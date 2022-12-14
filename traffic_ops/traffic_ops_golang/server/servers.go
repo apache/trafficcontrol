@@ -826,16 +826,9 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 
 		var joinSubQuery string
-		rows, err := tx.Query(deliveryservice.GetRequiredCapabilitiesQuery, dsID)
-		if err != nil {
-			err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
+		if err := tx.QueryRow(deliveryservice.GetRequiredCapabilitiesQuery, dsID).Scan(pq.Array(&requiredCapabilities)); err != nil && err != sql.ErrNoRows {
+			err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %w", dsID, err)
 			return nil, 0, nil, err, http.StatusInternalServerError, nil
-		}
-		for rows.Next() {
-			if err = rows.Scan(pq.Array(&requiredCapabilities)); err != nil {
-				err = fmt.Errorf("unable to scan required capabilities for deliveryservice %d: %w", dsID, err)
-				return nil, 0, nil, err, http.StatusInternalServerError, nil
-			}
 		}
 		if requiredCapabilities != nil && len(requiredCapabilities) > 0 {
 			dsHasRequiredCapabilities = true

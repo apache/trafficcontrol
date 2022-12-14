@@ -377,12 +377,15 @@ func createV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 // error are returned. The status code SHOULD NOT be used, if both errors are
 // nil.
 func createV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceV5, omitExtraLongDescFields bool, longDesc1, longDesc2 *string) (*tc.DeliveryServiceV5, int, error, error) {
+	var err error
 	tx := inf.Tx.Tx
-	err := Validate(tx, &ds)
-	if err != nil {
-		return nil, http.StatusBadRequest, fmt.Errorf("invalid request: %w", err), nil
+	userErr, sysErr := Validate(tx, &ds)
+	if userErr != nil {
+		return nil, http.StatusBadRequest, fmt.Errorf("invalid request: %w", userErr), nil
 	}
-
+	if sysErr != nil {
+		return nil, http.StatusInternalServerError, nil, sysErr
+	}
 	if authorized, err := isTenantAuthorized(inf, &ds); err != nil {
 		return nil, http.StatusInternalServerError, nil, fmt.Errorf("checking tenant: %w", err)
 	} else if !authorized {
@@ -1000,8 +1003,12 @@ func updateV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 *t
 func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceV5, omitExtraLongDescFields bool, longDesc1, longDesc2 *string) (*tc.DeliveryServiceV5, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
-	if err := Validate(tx, ds); err != nil {
-		return nil, http.StatusBadRequest, fmt.Errorf("invalid request: %w", err), nil
+	userErr, sysErr := Validate(tx, ds)
+	if userErr != nil {
+		return nil, http.StatusBadRequest, fmt.Errorf("invalid request: %w", userErr), nil
+	}
+	if sysErr != nil {
+		return nil, http.StatusInternalServerError, nil, sysErr
 	}
 
 	if authorized, err := isTenantAuthorized(inf, ds); err != nil {
@@ -1023,8 +1030,6 @@ func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	}
 
 	var errCode int
-	var userErr error
-	var sysErr error
 	var oldDetails TODeliveryServiceOldDetails
 	if dsType.HasSSLKeys() {
 		oldDetails, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
@@ -1537,9 +1542,7 @@ var validTLSVersionPattern = regexp.MustCompile(`^\d+\.\d+$`)
 // providing default values to some properties when they are zero-valued or nil
 // references*. This will panic if either argument is nil. The error returned is
 // safe for clients to see.
-//
-// TODO: return system errors as well.
-func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
+func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) (error, error) {
 	sanitize(ds)
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
@@ -1592,16 +1595,16 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 		errs = append(errs, fmt.Errorf("type fields: %w", err))
 	}
 	userErr, sysErr := validateRequiredCapabilities(tx, ds)
+	if sysErr != nil {
+		return nil, fmt.Errorf("reading/ scanning required capabilities: %w", sysErr)
+	}
 	if userErr != nil {
 		errs = append(errs, errors.New("required capabilities: "+userErr.Error()))
 	}
-	if sysErr != nil {
-		errs = append(errs, errors.New("reading/ scanning required capabilities: "+sysErr.Error()))
-	}
 	if len(errs) == 0 {
-		return nil
+		return nil, nil
 	}
-	return util.JoinErrs(errs)
+	return util.JoinErrs(errs), nil
 }
 
 func validateRequiredCapabilities(tx *sql.Tx, ds *tc.DeliveryServiceV5) (error, error) {
@@ -1627,10 +1630,7 @@ FROM (
 			missing = append(missing, missingCap)
 		}
 		if len(missing) > 0 {
-			var msg string
-			for _, m := range missing {
-				msg = msg + m + " "
-			}
+			msg := strings.Join(missing, ",")
 			userErr := fmt.Errorf("the following capabilities do not exist: %s", msg)
 			return userErr, nil
 		}

@@ -559,8 +559,13 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (res
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
-	if err := validateLegacy(dsr, tx); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	userErr, sysErr := validateLegacy(dsr, tx)
+	if sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	if userErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
 
@@ -997,8 +1002,13 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
-	if err := validateLegacy(dsr, tx); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	userErr, sysErr := validateLegacy(dsr, tx)
+	if sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	if userErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
 
