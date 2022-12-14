@@ -72,7 +72,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/deliveryservice_requests?status=draft HTTP/1.1
+	GET /api/4.1/deliveryservice_requests?status=draft HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -163,6 +163,7 @@ The response is an array of representations of :term:`Delivery Service Requests`
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": [],
 			"routingName": "video",
 			"signed": false,
 			"sslKeyVersion": 1,
@@ -213,7 +214,7 @@ The request must be a well-formed representation of a :term:`Delivery Service Re
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/4.0/deliveryservice_requests HTTP/1.1
+	POST /api/4.1/deliveryservice_requests HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -280,6 +281,7 @@ The request must be a well-formed representation of a :term:`Delivery Service Re
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": [],
 			"routingName": "video",
 			"signed": false,
 			"sslKeyVersion": 1,
@@ -328,7 +330,7 @@ The response will be a representation of the created :term:`Delivery Service Req
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 24 Feb 2020 20:11:12 GMT; Max-Age=3600; HttpOnly
-	Location: /api/4.0/deliveryservice_requests/2
+	Location: /api/4.1/deliveryservice_requests/2
 	X-Server-Name: traffic_ops_golang/
 	Date: Mon, 24 Feb 2020 19:11:12 GMT
 	Content-Length: 901
@@ -405,6 +407,7 @@ The response will be a representation of the created :term:`Delivery Service Req
 				"regional": false,
 				"regionalGeoBlocking": false,
 				"remapText": null,
+				"requiredCapabilities": [],
 				"routingName": "video",
 				"signed": false,
 				"sslKeyVersion": 1,
@@ -490,6 +493,7 @@ The response will be a representation of the created :term:`Delivery Service Req
 				"regional": false,
 				"regionalGeoBlocking": false,
 				"remapText": null,
+				"requiredCapabilities": [],
 				"routingName": "video",
 				"signed": false,
 				"sslKeyVersion": 1,
@@ -550,7 +554,7 @@ The request body must be a representation of a :term:`Delivery Service Request` 
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/4.0/deliveryservice_requests?id=1 HTTP/1.1
+	PUT /api/4.1/deliveryservice_requests?id=1 HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -667,6 +671,7 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": [],
 			"routingName": "video",
 			"signed": false,
 			"sslKeyVersion": 1,
@@ -748,6 +753,7 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": [],
 			"routingName": "cdn",
 			"signed": false,
 			"sslKeyVersion": null,
@@ -800,7 +806,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	DELETE /api/4.0/deliveryservice_requests?id=1 HTTP/1.1
+	DELETE /api/4.1/deliveryservice_requests?id=1 HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*

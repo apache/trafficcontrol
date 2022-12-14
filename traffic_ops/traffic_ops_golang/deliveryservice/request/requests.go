@@ -286,9 +286,17 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			api.WriteResp(w, r, dsrs)
 			return
 		}
+		if version.Minor >= 1 {
+			downgraded := make([]tc.DeliveryServiceRequestV4, 0, len(dsrs))
+			for _, dsr := range dsrs {
+				downgraded = append(downgraded, dsr.Downgrade())
+			}
+			api.WriteResp(w, r, downgraded)
+			return
+		}
 		downgraded := make([]tc.DeliveryServiceRequestV40, 0, len(dsrs))
 		for _, dsr := range dsrs {
-			downgraded = append(downgraded, dsr.Downgrade())
+			downgraded = append(downgraded, dsr.Downgrade().Downgrade())
 		}
 		api.WriteResp(w, r, downgraded)
 		return
@@ -296,7 +304,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	downgraded := make([]tc.DeliveryServiceRequestNullable, 0, len(dsrs))
 	for _, dsr := range dsrs {
-		downgraded = append(downgraded, dsr.Downgrade().Downgrade())
+		downgraded = append(downgraded, dsr.Downgrade().Downgrade().Downgrade())
 	}
 
 	api.WriteResp(w, r, downgraded)
@@ -501,6 +509,7 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 	upgraded.SetXMLID()
 	if ok, err = dbhelpers.DSRExistsWithXMLID(upgraded.XMLID, tx); err != nil {
 		err = fmt.Errorf("checking for existence of DSR with xmlid '%s'", upgraded.XMLID)
+
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	} else if ok {
@@ -528,7 +537,11 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 
 	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
 	w.WriteHeader(http.StatusCreated)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", dsr)
+	if inf.Version.Minor >= 1 {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", dsr)
+	} else {
+		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", dsr.Downgrade())
+	}
 
 	result.Successful = true
 	result.Assignee = dsr.Assignee
@@ -546,12 +559,17 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (res
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
-	if err := validateLegacy(dsr, tx); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	userErr, sysErr := validateLegacy(dsr, tx)
+	if sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	if userErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
 
-	upgraded := dsr.Upgrade().Upgrade()
+	upgraded := dsr.Upgrade().Upgrade().Upgrade()
 	authorized, err := isTenantAuthorized(upgraded, inf)
 	if err != nil {
 		sysErr := fmt.Errorf("checking tenant authorized: %w", err)
@@ -848,12 +866,23 @@ func putV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 	return
 }
 
-func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
+func putV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result dsrManipulationResult) {
 	tx := inf.Tx.Tx
-	var dsr tc.DeliveryServiceRequestV40
-	if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %w", err), nil)
-		return
+	var dsr tc.DeliveryServiceRequestV4
+	var dsrV40 tc.DeliveryServiceRequestV40
+
+	if inf.Version.Minor == 0 {
+		if err := json.NewDecoder(r.Body).Decode(&dsrV40); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %v", err), nil)
+			return
+		}
+		dsr = dsrV40.Upgrade()
+	} else {
+		if err := json.NewDecoder(r.Body).Decode(&dsr); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("decoding: %v", err), nil)
+			return
+		}
+		dsrV40 = dsr.Downgrade()
 	}
 	if userErr, sysErr := validateV4(dsr, tx); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, sysErr)
@@ -928,8 +957,8 @@ func putV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result ds
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	dsr = upgraded.Downgrade()
-	dsr.SetXMLID()
+	upgraded.SetXMLID()
+	dsr.XMLID = upgraded.XMLID
 
 	if dsr.ChangeType == tc.DSRChangeTypeUpdate {
 		query := deliveryservice.SelectDeliveryServicesQuery + `WHERE xml_id=:XMLID`
@@ -973,8 +1002,13 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
-	if err := validateLegacy(dsr, tx); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	userErr, sysErr := validateLegacy(dsr, tx)
+	if sysErr != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+	if userErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, userErr, nil)
 		return
 	}
 
@@ -989,7 +1023,7 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 	dsr.LastEditedByID = new(tc.IDNoMod)
 	*dsr.LastEditedByID = tc.IDNoMod(inf.User.ID)
 
-	upgraded := dsr.Upgrade().Upgrade()
+	upgraded := dsr.Upgrade().Upgrade().Upgrade()
 
 	authorized, err := isTenantAuthorized(upgraded, inf)
 	if err != nil {
@@ -1024,6 +1058,7 @@ func putLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result
 		return
 	}
 	upgraded.SetXMLID()
+	dsr.XMLID = &upgraded.XMLID
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d updated", inf.IntParams["id"]), dsr)
 	result.Action = api.Updated
@@ -1099,7 +1134,7 @@ func Put(w http.ResponseWriter, r *http.Request) {
 	case 5:
 		result = putV50(w, r, inf)
 	case 4:
-		result = putV40(w, r, inf)
+		result = putV4(w, r, inf)
 	case 3:
 		result = putLegacy(w, r, inf)
 	}

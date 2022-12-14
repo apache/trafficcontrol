@@ -134,6 +134,10 @@ Response Structure
 :regional:             A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:  A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:            :ref:`ds-raw-remap`
+:requiredCapabilities: An array of the capabilities that this Delivery Service requires.
+
+	.. versionadded:: 4.1
+
 :signed:               ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:     Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
 :rangeSliceBlockSize: An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3.
@@ -234,6 +238,7 @@ Response Structure
 		"regional": false,
 		"regionalGeoBlocking": false,
 		"remapText": null,
+		"requiredCapabilities": [],
 		"routingName": "cdn",
 		"serviceCategory": null,
 		"signed": false,

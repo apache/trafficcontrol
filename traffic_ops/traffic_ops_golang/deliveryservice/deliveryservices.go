@@ -347,7 +347,7 @@ func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
 	return nil
 }
 
-// create creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
+// createV40 creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
 func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
 	ds, code, userErr, sysErr := createV41(w, r, inf, tc.DeliveryServiceV41{DeliveryServiceV40: dsV4}, omitExtraLongDescFields)
 	if userErr != nil || sysErr != nil || ds == nil {
@@ -377,12 +377,15 @@ func createV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 // error are returned. The status code SHOULD NOT be used, if both errors are
 // nil.
 func createV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceV5, omitExtraLongDescFields bool, longDesc1, longDesc2 *string) (*tc.DeliveryServiceV5, int, error, error) {
+	var err error
 	tx := inf.Tx.Tx
-	err := Validate(tx, &ds)
-	if err != nil {
-		return nil, http.StatusBadRequest, fmt.Errorf("invalid request: %w", err), nil
+	userErr, sysErr := Validate(tx, &ds)
+	if userErr != nil {
+		return nil, http.StatusBadRequest, fmt.Errorf("invalid request: %w", userErr), nil
 	}
-
+	if sysErr != nil {
+		return nil, http.StatusInternalServerError, nil, sysErr
+	}
 	if authorized, err := isTenantAuthorized(inf, &ds); err != nil {
 		return nil, http.StatusInternalServerError, nil, fmt.Errorf("checking tenant: %w", err)
 	} else if !authorized {
@@ -469,6 +472,7 @@ func createV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 			ds.LastHeaderRewrite,
 			ds.ServiceCategory,
 			ds.MaxRequestHeaderBytes,
+			pq.Array(ds.RequiredCapabilities),
 		)
 	} else {
 		resultRows, err = tx.Query(insertQuery(),
@@ -532,6 +536,7 @@ func createV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 			ds.LastHeaderRewrite,
 			ds.ServiceCategory,
 			ds.MaxRequestHeaderBytes,
+			pq.Array(ds.RequiredCapabilities),
 		)
 	}
 
@@ -916,6 +921,13 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	dsNull := tc.DeliveryServiceNullableV30(*dsV31)
 	ds := dsNull.UpgradeToV4()
 	dsV41 := ds
+	dsMap, err := dbhelpers.GetRequiredCapabilitiesOfDeliveryServices([]int{*dsV31.ID}, inf.Tx.Tx)
+	if err != nil {
+		return nil, http.StatusInternalServerError, nil, err
+	}
+	if caps, ok := dsMap[*dsV31.ID]; ok {
+		dsV41.RequiredCapabilities = caps
+	}
 	if dsV41.ID == nil {
 		return nil, http.StatusInternalServerError, nil, errors.New("cannot update a Delivery Service with nil ID")
 	}
@@ -926,11 +938,11 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 		return nil, http.StatusInternalServerError, nil, fmt.Errorf("getting TLS versions for DS #%d in API version < 4.0: %w", *dsV41.ID, sysErr)
 	}
 
-	res, status, usrErr, sysErr := updateV40(w, r, inf, &dsV41.DeliveryServiceV40, false)
+	res, status, usrErr, sysErr := updateV41(w, r, inf, &dsV41, false)
 	if res == nil || usrErr != nil || sysErr != nil {
 		return nil, status, usrErr, sysErr
 	}
-	ds.DeliveryServiceV40 = *res
+	ds.DeliveryServiceV40 = res.DeliveryServiceV40
 	if dsV31.CacheURL != nil {
 		_, err := tx.Exec("UPDATE deliveryservice SET cacheurl = $1 WHERE id = $2",
 			*dsV31.CacheURL,
@@ -991,8 +1003,12 @@ func updateV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 *t
 func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceV5, omitExtraLongDescFields bool, longDesc1, longDesc2 *string) (*tc.DeliveryServiceV5, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
-	if err := Validate(tx, ds); err != nil {
-		return nil, http.StatusBadRequest, fmt.Errorf("invalid request: %w", err), nil
+	userErr, sysErr := Validate(tx, ds)
+	if userErr != nil {
+		return nil, http.StatusBadRequest, fmt.Errorf("invalid request: %w", userErr), nil
+	}
+	if sysErr != nil {
+		return nil, http.StatusInternalServerError, nil, sysErr
 	}
 
 	if authorized, err := isTenantAuthorized(inf, ds); err != nil {
@@ -1014,8 +1030,6 @@ func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	}
 
 	var errCode int
-	var userErr error
-	var sysErr error
 	var oldDetails TODeliveryServiceOldDetails
 	if dsType.HasSSLKeys() {
 		oldDetails, userErr, sysErr, errCode = getOldDetails(*ds.ID, tx)
@@ -1057,12 +1071,8 @@ func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 	}
 
 	if ds.Topology != nil {
-		requiredCapabilities, err := dbhelpers.GetDSRequiredCapabilitiesFromID(*ds.ID, tx)
-		if err != nil {
-			return nil, http.StatusInternalServerError, nil, fmt.Errorf("getting existing DS required capabilities: %w", err)
-		}
-		if len(requiredCapabilities) > 0 {
-			if userErr, sysErr, status := EnsureTopologyBasedRequiredCapabilities(tx, *ds.ID, *ds.Topology, requiredCapabilities); userErr != nil || sysErr != nil {
+		if len(ds.RequiredCapabilities) > 0 {
+			if userErr, sysErr, status := EnsureTopologyBasedRequiredCapabilities(tx, *ds.ID, *ds.Topology, ds.RequiredCapabilities); userErr != nil || sysErr != nil {
 				return nil, status, userErr, sysErr
 			}
 		}
@@ -1141,6 +1151,7 @@ func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 			ds.LastHeaderRewrite,
 			ds.ServiceCategory,
 			ds.MaxRequestHeaderBytes,
+			pq.Array(ds.RequiredCapabilities),
 			ds.ID,
 		)
 	} else {
@@ -1205,6 +1216,7 @@ func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 			ds.LastHeaderRewrite,
 			ds.ServiceCategory,
 			ds.MaxRequestHeaderBytes,
+			pq.Array(ds.RequiredCapabilities),
 			ds.ID,
 		)
 	}
@@ -1530,9 +1542,7 @@ var validTLSVersionPattern = regexp.MustCompile(`^\d+\.\d+$`)
 // providing default values to some properties when they are zero-valued or nil
 // references*. This will panic if either argument is nil. The error returned is
 // safe for clients to see.
-//
-// TODO: return system errors as well.
-func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
+func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) (error, error) {
 	sanitize(ds)
 	neverOrAlways := validation.NewStringRule(tovalidate.IsOneOfStringICase("NEVER", "ALWAYS"),
 		"must be one of 'NEVER' or 'ALWAYS'")
@@ -1584,10 +1594,48 @@ func Validate(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 	if err := validateTypeFields(tx, ds); err != nil {
 		errs = append(errs, fmt.Errorf("type fields: %w", err))
 	}
-	if len(errs) == 0 {
-		return nil
+	userErr, sysErr := validateRequiredCapabilities(tx, ds)
+	if sysErr != nil {
+		return nil, fmt.Errorf("reading/ scanning required capabilities: %w", sysErr)
 	}
-	return util.JoinErrs(errs)
+	if userErr != nil {
+		errs = append(errs, errors.New("required capabilities: "+userErr.Error()))
+	}
+	if len(errs) == 0 {
+		return nil, nil
+	}
+	return util.JoinErrs(errs), nil
+}
+
+func validateRequiredCapabilities(tx *sql.Tx, ds *tc.DeliveryServiceV5) (error, error) {
+	missing := make([]string, 0)
+	var missingCap string
+	query := `SELECT missing
+FROM (
+    SELECT UNNEST($1::TEXT[])
+    EXCEPT
+    SELECT UNNEST(ARRAY_AGG(name)) FROM server_capability) t(missing)
+`
+	if len(ds.RequiredCapabilities) > 0 {
+		rows, err := tx.Query(query, pq.Array(ds.RequiredCapabilities))
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			err = rows.Scan(&missingCap)
+			if err != nil {
+				return nil, err
+			}
+			missing = append(missing, missingCap)
+		}
+		if len(missing) > 0 {
+			msg := strings.Join(missing, ",")
+			userErr := fmt.Errorf("the following capabilities do not exist: %s", msg)
+			return userErr, nil
+		}
+	}
+	return nil, nil
 }
 
 func validateGeoLimitCountries(ds *tc.DeliveryServiceV5) error {
@@ -1947,6 +1995,7 @@ func GetDeliveryServices(query string, queryValues map[string]interface{}, tx *s
 			&ds.Regional,
 			&ds.RegionalGeoBlocking,
 			&ds.RemapText,
+			pq.Array(&ds.RequiredCapabilities),
 			&ds.RoutingName,
 			&ds.ServiceCategory,
 			&ds.SigningAlgorithm,
@@ -2484,6 +2533,7 @@ ds.active,
 	ds.regional,
 	ds.regional_geo_blocking,
 	ds.remap_text,
+	COALESCE(ds.required_capabilities, '{}'),
 	ds.routing_name,
 	ds.service_category,
 	ds.signing_algorithm,
@@ -2569,8 +2619,9 @@ first_header_rewrite=$56,
 inner_header_rewrite=$57,
 last_header_rewrite=$58,
 service_category=$59,
-max_request_header_bytes=$60
-WHERE id=$61
+max_request_header_bytes=$60,
+required_capabilities=$61
+WHERE id=$62
 RETURNING last_updated
 `
 }
@@ -2636,8 +2687,9 @@ first_header_rewrite=$54,
 inner_header_rewrite=$55,
 last_header_rewrite=$56,
 service_category=$57,
-max_request_header_bytes=$58
-WHERE id=$59
+max_request_header_bytes=$58,
+required_capabilities=$59
+WHERE id=$60
 RETURNING last_updated
 `
 }
@@ -2704,9 +2756,10 @@ first_header_rewrite,
 inner_header_rewrite,
 last_header_rewrite,
 service_category,
-max_request_header_bytes
+max_request_header_bytes,
+required_capabilities
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59,$60,$61)
 RETURNING id, last_updated
 `
 }
@@ -2771,9 +2824,10 @@ first_header_rewrite,
 inner_header_rewrite,
 last_header_rewrite,
 service_category,
-max_request_header_bytes
+max_request_header_bytes,
+required_capabilities
 )
-VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58)
+VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23,$24,$25,$26,$27,$28,$29,$30,$31,$32,$33,$34,$35,$36,$37,$38,$39,$40,$41,$42,$43,$44,$45,$46,$47,$48,$49,$50,$51,$52,$53,$54,$55,$56,$57,$58,$59)
 RETURNING id, last_updated
 `
 }

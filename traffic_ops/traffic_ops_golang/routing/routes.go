@@ -30,6 +30,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/about"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/acme"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
@@ -394,11 +395,6 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `deliveryservices/{xmlID}/urisignkeys$`, Handler: urisigning.SaveDeliveryServiceURIKeysHandler, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"DS-SECURITY-KEY:CREATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 40846633531},
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPut, Path: `deliveryservices/{xmlID}/urisignkeys$`, Handler: urisigning.SaveDeliveryServiceURIKeysHandler, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"DS-SECURITY-KEY:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 4764896931},
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodDelete, Path: `deliveryservices/{xmlID}/urisignkeys$`, Handler: urisigning.RemoveDeliveryServiceURIKeysHandler, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"DS-SECURITY-KEY:DELETE", "DS-SECURITY-KEY:READ", "DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 42992541731},
-
-		//Delivery Service Required Capabilities: CRUD
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices_required_capabilities/?$`, Handler: api.ReadHandler(&deliveryservice.RequiredCapability{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 415852222731},
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `deliveryservices_required_capabilities/?$`, Handler: api.CreateHandler(&deliveryservice.RequiredCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 409687399231},
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodDelete, Path: `deliveryservices_required_capabilities/?$`, Handler: api.DeleteHandler(&deliveryservice.RequiredCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 449628930431},
 
 		// Federations by CDN (the actual table for federation)
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `cdns/{name}/federations/?$`, Handler: api.ReadHandler(&cdnfederation.TOCDNFederation{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDN:READ", "FEDERATION:READ", "DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 48922503231},
@@ -798,9 +794,9 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodDelete, Path: `deliveryservices/{xmlID}/urisignkeys$`, Handler: urisigning.RemoveDeliveryServiceURIKeysHandler, RequiredPrivLevel: auth.PrivLevelAdmin, RequiredPermissions: []string{"DS-SECURITY-KEY:DELETE", "DS-SECURITY-KEY:READ", "DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 4299254173},
 
 		//Delivery Service Required Capabilities: CRUD
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices_required_capabilities/?$`, Handler: api.ReadHandler(&deliveryservice.RequiredCapability{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 41585222273},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `deliveryservices_required_capabilities/?$`, Handler: api.CreateHandler(&deliveryservice.RequiredCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 40968739923},
-		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodDelete, Path: `deliveryservices_required_capabilities/?$`, Handler: api.DeleteHandler(&deliveryservice.RequiredCapability{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 44962893043},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `deliveryservices_required_capabilities/?$`, Handler: api.DeprecatedReadHandler(&deliveryservice.RequiredCapability{}, util.StrPtr("the deliveryservices endpoint")), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 41585222273},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodPost, Path: `deliveryservices_required_capabilities/?$`, Handler: api.DeprecatedCreateHandler(&deliveryservice.RequiredCapability{}, util.StrPtr("the deliveryservices endpoint")), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 40968739923},
+		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodDelete, Path: `deliveryservices_required_capabilities/?$`, Handler: api.DeprecatedDeleteHandler(&deliveryservice.RequiredCapability{}, util.StrPtr("the deliveryservices endpoint")), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"DELIVERY-SERVICE:READ", "DELIVERY-SERVICE:UPDATE"}, Authenticated: Authenticated, Middlewares: nil, ID: 44962893043},
 
 		// Federations by CDN (the actual table for federation)
 		{Version: api.Version{Major: 4, Minor: 0}, Method: http.MethodGet, Path: `cdns/{name}/federations/?$`, Handler: api.ReadHandler(&cdnfederation.TOCDNFederation{}), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDN:READ", "FEDERATION:READ", "DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4892250323},

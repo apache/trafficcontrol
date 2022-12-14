@@ -850,13 +850,11 @@ func GetRequiredCapabilitiesOfDeliveryServices(ids []int, tx *sql.Tx) (map[int][
 	dsCaps := make(map[int][]string, len(ids))
 	q := `
 SELECT
-  d.id,
-  ARRAY_REMOVE(ARRAY_AGG(dsrc.required_capability ORDER BY dsrc.required_capability), NULL) AS required_capabilities
-FROM deliveryservice d
-LEFT JOIN deliveryservices_required_capability dsrc on d.id = dsrc.deliveryservice_id
-WHERE
-  d.id = ANY($1)
-GROUP BY d.id
+  ds.id,
+  ARRAY_REMOVE((ds.required_capabilities), NULL) AS required_capabilities
+FROM deliveryservice ds
+WHERE ds.id = ANY($1)
+GROUP BY ds.id, ds.required_capabilities
 `
 	rows, err := tx.Query(q, pq.Array(&queryIDs))
 	if err != nil {
@@ -927,23 +925,14 @@ func ScanCachegroupsServerCapabilities(rows *sql.Rows) (map[string][]int, map[in
 // GetDSRequiredCapabilitiesFromID returns the server's capabilities.
 func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
 	q := `
-	SELECT required_capability
-	FROM deliveryservices_required_capability
-	WHERE deliveryservice_id = $1
-	ORDER BY required_capability`
-	rows, err := tx.Query(q, id)
-	if err != nil {
-		return nil, errors.New("querying deliveryservice required capabilities from id: " + err.Error())
-	}
-	defer rows.Close()
+	SELECT required_capabilities
+	FROM deliveryservice
+	WHERE id = $1
+	ORDER BY required_capabilities`
 
 	caps := []string{}
-	for rows.Next() {
-		var cap string
-		if err := rows.Scan(&cap); err != nil {
-			return nil, errors.New("scanning capability: " + err.Error())
-		}
-		caps = append(caps, cap)
+	if err := tx.QueryRow(q, id).Scan(pq.Array(&caps)); err != nil {
+		return nil, errors.New("getting/ scanning capability: " + err.Error())
 	}
 	return caps, nil
 }
@@ -1546,7 +1535,7 @@ func GetDeliveryServiceTypeAndCDNName(dsID int, tx *sql.Tx) (tc.DSType, string, 
 	return dsType, cdnName, true, nil
 }
 
-// GetDeliveryServiceTypeAndTopology returns the type of the deliveryservice and the name of its topology.
+// GetDeliveryServiceTypeRequiredCapabilitiesAndTopology returns the type of the deliveryservice and the name of its topology.
 func GetDeliveryServiceTypeRequiredCapabilitiesAndTopology(dsID int, tx *sql.Tx) (tc.DSType, []string, *string, bool, error) {
 	var dsType tc.DSType
 	var reqCap []string
@@ -1554,13 +1543,12 @@ func GetDeliveryServiceTypeRequiredCapabilitiesAndTopology(dsID int, tx *sql.Tx)
 	q := `
 SELECT
   t.name,
-  ARRAY_REMOVE(ARRAY_AGG(dsrc.required_capability ORDER BY dsrc.required_capability), NULL) AS required_capabilities,
+  ARRAY_REMOVE(ds.required_capabilities, NULL) AS required_capabilities,
   ds.topology
 FROM deliveryservice AS ds
-LEFT JOIN deliveryservices_required_capability AS dsrc ON dsrc.deliveryservice_id = ds.id
 JOIN type t ON ds.type = t.id
 WHERE ds.id = $1
-GROUP BY t.name, ds.topology
+GROUP BY t.name, ds.topology, ds.required_capabilities
 `
 	if err := tx.QueryRow(q, dsID).Scan(&dsType, pq.Array(&reqCap), &topology); err != nil {
 		if err == sql.ErrNoRows {
