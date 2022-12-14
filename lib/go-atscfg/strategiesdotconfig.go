@@ -200,10 +200,12 @@ func getStrategyStrategiesSection(pa *ParentAbstraction) string {
 	for _, svc := range pa.Services {
 		txt += "\n" + `  - strategy: '` + getStrategyName(svc.Name) + `'`
 		txt += "\n" + `    policy: ` + getStrategyPolicy(svc.RetryPolicy)
-		if !svc.IgnoreQueryStringInParentSelection {
-			txt += "\n" + `    hash_key: path+query`
-		} else {
-			txt += "\n" + `    hash_key: path`
+		if svc.RetryPolicy == ParentAbstractionServiceRetryPolicyConsistentHash {
+			if !svc.IgnoreQueryStringInParentSelection {
+				txt += "\n" + `    hash_key: path+query`
+			} else {
+				txt += "\n" + `    hash_key: path`
+			}
 		}
 		txt += "\n" + `    go_direct: ` + strconv.FormatBool(svc.GoDirect)
 		if getStrategySecondaryMode(svc.SecondaryMode) == "peering_ring" {

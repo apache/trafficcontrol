@@ -1485,6 +1485,15 @@ func TestMakeStrategiesDotYAMLFirstLastNoTopoParams(t *testing.T) {
 		if 0 < len(missing) {
 			t.Errorf("Missing required string(s) from ds/line: %s/%v\n%v", *ds.XMLID, missing, txt)
 		}
+
+		excludes := []string{
+			`hash_key`,
+		}
+
+		excluding := missingFrom(txt, excludes)
+		if 1 != len(excludes) {
+			t.Errorf("Excluded required string(s) from ds/line: %s/%v\n%v", *ds.XMLID, excluding, txt)
+		}
 	}
 }
 
@@ -1783,6 +1792,7 @@ func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
 
 		needs := []string{
 			` policy: consistent_hash`,
+			` hash_key: path`,
 			` go_direct: false`,
 			` max_simple_retries: 12`,
 			` max_unavailable_retries: 22`,
@@ -1809,6 +1819,7 @@ func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
 
 		needs := []string{
 			` policy: consistent_hash`,
+			` hash_key: path`,
 			` go_direct: false`,
 			` max_simple_retries: 13`,
 			` max_unavailable_retries: 23`,
@@ -1845,6 +1856,15 @@ func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
 		missing := missingFrom(txt, needs)
 		if 0 < len(missing) {
 			t.Errorf("Missing required string(s) from line: %v\n%v", missing, txt)
+		}
+
+		excludes := []string{
+			`hash_key`,
+		}
+
+		excluding := missingFrom(txt, excludes)
+		if 1 != len(excludes) {
+			t.Errorf("Excluded required string(s) from ds/line: %s/%v\n%v", *ds.XMLID, excluding, txt)
 		}
 	}
 }
