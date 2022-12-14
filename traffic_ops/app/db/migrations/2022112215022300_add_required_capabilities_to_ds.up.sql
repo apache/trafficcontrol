@@ -18,13 +18,6 @@
 ALTER TABLE public.deliveryservice
     ADD COLUMN required_capabilities TEXT[];
 
-DO $$
-DECLARE temprow RECORD;
-BEGIN FOR temprow IN
-SELECT deliveryservice_id, ARRAY_AGG(required_capability) AS required_capabilities FROM deliveryservices_required_capability drc GROUP BY drc.deliveryservice_id
-    LOOP
-UPDATE deliveryservice d SET required_capabilities = temprow.required_capabilities WHERE d.id = temprow.deliveryservice_id;
-END LOOP;
-END $$;
+UPDATE public.deliveryservice d SET required_capabilities = (SELECT ARRAY_AGG(required_capability) AS required_capabilities FROM deliveryservices_required_capability drc WHERE drc.deliveryservice_id = d.id);
 
 DROP TABLE public.deliveryservices_required_capability;

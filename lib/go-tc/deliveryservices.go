@@ -1612,7 +1612,7 @@ func (ds DeliveryServiceV5) Downgrade() DeliveryServiceV4 {
 			TLSVersions: make([]string, len(ds.TLSVersions)),
 		},
 		Regional:             ds.Regional,
-		RequiredCapabilities: ds.RequiredCapabilities,
+		RequiredCapabilities: make([]string, len(ds.RequiredCapabilities)),
 	}
 
 	*downgraded.Active = ds.Active == DSActiveStateActive
@@ -1632,10 +1632,7 @@ func (ds DeliveryServiceV5) Downgrade() DeliveryServiceV4 {
 		copy(*downgraded.MatchList, ds.MatchList)
 	}
 	copy(downgraded.TLSVersions, ds.TLSVersions)
-	if len(ds.RequiredCapabilities) == 0 {
-		downgraded.RequiredCapabilities = make([]string, 0)
-	} else {
-		downgraded.RequiredCapabilities = make([]string, len(ds.RequiredCapabilities))
+	if len(ds.RequiredCapabilities) > 0 {
 		copy(downgraded.RequiredCapabilities, ds.RequiredCapabilities)
 	}
 	return downgraded
@@ -1736,10 +1733,7 @@ func (ds DeliveryServiceV4) Upgrade() DeliveryServiceV5 {
 		copy(upgraded.MatchList, *ds.MatchList)
 	}
 	copy(upgraded.TLSVersions, ds.TLSVersions)
-	if len(ds.RequiredCapabilities) == 0 {
-		upgraded.RequiredCapabilities = make([]string, 0)
-	} else {
-		upgraded.RequiredCapabilities = make([]string, len(ds.RequiredCapabilities))
+	if len(ds.RequiredCapabilities) > 0 {
 		copy(upgraded.RequiredCapabilities, ds.RequiredCapabilities)
 	}
 

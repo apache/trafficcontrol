@@ -148,7 +148,7 @@ Response Structure
 :regional:              A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:             :ref:`ds-raw-remap`
-:requiredCapabilities:  An array of the capabilities that this delivery service requires.
+:requiredCapabilities:  An array of the capabilities that this Delivery Service requires.
 
 	.. versionadded:: 4.1
 
@@ -333,7 +333,7 @@ Request Structure
 :regional:                  A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:       A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:                 :ref:`ds-raw-remap`
-:requiredCapabilities:      An array of the capabilities that this delivery service requires.
+:requiredCapabilities:      An array of the capabilities that this Delivery Service requires.
 
 	.. versionadded:: 4.1
 
@@ -505,7 +505,7 @@ Response Structure
 :regional:              A boolean value defining the :ref:`ds-regional` setting on this :term:`Delivery Service`
 :regionalGeoBlocking:   A boolean defining the :ref:`ds-regionalgeo` setting on this :term:`Delivery Service`
 :remapText:             :ref:`ds-raw-remap`
-:requiredCapabilities:  An array of the capabilities that this delivery service requires.
+:requiredCapabilities:  An array of the capabilities that this Delivery Service requires.
 
 	.. versionadded:: 4.1
 

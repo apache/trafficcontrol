@@ -435,7 +435,8 @@ type DeliveryServiceRequestNullable struct {
 	XMLID           *string                     `json:"-" db:"xml_id"`
 }
 
-// Downgrade will convert an instance of DeliveryServiceRequestV41 to DeliveryServiceRequestV40
+// Downgrade will convert an instance of DeliveryServiceRequestV41 to DeliveryServiceRequestV40.
+// Note that this function does a shallow copy of the requested and original Delivery Service structures.
 func (dsr DeliveryServiceRequestV41) Downgrade() DeliveryServiceRequestV40 {
 	var dsrV40 DeliveryServiceRequestV40
 	dsrV40.Assignee = copyStringIfNotNil(dsr.Assignee)
@@ -461,7 +462,8 @@ func (dsr DeliveryServiceRequestV41) Downgrade() DeliveryServiceRequestV40 {
 	return dsrV40
 }
 
-// Upgrade will convert an instance of DeliveryServiceRequestV40 to DeliveryServiceRequestV41
+// Upgrade will convert an instance of DeliveryServiceRequestV40 to DeliveryServiceRequestV41.
+// Note that this function does a shallow copy of the requested and original Delivery Service structures.
 func (dsrV40 DeliveryServiceRequestV40) Upgrade() DeliveryServiceRequestV41 {
 	var dsrV4 DeliveryServiceRequestV41
 	dsrV4.Assignee = copyStringIfNotNil(dsrV40.Assignee)

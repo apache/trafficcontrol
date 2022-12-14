@@ -895,7 +895,7 @@ func DSRExistsWithXMLID(xmlid string, tx *sql.Tx) (bool, error) {
 	return exists, err
 }
 
-// ScanCachegroupsServerCapabilities : given rows of (server ID, CDN ID, cachegroup name, server capabilities),
+// ScanCachegroupsServerCapabilities, given rows of (server ID, CDN ID, cachegroup name, server capabilities),
 // returns a map of cachegroup names to server IDs, a map of server IDs to a map of their capabilities,
 // a map of server IDs to CDN IDs, and an error (if one occurs).
 func ScanCachegroupsServerCapabilities(rows *sql.Rows) (map[string][]int, map[int]map[string]struct{}, map[int]int, error) {

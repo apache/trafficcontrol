@@ -20,7 +20,7 @@
 ******************************************
 
 .. deprecated:: 4.1
-	This endpoint will be removed in a future release, in favor of ``required_capabilities`` being a part of :term:`Delivery Services`.
+	This endpoint will be removed in a future release, in favor of :ref:`ds-required-capabilities` being a part of :term:`Delivery Services`.
 
 ``GET``
 =======
