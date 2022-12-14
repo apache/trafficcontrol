@@ -18,6 +18,8 @@
 # under the License.
 #
 
+VERSION ?= $(file < ../VERSION)
+
 # You can set these variables from the command line.
 SPHINXOPTS    = -j auto
 SPHINXBUILD   = python3 -m sphinx
@@ -29,7 +31,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sou
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: all help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+.PHONY: all help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext apichanges
 
 T3C_SOURCE_DIRS := $(patsubst %/,%,$(dir $(wildcard ../cache-config/**/README.md)))
 T3C_RST_SRC := $(join $(T3C_SOURCE_DIRS), $(T3C_SOURCE_DIRS:../cache-config/%=/%.rst))
@@ -180,6 +182,9 @@ changes: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
 	@echo
 	@echo "The overview file is in $(BUILDDIR)/changes."
+
+apichanges: $(BUILDDIR)
+	$(SPHINXBUILD) -b changes -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) -c source/ -D version=$(VERSION) source/api/ $(BUILDDIR)/apichanges
 
 linkcheck: $(BUILDDIR) $(T3C_RST_OUT)
 	$(SPHINXBUILD) -b linkcheck $(ALLSPHINXOPTS) $(BUILDDIR)/linkcheck
