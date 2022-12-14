@@ -91,7 +91,9 @@ func MakeIPAllowDotYAML(
 		for _, val := range vals {
 			switch name {
 			case ParamPurgeAllowIP:
-				ipAllowDat = append(ipAllowDat, yamlAllowAll(val))
+				for _, ip := range strings.Split(val, ",") {
+					ipAllowDat = append(ipAllowDat, yamlAllowAll(strings.TrimSpace(ip)))
+				}
 			case ParamCoalesceMaskLenV4:
 				if vi, err := strconv.Atoi(val); err != nil {
 					warnings = append(warnings, "got param '"+name+"' val '"+val+"' not a number, ignoring!")
