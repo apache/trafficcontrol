@@ -1071,7 +1071,7 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 .. _round_robin: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-round-robin
 .. _max_simple_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
 .. _max_unavailable_server_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-unavailable-server-retries
-.. _parent_retry: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry
+.. _parent_retry: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry (deprecated)
 .. _unavailable_server_retry_responses: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-unavailable-server-retry-responses
 .. _parent.config: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html
 .. _parent: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent
@@ -1088,7 +1088,7 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 	|                                         |                                                            | be requested.                                                                       |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| parent_retry                            | `parent_retry`_                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
-	|                                         |                                                            | "unavailable server retries", or both.  Deprecated (see below).                     |
+	|                                         |                                                            | "unavailable server retries", or both. (deprecated)                                 |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| simple_retry_response_codes             | **UNKNOWN**                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`  |
 	|                                         |                                                            | that necessitate a "simple retry".                                                  |
@@ -1107,11 +1107,11 @@ The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last``
 
 .. deprecated:: The ``mso.`` prefix is deprecated.  ``last.`` prefix should be preferred although no prefix can also be used.
 
-.. deprecated:: The parent_retry parameter is now inferred from the `simple retry` and `unavailable server retry` parameters.  To disable `simple retries` associate parameter ``max_simple_retries`` of ``0`` and ``max_simple_retry_responses`` of ``""``.  Similarly "unavailable server retries" may also be disabled.
+.. deprecated:: The `parent_retry` parameters are now inferred from the `simple retry` and `unavailable server retry` parameters. To disable "simple retries" for a :term:`Profile`, set the Value of its ``max_simple_retries`` :term:`Parameter` to ``0``, and the Value of its ``max_simple_retry_responses`` :term:`Parameter` to an empty string. "Unavailable server retries" may disabled in much the same way, using the analogous :term:`Parameters`.
 
-.. impl-detail:: With Apache Traffic Server 8.1.x the `simple_retry_response_codes` setting is not available.
-.. impl-detail:: With Apache Traffic Server 9.1.x `unavailable_server_retry_response_codes` are limited to 5xx responses and `simple_retry_response_codes` are limited to 4xx.
-.. impl-detail:: Apache Traffic Server 9.2.x allows more flexibility with 4xx and 5xx codes available for use with `simple_retry_response_codes`.
+.. impl-detail:: With Apache Traffic Server 8.1.x the ``simple_retry_response_codes`` setting is not available.
+.. impl-detail:: With Apache Traffic Server 9.1.x ``unavailable_server_retry_response_codes`` are limited to 5xx responses and ``simple_retry_response_codes`` are limited to 4xx.
+.. impl-detail:: Apache Traffic Server 9.2.x allows more flexibility with 4xx and 5xx codes available for use with ``simple_retry_response_codes``.
 
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 
