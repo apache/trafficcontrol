@@ -210,10 +210,10 @@ func (pp *PostProfileParam) Validate(tx *sql.Tx) error {
 	}
 	if pp.ParamIDs == nil {
 		errs = append(errs, errors.New("paramIds missing"))
-	} else if ok, nonExistingIDs, err := ParamsExist(*pp.ParamIDs, tx); err != nil {
-		errs = append(errs, errors.New(fmt.Sprintf("checking parameter IDs %v existence: "+err.Error(), *pp.ParamIDs)))
-	} else if !ok {
-		errs = append(errs, errors.New(fmt.Sprintf("parameters with IDs %v don't all exist", nonExistingIDs)))
+	} else if nonExistingIDs, err := ParamsExist(*pp.ParamIDs, tx); err != nil {
+		errs = append(errs, fmt.Errorf("checking parameter IDs %v existence: %w", *pp.ParamIDs, err))
+	} else if len(nonExistingIDs) >= 1 {
+		errs = append(errs, fmt.Errorf("parameters with IDs %v don't exist", nonExistingIDs))
 	}
 	if len(errs) > 0 {
 		return util.JoinErrs(errs)
@@ -277,15 +277,15 @@ func ParamExists(id int64, tx *sql.Tx) (bool, error) {
 
 // ParamsExist returns whether parameters exist for all the given ids, and any error.
 // TODO move to helper package.
-func ParamsExist(ids []int64, tx *sql.Tx) (bool, []int64, error) {
+func ParamsExist(ids []int64, tx *sql.Tx) ([]int64, error) {
 	var nonExistingIDs []int64
 	if err := tx.QueryRow(`SELECT ARRAY_AGG(id) FROM UNNEST($1::INT[]) AS id WHERE id NOT IN (SELECT id FROM parameter)`, pq.Array(ids)).Scan(pq.Array(&nonExistingIDs)); err != nil {
-		return false, nil, errors.New("querying parameters existence from id: " + err.Error())
+		return nil, fmt.Errorf("querying parameters existence from id: %w", err)
 	}
 	if len(nonExistingIDs) >= 1 {
-		return false, nonExistingIDs, nil
+		return nonExistingIDs, nil
 	}
-	return true, nil, nil
+	return nil, nil
 }
 
 // ProfileParametersNullable is an object of the form returned by the Traffic Ops /profileparameters endpoint.
