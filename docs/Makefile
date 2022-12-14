@@ -179,7 +179,7 @@ gettext: $(BUILDDIR) $(T3C_RST_OUT)
 	@echo "Build finished. The message catalogs are in $(BUILDDIR)/locale."
 
 changes: $(BUILDDIR) $(T3C_RST_OUT)
-	$(SPHINXBUILD) -b changes $(ALLSPHINXOPTS) $(BUILDDIR)/changes
+	$(SPHINXBUILD) -b changes -D version=$(VERSION) $(ALLSPHINXOPTS) $(BUILDDIR)/changes
 	@echo
 	@echo "The overview file is in $(BUILDDIR)/changes."
 
