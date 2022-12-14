@@ -32,40 +32,36 @@ ALTER TABLE public.deliveryservice RENAME COLUMN active_state TO active;
 
 UPDATE public.deliveryservice_request
 SET
-	deliveryservice = jsonb_set(deliveryservice, '{active}', '"ACTIVE"')
+	deliveryservice = deliveryservice || '{"active": "ACTIVE"}'
 WHERE
-	deliveryservice IS NOT NULL
-	AND
-	deliveryservice ? 'active'
-	AND
-	(deliveryservice -> 'active')::boolean IS TRUE;
+	deliveryservice ->> 'active' = 'true';
 
 UPDATE public.deliveryservice_request
 SET
-	deliveryservice = jsonb_set(deliveryservice, '{active}', '"PRIMED"')
+	deliveryservice = deliveryservice || '{"active": "PRIMED"}'
 WHERE
-	deliveryservice IS NOT NULL
-	AND
-	deliveryservice ? 'active'
-	AND
-	(deliveryservice -> 'active')::boolean IS FALSE;
+	deliveryservice ->> 'active' = 'false';
 
 UPDATE public.deliveryservice_request
 SET
-	original = jsonb_set(original, '{active}', '"ACTIVE"')
+	original = original || '{"active": "ACTIVE"}'
 WHERE
-	original IS NOT NULL
-	AND
-	original ? 'active'
-	AND
-	(original -> 'active')::boolean IS TRUE;
+	original ->> 'active' = 'true';
 
 UPDATE public.deliveryservice_request
 SET
-	original = jsonb_set(original, '{active}', '"PRIMED"')
+	original = original || '{"active": "PRIMED"}'
 WHERE
-	original IS NOT NULL
-	AND
-	original ? 'active'
-	AND
-	(original -> 'active')::boolean IS FALSE;
+	original ->> 'active' = 'false';
+
+UPDATE public.deliveryservice_request
+SET
+	original = original || CAST('{"lastUpdated": "' || replace(replace(original ->> 'lastUpdated', ' ', 'T'), '+00', 'Z') || '"}' AS jsonb)
+WHERE
+	original ->> 'lastUpdated' IS NOT NULL;
+
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = deliveryservice || CAST('{"lastUpdated": "' || replace(replace(deliveryservice ->> 'lastUpdated', ' ', 'T'), '+00', 'Z') || '"}' AS jsonb)
+WHERE
+	deliveryservice ->> 'lastUpdated' IS NOT NULL;

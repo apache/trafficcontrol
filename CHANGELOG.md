@@ -32,6 +32,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#4654](https://github.com/apache/trafficcontrol/pull/4654) *Traffic Ops, Traffic Portal* Switched Delivery Service active state to a three-value system, adding a state that will be used to prevent cache servers from deploying DS configuration.
 
 ### Fixed
+- [#7231](https://github.com/apache/trafficcontrol/pull/7231) *Traffic Ops, Traffic Portal* Fixed `sharedUserNames` display while retrieving CDN locks.
+- [#7216](https://github.com/apache/trafficcontrol/pull/7216) *Traffic Portal* Fixed sort for Server's Capabilities Table
 - [#4428](https://github.com/apache/trafficcontrol/issues/4428) *Traffic Ops* Fixed Internal Server Error with POST to `profileparameters` when POST body is empty
 - [#7179](https://github.com/apache/trafficcontrol/issues/7179) *Traffic Portal* Fixed search filter for Delivery Service Table
 - [#7174](https://github.com/apache/trafficcontrol/issues/7174) *Traffic Portal* Fixed topologies sort (table and Delivery Service's form)
@@ -55,7 +57,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Traffic Control Cache Config (t3c)* parent.config simulate topology for non topo delivery services.
 - [#7153](https://github.com/apache/trafficcontrol/pull/7153) *Traffic Control Cache Config (t3c)* Adds an extra T3C check for validity of an ssl cert (crash fix).
 - [#3965](https://github.com/apache/trafficcontrol/pull/3965) *Traffic Router* Traffic Router now always includes a `Content-Length` header in the response.
-- [#7182](https://github.com/apache/trafficcontrol/pull/7182) Sort peers used in strategy.yaml to prevent false positive for reload.
+- [#6533](https://github.com/apache/trafficcontrol/issues/6533) *TR should not rename/recreate log files on rollover
+- [#7182](https://github.com/apache/trafficcontrol/pull/7182) *Traffic Control Cache Config (t3c)* Sort peers used in strategy.yaml to prevent false positive for reload.
+- [#7204](https://github.com/apache/trafficcontrol/pull/7204) *Traffic Control Cache Config (t3c)* strategies.yaml hash_key only for consistent_hash
 
 ## [7.0.0] - 2022-07-19
 ### Added

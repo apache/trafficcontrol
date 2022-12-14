@@ -20,8 +20,8 @@ under the License.
 <div class="x_panel">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
-            <li ng-if="!settings.isRequest"><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li ng-if="settings.isRequest"><a ng-click="navigateToPath('/delivery-service-requests')">Delivery Service Requests</a></li>
+            <li ng-if="!settings.isRequest"><a href="/#!/delivery-services">Delivery Services</a></li>
+            <li ng-if="settings.isRequest"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
             <li ng-if="settings.isRequest" class="active">{{dsRequest.changeType}}</li>
             <li class="active">{{deliveryServiceName}}</li>
         </ol>
@@ -50,11 +50,11 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem"><a ng-click="clone(deliveryService)">Clone Delivery Service</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/clone?dsType={{deliveryService.type}}">Clone Delivery Service</a></li>
                     <hr class="divider"/>
-                    <li role="menuitem"><a ng-click="viewCharts()">View Charts</a></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/charts">View Charts</a></li>
                     <hr class="divider"/>
-                    <li name="manageServersMenuItem" role="menuitem"><button class="menu-item-button" type="button" ng-click="viewServers()">Manage Servers</button></li>
+                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/servers">Manage Servers</a></li>
                 </ul>
             </div>
         </div>
@@ -101,19 +101,25 @@ under the License.
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.active), 'has-feedback': hasError(generalConfig.active)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="active">Active *<div class="helptooltip">
-                            <div class="helptext">Whether or not this Delivery Service is active on the CDN and is capable of traffic.</div>
+                            <div class="helptext">
+								Whether or not this Delivery Service is active on the CDN and is capable of serving traffic.
+                                <br>
+                                <br>
+                                <a href="https://traffic-control-cdn.readthedocs.io/en/latest/overview/delivery_services.html#active" target="_blank">See Delivery Service Active States.</a>
+							</div>
                         </div>
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required>
                                 <option disabled hidden value="">Select...</option>
-                                <option ng-value="true">Active</option> <!--- there is only one valid option as you cannot inactivate any map delivery services --->
+                                <option value="PRIMED">Active</option>
+								<option value="INACTIVE">Inactive</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.active != dsCurrent.active">
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.active ? 'Active' : 'Not Active'}}</pre>
+                                <pre>{{::formatCurrentActive()}}</pre>
                             </aside>
                         </div>
                     </div>

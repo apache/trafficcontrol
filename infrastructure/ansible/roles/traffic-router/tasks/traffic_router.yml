@@ -94,6 +94,15 @@
   become: yes
   register: tr_systemd
 
+- name: Copy traffic router logrotate file
+  copy:
+    src: traffic_router.logrotate
+    dest: /etc/logrotate.d/traffic_router
+    mode: 0644
+    owner: root
+    group: root
+  become: yes
+
 - name: Reload systemd unit files if needed
   systemd:
     daemon_reload: yes

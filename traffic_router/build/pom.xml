@@ -94,6 +94,8 @@
 									<variableName>RPM_TARGET_OS</variableName>
 									<variableName>STARTUP_SCRIPT_DIR</variableName>
 									<variableName>STARTUP_SCRIPT_LOC</variableName>
+									<variableName>LOGROTATE_SCRIPT_DIR</variableName>
+									<variableName>LOGROTATE_SCRIPT_LOC</variableName>
 								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
@@ -205,6 +207,18 @@
 									<sources>
 										<source>
 											<location>${env.STARTUP_SCRIPT_LOC}</location>
+										</source>
+									</sources>
+								</mapping>
+								<mapping>
+									<directory>${env.LOGROTATE_SCRIPT_DIR}</directory>
+									<directoryIncluded>false</directoryIncluded>
+									<filemode>644</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+									<sources>
+										<source>
+											<location>${env.LOGROTATE_SCRIPT_LOC}</location>
 										</source>
 									</sources>
 								</mapping>

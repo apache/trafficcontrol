@@ -32,22 +32,15 @@ DROP TYPE public.ds_active_state;
 
 UPDATE public.deliveryservice_request
 SET
-	deliveryservice = jsonb_set(deliveryservice, '{active}', 'true')
+	deliveryservice = deliveryservice || '{"active": true}'
 WHERE
-	deliveryservice IS NOT NULL
-	AND
-	deliveryservice ? 'active'
-	AND
 	deliveryservice ->> 'active' = 'ACTIVE';
 
 UPDATE public.deliveryservice_request
 SET
-	deliveryservice = jsonb_set(deliveryservice, '{active}', 'false')
+	deliveryservice = deliveryservice || '{"active": false}'
 WHERE
-	deliveryservice IS NOT NULL
-	AND
-	deliveryservice ? 'active'
-	AND (
+	(
 		deliveryservice ->> 'active' = 'PRIMED'
 		OR
 		deliveryservice ->> 'active' = 'INACTIVE'
@@ -55,23 +48,29 @@ WHERE
 
 UPDATE public.deliveryservice_request
 SET
-	original = jsonb_set(original, '{active}', 'true')
+	original = original || '{"active": true}'
 WHERE
-	original IS NOT NULL
-	AND
-	original ? 'active'
-	AND
 	original ->> 'active' = 'ACTIVE';
 
 UPDATE public.deliveryservice_request
 SET
-	original = jsonb_set(original, '{active}', 'false')
+	original = original || '{"active": false}'
 WHERE
-	original IS NOT NULL
-	AND
-	original ? 'active'
-	AND (
+	(
 		original ->> 'active' = 'PRIMED'
 		OR
 		original ->> 'active' = 'INACTIVE'
 	);
+
+
+UPDATE public.deliveryservice_request
+SET
+	original = original || CAST('{"lastUpdated": "' || replace(replace(original ->> 'lastUpdated', 'T', ' '), 'Z', '+00') || '"}' AS jsonb)
+WHERE
+	original ->> 'lastUpdated' IS NOT NULL;
+
+UPDATE public.deliveryservice_request
+SET
+	deliveryservice = deliveryservice || CAST('{"lastUpdated": "' || replace(replace(deliveryservice ->> 'lastUpdated', 'T', ' '), 'Z', '+00') || '"}' AS jsonb)
+WHERE
+	deliveryservice ->> 'lastUpdated' IS NOT NULL;

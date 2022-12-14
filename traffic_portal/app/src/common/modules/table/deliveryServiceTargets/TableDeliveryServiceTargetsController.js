@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TableDeliveryServiceTargetsController = function(deliveryService, targets, $scope, $state, locationUtils, deliveryServiceService) {
+var TableDeliveryServiceTargetsController = function(deliveryService, targets, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
 
@@ -47,5 +47,5 @@ var TableDeliveryServiceTargetsController = function(deliveryService, targets, $
 
 };
 
-TableDeliveryServiceTargetsController.$inject = ['deliveryService', 'targets', '$scope', '$state', 'locationUtils', 'deliveryServiceService'];
+TableDeliveryServiceTargetsController.$inject = ['deliveryService', 'targets', '$scope', '$state', 'locationUtils'];
 module.exports = TableDeliveryServiceTargetsController;

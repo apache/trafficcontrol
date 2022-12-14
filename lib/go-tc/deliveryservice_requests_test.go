@@ -257,13 +257,14 @@ func TestDeliveryServiceRequestV4UpgradeAndV5Downgrade(t *testing.T) {
 		AssigneeID:     util.IntPtr(1),
 		Author:         "author",
 		AuthorID:       util.IntPtr(2),
-		ChangeType:     DSRChangeTypeCreate,
+		ChangeType:     DSRChangeTypeUpdate,
 		CreatedAt:      time.Time{},
 		ID:             util.IntPtr(3),
 		LastEditedBy:   "last edited by",
 		LastEditedByID: util.IntPtr(4),
 		LastUpdated:    time.Now(),
 		Requested:      &ds,
+		Original:       &ds,
 		Status:         RequestStatusComplete,
 	}
 	cpy := dsr.Upgrade().Downgrade()
