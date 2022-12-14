@@ -187,10 +187,10 @@ Bring all components down, remove the `traffic_ops/ca` directory, and delete the
 
 ### Code edits in the cdn-in-a-box directory
 
-Re/installed docker from the command line to use user=[your username] flag, and update the dockerfiles in the code for both enroller and traffic_ops in the cdn-in-a-box folder with the correct architecture for the M1. Link to install info for docker: https://docs.docker.com/desktop/install/mac-install/  and use Install from command line. 
+Re/installed docker from the command line to use user=[your username] flag, and update the dockerfiles in the code for both enroller and traffic_ops in the cdn-in-a-box folders with the correct architecture for the M1. Link to install info for docker for [Install from command line] (https://docs.docker.com/desktop/install/mac-install/)  and use Install from command line located in the "Mac with Apple Silicon" tab. 
 
-- Then update cdn-in-a-box/traffic_ops Dockerfile line 46 to -aarch64/pgdg-redhat-repo-latest.noarch.rpm after EL-${RHEL_VERSION%%.*} 
-- Add on line 18 of the cdn-in-a-box/enroller Dockerfile --platform=linux/amd64 after the 1st FROM.
+- At the postgresql install, update the cdn-in-a-box/traffic_ops Dockerfile to `-aarch64/pgdg-redhat-repo-latest.noarch.rpm` right after `EL-${RHEL_VERSION%%.*}`.
+- At the first `FROM` of the cdn-in-a-box/enroller Dockerfile, append `--platform=linux/amd64`.
  
 Build and run of it:
 In the trafficcontrol/infrastructure/cdn-in-a-box directory run the following:
@@ -209,6 +209,6 @@ In the trafficcontrol/infrastructure/cdn-in-a-box directory run the following:
 
 The limitation of this approach is that Docker Desktop can only be run by one user account per machine, namely the one specified in the -–user flag."
 
-The above is a direct quote found in Installing from the commandline: https://docs.docker.com/desktop/mac/permission-requirements/
+The above is a direct quote found in [Installing from the commandline] (https://docs.docker.com/desktop/mac/permission-requirements/)
 
-Note: The homebrew install did not work, neither did the Docker.dmg none command line install.
+Note: The Install from command line was the only install that resolved my issue of being unable to build the docker images and run the containers in localhost. Homebrew and the usual automatic install when double-clicking in the Docker.dmg did not work.
