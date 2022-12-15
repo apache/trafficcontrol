@@ -20,7 +20,6 @@ package servercapability
  */
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -229,8 +228,9 @@ func UpdateServerCapability(w http.ResponseWriter, r *http.Request) {
 	RETURNING sc.name, sc.description, sc.last_updated`
 
 	err := tx.QueryRow(query, sc.Name, sc.Description, requestedName).Scan(&sc.Name, &sc.Description, &sc.LastUpdated)
-	if err != nil && err == sql.ErrNoRows {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+	if err != nil {
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was updated")
@@ -257,7 +257,7 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 	var count int
 	err := tx.QueryRow("SELECT count(*) from server_capability where name = $1", sc.Name).Scan(&count)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server capability with name %s exists", sc.Name))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if server capability with name %s exists", err, sc.Name))
 		return
 	}
 	if count == 1 {
@@ -268,12 +268,13 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 	// create server capability
 	query := `INSERT INTO server_capability (name, description) VALUES ($1, $2) RETURNING last_updated`
 	err = tx.QueryRow(query, sc.Name, sc.Description).Scan(&sc.LastUpdated)
-	if err != nil && err == sql.ErrNoRows {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	if err != nil {
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created.")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
 	return
 }
 
@@ -325,8 +326,8 @@ func DeleteServerCapability(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no rows deleted for server capability"), nil)
 		return
 	}
-
-	api.WriteResp(w, r, "Successfully deleted server capability "+name)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was deleted.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, name)
 	return
 }
 
