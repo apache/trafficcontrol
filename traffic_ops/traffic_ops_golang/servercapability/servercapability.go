@@ -20,6 +20,7 @@ package servercapability
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -229,6 +230,10 @@ func UpdateServerCapability(w http.ResponseWriter, r *http.Request) {
 
 	err := tx.QueryRow(query, sc.Name, sc.Description, requestedName).Scan(&sc.Name, &sc.Description, &sc.LastUpdated)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
 		usrErr, sysErr, code := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
@@ -269,11 +274,16 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 	query := `INSERT INTO server_capability (name, description) VALUES ($1, $2) RETURNING last_updated`
 	err = tx.QueryRow(query, sc.Name, sc.Description).Scan(&sc.LastUpdated)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+			return
+		}
 		usrErr, sysErr, code := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/server_capabilities$?name=%s", inf.Version.Major, inf.Version.Minor, sc.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
 	return
 }
