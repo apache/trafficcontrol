@@ -38,7 +38,13 @@ import {
 	ResponseCDN,
 	ResponseDeliveryService,
 	RequestTenant,
-	ResponseTenant, TypeFromResponse, RequestSteeringTarget, ResponseDivision, RequestDivision, ResponseRegion, RequestRegion
+	ResponseTenant,
+	TypeFromResponse,
+	RequestSteeringTarget,
+	ResponseDivision,
+	RequestDivision,
+	ResponseRegion,
+	RequestRegion
 } from "trafficops-types";
 
 declare module "nightwatch" {
