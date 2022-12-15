@@ -94,8 +94,7 @@ export class RegionsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			action: "viewDivision",
-			multiRow: false,
+			href: (selectedRow: Region): string => `/core/division/${selectedRow.division}`,
 			name: "View Division"
 		},
 		{
@@ -136,9 +135,6 @@ export class RegionsTableComponent implements OnInit {
 				break;
 			case "edit":
 				await this.router.navigate(["/core/region", data.id]);
-				break;
-			case "viewDivision":
-				await this.router.navigate(["/core/division", data.division]);
 				break;
 			case "viewPhysLocs":
 				console.log("Physical Locations not implemented");
