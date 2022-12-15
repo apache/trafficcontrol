@@ -89,7 +89,7 @@ export class DivisionDetailComponent implements OnInit {
 	/**
 	 * Submits new/updated division.
 	 *
-	 * @param e HTML click event.
+	 * @param e HTML form submission event.
 	 */
 	public async submit(e: Event): Promise<void> {
 		e.preventDefault();

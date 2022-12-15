@@ -15,7 +15,7 @@ import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
-import {ResponseDivision, ResponseRegion} from "trafficops-types";
+import { ResponseDivision, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
@@ -95,7 +95,7 @@ export class RegionDetailComponent implements OnInit {
 	/**
 	 * Submits new/updated region.
 	 *
-	 * @param e HTML click event.
+	 * @param e HTML form submission event.
 	 */
 	public async submit(e: Event): Promise<void> {
 		e.preventDefault();
