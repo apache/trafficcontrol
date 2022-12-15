@@ -41,7 +41,7 @@ ARG TO_HOST=$TO_HOST
 RUN dnf install -y epel-release && \
     dnf install -y \
       jq \
-	  nodejs \
+      nodejs \
       openssl \
       # find is required by to-access.sh
       findutils \
