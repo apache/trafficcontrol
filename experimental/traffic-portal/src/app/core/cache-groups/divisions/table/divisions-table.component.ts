@@ -35,7 +35,7 @@ import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 })
 export class DivisionsTableComponent implements OnInit {
 	/** List of divisions */
-	public readonly divisions: Promise<Array<ResponseDivision>>;
+	public divisions: Promise<Array<ResponseDivision>>;
 
 	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: TpHeaderService, private readonly router: Router,
 		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
@@ -100,11 +100,11 @@ export class DivisionsTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl: FormControl = new FormControl<string>("");
+	public fuzzControl = new FormControl<string>("");
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
-		this.fuzzySubject.next(this.fuzzControl.value);
+		this.fuzzySubject.next(this.fuzzControl.value ?? "");
 	}
 
 	/**
@@ -121,7 +121,7 @@ export class DivisionsTableComponent implements OnInit {
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
-						this.api.deleteDivision(data.id);
+						this.api.deleteDivision(data.id).then(async () => this.divisions = this.api.getDivisions());
 					}
 				});
 				break;
@@ -129,7 +129,8 @@ export class DivisionsTableComponent implements OnInit {
 				await this.router.navigate(["/core/division", data.id]);
 				break;
 			case "viewRegions":
-				console.log("Regions not implemented");
+				await this.router.navigate(["/core/regions"]);
+				break;
 		}
 	}
 }

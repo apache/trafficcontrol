@@ -226,11 +226,12 @@ export class CacheGroupService extends APIService {
 	/**
 	 * Deletes an existing region.
 	 *
-	 * @param id Id of the region to delete.
+	 * @param regionOrId Id of the region to delete.
 	 * @returns The deleted region.
 	 */
-	public async deleteRegion(id: number): Promise<ResponseRegion> {
-		return this.delete<ResponseRegion>(`regions/${id}`).toPromise();
+	public async deleteRegion(regionOrId: number | ResponseRegion): Promise<void> {
+		const id = typeof(regionOrId) === "number" ? regionOrId : regionOrId.id;
+		await this.delete("regions/", undefined, { id : String(id) }).toPromise();
 	}
 
 	constructor(http: HttpClient) {

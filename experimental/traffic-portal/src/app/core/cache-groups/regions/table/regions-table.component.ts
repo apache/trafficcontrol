@@ -35,7 +35,7 @@ import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 })
 export class RegionsTableComponent implements OnInit {
 	/** List of regions */
-	public readonly regions: Promise<Array<ResponseRegion>>;
+	public regions: Promise<Array<ResponseRegion>>;
 
 	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: TpHeaderService, private readonly router: Router,
 		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
@@ -94,9 +94,14 @@ export class RegionsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			action: "viewRegions",
+			action: "viewDivision",
 			multiRow: false,
-			name: "View Regions"
+			name: "View Division"
+		},
+		{
+			action: "viewPhysLocs",
+			multiRow: false,
+			name: "View Physical Locations"
 		}
 	];
 
@@ -104,11 +109,11 @@ export class RegionsTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl: FormControl = new FormControl<string>("");
+	public fuzzControl = new FormControl<string>("");
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
-		this.fuzzySubject.next(this.fuzzControl.value);
+		this.fuzzySubject.next(this.fuzzControl.value ?? "");
 	}
 
 	/**
@@ -125,15 +130,18 @@ export class RegionsTableComponent implements OnInit {
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
-						this.api.deleteRegion(data.id);
+						this.api.deleteRegion(data.id).then(async () => this.regions = this.api.getRegions());
 					}
 				});
 				break;
 			case "edit":
 				await this.router.navigate(["/core/region", data.id]);
 				break;
-			case "viewRegions":
-				console.log("Regions not implemented");
+			case "viewDivision":
+				await this.router.navigate(["/core/division", data.division]);
+				break;
+			case "viewPhysLocs":
+				console.log("Physical Locations not implemented");
 		}
 	}
 }
