@@ -98,7 +98,7 @@ type ParentAbstractionService struct {
 
 	// ErrorResponseCodes is the list of HTTP response codes from the parent
 	// to consider as errors, but NOT mark the parent unhealthy. Typically 4xx codes.
-	// Becomes parent.config unavailable_server_retry_responses directive
+	// Becomes parent.config simple_server_retry_responses directive
 	// Becomes strategies.yaml TODO
 	ErrorResponseCodes []int
 

@@ -294,21 +294,9 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 	return nil
 }
 
-// doTail calls t3c-tail, which will read lines from the file at the provided
-// path, and will print lines matching the 'logMatch' regular expression.
-// When a line matching the 'endMatch' regular expression is encountered,
-// t3c-tail will exit - which means it MUST NOT be an empty string or only the
-// first line of the file will ever be read (and possibly printed, if it matches
-// 'logMatch'). In any case, the process will terminate after 'timeoutInMS'
-// milliseconds.
-// Note that apart from an exit code difference on timeout, this is almost
-// exactly equivalent to the bash command:
-//
-//	timeout timeoutInS tail -fn+2 file | grep -m 1 -B "$(wc -l file | cut -d ' ' -f1)" -E endMatch | grep -E logMatch
-//
-// ... where 'timeoutInS' is 1/1000 of 'timeoutInMS' and the string values of
-// arguments are otherwise substituted wherever they are found (GNU coreutils
-// are assumed to be present).
+// doTail calls t3c-tail and will run a tail on the log file provided with string for a regex to
+// match on default is .* endMatch will make t3c-tail exit when a pattern is matched otherwise
+// a timeout in a given number of seconds will occur.
 func doTail(cfg config.Cfg, file string, logMatch string, endMatch string, timeoutInMS int) error {
 	args := []string{
 		"--file=" + filepath.Join(cfg.TsHome, file),
