@@ -17,7 +17,7 @@ import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { Division, ResponseDivision, ResponseRegion } from "trafficops-types";
+import { Division, ResponseDivision } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -36,13 +36,11 @@ import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 export class DivisionsTableComponent implements OnInit {
 	/** List of divisions */
 	public divisions: Promise<Array<ResponseDivision>>;
-	public regions: Promise<Array<ResponseRegion>>;
 
 	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: TpHeaderService, private readonly router: Router,
 		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.divisions = this.api.getDivisions();
-		this.regions = this.api.getRegions();
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -131,13 +129,7 @@ export class DivisionsTableComponent implements OnInit {
 				await this.router.navigate(["/core/division", data.id]);
 				break;
 			case "viewRegions":
-				const region = (await this.regions).find(regionDiv => regionDiv.division === data.id);
-				if (region === undefined) {
-					await this.router.navigate(["/core/regions"]);
-				} else {
-					await this.router.navigate(["/core/region", region.id]);
-				}
-				break;
+				console.log("Regions not implemented");
 		}
 	}
 }
