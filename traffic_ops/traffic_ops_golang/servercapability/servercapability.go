@@ -267,7 +267,7 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if count == 1 {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server_capability name '%s' already exists", sc.Name), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server_capability name '%s' already exists.", sc.Name), nil)
 		return
 	}
 
