@@ -50,6 +50,7 @@ Request Structure
 Response Structure
 ------------------
 :name:        The name of this :term:`Server Capability`
+:description: The description of this :term:`Server Capability`
 :lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
 
 .. code-block:: http
@@ -71,6 +72,7 @@ Response Structure
 		"response": [
 			{
 				"name": "RAM",
+				"description": "ram server capability",
 				"lastUpdated": "2019-10-07 20:38:24+00"
 			}
 		]
@@ -88,6 +90,7 @@ Create a new :term:`Server Capability`.
 Request Structure
 -----------------
 :name: The name of the :term:`Server Capability`
+:description: The description of this :term:`Server Capability`
 
 .. code-block:: http
 	:caption: Request Example
@@ -101,12 +104,14 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"name": "RAM"
+		"name": "RAM",
+		"description": "ram server capability",
 	}
 
 Response Structure
 ------------------
 :name:        The name of this :term:`Server Capability`
+:description: The description of this :term:`Server Capability`
 :lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
 
 .. code-block:: http
@@ -133,6 +138,7 @@ Response Structure
 		],
 		"response": {
 			"name": "RAM",
+			"description": "ram server capability",
 			"lastUpdated": "2019-10-07 22:10:00+00"
 		}
 	}
@@ -149,6 +155,7 @@ Update an existing :term:`Server Capability`.
 Request Structure
 -----------------
 :name: The name of the :term:`Server Capability`
+:description: The description of this :term:`Server Capability`
 
 .. code-block:: http
 	:caption: Request Example
@@ -162,12 +169,14 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"name": "HDD"
+		"name": "HDD",
+		"description": "HDD server capability"
 	}
 
 Response Structure
 ------------------
 :name:        The name of this :term:`Server Capability`
+:description: The description of this :term:`Server Capability`
 :lastUpdated: The date and time at which this :term:`Server Capability` was last updated, in ISO-like format
 
 .. code-block:: http
@@ -194,6 +203,7 @@ Response Structure
 		],
 		"response": {
 			"name": "HDD",
+			"description": "HDD server capability",
 			"lastUpdated": "2021-03-03 21:22:08+00"
 		}
 	}

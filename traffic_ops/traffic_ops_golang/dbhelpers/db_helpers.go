@@ -2172,3 +2172,18 @@ func GetProfileIDDesc(tx *sql.Tx, name string) (id int, desc string) {
 	}
 	return
 }
+
+// GetSCInfo confirms whether the server capability exists, and an error (if one occurs).
+func GetSCInfo(tx *sql.Tx, name string) (bool, error) {
+	var count int
+	if err := tx.QueryRow("SELECT count(name) FROM server_capability AS sc WHERE sc.name=$1", name).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting server capability info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting server capability info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
+}
