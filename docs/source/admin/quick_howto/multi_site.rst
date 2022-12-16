@@ -75,21 +75,24 @@ The following steps will take you through the procedure of setting up an :abbr:`
 		|                                         |                  | consistent_hash          |                         |
 		+-----------------------------------------+------------------+--------------------------+-------------------------+
 		| last.parent_retry                       | parent.config    | simple_retry, both,      | parent_retry            |
-		|                                         |                  | unavailable_server_retry |                         |
+		|                                         |                  | unavailable_server_retry | (deprecated)            |
 		+-----------------------------------------+------------------+--------------------------+-------------------------+
 		| last.unavailable_server_retry_responses | parent.config    | list of server response  | defaults to the value   |
 		|                                         |                  | codes, eg "500,502,503"  | in records.config       |
 		|                                         |                  |                          | when unused.            |
 		+-----------------------------------------+------------------+--------------------------+-------------------------+
+		| last.max_unavailable_server_retries     | parent.config    | Number of retries made   | defaults to the value   |
+		|                                         |                  | after specified errors   | in records.config       |
+		|                                         |                  |                          | when unused.            |
+		+-----------------------------------------+------------------+--------------------------+-------------------------+
+		| last.simple_server_retry_responses      | parent.config    | list of server response  | defaults to the value   |
+		|                                         |                  | codes, eg "404"          | in records.config       |
+		|                                         |                  |                          | when unused.            |
+		+-----------------------------------------+------------------+--------------------------+-------------------------+
 		| last.max_simple_retries                 | parent.config    | Nubmer of retries made   | defaults to the value   |
-		|                                         |                  | after a 4xx error        | in records.config       |
+		|                                         |                  | after specified errors   | in records.config       |
 		|                                         |                  |                          | when unused.            |
 		+-----------------------------------------+------------------+--------------------------+-------------------------+
-		| last.max_unavailable_server_retries     | parent.config    | Nubmer of retries made   | defaults to the value   |
-		|                                         |                  | after a 5xx error        | in records.config       |
-		|                                         |                  |                          | when unused.            |
-		+-----------------------------------------+------------------+--------------------------+-------------------------+
-
 
 		.. figure:: multi_site/ds_profile_parameters.png
 			:scale: 100%

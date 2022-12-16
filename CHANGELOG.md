@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7191](https://github.com/apache/trafficcontrol/issues/7191) *tc-health-client* Uses Traffic Ops API 4.0. Also added reload option to systemd service file
 - [#4654](https://github.com/apache/trafficcontrol/pull/4654) *Traffic Ops, Traffic Portal* Switched Delivery Service active state to a three-value system, adding a state that will be used to prevent cache servers from deploying DS configuration.
 - [#7242](https://github.com/apache/trafficcontrol/pull/7242) *Traffic Portal* Now depends on NodeJS version 18 or later.
+- [#7120](https://github.com/apache/trafficcontrol/pull/7120) *Docs* Update t3c documentation regarding parent.config parent_retry.
 
 ### Fixed
 - [#6229](https://github.com/apache/trafficcontrol/issues/6229) *Traffic Ops* Fixed error message for assignment of non-existent parameters to a profile.
