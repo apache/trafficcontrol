@@ -1,0 +1,167 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-expansion-panel [expanded]="numChanges > 0">
+	<mat-expansion-panel-header>
+		<mat-panel-title>Cache Servers</mat-panel-title>
+		<mat-panel-description>Cache Servers configured to cache content for this CDN ({{numChanges}} pending change{{numChanges === 1 ? '' : 's'}})</mat-panel-description>
+	</mat-expansion-panel-header>
+	<mat-accordion multi>
+		<mat-expansion-panel *ngIf="new.length > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>New Cache Servers</mat-panel-title>
+				<mat-panel-description>{{pendingChangesStr(new)}}</mat-panel-description>
+				<ng-template matExpansionPanelContent>
+					<ng-template matExpansionPanelContent>
+						<tp-content-server *ngFor="let server of new" [server]="server" kind="new"></tp-content-server>
+					</ng-template>
+				</ng-template>
+			</mat-expansion-panel-header>
+		</mat-expansion-panel>
+		<mat-expansion-panel *ngIf="deleted.length > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Removed Cache Servers</mat-panel-title>
+				<mat-panel-description>{{pendingChangesStr(deleted)}}</mat-panel-description>
+				<ng-template matExpansionPanelContent>
+					<tp-content-server *ngFor="let server of deleted" [server]="server" kind="deleted"></tp-content-server>
+				</ng-template>
+			</mat-expansion-panel-header>
+		</mat-expansion-panel>
+		<mat-expansion-panel *ngIf="changed.length > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Changed Cache Servers</mat-panel-title>
+				<mat-panel-description>{{pendingChangesStr(changed)}}</mat-panel-description>
+				<ng-template matExpansionPanelContent>
+					<mat-card *ngFor="let server of changed">
+						<mat-card-header>
+							<mat-card-title>
+								<ng-container *ngIf="server.fqdn.oldValue !== server.fqdn.newValue; else fqdnElse">
+									<ins>{{server.fqdn.newValue}}</ins>&nbsp;<del>{{server.fqdn.oldValue}}</del>
+								</ng-container>
+								<ng-template #fqdnElse>
+									<span class="no-change">{{server.fqdn.oldValue}}</span>
+								</ng-template>
+							</mat-card-title>
+						</mat-card-header>
+						<mat-card-content>
+							<tp-diff-field name="HTTP Port" [value]="server.port"></tp-diff-field>
+							<tp-diff-field name="HTTPS Port" [value]="server.httpsPort"></tp-diff-field>
+							<tp-diff-field name="Hash Count" [value]="server.hashCount"></tp-diff-field>
+							<tp-diff-field name="Hash ID" [value]="server.hashId"></tp-diff-field>
+							<tp-diff-field name="IPv4 Address" [value]="server.ip"></tp-diff-field>
+							<tp-diff-field name="IPv6 Address" [value]="server.ip6"></tp-diff-field>
+							<tp-diff-field name="Cache Group" [value]="server.cacheGroup"></tp-diff-field>
+							<tp-diff-field name="Location ID" [value]="server.locationId"></tp-diff-field>
+							<tp-diff-field name="Profile" [value]="server.profile"></tp-diff-field>
+							<tp-diff-field name="Status" [value]="server.status"></tp-diff-field>
+							<tp-diff-field name="Type" [value]="server.type"></tp-diff-field>
+							<tp-diff-field name="Routing Disabled" [value]="server.routingDisabled"></tp-diff-field>
+							<div *ngIf="server.deliveryServices">
+								<h3>Delivery Service Assignments</h3>
+								<mat-accordion multi>
+									<mat-expansion-panel>
+										<mat-expansion-panel-header>
+											<mat-panel-title>New Assignments</mat-panel-title>
+											<mat-panel-description>{{pendingChangesStr(server.deliveryServices.new)}}</mat-panel-description>
+										</mat-expansion-panel-header>
+										<ng-template matExpansionPanelContent>
+											<ng-container *ngFor="let ds of expandDSAssignments(server.deliveryServices.new); last as last">
+												<mat-list dense>
+													<h4 matSubheader class="big-mode">{{ds[0]}}</h4>
+													<mat-list-item *ngFor="let v of ds[1]"><ins>{{v}}</ins></mat-list-item>
+												</mat-list>
+												<mat-divider *ngIf="!last"></mat-divider>
+											</ng-container>
+										</ng-template>
+									</mat-expansion-panel>
+									<mat-expansion-panel>
+										<mat-expansion-panel-header>
+											<mat-panel-title>Deleted Assignments</mat-panel-title>
+											<mat-panel-description>{{pendingChangesStr(server.deliveryServices.deleted)}}</mat-panel-description>
+										</mat-expansion-panel-header>
+										<ng-template matExpansionPanelContent>
+											<ng-container *ngFor="let ds of expandDSAssignments(server.deliveryServices.deleted); last as last">
+												<mat-list dense>
+													<h4 matSubheader class="big-mode">{{ds[0]}}</h4>
+													<mat-list-item *ngFor="let v of ds[1]"><del>{{v}}</del></mat-list-item>
+												</mat-list>
+												<mat-divider *ngIf="!last"></mat-divider>
+											</ng-container>
+										</ng-template>
+									</mat-expansion-panel>
+									<mat-expansion-panel>
+										<mat-expansion-panel-header>
+											<mat-panel-title>Changed Assignments</mat-panel-title>
+											<mat-panel-description>{{pendingChangesStr(server.deliveryServices.changed)}}</mat-panel-description>
+										</mat-expansion-panel-header>
+										<ng-template matExpansionPanelContent>
+											<ng-container *ngFor="let ds of expandDSAssignments(server.deliveryServices.changed); last as last">
+												<mat-list dense>
+													<h4 matSubheader class="big-mode">{{ds[0]}}</h4>
+													<mat-list-item *ngFor="let v of ds[1]">
+														<tp-diff-field [value]="v" [last]="true"></tp-diff-field>
+													</mat-list-item>
+												</mat-list>
+												<mat-divider *ngIf="!last"></mat-divider>
+											</ng-container>
+										</ng-template>
+									</mat-expansion-panel>
+									<mat-expansion-panel>
+										<mat-expansion-panel-header>
+											<mat-panel-title>Unchanged Assignments</mat-panel-title>
+											<mat-panel-description>{{expandDSAssignments(server.deliveryServices.unchanged).length}} unchanged assignment(s)</mat-panel-description>
+										</mat-expansion-panel-header>
+										<ng-template matExpansionPanelContent>
+											<ng-container *ngFor="let ds of expandDSAssignments(server.deliveryServices.unchanged); last as last">
+												<mat-list dense>
+													<h4 matSubheader class="big-mode">{{ds[0]}}</h4>
+													<mat-list-item *ngFor="let v of ds[1]">{{v}}</mat-list-item>
+												</mat-list>
+												<mat-divider *ngIf="!last"></mat-divider>
+											</ng-container>
+										</ng-template>
+									</mat-expansion-panel>
+								</mat-accordion>
+							</div>
+							<div *ngIf="server.capabilities.unchanged.size || server.capabilities.deleted.size || server.capabilities.new.size">
+								<h3>Capabilities</h3>
+									<mat-list *ngIf="server.capabilities.new.size" dense>
+										<h4 matSubheader>New Capabilities ({{server.capabilities.new.size}})</h4>
+										<mat-list-item *ngFor="let c of server.capabilities.new"><ins>{{c}}</ins></mat-list-item>
+									</mat-list>
+									<mat-list *ngIf="server.capabilities.deleted.size" dense>
+										<h4 matSubheader>Removed Capabilities ({{server.capabilities.deleted.size}})</h4>
+										<mat-list-item *ngFor="let c of server.capabilities.deleted"><del>{{c}}</del></mat-list-item>
+									</mat-list>
+									<mat-list *ngIf="server.capabilities.unchanged.size" dense>
+										<h4 matSubheader>Unchanged Capabilities ({{server.capabilities.unchanged.size}})</h4>
+										<mat-list-item class="no-change" *ngFor="let c of server.capabilities.unchanged">{{c}}</mat-list-item>
+									</mat-list>
+								</div>
+							</mat-card-content>
+					</mat-card>
+				</ng-template>
+			</mat-expansion-panel-header>
+		</mat-expansion-panel>
+		<mat-expansion-panel *ngIf="unchanged.length > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Unchanged Cache Servers</mat-panel-title>
+				<mat-panel-description>{{unchanged.length}} Cache Server{{unchanged.length === 1 ? "" : "s"}} unchanged</mat-panel-description>
+			</mat-expansion-panel-header>
+			<ng-template matExpansionPanelContent>
+				<tp-content-server *ngFor="let server of unchanged" [server]="server"></tp-content-server>
+			</ng-template>
+		</mat-expansion-panel>
+	</mat-accordion>
+</mat-expansion-panel>

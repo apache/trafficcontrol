@@ -45,7 +45,7 @@ describe("RelativeTimeString", () => {
 		fromDate.setFullYear(toDate.getFullYear(), toDate.getMonth(), toDate.getDate()-3);
 		const str = relativeTimeString(toDate.getTime() - fromDate.getTime());
 		expect(str.substring(4)).toBe(" days ago");
-		expect(str.substring(0, 4)).toBeCloseTo(3.9, 1);
+		expect(Math.ceil(Number(str.substring(0, 4)))).toBe(3);
 	});
 	it("Hours", () => {
 		fromDate.setFullYear(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());

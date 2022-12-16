@@ -1,0 +1,85 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-card>
+	<mat-card-header>
+		<mat-card-title class="no-change" *ngIf="kind === 'unchanged'">{{server.fqdn}}</mat-card-title>
+		<mat-card-title *ngIf="kind === 'new'"><ins>{{server.fqdn}}</ins></mat-card-title>
+		<mat-card-title *ngIf="kind === 'deleted'"><del>{{server.fqdn}}</del></mat-card-title>
+	</mat-card-header>
+	<mat-card-content>
+		<mat-form-field>
+			<mat-label>HTTP Port</mat-label>
+			<input matInput readonly type="number" [value]="server.port"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>HTTPS Port</mat-label>
+			<input matInput readonly type="number" [value]="server.httpsPort"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Hash Count</mat-label>
+			<input matInput readonly type="text" [value]="server.hashCount"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Hash ID</mat-label>
+			<input matInput readonly type="text" [value]="server.hashId"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>IPv4 Address</mat-label>
+			<input matInput readonly type="text" [value]="server.ip"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>IPv6 Address</mat-label>
+			<input matInput readonly type="text" [value]="server.ip6"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Cache Group</mat-label>
+			<input matInput readonly type="text" [value]="server.cacheGroup"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Location ID</mat-label>
+			<input matInput readonly type="text" [value]="server.locationId"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Profile</mat-label>
+			<input matInput readonly type="text" [value]="server.profile"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Status</mat-label>
+			<input matInput readonly type="text" [value]="server.status"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Routing Disabled</mat-label>
+			<input matInput readonly type="text" [value]="!!server.routingDisabled"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Type</mat-label>
+			<input matInput readonly type="text" [value]="server.type"/>
+		</mat-form-field>
+		<div *ngIf="server.type==='EDGE' && server.deliveryServices">
+			<h3>Delivery Service Assignments</h3>
+			<ng-container *ngFor="let ds of deliveryServices(); last as last">
+				<mat-list dense>
+					<h4 matSubheader>{{ds[0]}}</h4>
+					<mat-list-item *ngFor="let v of ds[1]">{{v}}</mat-list-item>
+				</mat-list>
+				<mat-divider *ngIf="!last"></mat-divider>
+			</ng-container>
+		</div>
+		<mat-list dense *ngIf="server.capabilities && server.capabilities.length > 0">
+			<h3 matSubheader>Capabilities</h3>
+			<mat-list-item *ngFor="let c of server.capabilities">{{c}}</mat-list-item>
+		</mat-list>
+	</mat-card-content>
+</mat-card>

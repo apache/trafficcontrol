@@ -1,0 +1,27 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<code *ngIf="name">{{name}}</code>
+<p class="no-change" *ngIf="(value.oldValue === undefined && value.newValue === undefined) || (value.oldValue === '' && value.newValue === ''); else oneIsDefined"><code>(no value)</code></p>
+<ng-template #oneIsDefined>
+	<p *ngIf="value.oldValue === undefined || value.oldValue === ''"><ins>{{value.newValue}}</ins></p>
+	<p *ngIf="value.newValue === undefined || value.newValue === ''"><del>{{value.oldValue}}</del></p>
+	<ng-container *ngIf="value.oldValue !== undefined && value.newValue !== undefined && value.oldValue !== '' && value.newValue !== ''">
+		<p *ngIf="value.oldValue !== value.newValue">
+			<del>{{value.oldValue}}</del>&nbsp;<ins>{{value.newValue}}</ins>
+		</p>
+		<p class="no-change" *ngIf="value.oldValue === value.newValue">{{value.oldValue}}</p>
+	</ng-container>
+</ng-template>
+<mat-divider *ngIf="!last"></mat-divider>

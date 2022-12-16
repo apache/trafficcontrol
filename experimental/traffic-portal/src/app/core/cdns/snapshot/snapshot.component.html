@@ -1,0 +1,36 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-card>
+	<mat-card-title>Pending Configuration Changes for the "{{cdn.name}}" CDN</mat-card-title>
+	<mat-card-subtitle>{{totalChangesPending}} pending change{{totalChangesPending === 1 ? '' : 's'}}</mat-card-subtitle>
+	<mat-card-content>
+		<mat-accordion multi>
+		<mat-expansion-panel [expanded]="configDiff.num > 0">
+			<mat-expansion-panel-header>
+				<mat-panel-title>Miscellaneous</mat-panel-title>
+				<mat-panel-description>Miscellaneous settings used to configure Traffic Router ({{configDiff.num}} pending change{{configDiff.num === 1 ? '' : 's'}})</mat-panel-description>
+			</mat-expansion-panel-header>
+			<ng-template matExpansionPanelContent>
+				<tp-diff-field *ngFor="let field of configDiffFields; last as last" [value]="field[1]" [name]="field[0]" [last]="last"></tp-diff-field>
+			</ng-template>
+		</mat-expansion-panel>
+		<tp-router-diff [snapshots]="snaps" (changesPending)="setChangeAmount('router', $event)"></tp-router-diff>
+		<tp-server-diff [snapshots]="snaps" (changesPending)="setChangeAmount('server', $event)"></tp-server-diff>
+		</mat-accordion>
+	</mat-card-content>
+	<mat-card-actions>
+		<button type="button" mat-raised-button color="primary">Take Snapshot</button>
+	</mat-card-actions>
+</mat-card>

@@ -13,8 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-
-import type { CDN } from "src/app/models";
+import type { CDN, ResponseCDN, Snapshot } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -28,8 +27,8 @@ export class CDNService extends APIService {
 		super(http);
 	}
 
-	public async getCDNs(id: number): Promise<CDN>;
-	public async getCDNs(): Promise<Map<string, CDN>>;
+	public async getCDNs(id: number | string): Promise<ResponseCDN>;
+	public async getCDNs(): Promise<Map<string, ResponseCDN>>;
 	/**
 	 * Gets one or all CDNs from Traffic Ops
 	 *
@@ -38,30 +37,45 @@ export class CDNService extends APIService {
 	 * 	passed.
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	 */
-	public async getCDNs(id?: number): Promise<Map<string, CDN> | CDN> {
+	public async getCDNs(id?: number | string): Promise<Map<string, ResponseCDN> | ResponseCDN> {
 		const path = "cdns";
-		if (id) {
-			return this.get<[CDN]>(path, undefined, {id: String(id)}).toPromise().then(
-				r => r[0]
-			).catch(
-				e => {
-					console.error(`Failed to get CDN #${id}`, e);
-					return {
-						dnssecEnabled: false,
-						domainName: "",
-						id: -1,
-						name: "",
-					};
-				}
-			);
-		}
-		return this.get<Array<CDN>>(path).toPromise().then(
-			r => new Map<string, CDN>(r.map(c=>[c.name, c]))
-		).catch(
-			e => {
-				console.error("Failed to get CDNs:", e);
-				return new Map();
+		if (typeof(id) === "number") {
+			const r = await this.get<[ResponseCDN]>(path, undefined, {id: String(id)}).toPromise();
+			if (r.length !== 1) {
+				throw new Error(`got ${r.length} CDNs with ID ${id}`);
 			}
-		);
+			return r[0];
+		}
+		if (typeof(id) === "string") {
+			const r = await this.get<[ResponseCDN]>(path, undefined, {name: id}).toPromise();
+			if (r.length !== 1) {
+				throw new Error(`got ${r.length} CDNs with Name ${id}`);
+			}
+			return r[0];
+		}
+		const cdns = await this.get<Array<ResponseCDN>>(path).toPromise();
+		return new Map(cdns.map(c=>[c.name, c]));
+	}
+
+	/**
+	 * Gets the *current* Snapshot for a given CDN.
+	 *
+	 * @param cdn The CDN for which to fetch a Snapshot.
+	 * @returns The current Snapshot of the requested CDN.
+	 */
+	 public async getCurrentSnapshot(cdn: CDN | string): Promise<Snapshot> {
+		const name = typeof(cdn) === "string" ? cdn : cdn.name;
+		return this.get<Snapshot>(`cdns/${name}/snapshot`).toPromise();
+	}
+
+	/**
+	 * Gets the *pending* Snapshot for a given CDN.
+	 *
+	 * @param cdn The CDN for which to fetch a Snapshot.
+	 * @returns The current Snapshot of the requested CDN.
+	 */
+	 public async getPendingSnapshot(cdn: CDN | string): Promise<Snapshot> {
+		const name = typeof(cdn) === "string" ? cdn : cdn.name;
+		return this.get<Snapshot>(`cdns/${name}/snapshot/new`).toPromise();
 	}
 }
