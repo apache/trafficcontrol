@@ -84,7 +84,7 @@ func validateV4(dsr tc.DeliveryServiceRequestV4, tx *sql.Tx) (error, error) {
 	return validateV5(dsr.Upgrade(), tx)
 }
 
-// validateV4 validates a DSR, returning - in order - a user-facing error that
+// validateV5 validates a DSR, returning - in order - a user-facing error that
 // should be shown to the client, and a system error.
 func validateV5(dsr tc.DeliveryServiceRequestV5, tx *sql.Tx) (error, error) {
 	var userErr, sysErr error
@@ -143,7 +143,7 @@ func validateV5(dsr tc.DeliveryServiceRequestV5, tx *sql.Tx) (error, error) {
 				if o == nil {
 					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
 				}
-				ds, ok := o.(*tc.DeliveryServiceV4)
+				ds, ok := o.(*tc.DeliveryServiceV5)
 				if !ok {
 					return fmt.Errorf("expected a Delivery Service, got %T", o)
 				}
