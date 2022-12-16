@@ -408,3 +408,55 @@ func TestGetCDNIDFromName(t *testing.T) {
 	}
 
 }
+
+func TestGetSCInfo(t *testing.T) {
+	var testCases = []struct {
+		description   string
+		name          string
+		expectedError error
+		exists        bool
+	}{
+		//{
+		//	description:   "Success: Get valid SC",
+		//	name:          "hdd",
+		//	expectedError: nil,
+		//	exists:        true,
+		//},
+		{
+			description:   "Failure: SC not in DB",
+			name:          "disk",
+			expectedError: errors.New("error getting server capability info: sql: no rows in result set"),
+			exists:        false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			t.Log("Starting test scenario: ", testCase.description)
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close()
+
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+
+			rows := sqlmock.NewRows([]string{"name"})
+			mock.ExpectBegin()
+			if testCase.exists {
+				rows = rows.AddRow(testCase.name)
+			}
+			mock.ExpectQuery("SELECT").WillReturnRows(rows)
+			mock.ExpectCommit()
+
+			scExists, err := GetSCInfo(db.MustBegin().Tx, testCase.name)
+			if testCase.exists != scExists {
+				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, scExists)
+			}
+
+			if err == testCase.expectedError {
+				t.Errorf("getSCInfo expected: %s, actual: %s", testCase.expectedError, err)
+			}
+		})
+	}
+}

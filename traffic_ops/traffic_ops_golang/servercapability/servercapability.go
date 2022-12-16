@@ -298,7 +298,7 @@ func DeleteServerCapability(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	name := inf.Params["name"]
-	exists, err := dbhelpers.GetSCInfo(inf.Tx, name)
+	exists, err := dbhelpers.GetSCInfo(tx, name)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
