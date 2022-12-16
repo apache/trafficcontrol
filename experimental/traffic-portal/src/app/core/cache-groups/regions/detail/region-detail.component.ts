@@ -15,31 +15,35 @@ import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
-import { ResponseDivision } from "trafficops-types";
+import { ResponseDivision, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 /**
- * DivisionDetailsComponent is the controller for the division add/edit form.
+ * RegionDetailsComponent is the controller for the region add/edit form.
  */
 @Component({
-	selector: "tp-divisions-detail",
-	styleUrls: ["./division-detail.component.scss"],
-	templateUrl: "./division-detail.component.html"
+	selector: "tp-regions-detail",
+	styleUrls: ["./region-detail.component.scss"],
+	templateUrl: "./region-detail.component.html"
 })
-export class DivisionDetailComponent implements OnInit {
+export class RegionDetailComponent implements OnInit {
 	public new = false;
-	public division!: ResponseDivision;
+	public region!: ResponseRegion;
+	public divisions!: Array<ResponseDivision>;
 
 	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location, private readonly dialog: MatDialog, private readonly header: TpHeaderService) { }
+		private readonly location: Location, private readonly dialog: MatDialog,
+		private readonly header: TpHeaderService) {
+	}
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
 	 */
 	public async ngOnInit(): Promise<void> {
+		this.divisions = await this.cacheGroupService.getDivisions();
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
 			console.error("missing required route parameter 'id'");
@@ -47,9 +51,11 @@ export class DivisionDetailComponent implements OnInit {
 		}
 
 		if (ID === "new") {
-			this.header.headerTitle.next("New Division");
+			this.header.headerTitle.next("New Region");
 			this.new = true;
-			this.division = {
+			this.region = {
+				division: -1,
+				divisionName: "",
 				id: -1,
 				lastUpdated: new Date(),
 				name: ""
@@ -62,32 +68,32 @@ export class DivisionDetailComponent implements OnInit {
 			return;
 		}
 
-		this.division = await this.cacheGroupService.getDivisions(numID);
-		this.header.headerTitle.next(`Division: ${this.division.name}`);
+		this.region = await this.cacheGroupService.getRegions(numID);
+		this.header.headerTitle.next(`Region: ${this.region.name}`);
 	}
 
 	/**
-	 * Deletes the current division.
+	 * Deletes the current region.
 	 */
-	public async deleteDivision(): Promise<void> {
+	public async deleteRegion(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new division");
+			console.error("Unable to delete new region");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {
-			data: {message: `Are you sure you want to delete division ${this.division.name} with id ${this.division.id}`,
+			data: {message: `Are you sure you want to delete region ${this.region.name} with id ${this.region.id}`,
 				title: "Confirm Delete"}
 		});
 		ref.afterClosed().subscribe(result => {
 			if(result) {
-				this.cacheGroupService.deleteDivision(this.division.id);
+				this.cacheGroupService.deleteRegion(this.region.id);
 				this.location.back();
 			}
 		});
 	}
 
 	/**
-	 * Submits new/updated division.
+	 * Submits new/updated region.
 	 *
 	 * @param e HTML form submission event.
 	 */
@@ -95,10 +101,10 @@ export class DivisionDetailComponent implements OnInit {
 		e.preventDefault();
 		e.stopPropagation();
 		if(this.new) {
-			this.division = await this.cacheGroupService.createDivision(this.division);
+			this.region = await this.cacheGroupService.createRegion(this.region);
 			this.new = false;
 		} else {
-			this.division = await this.cacheGroupService.updateDivision(this.division);
+			this.region = await this.cacheGroupService.updateRegion(this.region);
 		}
 	}
 

@@ -22,6 +22,8 @@ import { RouterModule, type Routes } from "@angular/router";
 
 import { DivisionDetailComponent } from "src/app/core/cache-groups/divisions/detail/division-detail.component";
 import { DivisionsTableComponent } from "src/app/core/cache-groups/divisions/table/divisions-table.component";
+import { RegionDetailComponent } from "src/app/core/cache-groups/regions/detail/region-detail.component";
+import { RegionsTableComponent } from "src/app/core/cache-groups/regions/table/regions-table.component";
 import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
 
 import { AppUIModule } from "../app.ui.module";
@@ -52,7 +54,9 @@ import { UsersComponent } from "./users/users.component";
 export const ROUTES: Routes = [
 	{ canActivate: [AuthenticatedGuard], component: DashboardComponent, path: "" },
 	{ canActivate: [AuthenticatedGuard], component: DivisionsTableComponent, path: "divisions" },
-	{ canActivate: [AuthenticatedGuard], component: DivisionDetailComponent, path: "divisions/:id" },
+	{ canActivate: [AuthenticatedGuard], component: DivisionDetailComponent, path: "division/:id" },
+	{ canActivate: [AuthenticatedGuard], component: RegionsTableComponent, path: "regions" },
+	{ canActivate: [AuthenticatedGuard], component: RegionDetailComponent, path: "region/:id" },
 	{ canActivate: [AuthenticatedGuard], component: UsersComponent, path: "users" },
 	{ canActivate: [AuthenticatedGuard], component: UserDetailsComponent, path: "users/:id"},
 	{ canActivate: [AuthenticatedGuard], component: ServersTableComponent, path: "servers" },
@@ -93,7 +97,9 @@ export const ROUTES: Routes = [
 		LastDaysComponent,
 		UserRegistrationDialogComponent,
 		DivisionsTableComponent,
-		DivisionDetailComponent
+		DivisionDetailComponent,
+		RegionsTableComponent,
+		RegionDetailComponent
 	],
 	exports: [],
 	imports: [

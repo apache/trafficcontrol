@@ -12,27 +12,29 @@
  * limitations under the License.
  */
 
-describe("Division Detail Spec", () => {
-	it("Test division", () => {
-		const page = browser.page.divisionDetail();
-		browser.url(`${page.api.launchUrl}/core/division/${browser.globals.testData.division.id}`, res => {
+describe("Region Detail Spec", () => {
+	it("Test region", () => {
+		const page = browser.page.regionDetail();
+		browser.url(`${page.api.launchUrl}/core/region/${browser.globals.testData.region.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@name")
+				.assert.enabled("@division")
 				.assert.enabled("@saveBtn")
 				.assert.not.enabled("@id")
 				.assert.not.enabled("@lastUpdated")
-				.assert.valueEquals("@name", browser.globals.testData.division.name)
-				.assert.valueEquals("@id", String(browser.globals.testData.division.id));
+				.assert.valueEquals("@name", browser.globals.testData.region.name)
+				.assert.valueEquals("@id", String(browser.globals.testData.region.id));
 		});
 	});
 
-	it("New division", () => {
-		const page = browser.page.divisionDetail();
-		browser.url(`${page.api.launchUrl}/core/division/new`, res => {
+	it("New region", () => {
+		const page = browser.page.regionDetail();
+		browser.url(`${page.api.launchUrl}/core/region/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@name")
+				.assert.enabled("@division")
 				.assert.enabled("@saveBtn")
 				.assert.not.elementPresent("@id")
 				.assert.not.elementPresent("@lastUpdated")

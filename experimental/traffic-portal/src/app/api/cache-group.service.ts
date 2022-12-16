@@ -13,7 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { RequestDivision, ResponseDivision } from "trafficops-types";
+import type { RequestDivision, ResponseDivision, RequestRegion, ResponseRegion } from "trafficops-types";
 
 import type { CacheGroup } from "src/app/models";
 
@@ -160,6 +160,78 @@ export class CacheGroupService extends APIService {
 	 */
 	public async deleteDivision(id: number): Promise<ResponseDivision> {
 		return this.delete<ResponseDivision>(`divisions/${id}`).toPromise();
+	}
+
+	public async getRegions(): Promise<Array<ResponseRegion>>;
+	public async getRegions(nameOrID: string | number): Promise<ResponseRegion>;
+
+	/**
+	 * Gets an array of regions from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the Region with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of Region objects - or a single Region object if 'nameOrID'
+	 * was given.
+	 */
+	public async getRegions(nameOrID?: string | number): Promise<Array<ResponseRegion> | ResponseRegion> {
+		const path = "regions";
+		if(nameOrID) {
+			let params;
+			switch (typeof nameOrID) {
+				case "string":
+					params = {name: nameOrID};
+					break;
+				case "number":
+					params = {id: String(nameOrID)};
+			}
+			const r = await this.get<[ResponseRegion]>(path, undefined, params).toPromise();
+			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
+
+		}
+		const regions = await this.get<Array<ResponseRegion>>(path).toPromise();
+		return regions.map(
+			d => ({...d, lastUpdated: new Date((d.lastUpdated as unknown as string).replace("+00", "Z"))})
+		);
+	}
+
+	/**
+	 * Replaces the current definition of a region with the one given.
+	 *
+	 * @param region The new region.
+	 * @returns The updated region.
+	 */
+	public async updateRegion(region: ResponseRegion): Promise<ResponseRegion> {
+		const path = `regions/${region.id}`;
+		const response = await this.put<ResponseRegion>(path, region).toPromise();
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Creates a new region.
+	 *
+	 * @param region The region to create.
+	 * @returns The created region.
+	 */
+	public async createRegion(region: RequestRegion): Promise<ResponseRegion> {
+		const response = await this.post<ResponseRegion>("regions", region).toPromise();
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Deletes an existing region.
+	 *
+	 * @param regionOrId Id of the region to delete.
+	 * @returns The deleted region.
+	 */
+	public async deleteRegion(regionOrId: number | ResponseRegion): Promise<void> {
+		const id = typeof(regionOrId) === "number" ? regionOrId : regionOrId.id;
+		await this.delete("regions/", undefined, { id : String(id) }).toPromise();
 	}
 
 	constructor(http: HttpClient) {

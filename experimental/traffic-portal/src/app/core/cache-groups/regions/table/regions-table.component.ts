@@ -17,7 +17,7 @@ import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { Division, ResponseDivision } from "trafficops-types";
+import { Region, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -26,21 +26,21 @@ import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 /**
- * DivisionsTableComponent is the controller for the "Divisions" table.
+ * RegionsTableComponent is the controller for the "Regions" table.
  */
 @Component({
-	selector: "tp-divisions",
-	styleUrls: ["./divisions-table.component.scss"],
-	templateUrl: "./divisions-table.component.html"
+	selector: "tp-regions",
+	styleUrls: ["./regions-table.component.scss"],
+	templateUrl: "./regions-table.component.html"
 })
-export class DivisionsTableComponent implements OnInit {
-	/** List of divisions */
-	public divisions: Promise<Array<ResponseDivision>>;
+export class RegionsTableComponent implements OnInit {
+	/** List of regions */
+	public regions: Promise<Array<ResponseRegion>>;
 
 	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: TpHeaderService, private readonly router: Router,
 		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
-		this.divisions = this.api.getDivisions();
+		this.regions = this.api.getRegions();
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -57,7 +57,7 @@ export class DivisionsTableComponent implements OnInit {
 				console.error("Failed to get query parameters:", e);
 			}
 		);
-		this.headerSvc.headerTitle.next("Divisions");
+		this.headerSvc.headerTitle.next("Regions");
 	}
 
 	/** Definitions of the table's columns according to the ag-grid API */
@@ -65,6 +65,10 @@ export class DivisionsTableComponent implements OnInit {
 		{
 			field: "name",
 			headerName: "Name"
+		},
+		{
+			field: "divisionName",
+			headerName: "Division"
 		},
 		{
 			field: "id",
@@ -77,8 +81,8 @@ export class DivisionsTableComponent implements OnInit {
 		}
 	];
 
-	/** Definitions for the context menu items (which act on augmented division data). */
-	public contextMenuItems: Array<ContextMenuItem<Division>> = [
+	/** Definitions for the context menu items (which act on augmented region data). */
+	public contextMenuItems: Array<ContextMenuItem<Region>> = [
 		{
 			action: "edit",
 			multiRow: false,
@@ -90,9 +94,13 @@ export class DivisionsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			action: "viewRegions",
+			href: (selectedRow: Region): string => `/core/division/${selectedRow.division}`,
+			name: "View Division"
+		},
+		{
+			action: "viewPhysLocs",
 			multiRow: false,
-			name: "View Regions"
+			name: "View Physical Locations"
 		}
 	];
 
@@ -112,24 +120,24 @@ export class DivisionsTableComponent implements OnInit {
 	 *
 	 * @param evt The action selected from the context menu.
 	 */
-	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseDivision>): Promise<void> {
-		const data = evt.data as ResponseDivision;
+	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseRegion>): Promise<void> {
+		const data = evt.data as ResponseRegion;
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
-					data: {message: `Are you sure you want to delete division ${data.name} with id ${data.id}`, title: "Confirm Delete"}
+					data: {message: `Are you sure you want to delete region ${data.name} with id ${data.id}`, title: "Confirm Delete"}
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
-						this.api.deleteDivision(data.id).then(async () => this.divisions = this.api.getDivisions());
+						this.api.deleteRegion(data.id).then(async () => this.regions = this.api.getRegions());
 					}
 				});
 				break;
 			case "edit":
-				await this.router.navigate(["/core/division", data.id]);
+				await this.router.navigate(["/core/region", data.id]);
 				break;
-			case "viewRegions":
-				console.log("Regions not implemented");
+			case "viewPhysLocs":
+				console.log("Physical Locations not implemented");
 		}
 	}
 }
