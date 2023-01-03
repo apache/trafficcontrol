@@ -15,6 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 
+ARG GO_VERSION
+FROM golang:${GO_VERSION} AS get-go
 FROM debian:bullseye AS enroller-dependencies
 
 RUN apt-get update && \
@@ -24,13 +26,9 @@ RUN apt-get update && \
         wget && \
     apt-get clean
 
-COPY GO_VERSION /
-RUN go_version=$(cat /GO_VERSION) && \
-    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
-    tar -C /usr/local -xvzf go.tar.gz && \
-    ln -s /usr/local/go/bin/go /usr/bin/go && \
-    rm go.tar.gz
-ENV GOPATH=/go \
+COPY --from=get-go /usr/local/go /usr/local/go
+ENV PATH=/usr/local/go/bin:${PATH} \
+    GOPATH=/go \
     CGO_ENABLED=0
 
 FROM enroller-dependencies AS enroller-builder

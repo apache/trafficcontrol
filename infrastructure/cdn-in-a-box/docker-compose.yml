@@ -259,6 +259,8 @@ services:
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/enroller/Dockerfile
+      args:
+          - GO_VERSION=${GO_VERSION}
     domainname: infra.ciab.test
     depends_on:
       - dns

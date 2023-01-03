@@ -183,18 +183,15 @@ Try disabling SELinux or setting it to 'permissive'. SELinux hates letting conta
 
 Bring all components down, remove the `traffic_ops/ca` directory, and delete the volumes with `docker volume prune`. This will force the regeneration of the certificates.
 
-## Notes for Apple M1 Pro Configuration
+## Notes for macOS
 
-### Code edits in the cdn-in-a-box directory
+CDN in a Box should work, without modification, on any architecture that can run Docker. If it does not, that is a bug, please open a new issue for it.
 
-Re/installed docker from the command line to use `--user=[your username]` flag, and update the dockerfiles in the code for both enroller and traffic_ops in the cdn-in-a-box folders with the correct architecture for the M1. Link to install info for docker for [Install from command line] (https://docs.docker.com/desktop/install/mac-install/)  and use Install from command line located in the "Mac with Apple Silicon" tab. 
+Re/installed docker from the command line to use `--user=[your username]` flag. Link to install info for docker for [Install from command line] (https://docs.docker.com/desktop/install/mac-install/)  and use Install from command line located in the "Mac with Apple Silicon" tab.
 
-- At the postgresql install, update the cdn-in-a-box/traffic_ops Dockerfile to `-aarch64/pgdg-redhat-repo-latest.noarch.rpm` right after `EL-${RHEL_VERSION%%.*}`.
-- At the first `FROM` of the cdn-in-a-box/enroller Dockerfile, append `--platform=linux/amd64`.
- 
 Build and run of it:
 In the trafficcontrol/infrastructure/cdn-in-a-box directory run the following:
- 
+
 - `make build-builders` ~~> this will create all the rpms and copy each rpms into its own folder in the cdn-in-a-box project. This will also create the dist folder under trafficcontrol folder structure even if you deleted yours.
 
 - `docker-compose up` ~~> this will create docker images, and if rebuild is needed, run `docker-compose up --build`.
