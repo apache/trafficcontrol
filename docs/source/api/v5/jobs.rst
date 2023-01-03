@@ -67,17 +67,13 @@ Request Structure
 
 Response Structure
 ------------------
-:assetUrl:        A regular expression - matching URLs will be operated upon according to ``keyword``
-:createdBy:       The username of the user who initiated the job
-:deliveryService: The :ref:`ds-xmlid` of the :term:`Delivery Service` on which this job operates
-:id:              An integral, unique identifier for this job
-:keyword:         A keyword that represents the operation being performed by the job:
-
-	PURGE
-		This job will prevent caching of URLs matching the ``assetUrl`` until it is removed (or its Time to Live expires)
-
-:parameters: A string containing key/value pairs representing parameters associated with the job - currently only uses Time to Live e.g. ``"TTL:48h"``
-:startTime:  The date and time at which the job began, in a non-standard format
+:id:               The :ref:`job-id`
+:assetUrl:         The :ref:`job-asset-url`
+:createdBy:        The :ref:`job-created-by`
+:deliveryService:  The :ref:`job-ds`
+:ttlHours:         The :ref:`job-ttl`
+:invalidationType: The :ref:`job-invalidation-type`
+:startTime:        The :ref:`job-start-time`
 
 .. code-block:: http
 	:caption: Response Example
