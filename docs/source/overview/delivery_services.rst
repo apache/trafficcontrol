@@ -1091,8 +1091,8 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 	| parent_retry                            | `parent_retry`_                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
 	|                                         |                                                            | "unavailable server retries", or both. (deprecated)                                 |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| simple_server_retry_responses           | `simple_server_retry_responses`_                           | Defines HTTP response codes for an :term:`origin server                             |
-	|                                         |                                                            | that necessitate a "simple retry".                                                  |
+	| simple_server_retry_responses           | `simple_server_retry_responses`_                           | Defines HTTP response codes for an :term:`origin server` that necessitate a "simple |
+	|                                         |                                                            | retry".                                                                             |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| max_simple_retries                      | `max_simple_retries`_                                      | Sets a strict limit on the number of "simple retries" allowed before giving up      |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
