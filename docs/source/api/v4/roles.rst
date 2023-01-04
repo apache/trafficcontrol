@@ -66,7 +66,6 @@ Response Structure
 ------------------
 :permissions:  An array of the names of the Permissions given to this :term:`Role`
 :description:  A description of the :term:`Role`
-:id:           The integral, unique identifier for this :term:`Role`
 :name:         The name of the :term:`Role`
 
 .. code-block:: http
@@ -171,7 +170,6 @@ Response Structure
 	.. tip:: This can be ``null`` *or* empty, depending on whether it was present in the request body, or merely empty. Obviously, it can also be a populated array.
 
 :description: A description of the :term:`Role`
-:id:          The integral, unique identifier for this :term:`Role`
 :name:        The name of the :term:`Role`
 
 .. code-block:: http
