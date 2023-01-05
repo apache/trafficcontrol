@@ -16,7 +16,7 @@
 # under the License.
 
 ARG GO_VERSION
-FROM golang:${GO_VERSION} AS get-go
+FROM golang:${GO_VERSION}-alpine AS get-go
 FROM alpine:3.13 AS integration-builder
 
 COPY --from=get-go /usr/local/go /usr/local/go
