@@ -24,14 +24,12 @@ FROM rockylinux:8
 MAINTAINER dev@trafficcontrol.apache.org
 
 RUN dnf install -y initscripts epel-release jq git
-COPY GO_VERSION .
-RUN go_version=$(cat /GO_VERSION) && \
-	curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
-	tar -C /usr/local -xzf go.tar.gz && \
-	ln -s /usr/local/go/bin/go /usr/bin/go && \
-	rm go.tar.gz GO_VERSION
 
-ENV GOPATH=/go \
+ARG GO_VERSION
+FROM golang:${GO_VERSION} AS get-go
+COPY --from=get-go /usr/local/go /usr/local/go
+ENV PATH=/usr/local/go/bin:${PATH} \
+    GOPATH=/go \
     CGO_ENABLED=0
 
 COPY traffic_monitor/tests/_integration/ /tm/

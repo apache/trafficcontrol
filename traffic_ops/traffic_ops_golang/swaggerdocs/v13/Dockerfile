@@ -26,13 +26,11 @@ RUN apt-get update && \
         wget && \
     apt-get clean
 
-COPY GO_VERSION /
-RUN go_version=$(cat /GO_VERSION) && \
-    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
-    tar -C /usr/local -xvzf go.tar.gz && \
-    ln -s /usr/local/go/bin/go /usr/bin/go && \
-    rm go.tar.gz
-ENV GOPATH=/go
+ARG GO_VERSION
+FROM golang:${GO_VERSION} AS get-go
+COPY --from=get-go /usr/local/go /usr/local/go
+ENV PATH=/usr/local/go/bin:${PATH} \
+    GOPATH=/go
 
 
 COPY traffic_ops/traffic_ops_golang/swaggerdocs/v13/swaggerspec .
