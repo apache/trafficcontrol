@@ -24,6 +24,7 @@ import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
+import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/cache-group-details.component";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
 import { DivisionDetailComponent } from "./cache-groups/divisions/detail/division-detail.component";
 import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
@@ -98,7 +99,8 @@ export const ROUTES: Routes = [
 		DivisionsTableComponent,
 		DivisionDetailComponent,
 		RegionsTableComponent,
-		RegionDetailComponent
+		RegionDetailComponent,
+		CacheGroupDetailsComponent
 	],
 	exports: [],
 	imports: [
