@@ -20,18 +20,17 @@ import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { RouterModule, type Routes } from "@angular/router";
 
-import { DivisionDetailComponent } from "src/app/core/cache-groups/divisions/detail/division-detail.component";
-import { DivisionsTableComponent } from "src/app/core/cache-groups/divisions/table/divisions-table.component";
-import { RegionDetailComponent } from "src/app/core/cache-groups/regions/detail/region-detail.component";
-import { RegionsTableComponent } from "src/app/core/cache-groups/regions/table/regions-table.component";
-import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
-
 import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { DivisionDetailComponent } from "./cache-groups/divisions/detail/division-detail.component";
+import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
+import { RegionDetailComponent } from "./cache-groups/regions/detail/region-detail.component";
+import { RegionsTableComponent } from "./cache-groups/regions/table/regions-table.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
+import { LastDaysComponent } from "./change-logs/last-days/last-days.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
 import { UpdatePasswordDialogComponent } from "./currentuser/update-password-dialog/update-password-dialog.component";
 import { DashboardComponent } from "./dashboard/dashboard.component";
