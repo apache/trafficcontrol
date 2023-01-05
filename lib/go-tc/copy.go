@@ -19,94 +19,35 @@ package tc
  * under the License.
  */
 
-// copyStringIfNotNil makes a deep copy of s - unless it's nil, in which case it
-// just returns nil.
-func copyStringIfNotNil(s *string) *string {
-	if s == nil {
-		return nil
+func coalesce[T any](p *T, def T) T {
+	if p == nil {
+		return def
 	}
-	ret := new(string)
-	*ret = *s
+	return *p
+}
+
+// coalesceToDefault coalesces a pointer to the type to which it points. It
+// returns the "zero value" of its input's pointed-to type when the input is
+// nil. This is equivalent to:
+//
+//	var x T
+//	result := coalesceToDefault(p, x)
+//
+// ... but can be done on one line without knowing the type of `p`.
+func coalesceToDefault[T any](p *T) T {
+	var ret T
+	if p != nil {
+		ret = *p
+	}
 	return ret
 }
 
-// coalesceString coalesces a possibly nil pointer to a string to a concrete
-// string, using the provided default value in case `nil` is encountered.
-//
-// This can be thought of as roughly the inverse of
-// github.com/apache/trafficcontrol/lib/go-util.StrPtr.
-func coalesceString(s *string, def string) string {
-	if s == nil {
-		return def
-	}
-	return *s
-}
-
-// copyIntIfNotNil makes a deep copy of i - unless it's nil, in which case it
-// just returns nil.
-func copyIntIfNotNil(i *int) *int {
-	if i == nil {
+// copyIfNotNil makes a deep copy of p - unless it's nil, in which case it just
+// returns nil.
+func copyIfNotNil[T any](p *T) *T {
+	if p == nil {
 		return nil
 	}
-	ret := new(int)
-	*ret = *i
-	return ret
-}
-
-// coalesceInt coalesces a possibly nil pointer to an integer to a concrete
-// integer, using the provided default value in case `nil` is encountered.
-//
-// This can be thought of as roughly the inverse of
-// github.com/apache/trafficcontrol/lib/go-util.IntPtr.
-func coalesceInt(i *int, def int) int {
-	if i == nil {
-		return def
-	}
-	return *i
-}
-
-// copyBoolIfNotNil makes a deep copy of b - unless it's nil, in which case it
-// just returns nil.
-func copyBoolIfNotNil(b *bool) *bool {
-	if b == nil {
-		return nil
-	}
-	ret := new(bool)
-	*ret = *b
-	return ret
-}
-
-// coalesceBool coalesces a possibly nil pointer to a boolean to a concrete
-// boolean, using the provided default value in case `nil` is encountered.
-//
-// This can be thought of as roughly the inverse of
-// github.com/apache/trafficcontrol/lib/go-util.BoolPtr.
-func coalesceBool(b *bool, def bool) bool {
-	if b == nil {
-		return def
-	}
-	return *b
-}
-
-// copyFloatIfNotNil makes a deep copy of f - unless it's nil, in which case it
-// just returns nil.
-func copyFloatIfNotNil(f *float64) *float64 {
-	if f == nil {
-		return nil
-	}
-	ret := new(float64)
-	*ret = *f
-	return ret
-}
-
-// coalesceFloat coalesces a possibly nil pointer to a float64 to a concrete
-// float64, using the provided default value in case `nil` is encountered.
-//
-// This can be thought of as roughly the inverse of
-// github.com/apache/trafficcontrol/lib/go-util.FloatPtr.
-func coalesceFloat(f *float64, def float64) float64 {
-	if f == nil {
-		return def
-	}
-	return *f
+	q := *p
+	return &q
 }
