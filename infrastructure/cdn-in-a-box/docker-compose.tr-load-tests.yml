@@ -31,6 +31,8 @@ services:
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/traffic_router_load_test/Dockerfile
+      args:
+          - GO_VERSION=${GO_VERSION}
     hostname: load-tests
     env_file:
     - variables.env
