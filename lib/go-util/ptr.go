@@ -1,3 +1,7 @@
+// Package util contains various miscellaneous utilities that are helpful
+// throughout components and aren't necessarily related to ATC data structures.
+package util
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,52 +21,95 @@
  * under the License.
  */
 
-package util
-
 import "time"
 
+// Ptr returns a pointer to the given value.
 func Ptr[T any](v T) *T {
 	return &v
 }
 
+// StrPtr returns a pointer to the given string.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func StrPtr(str string) *string {
-	return &str
+	return Ptr(str)
 }
 
+// IntPtr returns a pointer to the given integer.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func IntPtr(i int) *int {
-	return &i
+	return Ptr(i)
 }
 
+// UIntPtr returns a pointer to the given unsigned integer.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func UIntPtr(u uint) *uint {
-	return &u
+	return Ptr(u)
 }
 
+// UInt64Ptr returns a pointer to the given 64-bit unsigned integer.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func UInt64Ptr(u uint64) *uint64 {
-	return &u
+	return Ptr(u)
 }
 
+//
+// Deprecated. This is just a common mis-casing of UInt64Ptr. These should not
+// both exist, and this one - being the less proper casing - is subject to
+// removal without warning, as its very existence is likely accidental.
+// Uint64Ptr returns a pointer to the given 64-bit unsigned integer.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func Uint64Ptr(u uint64) *uint64 {
-	return &u
+	return Ptr(u)
 }
 
+// Int64Ptr returns a pointer to the given 64-bit integer.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func Int64Ptr(i int64) *int64 {
-	return &i
+	return Ptr(i)
 }
 
+// BoolPtr returns a pointer to the given boolean.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func BoolPtr(b bool) *bool {
-	return &b
+	return Ptr(b)
 }
 
+// FloatPtr returns a pointer to the given 64-bit floating-point number.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func FloatPtr(f float64) *float64 {
-	return &f
+	return Ptr(f)
 }
 
-func InterfacePtr(i interface{}) *interface{} {
-	return &i
+// InterfacePtr returns a pointer to the given empty interface.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
+func InterfacePtr(i any) *any {
+	return Ptr(i)
 }
 
+// TimePtr returns a pointer to the given time.Time value.
+//
+// Deprecated. This is exactly equivalent to just using Ptr, so duplicated
+// functionality like this function will likely be removed before too long.
 func TimePtr(t time.Time) *time.Time {
-	return &t
+	return Ptr(t)
 }
 
 // Coalesce coalesces the given pointer to a concrete value. This is basically

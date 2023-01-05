@@ -113,8 +113,7 @@ func TestCoalesce(t *testing.T) {
 	if copiedI != 9000 {
 		t.Errorf("Coalescing nil should've given the default value, got: %d", copiedI)
 	}
-	s := new(string)
-	*s = "9001"
+	s := Ptr("9001")
 	copiedS := Coalesce(s, "9000")
 	if copiedS != "9001" {
 		t.Errorf("Coalescing non-nil should've given %s, got: %s", *s, copiedS)
@@ -128,8 +127,7 @@ func TestCoalesceToDefault(t *testing.T) {
 	if copiedI != intDefault {
 		t.Errorf("Coalescing nil should've given the default value (%d), got: %d", intDefault, copiedI)
 	}
-	s := new(string)
-	*s = "9001"
+	s := Ptr("9001")
 	copiedS := CoalesceToDefault(s)
 	if copiedS != "9001" {
 		t.Errorf("Coalescing non-nil should've given %s, got: %s", *s, copiedS)
