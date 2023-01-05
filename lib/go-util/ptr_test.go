@@ -22,6 +22,7 @@ package util
 import (
 	"fmt"
 	"testing"
+	"time"
 )
 
 func ExamplePtr() {
@@ -82,6 +83,12 @@ func ExampleInterfacePtr() {
 	ptr := InterfacePtr(1 + 2i)
 	fmt.Println(*ptr)
 	// Output: (1+2i)
+}
+
+func ExampleTimePtr() {
+	ptr := TimePtr(time.Time{})
+	fmt.Println(*ptr)
+	// Output: 0001-01-01 00:00:00 +0000 UTC
 }
 
 func TestCopyIfNotNil(t *testing.T) {
