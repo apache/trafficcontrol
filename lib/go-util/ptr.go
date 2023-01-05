@@ -60,11 +60,11 @@ func UInt64Ptr(u uint64) *uint64 {
 	return Ptr(u)
 }
 
+// Uint64Ptr returns a pointer to the given 64-bit unsigned integer.
 //
 // Deprecated. This is just a common mis-casing of UInt64Ptr. These should not
 // both exist, and this one - being the less proper casing - is subject to
 // removal without warning, as its very existence is likely accidental.
-// Uint64Ptr returns a pointer to the given 64-bit unsigned integer.
 //
 // Deprecated. This is exactly equivalent to just using Ptr, so duplicated
 // functionality like this function will likely be removed before too long.
