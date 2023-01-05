@@ -13,9 +13,13 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { RequestDivision, ResponseDivision, RequestRegion, ResponseRegion } from "trafficops-types";
-
-import type { CacheGroup } from "src/app/models";
+import type {
+	RequestDivision,
+	ResponseDivision,
+	RequestRegion,
+	ResponseRegion,
+	ResponseCacheGroup,
+} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -24,17 +28,33 @@ import { APIService } from "./base-api.service";
  */
 @Injectable()
 export class CacheGroupService extends APIService {
-	public async getCacheGroups(idOrName: number | string): Promise<CacheGroup>;
-	public async getCacheGroups(): Promise<Array<CacheGroup>>;
+
 	/**
-	 * Gets one or all CDNs from Traffic Ops
+	 * Gets a single Cache Group from Traffic Ops.
 	 *
-	 * @param idOrName Optionally either the name or integral, unique identifier of a single Cache Group to be returned.
-	 * @returns Either an Array of CacheGroup objects, or a single CacheGroup, depending on whether
-	 * `idOrName` was 	passed.
-	 * @throws {Error} In the event that `idOrName` is passed but does not match any CacheGroup.
+	 * @param idOrName Either the name or integral, unique identifier of the
+	 * single Cache Group to be returned.
+	 * @returns The Cache Group identified by `idOrName`.
+	 * @throws {Error} When no matching Cache Group is found in Traffic Ops.
 	 */
-	public async getCacheGroups(idOrName?: number | string): Promise<Array<CacheGroup> | CacheGroup> {
+	public async getCacheGroups(idOrName: number | string): Promise<ResponseCacheGroup>;
+	/**
+	 * Gets Cache Groups from Traffic Ops.
+	 *
+	 * @returns All requested Cache Groups.
+	 */
+	public async getCacheGroups(): Promise<Array<ResponseCacheGroup>>;
+	/**
+	 * Gets one or all Cache Groups from Traffic Ops
+	 *
+	 * @param idOrName Optionally either the name or integral, unique identifier
+	 * of a single Cache Group to be returned.
+	 * @returns Either an Array of Cache Group objects, or a single Cache Group,
+	 * depending on whether `idOrName` was 	passed.
+	 * @throws {Error} In the event that `idOrName` is passed but does not match
+	 * any Cache Group.
+	 */
+	public async getCacheGroups(idOrName?: number | string): Promise<Array<ResponseCacheGroup> | ResponseCacheGroup> {
 		const path = "cachegroups";
 		if (idOrName !== undefined) {
 			let params;
@@ -45,48 +65,17 @@ export class CacheGroupService extends APIService {
 				case "number":
 					params = {id: String(idOrName)};
 			}
-			return this.get<[CacheGroup]>(path, undefined, params).toPromise().then(
-				r => {
-					const cg = r[0];
-					if (cg.id !== idOrName) {
-						throw new Error(`Traffic Ops returned no match for ID ${idOrName}`);
-					}
-					//  lastUpdated comes in as a string
-					cg.lastUpdated = cg.lastUpdated ? new Date((cg.lastUpdated as unknown as string).replace("+00", "Z")) : undefined;
-					return cg;
-				}
-			).catch(
-				e => {
-					console.error("Failed to get Cache Group with identifier", idOrName, ":", e);
-					return {
-						fallbackToClosest: false,
-						fallbacks: [],
-						latitude: 0,
-						localizationMethods: [],
-						longitude: 0,
-						name: "",
-						parentCacheGroupID: -1,
-						parentCacheGroupName: "",
-						secondaryParentCacheGroupID: -1,
-						secondaryParentCacheGroupName: "",
-						shortName: "",
-						typeId: -1,
-						typeName: ""
-					};
-				}
-			);
-		}
-		return this.get<Array<CacheGroup>>(path).toPromise().then(r => r.map(
-			cg => {
-				if (cg.lastUpdated) {
-					cg.lastUpdated = new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"));
-				}
-				return cg;
+			const resp = await this.get<[ResponseCacheGroup]>(path, undefined, params).toPromise();
+			if (resp.length !== 1) {
+				throw new Error(`Traffic Ops returned wrong number of results for Cache Group identifier: ${params}`);
 			}
-		)).catch(
-			e => {
-				console.error("Failed to get Cache Groups:", e);
-				return [];
+			const cg = resp[0];
+			//  lastUpdated comes in as a string
+			return {...cg, lastUpdated: new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"))};
+		}
+		const r = await this.get<Array<ResponseCacheGroup>>(path).toPromise();
+		return r.map(cg => ({...cg, lastUpdated: new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"))}));
+	}
 			}
 		);
 	}
