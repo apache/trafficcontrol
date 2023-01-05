@@ -19,7 +19,10 @@ package util
  * under the License.
  */
 
-import "fmt"
+import (
+	"fmt"
+	"testing"
+)
 
 func ExamplePtr() {
 	ptr := Ptr("testquest")
@@ -79,4 +82,56 @@ func ExampleInterfacePtr() {
 	ptr := InterfacePtr(1 + 2i)
 	fmt.Println(*ptr)
 	// Output: (1+2i)
+}
+
+func TestCopyIfNotNil(t *testing.T) {
+	var i *int
+	copiedI := CopyIfNotNil(i)
+	if copiedI != nil {
+		t.Errorf("Copying nil should've given nil, got: %d", *copiedI)
+	}
+
+	s := new(string)
+	*s = "9000"
+	copiedS := CopyIfNotNil(s)
+	if copiedS == nil {
+		t.Errorf("Copied pointer to %s was nil", *s)
+	} else {
+		if *copiedS != *s {
+			t.Errorf("Incorrectly copied pointer; expected: %s, got: %s", *s, *copiedS)
+		}
+		*s = "9001"
+		if *copiedS == *s {
+			t.Error("Expected copy to be 'deep' but modifying the original changed the copy")
+		}
+	}
+}
+
+func TestCoalesce(t *testing.T) {
+	var i *int
+	copiedI := Coalesce(i, 9000)
+	if copiedI != 9000 {
+		t.Errorf("Coalescing nil should've given the default value, got: %d", copiedI)
+	}
+	s := new(string)
+	*s = "9001"
+	copiedS := Coalesce(s, "9000")
+	if copiedS != "9001" {
+		t.Errorf("Coalescing non-nil should've given %s, got: %s", *s, copiedS)
+	}
+}
+
+func TestCoalesceToDefault(t *testing.T) {
+	var i *int
+	copiedI := CoalesceToDefault(i)
+	var intDefault int
+	if copiedI != intDefault {
+		t.Errorf("Coalescing nil should've given the default value (%d), got: %d", intDefault, copiedI)
+	}
+	s := new(string)
+	*s = "9001"
+	copiedS := CoalesceToDefault(s)
+	if copiedS != "9001" {
+		t.Errorf("Coalescing non-nil should've given %s, got: %s", *s, copiedS)
+	}
 }

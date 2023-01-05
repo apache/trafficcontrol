@@ -444,15 +444,15 @@ type DeliveryServiceRequestNullable struct {
 // Note that this function does a shallow copy of the requested and original Delivery Service structures.
 func (dsr DeliveryServiceRequestV41) Downgrade() DeliveryServiceRequestV40 {
 	var dsrV40 DeliveryServiceRequestV40
-	dsrV40.Assignee = CopyIfNotNil(dsr.Assignee)
-	dsrV40.AssigneeID = CopyIfNotNil(dsr.AssigneeID)
+	dsrV40.Assignee = util.CopyIfNotNil(dsr.Assignee)
+	dsrV40.AssigneeID = util.CopyIfNotNil(dsr.AssigneeID)
 	dsrV40.Author = dsr.Author
-	dsrV40.AuthorID = CopyIfNotNil(dsr.AuthorID)
+	dsrV40.AuthorID = util.CopyIfNotNil(dsr.AuthorID)
 	dsrV40.ChangeType = dsr.ChangeType
 	dsrV40.CreatedAt = dsr.CreatedAt
-	dsrV40.ID = CopyIfNotNil(dsr.ID)
+	dsrV40.ID = util.CopyIfNotNil(dsr.ID)
 	dsrV40.LastEditedBy = dsr.LastEditedBy
-	dsrV40.LastEditedByID = CopyIfNotNil(dsr.LastEditedByID)
+	dsrV40.LastEditedByID = util.CopyIfNotNil(dsr.LastEditedByID)
 	dsrV40.LastUpdated = dsr.LastUpdated
 	if dsr.Original != nil {
 		dsrV40.Original = new(DeliveryServiceV40)
@@ -471,15 +471,15 @@ func (dsr DeliveryServiceRequestV41) Downgrade() DeliveryServiceRequestV40 {
 // Note that this function does a shallow copy of the requested and original Delivery Service structures.
 func (dsrV40 DeliveryServiceRequestV40) Upgrade() DeliveryServiceRequestV41 {
 	var dsrV4 DeliveryServiceRequestV41
-	dsrV4.Assignee = CopyIfNotNil(dsrV40.Assignee)
-	dsrV4.AssigneeID = CopyIfNotNil(dsrV40.AssigneeID)
+	dsrV4.Assignee = util.CopyIfNotNil(dsrV40.Assignee)
+	dsrV4.AssigneeID = util.CopyIfNotNil(dsrV40.AssigneeID)
 	dsrV4.Author = dsrV40.Author
-	dsrV4.AuthorID = CopyIfNotNil(dsrV40.AuthorID)
+	dsrV4.AuthorID = util.CopyIfNotNil(dsrV40.AuthorID)
 	dsrV4.ChangeType = dsrV40.ChangeType
 	dsrV4.CreatedAt = dsrV40.CreatedAt
-	dsrV4.ID = CopyIfNotNil(dsrV40.ID)
+	dsrV4.ID = util.CopyIfNotNil(dsrV40.ID)
 	dsrV4.LastEditedBy = dsrV40.LastEditedBy
-	dsrV4.LastEditedByID = CopyIfNotNil(dsrV40.LastEditedByID)
+	dsrV4.LastEditedByID = util.CopyIfNotNil(dsrV40.LastEditedByID)
 	dsrV4.LastUpdated = dsrV40.LastUpdated
 	if dsrV40.Original != nil {
 		dsrV4.Original = new(DeliveryServiceV41)
@@ -1094,15 +1094,15 @@ type DeliveryServiceRequestV5 = DeliveryServiceRequestV50
 // also deep).
 func (dsr DeliveryServiceRequestV5) Downgrade() DeliveryServiceRequestV4 {
 	downgraded := DeliveryServiceRequestV4{
-		Assignee:       CopyIfNotNil(dsr.Assignee),
-		AssigneeID:     CopyIfNotNil(dsr.AssigneeID),
+		Assignee:       util.CopyIfNotNil(dsr.Assignee),
+		AssigneeID:     util.CopyIfNotNil(dsr.AssigneeID),
 		Author:         dsr.Author,
-		AuthorID:       CopyIfNotNil(dsr.AuthorID),
+		AuthorID:       util.CopyIfNotNil(dsr.AuthorID),
 		ChangeType:     dsr.ChangeType,
 		CreatedAt:      dsr.CreatedAt,
-		ID:             CopyIfNotNil(dsr.ID),
+		ID:             util.CopyIfNotNil(dsr.ID),
 		LastEditedBy:   dsr.LastEditedBy,
-		LastEditedByID: CopyIfNotNil(dsr.LastEditedByID),
+		LastEditedByID: util.CopyIfNotNil(dsr.LastEditedByID),
 		LastUpdated:    dsr.LastUpdated,
 		Status:         dsr.Status,
 		XMLID:          dsr.XMLID,
@@ -1129,15 +1129,15 @@ func (dsr DeliveryServiceRequestV5) Downgrade() DeliveryServiceRequestV4 {
 // also deep).
 func (dsr DeliveryServiceRequestV4) Upgrade() DeliveryServiceRequestV5 {
 	upgraded := DeliveryServiceRequestV5{
-		Assignee:       CopyIfNotNil(dsr.Assignee),
-		AssigneeID:     CopyIfNotNil(dsr.AssigneeID),
+		Assignee:       util.CopyIfNotNil(dsr.Assignee),
+		AssigneeID:     util.CopyIfNotNil(dsr.AssigneeID),
 		Author:         dsr.Author,
-		AuthorID:       CopyIfNotNil(dsr.AuthorID),
+		AuthorID:       util.CopyIfNotNil(dsr.AuthorID),
 		ChangeType:     dsr.ChangeType,
 		CreatedAt:      dsr.CreatedAt,
-		ID:             CopyIfNotNil(dsr.ID),
+		ID:             util.CopyIfNotNil(dsr.ID),
 		LastEditedBy:   dsr.LastEditedBy,
-		LastEditedByID: CopyIfNotNil(dsr.LastEditedByID),
+		LastEditedByID: util.CopyIfNotNil(dsr.LastEditedByID),
 		LastUpdated:    dsr.LastUpdated,
 		Status:         dsr.Status,
 		XMLID:          dsr.XMLID,

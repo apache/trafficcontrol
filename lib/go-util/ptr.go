@@ -64,3 +64,39 @@ func InterfacePtr(i interface{}) *interface{} {
 func TimePtr(t time.Time) *time.Time {
 	return &t
 }
+
+// Coalesce coalesces the given pointer to a concrete value. This is basically
+// the inverse operation of Ptr - it safely dereferences its input. If the
+// pointer is nil, def is returned as a default value.
+func Coalesce[T any](p *T, def T) T {
+	if p == nil {
+		return def
+	}
+	return *p
+}
+
+// CoalesceToDefault coalesces a pointer to the type to which it points. It
+// returns the "zero value" of its input's pointed-to type when the input is
+// nil. This is equivalent to:
+//
+//	var x T
+//	result := CoalesceToDefault(p, x)
+//
+// ... but can be done on one line without knowing the type of `p`.
+func CoalesceToDefault[T any](p *T) T {
+	var ret T
+	if p != nil {
+		ret = *p
+	}
+	return ret
+}
+
+// CopyIfNotNil makes a deep copy of p - unless it's nil, in which case it just
+// returns nil.
+func CopyIfNotNil[T any](p *T) *T {
+	if p == nil {
+		return nil
+	}
+	q := *p
+	return &q
+}
