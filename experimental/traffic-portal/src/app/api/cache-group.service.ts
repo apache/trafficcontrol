@@ -19,6 +19,7 @@ import type {
 	RequestRegion,
 	ResponseRegion,
 	ResponseCacheGroup,
+	RequestCacheGroup,
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
@@ -76,8 +77,66 @@ export class CacheGroupService extends APIService {
 		const r = await this.get<Array<ResponseCacheGroup>>(path).toPromise();
 		return r.map(cg => ({...cg, lastUpdated: new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"))}));
 	}
+
+	/**
+	 * Deletes a Cache Group.
+	 *
+	 * @param cacheGroup The Cache Group to be deleted, or just its ID.
+	 */
+	public async deleteCacheGroup(cacheGroup: ResponseCacheGroup | number): Promise<void> {
+		const id = typeof(cacheGroup) === "number" ? cacheGroup : cacheGroup.id;
+		return this.delete(`cachegroups/${id}`).toPromise();
+	}
+
+	/**
+	 * Creates a new Cache Group.
+	 *
+	 * @param cacheGroup The Cache Group to create.
+	 */
+	public async createCacheGroup(cacheGroup: RequestCacheGroup): Promise<ResponseCacheGroup> {
+		return this.post<ResponseCacheGroup>("cachegroups", cacheGroup).toPromise();
+	}
+
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param id The if of the Cache Group being updated.
+	 * @param cacheGroup The new definition of the Cache Group.
+	 */
+	public async updateCacheGroup(id: number, cacheGroup: RequestCacheGroup): Promise<ResponseCacheGroup>;
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param cacheGroup The full new definition of the Cache Group being
+	 * updated.
+	 */
+	public async updateCacheGroup(cacheGroup: ResponseCacheGroup): Promise<ResponseCacheGroup>;
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param cacheGroupOrID The full new definition of the Cache Group being
+	 * updated, or just its ID.
+	 * @param payload The new definition of the Cache Group. This is required if
+	 * `cacheGroupOrID` is an ID, and ignored otherwise.
+	 */
+	public async updateCacheGroup(cacheGroupOrID: ResponseCacheGroup | number, payload?: RequestCacheGroup): Promise<ResponseCacheGroup> {
+		let id;
+		let body;
+		if (typeof(cacheGroupOrID) === "number") {
+			if (!payload) {
+				throw new TypeError("invalid call signature - missing request payload");
 			}
-		);
+			body = payload;
+			id = cacheGroupOrID;
+		} else {
+			body = cacheGroupOrID;
+			({id} = cacheGroupOrID);
+		}
+
+		return this.put<ResponseCacheGroup>(`cachegroups/${id}`, body).toPromise();
 	}
 
 	public async getDivisions(): Promise<Array<ResponseDivision>>;
