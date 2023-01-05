@@ -23,14 +23,14 @@ import "testing"
 
 func TestCopyIfNotNil(t *testing.T) {
 	var i *int
-	copiedI := copyIfNotNil(i)
+	copiedI := CopyIfNotNil(i)
 	if copiedI != nil {
 		t.Errorf("Copying nil should've given nil, got: %d", *copiedI)
 	}
 
 	s := new(string)
 	*s = "9000"
-	copiedS := copyIfNotNil(s)
+	copiedS := CopyIfNotNil(s)
 	if copiedS == nil {
 		t.Errorf("Copied pointer to %s was nil", *s)
 	} else {
@@ -46,13 +46,13 @@ func TestCopyIfNotNil(t *testing.T) {
 
 func TestCoalesce(t *testing.T) {
 	var i *int
-	copiedI := coalesce(i, 9000)
+	copiedI := Coalesce(i, 9000)
 	if copiedI != 9000 {
 		t.Errorf("Coalescing nil should've given the default value, got: %d", copiedI)
 	}
 	s := new(string)
 	*s = "9001"
-	copiedS := coalesce(s, "9000")
+	copiedS := Coalesce(s, "9000")
 	if copiedS != "9001" {
 		t.Errorf("Coalescing non-nil should've given %s, got: %s", *s, copiedS)
 	}
