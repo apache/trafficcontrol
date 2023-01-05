@@ -12,9 +12,29 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import { RequestDivision, ResponseDivision, RequestRegion, ResponseRegion } from "trafficops-types";
+import { RequestDivision, ResponseDivision, RequestRegion, ResponseRegion, ResponseCacheGroup, RequestCacheGroup } from "trafficops-types";
 
-import type { CacheGroup } from "src/app/models";
+type ParentKeys = "parentCacheGroupId" | "parentCacheGroupName";
+type SecondaryParentKeys = "secondaryParentCacheGroupId" | "secondaryParentCacheGroupName";
+type AllParentageKeys = ParentKeys | SecondaryParentKeys;
+
+type Parentage = {
+	parentCacheGroupId: null,
+	parentCacheGroupName: null
+} | {
+	parentCacheGroupId: number,
+	parentCacheGroupName: string
+};
+
+type SecondaryParentage = {
+	secondaryParentCacheGroupId: null,
+	secondaryParentCacheGroupName: null
+} | {
+	secondaryParentCacheGroupId: number,
+	secondaryParentCacheGroupName: string
+};
+
+type AllParentage = Parentage & SecondaryParentage;
 
 /**
  * CDNService expose API functionality relating to CDNs.
@@ -37,18 +57,19 @@ export class CacheGroupService {
 		name: "Reg1"
 	}
 	];
-	private readonly cacheGroups = [
+	private readonly cacheGroups: Array<ResponseCacheGroup> = [
 		{
 			fallbackToClosest: true,
 			fallbacks: [],
 			id: 1,
+			lastUpdated: new Date(),
 			latitude: 0,
 			localizationMethods: [],
 			longitude: 0,
 			name: "Mid",
-			parentCacheGroupID: null,
+			parentCacheGroupId: null,
 			parentCacheGroupName: null,
-			secondaryParentCacheGroupID: null,
+			secondaryParentCacheGroupId: null,
 			secondaryParentCacheGroupName: null,
 			shortName: "Mid",
 			typeId: 1,
@@ -58,13 +79,14 @@ export class CacheGroupService {
 			fallbackToClosest: true,
 			fallbacks: [],
 			id: 2,
+			lastUpdated: new Date(),
 			latitude: 0,
 			localizationMethods: [],
 			longitude: 0,
 			name: "Edge",
-			parentCacheGroupID: 1,
+			parentCacheGroupId: 1,
 			parentCacheGroupName: "Mid",
-			secondaryParentCacheGroupID: null,
+			secondaryParentCacheGroupId: null,
 			secondaryParentCacheGroupName: null,
 			shortName: "Edge",
 			typeId: 2,
@@ -74,13 +96,14 @@ export class CacheGroupService {
 			fallbackToClosest: true,
 			fallbacks: [],
 			id: 3,
+			lastUpdated: new Date(),
 			latitude: 0,
 			localizationMethods: [],
 			longitude: 0,
 			name: "Origin",
-			parentCacheGroupID: null,
+			parentCacheGroupId: null,
 			parentCacheGroupName: null,
-			secondaryParentCacheGroupID: null,
+			secondaryParentCacheGroupId: null,
 			secondaryParentCacheGroupName: null,
 			shortName: "Origin",
 			typeId: 3,
@@ -90,13 +113,14 @@ export class CacheGroupService {
 			fallbackToClosest: true,
 			fallbacks: [],
 			id: 4,
+			lastUpdated: new Date(),
 			latitude: 0,
 			localizationMethods: [],
 			longitude: 0,
 			name: "Other",
-			parentCacheGroupID: null,
+			parentCacheGroupId: null,
 			parentCacheGroupName: null,
-			secondaryParentCacheGroupID: null,
+			secondaryParentCacheGroupId: null,
 			secondaryParentCacheGroupName: null,
 			shortName: "Other",
 			typeId: 4,
@@ -104,8 +128,8 @@ export class CacheGroupService {
 		}
 	];
 
-	public async getCacheGroups(idOrName: number | string): Promise<CacheGroup>;
-	public async getCacheGroups(): Promise<Array<CacheGroup>>;
+	public async getCacheGroups(idOrName: number | string): Promise<ResponseCacheGroup>;
+	public async getCacheGroups(): Promise<Array<ResponseCacheGroup>>;
 	/**
 	 * Gets one or all CDNs from Traffic Ops
 	 *
@@ -114,7 +138,7 @@ export class CacheGroupService {
 	 * `idOrName` was 	passed.
 	 * @throws {Error} In the event that `idOrName` is passed but does not match any CacheGroup.
 	 */
-	public async getCacheGroups(idOrName?: number | string): Promise<Array<CacheGroup> | CacheGroup> {
+	public async getCacheGroups(idOrName?: number | string): Promise<Array<ResponseCacheGroup> | ResponseCacheGroup> {
 		if (idOrName !== undefined) {
 			let cacheGroup;
 			switch (typeof(idOrName)) {
@@ -130,6 +154,160 @@ export class CacheGroupService {
 			return cacheGroup;
 		}
 		return this.cacheGroups;
+	}
+
+	/**
+	 * Deletes a Cache Group.
+	 *
+	 * @param cacheGroup The Cache Group to be deleted, or just its ID.
+	 */
+	public async deleteCacheGroup(cacheGroup: ResponseCacheGroup | number): Promise<void> {
+		const id = typeof(cacheGroup) === "number" ? cacheGroup : cacheGroup.id;
+		const idx = this.cacheGroups.findIndex(cg => cg.id === id);
+		if (idx < 0) {
+			throw new Error(`no such Cache Group: #${id}`);
+		}
+		this.cacheGroups.splice(idx, 1);
+	}
+
+	/**
+	 * Gets the names of parents for a Cache Group from their IDs.
+	 *
+	 * @param parentID The ID of a parent Cache Group (or not).
+	 * @param secondaryParentID The ID of a "secondary" parent Cache Group (or
+	 * not).
+	 * @returns The parentage portion of a Cache Group.
+	 */
+	private getParents(parentID: number | null | undefined, secondaryParentID: number | null | undefined): AllParentage {
+		let parent: Parentage = {
+			parentCacheGroupId: null,
+			parentCacheGroupName: null
+		};
+		if (typeof(parentID) === "number") {
+			const p = this.cacheGroups.find(cg => cg.id === parentID);
+			if (!p) {
+				throw new Error("no such parent Cache Group: #${parentID}")
+			}
+			parent = {
+				parentCacheGroupId: p.id,
+				parentCacheGroupName: p.name
+			};
+		}
+
+		let secondaryParent: SecondaryParentage = {
+			secondaryParentCacheGroupId: null,
+			secondaryParentCacheGroupName: null
+		};
+		if (typeof(secondaryParentID) === "number") {
+			const p = this.cacheGroups.find(cg => cg.id === secondaryParentID);
+			if (!p) {
+				throw new Error("no such secondary parent Cache Group: #${secondaryParentID}")
+			}
+			secondaryParent = {
+				secondaryParentCacheGroupId: p.id,
+				secondaryParentCacheGroupName: p.name
+			};
+		}
+
+		return {
+			...parent,
+			...secondaryParent
+		};
+	}
+
+	/**
+	 * Creates a new Cache Group.
+	 *
+	 * @param cacheGroup The Cache Group to create.
+	 */
+	public async createCacheGroup(cacheGroup: RequestCacheGroup): Promise<ResponseCacheGroup> {
+		const cg = {
+			...cacheGroup,
+			...this.getParents(cacheGroup.parentCacheGroupId, cacheGroup.secondaryParentCacheGroupId),
+			fallbackToClosest: cacheGroup.fallbackToClosest ?? false,
+			fallbacks: cacheGroup.fallbacks ?? [],
+			id: ++this.lastID,
+			lastUpdated: new Date(),
+			latitude: cacheGroup.latitude ?? 0,
+			localizationMethods: cacheGroup.localizationMethods ?? [],
+			longitude: cacheGroup.longitude ?? 0,
+			typeName: "",
+		};
+		this.cacheGroups.push(cg);
+		return cg;
+	}
+
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param id The if of the Cache Group being updated.
+	 * @param cacheGroup The new definition of the Cache Group.
+	 */
+	public async updateCacheGroup(id: number, cacheGroup: RequestCacheGroup): Promise<ResponseCacheGroup>;
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param cacheGroup The full new definition of the Cache Group being
+	 * updated.
+	 */
+	public async updateCacheGroup(cacheGroup: ResponseCacheGroup): Promise<ResponseCacheGroup>;
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param cacheGroupOrID The full new definition of the Cache Group being
+	 * updated, or just its ID.
+	 * @param payload The new definition of the Cache Group. This is required if
+	 * `cacheGroupOrID` is an ID, and ignored otherwise.
+	 */
+	public async updateCacheGroup(cacheGroupOrID: ResponseCacheGroup | number, payload?: RequestCacheGroup): Promise<ResponseCacheGroup> {
+		let idx;
+		let cg: Omit<ResponseCacheGroup, AllParentageKeys>;
+		let parentCacheGroupId;
+		let secondaryParentCacheGroupId;
+		if (typeof(cacheGroupOrID) === "number") {
+			if (!payload) {
+				throw new TypeError("invalid call signature - missing request payload");
+			}
+			idx = this.cacheGroups.findIndex(cg => cg.id === cacheGroupOrID);
+			cg = {
+				...payload,
+				fallbackToClosest: payload.fallbackToClosest ?? false,
+				fallbacks: payload.fallbacks ?? [],
+				id: ++this.lastID,
+				lastUpdated: new Date(),
+				latitude: payload.latitude ?? 0,
+				localizationMethods: payload.localizationMethods ?? [],
+				longitude: payload.longitude ?? 0,
+				typeName: "",
+			};
+			parentCacheGroupId = payload.parentCacheGroupId;
+			secondaryParentCacheGroupId = payload.secondaryParentCacheGroupId;
+		} else {
+			idx = this.cacheGroups.findIndex(cg => cg.id === cacheGroupOrID.id);
+			cg = {
+				...cacheGroupOrID,
+				lastUpdated: new Date()
+			}
+			parentCacheGroupId = cacheGroupOrID.parentCacheGroupId;
+			secondaryParentCacheGroupId = cacheGroupOrID.secondaryParentCacheGroupId;
+		}
+
+		if (idx < 0) {
+			throw new Error(`no such Cache Group: #${cacheGroupOrID}`);
+		}
+
+
+		const final = {
+			...cg,
+			...this.getParents(parentCacheGroupId, secondaryParentCacheGroupId)
+		}
+
+		this.cacheGroups[idx] = final;
+
+		return final;
 	}
 
 	public async getDivisions(): Promise<Array<ResponseDivision>>;
