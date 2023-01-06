@@ -18,9 +18,8 @@ import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 
 import { CacheGroupService } from "src/app/api";
-import type { CacheGroup } from "src/app/models";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 /**
  * CacheGroupTableComponent is the controller for the "Cache Groups" table.
@@ -33,7 +32,7 @@ import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 export class CacheGroupTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
-	public readonly cacheGroups: Promise<Array<CacheGroup>>;
+	public readonly cacheGroups: Promise<Array<ResponseCacheGroup>>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
@@ -73,12 +72,12 @@ export class CacheGroupTableComponent implements OnInit {
 			hide: true,
 		},
 		{
-			field: "parentCacheGroupName",
+			field: "parentCachegroupName",
 			headerName: "Parent",
 			hide: false
 		},
 		{
-			field: "secondaryParentCacheGroupName",
+			field: "secondaryParentCachegroupName",
 			headerName: "Secondary Parent",
 			hide: true,
 		},
@@ -94,8 +93,11 @@ export class CacheGroupTableComponent implements OnInit {
 		}
 	];
 
-	/** Definitions for the context menu items (which act on augmented cache-group data). */
-	public contextMenuItems: Array<ContextMenuItem<CacheGroup>> = [
+	/**
+	 * Definitions for the context menu items (which act on augmented
+	 * Cache Group data).
+	 */
+	public contextMenuItems: Array<ContextMenuItem<ResponseCacheGroup>> = [
 		{
 			action: "edit",
 			name: "Edit"
@@ -128,14 +130,20 @@ export class CacheGroupTableComponent implements OnInit {
 		}
 	];
 
-	/** A subject that child components can subscribe to for access to the fuzzy search query text */
+	/**
+	 * A subject that child components can subscribe to for access to the fuzzy
+	 * search query text.
+	 */
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
 	public fuzzControl: UntypedFormControl = new UntypedFormControl("");
 
-	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute,
-		private readonly headerSvc: TpHeaderService) {
+	constructor(
+		private readonly api: CacheGroupService,
+		private readonly route: ActivatedRoute,
+		private readonly headerSvc: TpHeaderService
+	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.cacheGroups = this.api.getCacheGroups();
 	}
@@ -167,7 +175,7 @@ export class CacheGroupTableComponent implements OnInit {
 	 *
 	 * @param a The action selected from the context menu.
 	 */
-	public handleContextMenu(a: ContextMenuActionEvent<CacheGroup>): void {
+	public handleContextMenu(a: ContextMenuActionEvent<ResponseCacheGroup>): void {
 		console.log("action:", a);
 	}
 
