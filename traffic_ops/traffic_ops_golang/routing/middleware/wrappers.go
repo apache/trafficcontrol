@@ -27,6 +27,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/lestrrat-go/jwx/jwt"
 	"net/http"
 	"strings"
 	"time"
@@ -200,6 +201,19 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 			cookie, userErr, sysErr := tocookie.Parse(secret, cookie.Value)
 			if userErr == nil && sysErr == nil {
 				user = cookie.AuthData
+			}
+		} else {
+			cookie, err := r.Cookie("access_token")
+			if err == nil && cookie != nil {
+				decodedToken, err := jwt.Parse(
+					[]byte(cookie.Value),
+				)
+				if err == nil && cookie != nil {
+					cookie, userErr, sysErr := tocookie.Parse(secret, fmt.Sprintf("%s", decodedToken.PrivateClaims()["mojoCookie"]))
+					if userErr == nil && sysErr == nil {
+						user = cookie.AuthData
+					}
+				}
 			}
 		}
 		start := time.Now()
