@@ -24,6 +24,7 @@ require (
 	github.com/GehirnInc/crypt v0.0.0-20200316065508-bb7000b8a962
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/basho/riak-go-client v1.7.1-0.20170327205844-5587c16e0b8b
+	github.com/cbroglie/mustache v1.4.0
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/dchest/siphash v1.2.2
 	github.com/fsnotify/fsnotify v1.5.1
