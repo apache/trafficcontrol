@@ -51,12 +51,12 @@ type BasicServer struct {
 }
 
 type CommonServerProperties struct {
-	Profile    string `json:"profile"`
-	Status     string `json:"status"`
-	Port       int    `json:"port"`
-	Cachegroup string `json:"cachegroup"`
-	HostName   string `json:"hostname"`
-	FQDN       string `json:"fqdn"`
+	Profile    []string `json:"profile"`
+	Status     string   `json:"status"`
+	Port       int      `json:"port"`
+	Cachegroup string   `json:"cachegroup"`
+	HostName   string   `json:"hostname"`
+	FQDN       string   `json:"fqdn"`
 }
 
 type Monitor struct {
@@ -126,7 +126,7 @@ type MonitoringResponse struct {
 
 type Router struct {
 	Type    string
-	Profile string
+	Profile []string
 }
 
 type DeliveryService struct {
@@ -188,7 +188,7 @@ SELECT
 	status.name as status,
 	cachegroup.name as cachegroup,
 	me.tcp_port as port,
-	profile.name as profile,
+	(SELECT ARRAY_AGG(sp.profile_name ORDER BY sp.priority ASC) FROM server_profile AS sp where sp.server=me.id) AS profile_name,
 	type.name as type,
 	me.xmpp_id as hashID,
     me.id as serverID
@@ -308,7 +308,7 @@ AND cdn.name = $3
 		var status sql.NullString
 		var cachegroup sql.NullString
 		var port sql.NullInt64
-		var profile sql.NullString
+		var profile pq.StringArray
 		var ttype sql.NullString
 		var hashID sql.NullString
 		var serverID sql.NullInt64
@@ -347,7 +347,7 @@ AND cdn.name = $3
 			monitors = append(monitors, Monitor{
 				BasicServer: BasicServer{
 					CommonServerProperties: CommonServerProperties{
-						Profile:    profile.String,
+						Profile:    profile,
 						Status:     status.String,
 						Port:       int(port.Int64),
 						Cachegroup: cachegroup.String,
@@ -371,7 +371,7 @@ AND cdn.name = $3
 			}
 			cache := Cache{
 				CommonServerProperties: CommonServerProperties{
-					Profile:    profile.String,
+					Profile:    profile,
 					Status:     status.String,
 					Port:       int(port.Int64),
 					Cachegroup: cachegroup.String,
@@ -387,7 +387,7 @@ AND cdn.name = $3
 		} else if ttype.String == tc.RouterTypeName {
 			routers = append(routers, Router{
 				Type:    ttype.String,
-				Profile: profile.String,
+				Profile: profile,
 			})
 		}
 	}
@@ -433,20 +433,24 @@ func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error
 	profiles := map[string]Profile{}
 	profileNames := []string{}
 	for _, router := range routers {
-		profiles[router.Profile] = Profile{
-			Name: router.Profile,
-			Type: router.Type,
+		for _, profileName := range router.Profile {
+			profiles[profileName] = Profile{
+				Name: profileName,
+				Type: router.Type,
+			}
 		}
 	}
 
 	for _, cache := range caches {
-		if _, ok := cacheProfileTypes[cache.Profile]; !ok {
-			cacheProfileTypes[cache.Profile] = cache.Type
-			profiles[cache.Profile] = Profile{
-				Name: cache.Profile,
-				Type: cache.Type,
+		for _, profileName := range cache.Profile {
+			if _, ok := cacheProfileTypes[profileName]; !ok {
+				cacheProfileTypes[profileName] = cache.Type
+				profiles[profileName] = Profile{
+					Name: profileName,
+					Type: cache.Type,
+				}
+				profileNames = append(profileNames, profileName)
 			}
-			profileNames = append(profileNames, cache.Profile)
 		}
 	}
 
