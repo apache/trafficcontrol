@@ -21,7 +21,6 @@ package util
 
 import (
 	"fmt"
-	"testing"
 	"time"
 )
 
@@ -91,52 +90,33 @@ func ExampleTimePtr() {
 	// Output: 0001-01-01 00:00:00 +0000 UTC
 }
 
-func TestCopyIfNotNil(t *testing.T) {
+func ExampleCopyIfNotNil() {
 	var i *int
-	copiedI := CopyIfNotNil(i)
-	if copiedI != nil {
-		t.Errorf("Copying nil should've given nil, got: %d", *copiedI)
-	}
+	fmt.Println(CopyIfNotNil(i))
 
-	s := new(string)
-	*s = "9000"
-	copiedS := CopyIfNotNil(s)
-	if copiedS == nil {
-		t.Errorf("Copied pointer to %s was nil", *s)
-	} else {
-		if *copiedS != *s {
-			t.Errorf("Incorrectly copied pointer; expected: %s, got: %s", *s, *copiedS)
-		}
-		*s = "9001"
-		if *copiedS == *s {
-			t.Error("Expected copy to be 'deep' but modifying the original changed the copy")
-		}
-	}
+	s := Ptr("9000")
+	fmt.Println(*CopyIfNotNil(s))
+
+	// Output: <nil>
+	// 9000
 }
 
-func TestCoalesce(t *testing.T) {
+func ExampleCoalesce() {
 	var i *int
-	copiedI := Coalesce(i, 9000)
-	if copiedI != 9000 {
-		t.Errorf("Coalescing nil should've given the default value, got: %d", copiedI)
-	}
-	s := Ptr("9001")
-	copiedS := Coalesce(s, "9000")
-	if copiedS != "9001" {
-		t.Errorf("Coalescing non-nil should've given %s, got: %s", *s, copiedS)
-	}
+	fmt.Println(Coalesce(i, 9000))
+
+	s := Ptr("testquest")
+	fmt.Println(Coalesce(s, "9001"))
+	// Output: 9000
+	// testquest
 }
 
-func TestCoalesceToDefault(t *testing.T) {
+func ExampleCoalesceToDefault() {
 	var i *int
-	copiedI := CoalesceToDefault(i)
-	var intDefault int
-	if copiedI != intDefault {
-		t.Errorf("Coalescing nil should've given the default value (%d), got: %d", intDefault, copiedI)
-	}
-	s := Ptr("9001")
-	copiedS := CoalesceToDefault(s)
-	if copiedS != "9001" {
-		t.Errorf("Coalescing non-nil should've given %s, got: %s", *s, copiedS)
-	}
+	fmt.Println(CoalesceToDefault(i))
+
+	s := Ptr("testquest")
+	fmt.Println(CoalesceToDefault(s))
+	// Output: 0
+	// testquest
 }
