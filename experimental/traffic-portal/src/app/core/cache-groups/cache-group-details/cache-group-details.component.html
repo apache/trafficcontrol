@@ -17,7 +17,7 @@ limitations under the License.
 		<mat-card-content>
 			<mat-form-field>
 				<mat-label>Name</mat-label>
-				<input matInput type="text" name="name" required [(ngModel)]="cacheGroup.name" />
+				<input matInput type="text" name="name" required [(ngModel)]="cacheGroup.name" required/>
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
@@ -29,7 +29,7 @@ limitations under the License.
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Parent</mat-label>
-				<mat-select [(ngModel)]="cacheGroup.parentCachegroupId">
+				<mat-select [(ngModel)]="cacheGroup.parentCachegroupId" name="parentCacheGroup">
 					<mat-option [value]="null">-- None --</mat-option>
 					<mat-optgroup label="Cache Groups">
 						<mat-option *ngFor="let cg of parentCacheGroups()" [value]="cg.id">{{cg.name}}</mat-option>
@@ -38,7 +38,7 @@ limitations under the License.
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Secondary Parent</mat-label>
-				<mat-select [(ngModel)]="cacheGroup.secondaryParentCachegroupId">
+				<mat-select [(ngModel)]="cacheGroup.secondaryParentCachegroupId" name="secondaryParentCacheGroup">
 					<mat-option [value]="null">-- None --</mat-option>
 					<mat-optgroup label="Cache Groups">
 						<mat-option *ngFor="let cg of secondaryParentCacheGroups()" [value]="cg.id">{{cg.name}}</mat-option>
