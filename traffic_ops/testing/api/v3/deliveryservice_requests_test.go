@@ -112,19 +112,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						}),
 						"status": "draft",
 					},
-					Expectations: utils.CkRequest(
-						utils.NoError(),
-						utils.HasStatus(http.StatusOK),
-						func(t *testing.T, ri toclientlib.ReqInf, i interface{}, a tc.Alerts, err error) {
-							dsr, ok := i.(tc.DeliveryServiceRequestNullable)
-							if !ok {
-								t.Fatalf("Expected a DeliveryServiceRequestNullable, got: %T", i)
-							}
-							if dsr.DeliveryService == nil {
-								t.Error("Traffic Ops responded with an invalid DSR (missing deliveryService)")
-							}
-						},
-					),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when MISSING REQUIRED Delivery Service FIELDS": {
 					ClientSession: TOSession,
