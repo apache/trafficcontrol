@@ -32,11 +32,29 @@ import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 })
 export class CacheGroupDetailsComponent implements OnInit {
 	public new = false;
-	public cacheGroup!: ResponseCacheGroup;
+	public cacheGroup: ResponseCacheGroup = {
+		fallbackToClosest: true,
+		fallbacks: [],
+		id: -1,
+		lastUpdated: new Date(),
+		latitude: 0,
+		localizationMethods: [],
+		longitude: 0,
+		name: "",
+		parentCachegroupId: null,
+		parentCachegroupName: null,
+		secondaryParentCachegroupId: null,
+		secondaryParentCachegroupName: null,
+		shortName: "",
+		typeId: -1,
+		typeName: ""
+	};
+
+	public cacheGroups: Array<ResponseCacheGroup> = [];
 
 	constructor(
 		private readonly route: ActivatedRoute,
-		private readonly cacheGroupService: CacheGroupService,
+		private readonly api: CacheGroupService,
 		private readonly location: Location,
 		private readonly dialog: MatDialog,
 		private readonly header: TpHeaderService
@@ -55,23 +73,6 @@ export class CacheGroupDetailsComponent implements OnInit {
 		if (ID === "new") {
 			this.header.headerTitle.next("New Division");
 			this.new = true;
-			this.cacheGroup = {
-				fallbackToClosest: true,
-				fallbacks: [],
-				id: -1,
-				lastUpdated: new Date(),
-				latitude: 0,
-				localizationMethods: [],
-				longitude: 0,
-				name: "",
-				parentCacheGroupId: null,
-				parentCacheGroupName: null,
-				secondaryParentCacheGroupId: null,
-				secondaryParentCacheGroupName: null,
-				shortName: "",
-				typeId: -1,
-				typeName: ""
-			};
 			return;
 		}
 		const numID = parseInt(ID, 10);
@@ -80,14 +81,41 @@ export class CacheGroupDetailsComponent implements OnInit {
 			return;
 		}
 
-		this.cacheGroup = await this.cacheGroupService.getCacheGroups(numID);
+		const cacheGroups = await this.api.getCacheGroups();
+		const idx = cacheGroups.findIndex(c => c.id === numID);
+		if (idx < 0) {
+			throw new Error(`no such Cache Group: #${ID}`);
+		}
+		this.cacheGroup = cacheGroups.splice(idx, 1)[0];
+		this.cacheGroups = cacheGroups;
 		this.header.headerTitle.next(`Cache Group: ${this.cacheGroup.name}`);
+	}
+
+	/**
+	 * Gets all Cache Groups eligible to be the parent of this Cache Group.
+	 *
+	 * @returns Every Cache Group except this one and its secondary parent (if
+	 * it has one).
+	 */
+	public parentCacheGroups(): Array<ResponseCacheGroup> {
+		return this.cacheGroups.filter(cg => cg.id !== this.cacheGroup.secondaryParentCachegroupId);
+	}
+
+	/**
+	 * Gets all Cache Groups eligible to be the secondary parent of this Cache
+	 * Group.
+	 *
+	 * @returns Every Cache Group except this one and its primary parent (if it
+	 * has one).
+	 */
+	public secondaryParentCacheGroups(): Array<ResponseCacheGroup> {
+		return this.cacheGroups.filter(cg => cg.id !== this.cacheGroup.parentCachegroupId);
 	}
 
 	/**
 	 * Deletes the Cache Group.
 	 */
-	public async deleteDivision(): Promise<void> {
+	public async delete(): Promise<void> {
 		if (this.new) {
 			console.error("Unable to delete new Cache Group");
 			return;
@@ -103,7 +131,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 		);
 		ref.afterClosed().subscribe(result => {
 			if(result) {
-				this.cacheGroupService.deleteCacheGroup(this.cacheGroup);
+				this.api.deleteCacheGroup(this.cacheGroup);
 				this.location.back();
 			}
 		});
@@ -119,10 +147,10 @@ export class CacheGroupDetailsComponent implements OnInit {
 		e.stopPropagation();
 		this.cacheGroup.shortName = this.cacheGroup.name;
 		if(this.new) {
-			this.cacheGroup = await this.cacheGroupService.createCacheGroup(this.cacheGroup);
+			this.cacheGroup = await this.api.createCacheGroup(this.cacheGroup);
 			this.new = false;
 		} else {
-			this.cacheGroup = await this.cacheGroupService.updateCacheGroup(this.cacheGroup);
+			this.cacheGroup = await this.api.updateCacheGroup(this.cacheGroup);
 		}
 	}
 }
