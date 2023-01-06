@@ -112,9 +112,21 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						}),
 						"status": "draft",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(
+						utils.NoError(),
+						utils.HasStatus(http.StatusOK),
+						func(t *testing.T, ri toclientlib.ReqInf, i interface{}, a tc.Alerts, err error) {
+							dsr, ok := i.(tc.DeliveryServiceRequestNullable)
+							if !ok {
+								t.Fatalf("Expected a DeliveryServiceRequestNullable, got: %T", i)
+							}
+							if dsr.DeliveryService == nil {
+								t.Error("Traffic Ops responded with an invalid DSR (missing deliveryService)")
+							}
+						},
+					),
 				},
-				"BAD REQUEST when MISSING REQUIRED FIELDS": {
+				"BAD REQUEST when MISSING REQUIRED Delivery Service FIELDS": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
@@ -122,6 +134,49 @@ func TestDeliveryServiceRequests(t *testing.T) {
 							"type":  "HTTP",
 							"xmlId": "test-ds-fields",
 						},
+						"status": "draft",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"bad request when missing Delivery Service definition": {
+					ClientSession: TOSession,
+					RequestBody: map[string]any{
+						"changeType": "create",
+						"status":     "draft",
+					},
+				},
+				"bad request when missing status": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"changeType": "create",
+						"deliveryService": generateDeliveryService(t, map[string]interface{}{
+							"ccrDnsTtl":          30,
+							"deepCachingType":    "NEVER",
+							"initialDispersion":  3,
+							"ipv6RoutingEnabled": true,
+							"longDesc":           "long desc",
+							"orgServerFqdn":      "http://example.test",
+							"profileName":        nil,
+							"tenant":             "root",
+							"xmlId":              "test-ds2",
+						}),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"bad request when missing change type": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"deliveryService": generateDeliveryService(t, map[string]interface{}{
+							"ccrDnsTtl":          30,
+							"deepCachingType":    "NEVER",
+							"initialDispersion":  3,
+							"ipv6RoutingEnabled": true,
+							"longDesc":           "long desc",
+							"orgServerFqdn":      "http://example.test",
+							"profileName":        nil,
+							"tenant":             "root",
+							"xmlId":              "test-ds2",
+						}),
 						"status": "draft",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -241,7 +296,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					dsReq := tc.DeliveryServiceRequest{}
+					dsReq := tc.DeliveryServiceRequestNullable{}
 
 					if testCase.RequestBody != nil {
 						dat, err := json.Marshal(testCase.RequestBody)
@@ -267,14 +322,14 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateDeliveryServiceRequest(dsReq)
+							alerts, reqInf, err := testCase.ClientSession.CreateDeliveryServiceRequest(dsReq.ToConcrete())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestByIDWithHdr(testCase.EndpointID(), dsReq, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestByIDWithHdr(testCase.EndpointID(), dsReq.ToConcrete(), testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
