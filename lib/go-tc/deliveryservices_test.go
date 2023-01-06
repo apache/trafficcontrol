@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 func compareV31DSes(a, b DeliveryServiceNullableV30, t *testing.T) {
@@ -907,5 +908,253 @@ func BenchmarkTLSVersionsAlerts(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ds.TLSVersionsAlerts()
+	}
+}
+
+func TestDeliveryServiceNullableV30_ToConcrete(t *testing.T) {
+	active := true
+	anonymousBlockingEnabled := true
+	cacheURL := "cache URL"
+	ccrDNSTTL := 1
+	cdnID := 2
+	cdnName := "cdn name"
+	checkPath := "check path"
+	deepCachingType := DeepCachingTypeAlways
+	displayName := "display name"
+	dnsBypassCNAME := "dns bypass cname"
+	dnsBypassIP := "dns bypass IP"
+	dnsBypassIP6 := "dns bypass IPv6"
+	dnsBypassTTL := 3
+	dscp := 4
+	edgeHeaderRewrite := "edge header rewrite"
+	exampleURL := "example URL"
+	geoLimit := 5
+	geoProvider := 6
+	globalMaxMBPS := 7
+	globalMaxTPS := 8
+	httpBypassFQDN := "http bypass fqdn"
+	id := 9
+	infoURL := "info url"
+	var initialDispersion float32 = 10
+	ipv6RoutingEnabled := true
+	lastUpdated := time.Now()
+	logsEnabled := true
+	longDesc := "long description"
+	longDesc1 := "long description 1"
+	longDesc2 := "long description 2"
+	match := DeliveryServiceMatch{
+		Type:      DSMatchTypeHeaderRegex,
+		SetNumber: 11,
+		Pattern:   "pattern",
+	}
+	maxDNSAnswers := 12
+	midHeaderRewrite := "mid header rewrite"
+	missLat := 13.0
+	missLong := 14.0
+	multiSiteOrigin := true
+	orgServerFQDN := "origin server fqdn"
+	profileDesc := "profile description"
+	profileID := 15
+	profileName := "profile name"
+	protocol := 16
+	qStringIgnore := 17
+	rangeRequestHandling := 18
+	regexRemap := "regular expression re-mapping expressions"
+	regionalGeoBlocking := true
+	remapText := "remap text"
+	routingName := "routing name"
+	signed := true
+	typeID := 19
+	typ := DSTypeAnyMap
+	trResponseHeaders := "tr response headers"
+	tenantID := 20
+	xmlid := "xmlid"
+	fqPacingRate := 21
+	signingAlgorithm := "signing algorithm"
+	tenant := "tenant"
+	trRequestHeaders := "tr request headers"
+	maxOriginConnections := 22
+	consistentHashRegex := "consistent hash regular expression"
+	consistentHashQueryParam := "consistent hashing query string parameter"
+	expected := DeliveryService{
+		DeliveryServiceV13: DeliveryServiceV13{
+			DeliveryServiceV11: DeliveryServiceV11{
+				Active:                   active,
+				AnonymousBlockingEnabled: anonymousBlockingEnabled,
+				CacheURL:                 cacheURL,
+				CCRDNSTTL:                ccrDNSTTL,
+				CDNID:                    cdnID,
+				CDNName:                  cdnName,
+				CheckPath:                checkPath,
+				DeepCachingType:          deepCachingType,
+				DisplayName:              displayName,
+				DNSBypassCname:           dnsBypassCNAME,
+				DNSBypassIP:              dnsBypassIP,
+				DNSBypassIP6:             dnsBypassIP6,
+				DNSBypassTTL:             dnsBypassTTL,
+				DSCP:                     dscp,
+				EdgeHeaderRewrite:        edgeHeaderRewrite,
+				ExampleURLs:              []string{exampleURL},
+				GeoLimit:                 geoLimit,
+				GeoProvider:              geoProvider,
+				GlobalMaxMBPS:            globalMaxMBPS,
+				GlobalMaxTPS:             globalMaxTPS,
+				HTTPBypassFQDN:           httpBypassFQDN,
+				ID:                       id,
+				InfoURL:                  infoURL,
+				InitialDispersion:        initialDispersion,
+				IPV6RoutingEnabled:       ipv6RoutingEnabled,
+				LastUpdated:              TimeNoModFromTime(lastUpdated),
+				LogsEnabled:              logsEnabled,
+				LongDesc:                 longDesc,
+				LongDesc1:                longDesc1,
+				LongDesc2:                longDesc2,
+				MatchList:                []DeliveryServiceMatch{match},
+				MaxDNSAnswers:            maxDNSAnswers,
+				MidHeaderRewrite:         midHeaderRewrite,
+				MissLat:                  missLat,
+				MissLong:                 missLong,
+				MultiSiteOrigin:          multiSiteOrigin,
+				OrgServerFQDN:            orgServerFQDN,
+				ProfileDesc:              profileDesc,
+				ProfileID:                profileID,
+				ProfileName:              profileName,
+				Protocol:                 protocol,
+				QStringIgnore:            qStringIgnore,
+				RangeRequestHandling:     rangeRequestHandling,
+				RegexRemap:               regexRemap,
+				RegionalGeoBlocking:      regionalGeoBlocking,
+				RemapText:                remapText,
+				RoutingName:              routingName,
+				Signed:                   signed,
+				TypeID:                   typeID,
+				Type:                     typ,
+				TRResponseHeaders:        trResponseHeaders,
+				TenantID:                 tenantID,
+				XMLID:                    xmlid,
+			},
+			DeepCachingType:   deepCachingType,
+			FQPacingRate:      fqPacingRate,
+			SigningAlgorithm:  signingAlgorithm,
+			Tenant:            tenant,
+			TRRequestHeaders:  trRequestHeaders,
+			TRResponseHeaders: trResponseHeaders,
+		},
+		MaxOriginConnections:      maxOriginConnections,
+		ConsistentHashRegex:       consistentHashRegex,
+		ConsistentHashQueryParams: []string{consistentHashQueryParam},
+	}
+
+	nullable := DeliveryServiceNullableV30{
+		DeliveryServiceV30: DeliveryServiceV30{
+			DeliveryServiceNullableV15: DeliveryServiceNullableV15{
+				DeliveryServiceNullableV14: DeliveryServiceNullableV14{
+					DeliveryServiceNullableV13: DeliveryServiceNullableV13{
+						DeliveryServiceNullableV12: DeliveryServiceNullableV12{
+							DeliveryServiceNullableV11: DeliveryServiceNullableV11{
+								DeliveryServiceNullableFieldsV11: DeliveryServiceNullableFieldsV11{
+									Active:                   &active,
+									AnonymousBlockingEnabled: &anonymousBlockingEnabled,
+									CCRDNSTTL:                &ccrDNSTTL,
+									CDNID:                    &cdnID,
+									CDNName:                  &cdnName,
+									CheckPath:                &checkPath,
+									DisplayName:              &displayName,
+									DNSBypassCNAME:           &dnsBypassCNAME,
+									DNSBypassIP:              &dnsBypassIP,
+									DNSBypassIP6:             &dnsBypassIP6,
+									DNSBypassTTL:             &dnsBypassTTL,
+									DSCP:                     &dscp,
+									EdgeHeaderRewrite:        &edgeHeaderRewrite,
+									ExampleURLs:              []string{exampleURL},
+									GeoLimit:                 &geoLimit,
+									GeoProvider:              &geoProvider,
+									GlobalMaxMBPS:            &globalMaxMBPS,
+									GlobalMaxTPS:             &globalMaxTPS,
+									HTTPBypassFQDN:           &httpBypassFQDN,
+									ID:                       &id,
+									InfoURL:                  &infoURL,
+									InitialDispersion:        new(int),
+									IPV6RoutingEnabled:       &ipv6RoutingEnabled,
+									LastUpdated:              TimeNoModFromTime(lastUpdated),
+									LogsEnabled:              &logsEnabled,
+									LongDesc:                 &longDesc,
+									LongDesc1:                &longDesc1,
+									LongDesc2:                &longDesc2,
+									MatchList:                &[]DeliveryServiceMatch{match},
+									MaxDNSAnswers:            &maxDNSAnswers,
+									MidHeaderRewrite:         &midHeaderRewrite,
+									MissLat:                  &missLat,
+									MissLong:                 &missLong,
+									MultiSiteOrigin:          &multiSiteOrigin,
+									OrgServerFQDN:            &orgServerFQDN,
+									ProfileDesc:              &profileDesc,
+									ProfileID:                &profileID,
+									ProfileName:              &profileName,
+									Protocol:                 &protocol,
+									QStringIgnore:            &qStringIgnore,
+									RangeRequestHandling:     &rangeRequestHandling,
+									RegexRemap:               &regexRemap,
+									RegionalGeoBlocking:      &regionalGeoBlocking,
+									RemapText:                &remapText,
+									RoutingName:              &routingName,
+									Signed:                   signed,
+									TypeID:                   &typeID,
+									Type:                     &typ,
+									TenantID:                 &tenantID,
+									XMLID:                    &xmlid,
+								},
+								DeliveryServiceRemovedFieldsV11: DeliveryServiceRemovedFieldsV11{
+									CacheURL: &cacheURL,
+								},
+							},
+						},
+						DeliveryServiceFieldsV13: DeliveryServiceFieldsV13{
+							DeepCachingType:   &deepCachingType,
+							FQPacingRate:      &fqPacingRate,
+							SigningAlgorithm:  &signingAlgorithm,
+							Tenant:            &tenant,
+							TRResponseHeaders: &trResponseHeaders,
+							TRRequestHeaders:  &trRequestHeaders,
+						},
+					},
+					DeliveryServiceFieldsV14: DeliveryServiceFieldsV14{
+						ConsistentHashRegex:       &consistentHashRegex,
+						ConsistentHashQueryParams: []string{consistentHashQueryParam},
+						MaxOriginConnections:      &maxOriginConnections,
+					},
+				},
+				DeliveryServiceFieldsV15: DeliveryServiceFieldsV15{
+					EcsEnabled:          true,
+					RangeSliceBlockSize: new(int),
+				},
+			},
+			DeliveryServiceFieldsV30: DeliveryServiceFieldsV30{
+				FirstHeaderRewrite: new(string),
+				InnerHeaderRewrite: new(string),
+				LastHeaderRewrite:  new(string),
+				ServiceCategory:    new(string),
+				Topology:           new(string),
+			},
+		},
+		DeliveryServiceFieldsV31: DeliveryServiceFieldsV31{
+			MaxRequestHeaderBytes: new(int),
+		},
+	}
+	*nullable.InitialDispersion = int(initialDispersion)
+
+	actual := nullable.ToConcrete()
+	if !reflect.DeepEqual(actual, expected) {
+		t.Error("concrete-ed nullable doesn't match expected")
+		bts, err := json.MarshalIndent(expected, "", "\t")
+		if err != nil {
+			t.Fatalf("Failed to format expected structure for comparison: %v", err)
+		}
+		t.Logf("Want: %s", string(bts))
+		bts, err = json.MarshalIndent(actual, "", "\t")
+		if err != nil {
+			t.Fatalf("Failed to format actual structure for comparison: %v", err)
+		}
+		t.Logf("Got: %s", string(bts))
 	}
 }

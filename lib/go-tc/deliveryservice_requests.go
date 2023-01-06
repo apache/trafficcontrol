@@ -440,6 +440,35 @@ type DeliveryServiceRequestNullable struct {
 	XMLID           *string                     `json:"-" db:"xml_id"`
 }
 
+// ToConcrete converts a DeliveryServiceRequestNullable to a
+// DeliveryServiceRequest.
+//
+// Deprecated: Both DeliveryServiceRequestNullable and DeliveryServiceRequest
+// are deprecated, so theoretically this serves no further purpose.
+func (dsr DeliveryServiceRequestNullable) ToConcrete() DeliveryServiceRequest {
+	ret := DeliveryServiceRequest{
+		AssigneeID:      util.CoalesceToDefault(dsr.AssigneeID),
+		Assignee:        util.CoalesceToDefault(dsr.Assignee),
+		AuthorID:        util.CoalesceToDefault(dsr.AuthorID),
+		Author:          util.CoalesceToDefault(dsr.Author),
+		ChangeType:      util.CoalesceToDefault(dsr.ChangeType),
+		CreatedAt:       util.CopyIfNotNil(dsr.CreatedAt),
+		ID:              util.CoalesceToDefault(dsr.ID),
+		LastEditedBy:    util.CoalesceToDefault(dsr.LastEditedBy),
+		LastEditedByID:  util.CoalesceToDefault(dsr.LastEditedByID),
+		LastUpdated:     util.CopyIfNotNil(dsr.LastUpdated),
+		DeliveryService: DeliveryService{},
+		Status:          util.CoalesceToDefault(dsr.Status),
+		XMLID:           util.CoalesceToDefault(dsr.XMLID),
+	}
+
+	if dsr.DeliveryService != nil {
+		ret.DeliveryService = dsr.DeliveryService.ToConcrete()
+	}
+
+	return ret
+}
+
 // Downgrade will convert an instance of DeliveryServiceRequestV41 to DeliveryServiceRequestV40.
 // Note that this function does a shallow copy of the requested and original Delivery Service structures.
 func (dsr DeliveryServiceRequestV41) Downgrade() DeliveryServiceRequestV40 {
