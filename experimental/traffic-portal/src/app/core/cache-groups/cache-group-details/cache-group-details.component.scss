@@ -11,3 +11,45 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
+form {
+	max-width: calc(100% - 32px);
+}
+
+mat-card {
+	margin: 1em auto;
+	box-sizing: border-box;
+	width: 80%;
+	min-width: 350px;
+
+	mat-card-content {
+		display: grid;
+		grid-template-columns: 1fr;
+		row-gap: 2em;
+		margin: 1em auto 50px;
+
+		.pair {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			column-gap: 8px;
+		}
+	}
+}
+
+/* This is roughly the point where 350px is 80% of the viewport. */
+@media(max-width:440px) {
+	mat-card {
+		min-width: unset;
+		width: 100%;
+		form {
+			min-width: 100%;
+			mat-card-content {
+				margin: 1em auto;
+				.pair {
+					grid-template-columns: 1fr;
+					row-gap: 2em;
+				}
+			}
+		}
+	}
+}
