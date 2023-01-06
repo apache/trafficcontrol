@@ -67,12 +67,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7204](https://github.com/apache/trafficcontrol/pull/7204) *Traffic Control Cache Config (t3c)* strategies.yaml hash_key only for consistent_hash
 
 ### Removed
-- Remove components in `infrastructre/docker/`, not in use, cdn-in-a-box performs the same functionality
-- Remove `misc/jira_github_issue_import.py`, the project does not use JIRA
-- Remove `traffic_ops/install/bin/_postinstall.pl` and `traffic_ops/install/lib/`, _postinstall.py is the recommended script to use for install
-- Remove `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version
-- Remove `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use
-- 
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use, cdn-in-a-box performs the same functionality `misc/jira_github_issue_import.py`, the project does not use JIRA
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove `traffic_ops/install/bin/_postinstall.pl` and `traffic_ops/install/lib/`, _postinstall.py is the recommended script to use for install
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271)Remove `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271)Remove `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use
 
 ## [7.0.0] - 2022-07-19
 ### Added
