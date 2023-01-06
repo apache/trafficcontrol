@@ -121,7 +121,7 @@ type CreateDeliveryServiceNullableResponse struct {
 	Alerts
 }
 
-// UpdateDeliveryServiceNullableResponse oughly models the structure of
+// UpdateDeliveryServiceNullableResponse roughly models the structure of
 // responses from Traffic Ops to PUT requests made to its
 // /deliveryservices/{{ID}} API endpoint.
 //
