@@ -13,9 +13,11 @@
 */
 
 import { Component, type OnInit } from "@angular/core";
-import { UntypedFormControl } from "@angular/forms";
+import { FormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
+import type { ColDef } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
+import { LocalizationMethod, localizationMethodToString, ResponseCacheGroup } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
@@ -35,7 +37,7 @@ export class CacheGroupTableComponent implements OnInit {
 	public readonly cacheGroups: Promise<Array<ResponseCacheGroup>>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
-	public columnDefs = [
+	public columnDefs: ColDef[] = [
 		{
 			field: "fallbackToClosest",
 			filter: "tpBooleanFilter",
@@ -53,6 +55,20 @@ export class CacheGroupTableComponent implements OnInit {
 			filter: "agDateColumnFilter",
 			headerName: "Last Updated",
 			hide: false
+		},
+		{
+			field: "localizationMethods",
+			headerName: "Enabled Localization Methods",
+			hide: true,
+			valueGetter: ({data}: {data: ResponseCacheGroup}): string => {
+				let methods;
+				if (data.localizationMethods.length > 0) {
+					methods = data.localizationMethods;
+				} else {
+					methods = [LocalizationMethod.CZ, LocalizationMethod.DEEP_CZ, LocalizationMethod.GEO];
+				}
+				return methods.map(localizationMethodToString).join(", ");
+			},
 		},
 		{
 			field: "latitude",
@@ -74,12 +90,20 @@ export class CacheGroupTableComponent implements OnInit {
 		{
 			field: "parentCachegroupName",
 			headerName: "Parent",
-			hide: false
+			hide: false,
+			valueFormatter: (
+				{data}: {data: ResponseCacheGroup}
+			): string => data.parentCachegroupId === null ? "" : `${data.parentCachegroupName} (#${data.parentCachegroupId})`,
 		},
 		{
 			field: "secondaryParentCachegroupName",
 			headerName: "Secondary Parent",
 			hide: true,
+			valueFormatter: (
+				{data}: {data: ResponseCacheGroup}
+			): string => data.secondaryParentCachegroupId === null ?
+				"" :
+				`${data.secondaryParentCachegroupName} (#${data.secondaryParentCachegroupId})`,
 		},
 		{
 			field: "shortName",
@@ -89,7 +113,8 @@ export class CacheGroupTableComponent implements OnInit {
 		{
 			field: "typeName",
 			headerName: "Type",
-			hide: false
+			hide: false,
+			valueFormatter: ({data}: {data: ResponseCacheGroup}): string => `${data.typeName} (#${data.typeId})`
 		}
 	];
 
@@ -137,7 +162,7 @@ export class CacheGroupTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl: UntypedFormControl = new UntypedFormControl("");
+	public fuzzControl: FormControl = new FormControl("");
 
 	constructor(
 		private readonly api: CacheGroupService,
