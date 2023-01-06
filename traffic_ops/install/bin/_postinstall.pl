@@ -689,10 +689,12 @@ sub insert_cdn {
 	my $dns_subdomain = $paramconf->{"dns_subdomain"};
 
     my $insert_stmt = <<INSERTS;
+
     -- global parameters
     insert into cdn (name, domain_name, dnssec_enabled)
                 values ('$cdn_name', '$dns_subdomain', false)
                 ON CONFLICT (name) DO NOTHING;
+
 INSERTS
     doInsert($dbh, $insert_stmt);
 }
@@ -714,16 +716,20 @@ sub insert_parameters {
     insert into parameter (name, config_file, value)
                 values ('tm.url', 'global', '$tm_url')
                 ON CONFLICT (name, config_file, value) DO NOTHING;
+
     insert into parameter (name, config_file, value)
                 values ('tm.infourl', 'global', '$tm_url/doc')
                 ON CONFLICT (name, config_file, value) DO NOTHING;
+
     -- CRConfig.json parameters
     insert into parameter (name, config_file, value)
                 values ('geolocation.polling.url', 'CRConfig.json', '$tm_url/routing/GeoLite2-City.mmdb.gz')
                 ON CONFLICT (name, config_file, value) DO NOTHING;
+
     insert into parameter (name, config_file, value)
                 values ('geolocation6.polling.url', 'CRConfig.json', '$tm_url/routing/GeoLiteCityv6.dat.gz')
                 ON CONFLICT (name, config_file, value) DO NOTHING;
+
 INSERTS
     doInsert($dbh, $insert_stmt);
 }
@@ -737,22 +743,28 @@ sub insert_profiles {
 	my $tm_url = $paramconf->{"tm.url"};
 
     my $insert_stmt = <<INSERTS;
+
     -- global parameters
     insert into profile (name, description, type, cdn)
                 values ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE',  (SELECT id FROM cdn WHERE name='ALL'))
                 ON CONFLICT (name) DO NOTHING;
+
     insert into profile_parameter (profile, parameter)
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.url' and config_file = 'global' and value = '$tm_url') )
                 ON CONFLICT (profile, parameter) DO NOTHING;
+
     insert into profile_parameter (profile, parameter)
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'tm.infourl' and config_file = 'global' and value = '$tm_url/doc') )
                 ON CONFLICT (profile, parameter) DO NOTHING;
+
     insert into profile_parameter (profile, parameter)
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation.polling.url' and config_file = 'CRConfig.json' and value = '$tm_url/routing/GeoLite2-City.mmdb.gz') )
                 ON CONFLICT (profile, parameter) DO NOTHING;
+
     insert into profile_parameter (profile, parameter)
                 values ( (select id from profile where name = 'GLOBAL'), (select id from parameter where name = 'geolocation6.polling.url' and config_file = 'CRConfig.json' and value = '$tm_url/routing/GeoLiteCityv6.dat.gz') )
                 ON CONFLICT (profile, parameter) DO NOTHING;
+
 INSERTS
     doInsert($dbh, $insert_stmt);
 }
