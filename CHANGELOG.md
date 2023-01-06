@@ -68,7 +68,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use, cdn-in-a-box performs the same functionality `misc/jira_github_issue_import.py`, the project does not use JIRA
-- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove `traffic_ops/install/bin/_postinstall.pl` and `traffic_ops/install/lib/`, _postinstall.py is the recommended script to use for install
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271)Remove `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271)Remove `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use
 
