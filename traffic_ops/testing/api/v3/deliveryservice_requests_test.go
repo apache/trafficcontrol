@@ -284,7 +284,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					dsReq := tc.DeliveryServiceRequestNullable{}
+					dsReq := tc.DeliveryServiceRequest{}
 
 					if testCase.RequestBody != nil {
 						dat, err := json.Marshal(testCase.RequestBody)
@@ -310,14 +310,14 @@ func TestDeliveryServiceRequests(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.CreateDeliveryServiceRequest(dsReq.ToConcrete())
+							alerts, reqInf, err := testCase.ClientSession.CreateDeliveryServiceRequest(dsReq)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestByIDWithHdr(testCase.EndpointID(), dsReq.ToConcrete(), testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestByIDWithHdr(testCase.EndpointID(), dsReq, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
