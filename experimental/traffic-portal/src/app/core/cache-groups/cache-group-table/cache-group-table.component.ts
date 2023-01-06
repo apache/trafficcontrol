@@ -124,7 +124,7 @@ export class CacheGroupTableComponent implements OnInit {
 	 */
 	public contextMenuItems: Array<ContextMenuItem<ResponseCacheGroup>> = [
 		{
-			action: "edit",
+			href: (selectedRow): string => `core/cache-group/${selectedRow.id}` ,
 			name: "Edit"
 		},
 		{
