@@ -15,9 +15,16 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
- 
+
+ARG GO_VERSION
+FROM golang:${GO_VERSION} AS get-go
+
 #  Swagger Spec Server
 FROM debian:buster AS swagger-server
+
+COPY --from=get-go /usr/local/go /usr/local/go
+ENV PATH=/usr/local/go/bin:${PATH} \
+    GOPATH=/go
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -25,13 +32,6 @@ RUN apt-get update && \
         git \
         wget && \
     apt-get clean
-
-ARG GO_VERSION
-FROM golang:${GO_VERSION} AS get-go
-COPY --from=get-go /usr/local/go /usr/local/go
-ENV PATH=/usr/local/go/bin:${PATH} \
-    GOPATH=/go
-
 
 COPY traffic_ops/traffic_ops_golang/swaggerdocs/v13/swaggerspec .
 COPY traffic_ops/traffic_ops_golang/swaggerdocs/v13/swaggerspec-server /usr/src/swaggerspec-server
