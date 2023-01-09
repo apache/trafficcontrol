@@ -23,6 +23,8 @@ services:
       context: ../..
       dockerfile: tools/golang/Dockerfile
       target: lint
+      args:
+        - GO_VERSION=${GO_VERSION}
     volumes:
       - ../..:/go/src/github.com/apache/trafficcontrol
 
@@ -31,6 +33,8 @@ services:
       context: ../..
       dockerfile: tools/golang/Dockerfile
       target: unit
+      args:
+        - GO_VERSION=${GO_VERSION}
     volumes:
       - ../..:/go/src/github.com/apache/trafficcontrol
       - ./junit:/junit

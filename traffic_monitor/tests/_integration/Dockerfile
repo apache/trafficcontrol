@@ -20,19 +20,17 @@
 # It doesn't do any of the complex things the Dockerfiles in infrastructure/docker or infrastructure/cdn-in-a-box do, like inserting itself into Traffic Ops.
 # It is designed for a very simple use case, where the complex orchestration of other Traffic Control components is done elsewhere (or manually).
 
+ARG GO_VERSION
+FROM golang:${GO_VERSION} AS get-go
 FROM rockylinux:8
 MAINTAINER dev@trafficcontrol.apache.org
 
-RUN dnf install -y initscripts epel-release jq git
-COPY GO_VERSION .
-RUN go_version=$(cat /GO_VERSION) && \
-	curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
-	tar -C /usr/local -xzf go.tar.gz && \
-	ln -s /usr/local/go/bin/go /usr/bin/go && \
-	rm go.tar.gz GO_VERSION
-
-ENV GOPATH=/go \
+COPY --from=get-go /usr/local/go /usr/local/go
+ENV PATH=/usr/local/go/bin:${PATH} \
+    GOPATH=/go \
     CGO_ENABLED=0
+
+RUN dnf install -y initscripts epel-release jq git
 
 COPY traffic_monitor/tests/_integration/ /tm/
 
