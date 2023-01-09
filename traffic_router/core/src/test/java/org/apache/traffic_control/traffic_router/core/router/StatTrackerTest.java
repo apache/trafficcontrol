@@ -29,7 +29,7 @@ public class StatTrackerTest {
         StatTracker.Tallies tallies = new StatTracker.Tallies();
         StatTracker.Track track = StatTracker.getTrack();
 
-        tallies.setCzCount(Integer.MAX_VALUE);
+        tallies.setCzCount(Long.MAX_VALUE);
 
         Map<String, StatTracker.Tallies> map = new HashMap<>();
         map.put("blah", tallies);
@@ -38,6 +38,6 @@ public class StatTrackerTest {
         track.setRouteType(StatTracker.Track.RouteType.DNS, "blah");
         track.setResult(StatTracker.Track.ResultType.CZ);
         tracker.saveTrack(track);
-        assertEquals("expected czCount to be max integer value but got " + tallies.getCzCount(), Integer.MAX_VALUE, tallies.getCzCount());
+        assertEquals("expected czCount to be max integer value but got " + tallies.getCzCount(), Long.MAX_VALUE, tallies.getCzCount());
     }
 }

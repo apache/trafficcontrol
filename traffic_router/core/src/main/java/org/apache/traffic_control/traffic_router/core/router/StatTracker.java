@@ -36,10 +36,10 @@ public class StatTracker {
 
 	public static class Tallies {
 
-		public int getCzCount() {
+		public long getCzCount() {
 			return czCount;
 		}
-		public void setCzCount(final int czCount) {
+		public void setCzCount(final long czCount) {
 			this.czCount = czCount;
 		}
 		public int getGeoCount() {
@@ -97,7 +97,7 @@ public class StatTracker {
 			this.regionalAlternateCount = regionalAlternateCount;
 		}
 
-		public int czCount;
+		public long czCount;
 		public int geoCount;
 		public int deepCzCount;
 		public int missCount;
@@ -403,7 +403,7 @@ public class StatTracker {
 		case CZ:
 			tallies.czCount++;
 			if (tallies.czCount < 0) {
-				tallies.czCount = Integer.MAX_VALUE;
+				tallies.czCount = Long.MAX_VALUE;
 			}
 			break;
 		case GEO:
