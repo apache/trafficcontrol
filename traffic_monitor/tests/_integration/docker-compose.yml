@@ -82,6 +82,8 @@ services:
     build:
       context: ../../..
       dockerfile: traffic_monitor/tests/_integration/Dockerfile
+      args:
+        - GO_VERSION=${GO_VERSION}
     depends_on:
       - testto
       - testcaches

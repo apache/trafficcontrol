@@ -23,6 +23,8 @@ services:
      build:
        context: ../../../..
        dockerfile: traffic_ops/traffic_ops_golang/swaggerdocs/v13/Dockerfile
+       args:
+         - GO_VERSION=${GO_VERSION}
      ports:
        - 8000:8000
      volumes:
