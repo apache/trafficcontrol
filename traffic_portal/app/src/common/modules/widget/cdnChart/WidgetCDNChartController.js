@@ -17,6 +17,22 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} $ */
+
+/**
+ * @param {*} cdn
+ * @param {*} $scope
+ * @param {import("angular").ITimeoutService} $timeout
+ * @param {import("angular").IFilterService} $filter
+ * @param {import("angular").IQService} $q
+ * @param {import("angular").IIntervalService} $interval
+ * @param {import("../../../api/CDNService")} cdnService
+ * @param {import("../../../api/CacheStatsService")} cacheStatsService
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/NumberUtils")} numberUtils
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ */
 var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $interval, cdnService, cacheStatsService, dateUtils, locationUtils, numberUtils, propertiesModel) {
 
 	var chartSeries,

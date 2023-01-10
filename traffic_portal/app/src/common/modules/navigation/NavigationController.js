@@ -17,7 +17,22 @@
  * under the License.
  */
 
-var NavigationController = function($scope, $log, $state, $location, $window, $timeout, $uibModal, permissionUtils, authService, trafficPortalService, propertiesModel, userModel) {
+/** @typedef {import("jquery")} $ */
+
+/**
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").ILocationService} $location
+ * @param {import("angular").IWindowService} $window
+ * @param {import("angular").ITimeoutService} $timeout
+ * @param {*} $uibModal
+ * @param {import("../../service/utils/PermissionUtils")} permissionUtils
+ * @param {import("../../api/AuthService")} authService
+ * @param {import("../../api/TrafficPortalService")} trafficPortalService
+ * @param {import("../../models/PropertiesModel")} propertiesModel
+ * @param {import("../../models/UserModel")} userModel
+ */
+var NavigationController = function($scope, $state, $location, $window, $timeout, $uibModal, permissionUtils, authService, trafficPortalService, propertiesModel, userModel) {
 
     $scope.appName = propertiesModel.properties.name;
 
@@ -167,5 +182,5 @@ var NavigationController = function($scope, $log, $state, $location, $window, $t
 
 };
 
-NavigationController.$inject = ['$scope', '$log', '$state', '$location', '$window', '$timeout', '$uibModal', 'permissionUtils', 'authService', 'trafficPortalService', 'propertiesModel', 'userModel'];
+NavigationController.$inject = ['$scope', '$state', '$location', '$window', '$timeout', '$uibModal', 'permissionUtils', 'authService', 'trafficPortalService', 'propertiesModel', 'userModel'];
 module.exports = NavigationController;
