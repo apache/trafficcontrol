@@ -49,7 +49,7 @@ func TestHealthClientStartup(t *testing.T) {
 		pollStateFile := "/var/log/trafficcontrol/poll-state.json"
 		atlantaMid := "atlanta-mid-16.ga.atlanta.kabletown.net"
 		dtrcMid := "dtrc-mid-02.kabletown.net"
-		traffic_monitor := "tm01.kabletown.net"
+		rascal := "rascal01.kabletown.net"
 
 		waitTime, err := time.ParseDuration("5s")
 		if err != nil {
@@ -116,11 +116,11 @@ func TestHealthClientStartup(t *testing.T) {
 
 		// verify that the health-client was able to poll and get an available
 		// traffic monitor from TrafficOps
-		_, ok = cfg.TOData.Get().Monitors[traffic_monitor]
+		_, ok = cfg.TOData.Get().Monitors[rascal]
 		if !ok {
-			t.Fatalf("Expected %s to be available but it's not", traffic_monitor)
+			t.Fatalf("Expected %s to be available but it's not", rascal)
 		} else {
-			fmt.Fprintf(os.Stdout, "%s is available: true\n", traffic_monitor)
+			fmt.Fprintf(os.Stdout, "%s is available: true\n", rascal)
 		}
 
 		fmt.Fprintf(os.Stdout, "Stopping the tc-health-client\n")

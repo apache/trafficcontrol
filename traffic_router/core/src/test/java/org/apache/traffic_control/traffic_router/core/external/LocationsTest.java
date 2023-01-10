@@ -15,6 +15,7 @@
 
 package org.apache.traffic_control.traffic_router.core.external;
 
+import org.apache.http.HttpHeaders;
 import org.apache.traffic_control.traffic_router.core.util.ExternalTest;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.catalina.LifecycleException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -30,10 +32,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.core.AnyOf.anyOf;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
+import static org.junit.Assert.fail;
 
 @Category(ExternalTest.class)
 public class LocationsTest {
@@ -137,6 +144,41 @@ public class LocationsTest {
 
 		} finally {
 			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itHandlesHeadRequests() throws Exception {
+		final List<String> paths = new ArrayList<String>();
+		paths.add("http://localhost:3333/crs/locations");
+		paths.add("http://localhost:3333/crs/locations/caches");
+
+		CloseableHttpResponse response = null;
+
+		try {
+			final HttpGet httpGet = new HttpGet("http://localhost:3333/crs/locations");
+			response = closeableHttpClient.execute(httpGet);
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+			JsonNode jsonNode = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+
+			String location = jsonNode.get("locations").get(0).asText();
+			paths.add("http://localhost:3333/crs/locations/" + location + "/caches");
+		} catch (Exception e) {
+			fail(e.getMessage());
+		} finally {
+			if (response != null) response.close();
+		}
+
+		for (final String path : paths) {
+			final HttpHead httpHead = new HttpHead(path);
+			try {
+				response = closeableHttpClient.execute(httpHead);
+				assertThat(response.getStatusLine().getStatusCode(), equalTo(200));
+				assertThat(response.getFirstHeader(HttpHeaders.CONTENT_LENGTH), notNullValue());
+			} finally {
+				if (response != null) response.close();
+			}
 		}
 	}
 }

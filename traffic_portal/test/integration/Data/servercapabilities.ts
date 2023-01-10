@@ -55,41 +55,49 @@ export const serverCapabilities = {
 				{
 					description: "can create a server capability",
 					name: "TP_SC",
+					capabilityDescription: "Server Capability",
 					validationMessage: "server capability was created."
 				},
 				{
 					description: "can create multiple server capabilities",
 					name: "TP_SC_2",
+					capabilityDescription: "Server Capability 2",
 					validationMessage: "server capability was created."
 				},
 				{
 					description: "can create multiple server capabilities",
 					name: "TP_SC_3",
+					capabilityDescription: "Server Capability 3",
 					validationMessage: "server capability was created."
 				},
 				{
 					description: "can handle creating existing server capability",
 					name: "TP_SC_2",
+					capabilityDescription: "Server Capability 2",
 					validationMessage: "server_capability name 'TP_SC_2' already exists."
 				},
 				{
 					description: "can handle invalid period in server capability",
 					name: "TP.AUTOMATED",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
 					description: "can handle invalid space in server capability",
 					name: "TP AUTOMATED",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
 					description: "can handle invalid character in server capability",
 					name: "TP#AUTOMATED",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
 					description: "can handle an empty text field",
 					name: "",
+					capabilityDescription: "",
 					validationMessage: "Required"
 				}
 			],
@@ -132,6 +140,7 @@ export const serverCapabilities = {
 				{
 					description: "can handle readonly role creating a server capability",
 					name: "TP_SC",
+					capabilityDescription: "Server Capability",
 					validationMessage: "missing required Permissions: SERVER-CAPABILITY:CREATE"
 				}
 			],
@@ -162,36 +171,43 @@ export const serverCapabilities = {
 				{
 					description: "can create a server capability",
 					name: "TP_SC",
+					capabilityDescription: "Server Capability",
 					validationMessage: "server capability was created."
 				},
 				{
 					description: "can create multiple server capabilities",
 					name: "TP_SC_2",
+					capabilityDescription: "Server Capability 2",
 					validationMessage: "server capability was created."
 				},
 				{
 					description: "can handle creating existing server capability",
 					name: "TP_SC_2",
+					capabilityDescription: "Server Capability 2",
 					validationMessage: "server_capability name 'TP_SC_2' already exists."
 				},
 				{
 					description: "can handle invalid period in server capability",
 					name: "TP.AUTOMATED",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
 					description: "can handle invalid space in server capability",
 					name: "TP AUTOMATED",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
 					description: "can handle invalid character in server capability",
 					name: "TP#AUTOMATED",
+					capabilityDescription: "Server Capability Automated",
 					validationMessage: "Must be alphamumeric with no spaces. Dashes and underscores also allowed."
 				},
 				{
 					description: "can handle an empty text field",
 					name: "",
+					capabilityDescription: "",
 					validationMessage: "Required"
 				}
 			],

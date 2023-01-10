@@ -276,7 +276,7 @@ func TestOrigins(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:            util.Ptr("origin2"),
@@ -295,7 +295,7 @@ func TestOrigins(t *testing.T) {
 							"FQDN": "originupdated.example.com", "IPAddress": "1.2.3.4", "IP6Address": "0000::1111", "Port": 1234, "Protocol": "http", "Tenant": "tenant2"})),
 				},
 				"FORBIDDEN when CHILD TENANT updates PARENT TENANT ORIGIN": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: tenant4UserSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("testtenancy"),
@@ -307,7 +307,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"NOT FOUND when ORIGIN DOESNT EXIST": {
-					EndpointId:    func() int { return 1111111 },
+					EndpointID:    func() int { return 1111111 },
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("testid"),
@@ -319,7 +319,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when DELIVERY SERVICE DOESNT EXIST": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin2"),
@@ -331,7 +331,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when CACHEGROUP DOESNT EXIST": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin2"),
@@ -344,7 +344,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when PROFILEID DOESNT EXIST": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin2"),
@@ -358,7 +358,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when COORDINATE DOESNT EXIST": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin2"),
@@ -372,7 +372,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when INVALID TENANT": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin1"),
@@ -385,7 +385,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"BAD REQUEST when INVALID PROTOCOL": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin2"),
@@ -398,7 +398,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV4 ADDRESS": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin2"),
@@ -412,7 +412,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV6 ADDRESS": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin2"),
@@ -426,7 +426,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID PORT": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:              util.Ptr("origin2"),
@@ -440,7 +440,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.Origin{
@@ -454,7 +454,7 @@ func TestOrigins(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Origin{
 						Name:            util.Ptr("origin2"),
@@ -470,12 +470,12 @@ func TestOrigins(t *testing.T) {
 			},
 			"DELETE": {
 				"NOT FOUND when DOESNT EXIST": {
-					EndpointId:    func() int { return 11111111 },
+					EndpointID:    func() int { return 11111111 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when CHILD TENANT deletes PARENT TENANT ORIGIN": {
-					EndpointId:    GetOriginID(t, "origin2"),
+					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: tenant4UserSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -502,14 +502,14 @@ func TestOrigins(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateOrigin(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateOrigin(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteOrigin(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteOrigin(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

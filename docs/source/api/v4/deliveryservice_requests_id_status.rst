@@ -45,7 +45,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/4.0/deliveryservice_requests/1/status HTTP/1.1
+	GET /api/4.1/deliveryservice_requests/1/status HTTP/1.1
 	User-Agent: python-requests/2.24.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -98,7 +98,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	PUT /api/4.0/deliveryservice_requests/1/status HTTP/1.1
+	PUT /api/4.1/deliveryservice_requests/1/status HTTP/1.1
 	User-Agent: python-requests/2.22.0
 	Accept-Encoding: gzip, deflate
 	Accept: */*
@@ -195,6 +195,7 @@ The response is a full representation of the modified :term:`DSR`.
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": [],
 			"routingName": "video",
 			"signed": false,
 			"sslKeyVersion": 1,
@@ -276,6 +277,7 @@ The response is a full representation of the modified :term:`DSR`.
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
+			"requiredCapabilities": [],
 			"routingName": "cdn",
 			"signed": false,
 			"sslKeyVersion": null,

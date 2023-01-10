@@ -225,7 +225,7 @@ func TestDeliveryServicesIDServers(t *testing.T) {
 		dsIDServersTests := utils.V4TestCase{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId: totest.GetDeliveryServiceId(t, TOSession, "test-ds-server-assignments"), ClientSession: TOSession,
+					EndpointID: totest.GetDeliveryServiceId(t, TOSession, "test-ds-server-assignments"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						utils.ResponseHasLength(2)),
 				},
@@ -237,7 +237,7 @@ func TestDeliveryServicesIDServers(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetServersByDeliveryService(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetServersByDeliveryService(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

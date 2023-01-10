@@ -20,6 +20,10 @@ import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { RouterModule, type Routes } from "@angular/router";
 
+import { DivisionDetailComponent } from "src/app/core/cache-groups/divisions/detail/division-detail.component";
+import { DivisionsTableComponent } from "src/app/core/cache-groups/divisions/table/divisions-table.component";
+import { RegionDetailComponent } from "src/app/core/cache-groups/regions/detail/region-detail.component";
+import { RegionsTableComponent } from "src/app/core/cache-groups/regions/table/regions-table.component";
 import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
 
 import { AppUIModule } from "../app.ui.module";
@@ -34,7 +38,9 @@ import { DashboardComponent } from "./dashboard/dashboard.component";
 import { DeliveryserviceComponent } from "./deliveryservice/deliveryservice.component";
 import { DsCardComponent } from "./ds-card/ds-card.component";
 import { InvalidationJobsComponent } from "./invalidation-jobs/invalidation-jobs.component";
-import { NewInvalidationJobDialogComponent } from "./invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
+import {
+	NewInvalidationJobDialogComponent
+} from "./invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./new-delivery-service/new-delivery-service.component";
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
@@ -47,6 +53,10 @@ import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
 	{ canActivate: [AuthenticatedGuard], component: DashboardComponent, path: "" },
+	{ canActivate: [AuthenticatedGuard], component: DivisionsTableComponent, path: "divisions" },
+	{ canActivate: [AuthenticatedGuard], component: DivisionDetailComponent, path: "division/:id" },
+	{ canActivate: [AuthenticatedGuard], component: RegionsTableComponent, path: "regions" },
+	{ canActivate: [AuthenticatedGuard], component: RegionDetailComponent, path: "region/:id" },
 	{ canActivate: [AuthenticatedGuard], component: UsersComponent, path: "users" },
 	{ canActivate: [AuthenticatedGuard], component: UserDetailsComponent, path: "users/:id"},
 	{ canActivate: [AuthenticatedGuard], component: ServersTableComponent, path: "servers" },
@@ -85,10 +95,13 @@ export const ROUTES: Routes = [
 		TenantDetailsComponent,
 		ChangeLogsComponent,
 		LastDaysComponent,
-		UserRegistrationDialogComponent
+		UserRegistrationDialogComponent,
+		DivisionsTableComponent,
+		DivisionDetailComponent,
+		RegionsTableComponent,
+		RegionDetailComponent
 	],
-	exports: [
-	],
+	exports: [],
 	imports: [
 		SharedModule,
 		AppUIModule,

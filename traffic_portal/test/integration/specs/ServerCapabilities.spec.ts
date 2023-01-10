@@ -47,7 +47,7 @@ serverCapabilities.tests.forEach(serverCapabilitiesData => {
             });
             serverCapabilitiesData.add.forEach(add => {
                 it(add.description, async () => {
-                    expect(await serverCapabilitiesPage.CreateServerCapabilities(add.name, add.validationMessage)).toBe(true);
+                    expect(await serverCapabilitiesPage.CreateServerCapabilities(add.name, add.capabilityDescription, add.validationMessage)).toBe(true);
                     await serverCapabilitiesPage.OpenServerCapabilityPage();
                 });
             });

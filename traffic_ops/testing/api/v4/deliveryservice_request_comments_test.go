@@ -66,7 +66,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServiceRequestComment{
 						DeliveryServiceRequestID: GetDSRequestId(t, "test-ds1")(),
@@ -75,14 +75,14 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
-					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody:   tc.DeliveryServiceRequestComment{},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
 					RequestBody:   tc.DeliveryServiceRequestComment{},
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
@@ -104,7 +104,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestComment(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestComment(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

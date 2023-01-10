@@ -17,13 +17,26 @@
  * under the License.
  */
 
+/**
+ * This is the parent controller for the forms used to modify or create a Target
+ * of a Steering Delivery Service.
+ *
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService} deliveryService
+ * @param {import("../../../api/DeliveryServiceService").SteeringTarget[]} currentTargets
+ * @param {import("../../../api/DeliveryServiceService").SteeringTarget} target
+ * @param {*} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/TypeService")} typeService
+ */
 var FormDeliveryServiceTargetController = function(deliveryService, currentTargets, target, $scope, formUtils, locationUtils, deliveryServiceService, typeService) {
 
 	var getDeliveryServices = function() {
 		deliveryServiceService.getDeliveryServices({ cdn: deliveryService.cdnId })
 			.then(function(result) {
-				$scope.deliveryServices = _.filter(result, function(ds) {
-					return ds.type.startsWith('HTTP') && _.findWhere(currentTargets, {targetId: ds.id}) == undefined;
+				$scope.deliveryServices = result.filter(function(ds) {
+					return ds.type?.startsWith('HTTP') && currentTargets.find(t=>t.targetId === ds.id) === undefined;
 				});
 			});
 	};

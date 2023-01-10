@@ -18,6 +18,19 @@
  */
 /** @typedef { import('../agGrid/CommonGridController').CGC } CGC */
 
+/**
+ * This is the controller for the table of servers assigned to a Delivery
+ * Service.
+ *
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService & {id: number}} deliveryService
+ * @param {unknown[]} servers
+ * @param {unknown} filter
+ * @param {import("angular").IControllerService} $controller
+ * @param {*} $scope
+ * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableDeliveryServiceServersController = function(deliveryService, servers, filter, $controller, $scope, $uibModal, deliveryServiceService, locationUtils) {
 
 	// extends the TableServersController to inherit common methods
@@ -84,19 +97,17 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 		});
 	};
 
-	$scope.selectServers = function() {
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/table/deliveryServiceServers/table.assignDSServers.tpl.html',
-			controller: 'TableAssignDSServersController',
-			size: 'lg',
+	$scope.selectServers = async function() {
+		const modalInstance = $uibModal.open({
+			templateUrl: "common/modules/table/deliveryServiceServers/table.assignDSServers.tpl.html",
+			controller: "TableAssignDSServersController",
+			size: "lg",
 			resolve: {
-				deliveryService: function() {
-					return deliveryService;
-				},
-				servers: function(serverService) {
+				deliveryService: () => deliveryService,
+				servers: (serverService) => {
 					if (deliveryService.topology) {
 						// topology-based ds's can only have ORG servers from the same CDN directly assigned
-						return serverService.getServers({ type: 'ORG', cdn: deliveryService.cdnId });
+						return serverService.getServers({ type: "ORG", cdn: deliveryService.cdnId });
 					} else {
 						return serverService.getEligibleDeliveryServiceServers(deliveryService.id);
 					}
@@ -106,16 +117,13 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 				}
 			}
 		});
-		modalInstance.result.then(function(selectedServerIds) {
-			deliveryServiceService.assignDeliveryServiceServers(deliveryService.id, selectedServerIds)
-				.then(
-					function() {
-						$scope.refresh();
-					}
-				);
-		}, function () {
+		try {
+			const selectedServerIds = await modalInstance.result;
+			await deliveryServiceService.assignDeliveryServiceServers(deliveryService.id, selectedServerIds)
+			$scope.refresh();
+		} catch {
 			// do nothing
-		});
+		}
 	};
 
 	$scope.confirmRemoveServer = function(server) {

@@ -40,7 +40,7 @@ type TrafficControl struct {
 	Capabilities                                      []tc.Capability                         `json:"capability"`
 	Coordinates                                       []tc.Coordinate                         `json:"coordinates"`
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
-	DeliveryServiceRequests                           []tc.DeliveryServiceRequestV40          `json:"deliveryServiceRequests"`
+	DeliveryServiceRequests                           []tc.DeliveryServiceRequestV4           `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments                    []tc.DeliveryServiceRequestComment      `json:"deliveryServiceRequestComments"`
 	DeliveryServices                                  []tc.DeliveryServiceV4                  `json:"deliveryservices"`
 	DeliveryServicesRequiredCapabilities              []tc.DeliveryServicesRequiredCapability `json:"deliveryservicesRequiredCapabilities"`
@@ -59,7 +59,7 @@ type TrafficControl struct {
 	Roles                                             []tc.RoleV4                             `json:"roles"`
 	Servers                                           []tc.ServerV40                          `json:"servers"`
 	ServerServerCapabilities                          []tc.ServerServerCapability             `json:"serverServerCapabilities"`
-	ServerCapabilities                                []tc.ServerCapability                   `json:"serverCapabilities"`
+	ServerCapabilities                                []tc.ServerCapabilityV41                `json:"serverCapabilities"`
 	ServiceCategories                                 []tc.ServiceCategory                    `json:"serviceCategories"`
 	Statuses                                          []tc.StatusNullable                     `json:"statuses"`
 	StaticDNSEntries                                  []tc.StaticDNSEntry                     `json:"staticdnsentries"`
@@ -857,7 +857,7 @@ func DeleteTestRoles(t *testing.T, cl *toclient.Session) {
 
 func CreateTestServerCapabilities(t *testing.T, cl *toclient.Session, td TrafficControl) {
 	for _, sc := range td.ServerCapabilities {
-		resp, _, err := cl.CreateServerCapability(sc, toclient.RequestOptions{})
+		resp, _, err := cl.CreateServerCapabilityV41(sc, toclient.RequestOptions{})
 		assert.RequireNoError(t, err, "Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
 	}
 }

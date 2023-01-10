@@ -57,16 +57,16 @@ func GetAssignment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dsr tc.DeliveryServiceRequestV40
+	var dsr tc.DeliveryServiceRequestV5
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			errCode = http.StatusNotFound
 			userErr = fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])
 			sysErr = nil
 		} else {
 			errCode = http.StatusInternalServerError
 			userErr = nil
-			sysErr = fmt.Errorf("looking for DSR: %v", err)
+			sysErr = fmt.Errorf("looking for DSR: %w", err)
 		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -109,21 +109,21 @@ func getAssignee(r *assignmentRequest, xmlID string, tx *sql.Tx) (string, int, e
 	var message string
 	if r.AssigneeID != nil {
 		r.Assignee = new(string)
-		if err := tx.QueryRow(`SELECT username FROM tm_user WHERE id = $1`, *r.AssigneeID).Scan(r.Assignee); err == sql.ErrNoRows {
+		if err := tx.QueryRow(`SELECT username FROM tm_user WHERE id = $1`, *r.AssigneeID).Scan(r.Assignee); errors.Is(err, sql.ErrNoRows) {
 			userErr := fmt.Errorf("no such user #%d", *r.AssigneeID)
 			return "", http.StatusBadRequest, userErr, nil
 		} else if err != nil {
-			sysErr := fmt.Errorf("getting username for assignee ID (#%d): %v", *r.AssigneeID, err)
+			sysErr := fmt.Errorf("getting username for assignee ID (#%d): %w", *r.AssigneeID, err)
 			return "", http.StatusInternalServerError, nil, sysErr
 		}
 		message = fmt.Sprintf("Changed assignee of '%s' Delivery Service Request to '%s'", xmlID, *r.Assignee)
 	} else if r.Assignee != nil {
 		r.AssigneeID = new(int)
-		if err := tx.QueryRow(`SELECT id FROM tm_user WHERE username=$1`, *r.Assignee).Scan(r.AssigneeID); err == sql.ErrNoRows {
+		if err := tx.QueryRow(`SELECT id FROM tm_user WHERE username=$1`, *r.Assignee).Scan(r.AssigneeID); errors.Is(err, sql.ErrNoRows) {
 			userErr := fmt.Errorf("no such user '%s'", *r.Assignee)
 			return "", http.StatusBadRequest, userErr, nil
 		} else if err != nil {
-			sysErr := fmt.Errorf("getting user ID for assignee (%s): %v", *r.Assignee, err)
+			sysErr := fmt.Errorf("getting user ID for assignee (%s): %w", *r.Assignee, err)
 			return "", http.StatusInternalServerError, nil, sysErr
 		}
 		message = fmt.Sprintf("Changed assignee of '%s' Delivery Service Request to '%s'", xmlID, *r.Assignee)
@@ -162,16 +162,16 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 		req.Assignee = nil
 	}
 
-	var dsr tc.DeliveryServiceRequestV40
+	var dsr tc.DeliveryServiceRequestV5
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			errCode = http.StatusNotFound
 			userErr = fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])
 			sysErr = nil
 		} else {
 			errCode = http.StatusInternalServerError
 			userErr = nil
-			sysErr = fmt.Errorf("looking for DSR: %v", err)
+			sysErr = fmt.Errorf("looking for DSR: %w", err)
 		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -218,25 +218,20 @@ func PutAssignment(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
-		dsr.Original = new(tc.DeliveryServiceV4)
-		*dsr.Original = originals[0]
+		dsr.Original = new(tc.DeliveryServiceV5)
+		*dsr.Original = originals[0].DS
 	}
 	var resp interface{}
-	if inf.Version.Major >= 4 {
-		if dsr.Requested != nil && (dsr.Requested.LongDesc1 != nil || dsr.Requested.LongDesc2 != nil) {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("the longDesc1 and longDesc2 fields are no longer supported in API 4.0 onwards"), nil)
-			return
-		}
-
-		if dsr.Original != nil {
-			*dsr.Original = dsr.Original.RemoveLD1AndLD2()
-		}
-		if dsr.Requested != nil {
-			*dsr.Requested = dsr.Requested.RemoveLD1AndLD2()
-		}
+	if inf.Version.Major >= 5 {
 		resp = dsr
+	} else if inf.Version.Major >= 4 {
+		if inf.Version.Major >= 1 {
+			resp = dsr.Downgrade()
+		} else {
+			resp = dsr.Downgrade().Downgrade()
+		}
 	} else {
-		resp = dsr.Downgrade()
+		resp = dsr.Downgrade().Downgrade().Downgrade()
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, message, resp)

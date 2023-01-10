@@ -35,7 +35,7 @@ import (
 
 // validateLegacy ensures all required fields are present and in correct form.
 // Also checks request JSON is complete and valid.
-func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) error {
+func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) (error, error) {
 	if tx == nil {
 		log.Errorln("validating a legacy Delivery Service Request: nil transaction was passed")
 	}
@@ -46,7 +46,7 @@ func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) error {
 
 		if err != nil {
 			log.Errorf("querying for dsr by ID %d: %v", *dsr.ID, err)
-			return errors.New("unknown error")
+			return errors.New("unknown error"), nil
 		}
 	}
 
@@ -68,17 +68,26 @@ func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) error {
 	}
 	errs := tovalidate.ToErrors(errMap)
 	// ensure the deliveryservice requested is valid
-	upgraded := dsr.DeliveryService.UpgradeToV4()
-	e := deliveryservice.Validate(tx, &upgraded)
+	upgraded := dsr.DeliveryService.UpgradeToV4().Upgrade()
+	userErr, sysErr := deliveryservice.Validate(tx, &upgraded)
+	if sysErr != nil {
+		return nil, sysErr
+	}
+	errs = append(errs, userErr)
 
-	errs = append(errs, e)
-
-	return util.JoinErrs(errs)
+	return util.JoinErrs(errs), sysErr
 }
 
 // validateV4 validates a DSR, returning - in order - a user-facing error that
 // should be shown to the client, and a system error.
-func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
+func validateV4(dsr tc.DeliveryServiceRequestV4, tx *sql.Tx) (error, error) {
+	return validateV5(dsr.Upgrade(), tx)
+}
+
+// validateV5 validates a DSR, returning - in order - a user-facing error that
+// should be shown to the client, and a system error.
+func validateV5(dsr tc.DeliveryServiceRequestV5, tx *sql.Tx) (error, error) {
+	var userErr, sysErr error
 	if tx == nil {
 		return nil, errors.New("nil transaction")
 	}
@@ -112,18 +121,18 @@ func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
 				if r == nil {
 					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
 				}
-				ds, ok := r.(*tc.DeliveryServiceV4)
+				ds, ok := r.(*tc.DeliveryServiceV5)
 				if !ok {
 					return fmt.Errorf("expected a Delivery Service, got %T", r)
 				}
 				if ds == nil {
 					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
 				}
-				err := deliveryservice.Validate(tx, ds)
-				if err == nil {
-					dsr.XMLID = *ds.XMLID
+				userErr, sysErr = deliveryservice.Validate(tx, ds)
+				if userErr == nil && sysErr == nil {
+					dsr.XMLID = ds.XMLID
 				}
-				return err
+				return userErr
 			},
 		)),
 		validation.Field(&dsr.Original, validation.By(
@@ -134,7 +143,7 @@ func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
 				if o == nil {
 					return fmt.Errorf("required for changeType='%s'", dsr.ChangeType)
 				}
-				ds, ok := o.(*tc.DeliveryServiceV4)
+				ds, ok := o.(*tc.DeliveryServiceV5)
 				if !ok {
 					return fmt.Errorf("expected a Delivery Service, got %T", o)
 				}
@@ -176,9 +185,5 @@ func validateV4(dsr tc.DeliveryServiceRequestV40, tx *sql.Tx) (error, error) {
 			},
 		)),
 	)
-	if err != nil {
-		return err, nil
-	}
-
-	return err, nil
+	return err, sysErr
 }

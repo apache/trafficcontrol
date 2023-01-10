@@ -499,7 +499,7 @@ func TestJobs(t *testing.T) {
 			},
 			"DELETE": {
 				"NOT FOUND when JOB DOESNT EXIST": {
-					EndpointId:    func() int { return 1111111111 },
+					EndpointID:    func() int { return 1111111111 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -548,7 +548,7 @@ func TestJobs(t *testing.T) {
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteInvalidationJob(uint64(testCase.EndpointId()), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteInvalidationJob(uint64(testCase.EndpointID()), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

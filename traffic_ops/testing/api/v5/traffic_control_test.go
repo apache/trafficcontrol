@@ -28,9 +28,9 @@ type TrafficControl struct {
 	Capabilities                                      []tc.Capability                         `json:"capability"`
 	Coordinates                                       []tc.Coordinate                         `json:"coordinates"`
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
-	DeliveryServiceRequests                           []tc.DeliveryServiceRequestV40          `json:"deliveryServiceRequests"`
+	DeliveryServiceRequests                           []tc.DeliveryServiceRequestV5           `json:"deliveryServiceRequests"`
 	DeliveryServiceRequestComments                    []tc.DeliveryServiceRequestComment      `json:"deliveryServiceRequestComments"`
-	DeliveryServices                                  []tc.DeliveryServiceV4                  `json:"deliveryservices"`
+	DeliveryServices                                  []tc.DeliveryServiceV5                  `json:"deliveryservices"`
 	DeliveryServicesRequiredCapabilities              []tc.DeliveryServicesRequiredCapability `json:"deliveryservicesRequiredCapabilities"`
 	DeliveryServiceServerAssignments                  []tc.DeliveryServiceServers             `json:"deliveryServiceServerAssignments"`
 	TopologyBasedDeliveryServicesRequiredCapabilities []tc.DeliveryServicesRequiredCapability `json:"topologyBasedDeliveryServicesRequiredCapabilities"`
@@ -47,7 +47,7 @@ type TrafficControl struct {
 	Roles                                             []tc.RoleV4                             `json:"roles"`
 	Servers                                           []tc.ServerV4                           `json:"servers"`
 	ServerServerCapabilities                          []tc.ServerServerCapability             `json:"serverServerCapabilities"`
-	ServerCapabilities                                []tc.ServerCapability                   `json:"serverCapabilities"`
+	ServerCapabilities                                []tc.ServerCapabilityV41                `json:"serverCapabilities"`
 	ServiceCategories                                 []tc.ServiceCategory                    `json:"serviceCategories"`
 	Statuses                                          []tc.StatusNullable                     `json:"statuses"`
 	StaticDNSEntries                                  []tc.StaticDNSEntry                     `json:"staticdnsentries"`

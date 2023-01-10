@@ -15,6 +15,8 @@
 
 package org.apache.traffic_control.traffic_router.core.dns;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -67,7 +69,7 @@ import static org.powermock.api.mockito.PowerMockito.doCallRealMethod;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ZoneManager.class, SignatureManager.class})
+@PrepareForTest({ZoneManager.class, SignatureManager.class, InetAddress.class})
 @PowerMockIgnore("javax.management.*")
 public class ZoneManagerUnitTest {
     ZoneManager zoneManager;
@@ -89,6 +91,30 @@ public class ZoneManagerUnitTest {
 
         zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker(), null, mock(TrafficRouterManager.class)));
 
+    }
+
+    @Test
+    public void testGetLocalTRHostnameUsesSingleTRHostname() throws Exception {
+        JsonNode trs = new ObjectMapper().readTree("{\"tr-01\": {}}");
+        when(cacheRegister.getTrafficRouters()).thenReturn(trs);
+        InetAddress localhost = mock(InetAddress.class);
+        when(localhost.getHostName()).thenReturn("real-local-hostname");
+        PowerMockito.mockStatic(InetAddress.class);
+        when(InetAddress.getLocalHost()).thenReturn(localhost);
+        String actual = ZoneManager.getTRLocalHostname(zoneManager.getTrafficRouter());
+        assertThat("hostname of TR server in the CRConfig is returned when there is only one TR in the CRConfig", actual, equalTo("tr-01"));
+    }
+
+    @Test
+    public void testGetLocalTRHostnameUsesRealLocalHostNameIfMultipleTR() throws Exception {
+        JsonNode trs = new ObjectMapper().readTree("{\"tr-01\": {}, \"tr-02\":  {}}");
+        when(cacheRegister.getTrafficRouters()).thenReturn(trs);
+        InetAddress localhost = mock(InetAddress.class);
+        when(localhost.getHostName()).thenReturn("real-local-hostname");
+        PowerMockito.mockStatic(InetAddress.class);
+        when(InetAddress.getLocalHost()).thenReturn(localhost);
+        String actual = ZoneManager.getTRLocalHostname(zoneManager.getTrafficRouter());
+        assertThat("real local hostname of TR server is returned when there are multiple TRs in the CRConfig", actual, equalTo("real-local-hostname"));
     }
 
     @Test

@@ -17,10 +17,13 @@
  * under the License.
  */
 
-// this is the config the TO UI uses
+/**
+ * @file
+ * Configuration for the environment within which TP runs.
+ */
 
 "use strict";
 
 angular.module('config', [])
 
-.constant('ENV', { api: { unstable:'/api/4.1/', stable: "/api/4.0/" } });
+.constant('ENV', { api: { next: "/api/5.0/", unstable:'/api/4.1/', stable: "/api/4.0/" } });

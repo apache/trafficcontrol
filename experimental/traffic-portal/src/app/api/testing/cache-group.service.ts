@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
+import { RequestDivision, ResponseDivision, RequestRegion, ResponseRegion } from "trafficops-types";
 
 import type { CacheGroup } from "src/app/models";
 
@@ -20,7 +21,22 @@ import type { CacheGroup } from "src/app/models";
  */
 @Injectable()
 export class CacheGroupService {
+	private lastID = 10;
 
+	private readonly divisions: Array<ResponseDivision> = [{
+		id: 1,
+		lastUpdated: new Date(),
+		name: "Div1"
+	}
+	];
+	private readonly regions: Array<ResponseRegion> = [{
+		division: 1,
+		divisionName: "div1",
+		id: 1,
+		lastUpdated: new Date(),
+		name: "Reg1"
+	}
+	];
 	private readonly cacheGroups = [
 		{
 			fallbackToClosest: true,
@@ -114,5 +130,150 @@ export class CacheGroupService {
 			return cacheGroup;
 		}
 		return this.cacheGroups;
+	}
+
+	public async getDivisions(): Promise<Array<ResponseDivision>>;
+	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
+
+	/**
+	 * Gets an array of divisions from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the ResponseDivision with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of ResponseDivision objects - or a single ResponseDivision object if 'nameOrID'
+	 * was given.
+	 */
+	public async getDivisions(nameOrID?: string | number): Promise<Array<ResponseDivision> | ResponseDivision> {
+		if(nameOrID) {
+			let division;
+			switch (typeof nameOrID) {
+				case "string":
+					division = this.divisions.find(d=>d.name === nameOrID);
+					break;
+				case "number":
+					division = this.divisions.find(d=>d.id === nameOrID);
+			}
+			if (!division) {
+				throw new Error(`no such Division: ${nameOrID}`);
+			}
+			return division;
+		}
+		return this.divisions;
+	}
+
+	/**
+	 * Replaces the current definition of a division with the one given.
+	 *
+	 * @param division The new division.
+	 * @returns The updated division.
+	 */
+	public async updateDivision(division: ResponseDivision): Promise<ResponseDivision> {
+		const id = this.divisions.findIndex(d => d.id === division.id);
+		if (id === -1) {
+			throw new Error(`no such Division: ${division.id}`);
+		}
+		this.divisions[id] = division;
+		return division;
+	}
+
+	/**
+	 * Creates a new division.
+	 *
+	 * @param division The division to create.
+	 * @returns The created division.
+	 */
+	public async createDivision(division: RequestDivision): Promise<ResponseDivision> {
+		return {
+			...division,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+	}
+
+	/**
+	 * Deletes an existing division.
+	 *
+	 * @param id Id of the division to delete.
+	 * @returns The deleted division.
+	 */
+	public async deleteDivision(id: number): Promise<ResponseDivision> {
+		const index = this.divisions.findIndex(d => d.id === id);
+		if (index === -1) {
+			throw new Error(`no such Division: ${id}`);
+		}
+		return this.divisions.splice(index, 1)[0];
+	}
+
+	public async getRegions(): Promise<Array<ResponseRegion>>;
+	public async getRegions(nameOrID: string | number): Promise<ResponseRegion>;
+
+	/**
+	 * Gets an array of regions from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the ResponseRegion with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of ResponseRegion objects - or a single ResponseRegion object if 'nameOrID'
+	 * was given.
+	 */
+	public async getRegions(nameOrID?: string | number): Promise<Array<ResponseRegion> | ResponseRegion> {
+		if(nameOrID) {
+			let region;
+			switch (typeof nameOrID) {
+				case "string":
+					region = this.regions.find(d=>d.name === nameOrID);
+					break;
+				case "number":
+					region = this.regions.find(d=>d.id === nameOrID);
+			}
+			if (!region) {
+				throw new Error(`no such Region: ${nameOrID}`);
+			}
+			return region;
+		}
+		return this.regions;
+	}
+
+	/**
+	 * Replaces the current definition of a region with the one given.
+	 *
+	 * @param region The new region.
+	 * @returns The updated region.
+	 */
+	public async updateRegion(region: ResponseRegion): Promise<ResponseRegion> {
+		const id = this.regions.findIndex(d => d.id === region.id);
+		if (id === -1) {
+			throw new Error(`no such Region: ${region.id}`);
+		}
+		this.regions[id] = region;
+		return region;
+	}
+
+	/**
+	 * Creates a new region.
+	 *
+	 * @param region The region to create.
+	 * @returns The created region.
+	 */
+	public async createRegion(region: RequestRegion): Promise<ResponseRegion> {
+		return {
+			divisionName: "Div1",
+			...region,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+	}
+
+	/**
+	 * Deletes an existing region.
+	 *
+	 * @param id Id of the region to delete.
+	 * @returns The deleted region.
+	 */
+	public async deleteRegion(id: number): Promise<ResponseRegion> {
+		const index = this.regions.findIndex(d => d.id === id);
+		if (index === -1) {
+			throw new Error(`no such Region: ${id}`);
+		}
+		return this.regions.splice(index, 1)[0];
 	}
 }

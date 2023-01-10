@@ -34,14 +34,14 @@ func TestProfilesExport(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId:    totest.GetProfileID(t, TOSession, "EDGE1"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "EDGE1"),
 					ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateProfilesExportFields(map[string]interface{}{"CDNName": "cdn1", "Name": "EDGE1",
 							"Description": "edge1 description", "Type": "ATS_PROFILE"})),
 				},
 				"NOT FOUND when PROFILE DOESNT EXIST": {
-					EndpointId:    func() int { return 1111111111 },
+					EndpointID:    func() int { return 1111111111 },
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -54,7 +54,7 @@ func TestProfilesExport(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.ExportProfile(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.ExportProfile(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp, resp.Alerts, err)
 							}

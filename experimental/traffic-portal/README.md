@@ -21,7 +21,7 @@ CDN architectures. The eventual goal is to slowly eat Traffic Portal by
 importing all of its functionality once the self-service UI is complete.
 
 ## Prerequisites
-Traffic Portal runs on [NodeJS](https://nodejs.org/) version 13 (or later) and
+Traffic Portal runs on [NodeJS](https://nodejs.org/) version 18 (or later) and
 uses its built-in NPM package manager to manage dependencies.
 
 ## Building and Running
@@ -165,11 +165,11 @@ End-to-end testing uses NightwatchJS and can be run by using `ng e2e`. More
 detailed instructions can be found in the `nightwatch/` folder
 
 ## Extending Traffic Portal
-Traffic Portal supports extending functionality through the use of Angular modules. 
+Traffic Portal supports extending functionality through the use of Angular modules.
 The `Custom` module (located at `src/app/custom/`) contains the code to do so and any additional
 functionality should be added here as you would to any other Angular module. By default,
-this module is not built or included in the main bundle, to enable this modify the environment 
-(`src/environments`) variable `customModule` to true. 
+this module is not built or included in the main bundle, to enable this modify the environment
+(`src/environments`) variable `customModule` to true.
 
 ## Contributing
 This project uses `eslint` and an `.editorconfig` file for maintaining code

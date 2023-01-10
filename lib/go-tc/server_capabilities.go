@@ -25,14 +25,35 @@ type ServerCapabilitiesResponse struct {
 	Alerts
 }
 
+// ServerCapabilitiesResponseV41 contains the result data from a GET(v4.1 and above) /server_capabilities request.
+type ServerCapabilitiesResponseV41 struct {
+	Response []ServerCapabilityV41 `json:"response"`
+	Alerts
+}
+
 // ServerCapability contains information about a given ServerCapability in Traffic Ops.
 type ServerCapability struct {
 	Name        string     `json:"name" db:"name"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 }
 
+// ServerCapabilityV4 is an alias for the latest minor version for the major version 4.
+type ServerCapabilityV4 ServerCapabilityV41
+
+// ServerCapabilityV41 contains information (in-addition to description) about a given ServerCapability  in Traffic Ops.
+type ServerCapabilityV41 struct {
+	ServerCapability
+	Description string `json:"description" db:"description"`
+}
+
 // ServerCapabilityDetailResponse contains the result data from a POST /server_capabilities request.
 type ServerCapabilityDetailResponse struct {
 	Response ServerCapability `json:"response"`
+	Alerts
+}
+
+// ServerCapabilityDetailResponseV41 contains the result data from a POST(v4.1 and above) /server_capabilities request.
+type ServerCapabilityDetailResponseV41 struct {
+	Response ServerCapabilityV41 `json:"response"`
 	Alerts
 }

@@ -19,7 +19,7 @@
 
 # Traffic Portal Installation / Configuration
 
-### 1. Build Traffic Portal RPM w/ Docker or fetch Traffic Portal RPM from [Jenkins](https://builds.apache.org/view/S-Z/view/TrafficControl/job/trafficcontrol-master-build)
+### 1. Build Traffic Portal RPM w/ Docker
 
 * Build instructions: https://github.com/apache/trafficcontrol/blob/master/BUILD.md
 
@@ -28,7 +28,7 @@
 * Install the Node.js JavaScript runtime
 
     ```
-    $ curl --silent --location https://rpm.nodesource.com/setup_6.x | sudo bash -
+    $ curl --silent --location https://rpm.nodesource.com/setup_18.x | sudo bash -
     $ sudo yum install -y nodejs
     ```
 
@@ -60,8 +60,6 @@
     $ http(s)://ip-address:port
     ```
 
-#### Notes
-
-    - Traffic Portal consumes the Traffic Ops API, therefore, an instance of Traffic Ops must be running.
-    - Traffic Portal and Traffic Ops must be running on the same protocol (http or https).
-    - This is known to work with CentOS 6.7 and Centos 7 as the host environment.
+### Notes
+- Traffic Portal consumes the Traffic Ops API, therefore, an instance of Traffic Ops must be running.
+- This is known to work with CentOS 7 and Centos 8 as the host environment.

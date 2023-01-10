@@ -17,6 +17,25 @@
  * under the License.
  */
 
+/**
+ * This is the controller for (almost) all tables of Delivery Services.
+ *
+ * @param {string} tableName
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
+ * @param {unknown[]} steeringTargets
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").ILocationService} $location
+ * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/DeliveryServiceRequestService")} deliveryServiceRequestService
+ * @param {import("../../../service/utils/DeliveryServiceUtils")} deliveryServiceUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ * @param {import("../../../models/UserModel")} userModel
+ */
 function TableDeliveryServicesController(tableName, deliveryServices, steeringTargets, $anchorScroll, $scope, $state, $location, $uibModal, deliveryServiceService, deliveryServiceRequestService, deliveryServiceUtils, locationUtils, messageModel, propertiesModel, userModel) {
 	$scope.tableName = tableName;
 
@@ -122,7 +141,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			headerName: "Geo Limit",
 			field: "geoLimit",
 			hide: true,
-			valueFormatter: params => deliveryServiceUtils.geoLimits[params.data.geoLimit],
+			valueGetter: params => deliveryServiceUtils.geoLimits[params.data.geoLimit],
 			tooltipValueGetter: params => deliveryServiceUtils.geoLimits[params.data.geoLimit]
 		},
 		{
@@ -139,7 +158,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			headerName: "Geolocation Provider",
 			field: "geoProvider",
 			hide: true,
-			valueFormatter: params => deliveryServiceUtils.geoProviders[params.data.geoProvider],
+			valueGetter: params => deliveryServiceUtils.geoProviders[params.data.geoProvider],
 			tooltipValueGetter: params => deliveryServiceUtils.geoProviders[params.data.geoProvider]
 		},
 		{
@@ -261,21 +280,21 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			headerName: "Protocol",
 			field: "protocol",
 			hide: false,
-			valueFormatter: params => deliveryServiceUtils.protocols[params.data.protocol],
+			valueGetter: params => deliveryServiceUtils.protocols[params.data.protocol],
 			tooltipValueGetter: params => deliveryServiceUtils.protocols[params.data.protocol]
 		},
 		{
 			headerName: "Qstring Handling",
 			field: "qstringIgnore",
 			hide: true,
-			valueFormatter: params => deliveryServiceUtils.qstrings[params.data.qstringIgnore],
+			valueGetter: params => deliveryServiceUtils.qstrings[params.data.qstringIgnore],
 			tooltipValueGetter: params => deliveryServiceUtils.qstrings[params.data.qstringIgnore]
 		},
 		{
 			headerName: "Range Request Handling",
 			field: "rangeRequestHandling",
 			hide: true,
-			valueFormatter: params => deliveryServiceUtils.rrhs[params.data.rangeRequestHandling],
+			valueGetter: params => deliveryServiceUtils.rrhs[params.data.rangeRequestHandling],
 			tooltipValueGetter: params => deliveryServiceUtils.rrhs[params.data.rangeRequestHandling]
 		},
 		{
@@ -410,7 +429,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 	 * Opens a dialog asking the user for confirmation before deleting the given
 	 * Delivery Service.
 	 *
-	 * @param {{readonly xmlId: string;}} ds
+	 * @param {import("../../../api/DeliveryServiceService").DeliveryService} ds
 	 */
 	async function confirmDelete(ds) {
 		const params = {
@@ -443,7 +462,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 	/**
 	 * Creates a new DSR to delete the given Delivery Service.
 	 *
-	 * @param {{readonly xmlId: string}} ds
+	 * @param {import("../../../api/DeliveryServiceService").DeliveryService} ds
 	 */
 	async function createDeliveryServiceDeleteRequest(ds) {
 		const params = {

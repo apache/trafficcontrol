@@ -26,41 +26,47 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - cache-config/**.go
+      - cache-config/testing/**
+      - .github/actions/build-ats-test-rpm/**
+      - .github/actions/cache-config-integration-tests/**
+      - .github/actions/repo-info/**
       - .github/workflows/cache-config-tests.yml
       - go.mod
       - go.sum
       - GO_VERSION
-      - lib/go-atscfg/**.go
-      - traffic_ops/*client/**.go
-      - traffic_ops/toclientlib/**.go
       - lib/atscfg-go/**.go
+      - lib/go-atscfg/**.go
+      - 'traffic_ops/app/db/**'
+      - '!traffic_ops/app/db/**.md'
+      - traffic_ops/*client/**.go
+      - 'traffic_ops/install/**'
+      - traffic_ops/toclientlib/**.go
       - traffic_ops/traffic_ops_golang/**.go
-      - cache-config/**.go
-      - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
-      - .github/actions/build-ats-test-rpm/**
-      - .github/actions/repo-info/**
-      - .github/actions/cache-config-integration-tests/**
   create:
   pull_request:
     paths:
+      - cache-config/**.go
+      - cache-config/testing/**
+      - .github/actions/build-ats-test-rpm/**
+      - .github/actions/cache-config-integration-tests/**
+      - .github/actions/repo-info/**
       - .github/workflows/cache-config-tests.yml
       - go.mod
       - go.sum
       - GO_VERSION
-      - lib/go-atscfg/**.go
-      - traffic_ops/*client/**.go
-      - traffic_ops/toclientlib/**.go
       - lib/atscfg-go/**.go
+      - lib/go-atscfg/**.go
+      - 'traffic_ops/app/db/**'
+      - '!traffic_ops/app/db/**.md'
+      - traffic_ops/*client/**.go
+      - 'traffic_ops/install/**'
+      - traffic_ops/toclientlib/**.go
       - traffic_ops/traffic_ops_golang/**.go
-      - cache-config/**.go
-      - cache-config/testing/**
       - vendor/**.go
       - vendor/modules.txt
-      - .github/actions/build-ats-test-rpm/**
-      - .github/actions/repo-info/**
-      - .github/actions/cache-config-integration-tests/**
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:

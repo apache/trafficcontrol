@@ -15,23 +15,14 @@
 # specific language governing permissions and limitations
 # under the License.
 
+ARG GO_VERSION
+FROM golang:${GO_VERSION}-alpine AS get-go
 FROM alpine:3.13 AS integration-builder
 
-COPY GO_VERSION /
-RUN set -o errexit; \
-    go_version=$(cat /GO_VERSION); \
-    wget -O go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz; \
-    tar -C /usr/local -xvzf go.tar.gz; \
-    ln -s /usr/local/go/bin/go /usr/bin/go; \
-    rm go.tar.gz; \
-    architecture=$(uname -m); \
-    mkdir lib64; \
-    # Use musl libc where the go binary expects glibc
-    # Less-generalized: ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
-    ln -s /lib/ld-musl-${architecture}.so.[0-9] /lib64/ld-linux-${architecture//_/-}.so.2; \
-    # Test the go binary
-    go version
-ENV GOPATH=/go
+COPY --from=get-go /usr/local/go /usr/local/go
+ENV PATH=/usr/local/go/bin:${PATH} \
+    GOPATH=/go \
+    CGO_ENABLED=0
 ENV PATH="${PATH}:${GOPATH}/bin"
 
 RUN apk add --no-cache --update git gcc
@@ -54,7 +45,6 @@ COPY ./go.mod ./go.sum /go/src/github.com/apache/trafficcontrol/
 WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 RUN go mod vendor -v
 
-ENV CGO_ENABLED=0
 RUN set -o errexit -o xtrace;\
     for api_version in v3 v4; do\
         go test -c ./$api_version -ldflags="-w -s" -o traffic_ops_${api_version}_integration_test;\

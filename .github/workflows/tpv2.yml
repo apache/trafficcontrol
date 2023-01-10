@@ -52,10 +52,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Node 16
+      - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 18.x
 
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -84,10 +84,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Node 16
+      - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 18.x
 
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -116,10 +116,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Node 16
+      - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: 18.x
 
       - name: Install latest Chrome
         run: sudo apt-get update && sudo apt-get install google-chrome-stable

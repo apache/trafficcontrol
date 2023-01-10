@@ -66,7 +66,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServiceRequestComment{
 						DeliveryServiceRequestID: GetDSRequestId(t, "test-ds1")(),
@@ -75,14 +75,14 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Header": {
-					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody:   tc.DeliveryServiceRequestComment{},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetDSRequestCommentId(t, "admin"),
+					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
 					RequestBody:   tc.DeliveryServiceRequestComment{},
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
@@ -104,7 +104,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestComment(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.UpdateDeliveryServiceRequestComment(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
@@ -166,7 +166,9 @@ func CreateTestDeliveryServiceRequestComments(t *testing.T) {
 		opts.QueryParameters.Set("xmlId", comment.XMLID)
 		resp, _, err := TOSession.GetDeliveryServiceRequests(opts)
 		assert.NoError(t, err, "Cannot get Delivery Service Request by XMLID '%s': %v - alerts: %+v", comment.XMLID, err, resp.Alerts)
-		assert.Equal(t, len(resp.Response), 1, "Found %d Delivery Service request by XMLID '%s, expected exactly one", len(resp.Response), comment.XMLID)
+		if !assert.Equal(t, len(resp.Response), 1, "Found %d Delivery Service request by XMLID '%s, expected exactly one", len(resp.Response), comment.XMLID) {
+			continue
+		}
 		assert.NotNil(t, resp.Response[0].ID, "Got Delivery Service Request with xml_id '%s' that had a null ID", comment.XMLID)
 
 		comment.DeliveryServiceRequestID = *resp.Response[0].ID

@@ -114,7 +114,7 @@ func TestPhysLocations(t *testing.T) {
 						validatePhysicalLocationUpdateCreateFields("testPhysicalLocation", map[string]interface{}{"Name": "testPhysicalLocation"})),
 				},
 				"BAD REQUEST when REGION ID does NOT MATCH REGION NAME": {
-					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
 					RequestBody: tc.PhysLocation{
 						Address:    "1234 southern way",
@@ -132,7 +132,7 @@ func TestPhysLocations(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
 					RequestBody: tc.PhysLocation{
 						Address:   "1234 southern way",
@@ -148,7 +148,7 @@ func TestPhysLocations(t *testing.T) {
 						validatePhysicalLocationUpdateCreateFields("HotAtlanta", map[string]interface{}{"City": "NewCity"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetPhysicalLocationID(t, "HotAtlanta"),
+					EndpointID:     GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.PhysLocation{
@@ -163,7 +163,7 @@ func TestPhysLocations(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetPhysicalLocationID(t, "HotAtlanta"),
+					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
 					RequestBody: tc.PhysLocation{
 						Address:   "1234 southern way",
@@ -180,7 +180,7 @@ func TestPhysLocations(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointId:    GetPhysicalLocationID(t, "testDelete"),
+					EndpointID:    GetPhysicalLocationID(t, "testDelete"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -215,14 +215,14 @@ func TestPhysLocations(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdatePhysLocationByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdatePhysLocationByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeletePhysLocationByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeletePhysLocationByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

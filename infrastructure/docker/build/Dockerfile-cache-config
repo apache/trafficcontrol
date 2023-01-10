@@ -49,8 +49,17 @@ RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 FROM common-dependencies AS cache-config
 
 COPY GO_VERSION /
-RUN go_version=$(cat /GO_VERSION) && \
-	curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-amd64.tar.gz && \
+RUN set -o nounset -o errexit; \
+	rpm_arch="$(rpm --eval %_arch)" && \
+	if [[ "$rpm_arch" == x86_64 ]]; then \
+		arch=amd64; \
+	elif [[ $rpm_arch == aarch64 ]]; then \
+		arch=arm64; \
+	else \
+		arch="$rpm_arch"; \
+	fi; \
+	go_version=$(cat /GO_VERSION) && \
+	curl -Lo go.tar.gz https://dl.google.com/go/go${go_version}.linux-${arch}.tar.gz && \
 	tar -C /usr/local -xvzf go.tar.gz && \
 	ln -s /usr/local/go/bin/go /usr/bin/go && \
 	rm go.tar.gz

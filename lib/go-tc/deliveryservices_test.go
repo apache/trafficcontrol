@@ -15,7 +15,9 @@ package tc
  */
 
 import (
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -432,6 +434,13 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	longDesc := "longDesc"
 	longDesc1 := "longDesc1"
 	longDesc2 := "longDesc2"
+	matchList := []DeliveryServiceMatch{
+		{
+			SetNumber: 1,
+			Type:      DSMatchTypeHostRegex,
+			Pattern:   "this is a testing pattern",
+		},
+	}
 	maxDNSAnswers := -76675
 	maxOriginConnections := 6514684
 	maxRequestHeaderBytes := 555
@@ -464,6 +473,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	typ := DSTypeDNS
 	typeID := 22
 	xmlid := "xmlid"
+	requiredCapabilities := []string{"foo"}
 
 	newDS := DeliveryServiceV4{}
 	newDS.Active = new(bool)
@@ -504,7 +514,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	newDS.LongDesc = &longDesc
 	newDS.LongDesc1 = &longDesc1
 	newDS.LongDesc2 = &longDesc2
-	newDS.MatchList = nil
+	newDS.MatchList = &matchList
 	newDS.MaxDNSAnswers = &maxDNSAnswers
 	newDS.MaxOriginConnections = &maxOriginConnections
 	newDS.MaxRequestHeaderBytes = &maxRequestHeaderBytes
@@ -538,6 +548,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 	newDS.Type = &typ
 	newDS.TypeID = &typeID
 	newDS.XMLID = &xmlid
+	newDS.RequiredCapabilities = requiredCapabilities
 
 	active := false
 	oldDS := DeliveryServiceNullableV30{
@@ -578,7 +589,7 @@ func dsUpgradeAndDowngradeTestingPair() (DeliveryServiceNullableV30, DeliverySer
 									LongDesc:                 &longDesc,
 									LongDesc1:                &longDesc1,
 									LongDesc2:                &longDesc2,
-									MatchList:                nil,
+									MatchList:                &matchList,
 									MaxDNSAnswers:            &maxDNSAnswers,
 									MidHeaderRewrite:         &midHeaderRewrite,
 									MissLat:                  &missLat,
@@ -678,6 +689,59 @@ func TestDeliveryServiceUpgradeAndDowngrade(t *testing.T) {
 	upgraded = downgraded.UpgradeToV4()
 	if upgraded.TLSVersions != nil {
 		t.Errorf("Expected 'tlsVersions' to be nil after upgrade, because all TLS versions are implicitly supported for an APIv3 DS; found: %v", upgraded.TLSVersions)
+	}
+}
+
+func TestDeliveryServiceV4UpgradeAndV5Downgrade(t *testing.T) {
+	_, ds := dsUpgradeAndDowngradeTestingPair()
+	ds.RemoveLD1AndLD2()
+	upDowned := ds.Upgrade().Downgrade()
+	if !reflect.DeepEqual(ds, upDowned) {
+		bts, err := json.MarshalIndent(ds, "", "\t")
+		if err != nil {
+			t.Fatalf("failed to encode original DS after upgrade/downgrade comparison failed: %v", err)
+		}
+		t.Logf("original: %s", bts)
+		bts, err = json.MarshalIndent(upDowned, "", "\t")
+		if err != nil {
+			t.Fatalf("failed to encode upgraded-then-downgraded DS after upgrade/downgrade comparison failed: %v", err)
+		}
+		t.Logf("upgraded-then-downgraded: %s", bts)
+		t.Error("Delivery Service upgrade followed by downgrade should result in exact copy")
+	}
+
+	ds.OrgServerFQDN = new(string)
+	*ds.OrgServerFQDN = "testquest.org"
+	if upDowned.OrgServerFQDN != nil && *upDowned.OrgServerFQDN == *ds.OrgServerFQDN {
+		t.Error("Modifying a reference in the original should leave the copy unchanged")
+	}
+
+	ds.Active = new(bool)
+	upgraded := ds.Upgrade()
+	if upgraded.Active != DSActiveStatePrimed {
+		t.Fatalf("Upgrading an Active=false APIv4 DS should yield Active='%s', got: %s", DSActiveStatePrimed, upgraded.Active)
+	}
+	*ds.Active = true
+	if upgraded = ds.Upgrade(); upgraded.Active != DSActiveStateActive {
+		t.Fatalf("Upgrading an Active=true APIv4 DS should yield Active='%s', got: %s", DSActiveStateActive, upgraded.Active)
+	}
+
+	if downgraded := upgraded.Downgrade(); downgraded.Active == nil {
+		t.Error("Unexpected nil active state after downgrading APIv5 DS to APIv4")
+	} else if !*downgraded.Active {
+		t.Errorf("Downgrading an Active='%s' APIv5 DS should yield Active=true, got: false", DSActiveStateActive)
+	}
+	upgraded.Active = DSActiveStatePrimed
+	if downgraded := upgraded.Downgrade(); downgraded.Active == nil {
+		t.Error("Unexpected nil active state after downgrading APIv5 DS to APIv4")
+	} else if *downgraded.Active {
+		t.Errorf("Downgrading an Active='%s' APIv5 DS should yield Active=false, got: true", DSActiveStatePrimed)
+	}
+	upgraded.Active = DSActiveStateInactive
+	if downgraded := upgraded.Downgrade(); downgraded.Active == nil {
+		t.Error("Unexpected nil active state after downgrading APIv5 DS to APIv4")
+	} else if *downgraded.Active {
+		t.Errorf("Downgrading an Active='%s' APIv5 DS should yield Active=false, got: true", DSActiveStateInactive)
 	}
 }
 

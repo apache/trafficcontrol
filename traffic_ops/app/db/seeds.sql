@@ -129,6 +129,7 @@ CROSS JOIN ( VALUES
 	('SERVER-CAPABILITY:READ'),
 	('SERVER:READ'),
 	('SERVICE-CATEGORY:READ'),
+	('SSL-KEY-EXPIRATION:READ'),
 	('STATIC-DN:READ'),
 	('STATUS:READ'),
 	('SERVER-CHECK:READ'),
@@ -272,7 +273,7 @@ INSERT INTO public.type ("name", "description", use_in_table) VALUES ('EDGE', 'E
 INSERT INTO public.type ("name", "description", use_in_table) VALUES ('MID', 'Mid Tier Cache', 'server') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.type ("name", "description", use_in_table) VALUES ('ORG', 'Origin', 'server') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.type ("name", "description", use_in_table) VALUES ('CCR', 'Traffic Router', 'server') ON CONFLICT ("name") DO NOTHING;
-INSERT INTO public.type ("name", "description", use_in_table) VALUES ('TRAFFIC_MONITOR', 'Traffic Monitor', 'server') ON CONFLICT ("name") DO NOTHING;
+INSERT INTO public.type ("name", "description", use_in_table) VALUES ('RASCAL', 'Traffic Monitor', 'server') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.type ("name", "description", use_in_table) VALUES ('RIAK', 'Riak keystore', 'server') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.type ("name", "description", use_in_table) VALUES ('INFLUXDB', 'influxDb server', 'server') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.type ("name", "description", use_in_table) VALUES ('TRAFFIC_ANALYTICS', 'traffic analytics server', 'server') ON CONFLICT ("name") DO NOTHING;

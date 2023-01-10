@@ -30,7 +30,7 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
-RUN curl -sL https://rpm.nodesource.com/setup_12.x | bash -
+RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
 ARG TRAFFIC_PORTAL_RPM=traffic_portal/traffic_portal.rpm
@@ -48,8 +48,7 @@ RUN dnf install -y epel-release && \
       gettext \
       bind-utils \
       net-tools && \
-    dnf clean all || \
-    echo "ERROR INSTALLING PACKAGES"
+    dnf clean all
 
 ADD $TRAFFIC_PORTAL_RPM /
 RUN rpm -Uvh /$(basename $TRAFFIC_PORTAL_RPM) && \

@@ -111,7 +111,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 			},
 			"SERVER STATUS PUT": {
 				"BAD REQUEST when UPDATING SERVER STATUS when ONLY EDGE SERVER ASSIGNED": {
-					EndpointId: GetServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
+					EndpointID: GetServerID(t, "test-ds-server-assignments"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"status":        "ADMIN_DOWN",
 						"offlineReason": "admin down",
@@ -163,7 +163,7 @@ func TestDeliveryServiceServers(t *testing.T) {
 						})
 					case "SERVER STATUS PUT":
 						t.Run(name, func(t *testing.T) {
-							_, reqInf, err := testCase.ClientSession.UpdateServerStatus(testCase.EndpointId(), status)
+							_, reqInf, err := testCase.ClientSession.UpdateServerStatus(testCase.EndpointID(), status)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, tc.Alerts{}, err)
 							}
@@ -230,7 +230,7 @@ func TestDeliveryServicesIDServers(t *testing.T) {
 		dsIDServersTests := utils.V3TestCase{
 			"GET": {
 				"OK when VALID request": {
-					EndpointId: GetDeliveryServiceId(t, "test-ds-server-assignments"), ClientSession: TOSession,
+					EndpointID: GetDeliveryServiceId(t, "test-ds-server-assignments"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						utils.ResponseHasLength(1)),
 				},
@@ -242,7 +242,7 @@ func TestDeliveryServicesIDServers(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetServersByDeliveryService(testCase.EndpointId())
+							resp, reqInf, err := testCase.ClientSession.GetServersByDeliveryService(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, cdnService, propertiesModel) {
+let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, collectionUtils, cdnService, propertiesModel) {
 
 	const oldConfig = currentSnapshot.config,
 		newConfig = newSnapshot.config;
@@ -71,6 +71,34 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 		$scope[destination + "Count"].updated = updated;
 		$scope[destination + "Changes"] = diff;
 	};
+
+	function minimizeServerCapabilitiesDiff(oldTrafficServers, newTrafficServers) {
+		if (!(oldTrafficServers instanceof Object) || !(newTrafficServers instanceof Object)) {
+			return;
+		}
+		const oldServersIterator = Object.entries(oldTrafficServers).entries();
+		const newServersIterator = Object.entries(newTrafficServers).entries();
+		const capabilitiesKey = "capabilities";
+		for (let oldServersNext = oldServersIterator.next(), newServersNext = newServersIterator.next(); !(oldServersNext.done || newServersNext.done);) {
+			const [, [oldHostname, oldServer]] = oldServersNext.value;
+			const [, [newHostname, newServer]] = newServersNext.value;
+			if (oldHostname < newHostname) {
+				oldServersNext = oldServersIterator.next();
+				continue;
+			} else if (oldHostname > newHostname) {
+				newServersNext = newServersIterator.next();
+				continue;
+			}
+			const oldCapabilities = oldServer[capabilitiesKey];
+			const newCapabilities = newServer[capabilitiesKey];
+			if (oldCapabilities instanceof Object && newCapabilities instanceof Object) {
+				newServer[capabilitiesKey] = collectionUtils.minimizeArrayDiff(oldCapabilities, newCapabilities);
+			}
+			oldServersNext = oldServersIterator.next();
+			newServersNext = newServersIterator.next();
+		}
+
+	}
 
 	let snapshot = function () {
 		cdnService.snapshot(cdn);
@@ -196,6 +224,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 		performDiff(oldConfig, newConfig, 'config');
 		performDiff(oldTrafficRouters, newTrafficRouters, 'contentRouters');
 		performDiff(oldTrafficMonitors, newTrafficMonitors, 'monitors');
+		minimizeServerCapabilitiesDiff(oldTrafficServers, newTrafficServers);
 		performDiff(oldTrafficServers, newTrafficServers, 'contentServers');
 		performDiff(oldDeliveryServices, newDeliveryServices, 'deliveryServices');
 		performDiff(oldEdgeCacheGroups, newEdgeCacheGroups, 'edgeLocations');
@@ -207,5 +236,5 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 
 };
 
-ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$uibModal', 'locationUtils', 'cdnService', 'propertiesModel'];
+ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$uibModal', 'locationUtils', 'collectionUtils', 'cdnService', 'propertiesModel'];
 module.exports = ConfigController;

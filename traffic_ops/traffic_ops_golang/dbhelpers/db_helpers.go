@@ -106,10 +106,10 @@ WHERE tm_user.email = $1
 // This will succeed if the either there is no lock by any user on the CDN, or if the current user has the lock on the CDN.
 func CheckIfCurrentUserHasCdnLock(tx *sql.Tx, cdn, user string) (error, error, int) {
 	query := `
-SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames 
-FROM cdn_lock c 
-    LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn 
-WHERE c.cdn=$1 
+SELECT c.username, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames
+FROM cdn_lock c
+    LEFT JOIN cdn_lock_user u ON c.username = u.owner AND c.cdn = u.cdn
+WHERE c.cdn=$1
 GROUP BY c.username`
 	var userName string
 	var sharedUserNames []string
@@ -320,15 +320,15 @@ func CheckIfCurrentUserCanModifyCDNWithID(tx *sql.Tx, cdnID int64, user string) 
 // This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroup in question.
 func CheckIfCurrentUserCanModifyCachegroup(tx *sql.Tx, cachegroupID int, user string) (error, error, int) {
 	query := `
-SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames 
-FROM cdn_lock c LEFT JOIN cdn_lock_user u 
-    ON c.username = u.owner 
-           AND c.cdn = u.cdn 
+SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames
+FROM cdn_lock c LEFT JOIN cdn_lock_user u
+    ON c.username = u.owner
+           AND c.cdn = u.cdn
 WHERE c.cdn IN (
-    SELECT name FROM cdn 
+    SELECT name FROM cdn
     WHERE id IN (
-        SELECT cdn_id FROM server 
-        WHERE cachegroup = ($1))) 
+        SELECT cdn_id FROM server
+        WHERE cachegroup = ($1)))
 GROUP BY c.username, c.cdn, c.soft`
 	var userName string
 	var cdn string
@@ -362,14 +362,14 @@ GROUP BY c.username, c.cdn, c.soft`
 // CheckIfCurrentUserCanModifyCachegroups checks if the current user has the lock on the cdns that are associated with the provided cachegroup IDs.
 // This will succeed if no other user has a hard lock on any of the CDNs that relate to the cachegroups in question.
 func CheckIfCurrentUserCanModifyCachegroups(tx *sql.Tx, cachegroupIDs []int, user string) (error, error, int) {
-	query := `SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c 
-    LEFT JOIN cdn_lock_user u 
-        ON c.username = u.owner 
-               AND c.cdn = u.cdn 
+	query := `SELECT c.username, c.cdn, c.soft, ARRAY_REMOVE(ARRAY_AGG(u.username), NULL) AS shared_usernames FROM cdn_lock c
+    LEFT JOIN cdn_lock_user u
+        ON c.username = u.owner
+               AND c.cdn = u.cdn
 WHERE c.cdn IN (
-    SELECT name FROM cdn 
+    SELECT name FROM cdn
     WHERE id IN (
-        SELECT cdn_id FROM server 
+        SELECT cdn_id FROM server
         WHERE cachegroup = ANY($1)))
         GROUP BY c.username, c.cdn, c.soft`
 	var userName string
@@ -414,7 +414,7 @@ func parseCriteriaAndQueryValues(queryParamsToSQLCols map[string]WhereColumnInfo
 				err = colInfo.Checker(urlValue)
 			}
 			if err != nil {
-				errs = append(errs, errors.New(key+" "+err.Error()))
+				errs = append(errs, fmt.Errorf("%s %w", key, err))
 			} else {
 				criteria = colInfo.Column + "=:" + key
 				criteriaArgs = append(criteriaArgs, criteria)
@@ -617,12 +617,16 @@ INNER JOIN type AS dt ON dt.id = ds.type
 INNER JOIN profile AS p ON p.id = s.profile
 INNER JOIN status AS st ON st.id = s.status
 WHERE ds.cdn_id = (SELECT id FROM cdn WHERE name = $1)
-AND ds.active = true
-AND dt.name != '` + tc.DSTypeAnyMap.String() + `'
+AND ds.active = $2
+AND dt.name != $3
 AND p.routing_disabled = false
-AND (st.name = '` + tc.CacheStatusOnline.String() + `' OR st.name = '` + tc.CacheStatusReported.String() + `' OR st.name = '` + tc.CacheStatusAdminDown.String() + `')
+AND (
+	st.name = $4
+	OR st.name = $5
+	OR st.name = $6
+)
 `
-	rows, err := tx.Query(q, cdn)
+	rows, err := tx.Query(q, cdn, tc.DSActiveStateActive, tc.DSTypeAnyMap, tc.CacheStatusOnline, tc.CacheStatusReported, tc.CacheStatusAdminDown)
 	if err != nil {
 		return nil, errors.New("querying server deliveryservice names by CDN: " + err.Error())
 	}
@@ -846,13 +850,11 @@ func GetRequiredCapabilitiesOfDeliveryServices(ids []int, tx *sql.Tx) (map[int][
 	dsCaps := make(map[int][]string, len(ids))
 	q := `
 SELECT
-  d.id,
-  ARRAY_REMOVE(ARRAY_AGG(dsrc.required_capability ORDER BY dsrc.required_capability), NULL) AS required_capabilities
-FROM deliveryservice d
-LEFT JOIN deliveryservices_required_capability dsrc on d.id = dsrc.deliveryservice_id
-WHERE
-  d.id = ANY($1)
-GROUP BY d.id
+  ds.id,
+  ARRAY_REMOVE((ds.required_capabilities), NULL) AS required_capabilities
+FROM deliveryservice ds
+WHERE ds.id = ANY($1)
+GROUP BY ds.id, ds.required_capabilities
 `
 	rows, err := tx.Query(q, pq.Array(&queryIDs))
 	if err != nil {
@@ -923,23 +925,14 @@ func ScanCachegroupsServerCapabilities(rows *sql.Rows) (map[string][]int, map[in
 // GetDSRequiredCapabilitiesFromID returns the server's capabilities.
 func GetDSRequiredCapabilitiesFromID(id int, tx *sql.Tx) ([]string, error) {
 	q := `
-	SELECT required_capability
-	FROM deliveryservices_required_capability
-	WHERE deliveryservice_id = $1
-	ORDER BY required_capability`
-	rows, err := tx.Query(q, id)
-	if err != nil {
-		return nil, errors.New("querying deliveryservice required capabilities from id: " + err.Error())
-	}
-	defer rows.Close()
+	SELECT required_capabilities
+	FROM deliveryservice
+	WHERE id = $1
+	ORDER BY required_capabilities`
 
 	caps := []string{}
-	for rows.Next() {
-		var cap string
-		if err := rows.Scan(&cap); err != nil {
-			return nil, errors.New("scanning capability: " + err.Error())
-		}
-		caps = append(caps, cap)
+	if err := tx.QueryRow(q, id).Scan(pq.Array(&caps)); err != nil {
+		return nil, errors.New("getting/ scanning capability: " + err.Error())
 	}
 	return caps, nil
 }
@@ -1321,26 +1314,24 @@ func TopologyExists(tx *sql.Tx, name string) (bool, error) {
 // one of the Topology's Cache Groups is empty with respect to the Delivery
 // Service's CDN. Note that this can panic if ds does not have a properly set
 // CDNID.
-func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceV4) (int, error, error) {
-	statusCode, userErr, sysErr := http.StatusOK, error(nil), error(nil)
-
+func CheckTopology(tx *sqlx.Tx, ds tc.DeliveryServiceV5) (int, error, error) {
 	if ds.Topology == nil {
-		return statusCode, userErr, sysErr
+		return http.StatusOK, nil, nil
 	}
 
 	cacheGroupIDs, _, err := GetTopologyCachegroups(tx.Tx, *ds.Topology)
 	if err != nil {
-		return http.StatusInternalServerError, nil, fmt.Errorf("getting topology cachegroups: %v", err)
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting topology cachegroups: %w", err)
 	}
 	if len(cacheGroupIDs) == 0 {
 		return http.StatusBadRequest, fmt.Errorf("no such Topology '%s'", *ds.Topology), nil
 	}
 
-	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{*ds.CDNID}, true, []int{}); err != nil {
-		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %w", *ds.Topology, *ds.CDNID, err), nil
+	if err = topology_validation.CheckForEmptyCacheGroups(tx, cacheGroupIDs, []int{ds.CDNID}, true, []int{}); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("empty cachegroups in Topology %s found for CDN %d: %w", *ds.Topology, ds.CDNID, err), nil
 	}
 
-	return statusCode, userErr, sysErr
+	return http.StatusOK, nil, nil
 }
 
 // GetTopologyCachegroups returns an array of cachegroup IDs and an array of cachegroup
@@ -1544,7 +1535,7 @@ func GetDeliveryServiceTypeAndCDNName(dsID int, tx *sql.Tx) (tc.DSType, string, 
 	return dsType, cdnName, true, nil
 }
 
-// GetDeliveryServiceTypeAndTopology returns the type of the deliveryservice and the name of its topology.
+// GetDeliveryServiceTypeRequiredCapabilitiesAndTopology returns the type of the deliveryservice and the name of its topology.
 func GetDeliveryServiceTypeRequiredCapabilitiesAndTopology(dsID int, tx *sql.Tx) (tc.DSType, []string, *string, bool, error) {
 	var dsType tc.DSType
 	var reqCap []string
@@ -1552,13 +1543,12 @@ func GetDeliveryServiceTypeRequiredCapabilitiesAndTopology(dsID int, tx *sql.Tx)
 	q := `
 SELECT
   t.name,
-  ARRAY_REMOVE(ARRAY_AGG(dsrc.required_capability ORDER BY dsrc.required_capability), NULL) AS required_capabilities,
+  ARRAY_REMOVE(ds.required_capabilities, NULL) AS required_capabilities,
   ds.topology
 FROM deliveryservice AS ds
-LEFT JOIN deliveryservices_required_capability AS dsrc ON dsrc.deliveryservice_id = ds.id
 JOIN type t ON ds.type = t.id
 WHERE ds.id = $1
-GROUP BY t.name, ds.topology
+GROUP BY t.name, ds.topology, ds.required_capabilities
 `
 	if err := tx.QueryRow(q, dsID).Scan(&dsType, pq.Array(&reqCap), &topology); err != nil {
 		if err == sql.ErrNoRows {
@@ -2181,4 +2171,19 @@ func GetProfileIDDesc(tx *sql.Tx, name string) (id int, desc string) {
 		log.Errorf("scanning id and description in GetProfileIDDesc: " + err.Error())
 	}
 	return
+}
+
+// GetSCInfo confirms whether the server capability exists, and an error (if one occurs).
+func GetSCInfo(tx *sql.Tx, name string) (bool, error) {
+	var count int
+	if err := tx.QueryRow("SELECT count(name) FROM server_capability AS sc WHERE sc.name=$1", name).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting server capability info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting server capability info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
 }

@@ -43,7 +43,7 @@ RUN set -o nounset -o errexit && \
 		use_repo='--repo=pgdg13'; \
 		enable_repo='--enablerepo=powertools'; \
 	fi; \
-	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-x86_64/pgdg-redhat-repo-latest.noarch.rpm"; \
+	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-$(rpm --eval %_arch)/pgdg-redhat-repo-latest.noarch.rpm"; \
 	dnf -y install epel-release libicu; \
 	dnf -y $use_repo -- install postgresql13; \
 	dnf -y $enable_repo install \

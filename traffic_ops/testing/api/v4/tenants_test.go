@@ -106,7 +106,7 @@ func TestTenants(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetTenantID(t, "tenant4"),
+					EndpointID:    GetTenantID(t, "tenant4"),
 					ClientSession: TOSession,
 					RequestBody: tc.Tenant{
 						Active:     false,
@@ -118,7 +118,7 @@ func TestTenants(t *testing.T) {
 						validateTenantCreateUpdateFields(map[string]interface{}{"Name": "newname", "Active": false})),
 				},
 				"BAD REQUEST when ROOT TENANT": {
-					EndpointId:    GetTenantID(t, "root"),
+					EndpointID:    GetTenantID(t, "root"),
 					ClientSession: TOSession,
 					RequestBody: tc.Tenant{
 						Active:     false,
@@ -128,7 +128,7 @@ func TestTenants(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:    GetTenantID(t, "tenant2"),
+					EndpointID:    GetTenantID(t, "tenant2"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.Tenant{
@@ -140,7 +140,7 @@ func TestTenants(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetTenantID(t, "tenant2"),
+					EndpointID:    GetTenantID(t, "tenant2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Tenant{
 						Active:     false,
@@ -154,7 +154,7 @@ func TestTenants(t *testing.T) {
 			},
 			"DELETE": {
 				"BAD REQUEST when TENANT HAS CHILDREN": {
-					EndpointId:    GetTenantID(t, "tenant1"),
+					EndpointID:    GetTenantID(t, "tenant1"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -181,14 +181,14 @@ func TestTenants(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateTenant(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateTenant(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteTenant(testCase.EndpointId(), testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteTenant(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

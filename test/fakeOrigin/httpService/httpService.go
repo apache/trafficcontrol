@@ -25,7 +25,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"net/http/pprof"
 	"os"
 	"path"
 	"path/filepath"
@@ -33,6 +35,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/test/fakeOrigin/dtp"
 	"github.com/apache/trafficcontrol/test/fakeOrigin/endpoint"
 	"github.com/apache/trafficcontrol/test/fakeOrigin/transcode"
 )
@@ -58,6 +61,13 @@ func GetRoutes(cfg endpoint.Config) (map[string]EndpointRoutes, error) {
 			allRoutes[ep.ID] = routes
 			continue
 		}
+
+		if ep.EndpointType == endpoint.Testing {
+			routes.MasterPath = path.Join("/", ep.ID)
+			allRoutes[ep.ID] = routes
+			continue
+		}
+
 		if ep.EndpointType == endpoint.Dir {
 			fileList := []string{}
 			err := filepath.Walk(ep.Source, func(path string, f os.FileInfo, err error) error {
@@ -152,12 +162,41 @@ func registerRoute(mux *http.ServeMux, e endpoint.Endpoint, httpPath string, isL
 			return errors.New("creating handler '" + httpPath + "': " + err.Error())
 		}
 		if isSSL {
-			mux.Handle(httpPath, log(strictTransportSecurity(originHeaderManipulation(h))))
-			mux.Handle(httpPath+"/", log(strictTransportSecurity(originHeaderManipulation(h))))
+			mux.Handle(httpPath, logfo(strictTransportSecurity(originHeaderManipulation(h))))
+			mux.Handle(httpPath+"/", logfo(strictTransportSecurity(originHeaderManipulation(h))))
 		} else {
-			mux.Handle(httpPath, log(originHeaderManipulation(h)))
-			mux.Handle(httpPath+"/", log(originHeaderManipulation(h)))
+			mux.Handle(httpPath, logfo(originHeaderManipulation(h)))
+			mux.Handle(httpPath+"/", logfo(originHeaderManipulation(h)))
 		}
+		fmt.Println("registered for static endpoint logfo for path: ", httpPath)
+		return nil
+	}
+
+	if e.EndpointType == endpoint.Testing {
+		alog := log.New(os.Stderr, "", 0)
+		dtpHandler := dtp.NewDTPHandler()
+
+		dtp.GlobalConfig.Log.RequestHeaders = e.LogReqHeaders
+		dtp.GlobalConfig.Log.ResponseHeaders = e.LogRespHeaders
+		dtp.GlobalConfig.StallDuration = e.StallDuration * time.Second
+		dtp.GlobalConfig.Debug = e.EnableDebug
+		dtp.GlobalConfig.EnablePprof = e.EnablePprof
+
+		// General DTP endpoints for testing
+		mux.Handle("/"+e.ID, dtp.Logger(alog, dtpHandler))
+		mux.Handle("/"+e.ID+"/", dtp.Logger(alog, dtpHandler))
+
+		// DTP endpoints for pprof output
+		if dtp.GlobalConfig.EnablePprof {
+			mux.HandleFunc("/"+e.ID+"/debug/pprof/", pprof.Index)
+			mux.HandleFunc("/"+e.ID+"/debug/pprof/cmdline", pprof.Cmdline)
+			mux.HandleFunc("/"+e.ID+"/debug/pprof/profile", pprof.Profile)
+			mux.HandleFunc("/"+e.ID+"/debug/pprof/symbol", pprof.Symbol)
+			mux.HandleFunc("/"+e.ID+"/debug/pprof/trace", pprof.Trace)
+		}
+
+		// DTP endpoint for setting various config values on the fly
+		mux.HandleFunc("/"+e.ID+"/config", dtp.ConfigHandler)
 		return nil
 	}
 
@@ -187,11 +226,11 @@ func registerRoute(mux *http.ServeMux, e endpoint.Endpoint, httpPath string, isL
 		return errors.New("registering route '" + httpPath + "': " + err.Error())
 	}
 	if isSSL {
-		mux.Handle(httpPath, log(strictTransportSecurity(originHeaderManipulation(cacheOptimization(h, startTime, ep)))))
-		mux.Handle(httpPath+"/", log(strictTransportSecurity(originHeaderManipulation(cacheOptimization(h, startTime, ep)))))
+		mux.Handle(httpPath, logfo(strictTransportSecurity(originHeaderManipulation(cacheOptimization(h, startTime, ep)))))
+		mux.Handle(httpPath+"/", logfo(strictTransportSecurity(originHeaderManipulation(cacheOptimization(h, startTime, ep)))))
 	} else {
-		mux.Handle(httpPath, log(originHeaderManipulation(cacheOptimization(h, startTime, ep))))
-		mux.Handle(httpPath+"/", log(originHeaderManipulation(cacheOptimization(h, startTime, ep))))
+		mux.Handle(httpPath, logfo(originHeaderManipulation(cacheOptimization(h, startTime, ep))))
+		mux.Handle(httpPath+"/", logfo(originHeaderManipulation(cacheOptimization(h, startTime, ep))))
 	}
 	return nil
 }
@@ -202,7 +241,13 @@ func registerRoutes(mux *http.ServeMux, conf endpoint.Config, routes map[string]
 		if !ok {
 			return errors.New("no routes found for endpoint '" + e.ID + "'")
 		}
-		if endpointRoutes.MasterPath != "" {
+		if e.EndpointType == endpoint.Testing {
+			err := registerRoute(mux, e, e.ID, false, ContentTypeJSON, isSSL)
+			if err != nil {
+				return errors.New("error registering endpoint '" + e.ID + "': " + err.Error())
+			}
+		}
+		if endpointRoutes.MasterPath != "" && e.EndpointType != endpoint.Testing {
 			err := registerRoute(mux, e, endpointRoutes.MasterPath, e.EndpointType == endpoint.Live && !endpointRoutes.IsABR, ContentTypeM3U8, isSSL)
 			if err != nil {
 				return errors.New("Error registering endpoint '" + e.ID + "': " + err.Error())
@@ -227,8 +272,8 @@ func registerRoutes(mux *http.ServeMux, conf endpoint.Config, routes map[string]
 			}
 		}
 	}
-	mux.Handle("/crossdomain.xml", log(crossdomainHandler(conf.ServerConf.CrossdomainFile)))
-	mux.Handle("/", log(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/crossdomain.xml", logfo(crossdomainHandler(conf.ServerConf.CrossdomainFile)))
+	mux.Handle("/", logfo(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(http.StatusText(http.StatusNotFound)))
 	})))
@@ -242,7 +287,13 @@ func StartHTTPListener(conf endpoint.Config, routes map[string]EndpointRoutes) e
 		return errors.New("registering routes: " + err.Error())
 	}
 	fmt.Println("Serving HTTP on " + conf.ServerConf.BindingAddress + ":" + strconv.Itoa(conf.ServerConf.HTTPListeningPort))
-	return http.ListenAndServe(conf.ServerConf.BindingAddress+":"+strconv.Itoa(conf.ServerConf.HTTPListeningPort), mux)
+	srv := &http.Server{
+		Addr:         conf.ServerConf.BindingAddress + ":" + strconv.Itoa(conf.ServerConf.HTTPListeningPort),
+		Handler:      mux,
+		ReadTimeout:  conf.ServerConf.ReadTimeout * time.Second,
+		WriteTimeout: conf.ServerConf.ReadTimeout * time.Second,
+	}
+	return srv.ListenAndServe()
 }
 
 // StartHTTPSListener kicks off the HTTPS stack
@@ -271,6 +322,8 @@ func StartHTTPSListener(conf endpoint.Config, routes map[string]EndpointRoutes) 
 		Handler:      mux,
 		TLSConfig:    cfg,
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+		ReadTimeout:  conf.ServerConf.ReadTimeout * time.Second,
+		WriteTimeout: conf.ServerConf.WriteTimeout * time.Second,
 	}
 	fmt.Println("Serving HTTPS on " + conf.ServerConf.BindingAddress + ":" + strconv.Itoa(conf.ServerConf.HTTPSListeningPort))
 	return srv.ListenAndServeTLS(conf.ServerConf.SSLCert, conf.ServerConf.SSLKey)

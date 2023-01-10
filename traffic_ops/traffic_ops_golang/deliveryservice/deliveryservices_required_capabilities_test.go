@@ -92,12 +92,11 @@ func TestCreateDeliveryServicesRequiredCapability(t *testing.T) {
 	arrayRows := sqlmock.NewRows([]string{"array"})
 	mock.ExpectQuery("SELECT ds.server FROM deliveryservice_server").WillReturnRows(arrayRows)
 
-	rows := sqlmock.NewRows([]string{"required_capability", "deliveryservice_id", "last_updated"}).AddRow(
-		util.StrPtr("mem"),
+	rows := sqlmock.NewRows([]string{"deliveryservice_id", "last_updated"}).AddRow(
 		util.IntPtr(1),
 		time.Now(),
 	)
-	mock.ExpectQuery("INSERT INTO deliveryservices_required_capability").WillReturnRows(rows)
+	mock.ExpectQuery("UPDATE deliveryservice").WillReturnRows(rows)
 
 	userErr, sysErr, errCode := rc.Create()
 	if userErr != nil {
@@ -197,7 +196,7 @@ func TestReadDeliveryServicesRequiredCapability(t *testing.T) {
 		capability.XMLID,
 		time.Now(),
 	)
-	mock.ExpectQuery("SELECT .* FROM deliveryservices_required_capability").WillReturnRows(rows)
+	mock.ExpectQuery("SELECT .* FROM deliveryservice").WillReturnRows(rows)
 
 	results, userErr, sysErr, errCode, _ := rc.Read(nil, false)
 	if userErr != nil {
@@ -248,7 +247,7 @@ func TestDeleteDeliveryServicesRequiredCapability(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"xml_id", "name"}).AddRow("name", "cdnName"))
 	mock.ExpectQuery("SELECT c.username").WillReturnRows(sqlmock.NewRows(nil))
-	mock.ExpectExec("DELETE").WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("UPDATE").WillReturnResult(sqlmock.NewResult(1, 1))
 
 	rc := RequiredCapability{
 		api.APIInfoImpl{

@@ -13,6 +13,9 @@
 .. limitations under the License.
 ..
 
+.. |checkmark| image:: ../admin/images/good.png
+.. |X| image:: ../admin/images/bad.png
+
 .. _delivery-services:
 
 *****************
@@ -20,7 +23,7 @@ Delivery Services
 *****************
 "Delivery Services" are a very important construct in :abbr:`ATC (Apache Traffic Control)`. At their most basic, they are a source of content and a set of :term:`cache servers` and configuration options used to distribute that content.
 
-Delivery Services are modeled several times over, in the Traffic Ops database, in Traffic Portal forms and tables, and several times for various :ref:`to-api` versions in the new Go Traffic Ops codebase. Go-specific data structures can be found in `the project's GoDoc documentation <https://pkg.go.dev/github.com/apache/trafficcontrol/lib/go-tc#DeliveryServiceNullableV11>`_. Rather than application-specific definitions, what follows is an attempt at consolidating all of the different properties and names of properties of Delivery Service objects throughout the :abbr:`ATC (Apache Traffic Control)` suite. The names of these fields are typically chosen as the most human-readable and/or most commonly-used names for the fields, and when reading please note that in many cases these names will appear camelCased or snake_cased to be machine-readable. Any aliases of these fields that are not merely case transformations of the indicated, canonical names will be noted in a table of aliases.
+Delivery Services are modeled several times over, in the Traffic Ops database, in Traffic Portal forms and tables, and several times for various :ref:`to-api` versions in the new Go Traffic Ops codebase. Go-specific data structures can be found in `the project's GoDoc documentation <https://pkg.go.dev/github.com/apache/trafficcontrol/lib/go-tc#DeliveryServiceV5>`_. Rather than application-specific definitions, what follows is an attempt at consolidating all of the different properties and names of properties of Delivery Service objects throughout the :abbr:`ATC (Apache Traffic Control)` suite. The names of these fields are typically chosen as the most human-readable and/or most commonly-used names for the fields, and when reading please note that in many cases these names will appear camelCased or snake_cased to be machine-readable. Any aliases of these fields that are not merely case transformations of the indicated, canonical names will be noted in a table of aliases.
 
 .. seealso:: The API reference for Delivery Service-related endpoints such as :ref:`to-api-deliveryservices` contains definitions of the Delivery Service object(s) returned and/or accepted by those endpoints.
 .. seealso:: :ref:`delivery-service-requests`
@@ -29,7 +32,39 @@ Delivery Services are modeled several times over, in the Traffic Ops database, i
 
 Active
 ------
-Whether or not this Delivery Service is active on the CDN and can be served. When a Delivery Service is not "active", Traffic Router will not be made aware of its existence - i.e. it will not appear in CDN :term:`Snapshots`. Setting a Delivery Service to be "active" (or "inactive") will require that a new :term:`Snapshot` be taken.
+Whether or not this Delivery Service is active on the CDN and can be served. A Delivery Service's "active state" can be one of the three values listed below.
+
+ACTIVE
+	The Delivery Service's configuration is deployed to the appropriate :term:`cache servers` when updates are :term:`Queue`\ d, and Traffic Router is made aware of its existence through CDN :term:`Snapshots`.
+PRIMED
+	The Delivery Service's configuration is deployed to the appropriate :term:`cache servers` when updates are :term:`Queue`\ d, but Traffic Router is *not* made aware of its existence through CDN :term:`Snapshots`, so clients will not be routed for it.
+INACTIVE
+	The Delivery Service's configuration is *not* deployed to any :term:`cache servers` when updates are :term:`Queue`\ d, *nor* is Traffic Router made aware of its existence through CDN :term:`Snapshots`.
+
+Changing a Delivery Service's "active state" either to or from "ACTIVE" will require that a new :term:`Snapshot` be taken. Likewise, a :term:`Queue Updates` must be performed if the "active state" changes either to or from "INACTIVE". Table :numref:`tbl-active-state-transitions` expresses these relationships exhaustively.
+
+.. _tbl-active-state-transitions:
+
+.. table:: Active State Transitions
+
+	+----------------+-----------+-------------------------------+--------------------------------+
+	| Original State | New State | CDN :term:`Snapshot` Required | :term:`Queue Updates` Required |
+	+================+===========+===============================+================================+
+	| ACTIVE         | PRIMED    |                   |checkmark| |                            |X| |
+	+----------------+-----------+-------------------------------+--------------------------------+
+	| ACTIVE         | INACTIVE  |                   |checkmark| |                    |checkmark| |
+	+----------------+-----------+-------------------------------+--------------------------------+
+	| PRIMED         | ACTIVE    |                   |checkmark| |                            |X| |
+	+----------------+-----------+-------------------------------+--------------------------------+
+	| PRIMED         | INACTIVE  |                           |X| |                    |checkmark| |
+	+----------------+-----------+-------------------------------+--------------------------------+
+	| INACTIVE       | ACTIVE    |                   |checkmark| |                    |checkmark| |
+	+----------------+-----------+-------------------------------+--------------------------------+
+	| INACTIVE       | PRIMED    |                           |X| |                    |checkmark| |
+	+----------------+-----------+-------------------------------+--------------------------------+
+
+.. versionchanged:: ATCv7.1
+	In API version 5, introduced in :abbr:`ATC (Apache Traffic Control)` version 7.1 (tentative plan for release at the time of this writing), this was switched to the enumerated strings listed here. Prior to version 5 of :ref:`to-api`, this was a boolean having only the states "true" and "false". "True" was identical to today's "ACTIVE", while "false" was identical to "PRIMED". "INACTIVE" has no legacy analogue. Thus when requesting older API versions, an "active state" of "false" may actually be either INACTIVE or PRIMED, and there is no way to tell which.
 
 .. _ds-anonymous-blocking:
 
@@ -277,7 +312,7 @@ Limits access to a Delivery Service by geographic location. The only practical d
 
 Geo Limit Countries
 -------------------
-When `Geo Limit`_ is being used with this Delivery Service (and is set to exactly ``2``), this is optionally a list of country codes to which access to content provided by the Delivery Service will be restricted. Normally, this is a comma-delimited string of said country codes, or an array of strings representing the country codes. When creating a Delivery Service with this field or modifying the Geo Limit Countries field on an existing Delivery Service, any amount of whitespace between country codes is permissible, as it will be removed on submission, but responses from the :ref:`to-api` should never include such whitespace.
+When `Geo Limit`_ is being used with this Delivery Service (and is set to exactly ``2``), this is optionally a list of country codes to which access to content provided by the Delivery Service will be restricted. Normally, this is an array of strings representing country codes, but in legacy versions of the :ref:`to-api` it was a comma-delimited string of said country codes rather than a real array. When creating or modifying this field of a Delivery Service in said legacy API versions, any amount of whitespace between country codes is permissible, as it will be removed on submission, but responses from the :ref:`to-api` should never include such whitespace.
 
 .. table:: Aliases
 
@@ -1026,8 +1061,8 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 
 - ``merge_parent_groups`` - on a Deliver Service :term:`Profile`, if this exists, moves each of the space-separated :term:`Cache Groups` named in the :ref:`parameter-value` from the secondary parent list into the primary parent list. This can be used to combine all parents into a single consistent hash ring.
 
-	.. deprecated:: ATCv6.2
-		In :ref:`to-api` version 4, TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
+.. deprecated:: 6.2
+	In :ref:`to-api` version 4, TLS versions should be configured using the `TLS Versions`_ property of the Delivery Service, and support for this :term:`Parameter` will be removed at some point after the stabilization of :ref:`to-api` version 4.
 
 Parameters that Affect Multi-Site Origin and Parent Down Behavior
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -1038,6 +1073,7 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 .. _max_unavailable_server_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-unavailable-server-retries
 .. _parent_retry: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry
 .. _unavailable_server_retry_responses: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-unavailable-server-retry-responses
+.. _simple_server_retry_responses: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-simple-server-retry-responses
 .. _parent.config: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html
 .. _parent: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent
 .. _secondary_parent: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-secondary-parent
@@ -1052,27 +1088,33 @@ Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`A
 	| algorithm                               | `round_robin`_                                             | Sets the algorithm used to determine from which :term:`origin server` content will  |
 	|                                         |                                                            | be requested.                                                                       |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| parent_retry                            | `parent_retry`_                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
+	|                                         |                                                            | "unavailable server retries", or both. (deprecated)                                 |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| simple_server_retry_responses           | `simple_server_retry_responses`_                           | Defines HTTP response codes for an :term:`origin server` that necessitate a "simple |
+	|                                         |                                                            | retry".                                                                             |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| max_simple_retries                      | `max_simple_retries`_                                      | Sets a strict limit on the number of "simple retries" allowed before giving up      |
+	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
+	| unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
+	|                                         |                                                            | currently "unavailable".                                                            |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 	| max_unavailable_server_retries          | `max_unavailable_server_retries`_                          | Sets a strict limit on the number of times the :term:`cache server` will attempt to |
 	|                                         |                                                            | request content from an :term:`origin server` that has previously been considered   |
 	|                                         |                                                            | "unavailable".                                                                      |
 	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| parent_retry                            | `parent_retry`_                                            | Sets whether the :term:`cache servers` will use "simple retries",                   |
-	|                                         |                                                            | "unavailable server retries", or both.                                              |
-	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| simple_retry_response_codes             | **UNKNOWN**                                                | **UNKNOWN** - supposedly defines HTTP response codes from an :term:`origin server`  |
-	|                                         |                                                            | that necessitate a "simple retry".                                                  |
-	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
-	| unavailable_server_retry_response_codes | `unavailable_server_retry_responses`_                      | Defines HTTP response codes from an :term:`origin server` that indicate it is       |
-	|                                         |                                                            | currently "unavailable".                                                            |
-	+-----------------------------------------+------------------------------------------------------------+-------------------------------------------------------------------------------------+
 
 The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last`` tiers by specifying prefixes ``first.``, ``inner.`` and ``last.``, applicable to both topology and non topology. This allows fine tuning of marking parents "down" and retry behavior inside a CDN.
 
-.. deprecated:: The ``mso.`` prefix is deprecated.  ``last.`` prefix should be preferred although no prefix can also be used.
+.. deprecated:: 7.0
+	The ``mso.`` prefix is deprecated.  ``last.`` prefix should be preferred although no prefix can also be used.
 
-.. warning:: The `simple_retry_response_codes`` :term:`Parameter` has no apparent, possible use according to the :abbr:`ATS (Apache Traffic Server)` `parent.config documentation <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_. Whether or not it has any effect - let alone the *intended* effect - is not known, and its use is therefore strongly discouraged.
+.. deprecated:: 7.0
+	The `parent_retry` parameters are now inferred from the `simple retry` and `unavailable server retry` parameters. To disable "simple retries" for a :term:`Profile`, set the Value of its ``max_simple_retries`` :term:`Parameter` to ``0``, and the Value of its ``max_simple_retry_responses`` :term:`Parameter` to an empty string. "Unavailable server retries" may disabled in much the same way, using the analogous :term:`Parameters`.
+
+.. impl-detail:: With Apache Traffic Server 8.1.x the ``simple_retry_response_codes`` setting is not available.
+.. impl-detail:: With Apache Traffic Server 9.1.x ``unavailable_server_retry_response_codes`` are limited to 5xx responses and ``simple_retry_response_codes`` are limited to 4xx.
+.. impl-detail:: Apache Traffic Server 9.2.x allows more flexibility with 4xx and 5xx codes available for use with ``simple_retry_response_codes``.
 
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
 

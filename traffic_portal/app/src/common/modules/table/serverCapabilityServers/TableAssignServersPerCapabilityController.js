@@ -32,6 +32,7 @@ var TableAssignServersPerCapabilityController = function(servers, serverCapabili
             field: "hostName",
             checkboxSelection: true,
             headerCheckboxSelection: true,
+            sort: "asc",
         },
         {
             headerName: "Type",

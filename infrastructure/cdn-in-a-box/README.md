@@ -182,3 +182,30 @@ Try disabling SELinux or setting it to 'permissive'. SELinux hates letting conta
 ### Traffic Vault container exits with cp /usr/local/share/ca-certificates cp: missing destination
 
 Bring all components down, remove the `traffic_ops/ca` directory, and delete the volumes with `docker volume prune`. This will force the regeneration of the certificates.
+
+## Notes for macOS
+
+CDN in a Box should work, without modification, on any architecture that can run Docker. If it does not, that is a bug, please open a new issue for it.
+
+Re/installed docker from the command line to use `--user=[your username]` flag. Link to install info for docker for [Install from command line] (https://docs.docker.com/desktop/install/mac-install/)  and use Install from command line located in the "Mac with Apple Silicon" tab.
+
+Build and run of it:
+In the trafficcontrol/infrastructure/cdn-in-a-box directory run the following:
+
+- `make build-builders` ~~> this will create all the rpms and copy each rpms into its own folder in the cdn-in-a-box project. This will also create the dist folder under trafficcontrol folder structure even if you deleted yours.
+
+- `docker-compose up` ~~> this will create docker images, and if rebuild is needed, run `docker-compose up --build`.
+
+### Docker v4.11 and later of Docker Desktop for Mac
+
+"Privileged configurations are applied during the installation with the --user flag on the install command. In this case, the user is not prompted to grant root privileges on the first run of Docker Desktop. Specifically, the --user flag:
+
+- Uninstalls the previous com.docker.vmnetd if present
+- Sets up symlinks for the user
+- Ensures that localhost is resolved to 127.0.0.1
+
+The limitation of this approach is that Docker Desktop can only be run by one user account per machine, namely the one specified in the -–user flag."
+
+The above is a direct quote found in [Installing from the commandline] (https://docs.docker.com/desktop/mac/permission-requirements/)
+
+Note: The Install from command line was the only install that resolved my issue of being unable to build the docker images and run the containers in localhost. Homebrew and the usual automatic install when double-clicking in the Docker.dmg did not work.

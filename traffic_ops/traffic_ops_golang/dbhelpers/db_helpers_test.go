@@ -21,6 +21,7 @@ package dbhelpers
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"reflect"
 	"strconv"
@@ -407,4 +408,55 @@ func TestGetCDNIDFromName(t *testing.T) {
 		})
 	}
 
+}
+
+func TestGetSCInfo(t *testing.T) {
+	var testCases = []struct {
+		description   string
+		name          string
+		expectedError error
+		exists        bool
+	}{
+		{
+			description:   "Success: Get valid SC",
+			name:          "hdd",
+			expectedError: nil,
+			exists:        true,
+		},
+		{
+			description:   "Failure: SC not in DB",
+			name:          "disk",
+			expectedError: sql.ErrNoRows,
+			exists:        false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close()
+
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+
+			mock.ExpectBegin()
+			rows := sqlmock.NewRows([]string{"count"})
+			if testCase.exists {
+				rows = rows.AddRow(1)
+			}
+			mock.ExpectQuery("SELECT").WillReturnRows(rows)
+			mock.ExpectCommit()
+
+			scExists, err := GetSCInfo(db.MustBegin().Tx, testCase.name)
+			if testCase.exists != scExists {
+				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, scExists)
+			}
+
+			if !errors.Is(err, testCase.expectedError) {
+				t.Errorf("getSCInfo expected: %s, actual: %s", testCase.expectedError, err)
+			}
+		})
+	}
 }

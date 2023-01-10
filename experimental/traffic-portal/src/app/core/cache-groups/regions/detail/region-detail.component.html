@@ -1,0 +1,42 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-card>
+	<tp-loading *ngIf="!region"></tp-loading>
+	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="region">
+		<mat-card-content>
+			<mat-form-field>
+				<mat-label>Name</mat-label>
+				<input matInput type="text" name="name" required [(ngModel)]="region.name" />
+			</mat-form-field>
+				<mat-form-field>
+					<mat-label>Division</mat-label>
+						<mat-select name="division"[(ngModel)]="region.division" required>
+							<mat-option *ngFor="let division of divisions" [value]="division.id">{{division.name}}</mat-option>
+						</mat-select>
+				</mat-form-field>
+			<mat-form-field *ngIf="!new">
+				<mat-label>ID</mat-label>
+				<input matInput type="text" name="id" disabled readonly [defaultValue]="region.id" />
+			</mat-form-field>
+			<mat-form-field *ngIf="!new">
+				<mat-label>Last Updated</mat-label>
+				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="region.lastUpdated" /> </mat-form-field>
+		</mat-card-content>
+		<mat-card-actions align="end">
+			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="deleteRegion()">Delete</button>
+			<button mat-raised-button type="submit" color="primary">Save</button>
+		</mat-card-actions>
+	</form>
+</mat-card>

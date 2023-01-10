@@ -43,20 +43,20 @@ func TestSteeringTargets(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.SteeringTargetNullable]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
-					EndpointId:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
+					EndpointID:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
 					ClientSession: steeringUserSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
 				},
 				"OK when VALID request": {
-					EndpointId:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
+					EndpointID:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
 					ClientSession: steeringUserSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateSteeringTargetFields(map[string]interface{}{"DeliveryService": "ds1", "DeliveryServiceID": uint64(totest.GetDeliveryServiceId(t, TOSession, "ds1")()),
 							"Target": "ds2", "TargetID": uint64(totest.GetDeliveryServiceId(t, TOSession, "ds2")()), "Type": "STEERING_WEIGHT", "TypeID": GetTypeID(t, "STEERING_WEIGHT")(), "Value": util.JSONIntStr(42)})),
 				},
 				"OK when CHANGES made": {
-					EndpointId:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
+					EndpointID:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
 					ClientSession: steeringUserSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {currentTimeRFC}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -110,7 +110,7 @@ func TestSteeringTargets(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetSteeringTargets(testCase.EndpointId(), testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetSteeringTargets(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -136,7 +136,7 @@ func TestSteeringTargets(t *testing.T) {
 							}
 							targetID, err := strconv.Atoi(testCase.RequestOpts.QueryParameters["targetID"][0])
 							assert.RequireNoError(t, err, "Expected no error converting string to int for target ID: %v", err)
-							alerts, reqInf, err := testCase.ClientSession.DeleteSteeringTarget(testCase.EndpointId(), targetID, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.DeleteSteeringTarget(testCase.EndpointID(), targetID, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

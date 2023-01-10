@@ -28,6 +28,9 @@ github.com/basho/riak-go-client/rpb/riak_kv
 github.com/basho/riak-go-client/rpb/riak_search
 github.com/basho/riak-go-client/rpb/riak_ts
 github.com/basho/riak-go-client/rpb/riak_yokozuna
+# github.com/cbroglie/mustache v1.4.0
+## explicit; go 1.17
+github.com/cbroglie/mustache
 # github.com/cenkalti/backoff v2.2.1+incompatible
 ## explicit
 github.com/cenkalti/backoff

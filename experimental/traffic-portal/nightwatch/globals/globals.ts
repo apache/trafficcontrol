@@ -16,15 +16,19 @@ import * as https from "https";
 
 import axios, {AxiosError} from "axios";
 import {NightwatchBrowser} from "nightwatch";
-import { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
+import type { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
 import type {CommonPageObject} from "nightwatch/page_objects/common";
 import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
 import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deliveryServiceDetail";
 import type {DeliveryServiceInvalidPageObject} from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
+import type { DivisionDetailPageObject } from "nightwatch/page_objects/divisionDetail";
+import type { DivisionsPageObject } from "nightwatch/page_objects/divisionsTable";
 import type {LoginPageObject} from "nightwatch/page_objects/login";
+import type { RegionDetailPageObject } from "nightwatch/page_objects/regionDetail";
+import type { RegionsPageObject } from "nightwatch/page_objects/regionsTable";
 import type {ServersPageObject} from "nightwatch/page_objects/servers";
-import { TenantDetailPageObject } from "nightwatch/page_objects/tenantDetail";
-import { TenantsPageObject } from "nightwatch/page_objects/tenants";
+import type { TenantDetailPageObject } from "nightwatch/page_objects/tenantDetail";
+import type { TenantsPageObject } from "nightwatch/page_objects/tenants";
 import type {UsersPageObject} from "nightwatch/page_objects/users";
 import {
 	CDN,
@@ -34,7 +38,13 @@ import {
 	ResponseCDN,
 	ResponseDeliveryService,
 	RequestTenant,
-	ResponseTenant, TypeFromResponse, RequestSteeringTarget
+	ResponseTenant,
+	TypeFromResponse,
+	RequestSteeringTarget,
+	ResponseDivision,
+	RequestDivision,
+	ResponseRegion,
+	RequestRegion
 } from "trafficops-types";
 
 declare module "nightwatch" {
@@ -47,7 +57,11 @@ declare module "nightwatch" {
 		deliveryServiceCard: () => DeliveryServiceCardPageObject;
 		deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
 		deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
+		divisionDetail: () => DivisionDetailPageObject;
+		divisionsTable: () => DivisionsPageObject;
 		login: () => LoginPageObject;
+		regionDetail: () => RegionDetailPageObject;
+		regionsTable: () => RegionsPageObject;
 		servers: () => ServersPageObject;
 		tenants: () => TenantsPageObject;
 		tenantDetail: () => TenantDetailPageObject;
@@ -76,7 +90,11 @@ export interface CreatedData {
 	ds2: ResponseDeliveryService;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
+	division: ResponseDivision;
+	region: ResponseRegion;
 }
+
+const testData = {};
 
 const globals = {
 	adminPass: "twelve12",
@@ -140,11 +158,11 @@ const globals = {
 		}
 
 		try {
-			const testData = globals.testData as CreatedData;
+			const data = testData as CreatedData;
 			resp = await client.post(`${apiUrl}/cdns`, JSON.stringify(cdn));
 			respCDN = resp.data.response;
 			console.log(`Successfully created CDN ${respCDN.name}`);
-			testData.cdn = respCDN;
+			data.cdn = respCDN;
 
 			const ds: RequestDeliveryService = {
 				active: false,
@@ -184,14 +202,14 @@ const globals = {
 			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
 			let respDS: ResponseDeliveryService = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
-			testData.ds = respDS;
+			data.ds = respDS;
 
 			ds.displayName = `test DS2${globals.uniqueString}`;
 			ds.xmlId = `testDS2${globals.uniqueString}`;
 			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
 			respDS = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
-			testData.ds2 = respDS;
+			data.ds2 = respDS;
 
 			ds.displayName = `test steering DS${globals.uniqueString}`;
 			ds.xmlId = `testSDS${globals.uniqueString}`;
@@ -199,17 +217,17 @@ const globals = {
 			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
 			respDS = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
-			testData.steeringDS = respDS;
+			data.steeringDS = respDS;
 
 			const target: RequestSteeringTarget = {
-				targetId: testData.ds.id,
+				targetId: data.ds.id,
 				typeId: steeringWeightType.id,
 				value: 1
 			};
-			await client.post(`${apiUrl}/steering/${testData.steeringDS.id}/targets`, JSON.stringify(target));
-			target.targetId = testData.ds2.id;
-			await client.post(`${apiUrl}/steering/${testData.steeringDS.id}/targets`, JSON.stringify(target));
-			console.log(`Created steering targets for ${testData.steeringDS.displayName}`);
+			await client.post(`${apiUrl}/steering/${data.steeringDS.id}/targets`, JSON.stringify(target));
+			target.targetId = data.ds2.id;
+			await client.post(`${apiUrl}/steering/${data.steeringDS.id}/targets`, JSON.stringify(target));
+			console.log(`Created steering targets for ${data.steeringDS.displayName}`);
 
 			const tenant: RequestTenant = {
 				active: true,
@@ -219,7 +237,24 @@ const globals = {
 			resp = await client.post(`${apiUrl}/tenants`, JSON.stringify(tenant));
 			const respTenant: ResponseTenant = resp.data.response;
 			console.log(`Successfully created Tenant ${respTenant.name}`);
-			(globals.testData as CreatedData).tenant = respTenant;
+			data.tenant = respTenant;
+
+			const division: RequestDivision = {
+				name: `testD${globals.uniqueString}`
+			};
+			resp = await client.post(`${apiUrl}/divisions`, JSON.stringify(division));
+			const respDivision: ResponseDivision = resp.data.response;
+			console.log(`Successfully created Division ${respDivision.name}`);
+			data.division = respDivision;
+
+			const region: RequestRegion = {
+				division: 1,
+				name: `testR${globals.uniqueString}`
+			};
+			resp = await client.post(`${apiUrl}/regions`, JSON.stringify(region));
+			const respRegion: ResponseRegion = resp.data.response;
+			console.log(`Successfully created Region ${respRegion.name}`);
+			data.region = respRegion;
 		} catch(e) {
 			console.error((e as AxiosError).message);
 			throw e;
@@ -227,6 +262,7 @@ const globals = {
 		done();
 	},
 	beforeEach: (browser: NightwatchBrowser, done: () => void): void => {
+		browser.globals.testData = testData as CreatedData;
 		browser.page.login()
 			.navigate().section.loginForm
 			.loginAndWait(browser.globals.adminUser, browser.globals.adminPass);
@@ -235,7 +271,7 @@ const globals = {
 			done();
 		});
 	},
-	testData: {},
+	testData,
 	trafficOpsURL: "https://localhost:6443",
 	uniqueString: new Date().getTime().toString()
 };

@@ -17,6 +17,30 @@
  * under the License.
  */
 
+/**
+ * This is the controller for the form used to edit Delivery Service Requests -
+ * **NOT** the form used to edit Delivery Services *using* requests.
+ *
+ * @param {import("../../../../common/api/DeliveryServiceRequestService").DeliveryServiceRequest} deliveryServiceRequest
+ * @param {import("../../../../common/api/DeliveryServiceService").DeliveryService} dsCurrent
+ * @param {unknown} origin
+ * @param {unknown[]} topologies
+ * @param {string} type
+ * @param {unknown[]} types
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {*} $stateParams
+ * @param {import("angular").IControllerService} $controller
+ * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("angular").IQService} $q
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../../common/service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../common/api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../../common/api/DeliveryServiceRequestService")} deliveryServiceRequestService
+ * @param {import("../../../../common/models/MessageModel")} messageModel
+ * @param {import("../../../../common/models/UserModel")} userModel
+ */
 var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, dsCurrent, origin, topologies, type, types, $scope, $state, $stateParams, $controller, $uibModal, $anchorScroll, $q, $location, locationUtils, deliveryServiceService, deliveryServiceRequestService, messageModel, userModel) {
 
 	$scope.dsRequest = deliveryServiceRequest[0];
@@ -58,7 +82,11 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	};
 
 	$scope.magicNumberLabel = function(collection, magicNumber) {
-		var item = _.findWhere(collection, { value: magicNumber });
+		const item = collection.find(i => i.value === magicNumber);
+		if (!item) {
+			console.error("unable to find a label for", magicNumber, "in collection:", collection);
+			return "";
+		}
 		return item.label;
 	};
 
@@ -103,101 +131,78 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 		return promises;
 	};
 
-	$scope.fulfillRequest = function(ds) {
-		var params = {
-			title: 'Delivery Service ' + $scope.changeType + ': ' + ds.xmlId,
-			message: 'Are you sure you want to fulfill this delivery service request and ' + $scope.changeType + ' the ' + ds.xmlId + ' delivery service'
+	/**
+	 * @param {import("../../../../common/api/DeliveryServiceService").DeliveryService} ds
+	 */
+	$scope.fulfillRequest = async function(ds) {
+		/** @type {{title: string; message?: string; key?: string}} */
+		let params = {
+			title: `Delivery Service ${$scope.changeType}: ${ds.xmlId}`,
+			message: `Are you sure you want to fulfill this delivery service request and ${$scope.changeType} the ${ds.xmlId} delivery service`
 		};
-		params['message'] += ($scope.changeType == 'create' || $scope.changeType == 'update') ? ' with these configuration settings?' : '?';
-		var modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
+		params.message += ($scope.changeType === "create" || $scope.changeType === "update") ? " with these configuration settings?" : "?";
+		let modalInstance = $uibModal.open({
+			templateUrl: "common/modules/dialog/confirm/dialog.confirm.tpl.html",
+			controller: "DialogConfirmController",
+			size: "md",
 			resolve: {
-				params: function () {
-					return params;
-				}
+				params
 			}
 		});
-		modalInstance.result.then(function() {
+
+		try {
+			await modalInstance.result;
+		} catch {
+			// this means the user cancelled
+			return;
+		}
+
+		try {
 			// create, update or delete the ds per the ds request
-			if ($scope.changeType == 'create') {
-				deliveryServiceService.createDeliveryService(ds).
-					then(
-						function(result) {
-							updateDeliveryServiceRequest('pending'); // after a successful create, update the ds request, assignee and status
-							messageModel.setMessages([ { level: 'success', text: 'Delivery Service [ ' + ds.xmlId + ' ] created' } ], true);
-							locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?dsType=' + result.data.response[0].type);
-						},
-						function(fault) {
-							$anchorScroll(); // scrolls window to top
-							messageModel.setMessages(fault.data.alerts, false);
-						}
-					);
-			} else if ($scope.changeType == 'update') {
-				deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, 'pending').
-					then(
-						function(result) {
-							deliveryServiceService.updateDeliveryService(ds).then(
-								function (result) {
-									updateDeliveryServiceRequest(); // after a successful ds update, update the assignee
-									messageModel.setMessages([{
-										level: 'success',
-										text: 'Delivery Service [ ' + ds.xmlId + ' ] updated'
-									}], true);
-									locationUtils.navigateToPath('/delivery-services/' + result.data.response[0].id + '?dsType=' + result.data.response[0].type);
-								},
-								function (fault) {
-									$anchorScroll(); // scrolls window to top
-									messageModel.setMessages(fault.data.alerts, false);
-								}
-							)
-						},
-						function (fault) {
-							$anchorScroll(); // scrolls window to top
-							messageModel.setMessages(fault.data.alerts, false);
-						}
-				);
-			} else if ($scope.changeType == 'delete') {
-				// and we're going to ask even again if they really want to delete but this time they need to enter the ds name to confirm the delete
+			if ($scope.changeType === "create") {
+					const result = await deliveryServiceService.createDeliveryService(ds);
+					await updateDeliveryServiceRequest("pending"); // after a successful create, update the ds request, assignee and status
+					messageModel.setMessages([ { level: "success", text: `Delivery Service [ ${ds.xmlId} ] created` } ], true);
+					locationUtils.navigateToPath(`/delivery-services/${result.response.id}?dsType=${result.response.type}`);
+			} else if ($scope.changeType === "update") {
+				await deliveryServiceRequestService.updateDeliveryServiceRequestStatus($scope.dsRequest.id, "pending");
+				// If the change type is "update", we assume the DS has an ID.
+				const result = await deliveryServiceService.updateDeliveryService(ds);
+				await updateDeliveryServiceRequest(); // after a successful ds update, update the assignee
+				messageModel.setMessages([{
+					level: "success",
+					text: `Delivery Service [ ${ds.xmlId} ] updated`
+				}], true);
+				locationUtils.navigateToPath(`/delivery-services/${result.response.id}?dsType=${result.response.type}`);
+			} else if ($scope.changeType === "delete") {
+				// and we"re going to ask even again if they really want to delete but this time they need to enter the ds name to confirm the delete
 				params = {
-					title: 'Delete Delivery Service: ' + ds.xmlId,
+					title: `Delete Delivery Service: ${ds.xmlId}`,
 					key: ds.xmlId
 				};
 				modalInstance = $uibModal.open({
-					templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-					controller: 'DialogDeleteController',
-					size: 'md',
+					templateUrl: "common/modules/dialog/delete/dialog.delete.tpl.html",
+					controller: "DialogDeleteController",
+					size: "md",
 					resolve: {
-						params: function () {
-							return params;
-						}
+						params
 					}
 				});
-				modalInstance.result.then(function() {
-					deliveryServiceService.deleteDeliveryService(ds).
-						then(
-							function() {
-								const promises = updateDeliveryServiceRequest('pending'); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
-								$q.all(promises)
-									.then(
-										function() {
-											messageModel.setMessages([ { level: 'success', text: 'Delivery service [ ' + ds.xmlId + ' ] deleted' } ], true);
-											locationUtils.navigateToPath('/delivery-service-requests');
-										});
-							},
-							function(fault) {
-								$anchorScroll(); // scrolls window to top
-								messageModel.setMessages(fault.data.alerts, false);
-							}
-						);
-				}, function () {
-					// do nothing
-				});
+				try {
+					await modalInstance.result;
+				} catch {
+					// this means the user cancelled.
+					return;
+				}
+				await deliveryServiceService.deleteDeliveryService(ds);
+				await Promise.all(updateDeliveryServiceRequest("pending")); // after a successful delete, update the ds request, assignee and status and navigate to ds requests page
+				messageModel.setMessages([ { level: "success", text: `Delivery service [ ${ds.xmlId} ] deleted` } ], true);
+				locationUtils.navigateToPath("/delivery-service-requests");
 			}
-		}, function () {
-			// do nothing
-		});
+		} catch (fault) {
+			$anchorScroll(); // scrolls window to top
+			messageModel.setMessages(fault.data.alerts, false);
+		}
 	};
 
 	$scope.save = function(deliveryService) {

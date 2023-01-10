@@ -24,6 +24,8 @@ env:
   RHEL_VERSION: rhel_version
   STARTUP_SCRIPT_DIR: /startup-dir
   STARTUP_SCRIPT_LOC: ../core/src/main/lib/systemd/system
+  LOGROTATE_SCRIPT_DIR: /etc/logrotate.d
+  LOGROTATE_SCRIPT_LOC: ../core/src/main/lib/logrotate
   TOMCAT_RELEASE: tomcat_release
   TOMCAT_VERSION: tomcat_version
 
@@ -58,6 +60,11 @@ jobs:
       - name: Run Traffic Router tests
         run: mvn -Djava.library.path=/usr/lib/x86_64-linux-gnu verify
         working-directory: ${{ github.workspace }}/traffic_router
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: core/target/site/jacoco-aggregate/jacoco.xml
+          flags: traffic_router_unit
       - name: Upload Surefire and Failsafe Reports
         uses: actions/upload-artifact@v3
         if: ${{ failure() }}

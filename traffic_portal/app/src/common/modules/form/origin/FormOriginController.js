@@ -17,14 +17,28 @@
  * under the License.
  */
 
-var FormOriginController = function(origin, $scope, $window, $location, formUtils, locationUtils, tenantUtils, deliveryServiceService, profileService, tenantService, coordinateService, cacheGroupService, userModel) {
+/**
+ * This is the parent controller for all forms used to modify or create Origins.
+ *
+ * @param {unknown} origin
+ * @param {*} $scope
+ * @param {import("angular").IWindowService} $window
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/TenantUtils")} tenantUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/ProfileService")} profileService
+ * @param {import("../../../api/TenantService")} tenantService
+ * @param {import("../../../api/CoordinateService")} coordinateService
+ * @param {import("../../../api/CacheGroupService")} cacheGroupService
+ * @param {import("../../../models/UserModel")} userModel
+ */
+var FormOriginController = function(origin, $scope, $window, formUtils, locationUtils, tenantUtils, deliveryServiceService, profileService, tenantService, coordinateService, cacheGroupService, userModel) {
 
     var getProfiles = function() {
         profileService.getProfiles({ orderby: 'name' })
             .then(function(result) {
-                $scope.profiles = _.filter(result, function(profile) {
-                    return profile.type == 'ORG_PROFILE';
-                });
+                $scope.profiles = result.filter(profile => profile.type === 'ORG_PROFILE');
             });
     };
 
@@ -42,9 +56,7 @@ var FormOriginController = function(origin, $scope, $window, $location, formUtil
     var getCacheGroups = function() {
         cacheGroupService.getCacheGroups({ orderby: 'name' })
             .then(function(result) {
-                $scope.cacheGroups = _.filter(result, function(cachegroup) {
-                    return cachegroup.typeName == 'ORG_LOC';
-                });
+                $scope.cacheGroups = result.filter(cachegroup => cachegroup.typeName === 'ORG_LOC');
             });
     };
 
@@ -77,7 +89,7 @@ var FormOriginController = function(origin, $scope, $window, $location, formUtil
     $scope.navigateToPath = locationUtils.navigateToPath;
 
     $scope.editDeliveryService = function(deliveryServiceId) {
-        ds = _.findWhere($scope.deliveryServices, { id: deliveryServiceId });
+        const ds = $scope.deliveryServices.find(d => d.id === deliveryServiceId);
         $window.open('/#!/delivery-services/' + ds.id + '?dsType=' + ds.type, '_blank');
     };
 
@@ -96,5 +108,5 @@ var FormOriginController = function(origin, $scope, $window, $location, formUtil
 
 };
 
-FormOriginController.$inject = ['origin', '$scope', '$window', '$location', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceService', 'profileService', 'tenantService', 'coordinateService', 'cacheGroupService', 'userModel'];
+FormOriginController.$inject = ['origin', '$scope', '$window', 'formUtils', 'locationUtils', 'tenantUtils', 'deliveryServiceService', 'profileService', 'tenantService', 'coordinateService', 'cacheGroupService', 'userModel'];
 module.exports = FormOriginController;

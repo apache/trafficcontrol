@@ -94,6 +94,8 @@
 									<variableName>RPM_TARGET_OS</variableName>
 									<variableName>STARTUP_SCRIPT_DIR</variableName>
 									<variableName>STARTUP_SCRIPT_LOC</variableName>
+									<variableName>LOGROTATE_SCRIPT_DIR</variableName>
+									<variableName>LOGROTATE_SCRIPT_LOC</variableName>
 								</requireEnvironmentVariable>
 							</rules>
 							<fail>true</fail>
@@ -133,7 +135,6 @@
 							<name>${project.parent.artifactId}</name>
 							<release>${env.BUILD_NUMBER}.${env.RHEL_VERSION}</release>
 							<license>Apache License, Version 2.0</license>
-							<needarch>x86_64</needarch>
 							<targetOS>${env.RPM_TARGET_OS}</targetOS>
 							<defineStatements>
 								<defineStatement>_source_payload w2.xzdio</defineStatement>
@@ -206,6 +207,18 @@
 									<sources>
 										<source>
 											<location>${env.STARTUP_SCRIPT_LOC}</location>
+										</source>
+									</sources>
+								</mapping>
+								<mapping>
+									<directory>${env.LOGROTATE_SCRIPT_DIR}</directory>
+									<directoryIncluded>false</directoryIncluded>
+									<filemode>644</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+									<sources>
+										<source>
+											<location>${env.LOGROTATE_SCRIPT_LOC}</location>
 										</source>
 									</sources>
 								</mapping>

@@ -61,7 +61,7 @@ func TestStatuses(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					EndpointID:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
 					RequestBody: tc.Status{
 						Description: "new description",
@@ -71,7 +71,7 @@ func TestStatuses(t *testing.T) {
 						validateStatusesUpdateCreateFields("TEST_NULL_DESCRIPTION", map[string]interface{}{"Description": "new description"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId:     GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					EndpointID:     GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession:  TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.Status{
@@ -81,7 +81,7 @@ func TestStatuses(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
+					EndpointID:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
 					RequestBody: tc.Status{
 						Description: "new description",
@@ -113,14 +113,14 @@ func TestStatuses(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.UpdateStatusByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							alerts, reqInf, err := testCase.ClientSession.UpdateStatusByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteStatusByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteStatusByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

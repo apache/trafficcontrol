@@ -24,10 +24,10 @@ Get or set the status of a :term:`Delivery Service Request`.
 =======
 Gets the status of a :term:`DSR`.
 
-:Auth. Required: Yes
-:Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"
+:Auth. Required:       Yes
+:Roles Required:       "admin", "Federation", "operations", "Portal", or "Steering"
 :Permissions Required: DS-REQUEST:READ
-:Response Type:  Object (string)
+:Response Type:        Object (string)
 
 Request Structure
 -----------------
@@ -97,16 +97,15 @@ Request Structure
 	:caption: Request Example
 
 	PUT /api/5.0/deliveryservice_requests/1/status HTTP/1.1
-	User-Agent: python-requests/2.22.0
+	User-Agent: python-requests/2.25.1
 	Accept-Encoding: gzip, deflate
 	Accept: */*
 	Connection: keep-alive
-	Cookie: mojolicious=...
-	Content-Length: 28
+	Cookie: access_token=...; mojolicious=...
+	Content-Length: 23
+	Content-Type: application/json
 
-	{
-		"status": "rejected"
-	}
+	{"status": "submitted"}
 
 Response Structure
 ------------------
@@ -122,39 +121,54 @@ The response is a full representation of the modified :term:`DSR`.
 	Access-Control-Allow-Origin: *
 	Content-Encoding: gzip
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Sun, 23 Feb 2020 15:54:53 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: C8Nhciy1jv5X7CGgHwAnLp1qmLIzHq+4dvlAApb3cFSz5V2dABl7+N1Z4ndzB7GertB7rNLP31pVcat8vEz6rA==
+	Permissions-Policy: interest-cohort=()
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 23:21:02 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 23:21:02 GMT; Max-Age=3600; HttpOnly
+	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Sun, 23 Feb 2020 14:54:53 GMT
-	Content-Length: 930
+	Date: Thu, 29 Sep 2022 22:21:02 GMT
+	Content-Length: 1174
 
 	{ "alerts": [{
 		"text": "Changed status of 'demo1' Delivery Service Request from 'draft' to 'submitted'",
 		"level": "success"
 	}],
 	"response": {
-		"assignee": "admin",
+		"assignee": null,
 		"author": "admin",
 		"changeType": "update",
-		"createdAt": "2020-09-25T06:52:23.758877Z",
-		"id": 6,
+		"createdAt": "2022-09-29T22:07:15.008503Z",
+		"id": 1,
 		"lastEditedBy": "admin",
-		"lastUpdated": "2020-09-25T07:13:28.753352Z",
+		"lastUpdated": "2022-09-29T22:21:02.144598Z",
 		"original": {
-			"active": true,
+			"active": "ACTIVE",
 			"anonymousBlockingEnabled": false,
-			"cacheurl": null,
 			"ccrDnsTtl": null,
 			"cdnId": 2,
 			"cdnName": "CDN-in-a-Box",
 			"checkPath": null,
+			"consistentHashQueryParams": [
+				"abc",
+				"pdq",
+				"xxx",
+				"zyx"
+			],
+			"consistentHashRegex": null,
+			"deepCachingType": "NEVER",
 			"displayName": "Demo 1",
 			"dnsBypassCname": null,
 			"dnsBypassIp": null,
 			"dnsBypassIp6": null,
 			"dnsBypassTtl": null,
 			"dscp": 0,
+			"ecsEnabled": false,
 			"edgeHeaderRewrite": null,
+			"exampleURLs": [
+				"http://video.demo1.mycdn.ciab.test",
+				"https://video.demo1.mycdn.ciab.test"
+			],
+			"firstHeaderRewrite": null,
+			"fqPacingRate": null,
 			"geoLimit": 0,
 			"geoLimitCountries": null,
 			"geoLimitRedirectURL": null,
@@ -165,8 +179,10 @@ The response is a full representation of the modified :term:`DSR`.
 			"id": 1,
 			"infoUrl": null,
 			"initialDispersion": 1,
+			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
-			"lastUpdated": "2020-09-25T02:09:54Z",
+			"lastHeaderRewrite": null,
+			"lastUpdated": "2022-09-29T20:58:53.07251Z",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
 			"matchList": [
@@ -177,10 +193,12 @@ The response is a full representation of the modified :term:`DSR`.
 				}
 			],
 			"maxDnsAnswers": null,
+			"maxOriginConnections": 0,
+			"maxRequestHeaderBytes": 0,
 			"midHeaderRewrite": null,
 			"missLat": 42,
 			"missLong": -88,
-			"multiSiteOrigin": false,
+			"multiSiteOrigin": true,
 			"originShield": null,
 			"orgServerFqdn": "http://origin.infra.ciab.test",
 			"profileDescription": null,
@@ -189,59 +207,47 @@ The response is a full representation of the modified :term:`DSR`.
 			"protocol": 2,
 			"qstringIgnore": 0,
 			"rangeRequestHandling": 0,
+			"rangeSliceBlockSize": null,
 			"regexRemap": null,
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
 			"routingName": "video",
+			"serviceCategory": null,
 			"signed": false,
-			"sslKeyVersion": 1,
-			"tenantId": 1,
-			"type": "HTTP",
-			"typeId": 1,
-			"xmlId": "demo1",
-			"exampleURLs": [
-				"http://video.demo1.mycdn.ciab.test",
-				"https://video.demo1.mycdn.ciab.test"
-			],
-			"deepCachingType": "NEVER",
-			"fqPacingRate": null,
 			"signingAlgorithm": null,
+			"sslKeyVersion": 1,
 			"tenant": "root",
+			"tenantId": 1,
+			"tlsVersions": null,
+			"topology": "demo1-top",
 			"trResponseHeaders": null,
 			"trRequestHeaders": null,
-			"consistentHashRegex": null,
-			"consistentHashQueryParams": [
-				"abc",
-				"pdq",
-				"xxx",
-				"zyx"
-			],
-			"maxOriginConnections": 0,
-			"ecsEnabled": false,
-			"rangeSliceBlockSize": null,
-			"topology": "demo1-top",
-			"firstHeaderRewrite": null,
-			"innerHeaderRewrite": null,
-			"lastHeaderRewrite": null,
-			"serviceCategory": null,
-			"tlsVersions": null
+			"type": "HTTP",
+			"typeId": 1,
+			"xmlId": "demo1"
 		},
 		"requested": {
-			"active": true,
+			"active": "INACTIVE",
 			"anonymousBlockingEnabled": false,
-			"cacheurl": null,
 			"ccrDnsTtl": 30,
 			"cdnId": 2,
 			"cdnName": null,
 			"checkPath": null,
-			"displayName": "Demo 1 but modified by a DSR",
+			"consistentHashQueryParams": null,
+			"consistentHashRegex": null,
+			"deepCachingType": "NEVER",
+			"displayName": "Demo 1 but I modified the DSR",
 			"dnsBypassCname": null,
 			"dnsBypassIp": null,
 			"dnsBypassIp6": null,
 			"dnsBypassTtl": null,
 			"dscp": 0,
+			"ecsEnabled": false,
 			"edgeHeaderRewrite": null,
+			"exampleURLs": null,
+			"firstHeaderRewrite": null,
+			"fqPacingRate": null,
 			"geoLimit": 0,
 			"geoLimitCountries": null,
 			"geoLimitRedirectURL": null,
@@ -252,16 +258,20 @@ The response is a full representation of the modified :term:`DSR`.
 			"id": 1,
 			"infoUrl": null,
 			"initialDispersion": 3,
+			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": null,
-			"lastUpdated": null,
+			"lastHeaderRewrite": null,
+			"lastUpdated": "0001-01-01T00:00:00Z",
 			"logsEnabled": false,
 			"longDesc": "long desc",
 			"matchList": null,
 			"maxDnsAnswers": null,
+			"maxOriginConnections": 0,
+			"maxRequestHeaderBytes": 0,
 			"midHeaderRewrite": null,
 			"missLat": null,
 			"missLong": null,
-			"multiSiteOrigin": null,
+			"multiSiteOrigin": false,
 			"originShield": null,
 			"orgServerFqdn": null,
 			"profileDescription": null,
@@ -270,35 +280,25 @@ The response is a full representation of the modified :term:`DSR`.
 			"protocol": null,
 			"qstringIgnore": null,
 			"rangeRequestHandling": null,
+			"rangeSliceBlockSize": null,
 			"regexRemap": null,
 			"regional": false,
 			"regionalGeoBlocking": false,
 			"remapText": null,
 			"routingName": "cdn",
+			"serviceCategory": null,
 			"signed": false,
-			"sslKeyVersion": null,
-			"tenantId": 1,
-			"type": null,
-			"typeId": 8,
-			"xmlId": "demo1",
-			"exampleURLs": null,
-			"deepCachingType": "NEVER",
-			"fqPacingRate": null,
 			"signingAlgorithm": null,
+			"sslKeyVersion": null,
 			"tenant": null,
+			"tenantId": 1,
+			"tlsVersions": null,
+			"topology": null,
 			"trResponseHeaders": null,
 			"trRequestHeaders": null,
-			"consistentHashRegex": null,
-			"consistentHashQueryParams": null,
-			"maxOriginConnections": 0,
-			"ecsEnabled": false,
-			"rangeSliceBlockSize": null,
-			"topology": null,
-			"firstHeaderRewrite": null,
-			"innerHeaderRewrite": null,
-			"lastHeaderRewrite": null,
-			"serviceCategory": null,
-			"tlsVersions": null
+			"type": null,
+			"typeId": 8,
+			"xmlId": "demo1"
 		},
 		"status": "submitted"
 	}}

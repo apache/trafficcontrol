@@ -57,16 +57,16 @@ func GetStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dsr tc.DeliveryServiceRequestV40
+	var dsr tc.DeliveryServiceRequestV5
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", inf.IntParams["id"]).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			errCode = http.StatusNotFound
 			userErr = fmt.Errorf("no such Delivery Service Request: %d", inf.IntParams["id"])
 			sysErr = nil
 		} else {
 			errCode = http.StatusInternalServerError
 			userErr = nil
-			sysErr = fmt.Errorf("looking for DSR: %v", err)
+			sysErr = fmt.Errorf("looking for DSR: %w", err)
 		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -102,7 +102,6 @@ RETURNING last_updated
 // PutStatus is the handler for PUT requests to
 // /deliveryservice_requests/{{ID}}/status.
 func PutStatus(w http.ResponseWriter, r *http.Request) {
-	var omitExtraLongDescFields bool
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
@@ -112,8 +111,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	// Middleware should've already handled this, so idk why this is a pointer at all tbh
-	version := inf.Version
-	if version == nil {
+	if inf.Version == nil {
 		middleware.NotImplementedHandler().ServeHTTP(w, r)
 		return
 	}
@@ -124,9 +122,6 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Version.Major >= 4 && inf.Version.Minor >= 0 {
-		omitExtraLongDescFields = true
-	}
 	var req tc.StatusChangeRequest
 	if err := api.Parse(r.Body, tx, &req); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -135,16 +130,16 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 
 	dsrID := inf.IntParams["id"]
 
-	var dsr tc.DeliveryServiceRequestV40
+	var dsr tc.DeliveryServiceRequestV5
 	if err := inf.Tx.QueryRowx(selectQuery+"WHERE r.id=$1", dsrID).StructScan(&dsr); err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			errCode = http.StatusNotFound
 			userErr = fmt.Errorf("no such Delivery Service Request: %d", dsrID)
 			sysErr = nil
 		} else {
 			errCode = http.StatusInternalServerError
 			userErr = nil
-			sysErr = fmt.Errorf("looking for DSR: %v", err)
+			sysErr = fmt.Errorf("looking for DSR: %w", err)
 		}
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -174,7 +169,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	// (and isn't a "create" request)
 	if dsr.IsOpen() && req.Status != tc.RequestStatusDraft && req.Status != tc.RequestStatusSubmitted && dsr.ChangeType != tc.DSRChangeTypeCreate {
 		if dsr.ChangeType == tc.DSRChangeTypeUpdate && dsr.Requested != nil && dsr.Requested.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Requested.ID: {&dsr}}, omitExtraLongDescFields)
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Requested.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV5{*dsr.Requested.ID: {&dsr}})
 			if userErr != nil || sysErr != nil {
 				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 				return
@@ -183,7 +178,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 				sysErr = fmt.Errorf("failed to build original from dsr #%d that was to be closed; requested ID: %d", dsrID, *dsr.Requested.ID)
 			}
 		} else if dsr.ChangeType == tc.DSRChangeTypeDelete && dsr.Original != nil && dsr.Original.ID != nil {
-			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV4{*dsr.Original.ID: {&dsr}}, omitExtraLongDescFields)
+			errCode, userErr, sysErr = getOriginals([]int{*dsr.Original.ID}, inf.Tx, map[int][]*tc.DeliveryServiceRequestV5{*dsr.Original.ID: {&dsr}})
 			if userErr != nil || sysErr != nil {
 				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 				return
@@ -200,7 +195,7 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 
 		err := tx.QueryRow(updateStatusAndOriginalQuery, dsr.Original, req.Status, dsr.LastEditedByID, dsrID).Scan(&dsr.LastUpdated)
 		if err != nil {
-			sysErr = fmt.Errorf("updating original for dsr #%d: %v", dsrID, err)
+			sysErr = fmt.Errorf("updating original for dsr #%d: %w", dsrID, err)
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 			return
 		}
@@ -216,8 +211,8 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("expected exactly one DS with XMLID '%s', found: %d", dsr.XMLID, len(original)))
 				return
 			}
-			dsr.Original = new(tc.DeliveryServiceV4)
-			*dsr.Original = original[0]
+			dsr.Original = new(tc.DeliveryServiceV5)
+			*dsr.Original = original[0].DS
 		}
 	} else {
 		userErr, sysErr, errCode = api.ParseDBError(err)
@@ -229,16 +224,16 @@ func PutStatus(w http.ResponseWriter, r *http.Request) {
 	dsr.Status = req.Status
 
 	var resp interface{}
-	if inf.Version.Major >= 4 {
-		if dsr.Original != nil {
-			*dsr.Original = dsr.Original.RemoveLD1AndLD2()
-		}
-		if dsr.Requested != nil {
-			*dsr.Requested = dsr.Requested.RemoveLD1AndLD2()
-		}
+	if inf.Version.Major >= 5 {
 		resp = dsr
+	} else if inf.Version.Major >= 4 {
+		if inf.Version.Minor >= 1 {
+			resp = dsr.Downgrade()
+		} else {
+			resp = dsr.Downgrade().Downgrade()
+		}
 	} else {
-		resp = dsr.Downgrade()
+		resp = dsr.Downgrade().Downgrade().Downgrade()
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, message, resp)

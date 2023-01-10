@@ -24,6 +24,7 @@ require (
 	github.com/GehirnInc/crypt v0.0.0-20200316065508-bb7000b8a962
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d
 	github.com/basho/riak-go-client v1.7.1-0.20170327205844-5587c16e0b8b
+	github.com/cbroglie/mustache v1.4.0
 	github.com/cihub/seelog v0.0.0-20170130134532-f561c5e57575
 	github.com/dchest/siphash v1.2.2
 	github.com/fsnotify/fsnotify v1.5.1
@@ -98,4 +99,19 @@ require (
 	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
 	gopkg.in/jcmturner/rpc.v1 v1.1.0 // indirect
+)
+
+// Although the Apache Traffic Control considers v7.0.1 stable, Go modules consider it unstable because its major version
+// is greater than 1, and without these retractions, a commit like 817a702a9de6 will have a computed vesion of
+// v1.1.4-0.20201118150121-817a702a9de6
+// With these retractions, the same commit will have a computed version of
+// v0.0.0-20201118150121-817a702a9de6
+// See https://pkg.go.dev/cmd/go@go1.15.15#hdr-Module_compatibility_and_semantic_versioning for details.
+retract (
+	v1.1.5-retractions
+	v1.1.4
+	v1.1.3
+	v1.1.2
+	v1.1.1
+	v1.1.0
 )

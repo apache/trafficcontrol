@@ -39,6 +39,8 @@ buildRpmTrafficRouter () {
 
 	export STARTUP_SCRIPT_DIR="/lib/systemd/system"
 	export STARTUP_SCRIPT_LOC="../core/src/main/lib/systemd/system"
+	export LOGROTATE_SCRIPT_DIR="/etc/logrotate.d"
+	export LOGROTATE_SCRIPT_LOC="../core/src/main/lib/logrotate"
 
 	cd "$TR_DIR" || { echo "Could not cd to $TR_DIR: $?"; return 1; }
 	mvn -P rpm-build -Dmaven.test.skip=true -DminimumTPS=1 clean package ||  \
@@ -78,7 +80,7 @@ adaptEnvironment() {
 	WORKSPACE=${WORKSPACE:-$TC_DIR}
 	RPMBUILD="$WORKSPACE/rpmbuild"
 	DIST="$WORKSPACE/dist"
-	RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.x86_64.rpm"
+	RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.noarch.rpm"
 	RPM_TARGET_OS="${RPM_TARGET_OS:-linux}"
 	TOMCAT_VERSION=9.0
 	TOMCAT_RELEASE=67

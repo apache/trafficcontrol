@@ -17,6 +17,20 @@
  * under the License.
  */
 
+/**
+ *
+ * @param {{cdnId: number; id: number; hostName: string; type: string}} server
+ * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
+ * @param {unknown[]} steeringTargets
+ * @param {unknown} filter
+ * @param {import("angular").IControllerService} $controller
+ * @param {*} $scope
+ * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/ServerUtils")} serverUtils
+ * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
+ * @param {import("../../../api/ServerService")} serverService
+ */
 function TableServerDeliveryServicesController(server, deliveryServices, steeringTargets, filter, $controller, $scope, $uibModal, locationUtils, serverUtils, deliveryServiceService, serverService) {
 
 	// extends the TableDeliveryServicesController to inherit common methods
@@ -141,7 +155,7 @@ function TableServerDeliveryServicesController(server, deliveryServices, steerin
 			size: "lg",
 			resolve: {
 				server: () => server,
-				deliveryServices: deliveryServiceService => deliveryServiceService.getDeliveryServices({ cdn: server.cdnId }),
+				deliveryServices: () => deliveryServiceService.getDeliveryServices({ cdn: server.cdnId }),
 				assignedDeliveryServices: () => deliveryServices
 			}
 		});

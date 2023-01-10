@@ -94,7 +94,7 @@ func TestCacheGroups(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
 					ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullable{
 						Latitude:            util.Ptr(17.5),
@@ -109,7 +109,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointId: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestHeaders: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					RequestBody: tc.CacheGroupNullable{
 						Name:      util.Ptr("cachegroup1"),
@@ -120,7 +120,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
 					ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullable{
 						Name:      util.Ptr("cachegroup1"),
@@ -132,14 +132,14 @@ func TestCacheGroups(t *testing.T) {
 					Expectations:   utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
 					ClientSession: NoAuthTOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
 			},
 			"DELETE": {
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					EndpointId:    GetCacheGroupId(t, "cachegroup1"),
+					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
 					ClientSession: NoAuthTOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
@@ -166,14 +166,14 @@ func TestCacheGroups(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroupNullableByIDWithHdr(testCase.EndpointId(), testCase.RequestBody, testCase.RequestHeaders)
+							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroupNullableByIDWithHdr(testCase.EndpointID(), testCase.RequestBody, testCase.RequestHeaders)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "DELETE":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.DeleteCacheGroupByID(testCase.EndpointId())
+							alerts, reqInf, err := testCase.ClientSession.DeleteCacheGroupByID(testCase.EndpointID())
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

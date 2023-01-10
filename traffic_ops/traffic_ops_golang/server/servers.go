@@ -104,9 +104,9 @@ AND (
 	FROM server_server_capability ssc
 	WHERE ssc."server" = s.id
 ) @> (
-	SELECT ARRAY_AGG(drc.required_capability)
-	FROM deliveryservices_required_capability drc
-	WHERE drc.deliveryservice_id = d.id
+	SELECT d.required_capabilities
+	FROM deliveryservice d
+	WHERE d.id = :dsId
 )
 `
 
@@ -803,6 +803,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	usesMids := false
 	queryAddition := ""
 	dsHasRequiredCapabilities := false
+	var requiredCapabilities []string
 	var dsID int
 	var cdnID int
 	var serverCount uint64
@@ -825,9 +826,12 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		}
 
 		var joinSubQuery string
-		if err = tx.QueryRow(deliveryservice.HasRequiredCapabilitiesQuery, dsID).Scan(&dsHasRequiredCapabilities); err != nil {
-			err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %s", dsID, err)
+		if err := tx.QueryRow(deliveryservice.GetRequiredCapabilitiesQuery, dsID).Scan(pq.Array(&requiredCapabilities)); err != nil && err != sql.ErrNoRows {
+			err = fmt.Errorf("unable to get required capabilities for deliveryservice %d: %w", dsID, err)
 			return nil, 0, nil, err, http.StatusInternalServerError, nil
+		}
+		if requiredCapabilities != nil && len(requiredCapabilities) > 0 {
+			dsHasRequiredCapabilities = true
 		}
 		joinSubQuery = dssTopologiesJoinSubquery
 		// only if dsId is part of params: add join on deliveryservice_server table
@@ -1111,9 +1115,9 @@ func getMidServers(edgeIDs []int, servers map[int]tc.ServerV40, dsID int, cdnID 
 		capabilities.array_agg
 		@>
 		(
-		SELECT ARRAY_AGG(drc.required_capability)
-		FROM deliveryservices_required_capability drc
-		WHERE drc.deliveryservice_id=:ds_id)
+		SELECT ds.required_capabilities
+		FROM deliveryservice ds
+		WHERE ds.id=:ds_id)
 		)`
 	} else {
 		// TODO: include secondary parent?
@@ -2094,7 +2098,7 @@ FROM deliveryservice_server dss
 JOIN server s ON dss.server = s.id
 JOIN type t ON s.type = t.id
 JOIN deliveryservice ds ON dss.deliveryservice = ds.id
-WHERE t.name LIKE $1 AND ds.active
+WHERE t.name LIKE $1 AND ds.active = $3
 GROUP BY ds.id, ds.multi_site_origin, ds.topology
 HAVING COUNT(dss.server) = 1 AND $2 = ANY(ARRAY_AGG(dss.server));
 `
@@ -2118,7 +2122,7 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType 
 		return ids, errors.New("nil transaction")
 	}
 
-	rows, err := tx.Query(lastServerTypeOfDSesQuery, like, id)
+	rows, err := tx.Query(lastServerTypeOfDSesQuery, like, id, tc.DSActiveStateActive)
 	if err != nil {
 		return ids, fmt.Errorf("querying: %v", err)
 	}

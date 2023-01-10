@@ -111,8 +111,10 @@ wq
 ED
 ) || die "Failed to patch in astats_over_http"
 
+arch="$(rpm --eval %_arch)"
+
 # build a trafficserver RPM
-rm -f /root/rpmbuild/RPMS/x86_64/trafficserver-*.rpm
+rm -f /root/rpmbuild/RPMS/${arch}/trafficserver-*.rpm
 cd trafficserver
 
 if [[ ${RUN_ATS_UNIT_TESTS} == true ]]; then
@@ -127,7 +129,7 @@ if [[ ! -d /trafficcontrol/dist ]]; then
   mkdir /trafficcontrol/dist
 fi
 
-cp /root/rpmbuild/RPMS/x86_64/trafficserver*.rpm /trafficcontrol/dist ||
+cp /root/rpmbuild/RPMS/${arch}/trafficserver*.rpm /trafficcontrol/dist ||
     die "Failed to copy the ATS RPM to the dist directory"
 
 echo "trafficserver RPM has been copied"

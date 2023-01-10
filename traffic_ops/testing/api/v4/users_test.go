@@ -87,7 +87,7 @@ func TestUsers(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointId:    totest.GetUserID(t, TOSession, "steering"),
+					EndpointID:    totest.GetUserID(t, TOSession, "steering"),
 					ClientSession: TOSession,
 					RequestBody: tc.UserV4{
 						AddressLine1:  util.Ptr("updated line 1"),
@@ -110,7 +110,7 @@ func TestUsers(t *testing.T) {
 							"Country": "US", "Email": "steeringupdated@example.com", "FullName": "Steering User Updated"})),
 				},
 				"OK when UPDATING SELF": {
-					EndpointId:    totest.GetUserID(t, TOSession, "opsuser"),
+					EndpointID:    totest.GetUserID(t, TOSession, "opsuser"),
 					ClientSession: opsUserSession,
 					RequestBody: tc.UserV4{
 						AddressLine1:  util.Ptr("address of ops"),
@@ -130,7 +130,7 @@ func TestUsers(t *testing.T) {
 						validateUsersUpdateCreateFields(map[string]interface{}{"Email": "ops-updated@example.com", "FullName": "Operations User Updated"})),
 				},
 				"NOT FOUND when UPDATING SELF with ROLE that DOESNT EXIST": {
-					EndpointId:    totest.GetUserID(t, TOSession, "opsuser"),
+					EndpointID:    totest.GetUserID(t, TOSession, "opsuser"),
 					ClientSession: opsUserSession,
 					RequestBody: tc.UserV4{
 						AddressLine1:  util.Ptr("address of ops"),
@@ -149,7 +149,7 @@ func TestUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when OPERATIONS USER updates ADMIN USER": {
-					EndpointId:    totest.GetUserID(t, TOSession, "admin"),
+					EndpointID:    totest.GetUserID(t, TOSession, "admin"),
 					ClientSession: opsUserSession,
 					RequestBody: tc.UserV4{
 						Email:         util.Ptr("oops@ops.net"),
@@ -163,7 +163,7 @@ func TestUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"FORBIDDEN when CHILD TENANT USER updates PARENT TENANT USER": {
-					EndpointId:    totest.GetUserID(t, TOSession, "tenant3user"),
+					EndpointID:    totest.GetUserID(t, TOSession, "tenant3user"),
 					ClientSession: tenant4UserSession,
 					RequestBody: tc.UserV4{
 						Email:         util.Ptr("tenant3user@example.com"),
@@ -199,7 +199,7 @@ func TestUsers(t *testing.T) {
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateUser(testCase.EndpointId(), testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateUser(testCase.EndpointID(), testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}

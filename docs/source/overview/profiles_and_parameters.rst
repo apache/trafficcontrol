@@ -112,6 +112,8 @@ SPLUNK_PROFILE
 TM_PROFILE
 	A Traffic Monitor Profile.
 
+	.. warning:: For legacy reasons, the names of Profiles of this type *must* begin with ``RASCAL_``. This is **not** enforced by the :ref:`to-api` or Traffic Portal, but certain Traffic Control operations/components expect this and will fail to work otherwise!
+
 TP_PROFILE
 	A Traffic Portal Profile. This has no known special meaning to any Traffic Control component(s) (not even Traffic Portal itself), but its use is suggested for the profiles used by any and all Traffic Portal servers anyway.
 
@@ -306,7 +308,7 @@ This configuration file is mainly generated based on the assignments of :term:`c
 
 ip_allow.config
 '''''''''''''''
-This configuration file is mostly generated from various server data, but can be affected by a Parameter that has a :ref:`parameter-name` of "purge_allow_ip", which will cause the insertion of a line with :file:`src_ip={VALUE} action=ip_allow method=ALL` where ``VALUE`` is the Parameter's Value_. Additionally, Parameters with :ref:`Names <parameter-name>` like :file:`coalesce_{masklen|number}_v{4|6}` cause Traffic Ops to generate coalesced IP ranges in different ways. In the case that ``number`` was used, the Parameter's Value_ sets the the maximum number of IP address that may be coalesced into a single range. If ``masklen`` was used, the lines that are generated are coalesced into :abbr:`CIDR (Classless Inter-Domain Routing)` ranges using mask lengths determined by the Value_ of the parameter (using '4' sets the mask length of IPv4 address coalescing while using '6' sets the mask length to use when coalescing IPv6 addresses). This is not recommended, as the default mask lengths allow for maximum coalescence. Furthermore, if two Parameters on the same :ref:`Profile <profiles>` assigned to a server having Config File values of ``ip_allow.config`` and :ref:`Names <parameter-name>` that are both "coalesce_masklen_v4" but each has a different Value_, then the actual mask length used to coalesce IPv4 addresses is undefined (but will be one of the two). All forms of the "coalescence Parameters" have this problem.
+This configuration file is mostly generated from various server data, but can be affected by a Parameter that has a :ref:`parameter-name` of "purge_allow_ip", which will cause the insertion of a line with :file:`src_ip={VALUE} action=ip_allow method=ALL` where ``VALUE`` is the Parameter's Value_. To allow purge from multiple IPs use a comma separated list in the Parameter's Value_.  Additionally, Parameters with :ref:`Names <parameter-name>` like :file:`coalesce_{masklen|number}_v{4|6}` cause Traffic Ops to generate coalesced IP ranges in different ways. In the case that ``number`` was used, the Parameter's Value_ sets the the maximum number of IP address that may be coalesced into a single range. If ``masklen`` was used, the lines that are generated are coalesced into :abbr:`CIDR (Classless Inter-Domain Routing)` ranges using mask lengths determined by the Value_ of the parameter (using '4' sets the mask length of IPv4 address coalescing while using '6' sets the mask length to use when coalescing IPv6 addresses). This is not recommended, as the default mask lengths allow for maximum coalescence. Furthermore, if two Parameters on the same :ref:`Profile <profiles>` assigned to a server having Config File values of ``ip_allow.config`` and :ref:`Names <parameter-name>` that are both "coalesce_masklen_v4" but each has a different Value_, then the actual mask length used to coalesce IPv4 addresses is undefined (but will be one of the two). All forms of the "coalescence Parameters" have this problem.
 
 .. impl-detail:: At the time of this writing, coalescence is implemented through the `the NetAddr\:\:IP Perl library <http://search.cpan.org/~miker/NetAddr-IP-4.078/IP.pm>`_.
 
@@ -495,8 +497,8 @@ For each Parameter with this Config File value on the same :ref:`Profile <profil
 
 .. _tm-related-cache-server-params:
 
-traffic_monitor.properties
-''''''''''''''''''''''''''
+rascal.properties
+'''''''''''''''''
 This Config File is meant to be on Parameters assigned to either Traffic Monitor Profiles_ or :term:`cache server` Profiles_. Its allowed :ref:`Parameter Names <parameter-name>` are all configuration options for Traffic Monitor. The :ref:`Names <parameter-name>` with meaning are as follows.
 
 .. seealso:: :ref:`health-proto`
@@ -614,7 +616,60 @@ In order to support difficult configurations at MID/LAST, a
 and Value the raw remap lines.  The Value in this parameter will be pre
 or post pended to the end of ``remap.config``.
 
-.. seealso:: For an explanation of the syntax of this configuration file, refer to `the Apache Traffic Server remap.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_.
+To provide the most flexibility for managing :term:`Delivery Service` generated ``remap.config`` lines there are options for redefining the internal mustache template used to generate these ``remap.config`` lines.
+
+- ``template.first``
+- ``template.inner``
+- ``template.last``
+
+
+.. table:: ``remap.config`` Template Tags
+
+	+------------------+-----------------------------------+-------------------------------+
+	| :ref:`tag-name`  | Value_                            | Associated plugin/directive   |
+	+==================+===================================+===============================+
+	| Source           | Target, or request "from" URL     |                               |
+	+------------------+-----------------------------------+-------------------------------+
+	| Destination      | Replacement, or origin (“to”) URL |                               |
+	+------------------+-----------------------------------+-------------------------------+
+	| Strategy         | NextHop selection strategy        | parent_select.so              |
+	+------------------+-----------------------------------+-------------------------------+
+	| Dscp             | IP packet marking                 | header_rewrite.so             |
+	+------------------+-----------------------------------+-------------------------------+
+	| HeaderRewrite    | Header rewrite rules              | header_rewrite.so             |
+	+------------------+-----------------------------------+-------------------------------+
+	| DropQstring      | Query string handling at edge     | regex_remap.so                |
+	+------------------+-----------------------------------+-------------------------------+
+	| Signing          | URL Signing method                | url_sig.so, uri_signing.so    |
+	+------------------+-----------------------------------+-------------------------------+
+	| RegexRemap       | Regex remap expressions           | regex_remap.so                |
+	+------------------+-----------------------------------+-------------------------------+
+	| Cachekey         | Cachekey plugin parameters        | cachekey.so                   |
+	+------------------+-----------------------------------+-------------------------------+
+	| RangeRequests    | Range request handling            | background_fetch.so, slice.so |
+	+------------------+-----------------------------------+-------------------------------+
+	| Pacing           | Fair-Queuing Pacing Rate          | fq_pacing.so                  |
+	+------------------+-----------------------------------+-------------------------------+
+	| RawText          | Raw remap text for edge           |                               |
+	+------------------+-----------------------------------+-------------------------------+
+
+Default internal template values:
+
+.. code-block:: text
+	:caption: Default for template.first
+
+	map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{Dscp}}} {{{HeaderRewrite}}} {{{DropQstring}}} {{{Signing}}} {{{RegexRemap}}} {{{Cachekey}}} {{{RangeRequests}}} {{{Pacing}}} {{{RawText}}}
+
+.. code-block:: text
+	:caption: Default for template.inner, template.last
+
+	map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{HeaderRewrite}}} {{{Cachekey}}} {{{RangeRequests}}} {{{RawText}}}
+
+Users may use the above templates do things like manipulate the inputs to the cachekey via other plugins or modify the rule type from ``map`` to ``map_with_recv_port``.
+
+.. seealso:: For an explanation of the mustache syntax of the template, refer to `the mustache spec documentation <https://github.com/mustache/spec>`_.
+
+.. seealso:: For an explanation of the syntax of this ``remap.config`` file, refer to `the Apache Traffic Server remap.config documentation <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/remap.config.en.html>`_.
 
 :file:`set_dscp_{anything}.config`
 ''''''''''''''''''''''''''''''''''
