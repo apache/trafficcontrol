@@ -189,6 +189,32 @@ func GetWrapAccessLog(secret string) Middleware {
 	}
 }
 
+func getCookieToken(r *http.Request) string {
+	cookie, err := r.Cookie(tocookie.Name)
+	if err == nil && cookie != nil {
+		return cookie.Value
+	} else if r.Header.Get(rfc.Cookie) != "" && strings.Contains(r.Header.Get(rfc.Cookie), "access_token") {
+		cookie, err := r.Cookie("access_token")
+		if err == nil && cookie != nil {
+			decodedToken, err := jwt.Parse([]byte(cookie.Value))
+			if err == nil && cookie != nil {
+				return fmt.Sprintf("%s", decodedToken.PrivateClaims()["mojoCookie"])
+			}
+		}
+	} else if r.Header.Get(rfc.Authorization) != "" && strings.Contains(r.Header.Get(rfc.Authorization), "Bearer") {
+		givenTokenSplit := strings.Split(r.Header.Get(rfc.Authorization), " ")
+		if len(givenTokenSplit) < 2 {
+			return ""
+		}
+		decodedToken, err := jwt.Parse([]byte(givenTokenSplit[1]))
+		if err == nil && decodedToken != nil {
+			return fmt.Sprintf("%s", decodedToken.PrivateClaims()["mojoCookie"])
+		}
+		return givenTokenSplit[1]
+	}
+	return ""
+}
+
 // WrapAccessLog takes the cookie secret and a http.Handler, and returns a HandlerFunc which writes to the Access Log (which is the lib/go-log EventLog) after the HandlerFunc finishes.
 // This is not a Middleware, because it needs the secret as a parameter. For a Middleware, see GetWrapAccessLog.
 func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
@@ -196,25 +222,10 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		var imsType = NONIMS
 		iw := &util.Interceptor{W: w}
 		user := "-"
-		cookie, err := r.Cookie(tocookie.Name)
-		if err == nil && cookie != nil {
-			cookie, userErr, sysErr := tocookie.Parse(secret, cookie.Value)
-			if userErr == nil && sysErr == nil {
-				user = cookie.AuthData
-			}
-		} else {
-			cookie, err := r.Cookie("access_token")
-			if err == nil && cookie != nil {
-				decodedToken, err := jwt.Parse(
-					[]byte(cookie.Value),
-				)
-				if err == nil && cookie != nil {
-					cookie, userErr, sysErr := tocookie.Parse(secret, fmt.Sprintf("%s", decodedToken.PrivateClaims()["mojoCookie"]))
-					if userErr == nil && sysErr == nil {
-						user = cookie.AuthData
-					}
-				}
-			}
+		cookieToken := getCookieToken(r)
+		cookie, userErr, sysErr := tocookie.Parse(secret, cookieToken)
+		if userErr == nil && sysErr == nil {
+			user = cookie.AuthData
 		}
 		start := time.Now()
 		defer func() {
