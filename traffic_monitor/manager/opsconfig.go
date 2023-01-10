@@ -190,7 +190,6 @@ func StartOpsConfigManager(
 				break
 			}
 		}
-		opsConfig.Set(newOpsConfig)
 
 		if cdn, err := toSession.MonitorCDN(staticAppData.Hostname); err != nil {
 			handleErr(fmt.Errorf("getting CDN name from Traffic Ops, using config CDN '%s': %s\n", newOpsConfig.CdnName, err))
@@ -200,6 +199,7 @@ func StartOpsConfigManager(
 			}
 			newOpsConfig.CdnName = cdn
 		}
+		opsConfig.Set(newOpsConfig)
 
 		// These must be in a goroutine, because the monitorConfigPoller tick sends to a channel this select listens for. Thus, if we block on sends to the monitorConfigPoller, we have a livelock race condition.
 		// More generically, we're using goroutines as an infinite chan buffer, to avoid potential livelocks
