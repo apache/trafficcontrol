@@ -17,6 +17,8 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} $ */
+
 const defaultBannerColor = "#EDEDED";
 const defaultSidebarColor = "#2A3F54";
 const defaultTextColor = "#515356";
