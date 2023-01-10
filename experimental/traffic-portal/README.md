@@ -21,7 +21,7 @@ CDN architectures. The eventual goal is to slowly eat Traffic Portal by
 importing all of its functionality once the self-service UI is complete.
 
 ## Prerequisites
-Traffic Portal runs on [NodeJS](https://nodejs.org/) version 18 (or later) and
+Traffic Portal runs on [NodeJS](https://nodejs.org/) version 16 (or later) and
 uses its built-in NPM package manager to manage dependencies.
 
 ## Building and Running

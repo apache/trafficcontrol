@@ -47,7 +47,7 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 
 FROM os-dependencies AS node-dependencies
 # Download and install node
-RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
+RUN curl -sL https://rpm.nodesource.com/setup_16.x | bash -
 RUN dnf install -y nodejs
 RUN npm i -g webdriver-manager
 

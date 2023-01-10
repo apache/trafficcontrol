@@ -24,7 +24,7 @@
     "Traffic Portal"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=16"
   },
   "engineStrict": true,
   "scripts": {
@@ -90,7 +90,7 @@
     "@types/jasmine": "~3.6.0",
     "@types/jasminewd2": "~2.0.3",
     "@types/nightwatch": "^2.3.14",
-    "@types/node": "^18.11.12",
+    "@types/node": "^16.18.11",
     "@typescript-eslint/eslint-plugin": "^5.36.2",
     "@typescript-eslint/parser": "^5.36.2",
     "axios": "^0.27.2",

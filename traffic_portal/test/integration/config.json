@@ -29,8 +29,8 @@
     "stopSpecOnExpectationFailure": true
   },
   "params": {
-    "apiUrl": " https://localhost:443/api/4.0",
-    "baseUrl": "https://localhost",
+    "apiUrl": " https://localhost:444/api/4.0",
+    "baseUrl": "https://localhost:444",
     "login": {
       "username": "admin",
       "password": "twelve12"
