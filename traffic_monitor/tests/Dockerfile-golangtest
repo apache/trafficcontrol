@@ -18,6 +18,7 @@ FROM debian:buster
 COPY --from=get-go /usr/local/go /usr/local/go
 ENV PATH=/usr/local/go/bin:${PATH} \
     GOPATH=/go
+ENV	PATH=${GOPATH}/bin:${PATH}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -41,8 +42,11 @@ VOLUME ["/junit"]
 
 WORKDIR /go/src/$DIR/traffic_monitor
 
-RUN bash -c "go install github.com/jstemmer/go-junit-report@latest"
-RUN bash -c "go mod vendor -v"
-CMD bash -c 'go test -v ./... ../lib/go-tc/... 2>&1 | go-junit-report --package-name=golang.test.tm --set-exit-code > /junit/golang.test.tm.xml && chmod 777 -R /junit && cat /junit/golang.test.tm.xml'
+RUN go install github.com/jstemmer/go-junit-report@latest
+RUN go mod vendor -v
+CMD go test -v ./... ../lib/go-tc/... 2>&1 | \
+		go-junit-report --package-name=golang.test.tm --set-exit-code > /junit/golang.test.tm.xml && \
+	chmod 777 -R /junit && \
+	cat /junit/golang.test.tm.xml
 #
 # vi:syntax=Dockerfile
