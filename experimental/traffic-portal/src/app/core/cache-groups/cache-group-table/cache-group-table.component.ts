@@ -143,10 +143,12 @@ export class CacheGroupTableComponent implements OnInit {
 		},
 		{
 			action: "asns",
+			disabled: (): true => true,
 			name: "Manage ASNs"
 		},
 		{
 			action: "parameters",
+			disabled: (): true => true,
 			name: "Manage Parameters"
 		},
 		{
