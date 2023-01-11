@@ -67,6 +67,7 @@ RUN dnf -y install epel-release && \
         make                    \
         numactl-libs            \
         openssl                 \
+        procps-ng               \
         perl                    \
         tcl                     \
         xz                      \
