@@ -18,7 +18,7 @@ FROM debian:buster
 COPY --from=get-go /usr/local/go /usr/local/go
 ENV PATH=/usr/local/go/bin:${PATH} \
     GOPATH=/go
-ENV	PATH=${GOPATH}/bin:${PATH}
+ENV PATH=${GOPATH}/bin:${PATH}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
