@@ -283,7 +283,7 @@ func ExampleLegacyTrafficMonitorConfigMap_Upgrade() {
 				IP:           "0.0.0.0",
 				HostName:     "test",
 				FQDN:         "test.quest",
-				Profile:      "test",
+				Profile:      []string{"test"},
 				Location:     "test",
 				ServerStatus: "testStatus",
 			},
@@ -300,7 +300,7 @@ func ExampleLegacyTrafficMonitorConfigMap_Upgrade() {
 				IP:               "0.0.0.1",
 				IP6:              "::2",
 				Port:             -1,
-				Profile:          "test",
+				Profile:          []string{"test"},
 				ServerStatus:     "testStatus",
 				Type:             "testType",
 			},
@@ -335,7 +335,7 @@ func ExampleLegacyTrafficMonitorConfigMap_Upgrade() {
 	fmt.Println("TrafficMonitor IP:", cm.TrafficMonitor["test"].IP)
 	fmt.Println("TrafficMonitor HostName:", cm.TrafficMonitor["test"].HostName)
 	fmt.Println("TrafficMonitor FQDN:", cm.TrafficMonitor["test"].FQDN)
-	fmt.Println("TrafficMonitor Profile:", cm.TrafficMonitor["test"].Profile)
+	fmt.Println("TrafficMonitor Profile:", cm.TrafficMonitor["test"].Profile[0])
 	fmt.Println("TrafficMonitor Location:", cm.TrafficMonitor["test"].Location)
 	fmt.Println("TrafficMonitor ServerStatus:", cm.TrafficMonitor["test"].ServerStatus)
 	fmt.Println("# of TrafficServers:", len(cm.TrafficServer))
@@ -351,7 +351,7 @@ func ExampleLegacyTrafficMonitorConfigMap_Upgrade() {
 	fmt.Println("TrafficServer first IP Address:", cm.TrafficServer["test"].Interfaces[0].IPAddresses[0].Address)
 	fmt.Println("TrafficServer second IP Address:", cm.TrafficServer["test"].Interfaces[0].IPAddresses[1].Address)
 	fmt.Println("TrafficServer Port:", cm.TrafficServer["test"].Port)
-	fmt.Println("TrafficServer Profile:", cm.TrafficServer["test"].Profile)
+	fmt.Println("TrafficServer Profile:", cm.TrafficServer["test"].Profile[0])
 	fmt.Println("TrafficServer ServerStatus:", cm.TrafficServer["test"].ServerStatus)
 	fmt.Println("TrafficServer Type:", cm.TrafficServer["test"].Type)
 

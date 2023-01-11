@@ -428,7 +428,7 @@ func generateStats(
 			log.Warnf("cache.StatsMarshall server %s missing from monitorConfig\n", id)
 		}
 
-		serverProfile, ok := monitorConfig.Profile[serverInfo.Profile]
+		serverProfile, ok := monitorConfig.Profile[serverInfo.Profile[0]]
 		if !ok {
 			log.Warnf("cache.StatsMarshall server %s missing profile in monitorConfig\n", id)
 		}

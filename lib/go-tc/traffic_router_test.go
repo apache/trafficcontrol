@@ -97,7 +97,7 @@ func ExampleLegacyTrafficServer_Upgrade() {
 		IP:               "198.0.2.0",
 		IP6:              "2001:DB8::1",
 		Port:             -1,
-		Profile:          "testProfile",
+		Profile:          []string{"testProfile"},
 		ServerStatus:     "testStatus",
 		Type:             "testType",
 	}
@@ -115,7 +115,7 @@ func ExampleLegacyTrafficServer_Upgrade() {
 	fmt.Println("first IP Address:", ts.Interfaces[0].IPAddresses[0].Address)
 	fmt.Println("second IP Address:", ts.Interfaces[0].IPAddresses[1].Address)
 	fmt.Println("Port:", ts.Port)
-	fmt.Println("Profile:", ts.Profile)
+	fmt.Println("Profile:", ts.Profile[0])
 	fmt.Println("ServerStatus:", ts.ServerStatus)
 	fmt.Println("Type:", ts.Type)
 
