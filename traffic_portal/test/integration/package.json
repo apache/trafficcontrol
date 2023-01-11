@@ -6,7 +6,7 @@
   "dependencies": {
     "@types/random-ipv6": "^1.0.0",
     "axios": "^0.21.2",
-    "chromedriver": "^78.0.1",
+    "chromedriver": "^109.0.0",
     "constants": "0.0.2",
     "download-file": "^0.1.5",
     "file-exists": "^5.0.1",
