@@ -188,7 +188,7 @@ SELECT
 	status.name as status,
 	cachegroup.name as cachegroup,
 	me.tcp_port as port,
-	(SELECT ARRAY_AGG(sp.profile_name ORDER BY sp.priority ASC) FROM server_profile AS sp where sp.server=me.id) AS profile_name,
+	(SELECT ARRAY_AGG(sp.profile_name ORDER BY sp.priority ASC) FROM server_profile AS sp where sp.server=me.id) as profile,
 	type.name as type,
 	me.xmpp_id as hashID,
     me.id as serverID
@@ -197,6 +197,7 @@ JOIN type type ON type.id = me.type
 JOIN status status ON status.id = me.status
 JOIN cachegroup cachegroup ON cachegroup.id = me.cachegroup
 JOIN profile profile ON profile.id = me.profile
+JOIN server_profile sp ON profile.name = sp.profile_name AND me.id = sp.server
 JOIN cdn cdn ON cdn.id = me.cdn_id
 WHERE cdn.name = $1
 `
@@ -308,12 +309,12 @@ AND cdn.name = $3
 		var status sql.NullString
 		var cachegroup sql.NullString
 		var port sql.NullInt64
-		var profile pq.StringArray
+		var profile []string
 		var ttype sql.NullString
 		var hashID sql.NullString
 		var serverID sql.NullInt64
 
-		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, &profile, &ttype, &hashID, &serverID); err != nil {
+		if err := rows.Scan(&hostName, &fqdn, &status, &cachegroup, &port, pq.Array(&profile), &ttype, &hashID, &serverID); err != nil {
 			return nil, nil, nil, err
 		}
 		cacheStatus := tc.CacheStatusFromString(status.String)

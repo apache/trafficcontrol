@@ -2,6 +2,7 @@ package monitoring
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sort"
 	"strconv"
@@ -102,7 +103,7 @@ func TestGetMonitoringServers(t *testing.T) {
 		t.Fatalf("getMonitoringServers expected: len(monitors) == 1, actual: %v", len(monitors))
 	}
 	sqlMonitor := monitors[0]
-	if sqlMonitor != monitor {
+	if !reflect.DeepEqual(sqlMonitor, monitor) {
 		t.Errorf("getMonitoringServers expected: monitor == %+v, actual: %+v", monitor, sqlMonitor)
 	}
 
@@ -110,7 +111,7 @@ func TestGetMonitoringServers(t *testing.T) {
 		t.Errorf("getMonitoringServers expected: len(routers) == 1, actual: %v", len(routers))
 	}
 	sqlRouter := routers[0]
-	if sqlRouter != router {
+	if !reflect.DeepEqual(sqlRouter, router) {
 		t.Errorf("getMonitoringServers expected: router == %+v, actual: %+v", router, sqlRouter)
 	}
 
@@ -140,7 +141,7 @@ func TestGetMonitoringServers(t *testing.T) {
 		t.Fatalf("getMonitoringServers expected: len(monitors) == 1, actual: %v", len(monitors))
 	}
 	sqlMonitor = monitors[0]
-	if sqlMonitor != monitor {
+	if !reflect.DeepEqual(sqlMonitor, monitor) {
 		t.Errorf("getMonitoringServers expected: monitor == %+v, actual: %+v", monitor, sqlMonitor)
 	}
 
@@ -252,7 +253,7 @@ func TestGetProfiles(t *testing.T) {
 
 	profiles := []Profile{
 		{
-			Name: router.Profile,
+			Name: router.Profile[0],
 			Type: RouterType,
 			Parameters: map[string]interface{}{
 				"param0": "param0Val",
@@ -260,7 +261,7 @@ func TestGetProfiles(t *testing.T) {
 			},
 		},
 		{
-			Name: cache.Profile,
+			Name: cache.Profile[0],
 			Type: "myType2",
 			Parameters: map[string]interface{}{
 				"2param0": "2param0Val",
@@ -476,7 +477,7 @@ func TestGetMonitoringJSON(t *testing.T) {
 
 		profiles := []Profile{
 			Profile{
-				Name: router.Profile,
+				Name: router.Profile[0],
 				Type: RouterType,
 				Parameters: map[string]interface{}{
 					"param0": "param0Val",
@@ -484,7 +485,7 @@ func TestGetMonitoringJSON(t *testing.T) {
 				},
 			},
 			Profile{
-				Name: cache.Profile,
+				Name: cache.Profile[0],
 				Type: "EDGE",
 				Parameters: map[string]interface{}{
 					"2param0": "2param0Val",
@@ -725,7 +726,7 @@ func createMockMonitor() Monitor {
 	return Monitor{
 		BasicServer: BasicServer{
 			CommonServerProperties: CommonServerProperties{
-				Profile:    "monitorProfile",
+				Profile:    []string{"monitorProfile"},
 				Status:     "monitorStatus",
 				Port:       8081,
 				Cachegroup: "monitorCachegroup",
@@ -743,9 +744,9 @@ func setupMockGetMonitoringServersWithoutIPv4(mock sqlmock.Sqlmock, monitor Moni
 	interfaceRows := sqlmock.NewRows([]string{"name", "max_bandwidth", "mtu", "monitor", "server"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
 	dssRows := sqlmock.NewRows([]string{"host_name", "xml_id"})
-	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.Profile, MonitorType, "noHash", 5)
+	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, fmt.Sprintf("{%s}", strings.Join(monitor.Profile, ",")), MonitorType, "noHash", 5)
 	for index, cache := range caches {
-		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
+		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, fmt.Sprintf("{%s}", strings.Join(cache.Profile, ",")), cache.Type, cache.HashID, cacheIDs[index])
 		dssRows = dssRows.AddRow(cache.HostName, "xml_id_foo")
 
 		interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
@@ -763,7 +764,7 @@ func setupMockGetMonitoringServersWithoutIPv4(mock sqlmock.Sqlmock, monitor Moni
 	// Add an interface and only ipv6 ip address for the monitor cache
 	interfaceRows = interfaceRows.AddRow("monitorCacheInterface", nil, 1500, false, 5)
 	ipAddressRows = ipAddressRows.AddRow("2020::10", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", false, 5, "monitorCacheInterface")
-	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, router.Profile, RouterType, "noHashid", 3)
+	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, fmt.Sprintf("{%s}", strings.Join(router.Profile, ",")), RouterType, "noHashid", 3)
 	mock.ExpectQuery("SELECT (.+) FROM interface i (.+)").WithArgs(cdn).WillReturnRows(interfaceRows)
 	mock.ExpectQuery("SELECT (.+) FROM ip_address ip (.+)").WillReturnRows(ipAddressRows)
 	mock.ExpectQuery("SELECT (.+) FROM deliveryservice_server AS dss (.+)").WillReturnRows(dssRows)
@@ -775,9 +776,9 @@ func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router
 	interfaceRows := sqlmock.NewRows([]string{"name", "max_bandwidth", "mtu", "monitor", "server"})
 	ipAddressRows := sqlmock.NewRows([]string{"address", "gateway", "service_address", "server", "interface"})
 	dssRows := sqlmock.NewRows([]string{"host_name", "xml_id"})
-	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, monitor.Profile, MonitorType, "noHash", 5)
+	serverRows = serverRows.AddRow(monitor.HostName, monitor.FQDN, monitor.Status, monitor.Cachegroup, monitor.Port, fmt.Sprintf("{%s}", strings.Join(monitor.Profile, ",")), MonitorType, "noHash", 5)
 	for index, cache := range caches {
-		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, cache.Profile, cache.Type, cache.HashID, cacheIDs[index])
+		serverRows = serverRows.AddRow(cache.HostName, cache.FQDN, cache.Status, cache.Cachegroup, cache.Port, fmt.Sprintf("{%s}", strings.Join(cache.Profile, ",")), cache.Type, cache.HashID, cacheIDs[index])
 		dssRows = dssRows.AddRow(cache.HostName, "xml_id_foo")
 
 		interfaceRows = interfaceRows.AddRow("none", nil, 1500, false, 0)
@@ -796,7 +797,7 @@ func setupMockGetMonitoringServers(mock sqlmock.Sqlmock, monitor Monitor, router
 	interfaceRows = interfaceRows.AddRow("monitorCacheInterface", nil, 1500, false, 5)
 	ipAddressRows = ipAddressRows.AddRow("5.6.7.10", "10.0.0.0", true, 5, "monitorCacheInterface")
 	ipAddressRows = ipAddressRows.AddRow("2020::10", "2001:0db8:85a3:0000:0000:8a2e:0370:7334", false, 5, "monitorCacheInterface")
-	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, router.Profile, RouterType, "noHashid", 3)
+	serverRows = serverRows.AddRow("noHostname", "noFqdn", "noStatus", "noGroup", 0, fmt.Sprintf("{%s}", strings.Join(router.Profile, ",")), RouterType, "noHashid", 3)
 	mock.ExpectQuery("SELECT (.+) FROM interface i (.+)").WithArgs(cdn).WillReturnRows(interfaceRows)
 	mock.ExpectQuery("SELECT (.+) FROM ip_address ip (.+)").WillReturnRows(ipAddressRows)
 	mock.ExpectQuery("SELECT (.+) FROM deliveryservice_server AS dss (.+)").WillReturnRows(dssRows)
@@ -816,7 +817,7 @@ func mockGetParams(mock sqlmock.Sqlmock, expected []parameter.TOParameter, cdn s
 func createMockCache(interfaceName string) Cache {
 	return Cache{
 		CommonServerProperties: CommonServerProperties{
-			Profile:    "cacheProfile",
+			Profile:    []string{"cacheProfile"},
 			Status:     "REPORTED",
 			Port:       8081,
 			Cachegroup: "cacheCachegroup",
@@ -890,7 +891,7 @@ func createMockCache(interfaceName string) Cache {
 func createMockRouter() Router {
 	return Router{
 		Type:    RouterType,
-		Profile: "routerProfile",
+		Profile: []string{"routerProfile"},
 	}
 }
 
