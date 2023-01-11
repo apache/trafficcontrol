@@ -38,7 +38,8 @@ RUN dnf install -y epel-release && \
         findutils \
         gettext \
         bind-utils \
-        openssl && \
+        openssl \
+        procps-ng && \
     dnf clean all
 
 FROM trafficstats-dependencies AS trafficstats

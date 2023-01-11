@@ -58,6 +58,7 @@ RUN set -o nounset -o errexit && \
 		net-tools            \
 		nmap-ncat            \
 		openssl              \
+		procps-ng            \
 		# rsync is used to copy certs in "Shared SSL certificate generation" step
 		rsync                \
 

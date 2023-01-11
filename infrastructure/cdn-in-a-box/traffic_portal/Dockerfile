@@ -43,6 +43,7 @@ RUN dnf install -y epel-release && \
       jq \
       nodejs \
       openssl \
+      procps-ng \
       # find is required by to-access.sh
       findutils \
       gettext \
