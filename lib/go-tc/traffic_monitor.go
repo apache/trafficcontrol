@@ -443,7 +443,7 @@ type TrafficMonitor struct {
 	// FQDN is the Fully Qualified Domain Name of the Traffic Monitor server.
 	FQDN string `json:"fqdn"`
 	// Profile is the Name of the Profile used by the Traffic Monitor.
-	Profile string `json:"profile"`
+	Profile []string `json:"profile"`
 	// Location is the Name of the Cache Group to which the Traffic Monitor
 	// belongs - called "Location" for legacy reasons.
 	Location string `json:"cachegroup"`

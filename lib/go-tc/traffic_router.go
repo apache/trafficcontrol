@@ -102,7 +102,7 @@ type LegacyTrafficServer struct {
 	IP               string              `json:"ip"`
 	IP6              string              `json:"ip6"`
 	Port             int                 `json:"port"`
-	Profile          string              `json:"profile"`
+	Profile          []string            `json:"profile"`
 	ServerStatus     string              `json:"status"`
 	Type             string              `json:"type"`
 }
@@ -214,7 +214,7 @@ type TrafficServer struct {
 	HTTPSPort        int                   `json:"httpsPort,omitempty"`
 	Interfaces       []ServerInterfaceInfo `json:"interfaces"`
 	Port             int                   `json:"port"`
-	Profile          string                `json:"profile"`
+	Profile          []string              `json:"profile"`
 	ServerStatus     string                `json:"status"`
 	Type             string                `json:"type"`
 }
