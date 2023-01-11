@@ -55,7 +55,7 @@ jobs:
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
 
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -87,7 +87,7 @@ jobs:
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
 
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -119,7 +119,7 @@ jobs:
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
 
       - name: Install latest Chrome
         run: sudo apt-get update && sudo apt-get install google-chrome-stable
