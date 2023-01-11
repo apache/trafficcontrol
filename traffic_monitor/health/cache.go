@@ -195,47 +195,49 @@ func EvalAggregate(result cache.ResultInfo, resultStats *threadsafe.ResultStatVa
 		return true, eventDesc(status, AvailableStr), ""
 	}
 
-	profile, ok := mc.Profile[serverInfo.Profile]
-	if !ok {
-		log.Errorf("Profile '%v' for cache server '%v' missing from monitoring configuration - treating as OFFLINE", serverInfo.Profile, result.ID)
-		return false, "ERROR - server profile missing in Traffic Ops monitor config", ""
-	}
+	for _, p := range serverInfo.Profile {
+		profile, ok := mc.Profile[p]
+		if !ok {
+			log.Errorf("Profile '%v' for cache server '%v' missing from monitoring configuration - treating as OFFLINE", profile, result.ID)
+			return false, "ERROR - server profile missing in Traffic Ops monitor config", ""
+		}
 
-	avail, eventDescVal, eventMsg := EvalCacheWithStatusInfo(result, mc, status, serverInfo.ServerStatus)
-	if !avail {
+		avail, eventDescVal, eventMsg := EvalCacheWithStatusInfo(result, mc, status, serverInfo.ServerStatus)
+		if !avail {
+			return avail, eventDescVal, eventMsg
+		}
+
+		computedStats := cache.ComputedStats()
+
+		for stat, threshold := range profile.Parameters.Thresholds {
+			resultStat := interface{}(nil)
+			computedStatF, ok := computedStats[stat]
+			if !ok {
+				if resultStats == nil {
+					continue
+				}
+				resultStatHistory := resultStats.Load(stat)
+				if len(resultStatHistory) == 0 {
+					continue
+				}
+				resultStat = resultStatHistory[0].Val
+			} else {
+				resultStat = computedStatF(result, serverInfo, profile, dummyCombinedState)
+			}
+
+			resultStatNum, ok := util.ToNumeric(resultStat)
+			if !ok {
+				log.Errorf("health.EvalCache threshold stat %s was not a number: %v", stat, resultStat)
+				continue
+			}
+
+			if !inThreshold(threshold, resultStatNum) {
+				return false, eventDesc(status, exceedsThresholdMsg(stat, threshold, resultStatNum)), stat
+			}
+		}
 		return avail, eventDescVal, eventMsg
 	}
-
-	computedStats := cache.ComputedStats()
-
-	for stat, threshold := range profile.Parameters.Thresholds {
-		resultStat := interface{}(nil)
-		computedStatF, ok := computedStats[stat]
-		if !ok {
-			if resultStats == nil {
-				continue
-			}
-			resultStatHistory := resultStats.Load(stat)
-			if len(resultStatHistory) == 0 {
-				continue
-			}
-			resultStat = resultStatHistory[0].Val
-		} else {
-			resultStat = computedStatF(result, serverInfo, profile, dummyCombinedState)
-		}
-
-		resultStatNum, ok := util.ToNumeric(resultStat)
-		if !ok {
-			log.Errorf("health.EvalCache threshold stat %s was not a number: %v", stat, resultStat)
-			continue
-		}
-
-		if !inThreshold(threshold, resultStatNum) {
-			return false, eventDesc(status, exceedsThresholdMsg(stat, threshold, resultStatNum)), stat
-		}
-	}
-
-	return avail, eventDescVal, eventMsg
+	return true, "", ""
 }
 
 // getProcessAvailableTuple gets a function to process an availability tuple

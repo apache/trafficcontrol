@@ -273,37 +273,39 @@ func monitorConfigListen(
 				continue
 			}
 
-			pollURLStr := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingURL
-			if pollURLStr == "" {
-				log.Errorf("monitor config server %v profile %v has no polling URL; can't poll", srv.HostName, srv.Profile)
-				continue
+			for _, profile := range srv.Profile {
+				pollURLStr := monitorConfig.Profile[profile].Parameters.HealthPollingURL
+				if pollURLStr == "" {
+					log.Errorf("monitor config server %v profile %v has no polling URL; can't poll", srv.HostName, srv.Profile)
+					continue
+				}
+
+				format := monitorConfig.Profile[profile].Parameters.HealthPollingFormat
+				if format == "" {
+					format = cache.DefaultStatsType
+					log.Infof("health.polling.format for '%v' is empty, using default '%v'", srv.HostName, format)
+				}
+
+				pollType := monitorConfig.Profile[profile].Parameters.HealthPollingType
+				if pollType == "" {
+					pollType = poller.DefaultPollerType
+					log.Infof("health.polling.type for '%v' is empty, using default '%v'", srv.HostName, pollType)
+				}
+
+				pollURL4Str, pollURL6Str := createServerHealthPollURLs(pollURLStr, srv)
+
+				connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[profile].Parameters.HealthConnectionTimeout)
+				if connTimeout == 0 {
+					connTimeout = DefaultHealthConnectionTimeout
+					log.Warnln("profile " + profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
+				}
+
+				healthURLs[srv.HostName] = poller.PollConfig{URL: pollURL4Str, URLv6: pollURL6Str, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
+
+				statURL4 := createServerStatPollURL(pollURL4Str)
+				statURL6 := createServerStatPollURL(pollURL6Str)
+				statURLs[srv.HostName] = poller.PollConfig{URL: statURL4, URLv6: statURL6, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 			}
-
-			format := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingFormat
-			if format == "" {
-				format = cache.DefaultStatsType
-				log.Infof("health.polling.format for '%v' is empty, using default '%v'", srv.HostName, format)
-			}
-
-			pollType := monitorConfig.Profile[srv.Profile].Parameters.HealthPollingType
-			if pollType == "" {
-				pollType = poller.DefaultPollerType
-				log.Infof("health.polling.type for '%v' is empty, using default '%v'", srv.HostName, pollType)
-			}
-
-			pollURL4Str, pollURL6Str := createServerHealthPollURLs(pollURLStr, srv)
-
-			connTimeout := trafficOpsHealthConnectionTimeoutToDuration(monitorConfig.Profile[srv.Profile].Parameters.HealthConnectionTimeout)
-			if connTimeout == 0 {
-				connTimeout = DefaultHealthConnectionTimeout
-				log.Warnln("profile " + srv.Profile + " health.connection.timeout Parameter is missing or zero, using default " + DefaultHealthConnectionTimeout.String())
-			}
-
-			healthURLs[srv.HostName] = poller.PollConfig{URL: pollURL4Str, URLv6: pollURL6Str, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
-
-			statURL4 := createServerStatPollURL(pollURL4Str)
-			statURL6 := createServerStatPollURL(pollURL6Str)
-			statURLs[srv.HostName] = poller.PollConfig{URL: statURL4, URLv6: statURL6, Host: srv.FQDN, Timeout: connTimeout, Format: format, PollType: pollType}
 		}
 
 		peerSet := map[tc.TrafficMonitorName]struct{}{}

@@ -86,7 +86,7 @@ func TestCreateCacheStatusesForKbps(t *testing.T) {
 		HTTPSPort:        443,
 		Interfaces:       interfaces,
 		Port:             8080,
-		Profile:          "profile",
+		Profile:          []string{"profile"},
 		ServerStatus:     "REPORTED",
 		Type:             "EDGE",
 	}

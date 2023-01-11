@@ -320,7 +320,7 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 		TrafficServer: map[string]tc.TrafficServer{
 			string(resultID): {
 				ServerStatus: string(tc.CacheStatusReported),
-				Profile:      "myProfileName",
+				Profile:      []string{"myProfileName"},
 				Interfaces: []tc.ServerInterfaceInfo{
 					{
 						Name:    "bond0",
@@ -394,8 +394,8 @@ func TestCalcAvailabilityThresholds(t *testing.T) {
 	}
 	GetVitals(&result, &prevResult, &mc)
 
-	mc.Profile[mc.TrafficServer[string(result.ID)].Profile] = tc.TMProfile{
-		Name: mc.TrafficServer[string(result.ID)].Profile,
+	mc.Profile[mc.TrafficServer[string(result.ID)].Profile[0]] = tc.TMProfile{
+		Name: mc.TrafficServer[string(result.ID)].Profile[0],
 		Parameters: tc.TMParameters{
 			Thresholds: map[string]tc.HealthThreshold{
 				"availableBandwidthInKbps": {
@@ -524,7 +524,7 @@ func TestEvalInterface(t *testing.T) {
 		},
 		TrafficServer: map[string]tc.TrafficServer{
 			"test": {
-				Profile: "testProfile",
+				Profile: []string{"testProfile"},
 				Interfaces: []tc.ServerInterfaceInfo{
 					{
 						Monitor:      true,

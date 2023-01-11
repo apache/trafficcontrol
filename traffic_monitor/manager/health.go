@@ -188,13 +188,15 @@ func processHealthResult(
 			results[i] = healthResult
 		}
 
-		maxHistory := uint64(monitorConfigCopy.Profile[monitorConfigCopy.TrafficServer[string(healthResult.ID)].Profile].Parameters.HistoryCount)
-		if maxHistory < 1 {
-			log.Infof("processHealthResult got history count %v for %v, setting to 1\n", maxHistory, healthResult.ID)
-			maxHistory = 1
-		}
+		for _, p := range monitorConfigCopy.TrafficServer[(healthResult.ID)].Profile {
+			maxHistory := uint64(monitorConfigCopy.Profile[p].Parameters.HistoryCount)
+			if maxHistory < 1 {
+				log.Infof("processHealthResult got history count %v for %v, setting to 1\n", maxHistory, healthResult.ID)
+				maxHistory = 1
+			}
 
-		healthHistoryCopy[tc.CacheName(healthResult.ID)] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[tc.CacheName(healthResult.ID)]...), maxHistory)
+			healthHistoryCopy[tc.CacheName(healthResult.ID)] = pruneHistory(append([]cache.Result{healthResult}, healthHistoryCopy[tc.CacheName(healthResult.ID)]...), maxHistory)
+		}
 	}
 
 	pollerName := "health"

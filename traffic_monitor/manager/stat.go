@@ -268,37 +268,39 @@ func processStatResults(
 	statMaxKbpses := statMaxKbpsesThreadsafe.Get().Copy()
 
 	for i, result := range results {
-		maxStats := uint64(mc.Profile[mc.TrafficServer[string(result.ID)].Profile].Parameters.HistoryCount)
-		if maxStats < 1 {
-			log.Infof("processStatResults got history count %v for %v, setting to 1\n", maxStats, result.ID)
-			maxStats = 1
-		}
+		for _, profile := range mc.TrafficServer[string(result.ID)].Profile {
+			maxStats := uint64(mc.Profile[profile].Parameters.HistoryCount)
+			if maxStats < 1 {
+				log.Infof("processStatResults got history count %v for %v, setting to 1\n", maxStats, result.ID)
+				maxStats = 1
+			}
 
-		// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
-		if lastResult, ok := lastResults[tc.CacheName(result.ID)]; ok && result.Error == nil {
-			health.GetVitals(&result, &lastResult, &mc) // TODO precompute
+			// TODO determine if we want to add results with errors, or just print the errors now and don't add them.
+			if lastResult, ok := lastResults[tc.CacheName(result.ID)]; ok && result.Error == nil {
+				health.GetVitals(&result, &lastResult, &mc) // TODO precompute
+				if result.Error == nil {
+					results[i] = result
+				} else {
+					log.Errorf("stat poll getting vitals for %v: %v\n", result.ID, result.Error)
+				}
+			}
+			statInfoHistory.Add(result, maxStats)
+			if err := statResultHistoryThreadsafe.Add(result, maxStats); err != nil {
+				log.Errorf("Adding result from %v: %v\n", result.ID, err)
+			}
+			// Don't add errored maxes or precomputed DSStats
 			if result.Error == nil {
-				results[i] = result
-			} else {
-				log.Errorf("stat poll getting vitals for %v: %v\n", result.ID, result.Error)
-			}
-		}
-		statInfoHistory.Add(result, maxStats)
-		if err := statResultHistoryThreadsafe.Add(result, maxStats); err != nil {
-			log.Errorf("Adding result from %v: %v\n", result.ID, err)
-		}
-		// Don't add errored maxes or precomputed DSStats
-		if result.Error == nil {
-			// max and precomputed always contain the latest result from each cache
-			statMaxKbpses[result.ID] = uint64(result.PrecomputedData.MaxKbps)
-			// if we failed to compute the OutBytes, keep the outbytes of the last result.
-			if result.PrecomputedData.OutBytes == 0 {
-				result.PrecomputedData.OutBytes = precomputedData[tc.CacheName(result.ID)].OutBytes
-			}
-			precomputedData[tc.CacheName(result.ID)] = result.PrecomputedData
+				// max and precomputed always contain the latest result from each cache
+				statMaxKbpses[result.ID] = uint64(result.PrecomputedData.MaxKbps)
+				// if we failed to compute the OutBytes, keep the outbytes of the last result.
+				if result.PrecomputedData.OutBytes == 0 {
+					result.PrecomputedData.OutBytes = precomputedData[tc.CacheName(result.ID)].OutBytes
+				}
+				precomputedData[tc.CacheName(result.ID)] = result.PrecomputedData
 
+			}
+			lastResults[tc.CacheName(result.ID)] = result
 		}
-		lastResults[tc.CacheName(result.ID)] = result
 	}
 	statInfoHistoryThreadsafe.Set(statInfoHistory)
 	statMaxKbpsesThreadsafe.Set(statMaxKbpses)
