@@ -114,7 +114,7 @@ func TestDeliveryServiceRequests(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
-				"BAD REQUEST when MISSING REQUIRED FIELDS": {
+				"BAD REQUEST when MISSING REQUIRED Delivery Service FIELDS": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"changeType": "create",
@@ -122,6 +122,49 @@ func TestDeliveryServiceRequests(t *testing.T) {
 							"type":  "HTTP",
 							"xmlId": "test-ds-fields",
 						},
+						"status": "draft",
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"bad request when missing Delivery Service definition": {
+					ClientSession: TOSession,
+					RequestBody: map[string]any{
+						"changeType": "create",
+						"status":     "draft",
+					},
+				},
+				"bad request when missing status": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"changeType": "create",
+						"deliveryService": generateDeliveryService(t, map[string]interface{}{
+							"ccrDnsTtl":          30,
+							"deepCachingType":    "NEVER",
+							"initialDispersion":  3,
+							"ipv6RoutingEnabled": true,
+							"longDesc":           "long desc",
+							"orgServerFqdn":      "http://example.test",
+							"profileName":        nil,
+							"tenant":             "root",
+							"xmlId":              "test-ds2",
+						}),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"bad request when missing change type": {
+					ClientSession: TOSession,
+					RequestBody: map[string]interface{}{
+						"deliveryService": generateDeliveryService(t, map[string]interface{}{
+							"ccrDnsTtl":          30,
+							"deepCachingType":    "NEVER",
+							"initialDispersion":  3,
+							"ipv6RoutingEnabled": true,
+							"longDesc":           "long desc",
+							"orgServerFqdn":      "http://example.test",
+							"profileName":        nil,
+							"tenant":             "root",
+							"xmlId":              "test-ds2",
+						}),
 						"status": "draft",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),

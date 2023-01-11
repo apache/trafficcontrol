@@ -19,7 +19,10 @@ package util
  * under the License.
  */
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func ExamplePtr() {
 	ptr := Ptr("testquest")
@@ -79,4 +82,41 @@ func ExampleInterfacePtr() {
 	ptr := InterfacePtr(1 + 2i)
 	fmt.Println(*ptr)
 	// Output: (1+2i)
+}
+
+func ExampleTimePtr() {
+	ptr := TimePtr(time.Time{})
+	fmt.Println(*ptr)
+	// Output: 0001-01-01 00:00:00 +0000 UTC
+}
+
+func ExampleCopyIfNotNil() {
+	var i *int
+	fmt.Println(CopyIfNotNil(i))
+
+	s := Ptr("9000")
+	fmt.Println(*CopyIfNotNil(s))
+
+	// Output: <nil>
+	// 9000
+}
+
+func ExampleCoalesce() {
+	var i *int
+	fmt.Println(Coalesce(i, 9000))
+
+	s := Ptr("testquest")
+	fmt.Println(Coalesce(s, "9001"))
+	// Output: 9000
+	// testquest
+}
+
+func ExampleCoalesceToDefault() {
+	var i *int
+	fmt.Println(CoalesceToDefault(i))
+
+	s := Ptr("testquest")
+	fmt.Println(CoalesceToDefault(s))
+	// Output: 0
+	// testquest
 }
