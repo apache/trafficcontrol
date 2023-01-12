@@ -20,9 +20,23 @@ import type {
 	ResponseRegion,
 	ResponseCacheGroup,
 	RequestCacheGroup,
+	CDN,
+	CacheGroupQueueResponse,
+	CacheGroupQueueRequest,
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
+
+/**
+ * Checks the type of an argument to
+ * {@link CacheGroupService.queueCacheGroupUpdates}.
+ *
+ * @param x The object to check.
+ * @returns Whether `x` is an {@link CacheGroupQueueRequest}.
+ */
+function isRequest(x: CacheGroupQueueRequest | CDN | string | number): x is CacheGroupQueueRequest {
+	return Object.prototype.hasOwnProperty.call(x, "action");
+}
 
 /**
  * CDNService expose API functionality relating to CDNs.
@@ -137,6 +151,80 @@ export class CacheGroupService extends APIService {
 		}
 
 		return this.put<ResponseCacheGroup>(`cachegroups/${id}`, body).toPromise();
+	}
+
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param cdnOrIdentifier Either a CDN, its name, or its ID.
+	 * @param action Used to determine the queue action to take. If not given,
+	 * defaults to `queue`.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		cdnOrIdentifier: CDN | string | number,
+		action?: "queue" | "dequeue"
+	): Promise<CacheGroupQueueResponse>;
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param request The full (de/)queue request.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		request: CacheGroupQueueRequest
+	): Promise<CacheGroupQueueResponse>;
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param cdnOrIdentifierOrRequest Either the full (de/)queue request or a
+	 * CDN, its name, or its ID.
+	 * @param action If `cdnOrIdentifierOrRequest` is not a full (de/)queue
+	 * request, then this will be used to determine the queue action to take. If
+	 * not given, defaults to `queue`.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		cdnOrIdentifierOrRequest: CacheGroupQueueRequest | CDN | string | number,
+		action?: "queue" | "dequeue"
+	): Promise<CacheGroupQueueResponse> {
+		const cgID = typeof(cacheGroupOrID) === "number" ? cacheGroupOrID : cacheGroupOrID.id;
+		const path = `cachegroups/${cgID}/queue_update`;
+		let request: CacheGroupQueueRequest;
+		if (isRequest(cdnOrIdentifierOrRequest)) {
+			request = cdnOrIdentifierOrRequest;
+		} else {
+			action = action ?? "queue";
+			switch (typeof(cdnOrIdentifierOrRequest)) {
+				case "string":
+					request = {
+						action,
+						cdn: cdnOrIdentifierOrRequest,
+					};
+					break;
+				case "number":
+					request = {
+						action,
+						cdnId: cdnOrIdentifierOrRequest,
+					};
+					break;
+				default:
+					request = {
+						action,
+						cdn: cdnOrIdentifierOrRequest.name
+					};
+			}
+		}
+		return this.post<CacheGroupQueueResponse>(path, request).toPromise();
 	}
 
 	public async getDivisions(): Promise<Array<ResponseDivision>>;

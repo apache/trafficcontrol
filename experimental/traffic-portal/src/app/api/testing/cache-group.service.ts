@@ -12,29 +12,52 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import { RequestDivision, ResponseDivision, RequestRegion, ResponseRegion, ResponseCacheGroup, RequestCacheGroup } from "trafficops-types";
+import type {
+	CacheGroupQueueRequest,
+	CacheGroupQueueResponse,
+	CDN,
+	RequestCacheGroup,
+	RequestDivision,
+	RequestRegion,
+	ResponseCacheGroup,
+	ResponseDivision,
+	ResponseRegion,
+} from "trafficops-types";
 
-type ParentKeys = "parentCacheGroupId" | "parentCacheGroupName";
-type SecondaryParentKeys = "secondaryParentCacheGroupId" | "secondaryParentCacheGroupName";
+import { ServerService } from "./server.service";
+
+type ParentKeys = "parentCachegroupId" | "parentCachegroupName";
+type SecondaryParentKeys = "secondaryParentCachegroupId" | "secondaryParentCachegroupName";
 type AllParentageKeys = ParentKeys | SecondaryParentKeys;
 
 type Parentage = {
-	parentCacheGroupId: null,
-	parentCacheGroupName: null
+	parentCachegroupId: null;
+	parentCachegroupName: null;
 } | {
-	parentCacheGroupId: number,
-	parentCacheGroupName: string
+	parentCachegroupId: number;
+	parentCachegroupName: string;
 };
 
 type SecondaryParentage = {
-	secondaryParentCacheGroupId: null,
-	secondaryParentCacheGroupName: null
+	secondaryParentCachegroupId: null;
+	secondaryParentCachegroupName: null;
 } | {
-	secondaryParentCacheGroupId: number,
-	secondaryParentCacheGroupName: string
+	secondaryParentCachegroupId: number;
+	secondaryParentCachegroupName: string;
 };
 
 type AllParentage = Parentage & SecondaryParentage;
+
+/**
+ * Checks the type of an argument to
+ * {@link CacheGroupService.queueCacheGroupUpdates}.
+ *
+ * @param x The object to check.
+ * @returns Whether `x` is an {@link CacheGroupQueueRequest}.
+ */
+function isRequest(x: CacheGroupQueueRequest | CDN | string | number): x is CacheGroupQueueRequest {
+	return Object.prototype.hasOwnProperty.call(x, "action");
+}
 
 /**
  * CDNService expose API functionality relating to CDNs.
@@ -67,10 +90,10 @@ export class CacheGroupService {
 			localizationMethods: [],
 			longitude: 0,
 			name: "Mid",
-			parentCacheGroupId: null,
-			parentCacheGroupName: null,
-			secondaryParentCacheGroupId: null,
-			secondaryParentCacheGroupName: null,
+			parentCachegroupId: null,
+			parentCachegroupName: null,
+			secondaryParentCachegroupId: null,
+			secondaryParentCachegroupName: null,
 			shortName: "Mid",
 			typeId: 1,
 			typeName: "MID_LOC"
@@ -84,10 +107,10 @@ export class CacheGroupService {
 			localizationMethods: [],
 			longitude: 0,
 			name: "Edge",
-			parentCacheGroupId: 1,
-			parentCacheGroupName: "Mid",
-			secondaryParentCacheGroupId: null,
-			secondaryParentCacheGroupName: null,
+			parentCachegroupId: 1,
+			parentCachegroupName: "Mid",
+			secondaryParentCachegroupId: null,
+			secondaryParentCachegroupName: null,
 			shortName: "Edge",
 			typeId: 2,
 			typeName: "EDGE_LOC"
@@ -101,10 +124,10 @@ export class CacheGroupService {
 			localizationMethods: [],
 			longitude: 0,
 			name: "Origin",
-			parentCacheGroupId: null,
-			parentCacheGroupName: null,
-			secondaryParentCacheGroupId: null,
-			secondaryParentCacheGroupName: null,
+			parentCachegroupId: null,
+			parentCachegroupName: null,
+			secondaryParentCachegroupId: null,
+			secondaryParentCachegroupName: null,
 			shortName: "Origin",
 			typeId: 3,
 			typeName: "ORG_LOC"
@@ -118,15 +141,17 @@ export class CacheGroupService {
 			localizationMethods: [],
 			longitude: 0,
 			name: "Other",
-			parentCacheGroupId: null,
-			parentCacheGroupName: null,
-			secondaryParentCacheGroupId: null,
-			secondaryParentCacheGroupName: null,
+			parentCachegroupId: null,
+			parentCachegroupName: null,
+			secondaryParentCachegroupId: null,
+			secondaryParentCachegroupName: null,
 			shortName: "Other",
 			typeId: 4,
 			typeName: "TC_LOC"
 		}
 	];
+
+	constructor(private readonly servers: ServerService) {}
 
 	public async getCacheGroups(idOrName: number | string): Promise<ResponseCacheGroup>;
 	public async getCacheGroups(): Promise<Array<ResponseCacheGroup>>;
@@ -180,32 +205,32 @@ export class CacheGroupService {
 	 */
 	private getParents(parentID: number | null | undefined, secondaryParentID: number | null | undefined): AllParentage {
 		let parent: Parentage = {
-			parentCacheGroupId: null,
-			parentCacheGroupName: null
+			parentCachegroupId: null,
+			parentCachegroupName: null
 		};
 		if (typeof(parentID) === "number") {
 			const p = this.cacheGroups.find(cg => cg.id === parentID);
 			if (!p) {
-				throw new Error("no such parent Cache Group: #${parentID}")
+				throw new Error(`no such parent Cache Group: #${parentID}`);
 			}
 			parent = {
-				parentCacheGroupId: p.id,
-				parentCacheGroupName: p.name
+				parentCachegroupId: p.id,
+				parentCachegroupName: p.name
 			};
 		}
 
 		let secondaryParent: SecondaryParentage = {
-			secondaryParentCacheGroupId: null,
-			secondaryParentCacheGroupName: null
+			secondaryParentCachegroupId: null,
+			secondaryParentCachegroupName: null
 		};
 		if (typeof(secondaryParentID) === "number") {
 			const p = this.cacheGroups.find(cg => cg.id === secondaryParentID);
 			if (!p) {
-				throw new Error("no such secondary parent Cache Group: #${secondaryParentID}")
+				throw new Error(`no such secondary parent Cache Group: #${secondaryParentID}`);
 			}
 			secondaryParent = {
-				secondaryParentCacheGroupId: p.id,
-				secondaryParentCacheGroupName: p.name
+				secondaryParentCachegroupId: p.id,
+				secondaryParentCachegroupName: p.name
 			};
 		}
 
@@ -223,7 +248,7 @@ export class CacheGroupService {
 	public async createCacheGroup(cacheGroup: RequestCacheGroup): Promise<ResponseCacheGroup> {
 		const cg = {
 			...cacheGroup,
-			...this.getParents(cacheGroup.parentCacheGroupId, cacheGroup.secondaryParentCacheGroupId),
+			...this.getParents(cacheGroup.parentCachegroupId, cacheGroup.secondaryParentCachegroupId),
 			fallbackToClosest: cacheGroup.fallbackToClosest ?? false,
 			fallbacks: cacheGroup.fallbacks ?? [],
 			id: ++this.lastID,
@@ -265,13 +290,13 @@ export class CacheGroupService {
 	public async updateCacheGroup(cacheGroupOrID: ResponseCacheGroup | number, payload?: RequestCacheGroup): Promise<ResponseCacheGroup> {
 		let idx;
 		let cg: Omit<ResponseCacheGroup, AllParentageKeys>;
-		let parentCacheGroupId;
-		let secondaryParentCacheGroupId;
+		let parentCachegroupId;
+		let secondaryParentCachegroupId;
 		if (typeof(cacheGroupOrID) === "number") {
 			if (!payload) {
 				throw new TypeError("invalid call signature - missing request payload");
 			}
-			idx = this.cacheGroups.findIndex(cg => cg.id === cacheGroupOrID);
+			idx = this.cacheGroups.findIndex(c => c.id === cacheGroupOrID);
 			cg = {
 				...payload,
 				fallbackToClosest: payload.fallbackToClosest ?? false,
@@ -283,31 +308,112 @@ export class CacheGroupService {
 				longitude: payload.longitude ?? 0,
 				typeName: "",
 			};
-			parentCacheGroupId = payload.parentCacheGroupId;
-			secondaryParentCacheGroupId = payload.secondaryParentCacheGroupId;
+			parentCachegroupId = payload.parentCachegroupId;
+			secondaryParentCachegroupId = payload.secondaryParentCachegroupId;
 		} else {
-			idx = this.cacheGroups.findIndex(cg => cg.id === cacheGroupOrID.id);
+			idx = this.cacheGroups.findIndex(c => c.id === cacheGroupOrID.id);
 			cg = {
 				...cacheGroupOrID,
 				lastUpdated: new Date()
-			}
-			parentCacheGroupId = cacheGroupOrID.parentCacheGroupId;
-			secondaryParentCacheGroupId = cacheGroupOrID.secondaryParentCacheGroupId;
+			};
+			parentCachegroupId = cacheGroupOrID.parentCachegroupId;
+			secondaryParentCachegroupId = cacheGroupOrID.secondaryParentCachegroupId;
 		}
 
 		if (idx < 0) {
 			throw new Error(`no such Cache Group: #${cacheGroupOrID}`);
 		}
 
-
 		const final = {
 			...cg,
-			...this.getParents(parentCacheGroupId, secondaryParentCacheGroupId)
-		}
+			...this.getParents(parentCachegroupId, secondaryParentCachegroupId)
+		};
 
 		this.cacheGroups[idx] = final;
 
 		return final;
+	}
+
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param cdnOrIdentifier Either a CDN, its name, or its ID.
+	 * @param action Used to determine the queue action to take. If not given,
+	 * defaults to `queue`.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		cdnOrIdentifier: CDN | string | number,
+		action?: "queue" | "dequeue"
+	): Promise<CacheGroupQueueResponse>;
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param request The full (de/)queue request.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		request: CacheGroupQueueRequest
+	): Promise<CacheGroupQueueResponse>;
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param cdnOrIdentifierOrRequest Either the full (de/)queue request or a
+	 * CDN, its name, or its ID.
+	 * @param action If `cdnOrIdentifierOrRequest` is not a full (de/)queue
+	 * request, then this will be used to determine the queue action to take. If
+	 * not given, defaults to `queue`.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		cdnOrIdentifierOrRequest: CacheGroupQueueRequest | CDN | string | number,
+		action?: "queue" | "dequeue"
+	): Promise<CacheGroupQueueResponse> {
+		const cachegroupID = typeof(cacheGroupOrID) === "number" ? cacheGroupOrID : cacheGroupOrID.id;
+		const cg = this.cacheGroups.find(c => c.id === cachegroupID);
+		if (!cg) {
+			throw new Error(`no such Cache Group: #${cachegroupID}`);
+		}
+
+		let cdn;
+		if (isRequest(cdnOrIdentifierOrRequest)) {
+			action = cdnOrIdentifierOrRequest.action;
+			cdn = cdnOrIdentifierOrRequest.cdn ?? cdnOrIdentifierOrRequest.cdnId;
+		} else {
+			action = action ?? "queue";
+			switch (typeof(cdnOrIdentifierOrRequest)) {
+				case "string":
+				case "number":
+					cdn = cdnOrIdentifierOrRequest;
+					break;
+				default:
+					cdn = cdnOrIdentifierOrRequest.name;
+			}
+		}
+		const updPendingValue = action === "queue";
+		const serverNames = [];
+		for (const server of this.servers.servers) {
+			if (server.cachegroupId === cachegroupID && (server.cdnId === cdn || server.cdnName === cdn)) {
+				server.updPending = updPendingValue;
+				serverNames.push(server.hostName);
+			}
+		}
+		return {
+			action,
+			cachegroupID,
+			cachegroupName: cg.name,
+			cdn: String(cdn),
+			serverNames,
+		};
 	}
 
 	public async getDivisions(): Promise<Array<ResponseDivision>>;
