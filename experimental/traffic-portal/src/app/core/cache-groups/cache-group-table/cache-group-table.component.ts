@@ -239,14 +239,10 @@ export class CacheGroupTableComponent implements OnInit {
 			const serverNum = responses.map(r => r.serverNames.length).reduce((n, l) => n+l, 0);
 			// This endpoint returns no alerts at the time of this writing, so
 			// we gotta do it by hand.
-			this.alerts.alertsSubject.next({
-				level: AlertLevel.SUCCESS,
-				text: `${queue ? "Queued" : "Cleared"} Updates on ${serverNum} servers`
-			});
-			this.alerts.alertsSubject.next({
-				level: AlertLevel.SUCCESS,
-				text: `${queue ? "Queued" : "Cleared"} Updates on ${serverNum} servers`
-			});
+			this.alerts.newAlert(
+				AlertLevel.SUCCESS,
+				`${queue ? "Queued" : "Cleared"} Updates on ${serverNum} server${serverNum === 1 ? "" : "s"}`
+			);
 		}
 	}
 

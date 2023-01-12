@@ -20,9 +20,7 @@ import { RouterModule } from "@angular/router";
 import { AppUIModule } from "src/app/app.ui.module";
 
 import { AlertComponent } from "./alert/alert.component";
-import { AlertService } from "./alert/alert.service";
 import { LinechartDirective } from "./charts/linechart.directive";
-import { CurrentUserService } from "./currentUser/current-user.service";
 import { CollectionChoiceDialogComponent } from "./dialogs/collection-choice-dialog/collection-choice-dialog.component";
 import { DecisionDialogComponent } from "./dialogs/decision-dialog/decision-dialog.component";
 import { TextDialogComponent } from "./dialogs/text-dialog/text-dialog.component";
@@ -83,8 +81,6 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 	providers: [
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
-		AlertService,
-		CurrentUserService
 	]
 })
 export class SharedModule { }
