@@ -19,7 +19,7 @@ import { ActivatedRoute } from "@angular/router";
 import type { ResponseCacheGroup } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
-import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { DecisionDialogComponent, DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 /**
@@ -120,7 +120,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 			console.error("Unable to delete new Cache Group");
 			return;
 		}
-		const ref = this.dialog.open(
+		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(
 			DecisionDialogComponent,
 			{
 				data: {
@@ -130,7 +130,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 			}
 		);
 		ref.afterClosed().subscribe(result => {
-			if(result) {
+			if (result) {
 				this.api.deleteCacheGroup(this.cacheGroup);
 				this.location.back();
 			}
@@ -146,7 +146,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 		e.preventDefault();
 		e.stopPropagation();
 		this.cacheGroup.shortName = this.cacheGroup.name;
-		if(this.new) {
+		if (this.new) {
 			this.cacheGroup = await this.api.createCacheGroup(this.cacheGroup);
 			this.new = false;
 		} else {

@@ -14,12 +14,26 @@
 
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import type { ColDef } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
-import { LocalizationMethod, localizationMethodToString, ResponseCacheGroup } from "trafficops-types";
+import {
+	AlertLevel,
+	LocalizationMethod,
+	localizationMethodToString,
+	type ResponseCacheGroup,
+	type ResponseCDN
+} from "trafficops-types";
 
-import { CacheGroupService } from "src/app/api";
+import { CacheGroupService, CDNService } from "src/app/api";
+import { AlertService } from "src/app/shared/alert/alert.service";
+import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import {
+	CollectionChoiceDialogComponent,
+	type CollectionChoiceDialogData
+} from "src/app/shared/dialogs/collection-choice-dialog/collection-choice-dialog.component";
+import { DecisionDialogComponent, type DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
@@ -35,6 +49,9 @@ export class CacheGroupTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
 	public readonly cacheGroups: Promise<Array<ResponseCacheGroup>>;
+
+	/** All of the CDNs (on which a user might (de/)queue updates). */
+	public readonly cdns: Promise<Array<ResponseCDN>>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs: ColDef[] = [
@@ -124,7 +141,7 @@ export class CacheGroupTableComponent implements OnInit {
 	 */
 	public contextMenuItems: Array<ContextMenuItem<ResponseCacheGroup>> = [
 		{
-			href: (selectedRow): string => `core/cache-group/${selectedRow.id}` ,
+			href: (selectedRow): string => `core/cache-groups/${selectedRow.id}` ,
 			name: "Edit"
 		},
 		{
@@ -169,11 +186,16 @@ export class CacheGroupTableComponent implements OnInit {
 
 	constructor(
 		private readonly api: CacheGroupService,
+		private readonly cdnAPI: CDNService,
 		private readonly route: ActivatedRoute,
-		private readonly headerSvc: TpHeaderService
+		private readonly headerSvc: TpHeaderService,
+		private readonly dialog: MatDialog,
+		private readonly alerts: AlertService,
+		public readonly auth: CurrentUserService
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.cacheGroups = this.api.getCacheGroups();
+		this.cdns = this.cdnAPI.getCDNs();
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -198,13 +220,70 @@ export class CacheGroupTableComponent implements OnInit {
 		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
+	private async queueUpdates(cgs: ResponseCacheGroup[], queue: boolean = true): Promise<void> {
+		const title = `${queue ? "Queue" : "Clear"} Updates on ${cgs.length === 1 ? cgs[0].name : `${cgs.length} Cache Groups`}`;
+		const data = {
+			collection: (await this.cdns).map(c => ({label: c.name, value: c.id})),
+			hint: "Note that 'ALL' does NOT mean 'all CDNs'!",
+			label: "CDN",
+			message: `Select a CDN to which to limit the ${queue ? "Queuing" : "Clearing"} of Updates.`,
+			title,
+		};
+		const ref = this.dialog.open<CollectionChoiceDialogComponent, CollectionChoiceDialogData<number>, number | false>(
+			CollectionChoiceDialogComponent,
+			{data}
+		);
+		const result = await ref.afterClosed().toPromise();
+		if (typeof(result) === "number") {
+			const responses = await Promise.all(cgs.map(async cg => this.api.queueCacheGroupUpdates(cg, result)));
+			const serverNum = responses.map(r => r.serverNames.length).reduce((n, l) => n+l, 0);
+			// This endpoint returns no alerts at the time of this writing, so
+			// we gotta do it by hand.
+			this.alerts.alertsSubject.next({
+				level: AlertLevel.SUCCESS,
+				text: `${queue ? "Queued" : "Cleared"} Updates on ${serverNum} servers`
+			});
+			this.alerts.alertsSubject.next({
+				level: AlertLevel.SUCCESS,
+				text: `${queue ? "Queued" : "Cleared"} Updates on ${serverNum} servers`
+			});
+		}
+	}
+
+	private async delete(cg: ResponseCacheGroup): Promise<void> {
+		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
+			data: {
+				message: `Are you sure you want to delete the ${cg.name} Cache Group?`,
+				title: `Delete ${cg.name}`
+			}
+		});
+		if (await ref.afterClosed().toPromise()) {
+			this.api.deleteCacheGroup(cg);
+		}
+	}
+
 	/**
 	 * Handles a context menu event.
 	 *
 	 * @param a The action selected from the context menu.
 	 */
 	public handleContextMenu(a: ContextMenuActionEvent<ResponseCacheGroup>): void {
-		console.log("action:", a);
+		switch(a.action) {
+			case "queue":
+				this.queueUpdates(Array.isArray(a.data) ? a.data : [a.data]);
+				break;
+			case "dequeue":
+				this.queueUpdates(Array.isArray(a.data) ? a.data : [a.data], false);
+				break;
+			case "delete":
+				if (Array.isArray(a.data)) {
+					console.error("cannot delete multiple cache groups at once:", a.data);
+					return;
+				}
+				this.delete(a.data);
+				break;
+			default:
+				console.error("unrecognized context menu action:", a.action);
+		}
 	}
-
 }

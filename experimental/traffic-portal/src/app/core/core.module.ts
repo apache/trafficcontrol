@@ -54,9 +54,9 @@ import { UsersComponent } from "./users/users.component";
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
 	{ component: DivisionsTableComponent, path: "divisions" },
-	{ component: DivisionDetailComponent, path: "division/:id" },
+	{ component: DivisionDetailComponent, path: "divisions/:id" },
 	{ component: RegionsTableComponent, path: "regions" },
-	{ component: RegionDetailComponent, path: "region/:id" },
+	{ component: RegionDetailComponent, path: "regions/:id" },
 	{ component: UsersComponent, path: "users" },
 	{ component: UserDetailsComponent, path: "users/:id"},
 	{ component: ServersTableComponent, path: "servers" },
@@ -66,7 +66,7 @@ export const ROUTES: Routes = [
 	{ component: CurrentuserComponent, path: "me" },
 	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
 	{ component: CacheGroupTableComponent, path: "cache-groups" },
-	{ component: CacheGroupDetailsComponent, path: "cache-group/:id"},
+	{ component: CacheGroupDetailsComponent, path: "cache-groups/:id"},
 	{ component: TenantsComponent, path: "tenants"},
 	{ component: ChangeLogsComponent, path: "change-logs" },
 	{ component: TenantDetailsComponent, path: "tenants/:id"}
