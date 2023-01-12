@@ -26,10 +26,25 @@ import type {
 
 import { ServerService } from "./server.service";
 
+/**
+ * The names of properties of {@link ResponseCacheGroup}s that define its
+ * primary parentage.
+ */
 type ParentKeys = "parentCachegroupId" | "parentCachegroupName";
+/**
+ * The names of properties of {@link ResponseCacheGroup}s that define its
+ * secondary parentage.
+ */
 type SecondaryParentKeys = "secondaryParentCachegroupId" | "secondaryParentCachegroupName";
+/**
+ * The names of properties of {@link ResponseCacheGroup}s that define its
+ * parentage; both primary and secondary.
+ */
 type AllParentageKeys = ParentKeys | SecondaryParentKeys;
 
+/**
+ * The parts of a Cache Group pertaining to its primary parentage.
+ */
 type Parentage = {
 	parentCachegroupId: null;
 	parentCachegroupName: null;
@@ -38,6 +53,9 @@ type Parentage = {
 	parentCachegroupName: string;
 };
 
+/**
+ * The parts of a Cache Group pertaining to its secondary parentage.
+ */
 type SecondaryParentage = {
 	secondaryParentCachegroupId: null;
 	secondaryParentCachegroupName: null;
@@ -46,6 +64,9 @@ type SecondaryParentage = {
 	secondaryParentCachegroupName: string;
 };
 
+/**
+ * Contains all information about a Cache Groups parents, primary and secondary.
+ */
 type AllParentage = Parentage & SecondaryParentage;
 
 /**
