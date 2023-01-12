@@ -17,16 +17,28 @@
  * under the License.
  */
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatDialogModule, MAT_DIALOG_DATA } from "@angular/material/dialog";
 
-import { CollectionChoiceDialogComponent } from "./collection-choice-dialog.component";
+import { CollectionChoiceDialogComponent, type CollectionChoiceDialogData } from "./collection-choice-dialog.component";
 
 describe("CollectionChoiceDialogComponent", () => {
 	let component: CollectionChoiceDialogComponent;
 	let fixture: ComponentFixture<CollectionChoiceDialogComponent>;
+	const data: CollectionChoiceDialogData = {
+		collection: [],
+		message: "Choose something",
+		title: "Choose"
+	};
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ CollectionChoiceDialogComponent ]
+			declarations: [ CollectionChoiceDialogComponent ],
+			imports: [
+				MatDialogModule
+			],
+			providers: [
+				{provide: MAT_DIALOG_DATA, useValue: data}
+			]
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(CollectionChoiceDialogComponent);

@@ -14,6 +14,7 @@
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, fakeAsync } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
+import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 import {ReplaySubject} from "rxjs";
 
@@ -34,10 +35,11 @@ describe("CacheGroupTableComponent", () => {
 				APITestingModule,
 				HttpClientModule,
 				ReactiveFormsModule,
-				RouterTestingModule
+				RouterTestingModule,
+				MatDialogModule
 			],
 			providers: [
-				{ provide: TpHeaderService, useValue: headerSvc}
+				{ provide: TpHeaderService, useValue: headerSvc},
 			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(CacheGroupTableComponent);

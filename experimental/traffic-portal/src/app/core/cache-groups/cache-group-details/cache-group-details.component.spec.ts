@@ -13,19 +13,34 @@
 */
 
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatDialogModule } from "@angular/material/dialog";
+import { ActivatedRoute } from "@angular/router";
+import { RouterTestingModule } from "@angular/router/testing";
+import { ReplaySubject } from "rxjs";
+
+import { APITestingModule } from "src/app/api/testing";
+import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 import { CacheGroupDetailsComponent } from "./cache-group-details.component";
 
 describe("CacheGroupDetailsComponent", () => {
 	let component: CacheGroupDetailsComponent;
 	let fixture: ComponentFixture<CacheGroupDetailsComponent>;
+	let route: ActivatedRoute;
+	let paramMap: jasmine.Spy;
 
+	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ CacheGroupDetailsComponent ]
+			declarations: [ CacheGroupDetailsComponent ],
+			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
+			providers: [ { provide: TpHeaderService, useValue: headerSvc } ]
 		})
 			.compileComponents();
 
+		route = TestBed.inject(ActivatedRoute);
+		paramMap = spyOn(route.snapshot.paramMap, "get");
+		paramMap.and.returnValue(null);
 		fixture = TestBed.createComponent(CacheGroupDetailsComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
