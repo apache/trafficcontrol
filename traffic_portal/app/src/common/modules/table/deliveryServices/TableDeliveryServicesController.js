@@ -22,16 +22,12 @@
  *
  * @param {string} tableName
  * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
- * @param {unknown[]} steeringTargets
+ * @param {{deliveryService: string; targets: {deliveryService: string}[]}[]} steeringTargets
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {*} $scope
  * @param {*} $state
  * @param {import("angular").ILocationService} $location
- * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
- * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
- * @param {import("../../../api/DeliveryServiceRequestService")} deliveryServiceRequestService
  * @param {import("../../../service/utils/DeliveryServiceUtils")} deliveryServiceUtils
- * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../models/MessageModel")} messageModel
  * @param {import("../../../models/PropertiesModel")} propertiesModel
  * @param {import("../../../models/UserModel")} userModel
@@ -545,7 +541,8 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 	$scope.COMPLETE = 4;
 
 	/**
-	 * @param {{readonly id: number; type: string}} ds
+	 * @deprecated This should instead just be an ng-href.
+	 * @param {{readonly id: number; type: string; xmlId: string}} ds
 	 */
 	function viewCharts(ds) {
 		if (showCustomCharts) {

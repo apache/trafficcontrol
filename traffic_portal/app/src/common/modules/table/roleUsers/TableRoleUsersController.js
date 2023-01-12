@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} roles
+ * @param {*} roleUsers
+ * @param {import("angular").IControllerService} $controller
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableRoleUsersController = function(roles, roleUsers, $controller, $scope, $state, dateUtils, locationUtils) {
 
 	// extends the TableUsersController to inherit common methods
@@ -42,7 +51,7 @@ var TableRoleUsersController = function(roles, roleUsers, $controller, $scope, $
 		roleUsersTable.rows().invalidate().draw();
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		roleUsersTable = $('#roleUsersTable').DataTable({

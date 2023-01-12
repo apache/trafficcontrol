@@ -17,6 +17,17 @@
  * under the License.
  */
 
+/**
+ * @param {*} parameters
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IWindowService} $window
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/ParameterService")} parameterService
+ * @param {import("../../../api/ProfileService")} profileService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
 var TableParametersController = function(parameters, $scope, $state, $uibModal, $window, locationUtils, parameterService, profileService, messageModel) {
 
     let parametersTable;
@@ -32,12 +43,13 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
     var confirmDelete = function(parameter) {
         profileService.getParameterProfiles(parameter.id).
         then(function(result) {
-            var params = {
+			/** @type {{title: string; message?: string; key?: string}} */
+            let params = {
                 title: 'Delete Parameter?',
                 message: result.length + ' profiles use this parameter.<br><br>'
             };
             if (result.length > 0) {
-                params.message += _.pluck(result, 'name').join('<br>') + '<br><br>';
+                params.message += result.map(p => p.name).join('<br>') + '<br><br>';
             }
             params.message += 'Are you sure you want to delete the parameter?';
 

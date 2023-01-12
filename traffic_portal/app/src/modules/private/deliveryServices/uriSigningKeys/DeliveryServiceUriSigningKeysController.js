@@ -17,11 +17,19 @@
  * under the License.
  */
 
-var DeliveryServiceUriSigningKeysController = function($scope, $state, $uibModal, $log, deliveryService, keys, deliveryServiceUriSigningKeysService, messageModel, locationUtils) {
+/**
+ * @param {*} $scope
+ * @param {*} deliveryService
+ * @param {*} keys
+ * @param {import("../../../../common/api/DeliveryServiceUriSigningKeysService")} deliveryServiceUriSigningKeysService
+ * @param {import("../../../../common/models/MessageModel")} messageModel
+ * @param {import("../../../../common/service/utils/LocationUtils")} locationUtils
+ */
+var DeliveryServiceUriSigningKeysController = function($scope, deliveryService, keys, deliveryServiceUriSigningKeysService, messageModel, locationUtils) {
 	$scope.deliveryService = deliveryService;
 	$scope.keys = keys;
 	$scope.keysString = angular.toJson(keys, 4);
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.saveKeys = function(newKeys) {
 		deliveryServiceUriSigningKeysService.setKeys(deliveryService.xmlId, newKeys).then(function() {
@@ -32,5 +40,5 @@ var DeliveryServiceUriSigningKeysController = function($scope, $state, $uibModal
 		});
 	}
 };
-DeliveryServiceUriSigningKeysController.$inject = ['$scope', '$state', '$uibModal', '$log', 'deliveryService', 'keys', 'deliveryServiceUriSigningKeysService', 'messageModel', 'locationUtils'];
+DeliveryServiceUriSigningKeysController.$inject = ['$scope', 'deliveryService', 'keys', 'deliveryServiceUriSigningKeysService', 'messageModel', 'locationUtils'];
 module.exports = DeliveryServiceUriSigningKeysController;

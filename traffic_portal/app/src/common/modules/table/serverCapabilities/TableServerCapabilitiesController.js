@@ -17,12 +17,22 @@
  * under the License.
  */
 
+/**
+ * @param {*} serverCapabilities
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IWindowService} $window
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/ServerCapabilityService")} serverCapabilityService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
 var TableServerCapabilitiesController = function(serverCapabilities, $scope, $state, $uibModal, $window, locationUtils, serverCapabilityService, messageModel) {
 
 	var deleteServerCapability = function(serverCapability) {
 		serverCapabilityService.deleteServerCapability(serverCapability.name)
 			.then(function(result) {
-				messageModel.setMessages(result.alerts, false);
+				messageModel.setMessages(result.data.alerts, false);
 				$scope.refresh();
 			});
 	};

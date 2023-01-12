@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} physLocations
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TablePhysLocationsController = function(physLocations, $scope, $state, locationUtils) {
 
     $scope.physLocations = physLocations;

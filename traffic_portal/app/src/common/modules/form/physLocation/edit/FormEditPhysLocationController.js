@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} physLocation
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/PhysLocationService")} physLocationService
+ */
 var FormEditPhysLocationController = function(physLocation, $scope, $controller, $uibModal, $anchorScroll, locationUtils, physLocationService) {
 
     // extends the FormPhysLocationController to inherit common methods

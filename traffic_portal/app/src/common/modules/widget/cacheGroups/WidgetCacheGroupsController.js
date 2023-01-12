@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} $scope
+ * @param {import("angular").IIntervalService} $interval
+ * @param {import("../../../api/CacheGroupService")} cacheGroupService
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ */
 var WidgetCacheGroupsController = function($scope, $interval, cacheGroupService, locationUtils, propertiesModel) {
 
 	var interval,
@@ -45,7 +52,7 @@ var WidgetCacheGroupsController = function($scope, $interval, cacheGroupService,
 	$scope.currentCacheGroupsPage = 1;
 	$scope.cacheGroupsPerPage = 10;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.onlinePercent = function(location) {
 		return (location.online / (location.online + location.offline)) * 100;

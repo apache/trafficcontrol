@@ -17,7 +17,14 @@
  * under the License.
  */
 
-var FormCoordinateController = function(coordinate, $scope, $location, formUtils, locationUtils, coordinateService) {
+/**
+ * @param {*} coordinate
+ * @param {*} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/CoordinateService")} coordinateService
+ */
+var FormCoordinateController = function(coordinate, $scope, formUtils, locationUtils, coordinateService) {
 
     var getCoordinates = function() {
         coordinateService.getCoordinates({ orderby: 'name' })
@@ -28,7 +35,7 @@ var FormCoordinateController = function(coordinate, $scope, $location, formUtils
 
     $scope.coordinate = coordinate;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 
@@ -41,5 +48,5 @@ var FormCoordinateController = function(coordinate, $scope, $location, formUtils
 
 };
 
-FormCoordinateController.$inject = ['coordinate', '$scope', '$location', 'formUtils', 'locationUtils', 'coordinateService'];
+FormCoordinateController.$inject = ['coordinate', '$scope', 'formUtils', 'locationUtils', 'coordinateService'];
 module.exports = FormCoordinateController;

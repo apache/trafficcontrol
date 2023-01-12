@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} cacheGroup
+ * @param {*} types
+ * @param {*} cacheGroups
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/CacheGroupService")} cacheGroupService
+ */
 var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, $location, formUtils, locationUtils, cacheGroupService) {
 
     $scope.types = types;
@@ -49,7 +59,7 @@ var FormCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, 
         }
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

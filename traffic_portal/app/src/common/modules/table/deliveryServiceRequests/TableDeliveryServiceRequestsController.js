@@ -24,7 +24,7 @@
  * @param {import("../../../api/DeliveryServiceRequestService").DeliveryServiceRequest[]} dsRequests
  * @param {*} $scope
  * @param {*} $state
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {import("angular").IDocumentService} $document
  * @param {import("../../../service/utils/DateUtils")} dateUtils
@@ -144,7 +144,9 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		function(x) {
 			// The right way to do these is with an interceptor, but nobody wants
 			// to put in that kind of effort for a legacy product.
+			// @ts-ignore
 			x.createdAt = x.createdAt ? new Date(x.createdAt.replace("+00", "Z")) : x.createdAt;
+			// @ts-ignore
 			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
 		});
 
@@ -253,7 +255,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		},
         onFirstDataRendered: function() {
 			try {
-				const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters")) || {};
+				const filterState = JSON.parse(localStorage.getItem(tableName + "_table_filters") ?? "null") || {};
 				$scope.gridOptions.api.setFilterModel(filterState);
 			} catch (e) {
 				console.error("Failure to load stored filter state:", e);
@@ -266,7 +268,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 		onGridReady: function() {
 			try {
 				// need to create the show/hide column checkboxes and bind to the current visibility
-				const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns"));
+				const colstates = JSON.parse(localStorage.getItem(tableName + "_table_columns") ?? "null");
 				if (colstates) {
 					if (!$scope.gridOptions.columnApi.setColumnState(colstates)) {
 						console.error("Failed to load stored column state: one or more columns not found");
@@ -279,7 +281,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			}
 
 			try {
-				const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort"));
+				const sortState = JSON.parse(localStorage.getItem(tableName + "_table_sort") ?? "null");
 				$scope.gridOptions.api.setSortModel(sortState);
 			} catch (e) {
 				console.error("Failure to load stored sort state:", e);
@@ -303,7 +305,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 			}
 
 			try {
-				const page = parseInt(localStorage.getItem(tableName + "_table_page"));
+				const page = parseInt(localStorage.getItem(tableName + "_table_page") ?? "");
 				const totalPages = $scope.gridOptions.api.paginationGetTotalPages();
 				if (page !== undefined && page > 0 && page <= totalPages-1) {
 					$scope.gridOptions.api.paginationGoToPage(page);
@@ -366,7 +368,7 @@ var TableDeliveryServicesRequestsController = function (tableName, dsRequests, $
 	$scope.onPageSizeChanged = function() {
 		const value = Number($scope.pageSize);
 		$scope.gridOptions.api.paginationSetPageSize(value);
-		localStorage.setItem(tableName + "_page_size", value);
+		localStorage.setItem(tableName + "_page_size", String(value));
 	};
 
 	$scope.clearTableFilters = function() {

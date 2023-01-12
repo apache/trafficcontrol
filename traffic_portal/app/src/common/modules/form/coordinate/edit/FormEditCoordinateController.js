@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ *
+ * @param {*} coordinate
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/CoordinateService")} coordinateService
+ */
 var FormEditCoordinateController = function(coordinate, $scope, $controller, $uibModal, $anchorScroll, locationUtils, coordinateService) {
 
     $scope.coordinate = coordinate[0]

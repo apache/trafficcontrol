@@ -17,6 +17,18 @@
  * under the License.
  */
 
+/**
+ * @param {*} topology
+ * @param {*} cacheGroups
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/TopologyUtils")} topologyUtils
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
 var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $scope, $location, $uibModal, formUtils, locationUtils, topologyUtils, messageModel) {
 
 	let cacheGroupNamesInTopology = [];
@@ -100,7 +112,7 @@ var FormTopologyController = function(topology, cacheGroups, $anchorScroll, $sco
 		}
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

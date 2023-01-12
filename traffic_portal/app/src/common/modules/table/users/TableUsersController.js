@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} users
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableUsersController = function(users, $scope, $state, dateUtils, locationUtils) {
 
     let usersTable;

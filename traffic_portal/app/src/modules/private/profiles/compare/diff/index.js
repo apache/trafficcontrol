@@ -33,7 +33,12 @@ module.exports = angular.module('trafficPortal.private.profiles.diff', [])
 							profile2: function($stateParams, profileService) {
 								return profileService.getProfile($stateParams.profile2Id, { includeParams: true });
 							},
-							profilesParams: function(profile1, profile2, collectionUtils) {
+							/**
+							 * @param {{params: {id: unknown}[]}} profile1
+							 * @param {{params: {id: unknown}[]}} profile2
+							 * @param {import("../../../../../common/service/utils/CollectionUtils")} collectionUtils
+							 */
+							 profilesParams: function(profile1, profile2, collectionUtils) {
 								return collectionUtils.uniqArray(profile1.params, profile2.params, 'id');
 							},
 							showAll: function() {

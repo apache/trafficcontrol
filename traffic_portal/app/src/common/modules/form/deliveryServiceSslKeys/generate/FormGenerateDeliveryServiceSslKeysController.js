@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} sslKeys
+ * @param {*} sslRequest
+ * @param {*} $scope
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/DeliveryServiceSslKeysService")} deliveryServiceSslKeysService
+ * @param {import("../../../../service/utils/FormUtils")} formUtils
+ */
 var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, sslKeys, sslRequest, $scope, $uibModal, locationUtils, deliveryServiceSslKeysService, formUtils) {
 
 	var setSSLRequest = function(sslRequest) {
@@ -55,7 +65,7 @@ var FormGenerateDeliveryServiceSslKeysController = function(deliveryService, ssl
 	$scope.acmeProvider = "";
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 	$scope.sslRequest = setSSLRequest(sslRequest);
 
 	$scope.hasAcmeProviderError = function() {

@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} topologies
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableTopologiesController = function(topologies, $scope, $state, locationUtils) {
 
 	$scope.topologies = topologies;

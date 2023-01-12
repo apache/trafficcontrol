@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/** @typedef {import("moment")} moment */
+
+/**
+ * @param {*} $scope
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/ChangeLogService")} changeLogService
+ */
 var WidgetChangeLogsController = function($scope, locationUtils, changeLogService) {
 
 	var getChangeLogs = function() {
@@ -30,7 +37,7 @@ var WidgetChangeLogsController = function($scope, locationUtils, changeLogServic
 		return moment(date).fromNow();
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	var init = function() {
 		getChangeLogs();

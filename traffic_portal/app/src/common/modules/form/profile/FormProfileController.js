@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} profile
+ * @param {*} $scope
+ * @param {*} $uibModal
+ * @param {import("../../../service/utils/FileUtils")} fileUtils
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../api/CDNService")} cdnService
+ * @param {import("../../../api/ProfileService")} profileService
+ */
 var FormProfileController = function(profile, $scope, $uibModal, fileUtils, formUtils, cdnService, profileService) {
 
     async function getCDNs() {

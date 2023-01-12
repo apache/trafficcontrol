@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} server
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../api/ServerService")} serverService
+ * @param {import("../../../../api/StatusService")} statusService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormNewServerController = function(server, $anchorScroll, $scope, $controller, serverService, statusService, messageModel, locationUtils) {
 
     // extends the FormServerController to inherit common methods
@@ -27,7 +37,7 @@ var FormNewServerController = function(server, $anchorScroll, $scope, $controlle
             .then(function(result) {
                 $scope.statuses = result;
                 // Issue #2651 - Enabling server status for New Server but still defaulting enabled dropdown to OFFLINE
-                var offlineStatus = _.find(result, function(status){ return status.name == 'OFFLINE' });
+                const offlineStatus = result.find(status => status.name === 'OFFLINE');
                 $scope.server.statusId = offlineStatus.id;
             });
     };

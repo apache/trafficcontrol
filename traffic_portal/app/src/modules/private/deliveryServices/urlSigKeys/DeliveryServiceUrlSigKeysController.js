@@ -17,6 +17,17 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} */
+
+/**
+ * @param {import("../../../../common/api/DeliveryServiceService").DeliveryService} deliveryService
+ * @param {*} urlSigKeys
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../../common/service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../common/api/DeliveryServiceUrlSigKeysService")} deliveryServiceUrlSigKeysService
+ * @param {import("../../../../common/service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ */
 var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, $scope, $state, locationUtils, deliveryServiceUrlSigKeysService, $uibModal) {
 	$scope.deliveryService = deliveryService;
     //Here we take the unordered map of keys returned from riak:
@@ -90,12 +101,8 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
                 },
                 collection: function(deliveryServiceService) {
                     return deliveryServiceService.getDeliveryServices({ signed: true })
-                    .then(function(result){
-                    	return _.filter(result, function(ds){
-                            //you can't copy url sig keys from yourself
-                    		return ds.id !== deliveryService.id;
-                    	})
-                    });
+					//you can't copy url sig keys from yourself
+                    .then(result => result.filter(ds => ds.id !== deliveryService.id));
                 }
             }
         });
@@ -108,9 +115,11 @@ var DeliveryServiceUrlSigKeysController = function(deliveryService, urlSigKeys, 
         });
     };
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
+		// Datatables...
+		// @ts-ignore
 		$('#urlSigKeysTable').dataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,

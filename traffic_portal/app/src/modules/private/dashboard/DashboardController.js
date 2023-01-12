@@ -17,13 +17,19 @@
  * under the License.
  */
 
+/**
+ * @param {*} cdns
+ * @param {*} $scope
+ * @param {import("../../../common/service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../common/service/utils/PermissionUtils")} permissionUtils
+ */
 var DashboardController = function(cdns, $scope, locationUtils, permissionUtils) {
 
 	$scope.cdns = cdns;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
-	$scope.hasCapability = permissionUtils.hasCapability;
+	$scope.hasCapability = cap => permissionUtils.hasCapability(cap);
 
 };
 

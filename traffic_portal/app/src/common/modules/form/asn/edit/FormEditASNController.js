@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} asn
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/ASNService")} asnService
+ */
 var FormEditASNController = function(asn, $scope, $controller, $uibModal, $anchorScroll, locationUtils, asnService) {
 
     // extends the FormASNController to inherit common methods

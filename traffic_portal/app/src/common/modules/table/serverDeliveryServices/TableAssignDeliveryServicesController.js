@@ -17,6 +17,14 @@
  * under the License.
  */
 
+/**
+ * @param {*} server
+ * @param {*} deliveryServices
+ * @param {*} assignedDeliveryServices
+ * @param {*} $scope
+ * @param {*} $uibModalInstance
+ * @param {import("../../../service/utils/ServerUtils")} serverUtils
+ */
 var TableAssignDeliveryServicesController = function(server, deliveryServices, assignedDeliveryServices, $scope, $uibModalInstance, serverUtils) {
 
 	var selectedDeliveryServices = [];
@@ -34,8 +42,8 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 			function() {
 				return parseInt($(this).attr('id'));
 			}).get();
-		$scope.selectedDeliveryServices = _.map(deliveryServices, function(ds) {
-			if (ds.topology && $scope.isCache(server)) {
+		$scope.selectedDeliveryServices = deliveryServices.map(ds => {
+			if (ds.topology && serverUtils.isCache(server)) {
 				return ds;
 			}
 			if (visibleDSIds.includes(ds.id)) {
@@ -46,19 +54,19 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 		updateSelectedCount();
 	};
 
-	var updateSelectedCount = function() {
-		selectedDeliveryServices = _.filter($scope.selectedDeliveryServices, function(ds) { return ds['selected'] == true; } );
+	function updateSelectedCount() {
+		selectedDeliveryServices = $scope.selectedDeliveryServices.filter(ds => ds.selected );
 		$('div.selected-count').html('<b>' + selectedDeliveryServices.length + ' delivery services selected</b>');
-	};
+	}
 
 	$scope.server = server;
 
 	$scope.isCache = serverUtils.isCache;
 
-	$scope.selectedDeliveryServices = _.map(deliveryServices, function(ds) {
-		var isAssigned = _.find(assignedDeliveryServices, function(assignedDS) { return assignedDS.id == ds.id });
+	$scope.selectedDeliveryServices = deliveryServices.map(ds => {
+		const isAssigned = assignedDeliveryServices.find(assignedDS => assignedDS.id === ds.id);
 		if (isAssigned) {
-			ds['selected'] = true;
+			ds.selected = true;
 		}
 		return ds;
 	});
@@ -86,7 +94,7 @@ var TableAssignDeliveryServicesController = function(server, deliveryServices, a
 	};
 
 	$scope.submit = function() {
-		var selectedDSIds = _.pluck(selectedDeliveryServices, 'id');
+		var selectedDSIds = selectedDeliveryServices.map(d => d.id);
 		$uibModalInstance.close(selectedDSIds);
 	};
 

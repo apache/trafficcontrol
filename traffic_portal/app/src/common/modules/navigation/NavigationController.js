@@ -60,7 +60,7 @@ var NavigationController = function($scope, $state, $location, $window, $timeout
         isDisabled: false
     };
 
-    $scope.hasCapability = permissionUtils.hasCapability;
+    $scope.hasCapability = cap => permissionUtils.hasCapability(cap);
 
     $scope.navigateToPath = function(path) {
         $location.url(path);

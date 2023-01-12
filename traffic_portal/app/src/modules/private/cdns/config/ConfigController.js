@@ -17,7 +17,19 @@
  * under the License.
  */
 
-let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $state, $uibModal, locationUtils, collectionUtils, cdnService, propertiesModel) {
+/**
+ *
+ * @param {*} cdn
+ * @param {*} currentSnapshot
+ * @param {*} newSnapshot
+ * @param {*} $scope
+ * @param {import("../../../../common/service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../../common/service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../common/service/utils/CollectionUtils")} collectionUtils
+ * @param {import("../../../../common/api/CDNService")} cdnService
+ * @param {import("../../../../common/models/PropertiesModel")} propertiesModel
+ */
+let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $uibModal, locationUtils, collectionUtils, cdnService, propertiesModel) {
 
 	const oldConfig = currentSnapshot.config,
 		newConfig = newSnapshot.config;
@@ -201,7 +213,7 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 			},100);
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 
@@ -236,5 +248,5 @@ let ConfigController = function (cdn, currentSnapshot, newSnapshot, $scope, $sta
 
 };
 
-ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$state', '$uibModal', 'locationUtils', 'collectionUtils', 'cdnService', 'propertiesModel'];
+ConfigController.$inject = ['cdn', 'currentSnapshot', 'newSnapshot', '$scope', '$uibModal', 'locationUtils', 'collectionUtils', 'cdnService', 'propertiesModel'];
 module.exports = ConfigController;

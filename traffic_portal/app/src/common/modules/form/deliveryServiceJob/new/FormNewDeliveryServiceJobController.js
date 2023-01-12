@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} job
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../api/JobService")} jobService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope, $controller, jobService, messageModel, locationUtils) {
 
 	// extends the FormDeliveryServiceJobController to inherit common methods
@@ -29,7 +38,7 @@ var FormNewDeliveryServiceJobController = function(deliveryService, job, $scope,
 	];
 	// set default invalidation type
 	$scope.job.invalidationType = $scope.invalidationtypes[0];
-	
+
 	$scope.jobName = 'New';
 
 	$scope.settings = {

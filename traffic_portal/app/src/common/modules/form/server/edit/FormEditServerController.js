@@ -17,6 +17,17 @@
  * under the License.
  */
 
+/**
+ * @param {*} server
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/ServerService")} serverService
+ * @param {import("../../../../api/StatusService")} statusService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
 var FormEditServerController = function(server, $anchorScroll, $scope, $controller, $uibModal, locationUtils, serverService, statusService, messageModel) {
 
     // extends the FormServerController to inherit common methods

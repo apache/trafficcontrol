@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} profile
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/ProfileService")} profileService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
 var FormEditProfileController = function(profile, $scope, $controller, $uibModal, $anchorScroll, locationUtils, profileService, messageModel) {
 
     // extends the FormProfileController to inherit common methods

@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} staticDnsEntries
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, staticDnsEntries, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
@@ -35,7 +42,7 @@ var TableDeliveryServiceStaticDnsEntriesController = function(deliveryService, s
 		locationUtils.navigateToPath('/delivery-services/' + dsId + '/static-dns-entries/new');
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#staticDnsEntriesTable').dataTable({

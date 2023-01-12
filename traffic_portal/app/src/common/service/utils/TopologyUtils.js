@@ -17,15 +17,57 @@
  * under the License.
  */
 
-var TopologyUtils = function() {
+/**
+ * @typedef NormalizedTopologyNode
+ * @property {string} cachegroup
+ * @property {{name: string; type: string}} parent
+ * @property {{name: string; type: string}} secParent
+ * @property {number[]} parents
+ */
 
-	let normalizedTopology;
+/**
+ * @typedef NormalizedTopology
+ * @property {string} description
+ * @property {string} name
+ * @property {NormalizedTopologyNode[]} nodes
+ */
 
-	let flattenTopology = function(topologyTree, fromScratch) {
-		if (fromScratch) normalizedTopology.nodes = [];
-		topologyTree.forEach(function(node) {
+/**
+ * @typedef TopologyTree
+ * @property {string} cachegroup
+ * @property {string} [type]
+ * @property {{name: string; type: string}} parent
+ * @property {{name: string; type: string}} secParent
+ * @property {TopologyTree[]} [children]
+ */
+
+/**
+ * @typedef TopologyNode
+ * @property {string} cachegroup
+ * @property {{name: string; type: string}} parent
+ * @property {{name: string; type: string}} secParent
+ * @property {number[]} parents
+ * @property {string} type
+ * @property {TopologyNode[]} [children]
+ */
+
+/**
+ * TopologyUtils provides utilities for dealing with Topology hierarchies.
+ */
+class TopologyUtils {
+
+	/**
+	 * @private
+	 * @param {TopologyTree[]} topologyTree
+	 * @param {NormalizedTopology} topology
+	 * @param {boolean} [fromScratch]
+	 */
+	flattenTopology(topologyTree, topology, fromScratch) {
+		if (fromScratch)
+			topology.nodes = [];
+		for (const node of topologyTree) {
 			if (node.cachegroup) {
-				normalizedTopology.nodes.push({
+				topology.nodes.push({
 					cachegroup: node.cachegroup,
 					parent: node.parent,
 					secParent: node.secParent,
@@ -33,58 +75,73 @@ var TopologyUtils = function() {
 				});
 			}
 			if (node.children && node.children.length > 0) {
-				flattenTopology(node.children, false);
+				this.flattenTopology(node.children, topology, false);
 			}
-		});
-	};
+		}
+	}
 
-	let addNodeIndexes = function() {
-		normalizedTopology.nodes.forEach(function(currentNode) {
-			let parentNodeIndex = _.findIndex(normalizedTopology.nodes, function(node) { return currentNode.parent.name === node.cachegroup });
-			let secParentNodeIndex = _.findIndex(normalizedTopology.nodes, function(node) { return currentNode.secParent.name === node.cachegroup });
+	/**
+	 * @private
+	 * @param {NormalizedTopology} topology
+	 */
+	addNodeIndexes(topology) {
+		for (const currentNode of topology.nodes) {
+			const parentNodeIndex = topology.nodes.findIndex(node => currentNode.parent.name === node.cachegroup);
+			const secParentNodeIndex = topology.nodes.findIndex(node => currentNode.secParent.name === node.cachegroup);
 			if (parentNodeIndex > -1) {
 				currentNode.parents.push(parentNodeIndex);
 				if (secParentNodeIndex > -1) {
 					currentNode.parents.push(secParentNodeIndex);
 				}
 			}
-		});
+		}
 	};
 
-	this.getNormalizedTopology = function(name, description, topologyTree) {
+	/**
+	 * "Normalizes" the given Topology tree.
+	 *
+	 * @param {string} name
+	 * @param {string} description
+	 * @param {TopologyTree[]} topologyTree
+	 * @returns {NormalizedTopology}
+	 */
+	getNormalizedTopology(name, description, topologyTree) {
 		// build a normalized (flat) topology with parent indexes required for topology create/update
-		normalizedTopology = {
-			name: name,
-			description: description,
+		const normalizedTopology = {
+			name,
+			description,
 			nodes: []
 		};
-		flattenTopology(topologyTree, true);
-		addNodeIndexes();
+		this.flattenTopology(topologyTree, normalizedTopology, true);
+		this.addNodeIndexes(normalizedTopology);
 		return normalizedTopology;
 	};
 
-	this.getTopologyTree = function(topology) {
-		let nodes = angular.copy(topology.nodes);
-		let roots = [], // topology items without parents (primary or secondary)
-			all = {};
-
-		nodes.forEach(function(node, index) {
-			all[index] = node;
-		});
+	/**
+	 * Converts a set of Topology nodes into a Topology tree.
+	 *
+	 * @param {{nodes: TopologyNode[]}} topology
+	 * @returns {[{type: "ROOT"; children: TopologyTree[]}]}
+	 */
+	getTopologyTree(topology) {
+		/** @type {TopologyNode[]} */
+		const nodes = angular.copy(topology.nodes);
+		/** @type {TopologyTree[]} */
+		const roots = []; // topology items without parents (primary or secondary)
+		const all = Object.fromEntries(nodes.map((n, i) => [i, n]))
 
 		// create children based on parent definitions
-		Object.keys(all).forEach(function (guid) {
-			let item = all[guid];
-			if (!('children' in item)) {
+		for (const item of Object.values(all)) {
+			if (!("children" in item)) {
 				item.children = [];
 			}
 			if (item.parents.length === 0) {
-				item.parent = { name: '', type: '' };
-				item.secParent = { name: '', type: '' };
+				item.parent = { name: "", type: "" };
+				item.secParent = { name: "", type: "" };
 				roots.push(item);
 			} else if (item.parents[0] in all) {
-				let p = all[item.parents[0]];
-				if (!('children' in p)) {
+				const p = all[item.parents[0]];
+				if (!p.children) {
 					p.children = [];
 				}
 				p.children.push(item);
@@ -94,20 +151,19 @@ var TopologyUtils = function() {
 				if (item.parents.length === 2 && item.parents[1] in all) {
 					item.secParent = { name: all[item.parents[1]].cachegroup, type: all[item.parents[1]].type };
 				} else {
-					item.secParent = { name: '', type: '' };
+					item.secParent = { name: "", type: "" };
 				}
 			}
-		});
+		}
 
 		return [
 			{
-				type: 'ROOT',
+				type: "ROOT",
 				children: roots
 			}
 		];
 	};
-
-};
+}
 
 TopologyUtils.$inject = [];
 module.exports = TopologyUtils;

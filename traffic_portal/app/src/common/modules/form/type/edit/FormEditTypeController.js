@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} type
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/TypeService")} typeService
+ */
 var FormEditTypeController = function(type, $scope, $controller, $uibModal, $anchorScroll, locationUtils, typeService) {
 
     // extends the FormTypeController to inherit common methods

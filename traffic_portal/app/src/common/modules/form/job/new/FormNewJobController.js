@@ -17,6 +17,14 @@
  * under the License.
  */
 
+/**
+ * @param {*} job
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../api/JobService")} jobService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormNewJobController = function(job, $scope, $controller, jobService, messageModel, locationUtils) {
 
 	// extends the FormJobController to inherit common methods

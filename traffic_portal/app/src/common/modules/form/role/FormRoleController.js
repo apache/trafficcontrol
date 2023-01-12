@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} roles
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormRoleController = function(roles, $scope, $location, formUtils, locationUtils) {
 
 	$scope.role = roles[0];
@@ -25,7 +32,7 @@ var FormRoleController = function(roles, $scope, $location, formUtils, locationU
 		$location.path($location.path() + '/users');
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 
@@ -52,8 +59,11 @@ var FormRoleController = function(roles, $scope, $location, formUtils, locationU
 		return _pattern;
 	}
 	$scope.namePattern = namePattern;
-	// caches the RegExp so it only needs to be compiled once
-	_pattern = null;
+	/**
+	 * Caches the RegExp so it only needs to be compiled once.
+	 * @type {null | RegExp}
+	 */
+	let _pattern = null;
 };
 
 FormRoleController.$inject = ['roles', '$scope', '$location', 'formUtils', 'locationUtils'];
