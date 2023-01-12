@@ -25,7 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/config"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/v4/totest"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 )
 
 const cfgFmt = `Using Config values:

@@ -21,6 +21,7 @@ package totest
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -65,4 +66,24 @@ func GetUserID(t *testing.T, cl *toclient.Session, username string) func() int {
 		assert.RequireNotNil(t, users.Response[0].ID, "Expected ID to not be nil.")
 		return *users.Response[0].ID
 	}
+}
+
+func execSQL(db *sql.DB, sqlStmt string) error {
+	var err error
+
+	tx, err := db.Begin()
+	if err != nil {
+		return fmt.Errorf("transaction begin failed %v %v ", err, tx)
+	}
+
+	res, err := tx.Exec(sqlStmt)
+	if err != nil {
+		return fmt.Errorf("exec failed %v %v", err, res)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("commit failed %v %v", err, res)
+	}
+	return nil
 }
