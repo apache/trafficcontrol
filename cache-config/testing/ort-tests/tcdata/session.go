@@ -32,15 +32,15 @@ func (r *TCData) SetupSession(toReqTimeout time.Duration, toURL string, toUser s
 	var err error
 
 	toReqTimeout = time.Second * time.Duration(r.Config.Default.Session.TimeoutInSecs)
-	NoAuthTOSession = client.NewNoAuthSession(toURL, true, "to-api-v3-client-tests", true, toReqTimeout)
-	TOSession, _, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v3-client-tests", true, toReqTimeout)
+	NoAuthTOSession = client.NewNoAuthSession(toURL, true, "to-api-v4-client-tests", true, toReqTimeout)
+	TOSession, _, err = client.LoginWithAgent(toURL, toUser, toPass, true, "to-api-v4-client-tests", true, toReqTimeout)
 	return err
 }
 
 func (r *TCData) TeardownSession(toReqTimeout time.Duration, toURL string, toUser string, toPass string) error {
 	var err error
 	toReqTimeout = time.Second * time.Duration(r.Config.Default.Session.TimeoutInSecs)
-	TOSession, _, err = client.LogoutWithAgent(toURL, toUser, toPass, true, "to-api-v3-client-tests", true, toReqTimeout)
+	TOSession, _, err = client.LogoutWithAgent(toURL, toUser, toPass, true, "to-api-v4-client-tests", true, toReqTimeout)
 
 	return err
 }
