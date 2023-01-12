@@ -24,8 +24,6 @@
 
 - name: Protect against expired yum repo metadata
   shell: yum clean expire-cache
-  args:
-    warn: false
   become: yes
 
 - name: Install TR Dependencies

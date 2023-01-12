@@ -50,7 +50,7 @@
 - name: "Take pre-install snapshot of CRConfig.json ({{ to_api_target_cdn }})"
   delegate_to: localhost
   uri:
-    url: "{{ to_api_base_url }}/api/4.0/cdns/{{ to_api_target_cdn }}/snapshot"
+    url: "{{ to_api_base_url }}/api/{{ to_api_version }}/cdns/{{ to_api_target_cdn }}/snapshot"
     method: GET
     follow_redirects: all
     return_content: yes
@@ -76,7 +76,7 @@
   become: False
 
 - name: Fix/scrub json output format of the pre-commit snapshot output
-  shell: "jq -r '. | del(.stats|(.tm_user,.tm_version,.date,.tm_path))' {{ raw_precommit_snapshot_file.path }} > {{ precommit_snapshot_file.path }}"
+  shell: "jq -r '.response | del(.stats|(.tm_user,.tm_version,.date,.tm_path))' {{ raw_precommit_snapshot_file.path }} > {{ precommit_snapshot_file.path }}"
   delegate_to: localhost
 
 - name: Fix/scrub json output format of the pending snapshot output
@@ -117,7 +117,7 @@
 - name: "Writing snapshot ({{ to_api_target_cdn }})"
   delegate_to: localhost
   uri:
-    url: "{{ to_api_base_url }}/snapshot/{{ to_api_target_cdn }}"
+    url: "{{ to_api_base_url }}/api/{{ to_api_version }}/snapshot/{{ to_api_target_cdn }}"
     method: PUT
     follow_redirects: all
     return_content: yes
