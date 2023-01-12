@@ -220,6 +220,13 @@ export class CacheGroupTableComponent implements OnInit {
 		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
+	/**
+	 * Queues or clears updates on a group of Cache Groups.
+	 *
+	 * @param cgs The Cache Groups on which to operate.
+	 * @param queue Whether updates should be queued (`true`) or cleared
+	 * (`false`).
+	 */
 	private async queueUpdates(cgs: ResponseCacheGroup[], queue: boolean = true): Promise<void> {
 		const title = `${queue ? "Queue" : "Clear"} Updates on ${cgs.length === 1 ? cgs[0].name : `${cgs.length} Cache Groups`}`;
 		const data = {
@@ -246,6 +253,11 @@ export class CacheGroupTableComponent implements OnInit {
 		}
 	}
 
+	/**
+	 * Asks the user for confirmation before deleting a Cache Group.
+	 *
+	 * @param cg The Cache Group (potentially) being deleted.
+	 */
 	private async delete(cg: ResponseCacheGroup): Promise<void> {
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
 			data: {
