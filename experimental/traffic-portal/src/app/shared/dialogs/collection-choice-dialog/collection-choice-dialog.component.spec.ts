@@ -49,4 +49,10 @@ describe("CollectionChoiceDialogComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it("gets an appropriate input label", () => {
+		expect(component.label).toBe(data.message);
+		data.label = "test";
+		expect(component.label).toBe(data.label);
+	});
 });
