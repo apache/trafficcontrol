@@ -153,6 +153,7 @@ export class CacheGroupTableComponent implements OnInit {
 		},
 		{
 			action: "servers",
+			disabled: (): true => true,
 			name: "Manage Servers"
 		}
 	];
