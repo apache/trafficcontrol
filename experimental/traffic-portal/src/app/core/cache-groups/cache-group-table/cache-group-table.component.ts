@@ -212,9 +212,6 @@ export class CacheGroupTableComponent implements OnInit {
 					this.fuzzControl.setValue(decodeURIComponent(search));
 					this.updateURL();
 				}
-			},
-			e => {
-				console.error("Failed to get query parameters:", e);
 			}
 		);
 		this.headerSvc.headerTitle.next("Cache Groups");
