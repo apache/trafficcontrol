@@ -13,13 +13,14 @@
 */
 
 import { Location } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
+import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
-import type { ResponseCacheGroup } from "trafficops-types";
+import { LocalizationMethod, localizationMethodToString, TypeFromResponse, type ResponseCacheGroup } from "trafficops-types";
 
-import { CacheGroupService } from "src/app/api";
-import { DecisionDialogComponent, DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { CacheGroupService, TypeService } from "src/app/api";
+import { DecisionDialogComponent, type DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
 /**
@@ -38,7 +39,11 @@ export class CacheGroupDetailsComponent implements OnInit {
 		id: -1,
 		lastUpdated: new Date(),
 		latitude: 0,
-		localizationMethods: [],
+		localizationMethods: [
+			LocalizationMethod.CZ,
+			LocalizationMethod.DEEP_CZ,
+			LocalizationMethod.GEO
+		],
 		longitude: 0,
 		name: "",
 		parentCachegroupId: null,
@@ -51,14 +56,39 @@ export class CacheGroupDetailsComponent implements OnInit {
 	};
 
 	public cacheGroups: Array<ResponseCacheGroup> = [];
+	public types: Array<TypeFromResponse> = [];
+	public typeCtrl = new FormControl<number | null>(null);
+	public showErrors = false;
+
+	public readonly localizationMethods: readonly LocalizationMethod[] = [
+		LocalizationMethod.CZ,
+		LocalizationMethod.DEEP_CZ,
+		LocalizationMethod.GEO
+	];
+
+	/**
+	 * A description of the Cache Group's selected Type - or `null` if no Type
+	 * is (yet) selected.
+	 */
+	public get selectedTypeDescription(): string | null {
+		const type = this.types.find(t => t.id === this.typeCtrl.value);
+		if (!type) {
+			return null;
+		}
+		return type.description;
+	}
 
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly api: CacheGroupService,
+		private readonly typesAPI: TypeService,
 		private readonly location: Location,
 		private readonly dialog: MatDialog,
 		private readonly header: TpHeaderService
-	) { }
+	) {
+	}
+
+	public localizationMethodToString = localizationMethodToString;
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
@@ -70,9 +100,12 @@ export class CacheGroupDetailsComponent implements OnInit {
 			return;
 		}
 
+		const cgsPromise = this.api.getCacheGroups().then(cgs => this.cacheGroups = cgs);
+		const typePromise = this.typesAPI.getTypesInTable("cachegroup").then(ts => this.types = ts);
 		if (ID === "new") {
-			this.header.headerTitle.next("New Division");
+			this.header.headerTitle.next("New Cache Group");
 			this.new = true;
+			await Promise.all([typePromise, cgsPromise]);
 			return;
 		}
 		const numID = parseInt(ID, 10);
@@ -80,24 +113,28 @@ export class CacheGroupDetailsComponent implements OnInit {
 			throw new Error(`route parameter 'id' was non-number: ${ID}`);
 		}
 
-		const cacheGroups = await this.api.getCacheGroups();
-		const idx = cacheGroups.findIndex(c => c.id === numID);
+		const idx = this.cacheGroups.findIndex(c => c.id === numID);
 		if (idx < 0) {
 			throw new Error(`no such Cache Group: #${ID}`);
 		}
-		this.cacheGroup = cacheGroups.splice(idx, 1)[0];
-		this.cacheGroups = cacheGroups;
+		await cgsPromise;
+		this.cacheGroup = this.cacheGroups.splice(idx, 1)[0];
+		this.typeCtrl.setValue(this.cacheGroup.typeId);
+		this.updateLocalizationMethods();
 		this.header.headerTitle.next(`Cache Group: ${this.cacheGroup.name}`);
+		await typePromise;
 	}
 
 	/**
 	 * Gets all Cache Groups eligible to be the parent of this Cache Group.
 	 *
 	 * @returns Every Cache Group except this one and its secondary parent (if
-	 * it has one).
+	 * it has one) and any of its "fallbacks".
 	 */
 	public parentCacheGroups(): Array<ResponseCacheGroup> {
-		return this.cacheGroups.filter(cg => cg.id !== this.cacheGroup.secondaryParentCachegroupId);
+		return this.cacheGroups.filter(
+			cg => cg.fallbacks.every(f => f !== cg.name) && cg.id !== this.cacheGroup.secondaryParentCachegroupId
+		);
 	}
 
 	/**
@@ -105,10 +142,23 @@ export class CacheGroupDetailsComponent implements OnInit {
 	 * Group.
 	 *
 	 * @returns Every Cache Group except this one and its primary parent (if it
-	 * has one).
+	 * has one) and any of its "fallbacks".
 	 */
 	public secondaryParentCacheGroups(): Array<ResponseCacheGroup> {
-		return this.cacheGroups.filter(cg => cg.id !== this.cacheGroup.parentCachegroupId);
+		return this.cacheGroups.filter(
+			cg => cg.fallbacks.every(f => f !== cg.name) && cg.id !== this.cacheGroup.parentCachegroupId
+		);
+	}
+
+	/**
+	 * Gets all Cache Groups eligible to be a "fallback" for this Cache Group.
+	 *
+	 * @returns Every Cache Group except this one and its parent(s).
+	 */
+	public fallbacks(): Array<ResponseCacheGroup> {
+		return this.cacheGroups.filter(
+			cg => cg.id !== this.cacheGroup.parentCachegroupId && cg.id !== this.cacheGroup.secondaryParentCachegroupId
+		);
 	}
 
 	/**
@@ -144,12 +194,34 @@ export class CacheGroupDetailsComponent implements OnInit {
 	public async submit(e: Event): Promise<void> {
 		e.preventDefault();
 		e.stopPropagation();
+		this.showErrors = true;
+		if (this.typeCtrl.invalid) {
+			return;
+		}
+		const {value} = this.typeCtrl;
+		if (value === null) {
+			return console.error("cannot create Cache Group of null Type");
+		}
+		this.cacheGroup.typeId = value;
 		this.cacheGroup.shortName = this.cacheGroup.name;
 		if (this.new) {
 			this.cacheGroup = await this.api.createCacheGroup(this.cacheGroup);
 			this.new = false;
 		} else {
 			this.cacheGroup = await this.api.updateCacheGroup(this.cacheGroup);
+		}
+	}
+
+	/**
+	 * Updates the localization methods of the Cache Group based on user
+	 * selection.
+	 *
+	 * Specifically, selecting none is not allowed, so this will change to
+	 * select all available methods if none are selected.
+	 */
+	public updateLocalizationMethods(): void {
+		if (this.cacheGroup.localizationMethods.length === 0) {
+			this.cacheGroup.localizationMethods = [...this.localizationMethods];
 		}
 	}
 }

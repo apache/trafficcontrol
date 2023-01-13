@@ -31,8 +31,17 @@ mat-card {
 		.pair {
 			display: grid;
 			grid-template-columns: 1fr 1fr;
-			column-gap: 8px;
+			column-gap: 48px;
+			align-items: center;
+			justify-content: space-between;
 		}
+	}
+}
+
+/* Chosen more or less arbitrarily. */
+@media(max-width:1200px) {
+	mat-card form mat-card-content .pair {
+		column-gap: 8px;
 	}
 }
 

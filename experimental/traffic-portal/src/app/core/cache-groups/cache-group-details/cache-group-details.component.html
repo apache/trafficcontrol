@@ -19,6 +19,14 @@ limitations under the License.
 				<mat-label>Name</mat-label>
 				<input matInput type="text" name="name" required [(ngModel)]="cacheGroup.name" required/>
 			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Type</mat-label>
+				<mat-select name="type" [formControl]="typeCtrl" required (selectionChange)="showErrors = false">
+					<mat-option *ngFor="let type of types" [value]="type.id">{{type.name}}</mat-option>
+				</mat-select>
+				<mat-hint *ngIf="selectedTypeDescription">{{selectedTypeDescription}}</mat-hint>
+				<mat-error *ngIf="showErrors && typeCtrl.invalid">Required</mat-error>
+			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
 				<input matInput type="text" name="id" disabled readonly [defaultValue]="cacheGroup.id" />
@@ -54,6 +62,21 @@ limitations under the License.
 					<mat-label>Longitude</mat-label>
 					<input type="number" matInput min="-180" max="180" step="0.001" name="longitude" [(ngModel)]="cacheGroup.longitude" required/>
 				</mat-form-field>
+			</div>
+			<mat-form-field>
+				<mat-label>Allowed Client Localization Methods</mat-label>
+				<mat-select name="localizationMethods" multiple required [(ngModel)]="cacheGroup.localizationMethods" (selectionChange)="updateLocalizationMethods()">
+					<mat-option *ngFor="let method of localizationMethods" [value]="method">{{localizationMethodToString(method)}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<div class="pair">
+				<mat-form-field>
+					<mat-label>Fallbacks</mat-label>
+					<mat-select name="fallbacks" multiple [(ngModel)]="cacheGroup.fallbacks">
+						<mat-option *ngFor="let cg of fallbacks()">{{cg.name}}</mat-option>
+					</mat-select>
+				</mat-form-field>
+				<mat-checkbox name="fallbackToClosest" [(ngModel)]="cacheGroup.fallbackToClosest">Fall back to closest on localization failure</mat-checkbox>
 			</div>
 		</mat-card-content>
 		<mat-card-actions align="end">
