@@ -13,6 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import type { TypeFromResponse } from "trafficops-types";
 
 import type { Type } from "src/app/models";
 
@@ -78,8 +79,8 @@ export class TypeService extends APIService {
 	 * @param useInTable The database table for which to retrieve Types.
 	 * @returns The requested Types.
 	 */
-	public async getTypesInTable(useInTable: UseInTable): Promise<Array<Type>> {
-		return this.get<Array<Type>>("types", undefined, {useInTable}).toPromise().catch(
+	public async getTypesInTable(useInTable: UseInTable): Promise<Array<TypeFromResponse>> {
+		return this.get<Array<TypeFromResponse>>("types", undefined, {useInTable}).toPromise().catch(
 			(e) => {
 				console.error("Failed to get Types:", e);
 				return [];
