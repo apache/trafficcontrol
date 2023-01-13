@@ -79,12 +79,27 @@ func MakeDispatchMap(
 		}
 	}
 
+	// if any server has partners listed in toData.ServerPartners, this is an anycast enabled server
+	// tm can not control traffic to individual anycast enabled servers, since all of them have the same
+	// service IP
+	// It can poll all of them, but will only detect not available status on the last server that becomes
+	// unavailable. Therefore if any of the servers in the anycast group becomes unavailable, that means
+	// that the TM can not get to ANY of the anycast group servers and all of them must be marked unavailable
+	// TM will detect server load and bandwidth limits on all the servers that are responding to polls, and
+	// are serving traffic
+	// If TM detects server load issues, it can only control that by diverting traffic to all the servers in the
+	// anycast group
+	// If TM detects server bandwidth limits, it must divert traffic to all the servers that are responding and not
+	// responding in the anycast server group. The ones that are responding are in ECMP, and have the same bandwidth,
+	// so bandwidth to all must be decreased. The ones that are not responding, can appear to be in reported state,
+	// and must be marked unavailable to control traffic to the remaining servers
+
 	dispatchMap := map[string]http.HandlerFunc{
 		"/publish/CrConfig": wrap(WrapAgeErr(errorCount, func() ([]byte, time.Time, error) {
 			return srvTRConfig(opsConfig, toSession)
 		}, rfc.ApplicationJSON)),
 		"/publish/CrStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates, distributedPollingEnabled)
+			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates, distributedPollingEnabled, toData)
 			return WrapErrStatusCode(errorCount, path, bytes, statusCode, err)
 		}, rfc.ApplicationJSON)),
 		"/publish/CacheStatsNew": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {

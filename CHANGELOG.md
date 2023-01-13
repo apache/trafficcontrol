@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#7290](https://github.com/apache/trafficcontrol/pull/7290) *Traffic Monitor* Update TM results with hostname from via header, if exists
 - [#6234](https://github.com/apache/trafficcontrol/issues/6234) *Traffic Ops, Traffic Portal* Added description field to Server Capabilities
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple servers per capability.
 - [#7081](https://github.com/apache/trafficcontrol/issues/7081) *Traffic Router* Added better log messages for TR connection exceptions.

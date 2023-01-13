@@ -356,13 +356,21 @@ func CalcAvailability(
 			availStatus.UnavailableStat = aggUnavailableStat
 		}
 
+		if result.UsingIPv4 {
+			availStatus.LastPoll = result.Time
+			availStatus.LastPollv6 = lastStatus.LastPollv6
+		} else {
+			availStatus.LastPoll = lastStatus.LastPoll
+			availStatus.LastPollv6 = result.Time
+		}
 		localStates.SetCache(tc.CacheName(result.ID), tc.IsAvailable{
 			IsAvailable:    availStatus.ProcessedAvailable,
 			Ipv4Available:  availStatus.Available.IPv4,
 			Ipv6Available:  availStatus.Available.IPv6,
 			DirectlyPolled: true, // we know this cache was directly polled because otherwise we wouldn't have a cache.Result for it
 			Status:         availStatus.Why,
-			LastPoll:       result.Time,
+			LastPoll:       availStatus.LastPoll,
+			LastPollv6:     availStatus.LastPollv6,
 		})
 
 		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || available.IsAvailable != lastStatus.ProcessedAvailable {

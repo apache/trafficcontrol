@@ -20,6 +20,7 @@ package cache
  */
 
 import (
+	"fmt"
 	"io"
 	"time"
 
@@ -300,6 +301,9 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		result.Error = err
 		handler.resultChan <- result
 		return
+	}
+	if value, ok := miscStats["via"]; ok {
+		result.ID = fmt.Sprintf("%v", value)
 	}
 
 	result.Statistics = stats

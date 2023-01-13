@@ -21,8 +21,10 @@ package datareq
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -35,11 +37,12 @@ func srvTRState(
 	combinedStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	distributedPollingEnabled bool,
+	toData todata.TODataThreadsafe,
 ) ([]byte, int, error) {
 	_, raw := params["raw"]     // peer polling case
 	_, local := params["local"] // distributed peer polling case
 	if raw {
-		data, err := srvTRStateSelf(localStates, distributedPollingEnabled)
+		data, err := srvTRStateSelf(localStates, distributedPollingEnabled, toData)
 		return data, http.StatusOK, err
 	}
 
@@ -58,16 +61,17 @@ func srvTRState(
 		}
 	}
 
-	data, err := srvTRStateDerived(combinedStates, local && distributedPollingEnabled)
+	data, err := srvTRStateDerived(combinedStates, local && distributedPollingEnabled, toData)
 
 	return data, http.StatusOK, err
 }
 
-func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe, directlyPolledOnly bool) ([]byte, error) {
+func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe, directlyPolledOnly bool, toData todata.TODataThreadsafe) ([]byte, error) {
 	if !directlyPolledOnly {
-		return tc.CRStatesMarshall(combinedStates.Get())
+		combinedStatesC := updateStatusAnycast(combinedStates, toData)
+		return tc.CRStatesMarshall(combinedStatesC)
 	}
-	unfiltered := combinedStates.Get()
+	unfiltered := updateStatusAnycast(combinedStates, toData)
 	return tc.CRStatesMarshall(filterDirectlyPolledCaches(unfiltered))
 }
 
@@ -84,10 +88,55 @@ func filterDirectlyPolledCaches(crstates tc.CRStates) tc.CRStates {
 	return filtered
 }
 
-func srvTRStateSelf(localStates peer.CRStatesThreadsafe, directlyPolledOnly bool) ([]byte, error) {
+func srvTRStateSelf(localStates peer.CRStatesThreadsafe, directlyPolledOnly bool, toData todata.TODataThreadsafe) ([]byte, error) {
 	if !directlyPolledOnly {
-		return tc.CRStatesMarshall(localStates.Get())
+		localStatesC := updateStatusAnycast(localStates, toData)
+		return tc.CRStatesMarshall(localStatesC)
 	}
-	unfiltered := localStates.Get()
+	unfiltered := updateStatusAnycast(localStates, toData)
 	return tc.CRStatesMarshall(filterDirectlyPolledCaches(unfiltered))
+}
+
+func updateStatusAnycast(localStates peer.CRStatesThreadsafe, toData todata.TODataThreadsafe) tc.CRStates {
+	localStatesC := localStates.Get()
+	toDataC := toData.Get()
+
+	for cache, _ := range localStatesC.Caches {
+		if _, ok := toDataC.ServerPartners[cache]; ok {
+			// all server partners must be available if they are in reported state
+			allAvailableV4 := true
+			allAvailableV6 := true
+			allIsAvailable := true
+			for partner, _ := range toDataC.ServerPartners[cache] {
+				if partnerState, ok := localStatesC.Caches[partner]; ok {
+					// a partner host is reported but is marked down for too high traffic or load
+					// this host also needs to be marked down to divert all traffic for their
+					// common anycast ip
+					if strings.Contains(partnerState.Status, "REPORTED") &&
+						strings.Contains(partnerState.Status, "too high") {
+						if !partnerState.Ipv4Available {
+							allAvailableV4 = false
+						}
+						if !partnerState.Ipv6Available {
+							allAvailableV6 = false
+						}
+						if !partnerState.IsAvailable {
+							allIsAvailable = false
+						}
+					}
+				}
+			}
+			newIsAvailable := tc.IsAvailable{}
+			newIsAvailable.DirectlyPolled = localStatesC.Caches[cache].DirectlyPolled
+			newIsAvailable.Status = localStatesC.Caches[cache].Status
+			newIsAvailable.LastPoll = localStatesC.Caches[cache].LastPoll
+			newIsAvailable.LastPollv6 = localStatesC.Caches[cache].LastPollv6
+			newIsAvailable.IsAvailable = localStatesC.Caches[cache].IsAvailable && allIsAvailable
+			newIsAvailable.Ipv4Available = localStatesC.Caches[cache].Ipv4Available && allAvailableV4
+			newIsAvailable.Ipv6Available = localStatesC.Caches[cache].Ipv6Available && allAvailableV6
+
+			localStatesC.Caches[cache] = newIsAvailable
+		}
+	}
+	return localStatesC
 }

@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -72,6 +73,14 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 
 	ctx := pollCTX.(*poller.HTTPPollCtx)
 
+	via := ctx.HTTPHeader.Get("Via")
+	if via != "" {
+		result := regexp.MustCompile(` ([a-z0-9\-]*)\..*comcast.net`).FindStringSubmatch(via)
+		if len(result) > 0 {
+			cacheName = result[1]
+		}
+	}
+
 	ctype := ctx.HTTPHeader.Get("Content-Type")
 
 	if ctype == "text/json" || ctype == "text/javascript" || ctype == "application/json" || ctype == "" {
@@ -94,6 +103,8 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 	}
 
 	statMap := sohData.Global
+
+	statMap["via"] = cacheName
 
 	if stats.Loadavg, err = parseLoadAvg(statMap); err != nil {
 		return stats, nil, fmt.Errorf("Error parsing loadavg for cache '%s': %v", cacheName, err)

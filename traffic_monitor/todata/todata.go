@@ -78,6 +78,7 @@ type TOData struct {
 	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
 	ServerDeliveryServices map[tc.CacheName][]tc.DeliveryServiceName
 	ServerTypes            map[tc.CacheName]tc.CacheType
+	ServerPartners         map[tc.CacheName]map[tc.CacheName]bool
 }
 
 // New returns a new empty TOData object, initializing pointer members.
@@ -89,6 +90,7 @@ func New() *TOData {
 		DeliveryServiceTypes:   map[tc.DeliveryServiceName]tc.DSTypeCategory{},
 		DeliveryServiceRegexes: NewRegexes(),
 		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
+		ServerPartners:         map[tc.CacheName]map[tc.CacheName]bool{},
 	}
 }
 
@@ -178,6 +180,8 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 	if err != nil {
 		return fmt.Errorf("getting server types from monitoring config: %v", err)
 	}
+
+	newTOData.ServerPartners = getServerParners(mc)
 
 	d.set(newTOData)
 	return nil
@@ -340,6 +344,48 @@ func getServerTypes(mc tc.TrafficMonitorConfigMap) (map[tc.CacheName]tc.CacheTyp
 		serverTypes[tc.CacheName(server)] = t
 	}
 	return serverTypes, nil
+}
+
+// getServerPartners gets the cache parners that have the same anycast VIP
+func getServerParners(mc tc.TrafficMonitorConfigMap) map[tc.CacheName]map[tc.CacheName]bool {
+	serverPartners := map[tc.CacheName]map[tc.CacheName]bool{}
+
+	// get service addresses
+	serviceAddress := map[string][]string{}
+	for server, serverData := range mc.TrafficServer {
+		for _, intf := range serverData.Interfaces {
+			for _, addr := range intf.IPAddresses {
+				if addr.ServiceAddress {
+					if _, ok := serviceAddress[addr.Address]; !ok {
+						serviceAddress[addr.Address] = []string{}
+					}
+					serviceAddress[addr.Address] = append(serviceAddress[addr.Address], server)
+				}
+			}
+		}
+	}
+
+	for server, serverData := range mc.TrafficServer {
+		for _, intf := range serverData.Interfaces {
+			for _, addr := range intf.IPAddresses {
+				if addr.ServiceAddress {
+					// if service addresses belongs to more than one server
+					if len(serviceAddress[addr.Address]) > 1 {
+						if _, ok := serverPartners[tc.CacheName(server)]; !ok {
+							serverPartners[tc.CacheName(server)] = map[tc.CacheName]bool{}
+						}
+						for _, partner := range serviceAddress[addr.Address] {
+							if partner != server {
+								serverPartners[tc.CacheName(server)][tc.CacheName(partner)] = true
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return serverPartners
 }
 
 // canUseMonitorConfig returns true if we can prefer monitor config data to crconfig data.

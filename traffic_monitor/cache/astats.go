@@ -33,6 +33,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -116,8 +117,23 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 		astats.Ats["system.proc.loadavg"] = astats.System.ProcLoadavg
 		astats.Ats["system.proc.net.dev"] = astats.System.ProcNetDev
 
+		via := ctx.HTTPHeader.Get("Via")
+		if via != "" {
+			result := regexp.MustCompile(` ([a-z0-9\-]*)\..*comcast.net`).FindStringSubmatch(via)
+			if len(result) > 0 {
+				astats.Ats["via"] = result[1]
+			}
+		}
+
 		return stats, astats.Ats, nil
 	} else if ctype == "text/csv" {
+		via := ctx.HTTPHeader.Get("Via")
+		if via != "" {
+			result := regexp.MustCompile(` ([a-z0-9\-]*)\..*comcast.net`).FindStringSubmatch(via)
+			if len(result) > 0 {
+				cacheName = result[1]
+			}
+		}
 		return astatsCsvParseCsv(cacheName, rdr)
 	} else {
 		return stats, nil, fmt.Errorf("stats Content-Type (%s) can not be parsed by astats", ctype)

@@ -44,6 +44,7 @@ type IsAvailable struct {
 	DirectlyPolled bool      `json:"-"`
 	Status         string    `json:"status"`
 	LastPoll       time.Time `json:"lastPoll"`
+	LastPollv6     time.Time `json:"lastPollv6"`
 }
 
 // NewCRStates creates a new CR states object, initializing pointer members.

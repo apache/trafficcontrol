@@ -128,5 +128,7 @@ func astatsCsvParseCsv(cacheName string, data io.Reader) (Statistics, map[string
 		return stats, nil, fmt.Errorf("cache '%s' had no interfaces", cacheName)
 	}
 
+	statMap["via"] = cacheName
+
 	return stats, statMap, nil
 }
