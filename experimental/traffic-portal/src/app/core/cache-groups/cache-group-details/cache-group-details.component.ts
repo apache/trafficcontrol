@@ -77,8 +77,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 		}
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
-			console.error("route parameter 'id' was non-number:", ID);
-			return;
+			throw new Error(`route parameter 'id' was non-number: ${ID}`);
 		}
 
 		const cacheGroups = await this.api.getCacheGroups();
