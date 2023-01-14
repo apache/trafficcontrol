@@ -270,17 +270,17 @@ func TestGetProfiles(t *testing.T) {
 	}
 
 	mock.ExpectBegin()
-	rows := sqlmock.NewRows([]string{"profile", "name", "value"})
+	rows := sqlmock.NewRows([]string{"name", "value"})
+	profileNames := []string{}
 	for _, profile := range profiles {
+		profileNames = append(profileNames, profile.Name)
 		for paramName, paramVal := range profile.Parameters {
-			rows = rows.AddRow(profile.Name, paramName, paramVal)
+			rows = rows.AddRow(paramName, paramVal)
 		}
 	}
 
 	caches := []Cache{cache}
 	routers := []Router{router}
-
-	profileNames := []string{"cacheProfile"}
 
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows)
 

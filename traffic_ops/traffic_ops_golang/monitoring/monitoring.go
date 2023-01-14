@@ -188,7 +188,7 @@ SELECT
 	status.name as status,
 	cachegroup.name as cachegroup,
 	me.tcp_port as port,
-	profile.name as profile,
+	(SELECT STRING_AGG(sp.profile_name, '+' ORDER by sp.priority ASC) FROM server_profile AS sp where sp.server=me.id group by sp.server) as profile,
 	type.name as type,
 	me.xmpp_id as hashID,
     me.id as serverID
@@ -432,62 +432,33 @@ func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error
 	cacheProfileTypes := map[string]string{}
 	profiles := map[string]Profile{}
 	profileNames := []string{}
+	profileTypes := map[string]string{}
 	for _, router := range routers {
-		profiles[router.Profile] = Profile{
-			Name: router.Profile,
-			Type: router.Type,
-		}
+		profileNames = append(profileNames, router.Profile)
+		profileTypes[router.Profile] = router.Type
 	}
 
 	for _, cache := range caches {
 		if _, ok := cacheProfileTypes[cache.Profile]; !ok {
 			cacheProfileTypes[cache.Profile] = cache.Type
-			profiles[cache.Profile] = Profile{
-				Name: cache.Profile,
-				Type: cache.Type,
-			}
 			profileNames = append(profileNames, cache.Profile)
+			profileTypes[cache.Profile] = cache.Type
 		}
 	}
 
-	query := `
-SELECT p.name as profile, pr.name, pr.value
-FROM parameter pr
-JOIN profile p ON p.name = ANY($1)
-JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
-WHERE pr.config_file = $2;
-`
-	rows, err := tx.Query(query, pq.Array(profileNames), CacheMonitorConfigFile)
+	proParameters, err := aggregateMultipleProfileParameters(tx, profileNames)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var profileName sql.NullString
-		var name sql.NullString
-		var value sql.NullString
-		if err := rows.Scan(&profileName, &name, &value); err != nil {
-			return nil, err
+	for k, v := range proParameters {
+		profiles[k] = Profile{
+			Name:       k,
+			Type:       profileTypes[k],
+			Parameters: v,
 		}
-		if name.String == "" {
-			return nil, fmt.Errorf("null name") // TODO continue and warn?
-		}
-		profile := profiles[profileName.String]
-		if profile.Parameters == nil {
-			profile.Parameters = map[string]interface{}{}
-		}
-
-		if valNum, err := strconv.Atoi(value.String); err == nil {
-			profile.Parameters[name.String] = valNum
-		} else {
-			profile.Parameters[name.String] = value.String
-		}
-		profiles[profileName.String] = profile
-
 	}
 
-	profilesArr := []Profile{} // TODO make for efficiency?
+	profilesArr := make([]Profile, len([]Profile{}))
 	for _, profile := range profiles {
 		profilesArr = append(profilesArr, profile)
 	}
@@ -570,4 +541,44 @@ AND c.name = $3
 		}
 	}
 	return cfg, nil
+}
+
+func aggregateMultipleProfileParameters(tx *sql.Tx, profileNames []string) (map[string]map[string]interface{}, error) {
+	p := make(map[string]map[string]interface{})
+	query := `
+SELECT pr.name, pr.value
+FROM parameter pr
+JOIN profile p ON p.name = ANY($1)
+JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
+WHERE pr.config_file = $2;`
+
+	for _, profile := range profileNames {
+		profileList := strings.Split(profile, "+")
+		rows, err := tx.Query(query, pq.Array(profileList), CacheMonitorConfigFile)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		var parameter map[string]interface{}
+		for rows.Next() {
+			var name, value string
+			if err := rows.Scan(&name, &value); err != nil {
+				return nil, err
+			}
+			if name == "" {
+				return nil, fmt.Errorf("null name") // TODO continue and warn?
+			}
+			if parameter == nil {
+				parameter = map[string]interface{}{}
+			}
+			if valNum, err := strconv.Atoi(value); err == nil {
+				parameter[name] = valNum
+			} else {
+				parameter[name] = value
+			}
+		}
+		p[profile] = parameter
+	}
+	return p, nil
 }
