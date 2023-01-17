@@ -14,25 +14,29 @@
 */
 import * as https from "https";
 
-import axios, {AxiosError} from "axios";
-import {NightwatchBrowser} from "nightwatch";
+import axios, { AxiosError } from "axios";
+import { NightwatchBrowser } from "nightwatch";
 import type { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
-import type {CommonPageObject} from "nightwatch/page_objects/common";
-import type {DeliveryServiceCardPageObject} from "nightwatch/page_objects/deliveryServiceCard";
-import type {DeliveryServiceDetailPageObject} from "nightwatch/page_objects/deliveryServiceDetail";
-import type {DeliveryServiceInvalidPageObject} from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
+import type { CommonPageObject } from "nightwatch/page_objects/common";
+import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cache-group-details";
+import type { CacheGroupsPageObject } from "nightwatch/page_objects/cache-group-details";
+import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServiceCard";
+import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServiceDetail";
+import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
 import type { DivisionDetailPageObject } from "nightwatch/page_objects/divisionDetail";
 import type { DivisionsPageObject } from "nightwatch/page_objects/divisionsTable";
-import type {LoginPageObject} from "nightwatch/page_objects/login";
+import type { LoginPageObject } from "nightwatch/page_objects/login";
 import type { RegionDetailPageObject } from "nightwatch/page_objects/regionDetail";
 import type { RegionsPageObject } from "nightwatch/page_objects/regionsTable";
-import type {ServersPageObject} from "nightwatch/page_objects/servers";
+import type { ServersPageObject } from "nightwatch/page_objects/servers";
 import type { TenantDetailPageObject } from "nightwatch/page_objects/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/tenants";
-import type {UsersPageObject} from "nightwatch/page_objects/users";
+import type { UsersPageObject } from "nightwatch/page_objects/users";
 import {
 	CDN,
-	GeoLimit, GeoProvider, LoginRequest,
+	GeoLimit,
+	GeoProvider,
+	LoginRequest,
 	Protocol,
 	RequestDeliveryService,
 	ResponseCDN,
@@ -44,7 +48,9 @@ import {
 	ResponseDivision,
 	RequestDivision,
 	ResponseRegion,
-	RequestRegion
+	RequestRegion,
+	RequestCacheGroup,
+	ResponseCacheGroup
 } from "trafficops-types";
 
 declare module "nightwatch" {
@@ -52,6 +58,8 @@ declare module "nightwatch" {
 	 * Defines the global nightwatch browser type with our types mixed in.
 	 */
 	export interface NightwatchCustomPageObjects {
+		cacheGroupDetails: () => CacheGroupDetailPageObject;
+		cacheGroupsTable: () => CacheGroupsPageObject;
 		common: () => CommonPageObject;
 		changeLogs: () => ChangeLogsPageObject;
 		deliveryServiceCard: () => DeliveryServiceCardPageObject;
@@ -85,6 +93,7 @@ declare module "nightwatch" {
  * Contains the data created by the client before the test suite runs.
  */
 export interface CreatedData {
+	cacheGroup: ResponseCacheGroup;
 	cdn: ResponseCDN;
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
@@ -104,7 +113,7 @@ const globals = {
 			done();
 		});
 	},
-	apiVersion: "4.0",
+	apiVersion: "3.1",
 	before: async (done: () => void): Promise<void> => {
 		const apiUrl = `${globals.trafficOpsURL}/api/${globals.apiVersion}`;
 		const client = axios.create({
@@ -132,8 +141,9 @@ const globals = {
 			throw e;
 		}
 		if(accessToken === "") {
-			console.error("Access token is not set");
-			return Promise.reject();
+			const e = new Error("Access token is not set");
+			console.error(e.message);
+			throw e;
 		}
 		client.defaults.headers.common = { Cookie: accessToken };
 
@@ -155,6 +165,10 @@ const globals = {
 		const steeringWeightType = types.find(typ => typ.name === "STEERING_WEIGHT" && typ.useInTable === "steering_target");
 		if(steeringWeightType === undefined) {
 			throw new Error("Unable to find `STEERING_WEIGHT` type");
+		}
+		const cgType = types.find(typ => typ.useInTable === "cachegroup");
+		if (!cgType) {
+			throw new Error("Unable to find any Cache Group Types");
 		}
 
 		try {
@@ -255,6 +269,16 @@ const globals = {
 			const respRegion: ResponseRegion = resp.data.response;
 			console.log(`Successfully created Region ${respRegion.name}`);
 			data.region = respRegion;
+
+			const cacheGroup: RequestCacheGroup = {
+				name: "test",
+				shortName: "test",
+				typeId: cgType.id
+			};
+			resp = await client.post(`${apiUrl}/cachegroups`, JSON.stringify(cacheGroup));
+			const responseCG: ResponseCacheGroup = resp.data.response;
+			console.log("Successfully created Cache Group:", responseCG);
+			data.cacheGroup = responseCG;
 		} catch(e) {
 			console.error((e as AxiosError).message);
 			throw e;

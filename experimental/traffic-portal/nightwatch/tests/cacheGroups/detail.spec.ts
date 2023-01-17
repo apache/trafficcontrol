@@ -12,24 +12,24 @@
  * limitations under the License.
  */
 
-describe("Division Detail Spec", () => {
-	it("Test division", () => {
-		const page = browser.page.divisionDetail();
-		browser.url(`${page.api.launchUrl}/core/divisions/${browser.globals.testData.division.id}`, res => {
+describe("Cache Group Detail Spec", () => {
+	it("Test Cache Group", () => {
+		const page = browser.page.cacheGroupDetail();
+		browser.url(`${page.api.launchUrl}/core/cache-groups/${browser.globals.testData.cacheGroup.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@name")
 				.assert.enabled("@saveBtn")
 				.assert.not.enabled("@id")
 				.assert.not.enabled("@lastUpdated")
-				.assert.valueEquals("@name", browser.globals.testData.division.name)
-				.assert.valueEquals("@id", String(browser.globals.testData.division.id));
+				.assert.valueEquals("@name", browser.globals.testData.cacheGroup.name)
+				.assert.valueEquals("@id", String(browser.globals.testData.cacheGroup.id));
 		});
 	});
 
-	it("New division", () => {
-		const page = browser.page.divisionDetail();
-		browser.url(`${page.api.launchUrl}/core/divisions/new`, res => {
+	it("New Cache Group", () => {
+		const page = browser.page.cacheGroupDetail();
+		browser.url(`${page.api.launchUrl}/core/cache-groups/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@name")
