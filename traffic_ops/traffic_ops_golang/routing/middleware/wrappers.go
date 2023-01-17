@@ -27,7 +27,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/lestrrat-go/jwx/jwt"
 	"net/http"
 	"strings"
 	"time"
@@ -40,6 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/lestrrat-go/jwx/jwt"
 )
 
 // DefaultRequestTimeout is the default request timeout, if no timeout is configured.
@@ -193,15 +193,15 @@ func getCookieToken(r *http.Request) string {
 	cookie, err := r.Cookie(tocookie.Name)
 	if err == nil && cookie != nil {
 		return cookie.Value
-	} else if r.Header.Get(rfc.Cookie) != "" && strings.Contains(r.Header.Get(rfc.Cookie), "access_token") {
+	} else if r.Header.Get(rfc.Cookie) != "" && strings.Contains(r.Header.Get(rfc.Cookie), tocookie.AccessToken) {
 		cookie, err := r.Cookie("access_token")
 		if err == nil && cookie != nil {
 			decodedToken, err := jwt.Parse([]byte(cookie.Value))
 			if err == nil && cookie != nil {
-				return fmt.Sprintf("%s", decodedToken.PrivateClaims()["mojoCookie"])
+				return fmt.Sprintf("%s", decodedToken.PrivateClaims()[tocookie.MojoCookie])
 			}
 		}
-	} else if r.Header.Get(rfc.Authorization) != "" && strings.Contains(r.Header.Get(rfc.Authorization), "Bearer") {
+	} else if r.Header.Get(rfc.Authorization) != "" && strings.Contains(r.Header.Get(rfc.Authorization), tocookie.BearerToken) {
 		givenTokenSplit := strings.Split(r.Header.Get(rfc.Authorization), " ")
 		if len(givenTokenSplit) < 2 {
 			return ""
@@ -226,6 +226,8 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		cookie, userErr, sysErr := tocookie.Parse(secret, cookieToken)
 		if userErr == nil && sysErr == nil {
 			user = cookie.AuthData
+		} else {
+			log.Errorf("Error retrieving user:\nUser Error: %v\nSystem Error %v\n", userErr, sysErr)
 		}
 		start := time.Now()
 		defer func() {
