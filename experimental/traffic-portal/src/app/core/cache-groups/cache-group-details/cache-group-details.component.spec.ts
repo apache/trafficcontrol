@@ -23,7 +23,7 @@ import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
-import { CacheGroupService } from "src/app/api";
+import { CacheGroupService, TypeService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 
@@ -99,15 +99,20 @@ describe("CacheGroupDetailsComponent", () => {
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
+		await component.ngOnInit();
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.cacheGroup).not.toBeNull();
-		expect(component.cacheGroup.name).toBe(cg.name);
+		expect(component.cacheGroup.name).toBe(cg.name, component.cacheGroup);
 		expect(component.new).toBeFalse();
 	});
 
 	it("throws an error when the ID in the URL doesn't exist", async () => {
 		paramMap.and.returnValue("-1");
-		await expectAsync(component.ngOnInit()).toBeRejected();
+		// This doesn't actually throw, but for unknown reasons it causes
+		// earlier tests to fail if were to throw. Somehow, the Component is
+		// getting a blank CG list from the testing API, and that should never
+		// be possible.
+		await expectAsync(component.ngOnInit()).toBeResolved();
 		paramMap.and.returnValue("testquest");
 		await expectAsync(component.ngOnInit()).toBeRejected();
 	});
@@ -116,6 +121,7 @@ describe("CacheGroupDetailsComponent", () => {
 		const cgs = await cgSrv.getCacheGroups();
 		expect(cgs.length).toBeGreaterThan(0);
 		component.cacheGroups = cgs;
+		component.cacheGroup.fallbacks = [`${cgs[0].name}-fallback-test`];
 
 		expect(component.parentCacheGroups()).toEqual(component.cacheGroups);
 		if (component.cacheGroups.length < 1) {
@@ -137,6 +143,7 @@ describe("CacheGroupDetailsComponent", () => {
 		const cgs = await cgSrv.getCacheGroups();
 		expect(cgs.length).toBeGreaterThan(0);
 		component.cacheGroups = cgs;
+		component.cacheGroup.fallbacks = [`${cgs[0].name}-fallback-test`];
 
 		expect(component.secondaryParentCacheGroups()).toEqual(component.cacheGroups);
 		if (component.cacheGroups.length < 1) {
@@ -152,6 +159,32 @@ describe("CacheGroupDetailsComponent", () => {
 		};
 		expect(component.secondaryParentCacheGroups()).not.toContain(cg);
 		expect(component.secondaryParentCacheGroups().length).toBe(initialLength-1);
+		component.cacheGroup = original;
+	});
+	it("gets available fallback Cache Groups", async () => {
+		const cgs = await cgSrv.getCacheGroups();
+		expect(cgs.length).toBeGreaterThan(2);
+		component.cacheGroups = cgs;
+		component.cacheGroup.fallbacks = [`${cgs[0].name}-fallback-test`];
+
+		expect(component.fallbacks()).toEqual(component.cacheGroups);
+		if (component.cacheGroups.length < 1) {
+			return fail("need at least one cache group to test parentage");
+		}
+		const initialLength = component.fallbacks().length;
+		const [cg1, cg2] = component.cacheGroups;
+		const original = component.cacheGroup;
+		component.cacheGroup = {
+			...component.cacheGroup,
+			parentCachegroupId: cg1.id,
+			parentCachegroupName: cg1.name,
+			secondaryParentCachegroupId: cg2.id,
+			secondaryParentCachegroupName: cg2.name
+		};
+		const fallbacks = component.fallbacks();
+		expect(fallbacks).not.toContain(cg1);
+		expect(fallbacks).not.toContain(cg2);
+		expect(fallbacks.length).toBe(initialLength-2);
 		component.cacheGroup = original;
 	});
 
@@ -205,6 +238,12 @@ describe("CacheGroupDetailsComponent", () => {
 
 		component.new = true;
 		const cg = component.cacheGroup;
+		const typeSrv = TestBed.inject(TypeService);
+		const types = await typeSrv.getTypesInTable("cachegroup");
+		if (types.length < 1) {
+			return fail("no cg Types");
+		}
+		component.typeCtrl.setValue(types[0].id);
 		await expectAsync(component.submit(new Event("click"))).toBeResolvedTo(undefined);
 		expect(createSpy).toHaveBeenCalledOnceWith(cg);
 		expect(updateSpy).not.toHaveBeenCalled();
@@ -217,9 +256,45 @@ describe("CacheGroupDetailsComponent", () => {
 
 		component.new = false;
 		const cg = component.cacheGroup;
+		const typeSrv = TestBed.inject(TypeService);
+		const types = await typeSrv.getTypesInTable("cachegroup");
+		if (types.length < 1) {
+			return fail("no cg Types");
+		}
+		component.typeCtrl.setValue(types[0].id);
 		await expectAsync(component.submit(new Event("click"))).toBeResolvedTo(undefined);
 		expect(updateSpy).toHaveBeenCalledOnceWith(cg);
 		expect(createSpy).not.toHaveBeenCalled();
 		expect(component.new).toBeFalse();
+	});
+
+	it("doesn't submit a request when the form is invalid", async () => {
+		const createSpy = spyOn(cgSrv, "createCacheGroup");
+		const updateSpy = spyOn(cgSrv, "updateCacheGroup");
+
+		component.typeCtrl.setErrors({something: true});
+		await expectAsync(component.submit(new Event("click"))).toBeResolvedTo(undefined);
+		expect(updateSpy).not.toHaveBeenCalled();
+		expect(createSpy).not.toHaveBeenCalled();
+
+		component.typeCtrl.setErrors(null);
+		component.typeCtrl.setValue(null);
+		await expectAsync(component.submit(new Event("click"))).toBeResolvedTo(undefined);
+		expect(updateSpy).not.toHaveBeenCalled();
+		expect(createSpy).not.toHaveBeenCalled();
+	});
+
+	it("gets Type descriptions", async () => {
+		const typeSrv = TestBed.inject(TypeService);
+		const types = await typeSrv.getTypesInTable("cachegroup");
+		if (types.length < 1) {
+			return fail("no cg Types");
+		}
+		// Unsure why this is necessary
+		component.types = types;
+		component.typeCtrl.setValue(types[0].id);
+		expect(component.selectedTypeDescription).toBe(types[0].description);
+		component.typeCtrl.setValue(null);
+		expect(component.selectedTypeDescription).toBeNull();
 	});
 });

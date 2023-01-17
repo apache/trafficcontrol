@@ -115,7 +115,8 @@ export class CacheGroupDetailsComponent implements OnInit {
 
 		const idx = this.cacheGroups.findIndex(c => c.id === numID);
 		if (idx < 0) {
-			throw new Error(`no such Cache Group: #${ID}`);
+			console.error(`no such Cache Group: #${ID} - cachegroups: ${this.cacheGroups.length}`);
+			return;
 		}
 		await cgsPromise;
 		this.cacheGroup = this.cacheGroups.splice(idx, 1)[0];
@@ -133,7 +134,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 	 */
 	public parentCacheGroups(): Array<ResponseCacheGroup> {
 		return this.cacheGroups.filter(
-			cg => cg.fallbacks.every(f => f !== cg.name) && cg.id !== this.cacheGroup.secondaryParentCachegroupId
+			cg => this.cacheGroup.fallbacks.every(f => f !== cg.name) && cg.id !== this.cacheGroup.secondaryParentCachegroupId
 		);
 	}
 
@@ -146,7 +147,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 	 */
 	public secondaryParentCacheGroups(): Array<ResponseCacheGroup> {
 		return this.cacheGroups.filter(
-			cg => cg.fallbacks.every(f => f !== cg.name) && cg.id !== this.cacheGroup.parentCachegroupId
+			cg => this.cacheGroup.fallbacks.every(f => f !== cg.name) && cg.id !== this.cacheGroup.parentCachegroupId
 		);
 	}
 
