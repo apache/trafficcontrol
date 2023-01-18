@@ -271,8 +271,8 @@ const globals = {
 			data.region = respRegion;
 
 			const cacheGroup: RequestCacheGroup = {
-				name: "test",
-				shortName: "test",
+				name: `test${globals.uniqueString}`,
+				shortName: `test${globals.uniqueString}`,
 				typeId: cgType.id
 			};
 			resp = await client.post(`${apiUrl}/cachegroups`, JSON.stringify(cacheGroup));
