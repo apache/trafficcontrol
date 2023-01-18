@@ -47,6 +47,8 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 */
 	let cachedTLSVersions = null;
 
+	$scope.exposeInactive = !!(propertiesModel.properties.deliveryServices?.exposeInactive);
+
 	$scope.showSensitive = false;
 
 	const knownVersions = new Set(["1.0", "1.1", "1.2", "1.3"]);
