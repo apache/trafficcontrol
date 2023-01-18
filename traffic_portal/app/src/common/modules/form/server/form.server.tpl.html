@@ -111,8 +111,18 @@ under the License.
             </div>
 
             <fieldset>
-                <legend>Profiles<button name="addProfileBtn" class="btn btn-primary right-button btn-xs" type="button" title="add a new profile to the server" ng-click="addProfile()"><i class="fa fa-plus"></i></button></legend>
-                <fieldset ng-repeat="profile in server.profileNames track by $index">
+                <legend title="Layered Profiles for a given server."> Profiles
+                    <button name="addProfileBtn" class="btn btn-primary right-button btn-xs" type="button" title="add new profile(s) to the server" ng-click="addProfile()"><i class="fa fa-plus"></i></button>
+                </legend>
+                <div class="helptext">
+                    <p>
+                        <b>Note:</b> The profile with the highest priority (<b>1 - highest</b>), will take precedence (in terms of parameters).
+                        <br>
+                        For example, P1 and P2 are two profiles associated with a server, S1. Parameters of P1 will have a <u>higher</u> priority over that of P2.
+                        And if there exists parameters with same name but different values, then P1's parameters will <b>not</b> be overwritten.
+                    </p>
+                </div>
+                <fieldset ng-repeat="profile in server.profileNames track by $index"> {{$index + 1}}
                     <select ng-class="{'has-error': hasPropertyError(serverForm['activeProfile-'+$index], 'required'), 'has-feedback': hasPropertyError(serverForm['activeProfile-'+$index], 'required')}"
                             id="activeProfile-{{$index}}" name="activeProfile-{{$index}}" class="form-control" ng-model="server.profileNames[$index]"
                             ng-options="profile.name as profile.name for profile in profiles|excludeFilter:profile:server.profileNames" required>
