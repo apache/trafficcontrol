@@ -478,6 +478,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		// ... the right way to do this is with an interceptor, but nobody
 		// wants to put in that kinda work on a legacy product.
 	}
+
+	if (!$scope.exposeInactive && deliveryService.active === "INACTIVE") {
+		deliveryService.active = "PRIMED";
+	}
 };
 
 FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serviceCategoryService"];
