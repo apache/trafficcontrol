@@ -16,10 +16,10 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
+import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroupDetails";
+import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroupsTable";
 import type { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
 import type { CommonPageObject } from "nightwatch/page_objects/common";
-import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cache-group-details";
-import type { CacheGroupsPageObject } from "nightwatch/page_objects/cache-groups-table";
 import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServiceCard";
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServiceDetail";
 import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
