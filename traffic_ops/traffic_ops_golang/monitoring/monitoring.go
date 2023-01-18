@@ -446,15 +446,15 @@ func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error
 		}
 	}
 
-	proParameters, err := aggregateMultipleProfileParameters(tx, profileNames)
+	profileParameters, err := aggregateMultipleProfileParameters(tx, profileNames)
 	if err != nil {
 		return nil, err
 	}
-	for k, v := range proParameters {
-		profiles[k] = Profile{
-			Name:       k,
-			Type:       profileTypes[k],
-			Parameters: v,
+	for pName, parameters := range profileParameters {
+		profiles[pName] = Profile{
+			Name:       pName,
+			Type:       profileTypes[pName],
+			Parameters: parameters,
 		}
 	}
 
@@ -546,11 +546,12 @@ AND c.name = $3
 func aggregateMultipleProfileParameters(tx *sql.Tx, profileNames []string) (map[string]map[string]interface{}, error) {
 	p := make(map[string]map[string]interface{})
 	query := `
-SELECT pr.name, pr.value
+SELECT p.name, pr.name, pr.value
 FROM parameter pr
 JOIN profile p ON p.name = ANY($1)
 JOIN profile_parameter pp ON pp.profile = p.id and pp.parameter = pr.id
-WHERE pr.config_file = $2;`
+WHERE pr.config_file = $2
+ORDER BY ARRAY_POSITION($1, p.name), pr.name;`
 
 	for _, profile := range profileNames {
 		profileList := strings.Split(profile, "+")
@@ -562,20 +563,22 @@ WHERE pr.config_file = $2;`
 
 		var parameter map[string]interface{}
 		for rows.Next() {
-			var name, value string
-			if err := rows.Scan(&name, &value); err != nil {
+			var pName, prName, value string
+			if err := rows.Scan(&pName, &prName, &value); err != nil {
 				return nil, err
 			}
-			if name == "" {
+			if prName == "" {
 				return nil, fmt.Errorf("null name") // TODO continue and warn?
 			}
 			if parameter == nil {
 				parameter = map[string]interface{}{}
 			}
-			if valNum, err := strconv.Atoi(value); err == nil {
-				parameter[name] = valNum
-			} else {
-				parameter[name] = value
+			if _, ok := parameter[prName]; !ok {
+				if valNum, err := strconv.Atoi(value); err == nil {
+					parameter[prName] = valNum
+				} else {
+					parameter[prName] = value
+				}
 			}
 		}
 		p[profile] = parameter
