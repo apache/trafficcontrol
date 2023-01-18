@@ -232,11 +232,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
 	$scope.topologies = topologies;
 
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
+	$scope.showChartsButton = !!(propertiesModel.properties.deliveryServices?.charts?.customLink?.show);
 
 	$scope.openCharts = ds => deliveryServiceUtils.openCharts(ds);
 
-	$scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+	$scope.dsRequestsEnabled = !!(propertiesModel.properties.dsRequests?.enabled);
 
 	/**
 	 * Gods have mercy.
