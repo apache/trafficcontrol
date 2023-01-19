@@ -42,8 +42,8 @@ fi
 # cache-config tests need to ignore the testing directory
 if [ $TEST_NAME == "cache-config" ]; then
   go build -o cache-config/t3c-check-refs/ cache-config/t3c-check-refs/t3c-check-refs.go
-  go test --buildvcs=false $(go list ./cache-config/... | grep -v /testing/) -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
+  go test --buildvcs=false $(go list $INPUT_DIR | grep -v /testing/) -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
+else
+  go test --buildvcs=false $INPUT_DIR  -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
 fi
-
-go test --buildvcs=false $INPUT_DIR  -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
 exit $?
