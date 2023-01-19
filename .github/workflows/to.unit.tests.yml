@@ -25,22 +25,32 @@ on:
   push:
     paths:
       - .github/actions/go-test/**
-      - .github/workflows/to.unit.tests.yaml
+      - .github/workflows/to.unit.tests.yml
       - go.mod
       - go.sum
       - GO_VERSION
-      - traffic_ops/traffic_ops_golang/**.go
+      - grove/**.go
+      - lib/**.go
+      - traffic_monitor/**.go
+      - cache-config/**.go
+      - traffic_ops/**.go
+      - traffic_stats/**.go
       - vendor/**.go
       - vendor/modules.txt
   create:
   pull_request:
     paths:
       - .github/actions/go-test/**
-      - .github/workflows/to.unit.tests.yaml
+      - .github/workflows/to.unit.tests.yml
       - go.mod
       - go.sum
       - GO_VERSION
-      - traffic_ops/traffic_ops_golang/**.go
+      - grove/**.go
+      - lib/**.go
+      - traffic_monitor/**.go
+      - cache-config/**.go
+      - traffic_ops/**.go
+      - traffic_stats/**.go
       - vendor/**.go
       - vendor/modules.txt
     types: [opened, reopened, ready_for_review, synchronize]

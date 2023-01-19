@@ -25,7 +25,7 @@ on:
   push:
     paths:
       - .github/actions/go-test/**
-      - .github/workflows/traffic-stats.unit.tests.yaml
+      - .github/workflows/traffic-stats.unit.tests.yml
       - go.mod
       - go.sum
       - GO_VERSION
@@ -36,10 +36,15 @@ on:
   pull_request:
     paths:
       - .github/actions/go-test/**
-      - .github/workflows/traffic-stats.unit.tests.yaml
+      - .github/workflows/traffic-stats.unit.tests.yml
       - go.mod
       - go.sum
       - GO_VERSION
+      - grove/**.go
+      - lib/**.go
+      - traffic_monitor/**.go
+      - cache-config/**.go
+      - traffic_ops/**.go
       - traffic_stats/**.go
       - vendor/**.go
       - vendor/modules.txt
