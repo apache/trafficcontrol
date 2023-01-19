@@ -133,7 +133,7 @@ foreach my $server ( @{$jdataserver} ) {
 	next unless ( $server->{type} eq 'CCR' );
    DEBUG Dumper($server);
 
-	# next unless ( $server->{host_name} eq 'odol-ccr-chi-08');
+	# next unless ( $server->{host_name} eq 'odol-tr-chi-08');
 	my $new_ccr;
 	$new_ccr->{status}    = "OPERATIONAL";           # we are optimistic!
    $new_ccr->{cmsStatus} = $server->{status};

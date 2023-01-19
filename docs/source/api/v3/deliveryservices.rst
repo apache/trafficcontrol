@@ -78,7 +78,6 @@ Response Structure
 	.. deprecated:: ATCv3.0
 		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
-:ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:                 A :ref:`ds-check-path`
@@ -145,6 +144,7 @@ Response Structure
 :sslKeyVersion:         This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 :topology:              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trDnsTtl:              A :ref:`ds-dns-ttl`
 :trRequestHeaders:      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders:     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:                  The :ref:`ds-types` of this :term:`Delivery Service`
@@ -170,7 +170,6 @@ Response Structure
 		"active": true,
 		"anonymousBlockingEnabled": false,
 		"cacheurl": null,
-		"ccrDnsTtl": null,
 		"cdnId": 2,
 		"cdnName": "CDN-in-a-Box",
 		"checkPath": null,
@@ -238,6 +237,7 @@ Response Structure
 		"fqPacingRate": null,
 		"signingAlgorithm": null,
 		"tenant": "root",
+		"trDnsTtl": null,
 		"trResponseHeaders": null,
 		"trRequestHeaders": null,
 		"consistentHashRegex": null,
@@ -273,7 +273,6 @@ Request Structure
 	.. deprecated:: ATCv3.0
 		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
-:ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:                 A :ref:`ds-check-path`
 :consistentHashRegex:       A :ref:`ds-consistent-hashing-regex`
@@ -324,10 +323,11 @@ Request Structure
 :serviceCategory:           The name of the :ref:`ds-service-category` with which the :term:`Delivery Service` is associated - or ``null`` if there is to be no such category
 :signed:                    ``true`` if  and only if ``signingAlgorithm`` is not ``null``, ``false`` otherwise
 :signingAlgorithm:          Either a :ref:`ds-signing-algorithm` or ``null`` to indicate URL/URI signing is not implemented on this :term:`Delivery Service`
-:rangeSliceBlockSize:      An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).
+:rangeSliceBlockSize:       An integer that defines the byte block size for the ATS Slice Plugin. It can only and must be set if ``rangeRequestHandling`` is set to 3. It can only be between (inclusive) 262144 (256KB) - 33554432 (32MB).
 :sslKeyVersion:             This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:                  The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 :topology:                  The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trDnsTtl:                  A :ref:`ds-dns-ttl`
 :trRequestHeaders:          If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders:         If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:                      The :ref:`ds-types` of this :term:`Delivery Service`
@@ -388,7 +388,6 @@ Response Structure
 	.. deprecated:: ATCv3.0
 		This field has been deprecated in Traffic Control 3.x and is subject to removal in Traffic Control 4.x or later
 
-:ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:                 A :ref:`ds-check-path`
@@ -455,6 +454,7 @@ Response Structure
 :sslKeyVersion:         This integer indicates the :ref:`ds-ssl-key-version`
 :tenantId:              The integral, unique identifier of the :ref:`ds-tenant` who owns this :term:`Delivery Service`
 :topology:              The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trDnsTtl:              A :ref:`ds-dns-ttl`
 :trRequestHeaders:      If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders:     If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:                  The :ref:`ds-types` of this :term:`Delivery Service`
@@ -487,7 +487,6 @@ Response Structure
 			"active": false,
 			"anonymousBlockingEnabled": false,
 			"cacheurl": null,
-			"ccrDnsTtl": null,
 			"cdnId": 2,
 			"cdnName": "CDN-in-a-Box",
 			"checkPath": null,
@@ -547,6 +546,7 @@ Response Structure
 			"signed": false,
 			"sslKeyVersion": null,
 			"tenantId": 1,
+			"trDnsTtl": null,
 			"type": "HTTP",
 			"typeId": 1,
 			"xmlId": "test",

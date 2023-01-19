@@ -188,7 +188,6 @@ type DeliveryServiceV11 struct {
 	Active                   bool                   `json:"active"`
 	AnonymousBlockingEnabled bool                   `json:"anonymousBlockingEnabled"`
 	CacheURL                 string                 `json:"cacheurl"`
-	CCRDNSTTL                int                    `json:"ccrDnsTtl"`
 	CDNID                    int                    `json:"cdnId"`
 	CDNName                  string                 `json:"cdnName"`
 	CheckPath                string                 `json:"checkPath"`
@@ -235,6 +234,7 @@ type DeliveryServiceV11 struct {
 	Signed                   bool                   `json:"signed"`
 	TypeID                   int                    `json:"typeId"`
 	Type                     DSType                 `json:"type"`
+	TRDNSTTL                 int                    `json:"trDnsTtl"`
 	TRResponseHeaders        string                 `json:"trResponseHeaders"`
 	TenantID                 int                    `json:"tenantId"`
 	XMLID                    string                 `json:"xmlId"`
@@ -681,9 +681,9 @@ type DeliveryServiceNullableFieldsV11 struct {
 	// (e.g. Tor exit nodes) should be restricted from accessing the Delivery
 	// Service's content.
 	AnonymousBlockingEnabled *bool `json:"anonymousBlockingEnabled" db:"anonymous_blocking_enabled"`
-	// CCRDNSTTL sets the Time-to-Live - in seconds - for DNS responses for this
+	// TRDNSTTL sets the Time-to-Live - in seconds - for DNS responses for this
 	// Delivery Service from Traffic Router.
-	CCRDNSTTL *int `json:"ccrDnsTtl" db:"ccr_dns_ttl"`
+	TRDNSTTL *int `json:"trDnsTtl" db:"tr_dns_ttl"`
 	// CDNID is the integral, unique identifier for the CDN to which the
 	// Delivery Service belongs.
 	CDNID *int `json:"cdnId" db:"cdn_id"`

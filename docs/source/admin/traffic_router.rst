@@ -33,9 +33,6 @@ Requirements
 Installing Traffic Router
 =========================
 #. If no suitable :term:`Profile` exists, create a new :term:`Profile` for Traffic Router via the :guilabel:`+` button on the :ref:`tp-configure-profiles` page in Traffic Portal
-
-	.. warning:: Traffic Ops will *only* recognize a :term:`Profile` as assignable to a Traffic Router if its :ref:`profile-name` starts with the prefix ``ccr-``. The reason for this is a legacy limitation related to the old name for Traffic Router (Comcast Cloud Router), and will (hopefully) be rectified in the future.
-
 #. Enter the Traffic Router server into Traffic Portal on the :ref:`tp-configure-servers` page (or via the :ref:`to-api`), assign to it a Traffic Router :term:`Profile`, and ensure that its status is set to ``ONLINE``.
 #. Ensure the :abbr:`FQDN (Fully Qualified Domain Name)` of the Traffic Router is resolvable in DNS. This :abbr:`FQDN (Fully Qualified Domain Name)` must be resolvable by the clients expected to use this CDN.
 #. Install a Traffic Router server package, either from source or using a :file:`traffic_router-{version string}.rpm` package generated using the instructions in :ref:`dev-building`.

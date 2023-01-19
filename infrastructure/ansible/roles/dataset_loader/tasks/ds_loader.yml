@@ -60,7 +60,6 @@
     targetds:
       active: "{{ item.1.active | default(dl_ds_default_ds.active) | default(omit) }}"
       anonymousBlockingEnabled: "{{ item.1.anonymousBlockingEnabled | default(dl_ds_default_ds.anonymousBlockingEnabled) | default(omit) }}"
-      ccrDnsTtl: "{{ item.1.ccrDnsTtl | default(dl_ds_default_ds.ccrDnsTtl) | default(omit) }}"
       cdnId: "{{ Target_cdn_id | default(omit, true) }}"
       checkPath: "{{ item.1.checkPath | default(dl_ds_default_ds.checkPath) | default(omit) }}"
       deepCachingType: "{{ item.1.deepCachingType | default(dl_ds_default_ds.deepCachingType) | default(omit) }}"
@@ -105,6 +104,7 @@
       signingAlgorithm: "{{ item.1.signingAlgorithm | default(dl_ds_default_ds.signingAlgorithm) | default(omit) }}"
       sslKeyVersion: "{{ item.1.sslKeyVersion | default(dl_ds_default_ds.sslKeyVersion) | default(omit) }}"
       tenantId: "{{ tenant_id | default(omit, true) }}"
+      trDnsTtl: "{{ item.1.trDnsTtl | default(dl_ds_default_ds.trDnsTtl) | default(omit) }}"
       trRequestHeaders: "{{ item.1.trRequestHeaders | default(dl_ds_default_ds.trRequestHeaders) | default(omit) }}"
       trResponseHeaders: "{{ item.1.trResponseHeaders | default(dl_ds_default_ds.trResponseHeaders) | default(omit) }}"
       typeId: "{{ type_id | default(omit, true) }}"

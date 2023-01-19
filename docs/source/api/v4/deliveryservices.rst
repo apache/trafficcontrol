@@ -85,7 +85,6 @@ Response Structure
 ------------------
 :active:                   A boolean that defines :ref:`ds-active`.
 :anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
-:ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:                 A :ref:`ds-check-path`
@@ -163,6 +162,7 @@ Response Structure
 	.. versionadded:: 4.0
 
 :topology:          The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trDnsTtl:          The :ref:`ds-dns-ttl`
 :trRequestHeaders:  If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:              The :ref:`ds-types` of this :term:`Delivery Service`
@@ -190,7 +190,6 @@ Response Structure
 		{
 			"active": true,
 			"anonymousBlockingEnabled": false,
-			"ccrDnsTtl": null,
 			"cdnId": 2,
 			"cdnName": "CDN-in-a-Box",
 			"checkPath": null,
@@ -264,6 +263,7 @@ Response Structure
 			"tenantId": 1,
 			"tlsVersions": null,
 			"topology": "demo1-top",
+			"trDnsTtl": null,
 			"trResponseHeaders": null,
 			"trRequestHeaders": null,
 			"type": "DNS",
@@ -286,7 +286,6 @@ Request Structure
 -----------------
 :active:                   A boolean that defines :ref:`ds-active`.
 :anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
-:ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:                 A :ref:`ds-check-path`
 :consistentHashRegex:       A :ref:`ds-consistent-hashing-regex`
@@ -348,6 +347,7 @@ Request Structure
 	.. versionadded:: 4.0
 
 :topology:          The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trDnsTtl:          The :ref:`ds-dns-ttl`
 :trRequestHeaders:  If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:              The :ref:`ds-types` of this :term:`Delivery Service`
@@ -370,7 +370,6 @@ Request Structure
 	{
 		"active": false,
 		"anonymousBlockingEnabled": false,
-		"ccrDnsTtl": null,
 		"cdnId": 2,
 		"checkPath": null,
 		"consistentHashRegex": null,
@@ -430,6 +429,7 @@ Request Structure
 			"1.3"
 		],
 		"topology": null,
+		"trDnsTtl": null,
 		"trRequestHeaders": null,
 		"trResponseHeaders": null,
 		"type": "HTTP",
@@ -442,7 +442,6 @@ Response Structure
 ------------------
 :active:                   A boolean that defines :ref:`ds-active`.
 :anonymousBlockingEnabled: A boolean that defines :ref:`ds-anonymous-blocking`
-:ccrDnsTtl:                 The :ref:`ds-dns-ttl` - named "ccrDnsTtl" for legacy reasons
 :cdnId:                     The integral, unique identifier of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :cdnName:                   Name of the :ref:`ds-cdn` to which the :term:`Delivery Service` belongs
 :checkPath:                 A :ref:`ds-check-path`
@@ -520,6 +519,7 @@ Response Structure
 	.. versionadded:: 4.0
 
 :topology:          The unique name of the :term:`Topology` that this :term:`Delivery Service` is assigned to
+:trDnsTtl:          The :ref:`ds-dns-ttl`
 :trRequestHeaders:  If defined, this defines the :ref:`ds-tr-req-headers` used by Traffic Router for this :term:`Delivery Service`
 :trResponseHeaders: If defined, this defines the :ref:`ds-tr-resp-headers` used by Traffic Router for this :term:`Delivery Service`
 :type:              The :ref:`ds-types` of this :term:`Delivery Service`
@@ -557,7 +557,6 @@ Response Structure
 	"response": [{
 		"active": false,
 		"anonymousBlockingEnabled": false,
-		"ccrDnsTtl": null,
 		"cdnId": 2,
 		"cdnName": null,
 		"checkPath": null,
@@ -633,6 +632,7 @@ Response Structure
 			"1.3"
 		],
 		"topology": null,
+		"trDnsTtl": null,
 		"trResponseHeaders": null,
 		"trRequestHeaders": null,
 		"type": "HTTP",

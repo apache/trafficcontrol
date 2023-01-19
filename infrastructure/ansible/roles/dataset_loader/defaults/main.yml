@@ -1831,7 +1831,6 @@ dl_ds_lookup_rangeRequestHandling:
 dl_ds_default_ds:
   active: true
   anonymousBlockingEnabled: false
-  ccrDnsTtl: 3600
   checkPath: "/crossdomain.xml"
   deepCachingType: NEVER
   dscp: 0
@@ -1850,6 +1849,7 @@ dl_ds_default_ds:
   regionalGeoBlocking: false
   routingName: edge
   tenantName: root
+  trDnsTtl: 3600
   typeName: HTTP
   serveFromATS: true
   serveFromGrove: false

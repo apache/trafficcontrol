@@ -18,9 +18,6 @@
 	{% if targetds.anonymousBlockingEnabled is defined and targetds.anonymousBlockingEnabled is not none and targetds.anonymousBlockingEnabled != omit %}
   "anonymousBlockingEnabled": {{ targetds.anonymousBlockingEnabled | bool | lower }},
 	{% endif %}
-	{% if targetds.ccrDnsTtl is defined and targetds.ccrDnsTtl is not none and targetds.ccrDnsTtl != omit %}
-  "ccrDnsTtl": {{ targetds.ccrDnsTtl | int }},
-	{% endif %}
 	{% if targetds.cdnId is defined and targetds.cdnId is not none and targetds.cdnId != omit %}
   "cdnId":  {{ targetds.cdnId | int }},
 	{% endif %}
@@ -152,6 +149,9 @@
 	{% endif %}
 	{% if targetds.tenantId is defined and targetds.tenantId is not none and targetds.tenantId != omit %}
   "tenantId": {{ targetds.tenantId | int }},
+	{% endif %}
+	{% if targetds.trDnsTtl is defined and targetds.trDnsTtl is not none and targetds.trDnsTtl != omit %}
+  "trDnsTtl": {{ targetds.trDnsTtl | int }},
 	{% endif %}
 	{% if targetds.trRequestHeaders is defined and targetds.trRequestHeaders is not none and targetds.trRequestHeaders != omit %}
   "trRequestHeaders": "{{ targetds.trRequestHeaders }}",

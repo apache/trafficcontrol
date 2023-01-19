@@ -80,7 +80,7 @@
                   }
                 }
               }
-              ccrDnsTtl
+              trDnsTtl
               globalMaxTps
               globalMaxMbps
               longDesc

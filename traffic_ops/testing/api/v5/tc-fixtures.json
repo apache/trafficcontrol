@@ -343,7 +343,7 @@
             "requested": {
                 "active": "ACTIVE",
                 "cdnName": "cdn1",
-                "ccrDnsTtl": 30,
+                "trDnsTtl": 30,
                 "deepCachingType": "NEVER",
                 "displayName": "Good Kabletown CDN",
                 "dscp": 1,
@@ -373,7 +373,7 @@
             "requested": {
                 "active": "ACTIVE",
                 "cdnName": "cdn1",
-                "ccrDnsTtl": 30,
+                "trDnsTtl": 30,
                 "deepCachingType": "NEVER",
                 "displayName": "Good Kabletown CDN",
                 "dscp": 1,
@@ -403,7 +403,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -469,7 +469,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [
                 "fmt",
@@ -540,7 +540,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": null,
             "deepCachingType": "NEVER",
@@ -607,7 +607,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "deepCachingType": "NEVER",
             "displayName": "anymap-ds",
@@ -664,7 +664,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [
                 "a",
@@ -727,7 +727,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -793,7 +793,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -859,7 +859,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -925,7 +925,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -988,7 +988,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -1051,7 +1051,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -1113,7 +1113,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn2",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -1176,7 +1176,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -1239,7 +1239,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -1302,7 +1302,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn2",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -1364,7 +1364,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn2",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -1427,7 +1427,7 @@
         {
             "active": "PRIMED",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": [],
             "deepCachingType": "NEVER",
@@ -1518,7 +1518,7 @@
             "active": "PRIMED",
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl3",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": null,
             "deepCachingType": "NEVER",
@@ -1586,7 +1586,7 @@
             "active": "INACTIVE",
             "cdnName": "cdn1",
             "cacheurl": "cacheUrl3",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "consistentHashQueryParams": null,
             "deepCachingType": "NEVER",
@@ -1655,7 +1655,7 @@
         {
             "active": "ACTIVE",
             "cdnName": "cdn1",
-            "ccrDnsTtl": 3600,
+            "trDnsTtl": 3600,
             "checkPath": "",
             "deepCachingType": "NEVER",
             "displayName": "steering-ds",
