@@ -29,8 +29,7 @@ on:
       - go.mod
       - go.sum
       - GO_VERSION
-      - traffic_stats/**.go
-      - vendor/**.go
+      - '**.go'
       - vendor/modules.txt
   create:
   pull_request:
@@ -40,13 +39,7 @@ on:
       - go.mod
       - go.sum
       - GO_VERSION
-      - grove/**.go
-      - lib/**.go
-      - traffic_monitor/**.go
-      - cache-config/**.go
-      - traffic_ops/**.go
-      - traffic_stats/**.go
-      - vendor/**.go
+      - '**.go'
       - vendor/modules.txt
     types: [opened, reopened, ready_for_review, synchronize]
 
