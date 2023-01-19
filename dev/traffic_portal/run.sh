@@ -35,5 +35,5 @@ if [[ "$(id -u)" != "$uid" ]]; then
 	exec su "$user" -- "$0"
 fi
 
-npm ci
+npm i --save-dev
 ./node_modules/.bin/grunt
