@@ -116,6 +116,9 @@ export class NavigationService {
 				href: "/core/servers",
 				name: "Servers"
 			}, {
+				href: "/core/phys-locs",
+				name: "Physical Locations"
+			}, {
 				children: [{
 					href: "/core/cache-groups",
 					name: "Cache Groups"
@@ -125,25 +128,22 @@ export class NavigationService {
 				}, {
 					href: "/core/regions",
 					name: "Regions"
-				}, {
-					href: "/core/phys-locs",
-					name: "Physical Locations"
 				}],
-				name: "Cache Group Admin"
+				name: "Cache Groups"
 			}],
-			name: "Server Admin"
+			name: "Servers"
 		}, {
 			children: [{
 				href: "/core/users",
 				name: "Users"
 			}, {
 				href: "/core/me",
-				name: "Profile"
+				name: "My Profile"
 			}, {
 				href: "/core/tenants",
 				name: "Tenants"
 			}],
-			name: "User Admin"
+			name: "Users"
 		}, {
 			children: [{
 				href: "/core/change-logs",

@@ -204,7 +204,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	/** Options to pass into the AG-Grid object. */
 	public gridOptions: GridOptions;
 	/** Holds a reference to the AG-Grid API (once it has been initialized) */
-	private gridAPI!: GridApi;
+	public gridAPI!: GridApi;
 	/** Holds a reference to the AG-Grid Column API (once it has been initialized)  */
 	public columnAPI: ColumnApi | undefined;
 
@@ -256,7 +256,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		if (!this.columnAPI) {
 			return [];
 		}
-		return this.columnAPI.getAllColumns() ?? [];
+		return this.columnAPI.getColumns() ?? [];
 	}
 
 	/**
@@ -329,7 +329,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		try {
 			const colstates = localStorage.getItem(`${this.context}_table_columns`);
 			if (colstates) {
-				if (!this.columnAPI.setColumnState(JSON.parse(colstates))) {
+				if (!this.columnAPI.applyColumnState(JSON.parse(colstates))) {
 					console.error("Failed to load stored column state: one or more columns not found");
 				}
 			} else {

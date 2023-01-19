@@ -19,6 +19,7 @@ export class TpSidebarComponent implements OnInit {
 	public dataSource = new MatTreeNestedDataSource<TreeNavNode>();
 	public treeCtrl = new NestedTreeControl<TreeNavNode>(node => node.children);
 
+	public hidden = false;
 	private lastRoute = "";
 	private lastChild?: TreeNavNode;
 
@@ -54,7 +55,7 @@ export class TpSidebarComponent implements OnInit {
 	private mapChild(node: TreeNavNode): void {
 		if(node.children !== undefined) {
 			for(const child of node.children) {
-				this.childToParent.set(child.name, node);
+				this.childToParent.set(`${child.name}${child.href ?? ""}`, node);
 				this.mapChild(child);
 			}
 		}
@@ -66,6 +67,7 @@ export class TpSidebarComponent implements OnInit {
 	public ngOnInit(): void {
 		this.navService.sidebarHidden.subscribe(hidden => {
 			if(this.sidenav) {
+				this.hidden = hidden;
 				if(hidden && this.sidenav.opened) {
 					this.sidenav.close().catch(err => {
 						console.error(`Unable to close sidebar: ${err}`);
@@ -99,10 +101,11 @@ export class TpSidebarComponent implements OnInit {
 							child.active = true;
 							this.lastChild = child;
 							this.treeCtrl.expand(node);
-							let parent = this.childToParent.get(child.name);
-							while(parent !== undefined) {
+							let parent = this.childToParent.get(`${child.name}${child.href ?? ""}`);
+							let depth = 0;
+							while(parent !== undefined && depth++ < 5) {
 								this.treeCtrl.expand(parent);
-								parent = this.childToParent.get(parent.name);
+								parent = this.childToParent.get(`${parent.name}${parent.href ?? ""}`);
 							}
 							return;
 						}

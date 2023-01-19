@@ -28,6 +28,6 @@
 		</div>
 	</mat-sidenav-content>
 </mat-sidenav-container>
-<div class="expander" *ngIf="!sidenav.opened">
+<div class="expander" *ngIf="!sidenav.opened && !hidden">
 	<button type="button" mat-flat-button (click)="sidenav.toggle()" aria-label="Open the sidebar"><mat-icon>arrow_right_alt</mat-icon></button>
 </div>

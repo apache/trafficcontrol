@@ -13,6 +13,7 @@ mat-sidenav-container {
 			position: absolute;
 			bottom: 0;
 			left: 0;
+			width: 100%;
 		}
 
 		.mat-menu-item {
@@ -32,4 +33,16 @@ div.expander {
 	z-index: 10;
 	bottom: 50px;
 	left: 0;
+
+	animation: slide 0.75s forwards;
+}
+
+
+@keyframes slide {
+	from {
+		left: -50px;
+	}
+	to {
+		left: 0;
+	}
 }
