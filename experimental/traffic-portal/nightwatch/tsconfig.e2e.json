@@ -7,7 +7,6 @@
 		"types": [
 			"node",
 			"nightwatch"
-		],
-		"rootDirs": ["./page_objects", "./tests", "./globals"]
-	}
+		]
+	},
 }

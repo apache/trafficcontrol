@@ -16,7 +16,8 @@ import {
 	EnhancedSectionInstance,
 	NightwatchAPI
 } from "nightwatch";
-import { TableSectionCommands, TABLE_COMMANDS } from "nightwatch/globals/tables";
+
+import { TableSectionCommands, TABLE_COMMANDS } from "../../globals/tables";
 
 /**
  * Defines the commands for the servers table section.
