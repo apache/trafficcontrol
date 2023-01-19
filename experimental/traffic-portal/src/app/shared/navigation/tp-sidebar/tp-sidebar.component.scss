@@ -25,5 +25,11 @@ mat-sidenav-container {
 			padding-left: calc(.5em + 29px);
 		}
 	}
+}
 
+div.expander {
+	position: absolute;
+	z-index: 10;
+	bottom: 50px;
+	left: 0;
 }
