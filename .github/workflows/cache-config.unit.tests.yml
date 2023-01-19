@@ -46,7 +46,7 @@ on:
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
-  t3c_generate_unit_tests:
+  t3c_unit_tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
@@ -60,7 +60,7 @@ jobs:
           key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
       - name: Import cached Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Run T3C Generate unit tests
+      - name: Run T3C unit tests
         uses: ./.github/actions/go-test
         with:
           dir: ./cache-config/...
