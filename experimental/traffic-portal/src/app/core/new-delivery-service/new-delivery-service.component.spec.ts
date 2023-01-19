@@ -28,8 +28,8 @@ import {ReplaySubject} from "rxjs";
 import { APITestingModule } from "src/app/api/testing";
 import { Protocol } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
 import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
@@ -65,7 +65,7 @@ describe("NewDeliveryServiceComponent", () => {
 			],
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: TpHeaderService, useValue: headerSvc}
+				{ provide: NavigationService, useValue: headerSvc}
 			]
 		}).compileComponents();
 		// TestBed.overrideProvider(UserService, { useValue: mockAPIService });

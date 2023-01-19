@@ -14,22 +14,22 @@
 
 describe("DS Invalidation Jobs Spec", () => {
 	beforeEach(() => {
-		browser.page.deliveryServiceCard()
+		browser.page.deliveryServices.deliveryServiceCard()
 			.navigate()
 			.section.cards
 			.viewDetails(`testDS${browser.globals.uniqueString}`);
-		browser.page.deliveryServiceDetail()
+		browser.page.deliveryServices.deliveryServiceDetail()
 			.click("@invalidateJobs")
 			.assert.urlContains("invalidation-jobs");
 	});
 
 	it("Verify page", () => {
-		browser.page.deliveryServiceInvalidationJobs()
+		browser.page.deliveryServices.deliveryServiceInvalidationJobs()
 			.assert.enabled("@addButton");
 	});
 
 	it("Manage Job", async () => {
-		const page = browser.page.deliveryServiceInvalidationJobs();
+		const page = browser.page.deliveryServices.deliveryServiceInvalidationJobs();
 		const common = browser.page.common();
 		page
 			.click("@addButton");

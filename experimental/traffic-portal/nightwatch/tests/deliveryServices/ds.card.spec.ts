@@ -12,13 +12,18 @@
  * limitations under the License.
  */
 
-describe("Change Logs Spec", () => {
-	it("Filter by text", async () => {
-		const page = browser.page.changeLogs();
-		page.navigate()
-			.waitForElementPresent("input[name=fuzzControl]");
+describe("DS Card Spec", () => {
+	it("Verify expand test", async (): Promise<void> => {
+		await browser.page.deliveryServices.deliveryServiceCard()
+			.navigate()
+			.section.cards
+			.expandDS(`testDS${browser.globals.uniqueString}`);
+	});
 
-		page.section.changeLogsTable.searchText("test");
-		page.assert.urlContains("search=test");
+	it("Verify detail test", async (): Promise<void> => {
+		await browser.page.deliveryServices.deliveryServiceCard()
+			.navigate()
+			.section.cards
+			.viewDetails(`testDS${browser.globals.uniqueString}`);
 	});
 });

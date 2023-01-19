@@ -15,15 +15,15 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute, Router } from "@angular/router";
+import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { Division, ResponseDivision } from "trafficops-types";
+import { ResponseDivision } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * DivisionsTableComponent is the controller for the "Divisions" table.
@@ -37,10 +37,11 @@ export class DivisionsTableComponent implements OnInit {
 	/** List of divisions */
 	public divisions: Promise<Array<ResponseDivision>>;
 
-	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: TpHeaderService, private readonly router: Router,
+	constructor(private readonly route: ActivatedRoute, private readonly navSvc: NavigationService,
 		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.divisions = this.api.getDivisions();
+		this.navSvc.headerTitle.next("Divisions");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -57,7 +58,6 @@ export class DivisionsTableComponent implements OnInit {
 				console.error("Failed to get query parameters:", e);
 			}
 		);
-		this.headerSvc.headerTitle.next("Divisions");
 	}
 
 	/** Definitions of the table's columns according to the ag-grid API */
@@ -78,10 +78,9 @@ export class DivisionsTableComponent implements OnInit {
 	];
 
 	/** Definitions for the context menu items (which act on augmented division data). */
-	public contextMenuItems: Array<ContextMenuItem<Division>> = [
+	public contextMenuItems: Array<ContextMenuItem<ResponseDivision>> = [
 		{
-			action: "edit",
-			multiRow: false,
+			href: (div: ResponseDivision): string => `core/division/${div.id}`,
 			name: "Edit"
 		},
 		{
@@ -90,8 +89,7 @@ export class DivisionsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			action: "viewRegions",
-			multiRow: false,
+			href: (div: ResponseDivision): string => `core/regions?search=${div.name}`,
 			name: "View Regions"
 		}
 	];
@@ -125,11 +123,6 @@ export class DivisionsTableComponent implements OnInit {
 					}
 				});
 				break;
-			case "edit":
-				await this.router.navigate(["/core/division", data.id]);
-				break;
-			case "viewRegions":
-				console.log("Regions not implemented");
 		}
 	}
 }

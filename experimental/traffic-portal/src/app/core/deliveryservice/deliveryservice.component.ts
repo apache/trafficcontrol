@@ -20,7 +20,7 @@ import { Subject } from "rxjs";
 import { DeliveryServiceService } from "src/app/api";
 import type { DataPoint, DataSet, DeliveryService } from "src/app/models";
 import { AlertService } from "src/app/shared/alert/alert.service";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * DeliveryserviceComponent is the controller for a single Delivery Service's
@@ -87,7 +87,7 @@ export class DeliveryserviceComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly api: DeliveryServiceService,
 		private readonly alerts: AlertService,
-		private readonly headerSvc: TpHeaderService
+		private readonly navSvc: NavigationService
 	) {
 		this.bandwidthData.next([{
 			backgroundColor: "#BA3C57",
@@ -128,7 +128,7 @@ export class DeliveryserviceComponent implements OnInit {
 				this.deliveryservice = d;
 				this.loadBandwidth();
 				this.loadTPS();
-				this.headerSvc.headerTitle.next(d.displayName);
+				this.navSvc.headerTitle.next(d.displayName);
 
 				this.api.getSteering().then(configs => {
 					configs.forEach(config => {

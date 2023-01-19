@@ -18,7 +18,7 @@ import { MatMenuModule } from "@angular/material/menu";
 import { RouterModule } from "@angular/router";
 
 import { AppUIModule } from "src/app/app.ui.module";
-import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 import { TpSidebarComponent } from "src/app/shared/navigation/tp-sidebar/tp-sidebar.component";
 
 import { AlertComponent } from "./alert/alert.component";
@@ -36,7 +36,6 @@ import { EmailCellRendererComponent } from "./table-components/email-cell-render
 import { SSHCellRendererComponent } from "./table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { TelephoneCellRendererComponent } from "./table-components/telephone-cell-renderer/telephone-cell-renderer.component";
 import { UpdateCellRendererComponent } from "./table-components/update-cell-renderer/update-cell-renderer.component";
-import { TpHeaderComponent } from "./tp-header/tp-header.component";
 import { TreeSelectComponent } from "./tree-select/tree-select.component";
 import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 

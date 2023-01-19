@@ -11,13 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import type { UsersPageObject } from "nightwatch/page_objects/users";
+import type { UsersPageObject } from "nightwatch/page_objects/users/users";
 
 describe("Users Spec", () => {
 	it("Filter by username", async () => {
 		const username = browser.globals.adminUser;
 
-		const page: UsersPageObject = browser.page.users();
+		const page: UsersPageObject = browser.page.users.users();
 		page.navigate()
 			.waitForElementPresent(".ag-row");
 		let tbl = page.section.usersTable;

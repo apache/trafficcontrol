@@ -72,8 +72,8 @@ export const ROUTES: Routes = [
 	{ component: TenantsComponent, path: "tenants"},
 	{ component: ChangeLogsComponent, path: "change-logs" },
 	{ component: TenantDetailsComponent, path: "tenants/:id"},
-	{ component: PhysLocDetailComponent, path: "phys-loc/:id" },
-	{ component: PhysLocTableComponent, path: "phys-loc" },
+	{ component: PhysLocDetailComponent, path: "phys-locs/:id" },
+	{ component: PhysLocTableComponent, path: "phys-locs" },
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**

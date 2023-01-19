@@ -18,7 +18,7 @@ import { faPlus, faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons"
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
 import { defaultDeliveryService, type DeliveryService, type InvalidationJob } from "src/app/models";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
@@ -59,7 +59,7 @@ export class InvalidationJobsComponent implements OnInit {
 		private readonly jobAPI: InvalidationJobService,
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly dialog: MatDialog,
-		private readonly headerSvc: TpHeaderService
+		private readonly navSvc: NavigationService
 	) {
 		this.deliveryservice = {...defaultDeliveryService};
 		this.jobs = new Array<InvalidationJob>();
@@ -70,7 +70,7 @@ export class InvalidationJobsComponent implements OnInit {
 	 * Traffic Ops and setting the pageload date/time.
 	 */
 	public ngOnInit(): void {
-		this.headerSvc.headerTitle.next("Loading - Content Invalidation Jobs");
+		this.navSvc.headerTitle.next("Loading - Content Invalidation Jobs");
 		this.now = new Date();
 		const idParam = this.route.snapshot.paramMap.get("id");
 		if (!idParam) {
@@ -86,7 +86,7 @@ export class InvalidationJobsComponent implements OnInit {
 		this.dsAPI.getDeliveryServices(this.dsID).then(
 			r => {
 				this.deliveryservice = r;
-				this.headerSvc.headerTitle.next(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
+				this.navSvc.headerTitle.next(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
 			}
 		);
 	}

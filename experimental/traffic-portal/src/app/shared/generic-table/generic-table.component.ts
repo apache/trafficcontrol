@@ -502,6 +502,37 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	}
 
 	/**
+	 * Handle context menu link clicks
+	 *
+	 * @param evt html event
+	 * @param i context menu item being clicked
+	 */
+	public clickContextMenu(evt: Event, i: ContextMenuLink<T>): void {
+		// Default html handler is sufficient
+		if(i.newTab) {
+			return;
+		}
+		evt.preventDefault();
+		evt.stopPropagation();
+
+		const href = this.href(i);
+		if(href.indexOf("?") === -1) {
+			this.router.navigate([href]);
+		} else {
+			const path = href.split("?")[0];
+			const params = href.split("?")[1].split("&");
+			const extraParams: {[key: string]: string} = {};
+			params.forEach(param => {
+				const pieces = param.split("=");
+				extraParams[pieces[0]] =  pieces[1];
+			});
+
+			this.router.navigate([path], {queryParams: extraParams});
+		}
+
+	}
+
+	/**
 	 * Handles opening the context menu when a table cell is right-clicked.
 	 *
 	 * @param params The AG-Grid-emitted event.
@@ -629,7 +660,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * Builds a link for a link context menu item.
+	 * Builds a link for a link context menu item. Used to prevent page reload when navigating on the same tab.
 	 *
 	 * @param item The item being constructed into a link.
 	 * @returns A URL or router path as determined by the settings of `item`.

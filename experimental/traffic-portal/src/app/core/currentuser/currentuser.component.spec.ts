@@ -22,8 +22,8 @@ import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import type { CurrentUser } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
 import { CurrentuserComponent } from "./currentuser.component";
 
@@ -78,7 +78,7 @@ describe("CurrentuserComponent", () => {
 						})
 					}
 				},
-				{ provide: TpHeaderService, useValue: headerSvc}
+				{ provide: NavigationService, useValue: headerSvc}
 			]
 		});
 		TestBed.compileComponents();

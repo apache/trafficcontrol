@@ -13,24 +13,23 @@
  */
 
 import { EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI } from "nightwatch";
-
-import { TABLE_COMMANDS, TableSectionCommands } from "../globals/tables";
-
-/**
- * Defines the Divisions table commands
- */
-type DivisionsTableCommands = TableSectionCommands;
+import { TABLE_COMMANDS, TableSectionCommands } from "nightwatch/globals/tables";
 
 /**
- * Defines the Page Object for the Divisions page.
+ * Defines the Regions table commands
  */
-export type DivisionsPageObject = EnhancedPageObject<{}, {},
-EnhancedSectionInstance<DivisionsTableCommands>>;
+type RegionsTableCommands = TableSectionCommands;
 
-const divisionsPageObject = {
+/**
+ * Defines the Page Object for the Regions page.
+ */
+export type RegionsPageObject = EnhancedPageObject<{}, {},
+EnhancedSectionInstance<RegionsTableCommands>>;
+
+const regionsPageObject = {
 	api: {} as NightwatchAPI,
 	sections: {
-		divisionsTable: {
+		regionsTable: {
 			commands: {
 				...TABLE_COMMANDS
 			},
@@ -39,8 +38,8 @@ const divisionsPageObject = {
 		}
 	},
 	url(): string {
-		return `${this.api.launchUrl}/core/divisions`;
+		return `${this.api.launchUrl}/core/regions`;
 	}
 };
 
-export default divisionsPageObject;
+export default regionsPageObject;

@@ -14,14 +14,14 @@
 
 describe("DS Detail Spec", () => {
 	beforeEach(() => {
-		browser.page.deliveryServiceCard()
+		browser.page.deliveryServices.deliveryServiceCard()
 			.navigate()
 			.section.cards
 			.viewDetails(browser.globals.testData.ds.xmlId);
 	});
 
 	it("Verify page test", (): void => {
-		const page = browser.page.deliveryServiceDetail();
+		const page = browser.page.deliveryServices.deliveryServiceDetail();
 		page.assert.visible("@bandwidthChart")
 			.assert.visible("@tpsChart")
 			.assert.enabled("@invalidateJobs");
@@ -35,7 +35,7 @@ describe("DS Detail Spec", () => {
 	});
 
 	it("Default values test", (): void => {
-		const page = browser.page.deliveryServiceDetail();
+		const page = browser.page.deliveryServices.deliveryServiceDetail();
 		const now = new Date();
 		const nowString = now.toISOString();
 		const date = nowString.split("T")[0];
@@ -50,15 +50,15 @@ describe("DS Detail Spec", () => {
 	});
 
 	it("Is steering target test", (): void => {
-		let page = browser.page.deliveryServiceDetail();
+		let page = browser.page.deliveryServices.deliveryServiceDetail();
 		page.section.dateInputForm
 			.assert.visible("@steeringIcon");
 
-		browser.page.deliveryServiceCard()
+		browser.page.deliveryServices.deliveryServiceCard()
 			.navigate()
 			.section.cards
 			.viewDetails(browser.globals.testData.steeringDS.xmlId);
-		page = browser.page.deliveryServiceDetail();
+		page = browser.page.deliveryServices.deliveryServiceDetail();
 		page.section.dateInputForm
 			.assert.not.visible("@steeringIcon");
 	});

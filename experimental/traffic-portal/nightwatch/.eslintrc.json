@@ -17,7 +17,7 @@
 		{
 			"parserOptions": {
 				"project": [
-					"tsconfig.e2e.json"
+					"./nightwatch/tsconfig.e2e.json"
 				]
 			},
 			"files": [

@@ -12,9 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import { Event, Router, RouterEvent } from "@angular/router";
 import { ReplaySubject } from "rxjs";
-import { filter } from "rxjs/operators";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -25,7 +23,7 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 export declare type HeaderNavType = "anchor" | "button";
 
 /**
- * Specifies the setting for the nav
+ * Specifies the settings for the header nav
  */
 export interface HeaderNavigation {
 	type: HeaderNavType;
@@ -35,7 +33,11 @@ export interface HeaderNavigation {
 	text: string;
 }
 
+/**
+ * Specifies the settings for the sidebar nav
+ */
 export interface TreeNavNode {
+	active?: boolean | undefined;
 	name: string;
 	children?: Array<TreeNavNode> | undefined;
 	href?: string | undefined;
@@ -43,7 +45,7 @@ export interface TreeNavNode {
 }
 
 /**
- *
+ * NavigationService handles loading data to be used for navigation in the header and sidebar.
  */
 @Injectable({
 	providedIn: "root"
@@ -60,9 +62,7 @@ export class NavigationService {
 	private readonly horizontalNavs: Map<string, HeaderNavigation>;
 	private readonly verticalNavs: Map<string, HeaderNavigation>;
 
-	private lastRoute: string = "";
-
-	constructor(private readonly auth: CurrentUserService, private readonly api: UserService, private readonly route: Router) {
+	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
 		this.horizontalNavs = new Map<string, HeaderNavigation>([
 			["Home", {
 				routerLink: "/core",
@@ -89,13 +89,6 @@ export class NavigationService {
 					text: "Profile",
 					type: "anchor"
 				}],
-			["Tenants",
-				{
-					routerLink: "/core/tenants",
-					text: "Tenants",
-					type: "anchor",
-					visible: (): boolean => this.hasPermission("TENANT:READ"),
-				}],
 			["Logout",
 				{
 					click: async (): Promise<void> => this.logout(),
@@ -106,6 +99,7 @@ export class NavigationService {
 		this.horizontalNavsUpdated = new ReplaySubject(1);
 		this.verticalNavsUpdated = new ReplaySubject(1);
 		this.headerTitle = new ReplaySubject(1);
+		this.headerTitle.next("Welcome to Traffic Portal!");
 		this.headerHidden = new ReplaySubject(1);
 		this.headerHidden.next(false);
 		this.horizontalNavsUpdated.next(this.buildHorizontalNavs());
@@ -132,7 +126,7 @@ export class NavigationService {
 					href: "/core/regions",
 					name: "Regions"
 				}, {
-					href: "core/phys-loc",
+					href: "/core/phys-locs",
 					name: "Physical Locations"
 				}],
 				name: "Cache Group Admin"
@@ -157,17 +151,6 @@ export class NavigationService {
 			}],
 			name: "Other"
 		}]);
-
-		this.route.events.pipe(
-			filter((e: Event): e is RouterEvent => e instanceof RouterEvent)
-		).subscribe((e: RouterEvent) => {
-			const path = e.url.split("?")[0];
-			if(path !== this.lastRoute) {
-				console.log("url change");
-				this.lastRoute = path;
-			}
-		});
-
 	}
 
 	/**

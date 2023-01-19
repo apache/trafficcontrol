@@ -1,11 +1,18 @@
 mat-sidenav-container {
-	height: 100%;
+	height: calc(100% - 3.9em);
 
 	mat-sidenav {
-		//width: 10em;
+		min-width: 10em;
 
 		.mat-icon {
 			margin-right: 0;
+		}
+
+
+		div.bottom {
+			position: absolute;
+			bottom: 0;
+			left: 0;
 		}
 
 		.mat-menu-item {

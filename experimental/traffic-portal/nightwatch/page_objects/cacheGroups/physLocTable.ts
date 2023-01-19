@@ -13,24 +13,23 @@
  */
 
 import { EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI } from "nightwatch";
-
-import { TABLE_COMMANDS, TableSectionCommands } from "../globals/tables";
-
-/**
- * Defines the Regions table commands
- */
-type RegionsTableCommands = TableSectionCommands;
+import { TABLE_COMMANDS, TableSectionCommands } from "nightwatch/globals/tables";
 
 /**
- * Defines the Page Object for the Regions page.
+ * Defines the PhysLocs table commands
  */
-export type RegionsPageObject = EnhancedPageObject<{}, {},
-EnhancedSectionInstance<RegionsTableCommands>>;
+type PhysLocsTableCommands = TableSectionCommands;
 
-const regionsPageObject = {
+/**
+ * Defines the Page Object for the PhysLocs page.
+ */
+export type PhysLocTablePageObject = EnhancedPageObject<{}, {},
+EnhancedSectionInstance<PhysLocsTableCommands>>;
+
+const physLocsPageObject = {
 	api: {} as NightwatchAPI,
 	sections: {
-		regionsTable: {
+		physLocsTable: {
 			commands: {
 				...TABLE_COMMANDS
 			},
@@ -39,8 +38,8 @@ const regionsPageObject = {
 		}
 	},
 	url(): string {
-		return `${this.api.launchUrl}/core/regions`;
+		return `${this.api.launchUrl}/core/phys-locs`;
 	}
 };
 
-export default regionsPageObject;
+export default physLocsPageObject;

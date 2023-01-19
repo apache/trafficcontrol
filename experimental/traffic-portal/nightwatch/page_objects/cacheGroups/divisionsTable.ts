@@ -13,24 +13,23 @@
  */
 
 import { EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI } from "nightwatch";
-
-import { TABLE_COMMANDS, TableSectionCommands } from "../globals/tables";
-
-/**
- * Defines the Tenants table commands
- */
-type TenantsTableCommands = TableSectionCommands;
+import { TABLE_COMMANDS, TableSectionCommands } from "nightwatch/globals/tables";
 
 /**
- * Defines the Page Object for the Tenants page.
+ * Defines the Divisions table commands
  */
-export type TenantsPageObject = EnhancedPageObject<{}, {},
-EnhancedSectionInstance<TenantsTableCommands>>;
+type DivisionsTableCommands = TableSectionCommands;
 
-const tenantsPageObject = {
+/**
+ * Defines the Page Object for the Divisions page.
+ */
+export type DivisionsPageObject = EnhancedPageObject<{}, {},
+EnhancedSectionInstance<DivisionsTableCommands>>;
+
+const divisionsPageObject = {
 	api: {} as NightwatchAPI,
 	sections: {
-		tenantsTable: {
+		divisionsTable: {
 			commands: {
 				...TABLE_COMMANDS
 			},
@@ -39,8 +38,8 @@ const tenantsPageObject = {
 		}
 	},
 	url(): string {
-		return `${this.api.launchUrl}/core/tenants`;
+		return `${this.api.launchUrl}/core/divisions`;
 	}
 };
 
-export default tenantsPageObject;
+export default divisionsPageObject;

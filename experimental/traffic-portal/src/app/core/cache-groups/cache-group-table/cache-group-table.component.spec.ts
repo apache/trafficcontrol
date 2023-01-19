@@ -32,7 +32,7 @@ import { CacheGroupService, CDNService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { AlertService } from "src/app/shared/alert/alert.service";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { CacheGroupTableComponent } from "./cache-group-table.component";
 
@@ -59,7 +59,7 @@ describe("CacheGroupTableComponent", () => {
 	let fixture: ComponentFixture<CacheGroupTableComponent>;
 	let loader: HarnessLoader;
 
-	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+	const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ CacheGroupTableComponent ],
@@ -73,7 +73,7 @@ describe("CacheGroupTableComponent", () => {
 				MatSelectModule
 			],
 			providers: [
-				{ provide: TpHeaderService, useValue: headerSvc},
+				{ provide: NavigationService, useValue: navSvc}
 			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(CacheGroupTableComponent);

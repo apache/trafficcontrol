@@ -14,7 +14,7 @@
 
 describe("Division Detail Spec", () => {
 	it("Test division", () => {
-		const page = browser.page.divisionDetail();
+		const page = browser.page.cacheGroups.divisionDetail();
 		browser.url(`${page.api.launchUrl}/core/divisions/${browser.globals.testData.division.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
@@ -28,7 +28,7 @@ describe("Division Detail Spec", () => {
 	});
 
 	it("New division", () => {
-		const page = browser.page.divisionDetail();
+		const page = browser.page.cacheGroups.divisionDetail();
 		browser.url(`${page.api.launchUrl}/core/divisions/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")

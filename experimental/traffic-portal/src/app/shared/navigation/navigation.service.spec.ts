@@ -24,7 +24,7 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 import { HeaderNavigation, NavigationService } from "src/app/shared/navigation/navigation.service";
 import { type TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
-describe("TpHeaderService", () => {
+describe("NavigationService", () => {
 	let service: NavigationService;
 	let mockHeaderComp: jasmine.SpyObj<TpHeaderComponent>;
 	let logOutSpy: jasmine.Spy;

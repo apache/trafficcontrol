@@ -12,9 +12,9 @@
  * limitations under the License.
  */
 
-describe("Divisions Spec", () => {
+describe("PhysLocs Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.cacheGroups.divisionsTable().navigate()
+		browser.page.cacheGroups.physLocTable().navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);
