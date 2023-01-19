@@ -38,12 +38,14 @@ if ! [ -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]; then
 	go mod vendor
 fi
 
+export GOFLAGS="-buildvcs=false"
+
 # t3c-check-refs requires a binary in order to test
 # cache-config tests need to ignore the testing directory
 if [ $TEST_NAME == "cache-config" ]; then
-  go build --buildvcs=false -o ./cache-config/t3c-check-refs/ ./cache-config/t3c-check-refs/t3c-check-refs.go
-  go test --buildvcs=false $(go list $INPUT_DIR | grep -v /testing/) -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
+  go build -o ./cache-config/t3c-check-refs/ ./cache-config/t3c-check-refs/t3c-check-refs.go
+  go test $(go list $INPUT_DIR | grep -v /testing/) -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
 else
-  go test --buildvcs=false $INPUT_DIR  -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
+  go test $INPUT_DIR -coverpkg=$INPUT_DIR -coverprofile="$TEST_NAME-coverage.out"
 fi
 exit $?
