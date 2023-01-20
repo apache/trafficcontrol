@@ -256,7 +256,7 @@ describe("CacheGroupTableComponent", () => {
 			return fail(`dialog should have opened for deleting, actual number of dialogs: ${dialogs.length}`);
 		}
 		let dialog = dialogs[0];
-		dialog.close();
+		await dialog.close();
 		expect(spy).not.toHaveBeenCalled();
 
 		component.handleContextMenu({action: "delete", data: sampleCG});
