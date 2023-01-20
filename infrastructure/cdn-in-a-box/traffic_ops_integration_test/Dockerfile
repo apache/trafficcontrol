@@ -46,7 +46,7 @@ WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 RUN go mod vendor -v
 
 RUN set -o errexit -o xtrace;\
-    for api_version in v{3..5}; do\
+    for api_version in v3 v4 v5; do\
         go test -c ./$api_version -ldflags="-w -s" -o traffic_ops_${api_version}_integration_test;\
     done
 
