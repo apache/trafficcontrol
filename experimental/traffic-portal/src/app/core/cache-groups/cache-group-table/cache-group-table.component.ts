@@ -48,7 +48,7 @@ import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 export class CacheGroupTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
-	public readonly cacheGroups: Promise<Array<ResponseCacheGroup>>;
+	public cacheGroups: Promise<Array<ResponseCacheGroup>>;
 
 	/** All of the CDNs (on which a user might (de/)queue updates). */
 	public readonly cdns: Promise<Array<ResponseCDN>>;
@@ -268,7 +268,8 @@ export class CacheGroupTableComponent implements OnInit {
 			}
 		});
 		if (await ref.afterClosed().toPromise()) {
-			this.api.deleteCacheGroup(cg);
+			await this.api.deleteCacheGroup(cg);
+			this.cacheGroups = this.api.getCacheGroups();
 		}
 	}
 
