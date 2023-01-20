@@ -32,6 +32,7 @@ Apache Traffic Control allows you to build a large scale content delivery networ
 [![Youtube Subscribe](https://img.shields.io/youtube/channel/subscribers/UC2zEj6sERinzx8w8uvyRBYg?style=social&label=Apache%20Traffic%20Control)](https://www.youtube.com/channel/UC2zEj6sERinzx8w8uvyRBYg)
 
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/apache/trafficcontrol)](https://github.com/apache/trafficcontrol/releases)
+![Github commits since release](https://img.shields.io/github/commits-since/apache/trafficcontrol/RELEASE-7.0.1/master)
 
 
 __Build Status__ [^1]
