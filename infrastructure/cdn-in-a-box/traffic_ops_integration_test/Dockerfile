@@ -46,7 +46,7 @@ WORKDIR /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api
 RUN go mod vendor -v
 
 RUN set -o errexit -o xtrace;\
-    for api_version in v3 v4; do\
+    for api_version in v{3..5}; do\
         go test -c ./$api_version -ldflags="-w -s" -o traffic_ops_${api_version}_integration_test;\
     done
 
@@ -71,9 +71,11 @@ COPY ./infrastructure/cdn-in-a-box/traffic_ops/to-access.sh /opt/integration/app
 COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/integration/app/
 COPY ./traffic_ops/testing/api/v3/tc-fixtures.json /opt/integration/app/tc-fixtures-v3.json
 COPY ./traffic_ops/testing/api/v4/tc-fixtures.json /opt/integration/app/tc-fixtures-v4.json
+COPY ./traffic_ops/testing/api/v5/tc-fixtures.json /opt/integration/app/tc-fixtures-v5.json
 COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v3_integration_test \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v4_integration_test \
+    /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v5_integration_test \
     /opt/integration/app/
 
 COPY --from=integration-builder \
