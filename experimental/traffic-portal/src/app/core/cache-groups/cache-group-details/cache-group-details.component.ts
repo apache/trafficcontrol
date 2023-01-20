@@ -103,7 +103,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 		const cgsPromise = this.api.getCacheGroups().then(cgs => this.cacheGroups = cgs);
 		const typePromise = this.typesAPI.getTypesInTable("cachegroup").then(ts => this.types = ts);
 		if (ID === "new") {
-			this.header.headerTitle.next("New Cache Group");
+			this.setTitle();
 			this.new = true;
 			await Promise.all([typePromise, cgsPromise]);
 			return;
@@ -115,15 +115,25 @@ export class CacheGroupDetailsComponent implements OnInit {
 
 		const idx = this.cacheGroups.findIndex(c => c.id === numID);
 		if (idx < 0) {
-			console.error(`no such Cache Group: #${ID} - cachegroups: ${this.cacheGroups.length}`);
+			console.error(`no such Cache Group: #${ID}`);
 			return;
 		}
 		await cgsPromise;
 		this.cacheGroup = this.cacheGroups.splice(idx, 1)[0];
 		this.typeCtrl.setValue(this.cacheGroup.typeId);
 		this.updateLocalizationMethods();
-		this.header.headerTitle.next(`Cache Group: ${this.cacheGroup.name}`);
+		this.setTitle();
 		await typePromise;
+	}
+
+	/**
+	 * Sets the title of the page to either "new" or the name of the displayed
+	 * Cache Group, depending on the value of
+	 * {@link CacheGroupDetailsComponent.new}.
+	 */
+	private setTitle(): void {
+		const title = this.new ? "New Cache Group" : `Cache Group: ${this.cacheGroup.name}`;
+		this.header.headerTitle.next(title);
 	}
 
 	/**
@@ -182,7 +192,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 		ref.afterClosed().subscribe(result => {
 			if (result) {
 				this.api.deleteCacheGroup(this.cacheGroup);
-				this.location.back();
+				this.location.replaceState("core/cache-groups");
 			}
 		});
 	}
@@ -208,9 +218,11 @@ export class CacheGroupDetailsComponent implements OnInit {
 		if (this.new) {
 			this.cacheGroup = await this.api.createCacheGroup(this.cacheGroup);
 			this.new = false;
+			this.location.replaceState(`core/cache-groups/${this.cacheGroup.id}`);
 		} else {
 			this.cacheGroup = await this.api.updateCacheGroup(this.cacheGroup);
 		}
+		this.setTitle();
 	}
 
 	/**
