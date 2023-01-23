@@ -440,4 +440,36 @@ func TestNoOpWhenNoPermissionsRequired(t *testing.T) {
 	}
 }
 
-// TODO: TestWrapAccessLog, et. al
+func TestGetCookieToken(t *testing.T) {
+	var cookies []http.Cookie
+	var e bytes.Buffer
+
+	mojoCookie := http.Cookie{Name: "mojolicious", Value: "eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE2NzQyNTY4MjEsImJ5IjoidHJhZmZpY2NvbnRyb2wtZ28tdG9jb29raWUifQ--f7f40f516bfedc888d0ac6bc3c373b21773d1765"}
+	accessToken := http.Cookie{Name: "access_token", Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQyNTY4MjEsIm1vam9Db29raWUiOiJleUpoZFhSb1gyUmhkR0VpT2lKaFpHMXBiaUlzSW1WNGNHbHlaWE1pT2pFMk56UXlOVFk0TWpFc0ltSjVJam9pZEhKaFptWnBZMk52Ym5SeWIyd3RaMjh0ZEc5amIyOXJhV1VpZlEtLWY3ZjQwZjUxNmJmZWRjODg4ZDBhYzZiYzNjMzczYjIxNzczZDE3NjUifQ.41te1VWlSzHCiH77nZjdqtGQNgc-ad6HwRi5cyffTGc"}
+	bearerToken := "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQ1MjU0OTcsIm1vam9Db29raWUiOiJleUpoZFhSb1gyUmhkR0VpT2lKaFpHMXBiaUlzSW1WNGNHbHlaWE1pT2pFMk56UTFNalUwT1Rjc0ltSjVJam9pZEhKaFptWnBZMk52Ym5SeWIyd3RaMjh0ZEc5amIyOXJhV1VpZlEtLTlmODI1Yzk5MDJhYTU5NDI1ZTQwYzJhYzcyNjhiZTI4NDMyMTg4ZjEifQ.szYraBtmKQ0UB13G6C3WUDcix1kZQyn4uqv27qy0_vY"
+	cookies = append(cookies, mojoCookie, accessToken, http.Cookie{})
+
+	r, err := http.NewRequest("GET", "https://localhost:8888", nil)
+	if err == nil && r != nil {
+		for i := range cookies {
+			if cookies[i].Name != "" {
+				r.AddCookie(&cookies[i])
+				cookie := getCookieToken(r)
+				if cookie != mojoCookie.Value && cookies[i].Name == "mojolicious" {
+					e.WriteString("Error: Unable to get mojolicious cookie. ")
+				} else if cookie != mojoCookie.Value && cookies[i].Name == "access_token" {
+					e.WriteString("Error: Unable to get mojolicious cookie from Access Token. ")
+				}
+			} else {
+				r.Header.Add("Authorization", bearerToken)
+				cookie := getCookieToken(r)
+				if cookie != mojoCookie.Value {
+					e.WriteString("Error: Unable to get cookie from Bearer Token.")
+				}
+			}
+		}
+	}
+	if e.String() != "" {
+		t.Error(e.String())
+	}
+}

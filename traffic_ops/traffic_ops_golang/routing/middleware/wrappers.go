@@ -194,7 +194,7 @@ func getCookieToken(r *http.Request) string {
 	if err == nil && cookie != nil {
 		return cookie.Value
 	} else if r.Header.Get(rfc.Cookie) != "" && strings.Contains(r.Header.Get(rfc.Cookie), tocookie.AccessToken) {
-		cookie, err := r.Cookie("access_token")
+		cookie, err := r.Cookie(tocookie.AccessToken)
 		if err == nil && cookie != nil {
 			decodedToken, err := jwt.Parse([]byte(cookie.Value))
 			if err == nil && cookie != nil {
@@ -208,7 +208,7 @@ func getCookieToken(r *http.Request) string {
 		}
 		decodedToken, err := jwt.Parse([]byte(givenTokenSplit[1]))
 		if err == nil && decodedToken != nil {
-			return fmt.Sprintf("%s", decodedToken.PrivateClaims()["mojoCookie"])
+			return fmt.Sprintf("%s", decodedToken.PrivateClaims()[tocookie.MojoCookie])
 		}
 		return givenTokenSplit[1]
 	}
@@ -227,7 +227,7 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		if userErr == nil && sysErr == nil {
 			user = cookie.AuthData
 		} else {
-			log.Errorf("Error retrieving user:\nUser Error: %v\nSystem Error %v\n", userErr, sysErr)
+			log.Errorf("Error retrieving user from cookie: User Error: %v System Error: %v", userErr, sysErr)
 		}
 		start := time.Now()
 		defer func() {
