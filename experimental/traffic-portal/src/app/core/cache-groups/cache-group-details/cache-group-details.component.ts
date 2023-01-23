@@ -113,12 +113,12 @@ export class CacheGroupDetailsComponent implements OnInit {
 			throw new Error(`route parameter 'id' was non-number: ${ID}`);
 		}
 
+		await cgsPromise;
 		const idx = this.cacheGroups.findIndex(c => c.id === numID);
 		if (idx < 0) {
 			console.error(`no such Cache Group: #${ID}`);
 			return;
 		}
-		await cgsPromise;
 		this.cacheGroup = this.cacheGroups.splice(idx, 1)[0];
 		this.typeCtrl.setValue(this.cacheGroup.typeId);
 		this.updateLocalizationMethods();
