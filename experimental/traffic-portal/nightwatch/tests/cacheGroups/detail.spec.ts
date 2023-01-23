@@ -14,7 +14,7 @@
 
 describe("Cache Group Detail Spec", () => {
 	it("Test Cache Group", () => {
-		const page = browser.page.cacheGroupDetail();
+		const page = browser.page.cacheGroupDetails();
 		browser.url(`${page.api.launchUrl}/core/cache-groups/${browser.globals.testData.cacheGroup.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
@@ -28,7 +28,7 @@ describe("Cache Group Detail Spec", () => {
 	});
 
 	it("New Cache Group", () => {
-		const page = browser.page.cacheGroupDetail();
+		const page = browser.page.cacheGroupDetails();
 		browser.url(`${page.api.launchUrl}/core/cache-groups/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
