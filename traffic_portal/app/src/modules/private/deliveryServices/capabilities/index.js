@@ -30,9 +30,9 @@ module.exports = angular.module('trafficPortal.private.deliveryServices.capabili
 							deliveryService: function($stateParams, deliveryServiceService) {
 								return deliveryServiceService.getDeliveryService($stateParams.deliveryServiceId);
 							},
-							requiredCapabilities: function($stateParams, deliveryServiceService) {
-								return deliveryServiceService.getServerCapabilities($stateParams.deliveryServiceId);
-							}
+							// requiredCapabilities: function($stateParams, deliveryServiceService) {
+							// 	return deliveryServiceService.getServerCapabilities($stateParams.deliveryServiceId);
+							// }
 						}
 					}
 				}

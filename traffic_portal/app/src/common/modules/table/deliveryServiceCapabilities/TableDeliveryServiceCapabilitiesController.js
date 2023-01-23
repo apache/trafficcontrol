@@ -39,76 +39,76 @@ var TableDeliveryServiceCapabilitiesController = function(deliveryService, requi
 	$scope.requiredCapabilities = requiredCapabilities;
 
 	$scope.contextMenuItems = [
-		{
-			text: 'Remove Required Server Capability',
-			click: function ($itemScope) {
-				$scope.confirmRemoveCapability($itemScope.rq.requiredCapability);
-			}
-		}
+		// {
+		// 	text: 'Remove Required Server Capability',
+		// 	click: function ($itemScope) {
+		// 		$scope.confirmRemoveCapability($itemScope.rq.requiredCapability);
+		// 	}
+		// }
 	];
 
-	$scope.addDeliveryServiceCapability = function() {
-		const params = {
-			title: 'Add Required Server Capability',
-			message: "Please select a server capability required by this delivery service",
-			key: "name"
-		};
-		const modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-			controller: 'DialogSelectController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				},
-				collection: function(serverCapabilityService) {
-					return serverCapabilityService.getServerCapabilities();
-				}
-			}
-		});
-		modalInstance.result.then(function(serverCapability) {
-			deliveryServiceService.addServerCapability(deliveryService.id, serverCapability.name)
-				.then(
-					function(result) {
-						messageModel.setMessages(result.alerts, false);
-						$scope.refresh(); // refresh the table
-					}
-				);
-		});
-	};
-
-	$scope.confirmRemoveCapability = function(requiredCapability, $event) {
-		if ($event) {
-			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		}
-		const params = {
-			title: 'Remove Required Server Capability from Delivery Service?',
-			message: 'Are you sure you want to remove the ' + requiredCapability + ' server capability requirement from this delivery service?'
-		};
-		const modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function() {
-			deliveryServiceService.removeServerCapability(deliveryService.id, requiredCapability)
-				.then(
-					function(result) {
-						messageModel.setMessages(result.alerts, false);
-						$scope.refresh(); // refresh the table
-					}
-				);
-		});
-	};
-
-	$scope.editServerCapability = function(capabilityName) {
-		locationUtils.navigateToPath('/server-capabilities/edit?name=' + capabilityName);
-	};
+	// $scope.addDeliveryServiceCapability = function() {
+	// 	const params = {
+	// 		title: 'Add Required Server Capability',
+	// 		message: "Please select a server capability required by this delivery service",
+	// 		key: "name"
+	// 	};
+	// 	const modalInstance = $uibModal.open({
+	// 		templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
+	// 		controller: 'DialogSelectController',
+	// 		size: 'md',
+	// 		resolve: {
+	// 			params: function () {
+	// 				return params;
+	// 			},
+	// 			collection: function(serverCapabilityService) {
+	// 				return serverCapabilityService.getServerCapabilities();
+	// 			}
+	// 		}
+	// 	});
+	// 	modalInstance.result.then(function(serverCapability) {
+	// 		deliveryServiceService.addServerCapability(deliveryService.id, serverCapability.name)
+	// 			.then(
+	// 				function(result) {
+	// 					messageModel.setMessages(result.alerts, false);
+	// 					$scope.refresh(); // refresh the table
+	// 				}
+	// 			);
+	// 	});
+	// };
+    //
+	// $scope.confirmRemoveCapability = function(requiredCapability, $event) {
+	// 	if ($event) {
+	// 		$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
+	// 	}
+	// 	const params = {
+	// 		title: 'Remove Required Server Capability from Delivery Service?',
+	// 		message: 'Are you sure you want to remove the ' + requiredCapability + ' server capability requirement from this delivery service?'
+	// 	};
+	// 	const modalInstance = $uibModal.open({
+	// 		templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+	// 		controller: 'DialogConfirmController',
+	// 		size: 'md',
+	// 		resolve: {
+	// 			params: function () {
+	// 				return params;
+	// 			}
+	// 		}
+	// 	});
+	// 	modalInstance.result.then(function() {
+	// 		deliveryServiceService.removeServerCapability(deliveryService.id, requiredCapability)
+	// 			.then(
+	// 				function(result) {
+	// 					messageModel.setMessages(result.alerts, false);
+	// 					$scope.refresh(); // refresh the table
+	// 				}
+	// 			);
+	// 	});
+	// };
+    //
+	// $scope.editServerCapability = function(capabilityName) {
+	// 	locationUtils.navigateToPath('/server-capabilities/edit?name=' + capabilityName);
+	// };
 
 	$scope.refresh = function() {
 		$state.reload(); // reloads all the resolves for the view
