@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7113](https://github.com/apache/trafficcontrol/pull/7113) *Traffic Portal* Minimize the Server Server Capability part of the *Traffic Servers* section of the Snapshot Diff
 - [#7273](https://github.com/apache/trafficcontrol/pull/7273) *Traffic Ops* Adds SSL-KEY-EXPIRATION:READ permission to operations, portal, read-only, federation and steering roles
 - [#7296](https://github.com/apache/trafficcontrol/pull/7296) *Traffic Portal* New configuration option in `traffic_portal_properties.json` at `deliveryServices.exposeInactive` controls exposing APIv5 DS Active State options in the TP UI.
+- [#7309](https://github.com/apache/trafficcontrol/pull/7309) *Traffic Ops* Creates new role `trouter` with CDN:READ, DELIVERY-SERVICE:READ, DNS-SEC:READ, FEDERATION:READ, STEERING:READ, FEDERATION-RESOLVER:READ, DS-SECURITY-KEY:READ
 
 ### Changed
 - [#7224](https://github.com/apache/trafficcontrol/pull/7224) *Traffic Ops* Required Capabilities are now a part of the `DeliveryService` structure.
