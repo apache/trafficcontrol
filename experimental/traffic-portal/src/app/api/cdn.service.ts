@@ -13,8 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-
-import type { CDN } from "src/app/models";
+import type { ResponseCDN } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -28,8 +27,8 @@ export class CDNService extends APIService {
 		super(http);
 	}
 
-	public async getCDNs(id: number): Promise<CDN>;
-	public async getCDNs(): Promise<Map<string, CDN>>;
+	public async getCDNs(id: number): Promise<ResponseCDN>;
+	public async getCDNs(): Promise<Array<ResponseCDN>>;
 	/**
 	 * Gets one or all CDNs from Traffic Ops
 	 *
@@ -38,30 +37,15 @@ export class CDNService extends APIService {
 	 * 	passed.
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	 */
-	public async getCDNs(id?: number): Promise<Map<string, CDN> | CDN> {
+	public async getCDNs(id?: number): Promise<Array<ResponseCDN> | ResponseCDN> {
 		const path = "cdns";
 		if (id) {
-			return this.get<[CDN]>(path, undefined, {id: String(id)}).toPromise().then(
-				r => r[0]
-			).catch(
-				e => {
-					console.error(`Failed to get CDN #${id}`, e);
-					return {
-						dnssecEnabled: false,
-						domainName: "",
-						id: -1,
-						name: "",
-					};
-				}
-			);
-		}
-		return this.get<Array<CDN>>(path).toPromise().then(
-			r => new Map<string, CDN>(r.map(c=>[c.name, c]))
-		).catch(
-			e => {
-				console.error("Failed to get CDNs:", e);
-				return new Map();
+			const cdn = await this.get<[ResponseCDN]>(path, undefined, {id: String(id)}).toPromise();
+			if (cdn.length !== 1) {
+				throw new Error(`${cdn.length} CDNs found by ID ${id}`);
 			}
-		);
+			return cdn;
+		}
+		return this.get<Array<ResponseCDN>>(path).toPromise();
 	}
 }

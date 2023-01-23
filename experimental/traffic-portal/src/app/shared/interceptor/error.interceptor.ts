@@ -48,7 +48,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 
 			if (err.hasOwnProperty("error") && (err as {error: object}).error.hasOwnProperty("alerts")) {
 				for (const a of (err as {error: {alerts: Alert[]}}).error.alerts) {
-					this.alerts.alertsSubject.next(a);
+					this.alerts.newAlert(a);
 				}
 			}
 

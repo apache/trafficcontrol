@@ -13,28 +13,63 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { RequestDivision, ResponseDivision, RequestRegion, ResponseRegion } from "trafficops-types";
-
-import type { CacheGroup } from "src/app/models";
+import type {
+	RequestDivision,
+	ResponseDivision,
+	RequestRegion,
+	ResponseRegion,
+	ResponseCacheGroup,
+	RequestCacheGroup,
+	CDN,
+	CacheGroupQueueResponse,
+	CacheGroupQueueRequest,
+} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
+
+/**
+ * Checks the type of an argument to
+ * {@link CacheGroupService.queueCacheGroupUpdates}.
+ *
+ * @param x The object to check.
+ * @returns Whether `x` is an {@link CacheGroupQueueRequest}.
+ */
+function isRequest(x: CacheGroupQueueRequest | CDN | string | number): x is CacheGroupQueueRequest {
+	return Object.prototype.hasOwnProperty.call(x, "action");
+}
 
 /**
  * CDNService expose API functionality relating to CDNs.
  */
 @Injectable()
 export class CacheGroupService extends APIService {
-	public async getCacheGroups(idOrName: number | string): Promise<CacheGroup>;
-	public async getCacheGroups(): Promise<Array<CacheGroup>>;
+
 	/**
-	 * Gets one or all CDNs from Traffic Ops
+	 * Gets a single Cache Group from Traffic Ops.
 	 *
-	 * @param idOrName Optionally either the name or integral, unique identifier of a single Cache Group to be returned.
-	 * @returns Either an Array of CacheGroup objects, or a single CacheGroup, depending on whether
-	 * `idOrName` was 	passed.
-	 * @throws {Error} In the event that `idOrName` is passed but does not match any CacheGroup.
+	 * @param idOrName Either the name or integral, unique identifier of the
+	 * single Cache Group to be returned.
+	 * @returns The Cache Group identified by `idOrName`.
+	 * @throws {Error} When no matching Cache Group is found in Traffic Ops.
 	 */
-	public async getCacheGroups(idOrName?: number | string): Promise<Array<CacheGroup> | CacheGroup> {
+	public async getCacheGroups(idOrName: number | string): Promise<ResponseCacheGroup>;
+	/**
+	 * Gets Cache Groups from Traffic Ops.
+	 *
+	 * @returns All requested Cache Groups.
+	 */
+	public async getCacheGroups(): Promise<Array<ResponseCacheGroup>>;
+	/**
+	 * Gets one or all Cache Groups from Traffic Ops
+	 *
+	 * @param idOrName Optionally either the name or integral, unique identifier
+	 * of a single Cache Group to be returned.
+	 * @returns Either an Array of Cache Group objects, or a single Cache Group,
+	 * depending on whether `idOrName` was 	passed.
+	 * @throws {Error} In the event that `idOrName` is passed but does not match
+	 * any Cache Group.
+	 */
+	public async getCacheGroups(idOrName?: number | string): Promise<Array<ResponseCacheGroup> | ResponseCacheGroup> {
 		const path = "cachegroups";
 		if (idOrName !== undefined) {
 			let params;
@@ -45,50 +80,151 @@ export class CacheGroupService extends APIService {
 				case "number":
 					params = {id: String(idOrName)};
 			}
-			return this.get<[CacheGroup]>(path, undefined, params).toPromise().then(
-				r => {
-					const cg = r[0];
-					if (cg.id !== idOrName) {
-						throw new Error(`Traffic Ops returned no match for ID ${idOrName}`);
-					}
-					//  lastUpdated comes in as a string
-					cg.lastUpdated = cg.lastUpdated ? new Date((cg.lastUpdated as unknown as string).replace("+00", "Z")) : undefined;
-					return cg;
-				}
-			).catch(
-				e => {
-					console.error("Failed to get Cache Group with identifier", idOrName, ":", e);
-					return {
-						fallbackToClosest: false,
-						fallbacks: [],
-						latitude: 0,
-						localizationMethods: [],
-						longitude: 0,
-						name: "",
-						parentCacheGroupID: -1,
-						parentCacheGroupName: "",
-						secondaryParentCacheGroupID: -1,
-						secondaryParentCacheGroupName: "",
-						shortName: "",
-						typeId: -1,
-						typeName: ""
-					};
-				}
-			);
+			const resp = await this.get<[ResponseCacheGroup]>(path, undefined, params).toPromise();
+			if (resp.length !== 1) {
+				throw new Error(`Traffic Ops returned wrong number of results for Cache Group identifier: ${params}`);
+			}
+			const cg = resp[0];
+			//  lastUpdated comes in as a string
+			return {...cg, lastUpdated: new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"))};
 		}
-		return this.get<Array<CacheGroup>>(path).toPromise().then(r => r.map(
-			cg => {
-				if (cg.lastUpdated) {
-					cg.lastUpdated = new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"));
-				}
-				return cg;
+		const r = await this.get<Array<ResponseCacheGroup>>(path).toPromise();
+		return r.map(cg => ({...cg, lastUpdated: new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"))}));
+	}
+
+	/**
+	 * Deletes a Cache Group.
+	 *
+	 * @param cacheGroup The Cache Group to be deleted, or just its ID.
+	 */
+	public async deleteCacheGroup(cacheGroup: ResponseCacheGroup | number): Promise<void> {
+		const id = typeof(cacheGroup) === "number" ? cacheGroup : cacheGroup.id;
+		return this.delete(`cachegroups/${id}`).toPromise();
+	}
+
+	/**
+	 * Creates a new Cache Group.
+	 *
+	 * @param cacheGroup The Cache Group to create.
+	 */
+	public async createCacheGroup(cacheGroup: RequestCacheGroup): Promise<ResponseCacheGroup> {
+		return this.post<ResponseCacheGroup>("cachegroups", cacheGroup).toPromise();
+	}
+
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param id The if of the Cache Group being updated.
+	 * @param cacheGroup The new definition of the Cache Group.
+	 */
+	public async updateCacheGroup(id: number, cacheGroup: RequestCacheGroup): Promise<ResponseCacheGroup>;
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param cacheGroup The full new definition of the Cache Group being
+	 * updated.
+	 */
+	public async updateCacheGroup(cacheGroup: ResponseCacheGroup): Promise<ResponseCacheGroup>;
+	/**
+	 * Replaces an existing Cache Group with the provided new definition of a
+	 * Cache Group.
+	 *
+	 * @param cacheGroupOrID The full new definition of the Cache Group being
+	 * updated, or just its ID.
+	 * @param payload The new definition of the Cache Group. This is required if
+	 * `cacheGroupOrID` is an ID, and ignored otherwise.
+	 */
+	public async updateCacheGroup(cacheGroupOrID: ResponseCacheGroup | number, payload?: RequestCacheGroup): Promise<ResponseCacheGroup> {
+		let id;
+		let body;
+		if (typeof(cacheGroupOrID) === "number") {
+			if (!payload) {
+				throw new TypeError("invalid call signature - missing request payload");
 			}
-		)).catch(
-			e => {
-				console.error("Failed to get Cache Groups:", e);
-				return [];
+			body = payload;
+			id = cacheGroupOrID;
+		} else {
+			body = cacheGroupOrID;
+			({id} = cacheGroupOrID);
+		}
+
+		return this.put<ResponseCacheGroup>(`cachegroups/${id}`, body).toPromise();
+	}
+
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param cdnOrIdentifier Either a CDN, its name, or its ID.
+	 * @param action Used to determine the queue action to take. If not given,
+	 * defaults to `queue`.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		cdnOrIdentifier: CDN | string | number,
+		action?: "queue" | "dequeue"
+	): Promise<CacheGroupQueueResponse>;
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param request The full (de/)queue request.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		request: CacheGroupQueueRequest
+	): Promise<CacheGroupQueueResponse>;
+	/**
+	 * Queues (or dequeues) updates on a Cache Group's servers.
+	 *
+	 * @param cacheGroupOrID The Cache Group on which updates will be queued, or
+	 * just its ID.
+	 * @param cdnOrIdentifierOrRequest Either the full (de/)queue request or a
+	 * CDN, its name, or its ID.
+	 * @param action If `cdnOrIdentifierOrRequest` is not a full (de/)queue
+	 * request, then this will be used to determine the queue action to take. If
+	 * not given, defaults to `queue`.
+	 * @returns The API's response.
+	 */
+	public async queueCacheGroupUpdates(
+		cacheGroupOrID: ResponseCacheGroup | number,
+		cdnOrIdentifierOrRequest: CacheGroupQueueRequest | CDN | string | number,
+		action?: "queue" | "dequeue"
+	): Promise<CacheGroupQueueResponse> {
+		const cgID = typeof(cacheGroupOrID) === "number" ? cacheGroupOrID : cacheGroupOrID.id;
+		const path = `cachegroups/${cgID}/queue_update`;
+		let request: CacheGroupQueueRequest;
+		if (isRequest(cdnOrIdentifierOrRequest)) {
+			request = cdnOrIdentifierOrRequest;
+		} else {
+			action = action ?? "queue";
+			switch (typeof(cdnOrIdentifierOrRequest)) {
+				case "string":
+					request = {
+						action,
+						cdn: cdnOrIdentifierOrRequest,
+					};
+					break;
+				case "number":
+					request = {
+						action,
+						cdnId: cdnOrIdentifierOrRequest,
+					};
+					break;
+				default:
+					request = {
+						action,
+						cdn: cdnOrIdentifierOrRequest.name
+					};
 			}
-		);
+		}
+		return this.post<CacheGroupQueueResponse>(path, request).toPromise();
 	}
 
 	public async getDivisions(): Promise<Array<ResponseDivision>>;

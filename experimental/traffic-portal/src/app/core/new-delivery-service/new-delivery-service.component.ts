@@ -16,11 +16,11 @@ import { Component, type OnInit, ViewChild, Inject } from "@angular/core";
 import { UntypedFormControl } from "@angular/forms";
 import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
+import type { ResponseCDN } from "trafficops-types";
 
 import { CDNService, DeliveryServiceService } from "src/app/api";
 import {
 	bypassable,
-	type CDN,
 	defaultDeliveryService,
 	type DeliveryService,
 	Protocol,
@@ -104,7 +104,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	];
 
 	/** The available CDNs from which for the user to choose. */
-	public cdns: Array<CDN> = [];
+	public cdns: Array<ResponseCDN> = [];
 
 	/**
 	 * The available useInTable=delivery_service Types from which for the user
@@ -203,9 +203,9 @@ export class NewDeliveryServiceComponent implements OnInit {
 		}
 		this.cdns = [];
 		let def;
-		for (const [name, cdn] of cdns) {
+		for (const cdn of cdns) {
 			// this is a special, magic-value CDN that can't have any DSes
-			if (name !== "ALL") {
+			if (cdn.name !== "ALL") {
 				this.cdns.push(cdn);
 				if (id > 0) {
 					if (cdn.id === id) {
