@@ -218,7 +218,6 @@ export class CacheGroupDetailsComponent implements OnInit {
 		if (this.new) {
 			this.cacheGroup = await this.api.createCacheGroup(this.cacheGroup);
 			this.new = false;
-			this.location.replaceState(`core/cache-groups/${this.cacheGroup.id}`);
 		} else {
 			this.cacheGroup = await this.api.updateCacheGroup(this.cacheGroup);
 		}

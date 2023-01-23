@@ -233,8 +233,8 @@ describe("CacheGroupDetailsComponent", () => {
 	});
 
 	it("creates new Cache Groups", async () => {
-		const createSpy = spyOn(cgSrv, "createCacheGroup");
-		const updateSpy = spyOn(cgSrv, "updateCacheGroup");
+		const createSpy = spyOn(cgSrv, "createCacheGroup").and.callThrough();
+		const updateSpy = spyOn(cgSrv, "updateCacheGroup").and.callThrough();
 
 		component.new = true;
 		const cg = component.cacheGroup;
@@ -251,9 +251,7 @@ describe("CacheGroupDetailsComponent", () => {
 	});
 
 	it("updates existing Cache Groups", async () => {
-		const createSpy = spyOn(cgSrv, "createCacheGroup");
-		const updateSpy = spyOn(cgSrv, "updateCacheGroup");
-
+		const createSpy = spyOn(cgSrv, "createCacheGroup").and.callThrough();
 		component.new = false;
 		const cg = component.cacheGroup;
 		const typeSrv = TestBed.inject(TypeService);
@@ -261,6 +259,7 @@ describe("CacheGroupDetailsComponent", () => {
 		if (types.length < 1) {
 			return fail("no cg Types");
 		}
+		const updateSpy = spyOn(cgSrv, "updateCacheGroup").and.returnValue(new Promise(r => r(component.cacheGroup)));
 		component.typeCtrl.setValue(types[0].id);
 		await expectAsync(component.submit(new Event("click"))).toBeResolvedTo(undefined);
 		expect(updateSpy).toHaveBeenCalledOnceWith(cg);
@@ -269,8 +268,8 @@ describe("CacheGroupDetailsComponent", () => {
 	});
 
 	it("doesn't submit a request when the form is invalid", async () => {
-		const createSpy = spyOn(cgSrv, "createCacheGroup");
-		const updateSpy = spyOn(cgSrv, "updateCacheGroup");
+		const createSpy = spyOn(cgSrv, "createCacheGroup").and.callThrough();
+		const updateSpy = spyOn(cgSrv, "updateCacheGroup").and.callThrough();
 
 		component.typeCtrl.setErrors({something: true});
 		await expectAsync(component.submit(new Event("click"))).toBeResolvedTo(undefined);
