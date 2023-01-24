@@ -370,7 +370,7 @@ func CalcAvailability(
 			DirectlyPolled: true, // we know this cache was directly polled because otherwise we wouldn't have a cache.Result for it
 			Status:         availStatus.Why,
 			LastPoll:       availStatus.LastPoll,
-			LastPollv6:     availStatus.LastPollv6,
+			LastPollV6:     availStatus.LastPollv6,
 		})
 
 		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || available.IsAvailable != lastStatus.ProcessedAvailable {

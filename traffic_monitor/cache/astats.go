@@ -119,17 +119,16 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 
 		via := ctx.HTTPHeader.Get("Via")
 		if via != "" {
-			result := regexp.MustCompile(` ([a-z0-9\-]*)\..*comcast.net`).FindStringSubmatch(via)
+			result := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
 			if len(result) > 0 {
 				astats.Ats["via"] = result[1]
 			}
 		}
-
 		return stats, astats.Ats, nil
 	} else if ctype == "text/csv" {
 		via := ctx.HTTPHeader.Get("Via")
 		if via != "" {
-			result := regexp.MustCompile(` ([a-z0-9\-]*)\..*comcast.net`).FindStringSubmatch(via)
+			result := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
 			if len(result) > 0 {
 				cacheName = result[1]
 			}

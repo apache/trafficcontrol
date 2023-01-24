@@ -21,14 +21,13 @@ package datareq
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 )
 
 func srvTRState(
@@ -116,12 +115,15 @@ func updateStatusAnycast(localStates peer.CRStatesThreadsafe, toData todata.TODa
 						strings.Contains(partnerState.Status, "too high") {
 						if !partnerState.Ipv4Available {
 							allAvailableV4 = false
+							break
 						}
 						if !partnerState.Ipv6Available {
 							allAvailableV6 = false
+							break
 						}
 						if !partnerState.IsAvailable {
 							allIsAvailable = false
+							break
 						}
 					}
 				}
@@ -130,7 +132,7 @@ func updateStatusAnycast(localStates peer.CRStatesThreadsafe, toData todata.TODa
 			newIsAvailable.DirectlyPolled = localStatesC.Caches[cache].DirectlyPolled
 			newIsAvailable.Status = localStatesC.Caches[cache].Status
 			newIsAvailable.LastPoll = localStatesC.Caches[cache].LastPoll
-			newIsAvailable.LastPollv6 = localStatesC.Caches[cache].LastPollv6
+			newIsAvailable.LastPollV6 = localStatesC.Caches[cache].LastPollV6
 			newIsAvailable.IsAvailable = localStatesC.Caches[cache].IsAvailable && allIsAvailable
 			newIsAvailable.Ipv4Available = localStatesC.Caches[cache].Ipv4Available && allAvailableV4
 			newIsAvailable.Ipv6Available = localStatesC.Caches[cache].Ipv6Available && allAvailableV6
