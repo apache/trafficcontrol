@@ -13,7 +13,8 @@
  */
 
 import { EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI } from "nightwatch";
-import { TABLE_COMMANDS, TableSectionCommands } from "nightwatch/globals/tables";
+
+import { TABLE_COMMANDS, TableSectionCommands } from "../../globals/tables";
 
 /**
  * Defines the Divisions table commands

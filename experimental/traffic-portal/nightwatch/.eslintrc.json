@@ -35,6 +35,10 @@
 							"match": false
 						}
 					}
+				],
+				"no-restricted-imports": [
+					"error",
+					"../"
 				]
 			}
 		}

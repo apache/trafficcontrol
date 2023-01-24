@@ -34,7 +34,7 @@
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
-    "clean": "rm -rf out-tsc nightwatch/junit nightwatch/screens tests_output logs",
+    "clean": "rm -rf dist nightwatch/junit nightwatch/screens tests_output logs",
     "coverage": "ng test --code-coverage",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCustom",
     "coverage:ci": "ng test --code-coverage --watch=false --browsers=ChromeHeadlessCustom",
