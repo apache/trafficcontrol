@@ -117,7 +117,7 @@ Request Structure
 :invalidationType: The :ref:`job-invalidation-type`
 :regex:            The :ref:`job-regex`
 :startTime:        The :ref:`job-start-time`
-:ttl:              The :ref:`job-ttl`
+:ttlHours:         The :ref:`job-ttl`
 
 .. code-block:: http
 	:caption: Request Example
