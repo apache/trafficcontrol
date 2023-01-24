@@ -17,23 +17,23 @@ import * as https from "https";
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroupDetails";
+import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
+import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGroups/divisionDetail";
+import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroupsTable";
-import type { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
 import type { CommonPageObject } from "nightwatch/page_objects/common";
-import { PhysLocDetailPageObject } from "nightwatch/page_objects/cacheGroups/physLocDetail";
-import { PhysLocTablePageObject } from "nightwatch/page_objects/cacheGroups/physLocTable";
-import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServiceCard";
-import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServiceDetail";
-import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
-import type { DivisionDetailPageObject } from "nightwatch/page_objects/divisionDetail";
-import type { DivisionsPageObject } from "nightwatch/page_objects/divisionsTable";
+import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceCard";
+import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
+import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceInvalidationJobs";
 import type { LoginPageObject } from "nightwatch/page_objects/login";
-import type { RegionDetailPageObject } from "nightwatch/page_objects/regionDetail";
-import type { RegionsPageObject } from "nightwatch/page_objects/regionsTable";
-import type { ServersPageObject } from "nightwatch/page_objects/servers";
-import type { TenantDetailPageObject } from "nightwatch/page_objects/tenantDetail";
-import type { TenantsPageObject } from "nightwatch/page_objects/tenants";
-import type { UsersPageObject } from "nightwatch/page_objects/users";
+import type { ServersPageObject } from "nightwatch/page_objects/servers/servers";
+import type { PhysLocDetailPageObject } from "nightwatch/page_objects/cacheGroups/physLocDetail";
+import type { PhysLocTablePageObject } from "nightwatch/page_objects/cacheGroups/physLocTable";
+import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
+import type { RegionsPageObject } from "nightwatch/page_objects/cacheGroups/regionsTable";
+import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
+import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
+import type { UsersPageObject } from "nightwatch/page_objects/users/users";
 import {
 	CDN,
 	GeoLimit,

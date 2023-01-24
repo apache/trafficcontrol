@@ -27,8 +27,6 @@ import type {
 	CacheGroupQueueRequest,
 } from "trafficops-types";
 
-import type { CacheGroup } from "src/app/models";
-
 import { APIService } from "./base-api.service";
 
 /**
