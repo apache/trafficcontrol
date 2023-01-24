@@ -442,7 +442,6 @@ func TestNoOpWhenNoPermissionsRequired(t *testing.T) {
 
 func TestGetCookieToken(t *testing.T) {
 	var cookies []http.Cookie
-	var e bytes.Buffer
 
 	mojoCookie := http.Cookie{Name: "mojolicious", Value: "eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE2NzQyNTY4MjEsImJ5IjoidHJhZmZpY2NvbnRyb2wtZ28tdG9jb29raWUifQ--f7f40f516bfedc888d0ac6bc3c373b21773d1765"}
 	accessToken := http.Cookie{Name: "access_token", Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQyNTY4MjEsIm1vam9Db29raWUiOiJleUpoZFhSb1gyUmhkR0VpT2lKaFpHMXBiaUlzSW1WNGNHbHlaWE1pT2pFMk56UXlOVFk0TWpFc0ltSjVJam9pZEhKaFptWnBZMk52Ym5SeWIyd3RaMjh0ZEc5amIyOXJhV1VpZlEtLWY3ZjQwZjUxNmJmZWRjODg4ZDBhYzZiYzNjMzczYjIxNzczZDE3NjUifQ.41te1VWlSzHCiH77nZjdqtGQNgc-ad6HwRi5cyffTGc"}
@@ -456,20 +455,17 @@ func TestGetCookieToken(t *testing.T) {
 				r.AddCookie(&cookies[i])
 				cookie := getCookieToken(r)
 				if cookie != mojoCookie.Value && cookies[i].Name == "mojolicious" {
-					e.WriteString("Error: Unable to get mojolicious cookie. ")
+					t.Errorf("Error: Unable to get mojolicious cookie. Expected: %v Got: %v", mojoCookie.Value, cookie)
 				} else if cookie != mojoCookie.Value && cookies[i].Name == "access_token" {
-					e.WriteString("Error: Unable to get mojolicious cookie from Access Token. ")
+					t.Errorf("Error: Unable to get mojolicious cookie from Access Token. Expected: %v Got: %v", mojoCookie.Value, cookie)
 				}
 			} else {
 				r.Header.Add("Authorization", bearerToken)
 				cookie := getCookieToken(r)
 				if cookie != mojoCookie.Value {
-					e.WriteString("Error: Unable to get cookie from Bearer Token.")
+					t.Errorf("Error: Unable to get cookie from Bearer Token. Expected: %v Got: %v", mojoCookie.Value, cookie)
 				}
 			}
 		}
-	}
-	if e.String() != "" {
-		t.Error(e.String())
 	}
 }
