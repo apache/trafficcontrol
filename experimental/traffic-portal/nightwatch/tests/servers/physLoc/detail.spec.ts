@@ -14,7 +14,7 @@
 
 describe("Phys Location Detail Spec", () => {
 	it("Test physLoc", () => {
-		const page = browser.page.cacheGroups.physLocDetail();
+		const page = browser.page.servers.physLocDetail();
 		browser.url(`${page.api.launchUrl}/core/phys-locs/${browser.globals.testData.physLoc.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("form")
@@ -38,7 +38,7 @@ describe("Phys Location Detail Spec", () => {
 	});
 
 	it("New physLoc", () => {
-		const page = browser.page.cacheGroups.physLocDetail();
+		const page = browser.page.servers.physLocDetail();
 		browser.url(`${page.api.launchUrl}/core/phys-locs/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")

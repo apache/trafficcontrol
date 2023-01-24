@@ -21,13 +21,12 @@ import {type Observable, of, ReplaySubject} from "rxjs";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
+import { InvalidationJobsComponent } from "src/app/core/deliveryservice/invalidation-jobs/invalidation-jobs.component";
 import { defaultDeliveryService, type InvalidationJob, JobType } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 import { CustomvalidityDirective } from "src/app/shared/validation/customvalidity.directive";
-
-import { InvalidationJobsComponent } from "./invalidation-jobs.component";
 
 describe("InvalidationJobsComponent", () => {
 	let component: InvalidationJobsComponent;

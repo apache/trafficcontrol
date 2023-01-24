@@ -61,7 +61,7 @@ const physLocDetailPageObject = {
 			selector: "input[name='state']"
 		},
 		zip: {
-			selector: "input[name='zip']"
+			selector: "input[name='postalCode']"
 		}
 	},
 };

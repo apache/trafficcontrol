@@ -28,8 +28,6 @@ import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/c
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
 import { DivisionDetailComponent } from "./cache-groups/divisions/detail/division-detail.component";
 import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
-import { PhysLocDetailComponent } from "./cache-groups/phys-loc/detail/phys-loc-detail.component";
-import { PhysLocTableComponent } from "./cache-groups/phys-loc/table/phys-loc-table.component";
 import { RegionDetailComponent } from "./cache-groups/regions/detail/region-detail.component";
 import { RegionsTableComponent } from "./cache-groups/regions/table/regions-table.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
@@ -38,12 +36,14 @@ import { CurrentuserComponent } from "./currentuser/currentuser.component";
 import { UpdatePasswordDialogComponent } from "./currentuser/update-password-dialog/update-password-dialog.component";
 import { DashboardComponent } from "./dashboard/dashboard.component";
 import { DeliveryserviceComponent } from "./deliveryservice/deliveryservice.component";
-import { DsCardComponent } from "./ds-card/ds-card.component";
-import { InvalidationJobsComponent } from "./invalidation-jobs/invalidation-jobs.component";
+import { DsCardComponent } from "./deliveryservice/ds-card/ds-card.component";
+import { InvalidationJobsComponent } from "./deliveryservice/invalidation-jobs/invalidation-jobs.component";
 import {
 	NewInvalidationJobDialogComponent
-} from "./invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
-import { NewDeliveryServiceComponent } from "./new-delivery-service/new-delivery-service.component";
+} from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
+import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
+import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
+import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";

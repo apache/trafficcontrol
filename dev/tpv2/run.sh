@@ -35,5 +35,5 @@ if [[ "$(id -u)" != "$uid" ]]; then
 	exec su "$user" -- "$0"
 fi
 
-npm i --save-dev --ignore-scripts
+npm i
 ./node_modules/.bin/ng serve --ssl --ssl-cert /server.crt --ssl-key /server.key --watch --proxy-config "$TC/dev/tpv2/proxy.json" --port 443 --host "::0" --live-reload

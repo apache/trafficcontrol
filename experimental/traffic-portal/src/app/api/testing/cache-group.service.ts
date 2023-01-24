@@ -21,9 +21,7 @@ import type {
 	RequestRegion,
 	ResponseCacheGroup,
 	ResponseDivision,
-	ResponseRegion,
-	ResponsePhysicalLocation,
-	RequestPhysicalLocation
+	ResponseRegion
 } from "trafficops-types";
 
 import { ServerService } from "./server.service";
@@ -103,22 +101,6 @@ export class CacheGroupService {
 		name: "Reg1"
 	}
 	];
-	private readonly physicalLocations: Array<ResponsePhysicalLocation> = [{
-		address: "street",
-		city: "city",
-		comments: null,
-		email: null,
-		id: 1,
-		lastUpdated: new Date(),
-		name: "phys",
-		phone: null,
-		poc: null,
-		region: this.regions[0].name,
-		regionId: this.regions[0].id,
-		shortName: "short",
-		state: "st",
-		zip: "0000"
-	}];
 	private readonly cacheGroups: Array<ResponseCacheGroup> = [
 		{
 			fallbackToClosest: true,
@@ -453,83 +435,6 @@ export class CacheGroupService {
 			cdn: String(cdn),
 			serverNames,
 		};
-	}
-
-	public async getPhysicalLocations(): Promise<Array<ResponsePhysicalLocation>>;
-	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
-
-	/**
-	 * Gets an array of physicalLocations from Traffic Ops.
-	 *
-	 * @param nameOrID If given, returns only the ResponsePhysicalLocation with the given name
-	 * (string) or ID (number).
-	 * @returns An Array of ResponsePhysicalLocation objects - or a single ResponsePhysicalLocation object if 'nameOrID'
-	 * was given.
-	 */
-	public async getPhysicalLocations(nameOrID?: string | number): Promise<Array<ResponsePhysicalLocation> | ResponsePhysicalLocation> {
-		if(nameOrID) {
-			let physicalLocation;
-			switch (typeof nameOrID) {
-				case "string":
-					physicalLocation = this.physicalLocations.find(d=>d.name === nameOrID);
-					break;
-				case "number":
-					physicalLocation = this.physicalLocations.find(d=>d.id === nameOrID);
-			}
-			if (!physicalLocation) {
-				throw new Error(`no such PhysicalLocation: ${nameOrID}`);
-			}
-			return physicalLocation;
-		}
-		return this.physicalLocations;
-	}
-
-	/**
-	 * Replaces the current definition of a physicalLocation with the one given.
-	 *
-	 * @param physicalLocation The new physicalLocation.
-	 * @returns The updated physicalLocation.
-	 */
-	public async updatePhysicalLocation(physicalLocation: ResponsePhysicalLocation): Promise<ResponsePhysicalLocation> {
-		const id = this.physicalLocations.findIndex(d => d.id === physicalLocation.id);
-		if (id === -1) {
-			throw new Error(`no such PhysicalLocation: ${physicalLocation.id}`);
-		}
-		this.physicalLocations[id] = physicalLocation;
-		return physicalLocation;
-	}
-
-	/**
-	 * Creates a new physicalLocation.
-	 *
-	 * @param physicalLocation The physicalLocation to create.
-	 * @returns The created physicalLocation.
-	 */
-	public async createPhysicalLocation(physicalLocation: RequestPhysicalLocation): Promise<ResponsePhysicalLocation> {
-		return {
-			...physicalLocation,
-			comments: physicalLocation.comments ?? null,
-			email: physicalLocation.email ?? null,
-			id: ++this.lastID,
-			lastUpdated: new Date(),
-			phone: physicalLocation.phone ?? null,
-			poc: physicalLocation.poc ?? null,
-			region: this.regions.find(r => r.id === physicalLocation.regionId)?.name ?? null,
-		};
-	}
-
-	/**
-	 * Deletes an existing physicalLocation.
-	 *
-	 * @param id Id of the physicalLocation to delete.
-	 * @returns The deleted physicalLocation.
-	 */
-	public async deletePhysicalLocation(id: number): Promise<ResponsePhysicalLocation> {
-		const index = this.physicalLocations.findIndex(d => d.id === id);
-		if (index === -1) {
-			throw new Error(`no such PhysicalLocation: ${id}`);
-		}
-		return this.physicalLocations.splice(index, 1)[0];
 	}
 	public async getDivisions(): Promise<Array<ResponseDivision>>;
 	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;

@@ -17,11 +17,10 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { DeliveryServiceService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
+import { DsCardComponent } from "src/app/core/deliveryservice/ds-card/ds-card.component";
 import { Protocol, protocolToString, defaultDeliveryService } from "src/app/models";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
-
-import { DsCardComponent } from "./ds-card.component";
 
 describe("DsCardComponent", () => {
 	let component: DsCardComponent;

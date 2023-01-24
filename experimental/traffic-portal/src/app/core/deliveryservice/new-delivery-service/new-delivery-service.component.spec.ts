@@ -26,12 +26,11 @@ import { RouterTestingModule } from "@angular/router/testing";
 import {ReplaySubject} from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
+import { NewDeliveryServiceComponent } from "src/app/core/deliveryservice/new-delivery-service/new-delivery-service.component";
 import { Protocol } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
-
-import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 describe("NewDeliveryServiceComponent", () => {
 	let component: NewDeliveryServiceComponent;

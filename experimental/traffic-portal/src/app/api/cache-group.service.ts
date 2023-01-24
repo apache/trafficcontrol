@@ -18,8 +18,6 @@ import type {
 	ResponseDivision,
 	RequestRegion,
 	ResponseRegion,
-	RequestPhysicalLocation,
-	ResponsePhysicalLocation,
 	ResponseCacheGroup,
 	RequestCacheGroup,
 	CDN,
@@ -227,77 +225,6 @@ export class CacheGroupService extends APIService {
 			}
 		}
 		return this.post<CacheGroupQueueResponse>(path, request).toPromise();
-	}
-
-	public async getPhysicalLocations(): Promise<Array<ResponsePhysicalLocation>>;
-	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
-
-	/**
-	 * Gets an array of physicalLocations from Traffic Ops.
-	 *
-	 * @param nameOrID If given, returns only the PhysicalLocation with the given name
-	 * (string) or ID (number).
-	 * @returns An Array of PhysicalLocation objects - or a single PhysicalLocation object if 'nameOrID'
-	 * was given.
-	 */
-	public async getPhysicalLocations(nameOrID?: string | number): Promise<Array<ResponsePhysicalLocation> | ResponsePhysicalLocation> {
-		const path = "phys_locations";
-		if(nameOrID) {
-			let params;
-			switch (typeof nameOrID) {
-				case "string":
-					params = {name: nameOrID};
-					break;
-				case "number":
-					params = {id: String(nameOrID)};
-			}
-			const r = await this.get<[ResponsePhysicalLocation]>(path, undefined, params).toPromise();
-			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
-
-		}
-		const physicalLocations = await this.get<Array<ResponsePhysicalLocation>>(path).toPromise();
-		return physicalLocations.map(
-			d => ({...d, lastUpdated: new Date((d.lastUpdated as unknown as string).replace("+00", "Z"))})
-		);
-	}
-
-	/**
-	 * Replaces the current definition of a physicalLocation with the one given.
-	 *
-	 * @param physicalLocation The new physicalLocation.
-	 * @returns The updated physicalLocation.
-	 */
-	public async updatePhysicalLocation(physicalLocation: ResponsePhysicalLocation): Promise<ResponsePhysicalLocation> {
-		const path = `phys_locations/${physicalLocation.id}`;
-		const response = await this.put<ResponsePhysicalLocation>(path, physicalLocation).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
-	}
-
-	/**
-	 * Creates a new physicalLocation.
-	 *
-	 * @param physicalLocation The physicalLocation to create.
-	 * @returns The created physicalLocation.
-	 */
-	public async createPhysicalLocation(physicalLocation: RequestPhysicalLocation): Promise<ResponsePhysicalLocation> {
-		const response = await this.post<ResponsePhysicalLocation>("physicalLocations", physicalLocation).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
-	}
-
-	/**
-	 * Deletes an existing physicalLocation.
-	 *
-	 * @param id Id of the physicalLocation to delete.
-	 * @returns The deleted physicalLocation.
-	 */
-	public async deletePhysicalLocation(id: number): Promise<ResponsePhysicalLocation> {
-		return this.delete<ResponsePhysicalLocation>(`phys_locations/${id}`).toPromise();
 	}
 
 	public async getDivisions(): Promise<Array<ResponseDivision>>;

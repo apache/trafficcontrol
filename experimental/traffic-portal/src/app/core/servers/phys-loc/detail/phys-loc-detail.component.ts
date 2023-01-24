@@ -17,7 +17,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { ResponsePhysicalLocation, ResponseRegion } from "trafficops-types";
 
-import { CacheGroupService } from "src/app/api";
+import { CacheGroupService, PhysicalLocationService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -36,7 +36,8 @@ export class PhysLocDetailComponent implements OnInit {
 	public regions!: Array<ResponseRegion>;
 
 	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService) {
+		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService,
+		private readonly physLocService: PhysicalLocationService) {
 	}
 
 	/**
@@ -77,7 +78,7 @@ export class PhysLocDetailComponent implements OnInit {
 			return;
 		}
 
-		this.physLocation = await this.cacheGroupService.getPhysicalLocations(numID);
+		this.physLocation = await this.physLocService.getPhysicalLocations(numID);
 		this.navSvc.headerTitle.next(`Physical Location: ${this.physLocation.name}`);
 	}
 
@@ -95,7 +96,7 @@ export class PhysLocDetailComponent implements OnInit {
 		});
 		ref.afterClosed().subscribe(result => {
 			if(result) {
-				this.cacheGroupService.deletePhysicalLocation(this.physLocation.id);
+				this.physLocService.deletePhysicalLocation(this.physLocation.id);
 				this.location.back();
 			}
 		});
@@ -110,10 +111,10 @@ export class PhysLocDetailComponent implements OnInit {
 		e.preventDefault();
 		e.stopPropagation();
 		if(this.new) {
-			this.physLocation = await this.cacheGroupService.createPhysicalLocation(this.physLocation);
+			this.physLocation = await this.physLocService.createPhysicalLocation(this.physLocation);
 			this.new = false;
 		} else {
-			this.physLocation = await this.cacheGroupService.updatePhysicalLocation(this.physLocation);
+			this.physLocation = await this.physLocService.updatePhysicalLocation(this.physLocation);
 		}
 	}
 }

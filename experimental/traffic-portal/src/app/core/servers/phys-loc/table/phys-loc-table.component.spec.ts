@@ -17,7 +17,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { BehaviorSubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
-import { PhysLocTableComponent } from "src/app/core/cache-groups/phys-loc/table/phys-loc-table.component";
+import { PhysLocTableComponent } from "src/app/core/servers/phys-loc/table/phys-loc-table.component";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 describe("PhysLocTableComponent", () => {

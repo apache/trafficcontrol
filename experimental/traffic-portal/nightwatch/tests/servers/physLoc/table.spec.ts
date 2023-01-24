@@ -14,7 +14,7 @@
 
 describe("PhysLocs Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.cacheGroups.physLocTable().navigate()
+		browser.page.servers.physLocTable().navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);

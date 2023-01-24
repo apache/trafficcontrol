@@ -14,7 +14,7 @@
 
 describe("Cache Groups Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.cacheGroupsTable().navigate()
+		browser.page.cacheGroups.cacheGroupsTable().navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);

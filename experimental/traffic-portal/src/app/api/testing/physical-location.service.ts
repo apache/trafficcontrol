@@ -12,56 +12,105 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-
-import type { PhysicalLocation } from "src/app/models";
+import { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
 
 /**
  * PhysicalLocationService exposes API functionality relating to PhysicalLocations.
  */
 @Injectable()
 export class PhysicalLocationService {
-	private readonly locs = [
-		{
-			address: "1600 Pennsylvania Avenue NW",
-			city: "Washington",
-			comments: "",
-			email: "",
-			id: 1,
-			lastUpdated: new Date(),
-			name: "test",
-			phone: "",
-			poc: "",
-			region: "Washington, D.C",
-			regionId: 1,
-			shortName: "test",
-			state: "DC",
-			zip: "20500"
-		}
-	];
+	private lastID = 1;
+	private readonly physicalLocations: Array<ResponsePhysicalLocation> = [{
+		address: "street",
+		city: "city",
+		comments: null,
+		email: null,
+		id: 1,
+		lastUpdated: new Date(),
+		name: "phys",
+		phone: null,
+		poc: null,
+		region: "Region",
+		regionId: 1,
+		shortName: "short",
+		state: "st",
+		zip: "0000"
+	}];
 
-	public async getPhysicalLocations(idOrName: number | string): Promise<PhysicalLocation>;
-	public async getPhysicalLocations(): Promise<Array<PhysicalLocation>>;
+	public async getPhysicalLocations(): Promise<Array<ResponsePhysicalLocation>>;
+	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
+
 	/**
-	 * Gets one or all PhysicalLocations from Traffic Ops
+	 * Gets an array of physicalLocations from Traffic Ops.
 	 *
-	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single PhysicalLocation to be returned.
-	 * @returns The requested PhysicalLocation(s).
+	 * @param nameOrID If given, returns only the ResponsePhysicalLocation with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of ResponsePhysicalLocation objects - or a single ResponsePhysicalLocation object if 'nameOrID'
+	 * was given.
 	 */
-	public async getPhysicalLocations(idOrName?: number | string): Promise<PhysicalLocation | Array<PhysicalLocation>> {
-		if (idOrName !== undefined) {
-			let loc;
-			switch (typeof idOrName) {
+	public async getPhysicalLocations(nameOrID?: string | number): Promise<Array<ResponsePhysicalLocation> | ResponsePhysicalLocation> {
+		if(nameOrID) {
+			let physicalLocation;
+			switch (typeof nameOrID) {
 				case "string":
-					loc = this.locs.find(l=>l.name === idOrName);
+					physicalLocation = this.physicalLocations.find(d=>d.name === nameOrID);
 					break;
 				case "number":
-					loc = this.locs.find(l=>l.id === idOrName);
+					physicalLocation = this.physicalLocations.find(d=>d.id === nameOrID);
 			}
-			if (!loc) {
-				throw new Error(`no such Physical Location: ${idOrName}`);
+			if (!physicalLocation) {
+				throw new Error(`no such PhysicalLocation: ${nameOrID}`);
 			}
-			return loc;
+			return physicalLocation;
 		}
-		return this.locs;
+		return this.physicalLocations;
+	}
+
+	/**
+	 * Replaces the current definition of a physicalLocation with the one given.
+	 *
+	 * @param physicalLocation The new physicalLocation.
+	 * @returns The updated physicalLocation.
+	 */
+	public async updatePhysicalLocation(physicalLocation: ResponsePhysicalLocation): Promise<ResponsePhysicalLocation> {
+		const id = this.physicalLocations.findIndex(d => d.id === physicalLocation.id);
+		if (id === -1) {
+			throw new Error(`no such PhysicalLocation: ${physicalLocation.id}`);
+		}
+		this.physicalLocations[id] = physicalLocation;
+		return physicalLocation;
+	}
+
+	/**
+	 * Creates a new physicalLocation.
+	 *
+	 * @param physicalLocation The physicalLocation to create.
+	 * @returns The created physicalLocation.
+	 */
+	public async createPhysicalLocation(physicalLocation: RequestPhysicalLocation): Promise<ResponsePhysicalLocation> {
+		return {
+			...physicalLocation,
+			comments: physicalLocation.comments ?? null,
+			email: physicalLocation.email ?? null,
+			id: ++this.lastID,
+			lastUpdated: new Date(),
+			phone: physicalLocation.phone ?? null,
+			poc: physicalLocation.poc ?? null,
+			region: ""
+		};
+	}
+
+	/**
+	 * Deletes an existing physicalLocation.
+	 *
+	 * @param id Id of the physicalLocation to delete.
+	 * @returns The deleted physicalLocation.
+	 */
+	public async deletePhysicalLocation(id: number): Promise<void> {
+		const index = this.physicalLocations.findIndex(d => d.id === id);
+		if (index === -1) {
+			throw new Error(`no such PhysicalLocation: ${id}`);
+		}
+		return;
 	}
 }

@@ -18,7 +18,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
-import { PhysLocDetailComponent } from "src/app/core/cache-groups/phys-loc/detail/phys-loc-detail.component";
+import { PhysLocDetailComponent } from "src/app/core/servers/phys-loc/detail/phys-loc-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 describe("PhysLocDetailComponent", () => {

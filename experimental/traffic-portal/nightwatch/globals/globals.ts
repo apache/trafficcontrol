@@ -16,21 +16,21 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
-import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroupDetails";
-import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
+import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
+import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
 import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGroups/divisionDetail";
 import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
-import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroupsTable";
+import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
+import type { RegionsPageObject } from "nightwatch/page_objects/cacheGroups/regionsTable";
 import type { CommonPageObject } from "nightwatch/page_objects/common";
 import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceCard";
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
 import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceInvalidationJobs";
 import type { LoginPageObject } from "nightwatch/page_objects/login";
+import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
+import type { PhysLocTablePageObject } from "nightwatch/page_objects/servers/physLocTable";
 import type { ServersPageObject } from "nightwatch/page_objects/servers/servers";
-import type { PhysLocDetailPageObject } from "nightwatch/page_objects/cacheGroups/physLocDetail";
-import type { PhysLocTablePageObject } from "nightwatch/page_objects/cacheGroups/physLocTable";
-import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
-import type { RegionsPageObject } from "nightwatch/page_objects/cacheGroups/regionsTable";
+import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
 import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
 import type { UsersPageObject } from "nightwatch/page_objects/users/users";
@@ -62,14 +62,12 @@ declare module "nightwatch" {
 	 * Defines the global nightwatch browser type with our types mixed in.
 	 */
 	export interface NightwatchCustomPageObjects {
-		cacheGroupDetails: () => CacheGroupDetailPageObject;
-		cacheGroupsTable: () => CacheGroupsPageObject;
 		common: () => CommonPageObject;
 		cacheGroups: {
+			cacheGroupDetails: () => CacheGroupDetailPageObject;
+			cacheGroupsTable: () => CacheGroupsPageObject;
 			divisionDetail: () => DivisionDetailPageObject;
 			divisionsTable: () => DivisionsPageObject;
-			physLocDetail: () => PhysLocDetailPageObject;
-			physLocTable: () => PhysLocTablePageObject;
 			regionDetail: () => RegionDetailPageObject;
 			regionsTable: () => RegionsPageObject;
 		};
@@ -80,6 +78,8 @@ declare module "nightwatch" {
 		};
 		login: () => LoginPageObject;
 		servers: {
+			physLocDetail: () => PhysLocDetailPageObject;
+			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;
 		};
 		users: {

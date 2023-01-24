@@ -68,7 +68,7 @@ export class TpSidebarComponent implements OnInit {
 	private mapChild(node: TreeNavNode): void {
 		if(node.children !== undefined) {
 			for(const child of node.children) {
-				this.childToParent.set(`${child.name}${child.href ?? ""}`, node);
+				this.childToParent.set(this.nodeHandle(child), node);
 				this.mapChild(child);
 			}
 		}
@@ -114,11 +114,11 @@ export class TpSidebarComponent implements OnInit {
 							child.active = true;
 							this.lastChild = child;
 							this.treeCtrl.expand(node);
-							let parent = this.childToParent.get(`${child.name}${child.href ?? ""}`);
+							let parent = this.childToParent.get(this.nodeHandle(child));
 							let depth = 0;
 							while(parent !== undefined && depth++ < 5) {
 								this.treeCtrl.expand(parent);
-								parent = this.childToParent.get(`${parent.name}${parent.href ?? ""}`);
+								parent = this.childToParent.get(this.nodeHandle(parent));
 							}
 							return;
 						}
@@ -126,5 +126,15 @@ export class TpSidebarComponent implements OnInit {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Gets the key used in the parent map.
+	 *
+	 * @param node Node to get the key from.
+	 * @returns node key
+	 */
+	public nodeHandle(node: TreeNavNode): string {
+		return `${node.name}${node.href ?? ""}`;
 	}
 }

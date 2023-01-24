@@ -28,7 +28,7 @@ import { LoadingComponent } from "src/app/shared/loading/loading.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
-import { DsCardComponent } from "../ds-card/ds-card.component";
+import { DsCardComponent } from "../deliveryservice/ds-card/ds-card.component";
 
 import { DashboardComponent } from "./dashboard.component";
 

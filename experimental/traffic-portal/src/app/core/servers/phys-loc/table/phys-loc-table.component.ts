@@ -18,7 +18,7 @@ import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import { ResponsePhysicalLocation } from "trafficops-types";
 
-import { CacheGroupService } from "src/app/api";
+import { CacheGroupService, PhysicalLocationService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
@@ -87,9 +87,10 @@ export class PhysLocTableComponent implements OnInit {
 	public fuzzControl: FormControl = new FormControl<string>("");
 
 	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute,
-		private readonly navSvc: NavigationService,  public readonly auth: CurrentUserService, private readonly dialog: MatDialog) {
+		private readonly navSvc: NavigationService,  public readonly auth: CurrentUserService, private readonly dialog: MatDialog,
+		private readonly physLocService: PhysicalLocationService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
-		this.physLocations = this.api.getPhysicalLocations();
+		this.physLocations = this.physLocService.getPhysicalLocations();
 		this.navSvc.headerTitle.next("Physical Locations");
 	}
 
@@ -129,7 +130,7 @@ export class PhysLocTableComponent implements OnInit {
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
-						this.api.deleteDivision(data.id).then(async () => this.physLocations = this.api.getPhysicalLocations());
+						this.api.deleteDivision(data.id).then(async () => this.physLocations = this.physLocService.getPhysicalLocations());
 					}
 				});
 				break;
