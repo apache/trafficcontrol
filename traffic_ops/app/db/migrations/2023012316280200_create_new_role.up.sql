@@ -15,15 +15,9 @@
  * the License.
  */
 
-INSERT INTO public."role"
-(name, description, priv_level)
+INSERT INTO public."role" (name, description, priv_level)
 VALUES('trouter', 'Limited role for Traffic Router calls to Traffic Ops', 10);
 
-INSERT INTO public.role_capability
-(SELECT id FROM public."role" WHERE name="trouter", perm)
-FROM public.role
-        CROSS JOIN ( VALUES
-            ('CDN:READ', 'DELIVERY-SERVICE:READ', 'DNS-SEC:READ', 'FEDERATION:READ', 'STEERING:READ', 'FEDERATION-RESOLVER:READ', 'DS-SECURITY-KEY:READ')
-) AS perms(perm)
-WHERE priv_level > 10
-    ON CONFLICT DO NOTHING;
+INSERT INTO public.role_capability (role_id, cap_name)
+    VALUES ((select id from role where name='trouter'), UNNEST('{CDN:READ, DELIVERY-SERVICE:READ, DNS-SEC:READ, FEDERATION:READ, STEERING:READ, FEDERATION-RESOLVER:READ, DS-SECURITY-KEY:READ}'::text[]))
+        ON CONFLICT DO NOTHING;
