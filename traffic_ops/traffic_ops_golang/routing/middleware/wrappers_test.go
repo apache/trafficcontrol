@@ -26,6 +26,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/lestrrat-go/jwx/jwa"
+	"github.com/lestrrat-go/jwx/jwt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -442,29 +444,43 @@ func TestNoOpWhenNoPermissionsRequired(t *testing.T) {
 
 func TestGetCookieToken(t *testing.T) {
 	var cookies []http.Cookie
+	var jwtToken jwt.Token
+	var jwtSigned []byte
 
-	mojoCookie := http.Cookie{Name: "mojolicious", Value: "eyJhdXRoX2RhdGEiOiJhZG1pbiIsImV4cGlyZXMiOjE2NzQyNTY4MjEsImJ5IjoidHJhZmZpY2NvbnRyb2wtZ28tdG9jb29raWUifQ--f7f40f516bfedc888d0ac6bc3c373b21773d1765"}
-	accessToken := http.Cookie{Name: "access_token", Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQyNTY4MjEsIm1vam9Db29raWUiOiJleUpoZFhSb1gyUmhkR0VpT2lKaFpHMXBiaUlzSW1WNGNHbHlaWE1pT2pFMk56UXlOVFk0TWpFc0ltSjVJam9pZEhKaFptWnBZMk52Ym5SeWIyd3RaMjh0ZEc5amIyOXJhV1VpZlEtLWY3ZjQwZjUxNmJmZWRjODg4ZDBhYzZiYzNjMzczYjIxNzczZDE3NjUifQ.41te1VWlSzHCiH77nZjdqtGQNgc-ad6HwRi5cyffTGc"}
-	bearerToken := "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2NzQ1MjU0OTcsIm1vam9Db29raWUiOiJleUpoZFhSb1gyUmhkR0VpT2lKaFpHMXBiaUlzSW1WNGNHbHlaWE1pT2pFMk56UTFNalUwT1Rjc0ltSjVJam9pZEhKaFptWnBZMk52Ym5SeWIyd3RaMjh0ZEc5amIyOXJhV1VpZlEtLTlmODI1Yzk5MDJhYTU5NDI1ZTQwYzJhYzcyNjhiZTI4NDMyMTg4ZjEifQ.szYraBtmKQ0UB13G6C3WUDcix1kZQyn4uqv27qy0_vY"
+	authUser := "foobar"
+	httpCookie := tocookie.GetCookie(authUser, 0, "fOObAR.")
+
+	jwtToken, _ = jwt.NewBuilder().Claim(api.MojoCookie, httpCookie.Value).Build()
+	jwtSigned, _ = jwt.Sign(jwtToken, jwa.HS256, []byte("fOObAR."))
+
+	mojoCookie := http.Cookie{Name: httpCookie.Name, Value: httpCookie.Value}
+	accessToken := http.Cookie{Name: "access_token", Value: string(jwtSigned)}
+	bearerToken := "Bearer " + string(jwtSigned)
 	cookies = append(cookies, mojoCookie, accessToken, http.Cookie{})
+
+	getUserFromCookie := func(cookieToken string) {
+		secret := "fOObAR."
+		user := ""
+		cookie, userErr, sysErr := tocookie.Parse(secret, cookieToken)
+		if userErr == nil && sysErr == nil {
+			user = cookie.AuthData
+		}
+		if user != "foobar" {
+			t.Errorf("Error: Unable to user from cookie. Expected: %v Got: %v", authUser, user)
+		}
+	}
 
 	r, err := http.NewRequest("GET", "https://localhost:8888", nil)
 	if err == nil && r != nil {
 		for i := range cookies {
 			if cookies[i].Name != "" {
 				r.AddCookie(&cookies[i])
-				cookie := getCookieToken(r)
-				if cookie != mojoCookie.Value && cookies[i].Name == "mojolicious" {
-					t.Errorf("Error: Unable to get mojolicious cookie. Expected: %v Got: %v", mojoCookie.Value, cookie)
-				} else if cookie != mojoCookie.Value && cookies[i].Name == "access_token" {
-					t.Errorf("Error: Unable to get mojolicious cookie from Access Token. Expected: %v Got: %v", mojoCookie.Value, cookie)
-				}
+				cookieToken := getCookieToken(r)
+				getUserFromCookie(cookieToken)
 			} else {
 				r.Header.Add("Authorization", bearerToken)
-				cookie := getCookieToken(r)
-				if cookie != mojoCookie.Value {
-					t.Errorf("Error: Unable to get cookie from Bearer Token. Expected: %v Got: %v", mojoCookie.Value, cookie)
-				}
+				cookieToken := getCookieToken(r)
+				getUserFromCookie(cookieToken)
 			}
 		}
 	}
