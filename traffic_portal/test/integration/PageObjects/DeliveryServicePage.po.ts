@@ -76,8 +76,12 @@ export class DeliveryServicePage extends BasePage {
 			break;
 
 			case "DNS":
+				ps.push(element(by.name("capability")).click());
 			case "HTTP":
-				ps.push(element(by.name("orgServerFqdn")).sendKeys("http://origin.infra.ciab.test"));
+				ps.push(
+					element(by.name("orgServerFqdn")).sendKeys("http://origin.infra.ciab.test"),
+					element(by.name("capability")).click()
+				);
 			case "STEERING":
 				ps.push(element(by.name("protocol")).sendKeys("HTTP"));
 			break;
@@ -165,25 +169,6 @@ export class DeliveryServicePage extends BasePage {
 		const serverCell = element(by.cssContainingText(".ag-cell-value", serverName));
 		await browser.wait(ExpectedConditions.elementToBeClickable(serverCell), 3000);
 		await serverCell.click();
-		await this.ClickSubmit();
-		return this.GetOutputMessage();
-	}
-
-	/**
-	 * Assigns the Capability with the given name as a requirement of the
-	 * Delivery Service. Note that the browser must already be on a Delivery
-	 * Service edit view for this to work, as this method neither navigates to
-	 * it nor back to the table view afterward!
-	 *
-	 * @param name The name of the Capability to be required.
-	 * @returns The text shown in the first Alert pane found after attempting
-	 * the assignment.
-	 */
-	public async AssignRequiredCapabilitiesToDS(name: string): Promise<string>{
-		await this.btnMore.click();
-		await element(by.linkText("Manage Required Server Capabilities")).click();
-		await element(by.name("addCapabilityBtn")).click();
-		await element(by.name("selectFormDropdown")).sendKeys(name);
 		await this.ClickSubmit();
 		return this.GetOutputMessage();
 	}
