@@ -86,10 +86,10 @@ export class PhysicalLocationService extends APIService {
 	/**
 	 * Deletes an existing physicalLocation.
 	 *
-	 * @param id Id of the physicalLocation to delete.
-	 * @returns The deleted physicalLocation.
+	 * @param physLoc The Physical Location to be deleted (or its ID)
 	 */
-	public async deletePhysicalLocation(id: number): Promise<void> {
+	public async deletePhysicalLocation(physLoc: ResponsePhysicalLocation | number): Promise<void> {
+		const id = typeof(physLoc) === "number" ? physLoc : physLoc.id;
 		return this.delete(`phys_locations/${id}`).toPromise();
 	}
 

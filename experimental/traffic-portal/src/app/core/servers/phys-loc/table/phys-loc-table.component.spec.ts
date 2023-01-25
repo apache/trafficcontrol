@@ -14,11 +14,9 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
-import { BehaviorSubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
 import { PhysLocTableComponent } from "src/app/core/servers/phys-loc/table/phys-loc-table.component";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 describe("PhysLocTableComponent", () => {
 	let component: PhysLocTableComponent;
@@ -27,18 +25,7 @@ describe("PhysLocTableComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ PhysLocTableComponent ],
-			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
-			providers: [
-				{
-					provide: CurrentUserService,
-					useValue: {
-						currentUser: {
-						},
-						hasPermission: (): true => true,
-						userChanged: new BehaviorSubject({})
-					}
-				}
-			]
+			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ]
 		})
 			.compileComponents();
 

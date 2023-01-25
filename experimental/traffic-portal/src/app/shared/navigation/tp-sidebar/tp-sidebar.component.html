@@ -16,7 +16,7 @@ limitations under the License.
 	<mat-sidenav #sidenav mode="side" opened>
 		<mat-tree [dataSource]="dataSource" [treeControl]="treeCtrl">
 			<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
-				<a mat-menu-item [routerLink]="node.href" [style.font-weight]="node?.active ?? false ? 'bold' : 'normal'">
+				<a mat-menu-item [routerLink]="node.href" [routerLinkActive]="['boldNode']">
 					{{node.name}}
 				</a>
 			</mat-tree-node>

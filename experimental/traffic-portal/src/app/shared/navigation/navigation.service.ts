@@ -37,7 +37,6 @@ export interface HeaderNavigation {
  * Specifies the settings for the sidebar nav
  */
 export interface TreeNavNode {
-	active?: boolean | undefined;
 	name: string;
 	children?: Array<TreeNavNode> | undefined;
 	href?: string | undefined;

@@ -41,7 +41,7 @@ export class PhysicalLocationService {
 	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
 
 	/**
-	 * Gets an array of physicalLocations from Traffic Ops.
+	 * Gets one or all of PhysicalLocations from Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the ResponsePhysicalLocation with the given name
 	 * (string) or ID (number).
@@ -103,14 +103,14 @@ export class PhysicalLocationService {
 	/**
 	 * Deletes an existing physicalLocation.
 	 *
-	 * @param id Id of the physicalLocation to delete.
-	 * @returns The deleted physicalLocation.
+	 * @param physLoc The Physical Location to be deleted (or its ID)
 	 */
-	public async deletePhysicalLocation(id: number): Promise<void> {
+	public async deletePhysicalLocation(physLoc: ResponsePhysicalLocation | number): Promise<void> {
+		const id = typeof(physLoc) === "number" ? physLoc : physLoc.id;
 		const index = this.physicalLocations.findIndex(d => d.id === id);
 		if (index === -1) {
 			throw new Error(`no such PhysicalLocation: ${id}`);
 		}
-		return;
+		this.physicalLocations.splice(index, 1);
 	}
 }

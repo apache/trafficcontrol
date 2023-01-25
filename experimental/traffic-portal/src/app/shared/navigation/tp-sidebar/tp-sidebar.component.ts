@@ -34,7 +34,6 @@ export class TpSidebarComponent implements OnInit {
 
 	public hidden = false;
 	private lastRoute = "";
-	private lastChild?: TreeNavNode;
 
 	/**
 	 * Used in the sidebar to ensure the active page is visible.1
@@ -108,11 +107,6 @@ export class TpSidebarComponent implements OnInit {
 				for(const node of this.dataSource.data) {
 					for(const child of this.treeCtrl.getDescendants(node)) {
 						if(child.href === path) {
-							if(this.lastChild) {
-								this.lastChild.active = false;
-							}
-							child.active = true;
-							this.lastChild = child;
 							this.treeCtrl.expand(node);
 							let parent = this.childToParent.get(this.nodeHandle(child));
 							let depth = 0;
