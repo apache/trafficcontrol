@@ -62,12 +62,6 @@ var TableServerCapabilityDeliveryServicesController = function(serverCapability,
 				$scope.editDeliveryService($itemScope.ds);
 			}
 		},
-		// {
-		// 	text: 'Manage Required Server Capabilities',
-		// 	click: function ($itemScope) {
-		// 		locationUtils.navigateToPath('/delivery-services/' + $itemScope.ds.deliveryServiceID + '/required-server-capabilities');
-		// 	}
-		// }
 	];
 
 	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
