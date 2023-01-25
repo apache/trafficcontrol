@@ -37,9 +37,10 @@
  * @param {import("../../../api/TenantService")} tenantService
  * @param {import("../../../models/PropertiesModel")} propertiesModel
  * @param {import("../../../models/UserModel")} userModel
+ * @param {import("../../../api/ServerCapabilityService")} serverCapabilityService
  * @param {import("../../../api/ServiceCategoryService")} serviceCategoryService
  */
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serverCapabilityService, locationUtils, serviceCategoryService) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serverCapabilityService, serviceCategoryService) {
 
 	/**
 	 * This is used to cache TLS version settings when the checkbox is toggled.
@@ -499,5 +500,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 };
 
-FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serverCapabilityService", "locationUtils", "serviceCategoryService"];
+FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serverCapabilityService", "serviceCategoryService"];
 module.exports = FormDeliveryServiceController;
