@@ -115,15 +115,12 @@ func updateStatusAnycast(localStates peer.CRStatesThreadsafe, toData todata.TODa
 						strings.Contains(partnerState.Status, "too high") {
 						if !partnerState.Ipv4Available {
 							allAvailableV4 = false
-							break
 						}
 						if !partnerState.Ipv6Available {
 							allAvailableV6 = false
-							break
 						}
 						if !partnerState.IsAvailable {
 							allIsAvailable = false
-							break
 						}
 					}
 				}
