@@ -342,22 +342,26 @@ under the License.
                             </div>
                         </div>
                     </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.serverCapability), 'has-feedback': hasError(generalConfig.serverCapability)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="serverCapability">Server Capability
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.requiredCapabilities), 'has-feedback': hasError(generalConfig.requiredCapabilities)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="capability">Required Capability
                             <div class="helptooltip">
-                                <div class="helptext">Required server capability(ies) associated with a delivery  service</div>
+                                <div class="helptext">Required capability(ies) associated with a delivery  service</div>
                             </div>
                         </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <select id="serverCapability" name="serverCapability" class="form-control" ng-model="deliveryService.serverCapability" ng-options="sc in ::serverCapabilities | orderBy:'serverCapability'">
-                                <option selected value="">None</option>
-                            </select>
-                            <small ng-show="deliveryService.serverCapability"><a href="/#!/server-capabilities/edit?name=' + serverCapability.name" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.serverCapability !== dsCurrent.serverCapability">
-                                <h3 ng-if="open()">Current Value</h3>
-                                <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.serverCapability}}</pre>
-                            </aside>
+                        <div class="col-md-10 col-sm-10 col-xs-12 checkbox-scroll-container" style="...">
+                            <div ng-repeat="capability in requiredCapabilities">
+                                <input
+                                        type="checkbox"
+                                        id="capability"
+                                        name="capability"
+                                        style="..."
+                                        ng-model="selectedCapabilities[capability.name]"
+                                        ng-checked="selectedCapabilities[capability.name]"
+                                />
+                               <label>
+                                   <a ng-href="/#!/server-capabilities/edit?name={{capability.name}}" target="_blank"> {{capability.name}}</a>
+                               </label>
+                            </div>
                         </div>
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.serviceCategory), 'has-feedback': hasError(generalConfig.serviceCategory)}">

@@ -39,7 +39,7 @@
  * @param {import("../../../models/UserModel")} userModel
  * @param {import("../../../api/ServiceCategoryService")} serviceCategoryService
  */
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serverCapabilityService, serviceCategoryService) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serverCapabilityService, locationUtils, serviceCategoryService) {
 
 	/**
 	 * This is used to cache TLS version settings when the checkbox is toggled.
@@ -197,12 +197,14 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		tenantUtils.addLevels($scope.tenants);
 	}
 
+	$scope.selectedCapabilities = {};
 	/**
 	 * Updates the server Capabilities on the $scope.
 	 * @returns {Promise<void>}
 	 */
-	async function getServerCapabilities() {
-		$scope.serverCapabilities = await serverCapabilityService.getServerCapabilities();
+	async function getRequiredCapabilities() {
+		$scope.requiredCapabilities = await serverCapabilityService.getServerCapabilities();
+		$scope.selectedCapabilities = Object.fromEntries($scope.requiredCapabilities.map(dsc => [dsc.name, $scope.deliveryService.requiredCapabilities.includes(dsc.name)]))
 	}
 
 	/**
@@ -477,7 +479,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	getCDNs();
 	getProfiles();
 	getTenants();
-	getServerCapabilities();
+	getRequiredCapabilities();
 	getServiceCategories();
 	getSteeringTargets();
 	if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
@@ -497,5 +499,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 };
 
-FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serverCapabilityService", "serviceCategoryService"];
+FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serverCapabilityService", "locationUtils", "serviceCategoryService"];
 module.exports = FormDeliveryServiceController;
