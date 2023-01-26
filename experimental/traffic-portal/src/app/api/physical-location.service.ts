@@ -26,7 +26,7 @@ export class PhysicalLocationService extends APIService {
 	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
 
 	/**
-	 * Gets an array of physicalLocations from Traffic Ops.
+	 * Gets an array of Physical Location from Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the PhysicalLocation with the given name
 	 * (string) or ID (number).
@@ -55,10 +55,10 @@ export class PhysicalLocationService extends APIService {
 	}
 
 	/**
-	 * Replaces the current definition of a physicalLocation with the one given.
+	 * Replaces the current definition of a Physical Location with the one given.
 	 *
-	 * @param physicalLocation The new physicalLocation.
-	 * @returns The updated physicalLocation.
+	 * @param physicalLocation The new Physical Location.
+	 * @returns The updated Physical Location.
 	 */
 	public async updatePhysicalLocation(physicalLocation: ResponsePhysicalLocation): Promise<ResponsePhysicalLocation> {
 		const path = `phys_locations/${physicalLocation.id}`;
@@ -70,10 +70,10 @@ export class PhysicalLocationService extends APIService {
 	}
 
 	/**
-	 * Creates a new physicalLocation.
+	 * Creates a new Physical Location.
 	 *
-	 * @param physicalLocation The physicalLocation to create.
-	 * @returns The created physicalLocation.
+	 * @param physicalLocation The Physical Location to create.
+	 * @returns The created Physical Location.
 	 */
 	public async createPhysicalLocation(physicalLocation: RequestPhysicalLocation): Promise<ResponsePhysicalLocation> {
 		const response = await this.post<ResponsePhysicalLocation>("physicalLocations", physicalLocation).toPromise();
@@ -84,7 +84,7 @@ export class PhysicalLocationService extends APIService {
 	}
 
 	/**
-	 * Deletes an existing physicalLocation.
+	 * Deletes an existing Physical Location.
 	 *
 	 * @param physLoc The Physical Location to be deleted (or its ID)
 	 */

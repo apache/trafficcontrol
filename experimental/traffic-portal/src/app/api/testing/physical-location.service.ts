@@ -67,10 +67,10 @@ export class PhysicalLocationService {
 	}
 
 	/**
-	 * Replaces the current definition of a physicalLocation with the one given.
+	 * Replaces the current definition of a Physical Location with the one given.
 	 *
-	 * @param physicalLocation The new physicalLocation.
-	 * @returns The updated physicalLocation.
+	 * @param physicalLocation The new Physical Location.
+	 * @returns The updated Physical Location.
 	 */
 	public async updatePhysicalLocation(physicalLocation: ResponsePhysicalLocation): Promise<ResponsePhysicalLocation> {
 		const id = this.physicalLocations.findIndex(d => d.id === physicalLocation.id);
@@ -82,13 +82,13 @@ export class PhysicalLocationService {
 	}
 
 	/**
-	 * Creates a new physicalLocation.
+	 * Creates a new Physical Location.
 	 *
-	 * @param physicalLocation The physicalLocation to create.
-	 * @returns The created physicalLocation.
+	 * @param physicalLocation The Physical Location to create.
+	 * @returns The created Physical Location.
 	 */
 	public async createPhysicalLocation(physicalLocation: RequestPhysicalLocation): Promise<ResponsePhysicalLocation> {
-		return {
+		const phys = {
 			...physicalLocation,
 			comments: physicalLocation.comments ?? null,
 			email: physicalLocation.email ?? null,
@@ -98,10 +98,12 @@ export class PhysicalLocationService {
 			poc: physicalLocation.poc ?? null,
 			region: ""
 		};
+		this.physicalLocations.push(phys);
+		return phys;
 	}
 
 	/**
-	 * Deletes an existing physicalLocation.
+	 * Deletes an existing Physical Location.
 	 *
 	 * @param physLoc The Physical Location to be deleted (or its ID)
 	 */
