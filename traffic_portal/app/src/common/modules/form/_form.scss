@@ -376,5 +376,4 @@ input:checked + .slider::before {
 	overflow-y: auto;
 	display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-    padding-left: 16px;
 }
