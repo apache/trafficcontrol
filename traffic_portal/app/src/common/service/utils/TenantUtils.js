@@ -118,7 +118,8 @@ class TenantUtils {
 		const map = {};
 
 		for (let i = 0; i < tenantsArr.length; ++i) {
-			const obj = {...tenantsArr[i], children: []};
+			const obj = tenantsArr[i];
+			obj.children = [];
 
 			map[obj.id] = obj;
 
