@@ -169,3 +169,11 @@ Response Structure
 		"lastUpdated": "2018-11-14 20:49:28+00",
 		"name": "test",
 	}}
+
+
+Response Structure
+-----------------
+:HTTPstatuscode: This would typically be a 204 No Content for a successful deletion, or a 4xx status code (such as 400 Bad Request, 401 Unauthorized, or 403 Forbidden) if the deletion was not successful.   	
+:Message:   This would provide additional information about the outcome of the request. For example, it may include an error message if the request failed, or a success message if the lock was deleted. 
+:Additionaldata: Depending on the specific implementation of the API, the response object may include additional data such as the ID of the deleted lock, the timestamp of when the lock was deleted, or other information relevant to the request.
+
