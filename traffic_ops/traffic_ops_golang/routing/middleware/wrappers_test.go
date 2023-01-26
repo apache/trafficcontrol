@@ -26,8 +26,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/lestrrat-go/jwx/jwa"
-	"github.com/lestrrat-go/jwx/jwt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -44,6 +42,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
 
 	"github.com/jmoiron/sqlx"
+    "github.com/lestrrat-go/jwx/jwa"
+    "github.com/lestrrat-go/jwx/jwt"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
