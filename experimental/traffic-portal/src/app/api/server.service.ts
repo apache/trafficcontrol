@@ -233,7 +233,7 @@ export class ServerService extends APIService {
 			id = server.id;
 		}
 
-		return this.put<undefined>(`servers/${id}/status`, {offlineReason, status}).toPromise().catch(
+		return this.put(`servers/${id}/status`, {offlineReason, status}).toPromise().catch(
 			e=> {
 				console.error("Failed to update server status:", e);
 				return undefined;

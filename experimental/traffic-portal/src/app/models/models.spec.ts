@@ -12,10 +12,6 @@
 * limitations under the License.
 */
 import {
-	LocalizationMethod,
-	localizationMethodToString
-} from "./cache-groups";
-import {
 	bypassable,
 	defaultDeliveryService,
 	QStringHandling,
@@ -24,14 +20,6 @@ import {
 	rangeRequestHandlingToString
 } from "./deliveryservice";
 import { checkMap, type Servercheck } from "./server";
-
-describe("Cache Group utilities", () => {
-	it("converts localization methods to human-readable strings", () => {
-		expect(localizationMethodToString(LocalizationMethod.CZ)).toBe("Coverage Zone File");
-		expect(localizationMethodToString(LocalizationMethod.DEEP_CZ)).toBe("Deep Coverage Zone File");
-		expect(localizationMethodToString(LocalizationMethod.GEO)).toBe("Geo-IP Database");
-	});
-});
 
 describe("Delivery Service utilities", () => {
 	it("converts Query String Handlings to human-readable strings", () => {

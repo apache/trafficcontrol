@@ -5,7 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- [#7290](https://github.com/apache/trafficcontrol/pull/7290) *Traffic Monitor* Update TM results with hostname from via header, if exists
+- [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
+- [#7295](https://github.com/apache/trafficcontrol/pull/7295) *Traffic Portal* Added description and priority order for Layered Profile on server form.
 - [#6234](https://github.com/apache/trafficcontrol/issues/6234) *Traffic Ops, Traffic Portal* Added description field to Server Capabilities
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple servers per capability.
 - [#7081](https://github.com/apache/trafficcontrol/issues/7081) *Traffic Router* Added better log messages for TR connection exceptions.
@@ -25,6 +26,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture
 - [#7113](https://github.com/apache/trafficcontrol/pull/7113) *Traffic Portal* Minimize the Server Server Capability part of the *Traffic Servers* section of the Snapshot Diff
 - [#7273](https://github.com/apache/trafficcontrol/pull/7273) *Traffic Ops* Adds SSL-KEY-EXPIRATION:READ permission to operations, portal, read-only, federation and steering roles
+- [#7296](https://github.com/apache/trafficcontrol/pull/7296) *Traffic Portal* New configuration option in `traffic_portal_properties.json` at `deliveryServices.exposeInactive` controls exposing APIv5 DS Active State options in the TP UI.
 
 ### Changed
 - [#7224](https://github.com/apache/trafficcontrol/pull/7224) *Traffic Ops* Required Capabilities are now a part of the `DeliveryService` structure.
@@ -70,6 +72,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6533](https://github.com/apache/trafficcontrol/issues/6533) *TR should not rename/recreate log files on rollover
 - [#7182](https://github.com/apache/trafficcontrol/pull/7182) *Traffic Control Cache Config (t3c)* Sort peers used in strategy.yaml to prevent false positive for reload.
 - [#7204](https://github.com/apache/trafficcontrol/pull/7204) *Traffic Control Cache Config (t3c)* strategies.yaml hash_key only for consistent_hash
+- [#7277](https://github.com/apache/trafficcontrol/pull/7277) *Traffic Control Cache Config (t3c)* remapdotconfig: remove skip check at mids for nocache/live
 
 ## [7.0.0] - 2022-07-19
 ### Added

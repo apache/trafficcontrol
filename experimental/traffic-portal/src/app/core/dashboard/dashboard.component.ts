@@ -144,5 +144,4 @@ export class DashboardComponent implements OnInit {
 	public tracker(_: number, d: DeliveryService): number {
 		return d.id || 0;
 	}
-
 }

@@ -40,7 +40,13 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 		{
 			headerName: "Active",
 			field: "active",
-			hide: false
+			hide: false,
+			valueGetter: ({data}) => {
+				if (propertiesModel.properties.deliveryServices?.exposeInactive || data.active === "ACTIVE") {
+					return data.active;
+				}
+				return "INACTIVE";
+			}
 		},
 		{
 			headerName: "Anonymous Blocking",
@@ -378,9 +384,9 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 		}
 	];
 
-	let dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+	let dsRequestsEnabled = propertiesModel.properties?.dsRequests?.enabled;
 
-	let showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
+	let showCustomCharts = propertiesModel.properties.deliveryServices?.charts.customLink.show;
 
 	/**
 	 * @param {string} typeName
@@ -476,7 +482,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 						{ id: $scope.DRAFT, name: "Save Request as Draft" },
 						{ id: $scope.SUBMITTED, name: "Submit Request for Review and Deployment" }
 					];
-					if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
+					if (userModel.user.role === propertiesModel.properties?.dsRequests?.overrideRole) {
 						statuses.push({ id: $scope.COMPLETE, name: "Fulfill Request Immediately" });
 					}
 					return statuses;

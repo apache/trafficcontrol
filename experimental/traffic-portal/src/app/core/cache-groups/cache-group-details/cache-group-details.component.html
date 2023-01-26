@@ -1,0 +1,87 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<mat-card>
+	<tp-loading *ngIf="!cacheGroup"></tp-loading>
+	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="cacheGroup">
+		<mat-card-content>
+			<mat-form-field>
+				<mat-label>Name</mat-label>
+				<input matInput type="text" name="name" [(ngModel)]="cacheGroup.name" required/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Type</mat-label>
+				<mat-select name="type" [formControl]="typeCtrl" required (selectionChange)="showErrors = false">
+					<mat-option *ngFor="let type of types" [value]="type.id">{{type.name}}</mat-option>
+				</mat-select>
+				<mat-hint *ngIf="selectedTypeDescription">{{selectedTypeDescription}}</mat-hint>
+				<mat-error *ngIf="showErrors && typeCtrl.invalid">Required</mat-error>
+			</mat-form-field>
+			<mat-form-field *ngIf="!new">
+				<mat-label>ID</mat-label>
+				<input matInput type="text" name="id" disabled readonly [defaultValue]="cacheGroup.id" />
+			</mat-form-field>
+			<mat-form-field *ngIf="!new">
+				<mat-label>Last Updated</mat-label>
+				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="cacheGroup.lastUpdated" />
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Parent</mat-label>
+				<mat-select [(ngModel)]="cacheGroup.parentCachegroupId" name="parentCacheGroup">
+					<mat-option [value]="null">-- None --</mat-option>
+					<mat-optgroup label="Cache Groups">
+						<mat-option *ngFor="let cg of parentCacheGroups()" [value]="cg.id">{{cg.name}}</mat-option>
+					</mat-optgroup>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Secondary Parent</mat-label>
+				<mat-select [(ngModel)]="cacheGroup.secondaryParentCachegroupId" name="secondaryParentCacheGroup">
+					<mat-option [value]="null">-- None --</mat-option>
+					<mat-optgroup label="Cache Groups">
+						<mat-option *ngFor="let cg of secondaryParentCacheGroups()" [value]="cg.id">{{cg.name}}</mat-option>
+					</mat-optgroup>
+				</mat-select>
+			</mat-form-field>
+			<div class="pair">
+				<mat-form-field>
+					<mat-label>Latitude</mat-label>
+					<input type="number" matInput min="-90" max="90" step="0.001" name="latitude" [(ngModel)]="cacheGroup.latitude" required/>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>Longitude</mat-label>
+					<input type="number" matInput min="-180" max="180" step="0.001" name="longitude" [(ngModel)]="cacheGroup.longitude" required/>
+				</mat-form-field>
+			</div>
+			<mat-form-field>
+				<mat-label>Allowed Client Localization Methods</mat-label>
+				<mat-select name="localizationMethods" multiple required [(ngModel)]="cacheGroup.localizationMethods" (selectionChange)="updateLocalizationMethods()">
+					<mat-option *ngFor="let method of localizationMethods" [value]="method">{{localizationMethodToString(method)}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<div class="pair">
+				<mat-form-field>
+					<mat-label>Fallbacks</mat-label>
+					<mat-select name="fallbacks" multiple [(ngModel)]="cacheGroup.fallbacks">
+						<mat-option *ngFor="let cg of fallbacks()">{{cg.name}}</mat-option>
+					</mat-select>
+				</mat-form-field>
+				<mat-checkbox name="fallbackToClosest" [(ngModel)]="cacheGroup.fallbackToClosest">Fall back to closest on localization failure</mat-checkbox>
+			</div>
+		</mat-card-content>
+		<mat-card-actions align="end">
+			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="delete()">Delete</button>
+			<button mat-raised-button type="submit" color="primary">Save</button>
+		</mat-card-actions>
+	</form>
+</mat-card>

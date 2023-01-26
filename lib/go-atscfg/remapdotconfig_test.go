@@ -7474,6 +7474,241 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 	}
 }
 
+func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
+	hdr := "myHeaderComment"
+
+	edge := makeTestRemapServer()
+	edge.Type = "EDGE"
+	edge.Cachegroup = util.StrPtr("edgeCG")
+
+	mid := makeTestParentServer()
+	mid.Type = "MID"
+	mid.Cachegroup = util.StrPtr("midCG")
+	mid.HostName = util.StrPtr("mymid")
+	mid.ID = util.IntPtr(45)
+	setIP(mid, "192.168.2.5")
+
+	dsType := tc.DSType("HTTP_NO_CACHE")
+
+	// BNO
+	// show up at mid due to topo
+	ds0 := DeliveryService{}
+	ds0.ID = util.IntPtr(48)
+	ds0.Type = &dsType
+	ds0.OrgServerFQDN = util.StrPtr("origin0.example.test")
+	ds0.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds0.XMLID = util.StrPtr("mydsname0")
+	ds0.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds0.RegexRemap = util.StrPtr("")
+	ds0.FQPacingRate = util.IntPtr(314159)
+	ds0.DSCP = util.IntPtr(0)
+	ds0.RoutingName = util.StrPtr("myroutingname")
+	ds0.MultiSiteOrigin = util.BoolPtr(false)
+	ds0.OriginShield = util.StrPtr("myoriginshield")
+	ds0.ProfileID = util.IntPtr(49)
+	ds0.ProfileName = util.StrPtr("dsprofile")
+	ds0.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds0.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds0.Active = util.BoolPtr(true)
+	ds0.Topology = util.StrPtr("t0")
+
+	ds0.FirstHeaderRewrite = util.StrPtr("first-header-rewrite")
+	ds0.InnerHeaderRewrite = util.StrPtr("inner-header-rewrite")
+	ds0.LastHeaderRewrite = util.StrPtr("last-header-rewrite")
+	ds0.ServiceCategory = util.StrPtr("")
+	ds0.MaxOriginConnections = util.IntPtr(0)
+
+	// not show up at mid due to topo
+	ds1 := DeliveryService{}
+	ds1.ID = util.IntPtr(49)
+	ds1.Type = &dsType
+	ds1.OrgServerFQDN = util.StrPtr("origin1.example.test")
+	ds1.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds1.XMLID = util.StrPtr("mydsname1")
+	ds1.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds1.RegexRemap = util.StrPtr("")
+	ds1.FQPacingRate = util.IntPtr(314159)
+	ds1.DSCP = util.IntPtr(0)
+	ds1.RoutingName = util.StrPtr("myroutingname")
+	ds1.MultiSiteOrigin = util.BoolPtr(false)
+	ds1.OriginShield = util.StrPtr("myoriginshield")
+	ds1.ProfileID = util.IntPtr(49)
+	ds1.ProfileName = util.StrPtr("dsprofile")
+	ds1.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds1.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds1.Active = util.BoolPtr(true)
+	ds1.Topology = util.StrPtr("t1")
+
+	ds1.FirstHeaderRewrite = util.StrPtr("first-header-rewrite")
+	ds1.InnerHeaderRewrite = util.StrPtr("inner-header-rewrite")
+	ds1.LastHeaderRewrite = util.StrPtr("last-header-rewrite")
+	ds1.ServiceCategory = util.StrPtr("")
+	ds1.MaxOriginConnections = util.IntPtr(0)
+
+	dses := []DeliveryService{ds0, ds1}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *edge.ID,
+			DeliveryService: *ds0.ID,
+		},
+		DeliveryServiceServer{
+			Server:          *edge.ID,
+			DeliveryService: *ds1.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds0.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `regexpat0`,
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: *ds1.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `regexpat1`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "9",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(mid.ProfileNames[0]),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(mid.ProfileNames[0]),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+		{
+			Name: "t1",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+				},
+			},
+		},
+	}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = edge.Cachegroup
+	eCG.ID = edge.CachegroupID
+	eCG.ParentName = mid.Cachegroup
+	eCG.ParentCachegroupID = mid.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid.Cachegroup
+	mCG.ID = mid.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	{ // edge test
+		cfg, err := MakeRemapDotConfig(edge, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		txt = strings.TrimSpace(txt)
+
+		testComment(t, txt, hdr)
+
+		txtLines := strings.Split(txt, "\n")
+		if len(txtLines) != 4 {
+			t.Fatalf("expected 2 remaps from HTTP_NO_CACHE DS on Edge, actual: '%v' count %v", txt, len(txtLines))
+		}
+
+		if !strings.Contains(txt, "regexpat0") {
+			t.Errorf("expected ds0 on Edge, actual: '%v'", txt)
+		}
+
+		if !strings.Contains(txt, "regexpat1") {
+			t.Errorf("expected ds1 on Edge, actual: '%v'", txt)
+		}
+	}
+
+	{ // mid test
+		cfg, err := MakeRemapDotConfig(mid, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		txt = strings.TrimSpace(txt)
+
+		testComment(t, txt, hdr)
+
+		txtLines := strings.Split(txt, "\n")
+		if len(txtLines) != 3 {
+			t.Fatalf("expected 1 remap from HTTP_NO_CACHE DS on Mid, actual: '%v' count %v", txt, len(txtLines))
+		}
+
+		if !strings.Contains(txt, "origin0") {
+			t.Errorf("expected ds0 on Mid, actual: '%v'", txt)
+		}
+
+		if strings.Contains(txt, "origin1") {
+			t.Errorf("did not expect ds1 on Mid, actual: '%v'", txt)
+		}
+	}
+}
+
 func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 	hdr := "myHeaderComment"
 

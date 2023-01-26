@@ -30,40 +30,40 @@ describe("RelativeTimeString", () => {
 		expect(str.substring(0, 4)).toBeCloseTo(5.8, 1);
 	});
 	it("Months", () => {
-		fromDate.setFullYear(toDate.getFullYear());
+		fromDate.setUTCFullYear(toDate.getUTCFullYear());
 		const str = relativeTimeString(toDate.getTime() - fromDate.getTime());
 		expect(str.substring(4)).toBe(" months ago");
 		expect(str.substring(0, 4)).toBeCloseTo(9.5, 1);
 	});
 	it("Weeks", () => {
-		fromDate.setFullYear(toDate.getFullYear(), toDate.getMonth());
+		fromDate.setUTCFullYear(toDate.getUTCFullYear(), toDate.getUTCMonth());
 		const str = relativeTimeString(toDate.getTime() - fromDate.getTime());
 		expect(str.substring(4)).toBe(" weeks ago");
 		expect(str.substring(0, 4)).toBeCloseTo(1.8, 1);
 	});
 	it("Days", () => {
-		fromDate.setFullYear(toDate.getFullYear(), toDate.getMonth(), toDate.getDate()-3);
+		fromDate.setUTCFullYear(toDate.getUTCFullYear(), toDate.getUTCMonth(), toDate.getUTCDate()-3);
 		const str = relativeTimeString(toDate.getTime() - fromDate.getTime());
 		expect(str.substring(4)).toBe(" days ago");
 		expect(str.substring(0, 4)).toBeCloseTo(3.9, 1);
 	});
 	it("Hours", () => {
-		fromDate.setFullYear(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-		fromDate.setHours(toDate.getHours()-3);
+		fromDate.setUTCFullYear(toDate.getUTCFullYear(), toDate.getUTCMonth(), toDate.getUTCDate());
+		fromDate.setUTCHours(toDate.getUTCHours()-3);
 		const str = relativeTimeString(toDate.getTime() - fromDate.getTime());
 		expect(str.substring(4)).toBe(" hours ago");
 		expect(str.substring(0, 4)).toBeCloseTo(3.7, 1);
 	});
 	it("Minutes", () => {
-		fromDate.setFullYear(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-		fromDate.setHours(toDate.getHours());
+		fromDate.setUTCFullYear(toDate.getUTCFullYear(), toDate.getUTCMonth(), toDate.getUTCDate());
+		fromDate.setUTCHours(toDate.getUTCHours());
 		const str = relativeTimeString(toDate.getTime() - fromDate.getTime());
 		expect(str.substring(5)).toBe(" minutes ago");
 		expect(str.substring(0, 5)).toBeCloseTo(44.9, 1);
 	});
 	it("Seconds", () => {
-		fromDate.setFullYear(toDate.getFullYear(), toDate.getMonth(), toDate.getDate());
-		fromDate.setHours(toDate.getHours(), toDate.getMinutes());
+		fromDate.setUTCFullYear(toDate.getUTCFullYear(), toDate.getUTCMonth(), toDate.getUTCDate());
+		fromDate.setUTCHours(toDate.getUTCHours(), toDate.getUTCMinutes());
 		const str = relativeTimeString(toDate.getTime() - fromDate.getTime());
 		expect(str.substring(2)).toBe(" seconds ago");
 		expect(str.substring(0, 2)).toBe("56");

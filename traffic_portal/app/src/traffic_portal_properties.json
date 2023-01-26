@@ -190,7 +190,8 @@
           "show": false,
           "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_deliveryservice.js?which="
         }
-      }
+      },
+	  "exposeInactive": false
     },
     "dsRequests": {
       "_comments": "Should all delivery service changes go through the delivery service request/review process? You can also provide a override role name (i.e. admin) that will allow users with the given role to circumvent the delivery service request process.",

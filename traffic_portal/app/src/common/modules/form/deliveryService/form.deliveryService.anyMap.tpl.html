@@ -112,8 +112,9 @@ under the License.
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required>
                                 <option disabled hidden value="">Select...</option>
-                                <option value="PRIMED">Active</option>
-								<option value="INACTIVE">Inactive</option>
+                                <option value="ACTIVE">Active</option>
+                                <option value="PRIMED">{{exposeInactive ? 'Primed' : 'Inactive'}}</option>
+								<option ng-if="exposeInactive" value="INACTIVE">Inactive</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.active != dsCurrent.active">

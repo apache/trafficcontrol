@@ -15,12 +15,24 @@
 
 */
 
-var PropertiesModel = function() {
+/**
+ * PropertiesModel models the "properties" (i.e. configuration) of Traffic
+ * Portal.
+ */
+class PropertiesModel {
 
-	this.properties = {};
-	this.loaded = false;
+	/**
+	 * @type {Partial<typeof import("../../traffic_portal_properties.json").properties>}
+	 */
+	properties = {};
+	loaded = false;
 
-	this.setProperties = function(properties) {
+	/**
+	 * Loads in properties if not already done.
+	 *
+	 * @param {Partial<typeof import("../../traffic_portal_properties.json").properties>} properties
+	 */
+	setProperties(properties) {
 		if (this.loaded) return;
 		this.properties = properties;
 		this.loaded = true;

@@ -12,20 +12,6 @@
 * limitations under the License.
 */
 
-/**
- * This file is for modeling and functionality related to CDN objects
- */
-
-/**
- * Represents a CDN as exposed by the Traffic Ops API
- */
-export interface CDN {
-	/** Whether or not DNSSEC is enabled within this CDN. */
-	dnssecEnabled: boolean;
-	/** The Top-Level Domain within which the CDN operates. */
-	domainName:    string;
-	/** An integral, unique identifier for the CDN. */
-	id:            number;
-	/** The name of the CDN. */
-	name:          string;
+mat-form-field {
+	width: 100%;
 }
