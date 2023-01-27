@@ -76,7 +76,7 @@ export class PhysLocTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			href: (physLoc: ResponsePhysicalLocation): string => `/core/region/${physLoc.regionId}`,
+			href: (physLoc: ResponsePhysicalLocation): string => `/core/regions/${physLoc.regionId}`,
 			name: "View Region"
 		}
 	];

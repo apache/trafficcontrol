@@ -80,7 +80,7 @@ export class DivisionsTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented division data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseDivision>> = [
 		{
-			href: (div: ResponseDivision): string => `core/division/${div.id}`,
+			href: (div: ResponseDivision): string => `core/divisions/${div.id}`,
 			name: "Edit"
 		},
 		{

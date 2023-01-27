@@ -84,7 +84,7 @@ export class RegionsTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented region data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseRegion>> = [
 		{
-			href: (selectedRow: ResponseRegion): string => `/core/region/${selectedRow.id}`,
+			href: (selectedRow: ResponseRegion): string => `/core/regions/${selectedRow.id}`,
 			name: "Edit"
 		},
 		{
@@ -93,7 +93,7 @@ export class RegionsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			href: (selectedRow: Region): string => `/core/division/${selectedRow.division}`,
+			href: (selectedRow: Region): string => `/core/divisions/${selectedRow.division}`,
 			name: "View Division"
 		},
 		{
