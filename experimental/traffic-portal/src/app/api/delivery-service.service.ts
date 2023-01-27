@@ -16,10 +16,11 @@ import { Injectable } from "@angular/core";
 import { SteeringConfiguration } from "trafficops-types";
 
 import {
+	GeoLimit,
+	GeoProvider,
 	type DataPoint,
 	type DataSet,
 	type DataSetWithSummary,
-	defaultDeliveryService,
 	type DeliveryService,
 	type DSCapacity,
 	type DSHealth,
@@ -200,7 +201,26 @@ export class DeliveryServiceService extends APIService {
 			).catch(
 				e => {
 					console.error("Error getting Delivery Services:", e);
-					return {...defaultDeliveryService};
+					return {
+						active: false,
+						anonymousBlockingEnabled: false,
+						cdnId: -1,
+						displayName: "FIZZbuzz",
+						dscp: 0,
+						geoLimit: GeoLimit.NONE,
+						geoProvider: GeoProvider.MAX_MIND,
+						ipv6RoutingEnabled: true,
+						logsEnabled: true,
+						longDesc: "",
+						missLat: 0,
+						missLong: 0,
+						multiSiteOrigin: false,
+						regionalGeoBlocking: false,
+						routingName: "",
+						tenantId: -1,
+						typeId: -1,
+						xmlId: "fizz-buzz"
+					};
 				}
 			);
 		}

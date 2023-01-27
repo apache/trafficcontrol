@@ -19,7 +19,7 @@ import {ReplaySubject} from "rxjs";
 
 import { DeliveryServiceService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { defaultDeliveryService } from "src/app/models";
+import { GeoLimit, GeoProvider } from "src/app/models";
 import { AlertService } from "src/app/shared/alert/alert.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -57,7 +57,26 @@ describe("DeliveryserviceComponent", () => {
 			]
 		}).compileComponents();
 		const dsService = TestBed.inject(DeliveryServiceService);
-		const ds = await dsService.createDeliveryService({...defaultDeliveryService});
+		const ds = await dsService.createDeliveryService({
+			active: false,
+			anonymousBlockingEnabled: false,
+			cdnId: -1,
+			displayName: "FIZZbuzz",
+			dscp: 0,
+			geoLimit: GeoLimit.NONE,
+			geoProvider: GeoProvider.MAX_MIND,
+			ipv6RoutingEnabled: true,
+			logsEnabled: true,
+			longDesc: "",
+			missLat: 0,
+			missLong: 0,
+			multiSiteOrigin: false,
+			regionalGeoBlocking: false,
+			routingName: "",
+			tenantId: -1,
+			typeId: -1,
+			xmlId: "fizz-buzz"
+		});
 
 		fixture = TestBed.createComponent(DeliveryserviceComponent);
 		component = fixture.componentInstance;
