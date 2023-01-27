@@ -20,11 +20,12 @@ import { bypassable, protocolToString, ResponseCDN } from "trafficops-types";
 
 import { CDNService, DeliveryServiceService } from "src/app/api";
 import {
-	defaultDeliveryService,
 	type DeliveryService,
 	Protocol,
 	type Type,
-	type User
+	type User,
+	GeoLimit,
+	GeoProvider
 } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
@@ -67,7 +68,26 @@ const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])?(\.[A-z\d]([A-z0-9\-]*[A-z
 export class NewDeliveryServiceComponent implements OnInit {
 
 	/** The Delivery Service being created */
-	public deliveryService: DeliveryService = {...defaultDeliveryService};
+	public deliveryService: DeliveryService = {
+		active: false,
+		anonymousBlockingEnabled: false,
+		cdnId: -1,
+		displayName: "",
+		dscp: 0,
+		geoLimit: GeoLimit.NONE,
+		geoProvider: GeoProvider.MAX_MIND,
+		ipv6RoutingEnabled: true,
+		logsEnabled: true,
+		longDesc: "",
+		missLat: 0,
+		missLong: 0,
+		multiSiteOrigin: false,
+		regionalGeoBlocking: false,
+		routingName: "",
+		tenantId: -1,
+		typeId: -1,
+		xmlId: ""
+	};
 
 	/** Allows the user to set 'active' */
 	public activeImmediately = new UntypedFormControl();

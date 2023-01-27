@@ -19,7 +19,7 @@ import { protocolToString, Protocol as LibProtocol } from "trafficops-types";
 import { DeliveryServiceService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { DsCardComponent } from "src/app/core/deliveryservice/ds-card/ds-card.component";
-import { Protocol, defaultDeliveryService } from "src/app/models";
+import { GeoLimit, GeoProvider, Protocol } from "src/app/models";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
 
@@ -44,7 +44,26 @@ describe("DsCardComponent", () => {
 		api = TestBed.inject(DeliveryServiceService);
 		fixture = TestBed.createComponent(DsCardComponent);
 		component = fixture.componentInstance;
-		component.deliveryService = await api.createDeliveryService({...defaultDeliveryService});
+		component.deliveryService = await api.createDeliveryService({
+			active: false,
+			anonymousBlockingEnabled: false,
+			cdnId: -1,
+			displayName: "",
+			dscp: 0,
+			geoLimit: GeoLimit.NONE,
+			geoProvider: GeoProvider.MAX_MIND,
+			ipv6RoutingEnabled: true,
+			logsEnabled: true,
+			longDesc: "",
+			missLat: 0,
+			missLong: 0,
+			multiSiteOrigin: false,
+			regionalGeoBlocking: false,
+			routingName: "",
+			tenantId: -1,
+			typeId: -1,
+			xmlId: ""
+		});
 		fixture.detectChanges();
 	});
 

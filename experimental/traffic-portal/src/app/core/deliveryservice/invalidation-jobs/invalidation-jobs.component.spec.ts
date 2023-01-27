@@ -22,7 +22,7 @@ import {type Observable, of, ReplaySubject} from "rxjs";
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { InvalidationJobsComponent } from "src/app/core/deliveryservice/invalidation-jobs/invalidation-jobs.component";
-import { defaultDeliveryService, type InvalidationJob, JobType } from "src/app/models";
+import { type InvalidationJob, JobType, GeoLimit, GeoProvider } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
@@ -65,7 +65,27 @@ describe("InvalidationJobsComponent", () => {
 		}).compileComponents();
 
 		const dsService = TestBed.inject(DeliveryServiceService);
-		const ds = await dsService.createDeliveryService({...defaultDeliveryService});
+		const ds = await dsService.createDeliveryService({
+			active: false,
+			anonymousBlockingEnabled: false,
+			cdnId: -1,
+			displayName: "FIZZbuzz",
+			dscp: 0,
+			geoLimit: GeoLimit.NONE,
+			geoProvider: GeoProvider.MAX_MIND,
+			ipv6RoutingEnabled: true,
+			logsEnabled: true,
+			longDesc: "",
+			missLat: 0,
+			missLong: 0,
+			multiSiteOrigin: false,
+			regionalGeoBlocking: false,
+			routingName: "",
+			tenantId: -1,
+			typeId: -1,
+			xmlId: "fizz-buzz"
+
+		});
 
 		router = TestBed.inject(Router);
 		router.initialNavigation();
