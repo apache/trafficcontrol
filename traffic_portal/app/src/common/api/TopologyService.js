@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var TopologyService = function($http, ENV, locationUtils, messageModel) {
+var TopologyService = function($http, ENV, messageModel) {
 
 	this.getTopologies = function(queryParams) {
 		return $http.get(ENV.api.unstable + 'topologies', { params: queryParams }).then(
@@ -95,5 +95,5 @@ var TopologyService = function($http, ENV, locationUtils, messageModel) {
 
 };
 
-TopologyService.$inject = ['$http', 'ENV', 'locationUtils', 'messageModel'];
+TopologyService.$inject = ['$http', 'ENV', 'messageModel'];
 module.exports = TopologyService;

@@ -20,18 +20,18 @@ import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { RouterModule, type Routes } from "@angular/router";
 
-import { DivisionDetailComponent } from "src/app/core/cache-groups/divisions/detail/division-detail.component";
-import { DivisionsTableComponent } from "src/app/core/cache-groups/divisions/table/divisions-table.component";
-import { RegionDetailComponent } from "src/app/core/cache-groups/regions/detail/region-detail.component";
-import { RegionsTableComponent } from "src/app/core/cache-groups/regions/table/regions-table.component";
-import { LastDaysComponent } from "src/app/core/change-logs/last-days/last-days.component";
-
 import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
+import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/cache-group-details.component";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { DivisionDetailComponent } from "./cache-groups/divisions/detail/division-detail.component";
+import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
+import { RegionDetailComponent } from "./cache-groups/regions/detail/region-detail.component";
+import { RegionsTableComponent } from "./cache-groups/regions/table/regions-table.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
+import { LastDaysComponent } from "./change-logs/last-days/last-days.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
 import { UpdatePasswordDialogComponent } from "./currentuser/update-password-dialog/update-password-dialog.component";
 import { DashboardComponent } from "./dashboard/dashboard.component";
@@ -52,24 +52,25 @@ import { UserRegistrationDialogComponent } from "./users/user-registration-dialo
 import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
-	{ canActivate: [AuthenticatedGuard], component: DashboardComponent, path: "" },
-	{ canActivate: [AuthenticatedGuard], component: DivisionsTableComponent, path: "divisions" },
-	{ canActivate: [AuthenticatedGuard], component: DivisionDetailComponent, path: "division/:id" },
-	{ canActivate: [AuthenticatedGuard], component: RegionsTableComponent, path: "regions" },
-	{ canActivate: [AuthenticatedGuard], component: RegionDetailComponent, path: "region/:id" },
-	{ canActivate: [AuthenticatedGuard], component: UsersComponent, path: "users" },
-	{ canActivate: [AuthenticatedGuard], component: UserDetailsComponent, path: "users/:id"},
-	{ canActivate: [AuthenticatedGuard], component: ServersTableComponent, path: "servers" },
-	{ canActivate: [AuthenticatedGuard], component: ServerDetailsComponent, path: "server/:id" },
-	{ canActivate: [AuthenticatedGuard], component: DeliveryserviceComponent, path: "deliveryservice/:id" },
-	{ canActivate: [AuthenticatedGuard], component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
-	{ canActivate: [AuthenticatedGuard], component: CurrentuserComponent, path: "me" },
-	{ canActivate: [AuthenticatedGuard], component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
-	{ canActivate: [AuthenticatedGuard], component: CacheGroupTableComponent, path: "cache-groups" },
-	{ canActivate: [AuthenticatedGuard], component: TenantsComponent, path: "tenants"},
-	{ canActivate: [AuthenticatedGuard], component: ChangeLogsComponent, path: "change-logs" },
-	{ canActivate: [AuthenticatedGuard], component: TenantDetailsComponent, path: "tenants/:id"}
-];
+	{ component: DashboardComponent, path: "" },
+	{ component: DivisionsTableComponent, path: "divisions" },
+	{ component: DivisionDetailComponent, path: "divisions/:id" },
+	{ component: RegionsTableComponent, path: "regions" },
+	{ component: RegionDetailComponent, path: "regions/:id" },
+	{ component: UsersComponent, path: "users" },
+	{ component: UserDetailsComponent, path: "users/:id"},
+	{ component: ServersTableComponent, path: "servers" },
+	{ component: ServerDetailsComponent, path: "server/:id" },
+	{ component: DeliveryserviceComponent, path: "deliveryservice/:id" },
+	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
+	{ component: CurrentuserComponent, path: "me" },
+	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
+	{ component: CacheGroupTableComponent, path: "cache-groups" },
+	{ component: CacheGroupDetailsComponent, path: "cache-groups/:id"},
+	{ component: TenantsComponent, path: "tenants"},
+	{ component: ChangeLogsComponent, path: "change-logs" },
+	{ component: TenantDetailsComponent, path: "tenants/:id"}
+].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
  * CoreModule contains code that only logged in users will be served.
@@ -99,7 +100,8 @@ export const ROUTES: Routes = [
 		DivisionsTableComponent,
 		DivisionDetailComponent,
 		RegionsTableComponent,
-		RegionDetailComponent
+		RegionDetailComponent,
+		CacheGroupDetailsComponent
 	],
 	exports: [],
 	imports: [

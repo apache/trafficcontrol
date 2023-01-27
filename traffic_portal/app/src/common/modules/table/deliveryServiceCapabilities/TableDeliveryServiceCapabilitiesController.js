@@ -17,6 +17,8 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} */
+
 /**
  * The controller for the table that lists the server capabilities required by a
  * Delivery Service.
@@ -112,9 +114,12 @@ var TableDeliveryServiceCapabilitiesController = function(deliveryService, requi
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
+		// Datatable types don't exist in the project, and they should all be
+		// replaced with AG-Grid anyway.
+		// @ts-ignore
 		$('#deliveryServiceCapabilitiesTable').dataTable({
 			"lengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,

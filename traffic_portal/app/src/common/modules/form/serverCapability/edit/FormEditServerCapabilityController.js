@@ -17,7 +17,16 @@
  * under the License.
  */
 
-var FormEditServerCapabilityController = function(serverCapability, $scope, $controller, $uibModal, $anchorScroll, locationUtils, messageModel, serverCapabilityService) {
+/**
+ * @param {*} serverCapability
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../models/MessageModel")} messageModel
+ * @param {import("../../../../api/ServerCapabilityService")} serverCapabilityService
+ */
+var FormEditServerCapabilityController = function(serverCapability, $scope, $controller, $uibModal, locationUtils, messageModel, serverCapabilityService) {
 
 	// extends the FormServerCapabilityController to inherit common methods
 	angular.extend(this, $controller('FormServerCapabilityController', { serverCapability: serverCapability, $scope: $scope }));
@@ -66,5 +75,5 @@ var FormEditServerCapabilityController = function(serverCapability, $scope, $con
 
 };
 
-FormEditServerCapabilityController.$inject = ['serverCapability', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'messageModel', 'serverCapabilityService'];
+FormEditServerCapabilityController.$inject = ['serverCapability', '$scope', '$controller', '$uibModal', 'locationUtils', 'messageModel', 'serverCapabilityService'];
 module.exports = FormEditServerCapabilityController;

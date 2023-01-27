@@ -17,7 +17,16 @@
  * under the License.
  */
 
-var TableRoleCapabilitiesController = function(roles, $scope, $state, $uibModal, locationUtils, capabilityService, roleService, messageModel) {
+/**
+ * @param {*} roles
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/RoleService")} roleService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
+var TableRoleCapabilitiesController = function(roles, $scope, $state, $uibModal, locationUtils, roleService, messageModel) {
 
 	$scope.role = roles[0];
 
@@ -74,7 +83,7 @@ var TableRoleCapabilitiesController = function(roles, $scope, $state, $uibModal,
 			}
 		});
 		modalInstance.result.then(function() {
-			$scope.role.capabilities = _.filter($scope.role.capabilities, function(cap) { return cap != capToRemove; });
+			$scope.role.capabilities = $scope.role.capabilities.filter(cap => cap !== capToRemove);
 			roleService.updateRole($scope.role, $scope.role.name)
 				.then(
 					function(result) {
@@ -91,7 +100,7 @@ var TableRoleCapabilitiesController = function(roles, $scope, $state, $uibModal,
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#capabilitiesTable').dataTable({
@@ -106,5 +115,5 @@ var TableRoleCapabilitiesController = function(roles, $scope, $state, $uibModal,
 
 };
 
-TableRoleCapabilitiesController.$inject = ['roles', '$scope', '$state', '$uibModal', 'locationUtils', 'capabilityService', 'roleService', 'messageModel'];
+TableRoleCapabilitiesController.$inject = ['roles', '$scope', '$state', '$uibModal', 'locationUtils', 'roleService', 'messageModel'];
 module.exports = TableRoleCapabilitiesController;

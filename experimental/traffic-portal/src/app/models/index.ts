@@ -12,8 +12,6 @@
 * limitations under the License.
 */
 export * from "./alert.model";
-export * from "./cache-groups";
-export * from "./cdn";
 export * from "./data";
 export * from "./deliveryservice";
 export * from "./invalidation";

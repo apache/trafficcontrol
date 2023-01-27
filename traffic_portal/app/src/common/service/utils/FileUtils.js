@@ -17,71 +17,87 @@
  * under the License.
  */
 
-var FileUtils = function() {
+/**
+ * FileUtils provides methods that allow transforming data into file downloads
+ * for the user.
+ */
+class FileUtils {
 
-	this.exportJSON = function(json, fileName, fileExtension) {
-		var jsonStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(json, null, '\t')), // tab indented
-			extension = fileExtension || 'json';
-
-		// look ma, no hands...anchor trickery to pop a download dialog
-		var a = document.createElement('a');
+	/**
+	 * Downloads an arbitrary data blob in JSON format (indented with tab
+	 * characters).
+	 *
+	 * @param {object} json Any object that can be stringified - which means
+	 * **no** circular references and **no** functions.
+	 * @param {string} fileName The name the browser will suggest for the file
+	 * download.
+	 * @param {string} [fileExtension] The file name "extension" to use (with
+	 * the `.` omitted!). If not provided, the default is "json".
+	 */
+	exportJSON(json, fileName, fileExtension) {
+		const jsonStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(json, null, "\t"))}`;
+		const extension = fileExtension ?? "json";
+		const a = document.createElement("a");
 		a.setAttribute("href", jsonStr);
-		a.setAttribute("download", fileName + "." + extension);
+		a.setAttribute("download", `${fileName}.${extension}`);
 		a.click();
 		a.remove();
 	};
 
-	this.convertToCSV = function(JSONData, reportTitle, includedKeys) {
-		var arrData = typeof JSONData != 'object' ? JSON.parse(JSONData) : JSONData;
-		var CSV = '';
-		CSV += reportTitle + '\r\n\r\n';
+	/**
+	 * Downloads a set of arbitrary data rows as a CSV. The first row is
+	 * expected to be a header. If all rows are not the same length, the output
+	 * will likely be considered invalid by most applications - but this is
+	 * **not** checked by this utility.
+	 *
+	 * @deprecated Tables should all be ag-grid-based now, which has this
+	 * functionality built-in so that we don't need to maintain it ourselves.
+	 *
+	 * @param {readonly [readonly string[], ...(readonly unknown[] | Record<PropertyKey, unknown>)[]]} arrData The data to download.
+	 * @param {string} reportTitle The name that the browser will suggest for
+	 * the download. ".csv" will be appended, and therefore need not be
+	 * included.
+	 * @param {Set<string>|string[]} [includedKeys] The keys of objects to
+	 * include. If not given, all keys are included. Otherwise, for each
+	 * non-header row, the keys of each object that are found in this collection
+	 * will be added as row elements in alphabetical order of key name. The
+	 * header row will automatically be trimmed to only include headers for
+	 * included keys.
+	 */
+	convertToCSV(arrData, reportTitle, includedKeys) {
+		let CSV = reportTitle + '\r\n\r\n';
 
-		var keys = [];
-		for (var key in arrData[0]) {
-			if (!includedKeys || _.contains(includedKeys, key)) {
-				keys.push(key);
-			}
-		}
+		const keysToInclude = Array.isArray(includedKeys) ? new Set(includedKeys) : (includedKeys ?? false);
+		const keys = arrData[0].filter(key => !keysToInclude || keysToInclude.has(key))
 		keys.sort(); // alphabetically
+		CSV += keys.join(",") + '\r\n';
 
-		var row = "";
-		for (var i = 0; i < keys.length; i++) {
-			row += keys[i] + ',';
-		}
-		row = row.slice(0, -1);
-
-		CSV += row + '\r\n';
-
-		for (var j = 0; j < arrData.length; j++) {
-			var row = "";
-			for (var k = 0; k < keys.length; k++) {
-				row += '"' + arrData[j][keys[k]] + '",';
+		for (const rowData of arrData) {
+			const row = [];
+			for (const k of keys) {
+				row.push(`"${rowData[k]}"`);
 			}
-			row.slice(0, row.length - 1);
-			CSV += row + '\r\n';
+			CSV += row.join(",") + '\r\n';
 		}
 
-		if (CSV == '') {
+		if (!CSV) {
 			alert("Invalid data");
 			return;
 		}
 
-		var fileName = "";
-		fileName += reportTitle.replace(/ /g,"_");
+		const fileName = reportTitle.replace(/ /g, "_");
 
-		var uri = 'data:text/csv;charset=utf-8,' + escape(CSV);
-		var link = document.createElement("a");
+		const uri = `data:text/csv;charset=utf-8,${encodeURIComponent(CSV)}`;
+		const link = document.createElement("a");
 		link.href = uri;
-
-		link.style = "visibility:hidden";
-		link.download = fileName + ".csv";
+		link.style.visibility = "hidden";
+		link.download = `${fileName}.csv`;
 
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
-	};
-
-};
+	}
+}
 
 FileUtils.$inject = [];
 module.exports = FileUtils;

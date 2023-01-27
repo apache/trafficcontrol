@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} topology
+ * @param {*} cacheGroups
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/TopologyService")} topologyService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ * @param {import("../../../../service/utils/TopologyUtils")} topologyUtils
+ */
 var FormNewTopologyController = function(topology, cacheGroups, $scope, $controller, locationUtils, topologyService, messageModel, topologyUtils) {
 
 	// extends the FormTopologyController to inherit common methods

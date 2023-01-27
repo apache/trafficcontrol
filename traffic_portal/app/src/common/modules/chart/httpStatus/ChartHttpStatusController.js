@@ -17,6 +17,22 @@
  * under the License.
  */
 
+/**
+ * @global
+ * @typedef {import("moment")} moment
+ */
+
+/**
+ * @param {*} deliveryService
+ * @param {*} $scope
+ * @param {import("angular").ITimeoutService} $timeout
+ * @param {import("angular").IFilterService} $filter
+ * @param {import("angular").IQService} $q
+ * @param {import("angular").IIntervalService} $interval
+ * @param {import("../../../api/DeliveryServiceStatsService")} deliveryServiceStatsService
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ */
 var ChartHttpStatusController = function(deliveryService, $scope, $timeout, $filter, $q, $interval, deliveryServiceStatsService, dateUtils, propertiesModel) {
 
 	var chartSeries,

@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} $scope
+ * @param {import("angular").IIntervalService} $interval
+ * @param {import("angular").IFilterService} $filter
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/CacheGroupService")} cacheGroupService
+ * @param {import("../../../api/CDNService")} cdnService
+ * @param {import("../../../api/ServerService")} serverService
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ */
 var WidgetDashboardStatsController = function($scope, $interval, $filter, locationUtils, cacheGroupService, cdnService, serverService, propertiesModel) {
 
 	var cacheGroupHealthInterval,
@@ -24,7 +34,8 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 		serverCountInterval,
 		autoRefresh = propertiesModel.properties.dashboard.autoRefresh;
 
-	var serverCount = new Map([
+	/** @type {Map<string, string | number>} */
+	const serverCount = new Map([
 		["ONLINE", "Loading..."],
 		["OFFLINE", "Loading..."],
 		["REPORTED", "Loading..."],
@@ -49,10 +60,8 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 		cdnService.getCurrentStats()
 			.then(
 				function(result) {
-					var totalStats = _.find(result.currentStats, function(item) {
-						// total stats are buried in a hash where cdn = total
-						return item.cdn == 'total';
-					});
+					// total stats are buried in a hash where cdn = total
+					const totalStats = result.currentStats.find(item => item.cdn === "total");
 					$scope.totalBandwidth = $filter('number')(totalStats.bandwidth, 2) + ' Gbps';
 					$scope.totalConnections = $filter('number')(totalStats.connections, 0);
 				},
@@ -72,8 +81,9 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 				serverCount.set("ADMIN_DOWN", 0);
 				for (let s in result) {
 					const server = result[s]; // webpack won't handle a for...of loop
-					if (serverCount.has(server.status)) {
-						serverCount.set(server.status, serverCount.get(server.status) + 1);
+					const stat = serverCount.get(server.status);
+					if (typeof(stat) === "number") {
+						serverCount.set(server.status, stat + 1);
 					}
 				}
 			});
@@ -125,7 +135,7 @@ var WidgetDashboardStatsController = function($scope, $interval, $filter, locati
 		return serverCount.get("ADMIN_DOWN");
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.$on("$destroy", function() {
 		killIntervals();

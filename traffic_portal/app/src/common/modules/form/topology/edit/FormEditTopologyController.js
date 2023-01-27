@@ -17,7 +17,19 @@
  * under the License.
  */
 
-var FormEditTopologyController = function(topologies, cacheGroups, $scope, $controller, $uibModal, $anchorScroll, locationUtils, cdnService, topologyService, messageModel, topologyUtils) {
+/**
+ *
+ * @param {*} topologies
+ * @param {*} cacheGroups
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/TopologyService")} topologyService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ * @param {import("../../../../service/utils/TopologyUtils")} topologyUtils
+ */
+var FormEditTopologyController = function(topologies, cacheGroups, $scope, $controller, $uibModal, locationUtils, topologyService, messageModel, topologyUtils) {
 
 	// extends the FormTopologyController to inherit common methods
 	angular.extend(this, $controller('FormTopologyController', { topology: topologies[0], cacheGroups: cacheGroups, $scope: $scope }));
@@ -118,5 +130,5 @@ var FormEditTopologyController = function(topologies, cacheGroups, $scope, $cont
 
 };
 
-FormEditTopologyController.$inject = ['topologies', 'cacheGroups', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'cdnService', 'topologyService', 'messageModel', 'topologyUtils'];
+FormEditTopologyController.$inject = ['topologies', 'cacheGroups', '$scope', '$controller', '$uibModal', 'locationUtils', 'topologyService', 'messageModel', 'topologyUtils'];
 module.exports = FormEditTopologyController;

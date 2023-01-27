@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} region
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/RegionService")} regionService
+ */
 var FormNewRegionController = function(region, $scope, $controller, locationUtils, regionService) {
 
     // extends the FormRegionController to inherit common methods

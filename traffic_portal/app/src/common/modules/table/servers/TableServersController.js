@@ -17,7 +17,20 @@
  * under the License.
  */
 
-var TableServersController = function(tableName, servers, filter, $scope, $state, $uibModal, $window, dateUtils, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel, userModel, $document) {
+/**
+ * @param {*} servers
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/ServerUtils")} serverUtils
+ * @param {import("../../../api/CDNService")} cdnService
+ * @param {import("../../../api/ServerService")} serverService
+ * @param {import("../../../api/StatusService")} statusService
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
+var TableServersController = function(servers, $scope, $state, $uibModal, locationUtils, serverUtils, cdnService, serverService, statusService, propertiesModel, messageModel) {
 
 	/**** Constants, scope data, etc. ****/
 
@@ -234,7 +247,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	/** All of the statuses (populated on init). */
 	let statuses = [];
 
-	/** @type CGC.DropDownOption[] */
+	/** @type {import("../agGrid/CommonGridController").CGC.DropDownOption[]} */
 	$scope.dropDownOptions = [{
 		name: "createServerMenuItem",
 		href: "#!/servers/new",
@@ -256,7 +269,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 		type: 1
 	}];
 
-	/** @type CGC.ContextMenuOption[] */
+	/** @type {import("../agGrid/CommonGridController").CGC.ContextMenuOption[]} */
 	$scope.contextMenuOptions = [
 		{
 			type: 2,
@@ -382,7 +395,7 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	$scope.chartsBase = propertiesModel.properties.servers.charts.baseUrl;
 
 	/** Options, configuration, data and callbacks for the ag-grid table. */
-	/** @type CGC.GridSettings */
+	/** @type {import("../agGrid/CommonGridController").CGC.GridSettings} */
 	$scope.gridOptions = {
 		onRowClick: function(row) {
 			locationUtils.navigateToPath("/servers/" + row.data.id);
@@ -563,5 +576,5 @@ var TableServersController = function(tableName, servers, filter, $scope, $state
 	}
 };
 
-TableServersController.$inject = ['tableName', 'servers', 'filter', '$scope', '$state', '$uibModal', '$window', 'dateUtils', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel', "userModel", "$document"];
+TableServersController.$inject = ['servers', '$scope', '$state', '$uibModal', 'locationUtils', 'serverUtils', 'cdnService', 'serverService', 'statusService', 'propertiesModel', 'messageModel'];
 module.exports = TableServersController;

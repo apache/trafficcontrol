@@ -17,7 +17,13 @@
  * under the License.
  */
 
-var TableOriginsController = function(origins, $scope, $state, $location, locationUtils) {
+/**
+ * @param {*} origins
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
+var TableOriginsController = function(origins, $scope, $state, locationUtils) {
 
     $scope.createOrigin = function() {
         var path = '/origins/new';
@@ -45,5 +51,5 @@ var TableOriginsController = function(origins, $scope, $state, $location, locati
 
 };
 
-TableOriginsController.$inject = ['origins', '$scope', '$state', '$location', 'locationUtils'];
+TableOriginsController.$inject = ['origins', '$scope', '$state', 'locationUtils'];
 module.exports = TableOriginsController;

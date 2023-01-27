@@ -26,7 +26,9 @@ import { type Capability, type CurrentUser, ADMIN_ROLE } from "src/app/models";
  * an implicitly injected ErrorInterceptor which clears the authenticated user
  * value when it hits a 401 error - so that would be a circular dependency.
  */
-@Injectable()
+@Injectable({
+	providedIn: "root"
+})
 export class CurrentUserService {
 	/** Makes updateCurrentUser able to be called from multiple places without regard to order */
 	private updatingUserPromise: Promise<boolean> | null = null;

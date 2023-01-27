@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} servers
+ * @param {*} osversions
+ * @param {*} $scope
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../api/ToolsService")} toolsService
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../service/utils/ServerUtils")} serverUtils
+ */
 var FormISOController = function(servers, osversions, $scope, $anchorScroll, formUtils, toolsService, messageModel, serverUtils) {
 
 	$scope.IPPattern = serverUtils.IPPattern;

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel, ENV) {
+var DeliveryServiceSslKeysService = function($http, messageModel, ENV) {
     this.successMessage = 'SSL Keys generated and updated for ';
     this.acmeSuccessMessage = 'ACME call has been made successfully. This may take a few minutes. Please watch for a notification in the Change Log. Delivery Service = ';
 
@@ -126,5 +126,5 @@ var DeliveryServiceSslKeysService = function($http, locationUtils, messageModel,
     };
 };
 
-DeliveryServiceSslKeysService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
+DeliveryServiceSslKeysService.$inject = ['$http', 'messageModel', 'ENV'];
 module.exports = DeliveryServiceSslKeysService;

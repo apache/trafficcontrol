@@ -17,7 +17,19 @@
  * under the License.
  */
 
-var FormRegenerateKskController = function(cdn, dnssecKeysRequest, $scope, $location, $uibModal, formUtils, locationUtils, cdnService, messageModel) {
+/** @typedef {import("moment")} moment */
+
+/**
+ * @param {*} cdn
+ * @param {*} dnssecKeysRequest
+ * @param {*} $scope
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/CDNService")} cdnService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
+var FormRegenerateKskController = function(cdn, dnssecKeysRequest, $scope, $uibModal, formUtils, locationUtils, cdnService, messageModel) {
 
 	var generate = function() {
 		$scope.kskRequest.effectiveDate = moment($scope.kskRequest.effectiveDate).utc().format();
@@ -76,7 +88,7 @@ var FormRegenerateKskController = function(cdn, dnssecKeysRequest, $scope, $loca
 		});
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 
@@ -84,5 +96,5 @@ var FormRegenerateKskController = function(cdn, dnssecKeysRequest, $scope, $loca
 
 };
 
-FormRegenerateKskController.$inject = ['cdn', 'dnssecKeysRequest', '$scope', '$location', '$uibModal', 'formUtils', 'locationUtils', 'cdnService', 'messageModel'];
+FormRegenerateKskController.$inject = ['cdn', 'dnssecKeysRequest', '$scope', '$uibModal', 'formUtils', 'locationUtils', 'cdnService', 'messageModel'];
 module.exports = FormRegenerateKskController;

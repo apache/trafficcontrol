@@ -40,6 +40,7 @@ RUN dnf install -y epel-release && \
         gettext \
         bind-utils \
         openssl \
+        procps-ng \
         initscripts && \
     dnf clean all
 

@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {import("angular").IHttpService} $http
+ * @param {import("../service/utils/LocationUtils")} locationUtils
+ * @param {import("../models/MessageModel")} messageModel
+ * @param {{api: Record<PropertyKey, string>}} ENV
+ */
 var CacheGroupService = function($http, locationUtils, messageModel, ENV) {
 
     this.getCacheGroups = function(queryParams) {

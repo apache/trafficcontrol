@@ -17,6 +17,8 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} $ */
+
 const defaultBannerColor = "#EDEDED";
 const defaultSidebarColor = "#2A3F54";
 const defaultTextColor = "#515356";
@@ -24,6 +26,25 @@ const defaultTextColor = "#515356";
 const prodTextColor = "white";
 const prodBannerColor = "#B22222";
 
+/** @typedef {import("moment")} moment */
+
+/**
+ * @param {import("angular").IRootScopeService} $rootScope
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").ILocationService} $location
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../service/utils/PermissionUtils")} permissionUtils
+ * @param {import("../../api/AuthService")} authService
+ * @param {import("../../api/TrafficPortalService")} trafficPortalService
+ * @param {import("../../api/ChangeLogService")} changeLogService
+ * @param {import("../../api/CDNService")} cdnService
+ * @param {import("../../models/ChangeLogModel")} changeLogModel
+ * @param {import("../../models/UserModel")} userModel
+ * @param {import("../../models/PropertiesModel")} propertiesModel
+ */
 var HeaderController = function($rootScope, $scope, $state, $uibModal, $location, $anchorScroll, locationUtils, permissionUtils, authService, trafficPortalService, changeLogService, cdnService, changeLogModel, userModel, propertiesModel) {
 
     let getCDNs = function(notifications) {
@@ -61,7 +82,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
 
     $scope.changeLogs = [];
 
-    $scope.hasCapability = permissionUtils.hasCapability;
+    $scope.hasCapability = cap => permissionUtils.hasCapability(cap);
 
     $scope.isState = function(state) {
         return $state.current.name.indexOf(state) !== -1;
@@ -176,7 +197,7 @@ var HeaderController = function($rootScope, $scope, $state, $uibModal, $location
         });
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     var scrollToTop = function() {
         $anchorScroll(); // hacky?

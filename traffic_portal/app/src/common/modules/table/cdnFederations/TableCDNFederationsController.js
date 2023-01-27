@@ -17,6 +17,14 @@
  * under the License.
  */
 
+/**
+ * @param {*} cdn
+ * @param {*} federations
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableCDNFederationsController = function(cdn, federations, $scope, $state, $location, locationUtils) {
 
 	$scope.cdn = cdn;
@@ -35,7 +43,7 @@ var TableCDNFederationsController = function(cdn, federations, $scope, $state, $
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#federationsTable').dataTable({

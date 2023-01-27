@@ -17,6 +17,14 @@
  * under the License.
  */
 
+/**
+ * @param {*} roles
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/RoleService")} roleService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
 var FormNewRoleController = function(roles, $scope, $controller, locationUtils, roleService, messageModel) {
 
 	// extends the FormRoleController to inherit common methods

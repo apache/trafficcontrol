@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} regexes
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
@@ -35,7 +42,7 @@ var TableDeliveryServiceRegexesController = function(deliveryService, regexes, $
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#regexesTable').dataTable({

@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} types
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableTypesController = function(types, $scope, $state, dateUtils, locationUtils) {
 
     let table;

@@ -20,6 +20,8 @@ package atscfg
  */
 
 import (
+	"bufio"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -41,6 +43,33 @@ func makeTestRemapServer() *Server {
 	server.TCPPort = util.IntPtr(12080)
 	server.Type = "MID"
 	return server
+}
+
+// tokenize remap line
+func tokenize(txt string) []string {
+	tokens := []string{}
+	scanner := bufio.NewScanner(strings.NewReader(txt))
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		tokens = append(tokens, scanner.Text())
+	}
+	return tokens
+}
+
+// Returns list of plugins from given remap rule.
+func pluginsFromTokens(tokens []string, prefix string) []string {
+	plugins := []string{}
+
+	for _, token := range tokens {
+		if strings.HasPrefix(token, prefix) {
+			token = strings.TrimPrefix(token, prefix)
+			if 0 < len(token) {
+				plugins = append(plugins, token)
+			}
+		}
+	}
+
+	return plugins
 }
 
 func TestMakeRemapDotConfig0(t *testing.T) {
@@ -97,7 +126,7 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 	}
@@ -215,7 +244,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -316,7 +345,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -431,7 +460,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -532,7 +561,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -671,7 +700,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -771,7 +800,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -873,7 +902,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -976,7 +1005,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -1115,7 +1144,7 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -1256,7 +1285,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -1397,7 +1426,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -1539,7 +1568,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -1937,7 +1966,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -2042,7 +2071,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -2164,7 +2193,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -2286,7 +2315,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -2408,7 +2437,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -2530,7 +2559,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -2648,7 +2677,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -2772,7 +2801,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -2896,7 +2925,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -3024,7 +3053,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -3152,7 +3181,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -3280,7 +3309,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -3414,7 +3443,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -3537,7 +3566,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -3660,7 +3689,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -3783,7 +3812,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -3906,7 +3935,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -4027,7 +4056,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -4151,7 +4180,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -4415,7 +4444,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -4554,7 +4583,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -4678,7 +4707,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -4798,7 +4827,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -4922,7 +4951,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -5070,7 +5099,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -5216,7 +5245,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -5345,7 +5374,7 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -5484,7 +5513,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -5637,7 +5666,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -5712,7 +5741,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "@plugin=tslua.so @pparam=my-range-manipulator.lua  @plugin=slice.so @pparam=--blockbytes=262144 @plugin=cache_range_requests.so") {
+	if !strings.Contains(remapLine, "@plugin=tslua.so @pparam=my-range-manipulator.lua @plugin=slice.so @pparam=--blockbytes=262144 @plugin=cache_range_requests.so") {
 		t.Errorf("expected raw remap to come after range directive, actual '%v'", txt)
 	}
 	if strings.Contains(remapLine, "__RANGE_DIRECTIVE__") {
@@ -5782,7 +5811,7 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -5845,7 +5874,7 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 		t.Errorf("expected remap on edge server to contain a single cachekey plugin, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "@plugin=tslua.so @pparam=uri-manipulator.lua  @plugin=cachekey.so") {
+	if !strings.Contains(remapLine, "@plugin=tslua.so @pparam=uri-manipulator.lua @plugin=cachekey.so") {
 		t.Errorf("expected cachekey to come after tslua, actual '%v'", txt)
 	}
 	if strings.Contains(remapLine, "__CACHEKEY_DIRECTIVE__") {
@@ -5915,7 +5944,7 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -5978,7 +6007,7 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 		t.Errorf("expected remap on edge server to contain a single regex_remap plugin, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "@plugin=tslua.so @pparam=uri-manipulator.lua  @plugin=regex_remap.so") {
+	if !strings.Contains(remapLine, "@plugin=tslua.so @pparam=uri-manipulator.lua @plugin=regex_remap.so") {
 		t.Errorf("expected regex_remap to come after tslua, actual '%v'", txt)
 	}
 	if strings.Contains(remapLine, "__REGEX_REMAP_DIRECTIVE__") {
@@ -6049,7 +6078,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -6188,7 +6217,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -6316,7 +6345,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -6436,7 +6465,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -6556,7 +6585,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -6676,7 +6705,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -6800,7 +6829,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -6920,7 +6949,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -7030,7 +7059,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -7145,7 +7174,7 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -7265,7 +7294,7 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -7385,7 +7414,7 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -7445,6 +7474,241 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 	}
 }
 
+func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
+	hdr := "myHeaderComment"
+
+	edge := makeTestRemapServer()
+	edge.Type = "EDGE"
+	edge.Cachegroup = util.StrPtr("edgeCG")
+
+	mid := makeTestParentServer()
+	mid.Type = "MID"
+	mid.Cachegroup = util.StrPtr("midCG")
+	mid.HostName = util.StrPtr("mymid")
+	mid.ID = util.IntPtr(45)
+	setIP(mid, "192.168.2.5")
+
+	dsType := tc.DSType("HTTP_NO_CACHE")
+
+	// BNO
+	// show up at mid due to topo
+	ds0 := DeliveryService{}
+	ds0.ID = util.IntPtr(48)
+	ds0.Type = &dsType
+	ds0.OrgServerFQDN = util.StrPtr("origin0.example.test")
+	ds0.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds0.XMLID = util.StrPtr("mydsname0")
+	ds0.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds0.RegexRemap = util.StrPtr("")
+	ds0.FQPacingRate = util.IntPtr(314159)
+	ds0.DSCP = util.IntPtr(0)
+	ds0.RoutingName = util.StrPtr("myroutingname")
+	ds0.MultiSiteOrigin = util.BoolPtr(false)
+	ds0.OriginShield = util.StrPtr("myoriginshield")
+	ds0.ProfileID = util.IntPtr(49)
+	ds0.ProfileName = util.StrPtr("dsprofile")
+	ds0.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds0.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds0.Active = util.BoolPtr(true)
+	ds0.Topology = util.StrPtr("t0")
+
+	ds0.FirstHeaderRewrite = util.StrPtr("first-header-rewrite")
+	ds0.InnerHeaderRewrite = util.StrPtr("inner-header-rewrite")
+	ds0.LastHeaderRewrite = util.StrPtr("last-header-rewrite")
+	ds0.ServiceCategory = util.StrPtr("")
+	ds0.MaxOriginConnections = util.IntPtr(0)
+
+	// not show up at mid due to topo
+	ds1 := DeliveryService{}
+	ds1.ID = util.IntPtr(49)
+	ds1.Type = &dsType
+	ds1.OrgServerFQDN = util.StrPtr("origin1.example.test")
+	ds1.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds1.XMLID = util.StrPtr("mydsname1")
+	ds1.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds1.RegexRemap = util.StrPtr("")
+	ds1.FQPacingRate = util.IntPtr(314159)
+	ds1.DSCP = util.IntPtr(0)
+	ds1.RoutingName = util.StrPtr("myroutingname")
+	ds1.MultiSiteOrigin = util.BoolPtr(false)
+	ds1.OriginShield = util.StrPtr("myoriginshield")
+	ds1.ProfileID = util.IntPtr(49)
+	ds1.ProfileName = util.StrPtr("dsprofile")
+	ds1.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds1.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds1.Active = util.BoolPtr(true)
+	ds1.Topology = util.StrPtr("t1")
+
+	ds1.FirstHeaderRewrite = util.StrPtr("first-header-rewrite")
+	ds1.InnerHeaderRewrite = util.StrPtr("inner-header-rewrite")
+	ds1.LastHeaderRewrite = util.StrPtr("last-header-rewrite")
+	ds1.ServiceCategory = util.StrPtr("")
+	ds1.MaxOriginConnections = util.IntPtr(0)
+
+	dses := []DeliveryService{ds0, ds1}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *edge.ID,
+			DeliveryService: *ds0.ID,
+		},
+		DeliveryServiceServer{
+			Server:          *edge.ID,
+			DeliveryService: *ds1.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds0.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `regexpat0`,
+				},
+			},
+		},
+		tc.DeliveryServiceRegexes{
+			DSName: *ds1.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `regexpat1`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "9",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(mid.ProfileNames[0]),
+		},
+		tc.Parameter{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(mid.ProfileNames[0]),
+		},
+	}
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				{
+					Cachegroup: "midCG",
+				},
+			},
+		},
+		{
+			Name: "t1",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+				},
+			},
+		},
+	}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = edge.Cachegroup
+	eCG.ID = edge.CachegroupID
+	eCG.ParentName = mid.Cachegroup
+	eCG.ParentCachegroupID = mid.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid.Cachegroup
+	mCG.ID = mid.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	{ // edge test
+		cfg, err := MakeRemapDotConfig(edge, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		txt = strings.TrimSpace(txt)
+
+		testComment(t, txt, hdr)
+
+		txtLines := strings.Split(txt, "\n")
+		if len(txtLines) != 4 {
+			t.Fatalf("expected 2 remaps from HTTP_NO_CACHE DS on Edge, actual: '%v' count %v", txt, len(txtLines))
+		}
+
+		if !strings.Contains(txt, "regexpat0") {
+			t.Errorf("expected ds0 on Edge, actual: '%v'", txt)
+		}
+
+		if !strings.Contains(txt, "regexpat1") {
+			t.Errorf("expected ds1 on Edge, actual: '%v'", txt)
+		}
+	}
+
+	{ // mid test
+		cfg, err := MakeRemapDotConfig(mid, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		txt = strings.TrimSpace(txt)
+
+		testComment(t, txt, hdr)
+
+		txtLines := strings.Split(txt, "\n")
+		if len(txtLines) != 3 {
+			t.Fatalf("expected 1 remap from HTTP_NO_CACHE DS on Mid, actual: '%v' count %v", txt, len(txtLines))
+		}
+
+		if !strings.Contains(txt, "origin0") {
+			t.Errorf("expected ds0 on Mid, actual: '%v'", txt)
+		}
+
+		if strings.Contains(txt, "origin1") {
+			t.Errorf("did not expect ds1 on Mid, actual: '%v'", txt)
+		}
+	}
+}
+
 func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 	hdr := "myHeaderComment"
 
@@ -7501,7 +7765,7 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -7629,7 +7893,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -7761,7 +8025,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -7883,7 +8147,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -8068,7 +8332,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -8247,7 +8511,7 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -8465,7 +8729,7 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -8655,7 +8919,7 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -8853,7 +9117,7 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
-			Value:      "7",
+			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 		tc.Parameter{
@@ -8976,5 +9240,246 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 	}
 	if !strings.Contains(txt, `http://origin.example.test`) {
 		t.Errorf("expected mid with a parent mid cache to set remap target scheme to http, actual: %v", txt)
+	}
+}
+
+func TestMakeRemapDotConfigRemapTemplate(t *testing.T) {
+	opt := &RemapDotConfigOpts{
+		HdrComment:        "myHeaderComment",
+		UseStrategies:     true,
+		UseStrategiesCore: true,
+	}
+
+	edge := makeTestRemapServer()
+	edge.Type = "EDGE"
+	edge.Cachegroup = util.StrPtr("edgeCG")
+
+	mid := makeTestParentServer()
+	mid.Type = "MID"
+	mid.Cachegroup = util.StrPtr("midCG")
+	mid.HostName = util.StrPtr("mymid")
+	mid.ID = util.IntPtr(45)
+	setIP(mid, "192.168.2.2")
+
+	opl := makeTestParentServer()
+	opl.Type = "MID"
+	opl.Cachegroup = util.StrPtr("oplCG")
+	opl.HostName = util.StrPtr("myopl")
+	opl.ID = util.IntPtr(46)
+	setIP(opl, "192.168.2.3")
+
+	ds := DeliveryService{}
+	ds.ID = util.IntPtr(48)
+	dsType := tc.DSType("DNS")
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
+	ds.SigningAlgorithm = util.StrPtr("foo")
+	ds.XMLID = util.StrPtr("mydsname")
+	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingBackgroundFetch))
+	ds.RegexRemap = util.StrPtr("myregexremap")
+	ds.RemapText = util.StrPtr("@plugin=rawtextplugin.so")
+	ds.FQPacingRate = util.IntPtr(314159)
+	ds.DSCP = util.IntPtr(0)
+	ds.RoutingName = util.StrPtr("myroutingname")
+	ds.MultiSiteOrigin = util.BoolPtr(false)
+	ds.OriginShield = util.StrPtr("myoriginshield")
+	ds.ProfileID = util.IntPtr(49)
+	ds.ProfileName = util.StrPtr("dsprofile")
+	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
+	ds.Active = util.BoolPtr(true)
+	ds.Topology = util.StrPtr("t0")
+	ds.SigningAlgorithm = util.StrPtr("url_sig")
+
+	// non-nil default values should not trigger header rewrite plugin directive
+	ds.FirstHeaderRewrite = util.StrPtr("firstfoo")
+	ds.InnerHeaderRewrite = util.StrPtr("innerfoo")
+	ds.LastHeaderRewrite = util.StrPtr("lastfoo")
+	ds.ServiceCategory = util.StrPtr("")
+	ds.MaxOriginConnections = util.IntPtr(0)
+
+	dses := []DeliveryService{ds}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *edge.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: *ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   "myregexpattern",
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "9",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	const FirstTemplateString = `mapfoo {{{Destination}}} {{{Source}}} {{{Signing}}} {{{HeaderRewrite}}} {{{RegexRemap}}} {{{Dscp}}} {{{Signing}}} {{{RawText}}} {{{Cachekey}}} {{{Pacing}}} {{{RangeRequests}}}
+map http://foo/ http://bar/`
+
+	const InnerTemplateString = `map {{{Source}}} {{{Destination}}} {{{Cachekey}}} {{{HeaderRewrite}}} {{{RangeRequests}}} @plugin=prefetch.so @pparam=--backend=true`
+	const LastTemplateString = `map_with_recv_port {{{Source}}}:3600 {{{Destination}}} {{{HeaderRewrite}}} {{{Cachekey}}}`
+
+	remapConfigParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.Parameter{
+			Name:       "template.first",
+			ConfigFile: "remap.config",
+			Value:      FirstTemplateString,
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "template.inner",
+			ConfigFile: "remap.config",
+			Value:      InnerTemplateString,
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.Parameter{
+			Name:       "template.last",
+			ConfigFile: "remap.config",
+			Value:      LastTemplateString,
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+	}
+
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.Topology{
+		{
+			Name: "t0",
+			Nodes: []tc.TopologyNode{
+				{
+					Cachegroup: "edgeCG",
+					Parents:    []int{1},
+				},
+				{
+					Cachegroup: "midCG",
+					Parents:    []int{2},
+				},
+				{
+					Cachegroup: "oplCG",
+				},
+			},
+		},
+	}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = edge.Cachegroup
+	eCG.ID = edge.CachegroupID
+	eCG.ParentName = mid.Cachegroup
+	eCG.ParentCachegroupID = mid.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid.Cachegroup
+	mCG.ID = mid.CachegroupID
+	mCG.ParentName = opl.Cachegroup
+	mCG.ParentCachegroupID = opl.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	oCG := &tc.CacheGroupNullable{}
+	oCG.Name = opl.Cachegroup
+	oCG.ID = opl.CachegroupID
+	oCGType := tc.CacheGroupMidTypeName
+	oCG.Type = &oCGType
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *oCG}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	{ // first override
+		cfg, err := MakeRemapDotConfig(edge, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+		txt = strings.TrimSpace(txt)
+		testComment(t, txt, opt.HdrComment)
+
+		pluginsExp := []string{"url_sig.so", "header_rewrite.so", "regex_remap.so", "header_rewrite.so", "url_sig.so", "rawtextplugin.so", "cachekey.so", "fq_pacing.so", "background_fetch.so"}
+		tokens := tokenize(txt)
+		pluginsGot := pluginsFromTokens(tokens, "@plugin=")
+
+		if !reflect.DeepEqual(pluginsGot, pluginsExp) {
+			t.Errorf("unexpected plugins order for first override: '%v'\ngot: '%v'\nexp: '%v'", txt, pluginsGot, pluginsExp)
+		}
+
+		// check for swapped source and dest and munged name
+		if !strings.Contains(txt, `mapfoo http://origin.example.test/ http://myregexpattern/`) {
+			t.Errorf("expected munged map and swapped dest/source, got: '%v'", txt)
+		}
+
+		// check for tacked on remap rule
+		if !strings.Contains(txt, `map http://foo/ http://bar/`) {
+			t.Errorf("expected tacked on remap rule, got: '%v'", txt)
+		}
+	}
+
+	{ // inner override
+		cfg, err := MakeRemapDotConfig(mid, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+		txt = strings.TrimSpace(txt)
+		testComment(t, txt, opt.HdrComment)
+
+		pluginsExp := []string{"cachekey.so", "header_rewrite.so", "prefetch.so"}
+		tokens := tokenize(txt)
+		pluginsGot := pluginsFromTokens(tokens, "@plugin=")
+
+		if !reflect.DeepEqual(pluginsGot, pluginsExp) {
+			t.Errorf("unexpected plugins order for inner override: '%v'\ngot: '%v'\nexp: '%v'", txt, pluginsGot, pluginsExp)
+		}
+	}
+
+	{ // last override
+		cfg, err := MakeRemapDotConfig(opl, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, opt)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+		txt = strings.TrimSpace(txt)
+		testComment(t, txt, opt.HdrComment)
+
+		pluginsExp := []string{"header_rewrite.so", "cachekey.so"}
+		tokens := tokenize(txt)
+		pluginsGot := pluginsFromTokens(tokens, "@plugin=")
+
+		if !reflect.DeepEqual(pluginsGot, pluginsExp) {
+			t.Errorf("unexpected plugins order for inner override: '%v'\ngot: '%v'\nexp: '%v'", txt, pluginsGot, pluginsExp)
+		}
+
+		if !strings.Contains(txt, `map_with_recv_port http://origin.example.test:3600 https://origin.example.test`) {
+			t.Errorf("expected laster to have map_with_recv_port directive, got '%v'", txt)
+		}
 	}
 }

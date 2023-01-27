@@ -17,13 +17,14 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")}*/
+
 /**
- *
  * @param {{id: number; name: string}} parameter
  * @param {unknown[]} profiles
  * @param {*} $scope
  * @param {*} $state
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("angular").IWindowService} $window
  * @param {import("angular").ILocationService} $location
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
@@ -118,7 +119,7 @@ const TableParameterProfilesController = function (parameter, profiles, $scope, 
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	const confirmDelete = function (profile) {
 		const params = {
@@ -323,7 +324,11 @@ const TableParameterProfilesController = function (parameter, profiles, $scope, 
 	};
 
 	angular.element(document).ready(function () {
-		parameterProfilesTable = $('#parameterProfilesTable').DataTable({
+		// JQuery Datatables typings aren't in the project, because they
+		// probably don't exist, but even if they do we should just get rid of
+		// them instead of making them better.
+		// @ts-ignore
+		parameterProfilesTable = $("#parameterProfilesTable").DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
 			"columnDefs": [
@@ -341,7 +346,7 @@ const TableParameterProfilesController = function (parameter, profiles, $scope, 
 			"initComplete": function (settings, json) {
 				try {
 					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_parameterProfilesTable_/')).columns;
+					$scope.columns = JSON.parse(localStorage.getItem("DataTables_parameterProfilesTable_/") ?? "null").columns;
 				} catch (e) {
 					console.error("Failure to retrieve required column info from localStorage (key=DataTables_parameterProfilesTable_/):", e);
 				}

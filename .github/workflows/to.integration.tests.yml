@@ -27,7 +27,7 @@ on:
       - .github/actions/todb-init/**
       - .github/actions/tvdb-init/**
       - .github/actions/to-integration-tests/**
-      - .github/workflows/traffic-ops.yml
+      - .github/workflows/to.integration.tests.yml
       - go.mod
       - go.sum
       - GO_VERSION
@@ -43,7 +43,7 @@ on:
       - .github/actions/todb-init/**
       - .github/actions/tvdb-init/**
       - .github/actions/to-integration-tests/**
-      - .github/workflows/traffic-ops.yml
+      - .github/workflows/to.integration.tests.yml
       - go.mod
       - go.sum
       - GO_VERSION

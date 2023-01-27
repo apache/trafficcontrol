@@ -18,7 +18,7 @@
  */
 /** @typedef { import('../agGrid/CommonGridController').CGC } CGC */
 
-var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, $uibModal, dateUtils, propertiesModel, messageModel) {
+var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, $uibModal, propertiesModel, messageModel) {
 	/** @type CGC.TitleButton */
 	$scope.titleButton = {
 		onClick: function() {
@@ -140,5 +140,5 @@ var TableChangeLogsController = function(tableName, changeLogs, $scope, $state, 
 	};
 };
 
-TableChangeLogsController.$inject = ['tableName', 'changeLogs', '$scope', '$state', '$uibModal', 'dateUtils', 'propertiesModel', 'messageModel'];
+TableChangeLogsController.$inject = ['tableName', 'changeLogs', '$scope', '$state', '$uibModal', 'propertiesModel', 'messageModel'];
 module.exports = TableChangeLogsController;

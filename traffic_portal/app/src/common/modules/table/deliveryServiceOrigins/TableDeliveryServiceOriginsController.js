@@ -17,7 +17,14 @@
  * under the License.
  */
 
-var TableDeliveryServiceOriginsController = function(deliveryService, origins, $scope, $state, $location, locationUtils) {
+/**
+ * @param {*} deliveryService
+ * @param {*} origins
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
+var TableDeliveryServiceOriginsController = function(deliveryService, origins, $scope, $state, locationUtils) {
 
     $scope.createOrigin = function() {
         var path = '/origins/new';
@@ -37,7 +44,7 @@ var TableDeliveryServiceOriginsController = function(deliveryService, origins, $
         $state.reload(); // reloads all the resolves for the view
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     angular.element(document).ready(function () {
         $('#originsTable').dataTable({
@@ -49,5 +56,5 @@ var TableDeliveryServiceOriginsController = function(deliveryService, origins, $
 
 };
 
-TableDeliveryServiceOriginsController.$inject = ['deliveryService', 'origins', '$scope', '$state', '$location', 'locationUtils'];
+TableDeliveryServiceOriginsController.$inject = ['deliveryService', 'origins', '$scope', '$state', 'locationUtils'];
 module.exports = TableDeliveryServiceOriginsController;
