@@ -15,6 +15,4 @@
  * the License.
  */
 
-DELETE FROM public.role_capability rc WHERE rc.role_id='trouter';
-
 DELETE FROM public."role" r WHERE r.name='trouter';
