@@ -80,25 +80,6 @@ export const enum Protocol {
 }
 
 /**
- * Converts Protocols to a textual representation.
- *
- * @param p The Protocol to convert.
- * @returns A string representation of 'p', or 'UNKNOWN' if 'p' was unrecognized.
- */
-export function protocolToString(p: Protocol): string {
-	switch (p) {
-		case Protocol.HTTP:
-			return "Serve only unsecured HTTP requests";
-		case Protocol.HTTPS:
-			return "Serve only secured HTTPS requests";
-		case Protocol.HTTP_AND_HTTPS:
-			return "Serve both unsecured HTTP requests and secured HTTPS requests";
-		case Protocol.HTTP_TO_HTTPS:
-			return "Serve secured HTTPS requests normally, but redirect unsecured HTTP requests to use HTTPS";
-	}
-}
-
-/**
  * Represents the allowed values of the `qstringIgnore` field of a
  * `DeliveryService`.
  */
@@ -118,25 +99,6 @@ export const enum QStringHandling {
 }
 
 /**
- * Converts a QStringHandling to a textual representation.
- *
- * @param q The QStringHandling to convert.
- * @returns A string representation of 'q'.
- */
-export function qStringHandlingToString(q: QStringHandling): string {
-	switch (q) {
-		case QStringHandling.USE:
-			return "Use the query parameter string when deciding if a URL is cached, and pass it in upstream requests to the" +
-				" Mid-tier/origin";
-		case QStringHandling.IGNORE:
-			return "Do not use the query parameter string when deciding if a URL is cached, but do pass it in upstream requests to the" +
-				" Mid-tier/origin";
-		case QStringHandling.DROP:
-			return "Immediately strip URLs of their query parameter strings before checking cached objects or making upstream requests";
-	}
-}
-
-/**
  * Represents the allowed values of the `rangeRequestHandling` field of a
  * `Delivery Service`.
  */
@@ -152,22 +114,6 @@ export const enum RangeRequestHandling {
 	 * Cache range requests like any other request.
 	 */
 	CACHE_RANGE_REQUESTS = 2
-}
-/**
- * Converts a RangeRequestHandling to a textual representation.
- *
- * @param r The RangeRequestHandling to convert.
- * @returns A string representation of 'r'.
- */
-export function rangeRequestHandlingToString(r: RangeRequestHandling): string {
-	switch (r) {
-		case RangeRequestHandling.NONE:
-			return "Do not cache Range requests";
-		case RangeRequestHandling.BACKGROUND_FETCH:
-			return "Use the background_fetch plugin to serve Range requests while quietly caching the entire object";
-		case RangeRequestHandling.CACHE_RANGE_REQUESTS:
-			return "Use the cache_range_requests plugin to directly cache object ranges";
-	}
 }
 
 /**
@@ -399,30 +345,6 @@ export const defaultDeliveryService: DeliveryService ={
 	typeId: -1,
 	xmlId: ""
 };
-
-/**
- * Determines if the Delivery Service is a candidate for bypassing.
- *
- * @param ds The Delivery Service to check.
- * @returns `true` if it can have bypass settings, `false` otherwise.
- */
-export function bypassable(ds: DeliveryService): boolean {
-	if (!ds.type) {
-		return false;
-	}
-
-	switch (ds.type) {
-		case "HTTP":
-		case "HTTP_LIVE":
-		case "HTTP_LIVE_NATNL":
-		case "DNS":
-		case "DNS_LIVE":
-		case "DNS_LIVE_NATNL":
-			return true;
-		default:
-			return false;
-	}
-}
 
 /**
  * DSCapacity represents a response from the API to a request for the capacity

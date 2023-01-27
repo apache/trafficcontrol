@@ -16,15 +16,13 @@ import { Component, type OnInit, ViewChild, Inject } from "@angular/core";
 import { UntypedFormControl } from "@angular/forms";
 import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
-import type { ResponseCDN } from "trafficops-types";
+import { bypassable, protocolToString, ResponseCDN } from "trafficops-types";
 
 import { CDNService, DeliveryServiceService } from "src/app/api";
 import {
-	bypassable,
 	defaultDeliveryService,
 	type DeliveryService,
 	Protocol,
-	protocolToString,
 	type Type,
 	type User
 } from "src/app/models";

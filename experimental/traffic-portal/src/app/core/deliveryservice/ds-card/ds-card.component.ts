@@ -15,6 +15,7 @@ import { trigger, style, animate, transition } from "@angular/animations";
 import { Component, Input, type OnInit } from "@angular/core";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { Subject } from "rxjs";
+import { Protocol, protocolToString } from "trafficops-types";
 
 import { DeliveryServiceService } from "src/app/api";
 import {
@@ -22,7 +23,6 @@ import {
 	type DataSet,
 	type DeliveryService,
 	GeoProvider,
-	protocolToString
 } from "src/app/models";
 
 /**
@@ -119,7 +119,7 @@ export class DsCardComponent implements OnInit {
 	/** The Protocol of the Delivery Service as a string. */
 	public get protocolString(): string {
 		if (this.deliveryService.protocol !== undefined) {
-			return protocolToString(this.deliveryService.protocol);
+			return protocolToString(this.deliveryService.protocol as unknown as Protocol);
 		}
 		return "";
 	}
