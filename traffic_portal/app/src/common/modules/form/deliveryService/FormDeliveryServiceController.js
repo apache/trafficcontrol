@@ -215,7 +215,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		if (!dsCurrent) {
 			return "";
 		}
-		return dsCurrent.active.split(" ").map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(" ");
+		let {active} = dsCurrent;
+		if (!propertiesModel.properties.deliveryServices?.exposeInactive && active !== "ACTIVE") {
+			active = "INACTIVE";
+		}
+		return active.split(" ").map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(" ");
 	}
 
 	$scope.formatCurrentActive = formatCurrentActive;

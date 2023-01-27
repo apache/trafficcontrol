@@ -35,7 +35,8 @@ export interface HeaderNavigation {
 }
 
 /**
- *
+ * Provides an interface that allows modules and components to dynamically
+ * manipulate the header.
  */
 @Injectable({
 	providedIn: "root"

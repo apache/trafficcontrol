@@ -1,0 +1,31 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<h2 mat-dialog-title>{{dialogData.title}}</h2>
+<mat-dialog-content>
+	<p>{{dialogData.message}}</p>
+	<mat-form-field>
+		<label>{{dialogData.label}}</label>
+		<mat-select name="{{dialogData.label}}" [(ngModel)]="selected" required>
+			<mat-option *ngFor="let item of dialogData.collection" [value]="item.value">{{item.label}}</mat-option>
+		</mat-select>
+		<mat-hint *ngIf="dialogData.hint">
+			{{dialogData.hint}}
+		</mat-hint>
+	</mat-form-field>
+</mat-dialog-content>
+<mat-dialog-actions>
+	<button mat-button [disabled]="!selected" [mat-dialog-close]="selected">Confirm</button>
+	<button mat-button [mat-dialog-close]="false">Cancel</button>
+</mat-dialog-actions>

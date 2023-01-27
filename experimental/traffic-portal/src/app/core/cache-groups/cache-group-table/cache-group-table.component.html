@@ -13,7 +13,7 @@ limitations under the License.
 -->
 <mat-card class="table-page-content">
 	<div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Cache Groups" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
 	</div>
 	<tp-generic-table
 		[data]="cacheGroups | async"
@@ -24,3 +24,5 @@ limitations under the License.
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </mat-card>
+
+<button class="page-fab" mat-fab title="Create a new Cache Group" *ngIf="auth.hasPermission('CACHE-GROUP:CREATE')" routerLink="new"><mat-icon>add</mat-icon></button>
