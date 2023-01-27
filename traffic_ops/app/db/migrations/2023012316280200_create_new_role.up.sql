@@ -25,7 +25,6 @@ INSERT INTO public.role_capability (role_id, cap_name)
             'CDN:READ',
             'DELIVERY-SERVICE:READ',
             'DNS-SEC:READ',
-            'FEDERATION:READ',
             'STEERING:READ',
             'FEDERATION-RESOLVER:READ',
             'DS-SECURITY-KEY:READ']
