@@ -39,6 +39,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+
 	"github.com/lestrrat-go/jwx/jwt"
 )
 
