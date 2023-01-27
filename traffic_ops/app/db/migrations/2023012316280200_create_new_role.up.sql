@@ -19,5 +19,15 @@ INSERT INTO public."role" (name, description, priv_level)
 VALUES('trouter', 'Limited role for Traffic Router calls to Traffic Ops', 10);
 
 INSERT INTO public.role_capability (role_id, cap_name)
-    VALUES ((select id from role where name='trouter'), UNNEST('{CDN:READ, DELIVERY-SERVICE:READ, DNS-SEC:READ, FEDERATION:READ, STEERING:READ, FEDERATION-RESOLVER:READ, DS-SECURITY-KEY:READ}'::text[]))
-        ON CONFLICT DO NOTHING;
+    VALUES (
+        (SELECT id FROM role WHERE name='trouter'),
+        UNNEST(ARRAY[
+            'CDN:READ',
+            'DELIVERY-SERVICE:READ',
+            'DNS-SEC:READ',
+            'FEDERATION:READ',
+            'STEERING:READ',
+            'FEDERATION-RESOLVER:READ',
+            'DS-SECURITY-KEY:READ']
+        )
+    );
