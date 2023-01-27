@@ -26,6 +26,9 @@ import (
 
 const GeneratedByStr = "trafficcontrol-go-tocookie"
 const Name = "mojolicious"
+const MojoCookie = "mojoCookie"
+const AccessToken = "access_token"
+const BearerToken = "Bearer"
 const DefaultDuration = time.Hour
 
 type Cookie struct {
