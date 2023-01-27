@@ -14,11 +14,12 @@
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
+import { protocolToString, Protocol as LibProtocol } from "trafficops-types";
 
 import { DeliveryServiceService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { DsCardComponent } from "src/app/core/deliveryservice/ds-card/ds-card.component";
-import { Protocol, protocolToString, defaultDeliveryService } from "src/app/models";
+import { Protocol, defaultDeliveryService } from "src/app/models";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
 
@@ -55,13 +56,13 @@ describe("DsCardComponent", () => {
 		expect(component.protocolString).toBe("");
 
 		component.deliveryService.protocol = Protocol.HTTP;
-		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol as unknown as LibProtocol));
 		component.deliveryService.protocol = Protocol.HTTPS;
-		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol as unknown as LibProtocol));
 		component.deliveryService.protocol = Protocol.HTTP_TO_HTTPS;
-		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol as unknown as LibProtocol));
 		component.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
-		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol as unknown as LibProtocol));
 	});
 
 	it("toggles its open state, and loads its data", fakeAsync(() => {
