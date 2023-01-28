@@ -50,7 +50,7 @@ export class CDNService {
 	 */
 	public async getCDNs(id?: number): Promise<Array<ResponseCDN> | ResponseCDN> {
 		if (id !== undefined) {
-			const cdn = Array.from(this.cdns.values()).filter(c=>c.id===id)[0];
+			const cdn = this.cdns.find(c=>c.id===id);
 			if (!cdn) {
 				throw new Error(`no such CDN #${id}`);
 			}

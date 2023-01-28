@@ -15,9 +15,10 @@ import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { faPlus, faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+import { ResponseDeliveryService } from "trafficops-types";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
-import { type DeliveryService, GeoLimit, GeoProvider, type InvalidationJob } from "src/app/models";
+import type { InvalidationJob } from "src/app/models";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
@@ -34,7 +35,7 @@ import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog
 export class InvalidationJobsComponent implements OnInit {
 
 	/** The Delivery Service for which jobs are being described. */
-	public deliveryservice: DeliveryService;
+	public deliveryservice!: ResponseDeliveryService;
 
 	/** All of the jobs for the described Delivery Service. */
 	public jobs: Array<InvalidationJob>;
@@ -61,26 +62,6 @@ export class InvalidationJobsComponent implements OnInit {
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService
 	) {
-		this.deliveryservice = {
-			active: false,
-			anonymousBlockingEnabled: false,
-			cdnId: -1,
-			displayName: "",
-			dscp: 0,
-			geoLimit: GeoLimit.NONE,
-			geoProvider: GeoProvider.MAX_MIND,
-			ipv6RoutingEnabled: true,
-			logsEnabled: true,
-			longDesc: "",
-			missLat: 0,
-			missLong: 0,
-			multiSiteOrigin: false,
-			regionalGeoBlocking: false,
-			routingName: "",
-			tenantId: -1,
-			typeId: -1,
-			xmlId: ""
-		};
 		this.jobs = new Array<InvalidationJob>();
 	}
 

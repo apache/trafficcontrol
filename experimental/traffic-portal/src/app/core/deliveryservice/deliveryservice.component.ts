@@ -16,9 +16,10 @@ import { UntypedFormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { faBroom } from "@fortawesome/free-solid-svg-icons";
 import { Subject } from "rxjs";
+import type { ResponseDeliveryService } from "trafficops-types";
 
 import { DeliveryServiceService } from "src/app/api";
-import type { DataPoint, DataSet, DeliveryService } from "src/app/models";
+import type { DataPoint, DataSet } from "src/app/models";
 import { AlertService } from "src/app/shared/alert/alert.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -34,7 +35,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 export class DeliveryserviceComponent implements OnInit {
 
 	/** The Delivery Service described by this component. */
-	public deliveryservice = {} as DeliveryService;
+	public deliveryservice = {} as ResponseDeliveryService;
 
 	/** Data for the bandwidth chart. */
 	public bandwidthData = new Subject<[DataSet]>();

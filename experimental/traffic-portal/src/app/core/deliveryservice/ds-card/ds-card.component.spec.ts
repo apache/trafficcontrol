@@ -14,12 +14,11 @@
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
-import { protocolToString, Protocol as LibProtocol } from "trafficops-types";
+import { protocolToString, Protocol, GeoLimit, GeoProvider } from "trafficops-types";
 
-import { DeliveryServiceService } from "src/app/api";
+import { CDNService, DeliveryServiceService, TypeService, UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { DsCardComponent } from "src/app/core/deliveryservice/ds-card/ds-card.component";
-import { GeoLimit, GeoProvider, Protocol } from "src/app/models";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
 
@@ -44,14 +43,29 @@ describe("DsCardComponent", () => {
 		api = TestBed.inject(DeliveryServiceService);
 		fixture = TestBed.createComponent(DsCardComponent);
 		component = fixture.componentInstance;
+		const cdnService = TestBed.inject(CDNService);
+		const cdn = (await cdnService.getCDNs()).find(c => c.name !== "ALL");
+		if (!cdn) {
+			throw new Error("can't test a DS card component without any CDNs");
+		}
+		const typeService = TestBed.inject(TypeService);
+		const type = (await typeService.getTypesInTable("deliveryservice")).find(t => t.name === "ANY_MAP");
+		if (!type) {
+			throw new Error("can't test a DS card component without DS types");
+		}
+		const tenantService = TestBed.inject(UserService);
+		const tenant = (await tenantService.getTenants())[0];
 		component.deliveryService = await api.createDeliveryService({
 			active: false,
 			anonymousBlockingEnabled: false,
-			cdnId: -1,
-			displayName: "",
+			cacheurl: null,
+			cdnId: cdn.id,
+			displayName: "test",
 			dscp: 0,
 			geoLimit: GeoLimit.NONE,
 			geoProvider: GeoProvider.MAX_MIND,
+			httpBypassFqdn: null,
+			infoUrl: null,
 			ipv6RoutingEnabled: true,
 			logsEnabled: true,
 			longDesc: "",
@@ -59,10 +73,10 @@ describe("DsCardComponent", () => {
 			missLong: 0,
 			multiSiteOrigin: false,
 			regionalGeoBlocking: false,
-			routingName: "",
-			tenantId: -1,
-			typeId: -1,
-			xmlId: ""
+			remapText: null,
+			tenantId: tenant.id,
+			typeId: type.id,
+			xmlId: "test"
 		});
 		fixture.detectChanges();
 	});
@@ -75,13 +89,13 @@ describe("DsCardComponent", () => {
 		expect(component.protocolString).toBe("");
 
 		component.deliveryService.protocol = Protocol.HTTP;
-		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol as unknown as LibProtocol));
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
 		component.deliveryService.protocol = Protocol.HTTPS;
-		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol as unknown as LibProtocol));
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
 		component.deliveryService.protocol = Protocol.HTTP_TO_HTTPS;
-		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol as unknown as LibProtocol));
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
 		component.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
-		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol as unknown as LibProtocol));
+		expect(component.protocolString).toBe(protocolToString(component.deliveryService.protocol));
 	});
 
 	it("toggles its open state, and loads its data", fakeAsync(() => {

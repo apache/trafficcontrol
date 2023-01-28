@@ -17,12 +17,13 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {type Observable, of, ReplaySubject} from "rxjs";
+import { type Observable, of, ReplaySubject } from "rxjs";
+import { GeoLimit, GeoProvider } from "trafficops-types";
 
-import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
+import { CDNService, DeliveryServiceService, InvalidationJobService, TypeService, UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { InvalidationJobsComponent } from "src/app/core/deliveryservice/invalidation-jobs/invalidation-jobs.component";
-import { type InvalidationJob, JobType, GeoLimit, GeoProvider } from "src/app/models";
+import { type InvalidationJob, JobType } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
@@ -65,14 +66,30 @@ describe("InvalidationJobsComponent", () => {
 		}).compileComponents();
 
 		const dsService = TestBed.inject(DeliveryServiceService);
+		const cdnService = TestBed.inject(CDNService);
+		const cdn = (await cdnService.getCDNs()).find(c => c.name !== "ALL");
+		if (!cdn) {
+			throw new Error("can't test a DS card component without any CDNs");
+		}
+		const typeService = TestBed.inject(TypeService);
+		const type = (await typeService.getTypesInTable("deliveryservice")).find(t => t.name === "ANY_MAP");
+		if (!type) {
+			throw new Error("can't test a DS card component without DS types");
+		}
+		const tenantService = TestBed.inject(UserService);
+		const tenant = (await tenantService.getTenants())[0];
+
 		const ds = await dsService.createDeliveryService({
 			active: false,
 			anonymousBlockingEnabled: false,
-			cdnId: -1,
+			cacheurl: null,
+			cdnId: cdn.id,
 			displayName: "FIZZbuzz",
 			dscp: 0,
 			geoLimit: GeoLimit.NONE,
 			geoProvider: GeoProvider.MAX_MIND,
+			httpBypassFqdn: null,
+			infoUrl: null,
 			ipv6RoutingEnabled: true,
 			logsEnabled: true,
 			longDesc: "",
@@ -80,11 +97,10 @@ describe("InvalidationJobsComponent", () => {
 			missLong: 0,
 			multiSiteOrigin: false,
 			regionalGeoBlocking: false,
-			routingName: "",
-			tenantId: -1,
-			typeId: -1,
-			xmlId: "fizz-buzz"
-
+			remapText: null,
+			tenantId: tenant.id,
+			typeId: type.id,
+			xmlId: "fizz-buzz",
 		});
 
 		router = TestBed.inject(Router);
@@ -105,6 +121,7 @@ describe("InvalidationJobsComponent", () => {
 
 		fixture = TestBed.createComponent(InvalidationJobsComponent);
 		component = fixture.componentInstance;
+		component.deliveryservice = ds;
 		fixture.detectChanges();
 	});
 

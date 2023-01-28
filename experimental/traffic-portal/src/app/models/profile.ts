@@ -99,8 +99,9 @@ export interface Parameter {
  * Delivery Service.
  */
 export interface Profile {
-	id?: number;
+	id: number;
 	lastUpdated?: Date;
+	description: string;
 	name: string;
 	cdnName: string;
 	cdn: number;

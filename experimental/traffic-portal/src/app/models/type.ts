@@ -27,7 +27,7 @@ export interface Type {
 	/** The date/time at which the Type was last updated. */
 	lastUpdated?: Date;
 	/** The Type's name. */
-	name?:        string;
+	name:        string;
 	/** The database table that uses this Type. */
 	useInTable?:  string;
 }

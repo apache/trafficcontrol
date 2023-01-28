@@ -15,14 +15,12 @@ import { trigger, style, animate, transition } from "@angular/animations";
 import { Component, Input, type OnInit } from "@angular/core";
 import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { Subject } from "rxjs";
-import { Protocol, protocolToString } from "trafficops-types";
+import { protocolToString, type ResponseDeliveryService } from "trafficops-types";
 
 import { DeliveryServiceService } from "src/app/api";
-import {
-	type DataPoint,
-	type DataSet,
-	type DeliveryService,
-	GeoProvider,
+import type {
+	DataPoint,
+	DataSet,
 } from "src/app/models";
 
 /**
@@ -51,7 +49,7 @@ import {
 export class DsCardComponent implements OnInit {
 
 	/** The Delivery Service being described by this component. */
-	@Input() public deliveryService: DeliveryService;
+	@Input() public deliveryService!: ResponseDeliveryService;
 
 	/** Whether or not this is the first DS Card in a list. Affects styling. */
 	@Input() public first = false;
@@ -119,33 +117,12 @@ export class DsCardComponent implements OnInit {
 	/** The Protocol of the Delivery Service as a string. */
 	public get protocolString(): string {
 		if (this.deliveryService.protocol !== undefined) {
-			return protocolToString(this.deliveryService.protocol as unknown as Protocol);
+			return protocolToString(this.deliveryService.protocol);
 		}
 		return "";
 	}
 
 	constructor(private readonly dsAPI: DeliveryServiceService) {
-		this.deliveryService = {
-			active: true,
-			anonymousBlockingEnabled: false,
-			cdnId: -1,
-			displayName: "",
-			dscp: -1,
-			geoLimit: 0,
-			geoProvider: GeoProvider.MAX_MIND,
-			ipv6RoutingEnabled: true,
-			logsEnabled: true,
-			longDesc: "",
-			missLat: 0,
-			missLong: 0,
-			multiSiteOrigin: false,
-			regionalGeoBlocking: false,
-			routingName: "",
-			tenantId: 1,
-			typeId: -1,
-			xmlId: "-1"
-		};
-
 		this.available = 100;
 		this.maintenance = 0;
 		this.utilized = 0;
