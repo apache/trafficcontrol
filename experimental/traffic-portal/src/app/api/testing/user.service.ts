@@ -20,10 +20,11 @@ import type {
 	PostRequestUser,
 	PutOrPostResponseUser,
 	RequestTenant,
+	ResponseRole,
 	ResponseTenant
 } from "trafficops-types";
 
-import type { Role, CurrentUser } from "src/app/models";
+import type { CurrentUser } from "src/app/models";
 
 /**
  * Represents a request to register a user via email using the `/users/register`
@@ -331,7 +332,7 @@ export class UserService {
 	 * @param role The new user's Role (or just its ID).
 	 * @param tenant The new user's Tenant (or just its ID).
 	 */
-	public async registerUser(email: string, role: number | Role, tenant: number | ResponseTenant): Promise<void>;
+	public async registerUser(email: string, role: number | ResponseRole, tenant: number | ResponseTenant): Promise<void>;
 	/**
 	 * Registers a new user via email.
 	 *
@@ -346,7 +347,7 @@ export class UserService {
 	 */
 	public async registerUser(
 		userOrEmail: UserRegistrationRequest | string,
-		role?: number | Role,
+		role?: number | ResponseRole,
 		tenant?: number | ResponseTenant
 	): Promise<void> {
 		if (typeof(userOrEmail) === "string") {
@@ -357,9 +358,9 @@ export class UserService {
 	}
 
 	/** Fetches the Role with the given ID. */
-	public async getRoles (nameOrID: number | string): Promise<Role>;
+	public async getRoles (nameOrID: number | string): Promise<ResponseRole>;
 	/** Fetches all Roles. */
-	public async getRoles (): Promise<Array<Role>>;
+	public async getRoles (): Promise<Array<ResponseRole>>;
 	/**
 	 * Fetches one or all Roles from Traffic Ops.
 	 *
@@ -368,7 +369,7 @@ export class UserService {
 	 * @returns Either an Array of Roles, or a single Role, depending on whether
 	 * `name`/`id` was passed
 	 */
-	public async getRoles(nameOrID?: string | number): Promise<Array<Role> | Role> {
+	public async getRoles(nameOrID?: string | number): Promise<Array<ResponseRole> | ResponseRole> {
 		if (nameOrID !== undefined) {
 			let role;
 			switch (typeof nameOrID) {

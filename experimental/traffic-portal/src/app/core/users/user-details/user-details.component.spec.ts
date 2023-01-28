@@ -73,6 +73,7 @@ describe("UserDetailsComponent", () => {
 	it("updates the user's Role-related properties", () => {
 		const selectedRole = {
 			capabilities: [],
+			description: "",
 			id: 2,
 			name: "test",
 			privLevel: 100
