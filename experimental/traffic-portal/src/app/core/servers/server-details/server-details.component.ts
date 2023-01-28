@@ -16,11 +16,11 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
-import type { ResponseCacheGroup, ResponseCDN } from "trafficops-types";
+import type { ResponseCacheGroup, ResponseCDN, ResponsePhysicalLocation } from "trafficops-types";
 
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
-import { DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
+import { DUMMY_SERVER, Interface, Profile, Server, Status, Type } from "src/app/models";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
@@ -108,7 +108,7 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * The set of all Physical Locations.
 	 */
-	public physicalLocations = new Array<PhysicalLocation>();
+	public physicalLocations = new Array<ResponsePhysicalLocation>();
 	/**
 	 * The set of all Profiles.
 	 */

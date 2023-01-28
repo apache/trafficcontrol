@@ -13,7 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
+import type { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
