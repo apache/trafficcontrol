@@ -13,8 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-
-import { Profile, ProfileType } from "src/app/models";
+import { ProfileType, type ResponseProfile } from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
@@ -22,7 +21,7 @@ import { Profile, ProfileType } from "src/app/models";
 @Injectable()
 export class ProfileService {
 
-	private readonly profiles = [
+	private readonly profiles: ResponseProfile[] = [
 		{
 			cdn: 1,
 			cdnName: "ALL",
@@ -137,15 +136,15 @@ export class ProfileService {
 		}
 	];
 
-	public async getProfiles(idOrName: number | string): Promise<Profile>;
-	public async getProfiles(): Promise<Array<Profile>>;
+	public async getProfiles(idOrName: number | string): Promise<ResponseProfile>;
+	public async getProfiles(): Promise<Array<ResponseProfile>>;
 	/**
 	 * Retrieves Profiles from the API.
 	 *
 	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Profile to retrieve, or its name (string).
 	 * @returns The requested Profile(s).
 	 */
-	public async getProfiles(idOrName?: number | string): Promise<Array<Profile> | Profile> {
+	public async getProfiles(idOrName?: number | string): Promise<Array<ResponseProfile> | ResponseProfile> {
 		if (idOrName !== undefined) {
 			let profile;
 			switch (typeof idOrName) {

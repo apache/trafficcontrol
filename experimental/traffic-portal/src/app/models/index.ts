@@ -12,7 +12,6 @@
 * limitations under the License.
 */
 export * from "./data";
-export * from "./profile";
 export * from "./server";
 export * from "./type";
 export * from "./user";
