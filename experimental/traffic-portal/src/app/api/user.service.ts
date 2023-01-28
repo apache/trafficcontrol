@@ -25,7 +25,6 @@ import type {
 
 import {
 	type Role,
-	type Tenant,
 	type CurrentUser,
 	newCurrentUser
 } from "src/app/models";
@@ -224,7 +223,7 @@ export class UserService extends APIService {
 	 * @param role The new user's Role (or just its ID).
 	 * @param tenant The new user's Tenant (or just its ID).
 	 */
-	public async registerUser(email: string, role: number | Role, tenant: number | Tenant): Promise<void>;
+	public async registerUser(email: string, role: number | Role, tenant: number | ResponseTenant): Promise<void>;
 	/**
 	 * Registers a new user via email.
 	 *
@@ -238,7 +237,7 @@ export class UserService extends APIService {
 	public async registerUser(
 		userOrEmail: UserRegistrationRequest | string,
 		role?: number | Role,
-		tenant?: number | Tenant
+		tenant?: number | ResponseTenant
 	): Promise<void> {
 		let request;
 		if (typeof(userOrEmail) === "string") {

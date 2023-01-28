@@ -150,16 +150,5 @@ export interface Role {
 	privLevel:    number;
 }
 
-/**
- * Represents a group of Users that can own certain resources.
- */
-export interface Tenant {
-	active: boolean;
-	readonly id: number;
-	readonly lastUpdated: Date;
-	name: string;
-	parentId: number | null;
-}
-
 /** The name of a special Role that is always allowed to do whatever it wants. */
 export const ADMIN_ROLE = "admin";
