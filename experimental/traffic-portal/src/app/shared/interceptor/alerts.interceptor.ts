@@ -15,8 +15,7 @@ import type { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angu
 import { Injectable } from "@angular/core";
 import type { Observable } from "rxjs";
 import { tap } from "rxjs/operators";
-
-import type { Alert } from "src/app/models/alert.model";
+import type { Alert } from "trafficops-types";
 
 import { AlertService } from "../alert/alert.service";
 

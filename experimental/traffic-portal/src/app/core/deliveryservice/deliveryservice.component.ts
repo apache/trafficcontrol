@@ -16,7 +16,7 @@ import { UntypedFormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { faBroom } from "@fortawesome/free-solid-svg-icons";
 import { Subject } from "rxjs";
-import type { ResponseDeliveryService } from "trafficops-types";
+import { AlertLevel, ResponseDeliveryService } from "trafficops-types";
 
 import { DeliveryServiceService } from "src/app/api";
 import type { DataPoint, DataSet } from "src/app/models";
@@ -188,7 +188,7 @@ export class DeliveryserviceComponent implements OnInit {
 		try {
 			data = await this.api.getDSKBPS(xmlID, this.from, this.to, interval, false);
 		} catch (e) {
-			this.alerts.newAlert("warning", "Edge-Tier bandwidth data not found!");
+			this.alerts.newAlert(AlertLevel.WARNING, "Edge-Tier bandwidth data not found!");
 			console.error(`Failed to get edge KBPS data for '${xmlID}':`, e);
 			return;
 		}
@@ -243,7 +243,7 @@ export class DeliveryserviceComponent implements OnInit {
 			},
 			e => {
 				console.error(`Failed to get edge TPS data for '${this.deliveryservice.xmlId}':`, e);
-				this.alerts.newAlert("warning", "Edge-Tier transaction data not found!");
+				this.alerts.newAlert(AlertLevel.WARNING, "Edge-Tier transaction data not found!");
 			}
 		);
 	}

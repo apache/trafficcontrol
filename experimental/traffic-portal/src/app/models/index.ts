@@ -11,7 +11,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export * from "./alert.model";
 export * from "./data";
 export * from "./invalidation";
 export * from "./physical.location";
