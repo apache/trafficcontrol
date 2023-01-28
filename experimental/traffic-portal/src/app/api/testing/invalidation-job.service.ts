@@ -13,9 +13,9 @@
 */
 
 import { Injectable } from "@angular/core";
-import type { RequestInvalidationJob, ResponseDeliveryService } from "trafficops-types";
+import { JobType, RequestInvalidationJob, ResponseDeliveryService, ResponseInvalidationJob } from "trafficops-types";
 
-import { type InvalidationJob, JobType, type User } from "src/app/models";
+import type { User } from "src/app/models";
 
 // This needs to be imported from above, because that's how the services are
 // specified in `providers`.
@@ -43,7 +43,7 @@ interface JobOpts {
 @Injectable()
 export class InvalidationJobService {
 
-	private readonly jobs = new Array<InvalidationJob>();
+	private readonly jobs = new Array<ResponseInvalidationJob>();
 	private idCounter = 0;
 
 	constructor(private readonly dsService: DeliveryServiceService) {}
@@ -54,7 +54,7 @@ export class InvalidationJobService {
 	 * @param opts Optional identifiers for the requested Jobs.
 	 * @returns The request Jobs.
 	 */
-	public async getInvalidationJobs(opts?: JobOpts): Promise<Array<InvalidationJob>> {
+	public async getInvalidationJobs(opts?: JobOpts): Promise<Array<ResponseInvalidationJob>> {
 		let ret = this.jobs;
 		if (opts) {
 			if (opts.id) {
@@ -84,7 +84,7 @@ export class InvalidationJobService {
 	 * @param job The Job to create.
 	 * @returns whether or not creation succeeded.
 	 */
-	public async createInvalidationJob(job: RequestInvalidationJob): Promise<InvalidationJob> {
+	public async createInvalidationJob(job: RequestInvalidationJob): Promise<ResponseInvalidationJob> {
 		let deliveryService;
 		if (typeof job.deliveryService === "number") {
 			const ds = (await this.dsService.getDeliveryServices()).find(d=>d.id === job.deliveryService);
@@ -115,7 +115,7 @@ export class InvalidationJobService {
 	 * @param job The new definition of the Job.
 	 * @returns The edited Job as returned by the server.
 	 */
-	public async updateInvalidationJob(job: InvalidationJob): Promise<InvalidationJob> {
+	public async updateInvalidationJob(job: ResponseInvalidationJob): Promise<ResponseInvalidationJob> {
 		const idx = this.jobs.findIndex(j=>j.id===job.id);
 		if (idx < 0) {
 			throw new Error(`no such Job: #${job.id}`);
@@ -130,7 +130,7 @@ export class InvalidationJobService {
 	 * @param id The ID of the Job to delete.
 	 * @returns The deleted Job.
 	 */
-	public async deleteInvalidationJob(id: number): Promise<InvalidationJob> {
+	public async deleteInvalidationJob(id: number): Promise<ResponseInvalidationJob> {
 		const idx = this.jobs.findIndex(j=>j.id===id);
 		if (idx < 0) {
 			throw new Error(`no such Job: #${id}`);

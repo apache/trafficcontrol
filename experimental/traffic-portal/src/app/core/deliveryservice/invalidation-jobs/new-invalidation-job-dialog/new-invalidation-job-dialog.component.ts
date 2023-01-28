@@ -15,9 +15,9 @@ import { Component, Inject } from "@angular/core";
 import { UntypedFormControl } from "@angular/forms";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { Subject } from "rxjs";
+import type { ResponseInvalidationJob } from "trafficops-types";
 
 import { InvalidationJobService } from "src/app/api";
-import type { InvalidationJob } from "src/app/models";
 
 /**
  * Gets the time part of a Date as a string.
@@ -37,7 +37,7 @@ interface DialogData {
 	/** The ID of the Delivery Service to which the created/edited Job belongs. */
 	dsID: number;
 	/** If passed, the dialog will edit this Job instead of creating a new one. */
-	job?: InvalidationJob;
+	job?: ResponseInvalidationJob;
 }
 
 /**
@@ -89,7 +89,7 @@ export class NewInvalidationJobDialogComponent {
 	/** A subscribable that tracks whether the new job's regexp is valid. */
 	public readonly regexpIsValid = new Subject<string>();
 
-	private readonly job: InvalidationJob | undefined;
+	private readonly job: ResponseInvalidationJob | undefined;
 	private readonly dsID: number;
 
 	constructor(
@@ -140,7 +140,7 @@ export class NewInvalidationJobDialogComponent {
 	 * control).
 	 * @param startTime The Job's new Start Time (pre-parsed from Form Controls).
 	 */
-	private editJob(j: InvalidationJob, re: RegExp, startTime: Date): void {
+	private editJob(j: ResponseInvalidationJob, re: RegExp, startTime: Date): void {
 		const job = {
 			...j,
 			parameters: `TTL:${this.ttl.value as number}`,
