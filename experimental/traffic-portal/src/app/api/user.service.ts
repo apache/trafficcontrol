@@ -15,6 +15,7 @@
 import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
+	Capability,
 	GetResponseUser,
 	PostRequestUser,
 	PutOrPostResponseUser,
@@ -25,7 +26,6 @@ import type {
 import {
 	type Role,
 	type Tenant,
-	type Capability,
 	type CurrentUser,
 	newCurrentUser
 } from "src/app/models";
@@ -394,24 +394,13 @@ export class UserService extends APIService {
 	public async getCapabilities(name?: string): Promise<Array<Capability> | Capability> {
 		const path = "capabilities";
 		if (name) {
-			return this.get<[Capability]>(path, undefined, {name}).toPromise().then(
-				r => r[0]
-			).catch(
-				e => {
-					console.error("Failed to get user Permission:", e);
-					return {
-						description: "",
-						name: ""
-					};
-				}
-			);
-		}
-		return this.get<Array<Capability>>(path).toPromise().catch(
-			e => {
-				console.error("Failed to get user Permissions:", e);
-				return [];
+			const caps = await this.get<[Capability]>(path, undefined, {name}).toPromise();
+			if (caps.length !== 1) {
+				throw new Error(`Traffic Ops responded with ${caps.length} capabilities with the name '${name}'`);
 			}
-		);
+			return caps[0];
+		}
+		return this.get<Array<Capability>>(path).toPromise();
 	}
 
 	/**

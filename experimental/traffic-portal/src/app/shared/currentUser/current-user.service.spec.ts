@@ -160,7 +160,7 @@ describe("CurrentUserService", () => {
 		expect(service.hasPermission("a permission")).toBeTrue();
 		expect(service.hasPermission("a different permission")).toBeFalse();
 
-		service.setUser(newCurrentUser(), [{description: "", name: "a permission"}]);
+		service.setUser(newCurrentUser(), [{description: "", lastUpdated: new Date(), name: "a permission"}]);
 		expect(service.hasPermission("a permission")).toBeTrue();
 		expect(service.hasPermission("a different permission")).toBeFalse();
 	});

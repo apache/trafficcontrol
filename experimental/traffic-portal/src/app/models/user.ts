@@ -161,17 +161,5 @@ export interface Tenant {
 	parentId: number | null;
 }
 
-/**
- * Represents a user's ability to perform some action
- */
-export interface Capability {
-	/** The Capability's name. */
-	name:         string;
-	/** A description of the capability. */
-	description:  string;
-	/** The date/time at which the Capability was last updated. */
-	lastUpdated?: Date;
-}
-
 /** The name of a special Role that is always allowed to do whatever it wants. */
 export const ADMIN_ROLE = "admin";

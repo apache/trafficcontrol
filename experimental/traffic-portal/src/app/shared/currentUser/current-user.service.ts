@@ -14,9 +14,10 @@
 import { EventEmitter, Injectable } from "@angular/core";
 import { Router } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
+import { Capability } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import { type Capability, type CurrentUser, ADMIN_ROLE } from "src/app/models";
+import { type CurrentUser, ADMIN_ROLE } from "src/app/models";
 
 /**
  * This service keeps track of the currently authenticated user.
