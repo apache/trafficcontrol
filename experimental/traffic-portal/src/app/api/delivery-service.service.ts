@@ -13,20 +13,17 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { SteeringConfiguration } from "trafficops-types";
+import type { RequestDeliveryService, ResponseDeliveryService, SteeringConfiguration } from "trafficops-types";
 
-import {
-	GeoLimit,
-	GeoProvider,
-	type DataPoint,
-	type DataSet,
-	type DataSetWithSummary,
-	type DeliveryService,
-	type DSCapacity,
-	type DSHealth,
-	type InvalidationJob,
-	type TPSData,
-	type Type
+import type {
+	DataPoint,
+	DataSet,
+	DataSetWithSummary,
+	DSCapacity,
+	DSHealth,
+	InvalidationJob,
+	TPSData,
+	Type
 } from "src/app/models";
 
 import { APIService } from "./base-api.service";
@@ -170,8 +167,8 @@ export class DeliveryServiceService extends APIService {
 		return this.get<Array<SteeringConfiguration>>(path).toPromise();
 	}
 
-	public async getDeliveryServices(id: string | number): Promise<DeliveryService>;
-	public async getDeliveryServices(): Promise<Array<DeliveryService>>;
+	public async getDeliveryServices(id: string | number): Promise<ResponseDeliveryService>;
+	public async getDeliveryServices(): Promise<Array<ResponseDeliveryService>>;
 	/**
 	 * Gets a list of all visible Delivery Services
 	 *
@@ -179,7 +176,7 @@ export class DeliveryServiceService extends APIService {
 	 * @throws TypeError if ``id`` is not a proper type
 	 * @returns An array of `DeliveryService` objects.
 	 */
-	public async getDeliveryServices(id?: string | number): Promise<DeliveryService[] | DeliveryService> {
+	public async getDeliveryServices(id?: string | number): Promise<ResponseDeliveryService[] | ResponseDeliveryService> {
 		const path = "deliveryservices";
 		if (id) {
 			let params;
@@ -192,48 +189,19 @@ export class DeliveryServiceService extends APIService {
 				case "number":
 					params = {id: String(id)};
 			}
-			return this.get<[DeliveryService]>(path, undefined, params).toPromise().then(
-				r => {
-					const ds = r[0];
-					ds.lastUpdated = new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"));
-					return ds;
-				}
-			).catch(
-				e => {
-					console.error("Error getting Delivery Services:", e);
-					return {
-						active: false,
-						anonymousBlockingEnabled: false,
-						cdnId: -1,
-						displayName: "FIZZbuzz",
-						dscp: 0,
-						geoLimit: GeoLimit.NONE,
-						geoProvider: GeoProvider.MAX_MIND,
-						ipv6RoutingEnabled: true,
-						logsEnabled: true,
-						longDesc: "",
-						missLat: 0,
-						missLong: 0,
-						multiSiteOrigin: false,
-						regionalGeoBlocking: false,
-						routingName: "",
-						tenantId: -1,
-						typeId: -1,
-						xmlId: "fizz-buzz"
-					};
-				}
-			);
+			const r = await this.get<[ResponseDeliveryService]>(path, undefined, params).toPromise();
+			const ds = r[0];
+			return {
+				...ds,
+				lastUpdated: new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"))
+			};
 		}
-		return this.get<Array<DeliveryService>>(path).toPromise().then(r => r.map(
-			ds => {
-				ds.lastUpdated = new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"));
-				return ds;
-			}
-		)).catch(
-			e => {
-				console.error("Error getting Delivery Services:", e);
-				return [];
-			}
+		const resp = await this.get<Array<ResponseDeliveryService>>(path).toPromise();
+		return resp.map(
+			ds => ({
+				...ds,
+				lastUpdated: new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"))
+			})
 		);
 	}
 
@@ -243,9 +211,9 @@ export class DeliveryServiceService extends APIService {
 	 * @param ds The new Delivery Service object
 	 * @returns A boolean value indicating the success of the operation
 	 */
-	public async createDeliveryService(ds: DeliveryService): Promise<DeliveryService> {
+	public async createDeliveryService(ds: RequestDeliveryService): Promise<ResponseDeliveryService> {
 		const path = "deliveryservices";
-		return this.post<DeliveryService>(path, ds).toPromise();
+		return this.post<ResponseDeliveryService>(path, ds).toPromise();
 	}
 
 	/**
@@ -256,7 +224,7 @@ export class DeliveryServiceService extends APIService {
 	 * @returns An object that hopefully has the right keys to represent capacity.
 	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
 	 */
-	public async getDSCapacity(d: number | DeliveryService): Promise<DSCapacity> {
+	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<DSCapacity> {
 		let id: number;
 		if (typeof d === "number") {
 			id = d;

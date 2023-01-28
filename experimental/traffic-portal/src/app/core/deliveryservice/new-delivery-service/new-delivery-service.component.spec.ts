@@ -23,14 +23,15 @@ import { MatStepperModule } from "@angular/material/stepper";
 import { MatStepperHarness } from "@angular/material/stepper/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
-import {ReplaySubject} from "rxjs";
+import { ReplaySubject } from "rxjs";
+import { Protocol } from "trafficops-types";
 
 import { APITestingModule } from "src/app/api/testing";
-import { NewDeliveryServiceComponent } from "src/app/core/deliveryservice/new-delivery-service/new-delivery-service.component";
-import { Protocol } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
+
+import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 describe("NewDeliveryServiceComponent", () => {
 	let component: NewDeliveryServiceComponent;
@@ -134,7 +135,7 @@ describe("NewDeliveryServiceComponent", () => {
 	});
 
 	it("should set infrastructure info properly for HTTP Delivery Services", () => {
-		component.cdnObject.setValue({id: 2, name: "test"});
+		component.cdnObject.setValue({dnssecEnabled: false, domainName: "quest", id: 2, lastUpdated: new Date(), name: "test"});
 		component.dsType.setValue({id: 10, name: "HTTP"});
 		component.dsType.markAsDirty();
 		component.protocol.setValue(Protocol.HTTPS);
@@ -145,10 +146,8 @@ describe("NewDeliveryServiceComponent", () => {
 		component.bypassLoc.setValue(bypass);
 		component.bypassLoc.markAsDirty();
 		component.setInfrastructureInformation();
-		expect(component.deliveryService.type).toBe("HTTP");
 		expect(component.deliveryService.typeId).toBe(10);
 		expect(component.deliveryService.cdnId).toBe(2);
-		expect(component.deliveryService.cdnName).toBe("test");
 		expect(component.deliveryService.protocol).toBe(Protocol.HTTPS);
 		expect(component.deliveryService.ipv6RoutingEnabled).toBeFalse();
 		expect(component.deliveryService.httpBypassFqdn).toBe(bypass);
@@ -158,7 +157,7 @@ describe("NewDeliveryServiceComponent", () => {
 	});
 
 	it("should set infrastructure info properly for DNS Delivery Services", () => {
-		component.cdnObject.setValue({id: 2, name: "test"});
+		component.cdnObject.setValue({dnssecEnabled: false, domainName: "quest", id: 2, lastUpdated: new Date(), name: "test"});
 		component.dsType.setValue({id: 7, name: "DNS"});
 		component.dsType.markAsDirty();
 		component.protocol.setValue(Protocol.HTTP);
@@ -169,13 +168,11 @@ describe("NewDeliveryServiceComponent", () => {
 		component.bypassLoc.setValue(bypass);
 		component.bypassLoc.markAsDirty();
 		component.setInfrastructureInformation();
-		expect(component.deliveryService.type).toBe("DNS");
 		expect(component.deliveryService.typeId).toBe(7);
 		expect(component.deliveryService.cdnId).toBe(2);
-		expect(component.deliveryService.cdnName).toBe("test");
 		expect(component.deliveryService.protocol).toBe(Protocol.HTTP);
 		expect(component.deliveryService.ipv6RoutingEnabled).toBeFalse();
-		expect(component.deliveryService.httpBypassFqdn).toBeUndefined();
+		expect(component.deliveryService.httpBypassFqdn).toBeNull();
 		expect(component.deliveryService.dnsBypassCname).toBe(bypass);
 		expect(component.deliveryService.dnsBypassIp6).toBeUndefined();
 		expect(component.deliveryService.dnsBypassIp).toBeUndefined();

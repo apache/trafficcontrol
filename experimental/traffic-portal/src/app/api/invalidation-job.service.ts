@@ -14,8 +14,9 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import type { ResponseDeliveryService } from "trafficops-types";
 
-import type { DeliveryService, InvalidationJob, NewInvalidationJob, User } from "src/app/models";
+import type { InvalidationJob, NewInvalidationJob, User } from "src/app/models";
 
 import { APIService } from "./base-api.service";
 
@@ -24,7 +25,7 @@ import { APIService } from "./base-api.service";
  */
 interface JobOpts {
 	/** return only the Jobs that operate on this Delivery Service */
-	deliveryService?: DeliveryService;
+	deliveryService?: ResponseDeliveryService;
 	/** return only the Jobs that operate on the Delivery Service with this ID */
 	dsID?: number;
 	/** return only the Job that has this ID */

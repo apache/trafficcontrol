@@ -13,8 +13,9 @@
 */
 
 import { Injectable } from "@angular/core";
+import type { ResponseDeliveryService } from "trafficops-types";
 
-import { type DeliveryService, type InvalidationJob, JobType, type NewInvalidationJob, type User } from "src/app/models";
+import { type InvalidationJob, JobType, type NewInvalidationJob, type User } from "src/app/models";
 
 // This needs to be imported from above, because that's how the services are
 // specified in `providers`.
@@ -25,7 +26,7 @@ import { DeliveryServiceService } from "..";
  */
 interface JobOpts {
 	/** return only the Jobs that operate on this Delivery Service */
-	deliveryService?: DeliveryService;
+	deliveryService?: ResponseDeliveryService;
 	/** return only the Jobs that operate on the Delivery Service with this ID */
 	dsID?: number;
 	/** return only the Job that has this ID */
