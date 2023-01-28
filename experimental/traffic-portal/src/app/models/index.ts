@@ -12,7 +12,6 @@
 * limitations under the License.
 */
 export * from "./data";
-export * from "./invalidation";
 export * from "./physical.location";
 export * from "./profile";
 export * from "./server";

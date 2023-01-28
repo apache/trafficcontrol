@@ -15,10 +15,9 @@ import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { faPlus, faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
-import { ResponseDeliveryService } from "trafficops-types";
+import { ResponseDeliveryService, ResponseInvalidationJob } from "trafficops-types";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
-import type { InvalidationJob } from "src/app/models";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
@@ -38,7 +37,7 @@ export class InvalidationJobsComponent implements OnInit {
 	public deliveryservice!: ResponseDeliveryService;
 
 	/** All of the jobs for the described Delivery Service. */
-	public jobs: Array<InvalidationJob>;
+	public jobs: Array<ResponseInvalidationJob>;
 
 	/** The current date/time when the page loads */
 	public now: Date = new Date();
@@ -62,7 +61,7 @@ export class InvalidationJobsComponent implements OnInit {
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService
 	) {
-		this.jobs = new Array<InvalidationJob>();
+		this.jobs = new Array<ResponseInvalidationJob>();
 	}
 
 	/**
@@ -97,7 +96,7 @@ export class InvalidationJobsComponent implements OnInit {
 	 * @param j The Job to check.
 	 * @returns Whether or not `j` is currently in-progress.
 	 */
-	public isInProgress(j: InvalidationJob): boolean {
+	public isInProgress(j: ResponseInvalidationJob): boolean {
 		return j.startTime <= this.now && this.endDate(j) >= this.now;
 	}
 
@@ -117,7 +116,7 @@ export class InvalidationJobsComponent implements OnInit {
 	 * @param j The job from which to extract an end date.
 	 * @returns The date at which the Job will stop being in effect.
 	 */
-	public endDate(j: InvalidationJob): Date {
+	public endDate(j: ResponseInvalidationJob): Date {
 		if (!j.parameters) {
 			throw new Error("cannot get end date for job with no parameters");
 		}
@@ -162,7 +161,7 @@ export class InvalidationJobsComponent implements OnInit {
 	 *
 	 * @param job The Job to be edited.
 	 */
-	public editJob(job: InvalidationJob): void {
+	public editJob(job: ResponseInvalidationJob): void {
 		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data: {dsID: this.dsID, job}});
 		dialogRef.afterClosed().subscribe(
 			created => {

@@ -23,7 +23,6 @@ import type {
 import type {
 	DataPoint,
 	DataSetWithSummary,
-	InvalidationJob,
 	TPSData,
 	Type
 } from "src/app/models";
@@ -536,17 +535,5 @@ export class DeliveryServiceService {
 	 */
 	public async getDSTypes(): Promise<Array<Type>> {
 		return this.dsTypes;
-	}
-
-	/**
-	 * Creates a new content invalidation job.
-	 *
-	 * @todo Implement this when the Jobs Service is moved to the API module.
-	 *
-	 * @param job The content invalidation job to be created.
-	 * @returns whether or not creation succeeded.
-	 */
-	public async createInvalidationJob(job: InvalidationJob): Promise<boolean> {
-		return this.deliveryServices.findIndex(ds=>ds.xmlId === job.deliveryService) >= 0;
 	}
 }

@@ -18,12 +18,11 @@ import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { type Observable, of, ReplaySubject } from "rxjs";
-import { GeoLimit, GeoProvider } from "trafficops-types";
+import { GeoLimit, GeoProvider, JobType, ResponseInvalidationJob } from "trafficops-types";
 
 import { CDNService, DeliveryServiceService, InvalidationJobService, TypeService, UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { InvalidationJobsComponent } from "src/app/core/deliveryservice/invalidation-jobs/invalidation-jobs.component";
-import { type InvalidationJob, JobType } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
@@ -33,7 +32,7 @@ describe("InvalidationJobsComponent", () => {
 	let component: InvalidationJobsComponent;
 	let fixture: ComponentFixture<InvalidationJobsComponent>;
 	let router: Router;
-	let job: InvalidationJob;
+	let job: ResponseInvalidationJob;
 
 	beforeEach(async () => {
 		// mock the API

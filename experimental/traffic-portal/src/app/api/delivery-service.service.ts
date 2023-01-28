@@ -13,13 +13,18 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { Capacity, Health, RequestDeliveryService, ResponseDeliveryService, SteeringConfiguration } from "trafficops-types";
+import type {
+	Capacity,
+	Health,
+	RequestDeliveryService,
+	ResponseDeliveryService,
+	SteeringConfiguration
+} from "trafficops-types";
 
 import type {
 	DataPoint,
 	DataSet,
 	DataSetWithSummary,
-	InvalidationJob,
 	TPSData,
 	Type
 } from "src/app/models";
@@ -453,20 +458,6 @@ export class DeliveryServiceService extends APIService {
 				this.deliveryServiceTypes = r;
 				return r;
 			}
-		);
-	}
-
-	/**
-	 * Creates a new content invalidation job.
-	 *
-	 * @param job The content invalidation job to be created.
-	 * @returns whether or not creation succeeded.
-	 */
-	public async createInvalidationJob(job: InvalidationJob): Promise<boolean> {
-		const path = "user/current/jobs";
-		return this.post<InvalidationJob>(path, job).toPromise().then(
-			() => true,
-			() => false
 		);
 	}
 }
