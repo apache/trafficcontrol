@@ -15,9 +15,9 @@
 import { Component, type OnDestroy, type OnInit } from "@angular/core";
 import type { ValueGetterParams } from "ag-grid-community";
 import { BehaviorSubject, type Subscription } from "rxjs";
+import { ResponseTenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { Tenant } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
@@ -32,12 +32,12 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 })
 export class TenantsComponent implements OnInit, OnDestroy {
 
-	private tenantMap: Record<number, Tenant> = {};
+	private tenantMap: Record<number, ResponseTenant> = {};
 
 	public searchText = "";
 	public searchSubject = new BehaviorSubject("");
 
-	public tenants: Array<Tenant> = [{
+	public tenants: Array<ResponseTenant> = [{
 		active: true,
 		id: 1,
 		lastUpdated: new Date(),
@@ -78,7 +78,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 		}
 	];
 
-	public contextMenuItems: ContextMenuItem<Readonly<Tenant>>[] = [
+	public contextMenuItems: ContextMenuItem<Readonly<ResponseTenant>>[] = [
 	];
 
 	public loading = true;
@@ -119,11 +119,11 @@ export class TenantsComponent implements OnInit, OnDestroy {
 				name: "Disable"
 			});
 			this.contextMenuItems.push({
-				href: (t: Tenant): string => `core/tenants/${t.id}`,
+				href: (t: ResponseTenant): string => `core/tenants/${t.id}`,
 				name: "View Details"
 			});
 			this.contextMenuItems.push({
-				href: (t: Tenant): string => `core/tenants/${t.id}`,
+				href: (t: ResponseTenant): string => `core/tenants/${t.id}`,
 				name: "Open in New Tab",
 				newTab: true
 			});
@@ -147,7 +147,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 * @returns An empty string for the root Tenant, otherwise the parent
 	 * Tenant's name and ID as a string.
 	 */
-	public getParentString(t: Tenant): string {
+	public getParentString(t: ResponseTenant): string {
 		if (t.parentId === null) {
 			return "";
 		}
@@ -166,7 +166,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 *
 	 * @param a The action selected from the context menu.
 	 */
-	 public handleContextMenu(a: ContextMenuActionEvent<Readonly<Tenant>>): void {
+	 public handleContextMenu(a: ContextMenuActionEvent<Readonly<ResponseTenant>>): void {
 		console.log("action:", a);
 	}
 

@@ -23,7 +23,7 @@ import type {
 	ResponseTenant
 } from "trafficops-types";
 
-import type { Role, CurrentUser, Tenant } from "src/app/models";
+import type { Role, CurrentUser } from "src/app/models";
 
 /**
  * Represents a request to register a user via email using the `/users/register`
@@ -331,7 +331,7 @@ export class UserService {
 	 * @param role The new user's Role (or just its ID).
 	 * @param tenant The new user's Tenant (or just its ID).
 	 */
-	public async registerUser(email: string, role: number | Role, tenant: number | Tenant): Promise<void>;
+	public async registerUser(email: string, role: number | Role, tenant: number | ResponseTenant): Promise<void>;
 	/**
 	 * Registers a new user via email.
 	 *
@@ -347,7 +347,7 @@ export class UserService {
 	public async registerUser(
 		userOrEmail: UserRegistrationRequest | string,
 		role?: number | Role,
-		tenant?: number | Tenant
+		tenant?: number | ResponseTenant
 	): Promise<void> {
 		if (typeof(userOrEmail) === "string") {
 			if (role === undefined || tenant === undefined) {
@@ -393,7 +393,7 @@ export class UserService {
 	 * @returns The Tenant identified by `nameOrID` if given, otherwise all
 	 * Tenants visible to the requesting user's Tenant.
 	 */
-	public async getTenants(nameOrID?: string | number): Promise<Array<Tenant> | Tenant> {
+	public async getTenants(nameOrID?: string | number): Promise<Array<ResponseTenant> | ResponseTenant> {
 		if (nameOrID !== undefined) {
 			let tenant;
 			switch (typeof nameOrID) {

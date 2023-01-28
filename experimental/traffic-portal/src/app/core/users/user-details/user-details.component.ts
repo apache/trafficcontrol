@@ -15,10 +15,10 @@
 import { Component, type OnInit } from "@angular/core";
 import type { MatSelectChange } from "@angular/material/select";
 import { ActivatedRoute } from "@angular/router";
-import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser, User } from "trafficops-types";
+import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser, ResponseTenant, User } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { Role, Tenant } from "src/app/models";
+import type { Role } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
@@ -34,7 +34,7 @@ export class UserDetailsComponent implements OnInit {
 
 	public user!: GetResponseUser | PostRequestUser | PutOrPostResponseUser;
 	public roles = new Array<Role>();
-	public tenants = new Array<Tenant>();
+	public tenants = new Array<ResponseTenant>();
 	public new = false;
 
 	constructor(
@@ -128,7 +128,7 @@ export class UserDetailsComponent implements OnInit {
 	 *
 	 * @returns The user's current Tenant.
 	 */
-	public tenant(): Tenant | null {
+	public tenant(): ResponseTenant | null {
 		if (this.isNew(this.user)) {
 			return null;
 		}
@@ -158,7 +158,7 @@ export class UserDetailsComponent implements OnInit {
 	 *
 	 * @param t The Tenant selected by the user.
 	 */
-	public updateTenant(t: MatSelectChange & {value: Tenant}): void {
+	public updateTenant(t: MatSelectChange & {value: ResponseTenant}): void {
 		this.user.tenantId = t.value.id;
 		if (!this.isNew(this.user)) {
 			this.user.tenant = t.value.name;
