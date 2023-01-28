@@ -14,9 +14,9 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { ResponseDeliveryService } from "trafficops-types";
+import type { RequestInvalidationJob, ResponseDeliveryService } from "trafficops-types";
 
-import type { InvalidationJob, NewInvalidationJob, User } from "src/app/models";
+import type { InvalidationJob, User } from "src/app/models";
 
 import { APIService } from "./base-api.service";
 
@@ -96,7 +96,7 @@ export class InvalidationJobService extends APIService {
 	 * @param job The Job to create.
 	 * @returns whether or not creation succeeded.
 	 */
-	public async createInvalidationJob(job: NewInvalidationJob): Promise<InvalidationJob> {
+	public async createInvalidationJob(job: RequestInvalidationJob): Promise<InvalidationJob> {
 		const path = "jobs";
 		return this.post<InvalidationJob>(path, job).toPromise();
 	}

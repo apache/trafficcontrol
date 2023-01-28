@@ -13,9 +13,9 @@
 */
 
 import { Injectable } from "@angular/core";
-import type { ResponseDeliveryService } from "trafficops-types";
+import type { RequestInvalidationJob, ResponseDeliveryService } from "trafficops-types";
 
-import { type InvalidationJob, JobType, type NewInvalidationJob, type User } from "src/app/models";
+import { type InvalidationJob, JobType, type User } from "src/app/models";
 
 // This needs to be imported from above, because that's how the services are
 // specified in `providers`.
@@ -84,7 +84,7 @@ export class InvalidationJobService {
 	 * @param job The Job to create.
 	 * @returns whether or not creation succeeded.
 	 */
-	public async createInvalidationJob(job: NewInvalidationJob): Promise<InvalidationJob> {
+	public async createInvalidationJob(job: RequestInvalidationJob): Promise<InvalidationJob> {
 		let deliveryService;
 		if (typeof job.deliveryService === "number") {
 			const ds = (await this.dsService.getDeliveryServices()).find(d=>d.id === job.deliveryService);

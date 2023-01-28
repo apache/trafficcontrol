@@ -49,28 +49,3 @@ export interface InvalidationJob {
 	 */
 	startTime: Date;
 }
-
-/**
- * A NewInvalidationJob is the data structure used to request creation of a new
- * content invalidation job through the API.
- */
-export interface NewInvalidationJob {
-	/**
-	 * This may be either the ID or the XMLID of the Delivery Service to which
-	 * the Job will apply.
-	 */
-	deliveryService: number | string;
-	/**
-	 * The effective starting date/time for the Job.
-	 */
-	startTime: Date | string;
-	/**
-	 * A pattern that matches content to be invalidated.
-	 */
-	regex: string;
-	/**
-	 * Either the number of hours or a "duration string" describing for how
-	 * long the Job will remain in effect.
-	 */
-	ttl: number | string;
-}
