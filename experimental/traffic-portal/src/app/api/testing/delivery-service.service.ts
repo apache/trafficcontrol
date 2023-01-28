@@ -13,6 +13,8 @@
 */
 import { Injectable } from "@angular/core";
 import type {
+	Capacity,
+	Health,
 	RequestDeliveryService,
 	ResponseDeliveryService,
 	SteeringConfiguration
@@ -21,8 +23,6 @@ import type {
 import type {
 	DataPoint,
 	DataSetWithSummary,
-	DSCapacity,
-	DSHealth,
 	InvalidationJob,
 	TPSData,
 	Type
@@ -321,7 +321,7 @@ export class DeliveryServiceService {
 	 * @returns An object that hopefully has the right keys to represent capacity.
 	 * @throws If `d` is a {@link ResponseDeliveryService} that has no (valid) id
 	 */
-	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<DSCapacity> {
+	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<Capacity> {
 		let id: number;
 		if (typeof d === "number") {
 			id = d;
@@ -342,6 +342,7 @@ export class DeliveryServiceService {
 		return {
 			availablePercent: val %40,
 			maintenancePercent: val %40,
+			unavailablePercent: val %10,
 			utilizedPercent: val %20
 		};
 	}
@@ -353,13 +354,14 @@ export class DeliveryServiceService {
 	 * @param d The integral, unique identifier of a Delivery Service
 	 * @returns A response from the health endpoint
 	 */
-	public async getDSHealth(d: number): Promise<DSHealth> {
+	public async getDSHealth(d: number): Promise<Health> {
 		const ds = this.deliveryServices.filter(service => service.id === d)[0];
 		if (!ds) {
 			throw new Error(`no such Delivery Service: #${d}`);
 		}
 		const val = ds.lastUpdated ? ds.lastUpdated.valueOf() : 100;
 		return {
+			cacheGroups: [],
 			totalOffline: val % 50,
 			totalOnline: 100-(val%50)
 		};
