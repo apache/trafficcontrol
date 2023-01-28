@@ -15,6 +15,7 @@
 import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
+	Capability,
 	GetResponseUser,
 	PostRequestUser,
 	PutOrPostResponseUser,
@@ -22,7 +23,7 @@ import type {
 	ResponseTenant
 } from "trafficops-types";
 
-import type { Role, Capability, CurrentUser, Tenant } from "src/app/models";
+import type { Role, CurrentUser, Tenant } from "src/app/models";
 
 /**
  * Represents a request to register a user via email using the `/users/register`

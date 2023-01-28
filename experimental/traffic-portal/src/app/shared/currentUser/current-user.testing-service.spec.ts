@@ -13,8 +13,9 @@
 */
 import { EventEmitter, Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
+import { Capability } from "trafficops-types";
 
-import { ADMIN_ROLE, Capability, CurrentUser } from "src/app/models";
+import { ADMIN_ROLE, CurrentUser } from "src/app/models";
 
 /**
  * This is a mock for the {@link CurrentUserService} service for testing.
