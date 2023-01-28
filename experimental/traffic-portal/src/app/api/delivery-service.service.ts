@@ -13,14 +13,12 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { RequestDeliveryService, ResponseDeliveryService, SteeringConfiguration } from "trafficops-types";
+import type { Capacity, Health, RequestDeliveryService, ResponseDeliveryService, SteeringConfiguration } from "trafficops-types";
 
 import type {
 	DataPoint,
 	DataSet,
 	DataSetWithSummary,
-	DSCapacity,
-	DSHealth,
 	InvalidationJob,
 	TPSData,
 	Type
@@ -224,7 +222,7 @@ export class DeliveryServiceService extends APIService {
 	 * @returns An object that hopefully has the right keys to represent capacity.
 	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
 	 */
-	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<DSCapacity> {
+	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<Capacity> {
 		let id: number;
 		if (typeof d === "number") {
 			id = d;
@@ -237,13 +235,7 @@ export class DeliveryServiceService extends APIService {
 		}
 
 		const path = `deliveryservices/${id}/capacity`;
-		return this.get<DSCapacity>(path).toPromise().catch(
-			() => ({
-				availablePercent: 0,
-				maintenancePercent: 0,
-				utilizedPercent: 0
-			})
-		);
+		return this.get<Capacity>(path).toPromise();
 	}
 
 	/**
@@ -253,14 +245,9 @@ export class DeliveryServiceService extends APIService {
 	 * @param d The integral, unique identifier of a Delivery Service
 	 * @returns A response from the health endpoint
 	 */
-	public async getDSHealth(d: number): Promise<DSHealth> {
+	public async getDSHealth(d: number): Promise<Health> {
 		const path = `deliveryservices/${d}/health`;
-		return this.get<DSHealth>(path).toPromise().catch(
-			() => ({
-				totalOffline: 0,
-				totalOnline: 0
-			})
-		);
+		return this.get<Health>(path).toPromise();
 	}
 
 	public async getDSKBPS(

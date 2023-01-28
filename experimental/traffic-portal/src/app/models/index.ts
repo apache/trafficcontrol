@@ -13,7 +13,6 @@
 */
 export * from "./alert.model";
 export * from "./data";
-export * from "./deliveryservice";
 export * from "./invalidation";
 export * from "./physical.location";
 export * from "./profile";
