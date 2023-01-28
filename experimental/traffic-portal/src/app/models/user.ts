@@ -132,23 +132,5 @@ export function newCurrentUser(): CurrentUser {
 	};
 }
 
-/**
- * Represents a role that a user may have
- */
-export interface Role {
-	/**
-	 * The Capabilities afforded by this Role.
-	 */
-	capabilities: Array<string>;
-	/** A description of the Role. */
-	description?: string;
-	/** An integral, unique identifier for the Role. */
-	id:           number;
-	/** The Role's name. */
-	name:         string;
-	/** The Role's "privilege level". */
-	privLevel:    number;
-}
-
 /** The name of a special Role that is always allowed to do whatever it wants. */
 export const ADMIN_ROLE = "admin";

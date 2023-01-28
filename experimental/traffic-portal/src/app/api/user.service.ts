@@ -20,11 +20,11 @@ import type {
 	PostRequestUser,
 	PutOrPostResponseUser,
 	RequestTenant,
+	ResponseRole,
 	ResponseTenant
 } from "trafficops-types";
 
 import {
-	type Role,
 	type CurrentUser,
 	newCurrentUser
 } from "src/app/models";
@@ -223,7 +223,7 @@ export class UserService extends APIService {
 	 * @param role The new user's Role (or just its ID).
 	 * @param tenant The new user's Tenant (or just its ID).
 	 */
-	public async registerUser(email: string, role: number | Role, tenant: number | ResponseTenant): Promise<void>;
+	public async registerUser(email: string, role: number | ResponseRole, tenant: number | ResponseTenant): Promise<void>;
 	/**
 	 * Registers a new user via email.
 	 *
@@ -236,7 +236,7 @@ export class UserService extends APIService {
 	 */
 	public async registerUser(
 		userOrEmail: UserRegistrationRequest | string,
-		role?: number | Role,
+		role?: number | ResponseRole,
 		tenant?: number | ResponseTenant
 	): Promise<void> {
 		let request;
@@ -257,9 +257,9 @@ export class UserService extends APIService {
 	}
 
 	/** Fetches the Role with the given ID. */
-	public async getRoles (nameOrID: number | string): Promise<Role>;
+	public async getRoles (nameOrID: number | string): Promise<ResponseRole>;
 	/** Fetches all Roles. */
-	public async getRoles (): Promise<Array<Role>>;
+	public async getRoles (): Promise<Array<ResponseRole>>;
 	/**
 	 * Fetches one or all Roles from Traffic Ops.
 	 *
@@ -268,7 +268,7 @@ export class UserService extends APIService {
 	 * @returns Either an Array of Roles, or a single Role, depending on whether
 	 * `name`/`id` was passed
 	 */
-	public async getRoles(nameOrID?: string | number): Promise<Array<Role> | Role> {
+	public async getRoles(nameOrID?: string | number): Promise<Array<ResponseRole> | ResponseRole> {
 		const path = "roles";
 		if (nameOrID !== undefined) {
 			let params;
@@ -279,24 +279,13 @@ export class UserService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			return this.get<[Role]>(path, undefined, params).toPromise().then(r => r[0]).catch(
-				e => {
-					console.error("Failed to get Role:", e);
-					return {
-						capabilities: [],
-						id: -1,
-						name: "",
-						privLevel: -1,
-					};
-				}
-			);
-		}
-		return this.get<Array<Role>>(path).toPromise().catch(
-			e => {
-				console.error("Failed to get Roles:", e);
-				return [];
+			const resp = await this.get<[ResponseRole]>(path, undefined, params).toPromise();
+			if (resp.length !== 1) {
+				throw new Error(`Traffic Ops responded with ${resp.length} Roles by identifier ${nameOrID}`);
 			}
-		);
+			return resp[0];
+		}
+		return this.get<Array<ResponseRole>>(path).toPromise();
 	}
 
 	/**

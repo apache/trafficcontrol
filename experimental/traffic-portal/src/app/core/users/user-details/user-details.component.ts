@@ -15,10 +15,9 @@
 import { Component, type OnInit } from "@angular/core";
 import type { MatSelectChange } from "@angular/material/select";
 import { ActivatedRoute } from "@angular/router";
-import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser, ResponseTenant, User } from "trafficops-types";
+import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser, ResponseRole, ResponseTenant, User } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { Role } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
@@ -33,7 +32,7 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 export class UserDetailsComponent implements OnInit {
 
 	public user!: GetResponseUser | PostRequestUser | PutOrPostResponseUser;
-	public roles = new Array<Role>();
+	public roles = new Array<ResponseRole>();
 	public tenants = new Array<ResponseTenant>();
 	public new = false;
 
@@ -112,7 +111,7 @@ export class UserDetailsComponent implements OnInit {
 	 *
 	 * @returns The user's current Role.
 	 */
-	public role(): Role | null {
+	public role(): ResponseRole | null {
 		if (this.isNew(this.user)) {
 			return null;
 		}
@@ -145,7 +144,7 @@ export class UserDetailsComponent implements OnInit {
 	 *
 	 * @param r The Role selected by the user.
 	 */
-	public updateRole(r: MatSelectChange & {value: Role}): void {
+	public updateRole(r: MatSelectChange & {value: ResponseRole}): void {
 		this.user.role = r.value.id;
 		if (!this.isNew(this.user)) {
 			this.user.rolename = r.value.name;

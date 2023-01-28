@@ -13,10 +13,9 @@
 */
 import { Component, type OnInit } from "@angular/core";
 import { MatDialogRef } from "@angular/material/dialog";
-import { ResponseTenant } from "trafficops-types";
+import { ResponseRole, ResponseTenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { Role } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
@@ -29,10 +28,10 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 })
 export class UserRegistrationDialogComponent implements OnInit {
 
-	public roles = new Array<Role>();
+	public roles = new Array<ResponseRole>();
 	public tenants = new Array<ResponseTenant>();
 
-	public role!: Role;
+	public role!: ResponseRole;
 	public tenant!: ResponseTenant;
 	public email = "";
 
