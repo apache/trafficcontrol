@@ -14,10 +14,10 @@
 import { EventEmitter, Injectable } from "@angular/core";
 import { Router } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { Capability } from "trafficops-types";
+import { Capability, ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import { type CurrentUser, ADMIN_ROLE } from "src/app/models";
+import { ADMIN_ROLE } from "src/app/models";
 
 /**
  * This service keeps track of the currently authenticated user.
@@ -34,12 +34,12 @@ export class CurrentUserService {
 	/** Makes updateCurrentUser able to be called from multiple places without regard to order */
 	private updatingUserPromise: Promise<boolean> | null = null;
 	/** To allow downstream code to stay up to date with the current user */
-	public userChanged = new EventEmitter<CurrentUser>();
+	public userChanged = new EventEmitter<ResponseCurrentUser>();
 	/** The currently authenticated user - or `null` if not authenticated. */
-	private user: CurrentUser | null = null;
+	private user: ResponseCurrentUser | null = null;
 
 	/** The currently authenticated user - or `null` if not authenticated. */
-	public get currentUser(): CurrentUser | null {
+	public get currentUser(): ResponseCurrentUser | null {
 		return this.user;
 	}
 
@@ -99,7 +99,7 @@ export class CurrentUserService {
 	 * @param user User to e saved
 	 * @returns A promise returning the status of the update.
 	 */
-	public async saveCurrentUser(user: CurrentUser): Promise<boolean> {
+	public async saveCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		return this.api.updateCurrentUser(user);
 	}
 
@@ -125,7 +125,7 @@ export class CurrentUserService {
 	 * @param u The new user who has been authenticated.
 	 * @param caps The newly authenticated user's Permissions.
 	 */
-	public setUser(u: CurrentUser, caps: Set<string> | Array<Capability>): void {
+	public setUser(u: ResponseCurrentUser, caps: Set<string> | Array<Capability>): void {
 		this.user = u;
 		const capabilities = caps instanceof Array ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.user);

@@ -15,13 +15,46 @@ import { Location } from "@angular/common";
 import { fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
+import type { ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { LoginComponent } from "src/app/login/login.component";
-import { newCurrentUser, type User } from "src/app/models";
+import type { User } from "src/app/models";
 
 import { CurrentUserService } from "./current-user.service";
+
+/**
+ * Creates a new user for testing purposes.
+ *
+ * @returns A new current user.
+ */
+function newCurrentUser(): ResponseCurrentUser {
+	return {
+		addressLine1: "addressLine1",
+		addressLine2: "addressLine2",
+		city: "city",
+		company: "company",
+		country: "country",
+		email: "em@i.l",
+		fullName: "fullName",
+		gid: null,
+		id: 1,
+		lastUpdated: new Date(),
+		localUser: true,
+		newUser: false,
+		phoneNumber: "phoneNumber",
+		postalCode: "postalCode",
+		publicSshKey: "publicSshKey",
+		role: 1,
+		roleName: "roleName",
+		stateOrProvince: "stateOrProvince",
+		tenant: "tenant",
+		tenantId: 1,
+		uid: null,
+		username: "username"
+	};
+}
 
 describe("CurrentUserService", () => {
 	let service: CurrentUserService;
@@ -68,7 +101,7 @@ describe("CurrentUserService", () => {
 				city: "city",
 				company: "company",
 				country: "country",
-				email: "email",
+				email: "em@i.l",
 				fullName: "full name",
 				gid: 0,
 				id: 9000,
@@ -97,7 +130,7 @@ describe("CurrentUserService", () => {
 				city: null,
 				company: null,
 				country: null,
-				email: "different email",
+				email: "different em@i.l",
 				fullName: "different full name",
 				gid: null,
 				id: 9001,
@@ -128,7 +161,7 @@ describe("CurrentUserService", () => {
 			city: null,
 			company: null,
 			country: null,
-			email: "different email",
+			email: "different em@i.l",
 			fullName: "different full name",
 			gid: null,
 			id: 9001,

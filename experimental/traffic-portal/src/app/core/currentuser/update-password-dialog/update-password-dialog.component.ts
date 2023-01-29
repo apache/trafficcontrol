@@ -62,11 +62,16 @@ export class UpdatePasswordDialogComponent {
 			return;
 		}
 
-		const user = this.auth.currentUser;
-		if (!user) {
+		if (!this.auth.currentUser) {
 			console.error("Cannot update null user");
 			return;
 		}
+
+		const user = {
+			...this.auth.currentUser,
+			confirmLocalPasswd: this.confirm,
+			localPasswd: this.password,
+		};
 
 		user.localPasswd = this.password;
 		user.confirmLocalPasswd = this.confirm;
