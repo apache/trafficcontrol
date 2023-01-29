@@ -24,14 +24,12 @@ import {
 	protocolToString,
 	QStringHandling,
 	RangeRequestHandling,
+	TypeFromResponse,
 	type RequestDeliveryService,
 	type ResponseCDN
 } from "trafficops-types";
 
 import { CDNService, DeliveryServiceService } from "src/app/api";
-import type {
-	Type,
-} from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -115,7 +113,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	/** Allows the user to set the 'displayName'/'xml_id' */
 	public displayName = new FormControl("");
 	/** Allows the user to set 'type'/'typeId' */
-	public dsType = new FormControl<Type>({id: -1, name: ""});
+	public dsType = new FormControl<TypeFromResponse | null>(null);
 	/** Allows the user to set 'infoUrl' */
 	public infoURL = new FormControl("");
 	/** Allows the user to set 'originFqdn' */
@@ -141,7 +139,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * The available useInTable=delivery_service Types from which for the user
 	 * to choose.
 	 */
-	public dsTypes: Array<Type> = [];
+	public dsTypes: Array<TypeFromResponse> = [];
 
 	/** Need public access to models.bypassable in the template. */
 	public bypassable = bypassable;
@@ -172,8 +170,8 @@ export class NewDeliveryServiceComponent implements OnInit {
 		this.navSvc.headerTitle.next("New Delivery Service");
 
 		this.deliveryService.tenantId = this.auth.currentUser.tenantId;
-		const typeP = this.dsAPI.getDSTypes().then(
-			(types: Array<Type>) => {
+		const typeP = await this.dsAPI.getDSTypes().then(
+			types => {
 				this.dsTypes = types;
 				for (const t of types) {
 					if (t.name === "HTTP") {

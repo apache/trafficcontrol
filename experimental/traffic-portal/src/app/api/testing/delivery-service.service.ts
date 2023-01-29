@@ -17,14 +17,14 @@ import type {
 	Health,
 	RequestDeliveryService,
 	ResponseDeliveryService,
-	SteeringConfiguration
+	SteeringConfiguration,
+	TypeFromResponse
 } from "trafficops-types";
 
 import type {
 	DataPoint,
 	DataSetWithSummary,
 	TPSData,
-	Type
 } from "src/app/models";
 
 import { CDNService, ProfileService, TypeService, UserService } from "..";
@@ -533,7 +533,7 @@ export class DeliveryServiceService {
 	 * @returns An array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
 	 * 	types.
 	 */
-	public async getDSTypes(): Promise<Array<Type>> {
+	public async getDSTypes(): Promise<Array<TypeFromResponse>> {
 		return this.dsTypes;
 	}
 }

@@ -15,8 +15,6 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type { TypeFromResponse } from "trafficops-types";
 
-import type { Type } from "src/app/models";
-
 import { APIService } from "./base-api.service";
 
 /** The allowed values for the 'useInTables' query parameter of GET requests to /types. */
@@ -34,15 +32,15 @@ type UseInTable = "cachegroup" |
  */
 @Injectable()
 export class TypeService extends APIService {
-	public async getTypes(idOrName: number | string): Promise<Type>;
-	public async getTypes(): Promise<Array<Type>>;
+	public async getTypes(idOrName: number | string): Promise<TypeFromResponse>;
+	public async getTypes(): Promise<Array<TypeFromResponse>>;
 	/**
 	 * Gets one or all Types from Traffic Ops
 	 *
 	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single Type to be returned.
 	 * @returns The requested Type(s).
 	 */
-	public async getTypes(idOrName?: number | string): Promise<Type | Array<Type>> {
+	public async getTypes(idOrName?: number | string): Promise<TypeFromResponse | Array<TypeFromResponse>> {
 		const path = "types";
 		if (idOrName !== undefined) {
 			let params;
@@ -53,24 +51,13 @@ export class TypeService extends APIService {
 				case "number":
 					params = {id: String(idOrName)};
 			}
-			return this.get<[Type]>(path, undefined, params).toPromise().then(
-				r => r[0]
-			).catch(
-				e => {
-					console.error("Failed to get Type:", e);
-					return {
-						id: -1,
-						name: ""
-					};
-				}
-			);
-		}
-		return this.get<Array<Type>>(path).toPromise().catch(
-			e => {
-				console.error("Failed to get Types:", e);
-				return [];
+			const r = await this.get<[TypeFromResponse]>(path, undefined, params).toPromise();
+			if (r.length !== 1) {
+				throw new Error(`Traffic Ops responded with ${r.length} Types by identifier ${idOrName}`);
 			}
-		);
+			return r[0];
+		}
+		return this.get<Array<TypeFromResponse>>(path).toPromise();
 	}
 
 	/**
@@ -93,7 +80,7 @@ export class TypeService extends APIService {
 	 *
 	 * @returns All Types that have 'server' as their 'useInTable'.
 	 */
-	public async getServerTypes(): Promise<Array<Type>> {
+	public async getServerTypes(): Promise<Array<TypeFromResponse>> {
 		return this.getTypesInTable("server");
 	}
 

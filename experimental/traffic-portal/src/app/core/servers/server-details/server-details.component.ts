@@ -16,11 +16,11 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
-import type { ResponseCacheGroup, ResponseCDN, ResponsePhysicalLocation, ResponseProfile } from "trafficops-types";
+import type { ResponseCacheGroup, ResponseCDN, ResponsePhysicalLocation, ResponseProfile, TypeFromResponse } from "trafficops-types";
 
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
-import { DUMMY_SERVER, Interface, Server, Status, Type } from "src/app/models";
+import { DUMMY_SERVER, Interface, Server, Status } from "src/app/models";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
@@ -120,7 +120,7 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * The set of all Types that can be applied to a server.
 	 */
-	public types = new Array<Type>();
+	public types = new Array<TypeFromResponse>();
 
 	public autocompleteNew = AutocompleteValue.NEW_PASSWORD;
 
