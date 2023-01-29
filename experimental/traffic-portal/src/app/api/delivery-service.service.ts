@@ -18,7 +18,8 @@ import type {
 	Health,
 	RequestDeliveryService,
 	ResponseDeliveryService,
-	SteeringConfiguration
+	SteeringConfiguration,
+	TypeFromResponse
 } from "trafficops-types";
 
 import type {
@@ -26,7 +27,6 @@ import type {
 	DataSet,
 	DataSetWithSummary,
 	TPSData,
-	Type
 } from "src/app/models";
 
 import { APIService } from "./base-api.service";
@@ -148,7 +148,7 @@ function constructDataSetFromResponse(r: object): DataSetWithSummary {
 export class DeliveryServiceService extends APIService {
 
 	/** This is where DS Types are cached, as they are presumed to not change (often). */
-	private deliveryServiceTypes: Array<Type>;
+	private deliveryServiceTypes: Array<TypeFromResponse>;
 
 	/**
 	 * Injects the Angular HTTP client service into the parent constructor.
@@ -157,7 +157,7 @@ export class DeliveryServiceService extends APIService {
 	 */
 	constructor(http: HttpClient) {
 		super(http);
-		this.deliveryServiceTypes = new Array<Type>();
+		this.deliveryServiceTypes = new Array<TypeFromResponse>();
 	}
 
 	/**
@@ -443,21 +443,13 @@ export class DeliveryServiceService extends APIService {
 	 * @returns An array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
 	 * 	types.
 	 */
-	public async getDSTypes(): Promise<Array<Type>> {
+	public async getDSTypes(): Promise<Array<TypeFromResponse>> {
 		if (this.deliveryServiceTypes.length > 0) {
 			return this.deliveryServiceTypes;
 		}
 		const path = "types";
-		return this.get<Array<Type>>(path, undefined, {useInTable: "deliveryservice"}).toPromise().catch(
-			e => {
-				console.error("Failed to get Delivery Service Types:", e);
-				return [];
-			}
-		).then(
-			r => {
-				this.deliveryServiceTypes = r;
-				return r;
-			}
-		);
+		const r = await this.get<Array<TypeFromResponse>>(path, undefined, {useInTable: "deliveryservice"}).toPromise();
+		this.deliveryServiceTypes = r;
+		return r;
 	}
 }

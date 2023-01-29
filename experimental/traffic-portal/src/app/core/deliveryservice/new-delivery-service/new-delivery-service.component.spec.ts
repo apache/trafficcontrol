@@ -136,7 +136,7 @@ describe("NewDeliveryServiceComponent", () => {
 
 	it("should set infrastructure info properly for HTTP Delivery Services", () => {
 		component.cdnObject.setValue({dnssecEnabled: false, domainName: "quest", id: 2, lastUpdated: new Date(), name: "test"});
-		component.dsType.setValue({id: 10, name: "HTTP"});
+		component.dsType.setValue({description: "", id: 10, lastUpdated: new Date(), name: "HTTP", useInTable: ""});
 		component.dsType.markAsDirty();
 		component.protocol.setValue(Protocol.HTTPS);
 		component.protocol.markAsDirty();
@@ -158,7 +158,7 @@ describe("NewDeliveryServiceComponent", () => {
 
 	it("should set infrastructure info properly for DNS Delivery Services", () => {
 		component.cdnObject.setValue({dnssecEnabled: false, domainName: "quest", id: 2, lastUpdated: new Date(), name: "test"});
-		component.dsType.setValue({id: 7, name: "DNS"});
+		component.dsType.setValue({description: "", id: 7, lastUpdated: new Date(), name: "DNS", useInTable: ""});
 		component.dsType.markAsDirty();
 		component.protocol.setValue(Protocol.HTTP);
 		component.protocol.markAsDirty();
