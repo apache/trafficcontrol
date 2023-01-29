@@ -31,7 +31,6 @@ import {
 import { CDNService, DeliveryServiceService } from "src/app/api";
 import type {
 	Type,
-	User,
 } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
@@ -193,7 +192,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			d => {
 				const cdnsInUse = new Map<number, number>();
 				for (const ds of d) {
-					if (ds.tenantId === (this.auth.currentUser as User).tenantId) {
+					if (ds.tenantId === this.auth.currentUser?.tenantId) {
 						const usedCDNs = cdnsInUse.get(ds.tenantId);
 						if (!usedCDNs) {
 							cdnsInUse.set(ds.tenantId, 1);

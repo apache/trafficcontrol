@@ -20,7 +20,6 @@ import type { ResponseCurrentUser } from "trafficops-types";
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { LoginComponent } from "src/app/login/login.component";
-import type { User } from "src/app/models";
 
 import { CurrentUserService } from "./current-user.service";
 
@@ -63,8 +62,8 @@ describe("CurrentUserService", () => {
 
 	beforeEach(() => {
 		const mockAPIService = jasmine.createSpyObj(["updateCurrentUser", "getCurrentUser", "saveCurrentUser"]);
-		mockAPIService.getCurrentUser.and.returnValue(new Promise<User>(resolve => resolve(
-			{id: 1, newUser: false, role: 1, username: "name"}
+		mockAPIService.getCurrentUser.and.returnValue(new Promise<ResponseCurrentUser>(resolve => resolve(
+			{id: 1, newUser: false, role: 1, username: "name"} as ResponseCurrentUser
 		)));
 		TestBed.configureTestingModule({
 			imports: [
