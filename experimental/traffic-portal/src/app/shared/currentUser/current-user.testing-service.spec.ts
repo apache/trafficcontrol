@@ -15,8 +15,6 @@ import { EventEmitter, Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
 import { Capability, ResponseCurrentUser } from "trafficops-types";
 
-import { ADMIN_ROLE } from "src/app/models";
-
 /**
  * This is a mock for the {@link CurrentUserService} service for testing.
  *
@@ -27,6 +25,7 @@ import { ADMIN_ROLE } from "src/app/models";
  */
 @Injectable()
 export class CurrentUserTestingService {
+	public static readonly ADMIN_ROLE = "admin";
 	public static readonly PASSWORD = "twelve12!";
 	public userChanged = new EventEmitter<ResponseCurrentUser>();
 	public currentUser: ResponseCurrentUser = {
@@ -117,7 +116,7 @@ export class CurrentUserTestingService {
 	 * @returns `true` if the user has the Permission `perm`, `false` otherwise.
 	 */
 	public hasPermission(perm: string): boolean {
-		return this.currentUser.roleName === ADMIN_ROLE || this.capabilities.getValue().has(perm);
+		return this.currentUser.roleName === CurrentUserTestingService.ADMIN_ROLE || this.capabilities.getValue().has(perm);
 	}
 
 	/**
