@@ -20,11 +20,10 @@ import type {
 	PostRequestUser,
 	PutOrPostResponseUser,
 	RequestTenant,
+	ResponseCurrentUser,
 	ResponseRole,
 	ResponseTenant
 } from "trafficops-types";
-
-import type { CurrentUser } from "src/app/models";
 
 /**
  * Represents a request to register a user via email using the `/users/register`
@@ -169,27 +168,41 @@ export class UserService {
 	 *
 	 * @returns A `User` object representing the current user.
 	 */
-	public async getCurrentUser(): Promise<CurrentUser> {
+	public async getCurrentUser(): Promise<ResponseCurrentUser> {
 		let user = this.users.filter(u=>u.username === this.testAdminUsername)[0];
+		const transformUser = (u: GetResponseUser): ResponseCurrentUser => ({
+			addressLine1: u.addressLine1,
+			addressLine2: u.addressLine2,
+			city: u.city,
+			company: u.company,
+			country: u.country,
+			email: u.email,
+			fullName: u.fullName,
+			gid: u.gid,
+			id: u.id,
+			lastUpdated: u.lastUpdated,
+			localUser: true,
+			newUser: u.newUser ?? false,
+			phoneNumber: u.phoneNumber,
+			postalCode: u.postalCode,
+			publicSshKey: u.publicSshKey,
+			role: u.role,
+			roleName: u.rolename ?? "",
+			stateOrProvince: u.stateOrProvince,
+			tenant: u.tenant,
+			tenantId: u.tenantId,
+			uid: u.uid,
+			username: u.username
+		});
 		if (user) {
-			return {
-				...user,
-				localUser: true,
-				newUser: user.newUser ?? false,
-				roleName: user.rolename ?? "",
-			};
+			return transformUser(user);
 		}
 		console.warn("stored admin username not found in stored users: from now on the current user will be (more or less) random");
 		user = this.users[0];
 		if (!user) {
 			throw new Error("no users exist");
 		}
-		return {
-			...user,
-			localUser: true,
-			newUser: user.newUser ?? false,
-			roleName: user.rolename ?? "",
-		};
+		return transformUser(user);
 	}
 
 	/**
@@ -198,7 +211,7 @@ export class UserService {
 	 * @param user Unused. This method does nothing in the testing environment yet.
 	 * @returns whether or not the request was successful.
 	 */
-	public async updateCurrentUser(user: CurrentUser): Promise<boolean> {
+	public async updateCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		const storedUser = this.users.findIndex(u=>u.id === user.id);
 		if (storedUser < 0) {
 			console.error(`no such User: #${user.id}`);
@@ -208,7 +221,6 @@ export class UserService {
 		this.users[storedUser] = {
 			...user,
 			confirmLocalPasswd: undefined,
-			email: user.email as `${string}@${string}.${string}`,
 			fullName: user.fullName ?? "",
 			lastUpdated: new Date(),
 			roleName: undefined,

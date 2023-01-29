@@ -13,9 +13,9 @@
 */
 import { EventEmitter, Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
-import { Capability } from "trafficops-types";
+import { Capability, ResponseCurrentUser } from "trafficops-types";
 
-import { ADMIN_ROLE, CurrentUser } from "src/app/models";
+import { ADMIN_ROLE } from "src/app/models";
 
 /**
  * This is a mock for the {@link CurrentUserService} service for testing.
@@ -28,8 +28,8 @@ import { ADMIN_ROLE, CurrentUser } from "src/app/models";
 @Injectable()
 export class CurrentUserTestingService {
 	public static readonly PASSWORD = "twelve12!";
-	public userChanged = new EventEmitter<CurrentUser>();
-	public currentUser: CurrentUser = {
+	public userChanged = new EventEmitter<ResponseCurrentUser>();
+	public currentUser: ResponseCurrentUser = {
 		addressLine1: null,
 		addressLine2: null,
 		city: null,
@@ -80,7 +80,7 @@ export class CurrentUserTestingService {
 	 * @param user User to e saved
 	 * @returns A promise returning the status of the update.
 	 */
-	public async saveCurrentUser(user: CurrentUser): Promise<boolean> {
+	public async saveCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		this.currentUser = user;
 		return true;
 	}
@@ -103,7 +103,7 @@ export class CurrentUserTestingService {
 	 * @param u The new user who has been authenticated.
 	 * @param caps The newly authenticated user's Permissions.
 	 */
-	public setUser(u: CurrentUser, caps: Set<string> | Array<Capability>): void {
+	public setUser(u: ResponseCurrentUser, caps: Set<string> | Array<Capability>): void {
 		this.currentUser = u;
 		const capabilities = Array.isArray(caps) ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.currentUser);

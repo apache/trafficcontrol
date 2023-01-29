@@ -20,14 +20,10 @@ import type {
 	PostRequestUser,
 	PutOrPostResponseUser,
 	RequestTenant,
+	ResponseCurrentUser,
 	ResponseRole,
 	ResponseTenant
 } from "trafficops-types";
-
-import {
-	type CurrentUser,
-	newCurrentUser
-} from "src/app/models";
 
 import { APIService } from "./base-api.service";
 
@@ -99,19 +95,13 @@ export class UserService extends APIService {
 	 *
 	 * @returns A `User` object representing the current user.
 	 */
-	public async getCurrentUser(): Promise<CurrentUser> {
+	public async getCurrentUser(): Promise<ResponseCurrentUser> {
 		const path = "user/current";
-		return this.get<CurrentUser>(path).toPromise().then(
-			r => {
-				r.lastUpdated = new Date((r.lastUpdated as unknown as string).replace("+00", "Z"));
-				return r;
-			}
-		).catch(
-			e => {
-				console.error("Failed to get current user:", e);
-				return newCurrentUser();
-			}
-		);
+		const r = await this.get<ResponseCurrentUser>(path).toPromise();
+		return {
+			...r,
+			lastUpdated: new Date((r.lastUpdated as unknown as string).replace("+00", "Z"))
+		};
 	}
 
 	/**
@@ -120,9 +110,9 @@ export class UserService extends APIService {
 	 * @param user The new form of the user.
 	 * @returns whether or not the request was successful.
 	 */
-	public async updateCurrentUser(user: CurrentUser): Promise<boolean> {
+	public async updateCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		const path = "user/current";
-		return this.put<CurrentUser>(path, {user}).toPromise().then(
+		return this.put<ResponseCurrentUser>(path, {user}).toPromise().then(
 			() => true,
 			() => false
 		);
