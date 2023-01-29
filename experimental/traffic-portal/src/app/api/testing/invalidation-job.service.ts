@@ -13,9 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-import { JobType, RequestInvalidationJob, ResponseDeliveryService, ResponseInvalidationJob } from "trafficops-types";
-
-import type { User } from "src/app/models";
+import { JobType, RequestInvalidationJob, ResponseDeliveryService, ResponseInvalidationJob, ResponseUser } from "trafficops-types";
 
 // This needs to be imported from above, because that's how the services are
 // specified in `providers`.
@@ -32,7 +30,7 @@ interface JobOpts {
 	/** return only the Job that has this ID */
 	id?: number;
 	/** return only the Jobs that were created by this user */
-	user?: User;
+	user?: ResponseUser;
 	/** return only the Jobs that were created by the user that has this ID */
 	userId?: number;
 }
