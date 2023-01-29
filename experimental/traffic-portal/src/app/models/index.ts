@@ -14,4 +14,3 @@
 export * from "./data";
 export * from "./server";
 export * from "./type";
-export * from "./user";

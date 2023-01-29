@@ -17,7 +17,6 @@ import { BehaviorSubject } from "rxjs";
 import { Capability, ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import { ADMIN_ROLE } from "src/app/models";
 
 /**
  * This service keeps track of the currently authenticated user.
@@ -31,6 +30,8 @@ import { ADMIN_ROLE } from "src/app/models";
 	providedIn: "root"
 })
 export class CurrentUserService {
+	/** The special Role that's always allowed to do everything. */
+	public static readonly ADMIN_ROLE = "admin";
 	/** Makes updateCurrentUser able to be called from multiple places without regard to order */
 	private updatingUserPromise: Promise<boolean> | null = null;
 	/** To allow downstream code to stay up to date with the current user */
@@ -142,7 +143,7 @@ export class CurrentUserService {
 		if (!this.user) {
 			return false;
 		}
-		return this.user.roleName === ADMIN_ROLE || this.capabilities.getValue().has(perm);
+		return this.user.roleName === CurrentUserService.ADMIN_ROLE || this.capabilities.getValue().has(perm);
 	}
 
 	/**
