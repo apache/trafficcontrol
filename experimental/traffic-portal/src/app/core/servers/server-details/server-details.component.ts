@@ -17,6 +17,7 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import type {
+	Interface,
 	ResponseCacheGroup,
 	ResponseCDN,
 	ResponsePhysicalLocation,
@@ -28,7 +29,6 @@ import type {
 
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
-import type { Interface } from "src/app/models";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 

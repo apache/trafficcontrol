@@ -12,8 +12,6 @@
 * limitations under the License.
 */
 
-import { Interface } from "../models";
-
 // The RegExps in this file (the largest ones, anyway) are represented as strings -
 // this is vitally important to supporting Firefox, for some reason.
 // See: https://github.com/angular/angular/issues/40589
@@ -40,21 +38,3 @@ export const IP_WITH_CIDR = "(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]):)
 /** This RegExp matches valid IPv4 addresses (or netmasks). */
 export const IPV4 = /^((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/;
 /* eslint-enable max-len */
-
-/**
- * Gets the service interface from the given set of interfaces.
- *
- * @param infs The interfaces to search.
- * @returns The interface containing service addresses.
- * @throws When no service interface cannot be found - it is illegal for a server to not have exactly one service interface.
- */
-export function serviceInterface(infs: Array<Interface>): Interface {
-	for (const inf of infs) {
-		for (const ip of inf.ipAddresses) {
-			if (ip.serviceAddress) {
-				return inf;
-			}
-		}
-	}
-	throw new Error("no service address found");
-}
