@@ -13,7 +13,7 @@
 */
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { TreeData } from "src/app/models/tree-select.model";
+import { TreeData } from "src/app/models";
 
 import { TreeSelectComponent } from "./tree-select.component";
 
