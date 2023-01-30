@@ -158,32 +158,3 @@ export interface Servercheck {
 	/** whether or not the server has updates pending */
 	updPending: boolean;
 }
-
-/**
- * Builds a true Map from the Servercheck's "checks" property.
- *
- * @param srv The Servercheck to convert.
- * @returns A map of servercheck check names to their values.
- */
-export function checkMap(srv: Servercheck): Map<string, number | boolean> {
-	const ret = new Map();
-	if (!srv.checks) {
-		return ret;
-	}
-	for (const [key, value] of Object.entries(srv.checks)) {
-		switch (key) {
-			case "ILO":
-			case "10G":
-			case "FQDN":
-			case "DSCP":
-			case "10G6":
-			case "MTU":
-				ret.set(key, value === 1);
-				break;
-			default:
-				ret.set(key, value);
-				break;
-		}
-	}
-	return ret;
-}
