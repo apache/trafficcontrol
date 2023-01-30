@@ -13,9 +13,9 @@
 */
 
 import { Injectable } from "@angular/core";
-import type { ResponseStatus, Servercheck } from "trafficops-types";
+import type { RequestServer, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
 
-import type { Server } from "src/app/models";
+import { CDNService, PhysicalLocationService, ProfileService, TypeService } from "..";
 
 /**
  * Generates a `Servercheck` for a given `server`.
@@ -26,12 +26,12 @@ import type { Server } from "src/app/models";
  * @param server The server for which to generate a servercheck.
  * @returns A valid Servercheck for `server`.
  */
-function serverCheck(server: Server): Servercheck {
+function serverCheck(server: ResponseServer): Servercheck {
 	return {
 		adminState: server.status ?? "SERVER HAD NO STATUS",
 		cacheGroup: server.cachegroup ?? "SERVER HAD NO CACHE GROUP",
 		hostName: server.hostName ?? "SERVER HAD NO HOST NAME",
-		id: server.id as number,
+		id: server.id,
 		profile: server.profile ?? "SERVER HAD NO PROFILE",
 		revalPending: server.revalPending,
 		type: server.type ?? "SERVER HAD NO TYPE",
@@ -45,7 +45,7 @@ function serverCheck(server: Server): Servercheck {
 @Injectable()
 export class ServerService {
 
-	public servers = new Array<Server>();
+	public servers = new Array<ResponseServer>();
 
 	private readonly statuses = [
 		{
@@ -88,15 +88,22 @@ export class ServerService {
 
 	private idCounter = 1;
 
-	public async getServers(idOrName: number | string): Promise<Server>;
-	public async getServers(): Promise<Array<Server>>;
+	constructor(
+		private readonly cdnService: CDNService,
+		private readonly physLocService: PhysicalLocationService,
+		private readonly typeService: TypeService,
+		private readonly profileService: ProfileService
+	){}
+
+	public async getServers(idOrName: number | string): Promise<ResponseServer>;
+	public async getServers(): Promise<Array<ResponseServer>>;
 	/**
 	 * Retrieves servers from the API.
 	 *
 	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Server to retrieve, or its hostname (string).
 	 * @returns The requested server(s).
 	 */
-	public async getServers(idOrName?: number | string): Promise<Array<Server> | Server> {
+	public async getServers(idOrName?: number | string): Promise<Array<ResponseServer> | ResponseServer> {
 		if (idOrName !== undefined) {
 			let server;
 			switch (typeof idOrName) {
@@ -124,11 +131,46 @@ export class ServerService {
 	 * @param server The server to create.
 	 * @returns The server as created and returned by the API.
 	 */
-	public async createServer(server: Server): Promise<Server> {
-		server.lastUpdated = new Date();
-		server.id = ++this.idCounter;
-		this.servers.push(server);
-		return server;
+	public async createServer(server: RequestServer): Promise<ResponseServer> {
+		const cdn = await this.cdnService.getCDNs(server.cdnId);
+		const physLoc = await this.physLocService.getPhysicalLocations(server.physLocationId);
+		const profile = await this.profileService.getProfiles(server.profileId);
+		const type = await this.typeService.getTypes(server.typeId);
+		const status = await this.getStatuses(server.statusId);
+		const newServer = {
+			...server,
+			// Due to circular dependency, name not resolved here
+			cachegroup: "",
+			cdnName: cdn.name,
+			guid: server.guid ?? null,
+			httpsPort: server.httpsPort ?? null,
+			id: ++this.idCounter,
+			iloIpAddress: server.iloIpAddress ?? null,
+			iloIpGateway: server.iloIpGateway ?? null,
+			iloIpNetmask: server.iloIpNetmask ?? null,
+			iloPassword: server.iloPassword ?? null,
+			iloUsername: server.iloUsername ?? null,
+			lastUpdated: new Date(),
+			mgmtIpAddress: server.mgmtIpAddress ?? null,
+			mgmtIpGateway: server.mgmtIpGateway ?? null,
+			mgmtIpNetmask: server.mgmtIpNetmask ?? null,
+			offlineReason: server.offlineReason ?? null,
+			physLocation: physLoc.name,
+			profile: profile.name,
+			profileDesc: profile.description,
+			rack: server.rack ?? null,
+			revalPending: false,
+			routerHostName: server.routerHostName ?? null,
+			routerPortName: server.routerPortName ?? null,
+			status: status.name,
+			statusLastUpdated: null,
+			tcpPort: null,
+			type: type.name,
+			updPending: false,
+			xmppId: ""
+		};
+		this.servers.push(newServer);
+		return newServer;
 	}
 
 	public async getServerChecks(): Promise<Servercheck[]>;
@@ -181,7 +223,7 @@ export class ServerService {
 	 * @param server Either the server on which updates will be queued, or its integral, unique identifier.
 	 * @returns The 'response' property of the TO server's response. See TO API docs.
 	 */
-	public async queueUpdates(server: number | Server): Promise<{serverId: number; action: "queue"}> {
+	public async queueUpdates(server: number | ResponseServer): Promise<{serverId: number; action: "queue"}> {
 		let id: number;
 		if (typeof server === "number") {
 			id = server;
@@ -206,7 +248,7 @@ export class ServerService {
 	 * @param server Either the server for which updates will be cleared, or its integral, unique identifier.
 	 * @returns The 'response' property of the TO server's response. See TO API docs.
 	 */
-	public async clearUpdates(server: number | Server): Promise<{serverId: number; action: "dequeue"}> {
+	public async clearUpdates(server: number | ResponseServer): Promise<{serverId: number; action: "dequeue"}> {
 		let id: number;
 		if (typeof server === "number") {
 			id = server;
@@ -233,7 +275,7 @@ export class ServerService {
 	 * @param offlineReason The reason why the server was placed into a non-ONLINE or REPORTED status.
 	 * @returns Nothing.
 	 */
-	public async updateStatus(server: number | Server, statusName: string, offlineReason?: string): Promise<void> {
+	public async updateStatus(server: number | ResponseServer, statusName: string, offlineReason?: string): Promise<void> {
 		let id: number;
 		if (typeof server === "number") {
 			id = server;

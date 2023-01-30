@@ -14,9 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { ResponseStatus, Servercheck } from "trafficops-types";
-
-import type { Server } from "src/app/models";
+import type { RequestServer, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -39,15 +37,12 @@ function statusMap(s: ResponseStatus): ResponseStatus {
  * @param s The Server to massage.
  * @returns A Server that is identical to `s` except that its date/time fields are now actual Date objects.
  */
-function serverMap(s: Server): Server {
-	if (s.lastUpdated) {
-		// Non-RFC3336 for some reason
-		s.lastUpdated = new Date((s.lastUpdated as unknown as string).replace("+00", "Z"));
-	}
-	if (s.statusLastUpdated) {
-		s.statusLastUpdated = new Date(s.statusLastUpdated as unknown as string);
-	}
-	return s;
+function serverMap(s: ResponseServer): ResponseServer {
+	return {
+		...s,
+		lastUpdated: !s.lastUpdated ? s.lastUpdated : new Date((s.lastUpdated as unknown as string).replace("+00", "Z")),
+		statusLastUpdated: !s.statusLastUpdated ? s.statusLastUpdated : new Date(s.statusLastUpdated as unknown as string)
+	};
 }
 
 /**
@@ -65,24 +60,24 @@ export class ServerService extends APIService {
 		super(http);
 	}
 
-	public async getServers(idOrName: number | string): Promise<Server>;
-	public async getServers(): Promise<Array<Server>>;
+	public async getServers(idOrName: number | string): Promise<ResponseServer>;
+	public async getServers(): Promise<Array<ResponseServer>>;
 	/**
 	 * Retrieves servers from the API.
 	 *
 	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Server to retrieve, or its hostname (string).
 	 * @returns The requested server(s).
 	 */
-	public async getServers(idOrName?: number | string): Promise<Array<Server> | Server> {
+	public async getServers(idOrName?: number | string): Promise<Array<ResponseServer> | ResponseServer> {
 		const path = "servers";
 		let prom;
 		if (idOrName !== undefined) {
 			switch (typeof idOrName) {
 				case "number":
-					prom = this.get<[Server]>(path, undefined, {id: String(idOrName)}).toPromise();
+					prom = this.get<[ResponseServer]>(path, undefined, {id: String(idOrName)}).toPromise();
 					break;
 				case "string":
-					prom = this.get<Array<Server>>(path, undefined, {hostName: idOrName}).toPromise();
+					prom = this.get<Array<ResponseServer>>(path, undefined, {hostName: idOrName}).toPromise();
 			}
 			prom = prom.then(
 				servers => {
@@ -100,7 +95,7 @@ export class ServerService extends APIService {
 				}
 			).then(serverMap);
 		} else {
-			prom = this.get<Array<Server>>(path).toPromise().then(ss=>ss.map(serverMap));
+			prom = this.get<Array<ResponseServer>>(path).toPromise().then(ss=>ss.map(serverMap));
 		}
 		return prom;;
 	}
@@ -111,8 +106,8 @@ export class ServerService extends APIService {
 	 * @param s The server to create.
 	 * @returns The server as created and returned by the API.
 	 */
-	public async createServer(s: Server): Promise<Server> {
-		return this.post<Server>("servers", s).toPromise().then(serverMap);
+	public async createServer(s: RequestServer): Promise<ResponseServer> {
+		return this.post<ResponseServer>("servers", s).toPromise().then(serverMap);
 	}
 
 	public async getServerChecks(): Promise<Servercheck[]>;
@@ -171,7 +166,7 @@ export class ServerService extends APIService {
 	 * @param server Either the server on which updates will be queued, or its integral, unique identifier.
 	 * @returns The 'response' property of the TO server's response. See TO API docs.
 	 */
-	public async queueUpdates(server: number | Server): Promise<{serverId: number; action: "queue"}> {
+	public async queueUpdates(server: number | ResponseServer): Promise<{serverId: number; action: "queue"}> {
 		let id: number;
 		if (typeof server === "number") {
 			id = server;
@@ -195,7 +190,7 @@ export class ServerService extends APIService {
 	 * @param server Either the server for which updates will be cleared, or its integral, unique identifier.
 	 * @returns The 'response' property of the TO server's response. See TO API docs.
 	 */
-	public async clearUpdates(server: number | Server): Promise<{serverId: number; action: "dequeue"}> {
+	public async clearUpdates(server: number | ResponseServer): Promise<{serverId: number; action: "dequeue"}> {
 		let id: number;
 		if (typeof server === "number") {
 			id = server;
@@ -221,7 +216,7 @@ export class ServerService extends APIService {
 	 * @param offlineReason The reason why the server was placed into a non-ONLINE or REPORTED status.
 	 * @returns Nothing.
 	 */
-	public async updateStatus(server: number | Server, status: string, offlineReason?: string): Promise<undefined> {
+	public async updateStatus(server: number | ResponseServer, status: string, offlineReason?: string): Promise<undefined> {
 		let id: number;
 		if (typeof server === "number") {
 			id = server;
