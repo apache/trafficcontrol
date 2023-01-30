@@ -213,16 +213,6 @@ export function checkMap(srv: Servercheck): Map<string, number | boolean> {
 	return ret;
 }
 
-/**
- *
- */
-export interface Status {
-	description: string;
-	id?: number;
-	lastUpdated?: Date;
-	name: string;
-}
-
 export const DUMMY_SERVER: Server = {
 	cachegroupId: -1,
 	cdnId: -1,

@@ -13,12 +13,12 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {of} from "rxjs";
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { of } from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import {defaultServer, Server} from "src/app/models";
+import { defaultServer, Server } from "src/app/models";
 
 import { UpdateStatusComponent } from "./update-status.component";
 
@@ -95,16 +95,16 @@ describe("UpdateStatusComponent", () => {
 		component.status = null;
 		expect(component.isOffline).toBeFalse();
 
-		component.status = {description: "", name: "OFFLINE"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "OFFLINE"};
 		expect(component.isOffline).toBeTrue();
 
-		component.status = {description: "", name: "some weird custom status"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "some weird custom status"};
 		expect(component.isOffline).toBeTrue();
 
-		component.status = {description: "", name: "ONLINE"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "ONLINE"};
 		expect(component.isOffline).toBeFalse();
 
-		component.status = {description: "", name: "REPORTED"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "REPORTED"};
 		expect(component.isOffline).toBeFalse();
 	});
 
@@ -131,7 +131,7 @@ describe("UpdateStatusComponent", () => {
 
 		result = false;
 		mockMatDialog.afterClosed.and.returnValue(of(result));
-		component.status = {description: "", name: "no such status"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "no such status"};
 		await component.submit(new Event("click"));
 		expect(mockMatDialog.close.calls.count()).toBe(3);
 	});

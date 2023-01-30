@@ -14,8 +14,9 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import type { ResponseStatus } from "trafficops-types";
 
-import { defaultServer, Server, Servercheck, Status } from "src/app/models";
+import { defaultServer, Server, Servercheck } from "src/app/models";
 
 import { APIService } from "./base-api.service";
 
@@ -25,9 +26,11 @@ import { APIService } from "./base-api.service";
  * @param s The Status to format.
  * @returns The Status object with a proper Date lastUpdated time.
  */
-function statusMap(s: Status): Status {
-	s.lastUpdated = new Date((s.lastUpdated as unknown as string).replace("+00", "Z"));
-	return s;
+function statusMap(s: ResponseStatus): ResponseStatus {
+	return {
+		...s,
+		lastUpdated: new Date((s.lastUpdated as unknown as string).replace("+00", "Z"))
+	};
 }
 
 /**
@@ -143,26 +146,26 @@ export class ServerService extends APIService {
 		);
 	}
 
-	public async getStatuses(idOrName: number | string): Promise<Status>;
-	public async getStatuses(): Promise<Array<Status>>;
+	public async getStatuses(idOrName: number | string): Promise<ResponseStatus>;
+	public async getStatuses(): Promise<Array<ResponseStatus>>;
 	/**
 	 * Retrieves Statuses from the API.
 	 *
 	 * @param idOrName An optional ID (number) or Name (string) used to fetch a single Status thereby identified.
 	 * @returns The requested Status(es).
 	 */
-	public async getStatuses(idOrName?: number | string): Promise<Array<Status> | Status> {
+	public async getStatuses(idOrName?: number | string): Promise<Array<ResponseStatus> | ResponseStatus> {
 		const path = "statuses";
 		let ret;
 		switch (typeof idOrName) {
 			case "number":
-				ret = this.get<[Status]>(path, {params: {id: String(idOrName)}}).toPromise().then(r=>r[0]).then(statusMap);
+				ret = this.get<[ResponseStatus]>(path, {params: {id: String(idOrName)}}).toPromise().then(r=>r[0]).then(statusMap);
 				break;
 			case "string":
-				ret = this.get<[Status]>(path, {params: {name: idOrName}}).toPromise().then(r=>r[0]).then(statusMap);
+				ret = this.get<[ResponseStatus]>(path, {params: {name: idOrName}}).toPromise().then(r=>r[0]).then(statusMap);
 				break;
 			default:
-				ret = this.get<Array<Status>>(path).toPromise().then(ss=>ss.map(statusMap));
+				ret = this.get<Array<ResponseStatus>>(path).toPromise().then(ss=>ss.map(statusMap));
 		}
 		return ret;
 	}

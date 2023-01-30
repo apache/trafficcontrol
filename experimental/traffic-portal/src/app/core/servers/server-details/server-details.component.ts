@@ -16,11 +16,18 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
-import type { ResponseCacheGroup, ResponseCDN, ResponsePhysicalLocation, ResponseProfile, TypeFromResponse } from "trafficops-types";
+import type {
+	ResponseCacheGroup,
+	ResponseCDN,
+	ResponsePhysicalLocation,
+	ResponseProfile,
+	ResponseStatus,
+	TypeFromResponse
+} from "trafficops-types";
 
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
-import { DUMMY_SERVER, Interface, Server, Status } from "src/app/models";
+import { DUMMY_SERVER, type Interface, type Server } from "src/app/models";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
@@ -116,7 +123,7 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * The set of all Statuses.
 	 */
-	public statuses = new Array<Status>();
+	public statuses = new Array<ResponseStatus>();
 	/**
 	 * The set of all Types that can be applied to a server.
 	 */
