@@ -95,15 +95,15 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 	mappings := map[string]bool{
 		"http://dnsroutingname.mypattern1": false,
-		"http://myregexpattern1":          false,
-		"http://server.mypattern0":        false,
-		"https://server.mypattern0":       false,
-		"http://mcastserver1.mypattern0":  false,
-		"https://mcastserver1.mypattern0": false,
-		"http://mcastserver2.mypattern0":  false,
-		"https://mcastserver2.mypattern0": false,
-		"http://myregexpattern0":          false,
-		"https://myregexpattern0":         false,
+		"http://myregexpattern1":           false,
+		"http://server.mypattern0":         false,
+		"https://server.mypattern0":        false,
+		"http://mcastserver1.mypattern0":   false,
+		"https://mcastserver1.mypattern0":  false,
+		"http://mcastserver2.mypattern0":   false,
+		"https://mcastserver2.mypattern0":  false,
+		"http://myregexpattern0":           false,
+		"https://myregexpattern0":          false,
 	}
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
@@ -274,16 +274,11 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 			t.Fatalf("unexpected remap line '%v'", line)
 		}
 	}
-	for key, val := range mappings{
+	for key, val := range mappings {
 		if !val {
 			t.Fatalf("expected to find remap rule for '%v'", key)
 		}
 	}
-
-	/*if len(txtLines) != 14 {
-		t.Log(cfg.Warnings)
-		t.Fatalf("expected a total of 12 remap lines for anycast hosts, actual: '%v' count %v", txt, len(txtLines))
-	}*/
 }
 func TestMakeRemapDotConfig0(t *testing.T) {
 	hdr := "myHeaderComment"
