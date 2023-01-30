@@ -7747,6 +7747,8 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 	edge.Type = "EDGE"
 	edge.Cachegroup = util.StrPtr("edgeCG")
 
+	servers := makeTestAnyCastServers()
+
 	mid := makeTestParentServer()
 	mid.Type = "MID"
 	mid.Cachegroup = util.StrPtr("midCG")
@@ -7925,7 +7927,7 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 	configDir := `/opt/trafficserver/etc/trafficserver`
 
 	{ // edge test
-		cfg, err := MakeRemapDotConfig(edge, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+		cfg, err := MakeRemapDotConfig(edge, servers, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -7950,7 +7952,7 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 	}
 
 	{ // mid test
-		cfg, err := MakeRemapDotConfig(mid, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+		cfg, err := MakeRemapDotConfig(mid, servers, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
 		if err != nil {
 			t.Fatal(err)
 		}
