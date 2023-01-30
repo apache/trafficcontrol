@@ -38,6 +38,7 @@ ARG ENROLLER_DEBUG_BUILD=false
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./go.mod ./go.sum /go/src/github.com/apache/trafficcontrol/
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
+COPY ./traffic_ops/testing/api/assert /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/assert
 COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/
 COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v4-client/
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
