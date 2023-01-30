@@ -180,7 +180,7 @@ func (p *Postgres) GetExpirationInformation(tx *sql.Tx, ctx context.Context, day
 		fedMap[fedString] = true
 	}
 
-	inactiveQuery := "SELECT xml_id FROM deliveryservice WHERE NOT active"
+	inactiveQuery := "SELECT xml_id FROM deliveryservice WHERE active = 'INACTIVE' OR active = 'PRIMED'"
 	iaRows, err := tx.Query(inactiveQuery)
 	if err != nil {
 		return []tc.SSLKeyExpirationInformation{}, err

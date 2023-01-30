@@ -14,7 +14,7 @@
 
 describe("Regions Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.regionsTable().navigate()
+		browser.page.cacheGroups.regionsTable().navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);

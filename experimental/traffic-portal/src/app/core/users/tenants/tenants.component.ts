@@ -20,7 +20,7 @@ import { UserService } from "src/app/api";
 import type { Tenant } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * TenantsComponent is the controller for the table that lists Tenants.
@@ -87,9 +87,9 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	constructor(
 		private readonly userService: UserService,
 		public readonly auth: CurrentUserService,
-		private readonly headerSvc: TpHeaderService
+		private readonly navSvc: NavigationService
 	) {
-		this.headerSvc.headerTitle.next("Tenant");
+		this.navSvc.headerTitle.next("Tenant");
 		this.subscription = this.auth.userChanged.subscribe(
 			() => {
 				this.loadContextMenuItems();

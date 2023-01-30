@@ -16,6 +16,7 @@ limitations under the License.
 	<button mat-flat-button color="accent" type="button" title="de-select all rows" (click)="selectAll(true)">De-Select All</button>
 	<button mat-flat-button color="accent" type="button"*ngFor="let btn of tableTitleButtons" (click)="emitTitleButtonAction(btn.action)">{{btn.text}}</button>
 	<button mat-flat-button color="accent" type="button" (click)="download()" title="save as CSV"><fa-icon [icon]="downloadIcon"></fa-icon></button>
+	<button mat-flat-button color="accent" type="button" (click)="gridAPI.sizeColumnsToFit()">Resize</button>
 	<div class="toggle-columns" role="group" title="Select Table Columns">
 		<button mat-flat-button color="accent" [matMenuTriggerFor]="menu">
 			<fa-icon [icon]="columnsIcon"></fa-icon>&nbsp;
@@ -34,7 +35,7 @@ limitations under the License.
 	[rowData]="data"
 	[columnDefs]="cols"
 	class="ag-theme-material"
-	[frameworkComponents]="components"
+	[components]="components"
 	[gridOptions]="gridOptions"
 	(gridReady)="setAPI($event)"
 	(filterChanged)="storeFilter()"
@@ -49,7 +50,7 @@ limitations under the License.
 	<ul>
 		<li *ngFor="let item of contextMenuItems" role="menuitem">
 			<ng-container *ngIf="!isAction(item)">
-				<a *ngIf="!isDisabled(item)" [href]="href(item)" [target]="item.newTab ? '_blank' : '_self'">{{item.name}}</a>
+				<a *ngIf="!isDisabled(item)" [routerLink]="href(item)" [target]="item.newTab ? '_blank' : '_self'">{{item.name}}</a>
 				<button type="button" *ngIf="isDisabled(item)" disabled>{{item.name}}</button>
 			</ng-container>
 			<button name="{{itemName(item)}}" *ngIf="isAction(item)" type="button" (click)="emitContextMenuAction(item.action, item.multiRow, $event)" [disabled]="isDisabled(item)">{{item.name}}</button>

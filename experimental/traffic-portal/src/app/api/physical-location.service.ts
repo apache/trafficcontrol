@@ -13,8 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-
-import type { PhysicalLocation } from "src/app/models";
+import { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -23,33 +22,75 @@ import { APIService } from "./base-api.service";
  */
 @Injectable()
 export class PhysicalLocationService extends APIService {
-	public async getPhysicalLocations(idOrName: number | string): Promise<PhysicalLocation>;
-	public async getPhysicalLocations(): Promise<Array<PhysicalLocation>>;
+	public async getPhysicalLocations(): Promise<Array<ResponsePhysicalLocation>>;
+	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
+
 	/**
-	 * Gets one or all PhysicalLocations from Traffic Ops
+	 * Gets an array of Physical Location from Traffic Ops.
 	 *
-	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single PhysicalLocation to be returned.
-	 * @returns The requested PhysicalLocation(s).
+	 * @param nameOrID If given, returns only the PhysicalLocation with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of PhysicalLocation objects - or a single PhysicalLocation object if 'nameOrID'
+	 * was given.
 	 */
-	public async getPhysicalLocations(idOrName?: number | string): Promise<PhysicalLocation | Array<PhysicalLocation>> {
+	public async getPhysicalLocations(nameOrID?: string | number): Promise<Array<ResponsePhysicalLocation> | ResponsePhysicalLocation> {
 		const path = "phys_locations";
-		let prom;
-		if (idOrName !== undefined) {
+		if(nameOrID) {
 			let params;
-			switch (typeof idOrName) {
+			switch (typeof nameOrID) {
 				case "string":
-					params = {name: idOrName};
+					params = {name: nameOrID};
 					break;
 				case "number":
-					params = {id: String(idOrName)};
+					params = {id: String(nameOrID)};
 			}
-			prom = this.get<[PhysicalLocation]>(path, undefined, params).toPromise().then(
-				r => r[0]
-			);
-		} else {
-			prom = this.get<Array<PhysicalLocation>>(path).toPromise();
+			const r = await this.get<[ResponsePhysicalLocation]>(path, undefined, params).toPromise();
+			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
+
 		}
-		return prom;
+		const physicalLocations = await this.get<Array<ResponsePhysicalLocation>>(path).toPromise();
+		return physicalLocations.map(
+			d => ({...d, lastUpdated: new Date((d.lastUpdated as unknown as string).replace("+00", "Z"))})
+		);
+	}
+
+	/**
+	 * Replaces the current definition of a Physical Location with the one given.
+	 *
+	 * @param physicalLocation The new Physical Location.
+	 * @returns The updated Physical Location.
+	 */
+	public async updatePhysicalLocation(physicalLocation: ResponsePhysicalLocation): Promise<ResponsePhysicalLocation> {
+		const path = `phys_locations/${physicalLocation.id}`;
+		const response = await this.put<ResponsePhysicalLocation>(path, physicalLocation).toPromise();
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Creates a new Physical Location.
+	 *
+	 * @param physicalLocation The Physical Location to create.
+	 * @returns The created Physical Location.
+	 */
+	public async createPhysicalLocation(physicalLocation: RequestPhysicalLocation): Promise<ResponsePhysicalLocation> {
+		const response = await this.post<ResponsePhysicalLocation>("physicalLocations", physicalLocation).toPromise();
+		return {
+			...response,
+			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
+		};
+	}
+
+	/**
+	 * Deletes an existing Physical Location.
+	 *
+	 * @param physLoc The Physical Location to be deleted (or its ID)
+	 */
+	public async deletePhysicalLocation(physLoc: ResponsePhysicalLocation | number): Promise<void> {
+		const id = typeof(physLoc) === "number" ? physLoc : physLoc.id;
+		return this.delete(`phys_locations/${id}`).toPromise();
 	}
 
 	constructor(http: HttpClient) {

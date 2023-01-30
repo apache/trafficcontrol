@@ -18,7 +18,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { Observable, of, ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { ChangeLogsComponent } from "./change-logs.component";
 
@@ -43,7 +43,7 @@ describe("ChangeLogsComponent", () => {
 	let fixture: ComponentFixture<ChangeLogsComponent>;
 
 	beforeEach(async () => {
-		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+		const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 		await TestBed.configureTestingModule({
 			declarations: [ChangeLogsComponent],
 			imports: [
@@ -53,7 +53,7 @@ describe("ChangeLogsComponent", () => {
 			],
 			providers: [
 				{ provide: MatDialog, useClass: MockDialog },
-				{ provide: TpHeaderService, useValue: headerSvc },
+				{ provide: NavigationService, useValue: navSvc },
 			]
 		})
 			.compileComponents();

@@ -326,9 +326,6 @@ func getServerConfigRemapDotConfigForMid(
 	postRemapLines := []string{}
 
 	for _, ds := range dses {
-		if *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive {
-			continue
-		}
 		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}

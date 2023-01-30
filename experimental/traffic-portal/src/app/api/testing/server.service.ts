@@ -44,7 +44,7 @@ function serverCheck(server: Server): Servercheck {
 @Injectable()
 export class ServerService {
 
-	private readonly servers = new Array<Server>();
+	public servers = new Array<Server>();
 
 	private readonly statuses = [
 		{

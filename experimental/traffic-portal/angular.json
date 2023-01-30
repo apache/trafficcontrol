@@ -123,8 +123,7 @@
 						"lintFilePatterns": [
 							"src/**/*.ts",
 							"src/**/*.html",
-							"nightwatch/**/*.ts",
-							"nightwatch/**/*.js"
+							"nightwatch/**/*.ts"
 						]
 					}
 				},

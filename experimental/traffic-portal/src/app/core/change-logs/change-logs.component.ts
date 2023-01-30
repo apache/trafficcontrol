@@ -27,7 +27,7 @@ import {
 	ContextMenuItem,
 	TableTitleButton
 } from "src/app/shared/generic-table/generic-table.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { relativeTimeString } from "src/app/utils";
 
 /**
@@ -112,9 +112,10 @@ export class ChangeLogsComponent implements OnInit {
 	/** Whether user data is still loading. */
 	public loading = true;
 
-	constructor(private readonly headerSvc: TpHeaderService, private readonly api: ChangeLogsService,
+	constructor(private readonly navSvc: NavigationService, private readonly api: ChangeLogsService,
 		private readonly route: ActivatedRoute, private readonly dialog: MatDialog) {
 		this.fuzzySubj = new BehaviorSubject<string>("");
+		this.navSvc.headerTitle.next("Change Logs");
 	}
 
 	/**
@@ -131,8 +132,6 @@ export class ChangeLogsComponent implements OnInit {
 	 * Angular lifecycle hook
 	 */
 	public async ngOnInit(): Promise<void> {
-		this.headerSvc.headerTitle.next("Change Logs");
-
 		this.route.queryParamMap.subscribe(
 			m => {
 				const search = m.get("search");

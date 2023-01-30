@@ -21,7 +21,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import {ReplaySubject} from "rxjs";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { LoginComponent } from "./login.component";
 
@@ -50,7 +50,8 @@ describe("LoginComponent", () => {
 		const dialog = jasmine.createSpyObj(["open"]);
 		dialogSpy = dialog.open;
 
-		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(),
+			headerTitle: new ReplaySubject<string>(), sidebarHidden: new ReplaySubject<boolean>()});
 
 		TestBed.configureTestingModule({
 			declarations: [ LoginComponent ],
@@ -71,7 +72,7 @@ describe("LoginComponent", () => {
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				{ provide: MatDialog, useValue: dialog},
-				{ provide: TpHeaderService, useValue: headerSvc}
+				{ provide: NavigationService, useValue: headerSvc}
 			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(LoginComponent);

@@ -11,9 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from "@angular/core";
 
-import { CDN } from "src/app/models";
+import { Injectable } from "@angular/core";
+import { ResponseCDN } from "trafficops-types";
 
 /**
  * CDNService expose API functionality relating to CDNs.
@@ -21,31 +21,25 @@ import { CDN } from "src/app/models";
 @Injectable()
 export class CDNService {
 
-	private readonly cdns = new Map([
-		[
-			"ALL",
-			{
-				dnssecEnabled: false,
-				domainName: "-",
-				id: 1,
-				lastUpdated: new Date(),
-				name: "ALL"
-			}
-		],
-		[
-			"test",
-			{
-				dnssecEnabled: false,
-				domainName: "mycdn.test.test",
-				id: 2,
-				lastUpdated: new Date(),
-				name: "test"
-			}
-		]
-	]);
+	private readonly cdns = [
+		{
+			dnssecEnabled: false,
+			domainName: "-",
+			id: 1,
+			lastUpdated: new Date(),
+			name: "ALL"
+		},
+		{
+			dnssecEnabled: false,
+			domainName: "mycdn.test.test",
+			id: 2,
+			lastUpdated: new Date(),
+			name: "test"
+		}
+	];
 
-	public async getCDNs(id: number): Promise<CDN>;
-	public async getCDNs(): Promise<Map<string, CDN>>;
+	public async getCDNs(id: number): Promise<ResponseCDN>;
+	public async getCDNs(): Promise<Array<ResponseCDN>>;
 	/**
 	 * Gets one or all CDNs from Traffic Ops
 	 *
@@ -54,7 +48,7 @@ export class CDNService {
 	 * 	passed.
 	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	 */
-	public async getCDNs(id?: number): Promise<Map<string, CDN> | CDN> {
+	public async getCDNs(id?: number): Promise<Array<ResponseCDN> | ResponseCDN> {
 		if (id !== undefined) {
 			const cdn = Array.from(this.cdns.values()).filter(c=>c.id===id)[0];
 			if (!cdn) {

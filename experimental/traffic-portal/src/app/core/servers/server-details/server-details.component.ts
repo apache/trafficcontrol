@@ -16,11 +16,12 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import type { ResponseCacheGroup, ResponseCDN } from "trafficops-types";
 
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
-import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
 /**
@@ -99,11 +100,11 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * The set of all Cache Groups.
 	 */
-	public cacheGroups = new Array<CacheGroup>();
+	public cacheGroups = new Array<ResponseCacheGroup>();
 	/**
 	 * The set of all CDNs.
 	 */
-	public cdns = new Array<CDN>();
+	public cdns = new Array<ResponseCDN>();
 	/**
 	 * The set of all Physical Locations.
 	 */
@@ -135,7 +136,7 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly profileService: ProfileService,
 		private readonly typeService: TypeService,
 		private readonly physlocService: PhysicalLocationService,
-		private readonly headerSvc: TpHeaderService
+		private readonly navSvc: NavigationService
 	) {
 		this.server = DUMMY_SERVER;
 	}
@@ -194,7 +195,7 @@ export class ServerDetailsComponent implements OnInit {
 			this.serverService.getServers(Number(ID)).then(
 				s => {
 					this.server = s;
-					this.headerSvc.headerTitle.next(`Server #${this.server.id}`);
+					this.navSvc.headerTitle.next(`Server #${this.server.id}`);
 				}
 			).catch(
 				e => {
@@ -213,7 +214,7 @@ export class ServerDetailsComponent implements OnInit {
 				mtu: null,
 				name: "",
 			}];
-			this.headerSvc.headerTitle.next("New Server");
+			this.navSvc.headerTitle.next("New Server");
 		}
 	}
 

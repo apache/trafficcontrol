@@ -14,7 +14,7 @@
 
 describe("Divisions Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.divisionsTable().navigate()
+		browser.page.cacheGroups.divisionsTable().navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);

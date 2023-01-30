@@ -18,7 +18,7 @@ import { ActivatedRoute, Router } from "@angular/router";
 import { DeliveryServiceService } from "src/app/api";
 import type { DeliveryService } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { orderBy, fuzzyScore } from "src/app/utils/index";
 
 /**
@@ -85,7 +85,7 @@ export class DashboardComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
 		private readonly auth: CurrentUserService,
-		private readonly headerSvc: TpHeaderService
+		private readonly navSvc: NavigationService
 	) {
 		this.now = new Date();
 		this.now.setUTCMilliseconds(0);
@@ -100,6 +100,7 @@ export class DashboardComponent implements OnInit {
 				this.loading = false;
 			}
 		);
+		this.navSvc.headerTitle.next("Dashboard");
 	}
 
 	/**
@@ -115,8 +116,6 @@ export class DashboardComponent implements OnInit {
 				}
 			}
 		);
-
-		this.headerSvc.headerTitle.next("");
 	}
 
 	/**
@@ -144,5 +143,4 @@ export class DashboardComponent implements OnInit {
 	public tracker(_: number, d: DeliveryService): number {
 		return d.id || 0;
 	}
-
 }

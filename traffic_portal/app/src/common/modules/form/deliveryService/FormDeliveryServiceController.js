@@ -47,6 +47,8 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 */
 	let cachedTLSVersions = null;
 
+	$scope.exposeInactive = !!(propertiesModel.properties.deliveryServices?.exposeInactive);
+
 	$scope.showSensitive = false;
 
 	const knownVersions = new Set(["1.0", "1.1", "1.2", "1.3"]);
@@ -213,7 +215,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		if (!dsCurrent) {
 			return "";
 		}
-		return dsCurrent.active.split(" ").map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(" ");
+		let {active} = dsCurrent;
+		if (!propertiesModel.properties.deliveryServices?.exposeInactive && active !== "ACTIVE") {
+			active = "INACTIVE";
+		}
+		return active.split(" ").map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(" ");
 	}
 
 	$scope.formatCurrentActive = formatCurrentActive;
@@ -232,11 +238,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
 	$scope.topologies = topologies;
 
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
+	$scope.showChartsButton = !!(propertiesModel.properties.deliveryServices?.charts?.customLink?.show);
 
 	$scope.openCharts = ds => deliveryServiceUtils.openCharts(ds);
 
-	$scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+	$scope.dsRequestsEnabled = !!(propertiesModel.properties.dsRequests?.enabled);
 
 	/**
 	 * Gods have mercy.
@@ -475,6 +481,10 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		deliveryService.lastUpdated = new Date(deliveryService.lastUpdated.replace("+00", "Z"));
 		// ... the right way to do this is with an interceptor, but nobody
 		// wants to put in that kinda work on a legacy product.
+	}
+
+	if (!$scope.exposeInactive && deliveryService.active === "INACTIVE") {
+		deliveryService.active = "PRIMED";
 	}
 };
 
