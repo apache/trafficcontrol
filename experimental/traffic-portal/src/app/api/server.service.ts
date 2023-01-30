@@ -16,7 +16,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type { ResponseStatus } from "trafficops-types";
 
-import { defaultServer, Server, Servercheck } from "src/app/models";
+import type { Server, Servercheck } from "src/app/models";
 
 import { APIService } from "./base-api.service";
 
@@ -112,12 +112,7 @@ export class ServerService extends APIService {
 	 * @returns The server as created and returned by the API.
 	 */
 	public async createServer(s: Server): Promise<Server> {
-		return this.post<Server>("servers", s).toPromise().then(serverMap).catch(
-			e => {
-				console.error("Failed to create server:", e);
-				return {...defaultServer};
-			}
-		);
+		return this.post<Server>("servers", s).toPromise().then(serverMap);
 	}
 
 	public async getServerChecks(): Promise<Servercheck[]>;

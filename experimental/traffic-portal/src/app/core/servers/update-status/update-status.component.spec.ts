@@ -18,9 +18,34 @@ import { of } from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { defaultServer, Server } from "src/app/models";
+import type { Server } from "src/app/models";
 
 import { UpdateStatusComponent } from "./update-status.component";
+
+const defaultServer: Server = {
+	cachegroupId: -1,
+	cdnId: -1,
+	domainName: "",
+	hostName: "",
+	httpsPort: null,
+	iloIpAddress: null,
+	iloIpGateway: null,
+	iloIpNetmask: null,
+	iloPassword: null,
+	iloUsername: null,
+	interfaces: [],
+	mgmtIpAddress: null,
+	mgmtIpGateway: null,
+	mgmtIpNetmask: null,
+	offlineReason: null,
+	physLocationId: -1,
+	profileId: -1,
+	revalPending: false,
+	statusId: -1,
+	tcpPort: null,
+	typeId: -1,
+	updPending: false
+};
 
 describe("UpdateStatusComponent", () => {
 	let component: UpdateStatusComponent;

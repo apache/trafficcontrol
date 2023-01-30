@@ -25,7 +25,6 @@ import { of } from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { defaultServer } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { SharedModule } from "src/app/shared/shared.module";
 
@@ -62,7 +61,30 @@ describe("ServerDetailsComponent", () => {
 		fixture = TestBed.createComponent(ServerDetailsComponent);
 		const service = TestBed.inject(ServerService);
 		component = fixture.componentInstance;
-		component.server = await service.createServer({...defaultServer, interfaces: []});
+		component.server = await service.createServer({
+			cachegroupId: 1,
+			cdnId: 1,
+			domainName: "",
+			hostName: "",
+			httpsPort: null,
+			iloIpAddress: null,
+			iloIpGateway: null,
+			iloIpNetmask: null,
+			iloPassword: null,
+			iloUsername: null,
+			interfaces: [],
+			mgmtIpAddress: null,
+			mgmtIpGateway: null,
+			mgmtIpNetmask: null,
+			offlineReason: null,
+			physLocationId: 1,
+			profileId: 1,
+			revalPending: false,
+			statusId: 1,
+			tcpPort: null,
+			typeId: 1,
+			updPending: false
+		});
 		fixture.detectChanges();
 	});
 
