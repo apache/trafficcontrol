@@ -188,7 +188,7 @@ SELECT
 	status.name as status,
 	cachegroup.name as cachegroup,
 	me.tcp_port as port,
-	(SELECT STRING_AGG(sp.profile_name, '+' ORDER by sp.priority ASC) FROM server_profile AS sp where sp.server=me.id group by sp.server) as profile,
+	(SELECT STRING_AGG(sp.profile_name, ' ' ORDER by sp.priority ASC) FROM server_profile AS sp where sp.server=me.id group by sp.server) as profile,
 	type.name as type,
 	me.xmpp_id as hashID,
     me.id as serverID
@@ -554,14 +554,14 @@ WHERE pr.config_file = $2
 ORDER BY ARRAY_POSITION($1, p.name), pr.name;`
 
 	for _, profile := range profileNames {
-		profileList := strings.Split(profile, "+")
+		profileList := strings.Split(profile, " ")
 		rows, err := tx.Query(query, pq.Array(profileList), CacheMonitorConfigFile)
 		if err != nil {
 			return nil, err
 		}
 		defer rows.Close()
 
-		var parameter map[string]interface{}
+		parameter := make(map[string]interface{})
 		for rows.Next() {
 			var pName, prName, value string
 			if err := rows.Scan(&pName, &prName, &value); err != nil {
@@ -569,9 +569,6 @@ ORDER BY ARRAY_POSITION($1, p.name), pr.name;`
 			}
 			if prName == "" {
 				return nil, fmt.Errorf("null name") // TODO continue and warn?
-			}
-			if parameter == nil {
-				parameter = map[string]interface{}{}
 			}
 			if _, ok := parameter[prName]; !ok {
 				if valNum, err := strconv.Atoi(value); err == nil {
