@@ -19,7 +19,7 @@ import { ResponseDivision, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * RegionDetailsComponent is the controller for the region add/edit form.
@@ -36,7 +36,7 @@ export class RegionDetailComponent implements OnInit {
 
 	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
 		private readonly location: Location, private readonly dialog: MatDialog,
-		private readonly header: TpHeaderService) {
+		private readonly header: NavigationService) {
 	}
 
 	/**

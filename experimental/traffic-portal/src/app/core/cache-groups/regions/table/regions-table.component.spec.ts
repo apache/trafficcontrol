@@ -15,11 +15,9 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
-import { BehaviorSubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
 import { DivisionsTableComponent } from "src/app/core/cache-groups/divisions/table/divisions-table.component";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 describe("DivisionsTableComponent", () => {
 	let component: DivisionsTableComponent;
@@ -28,18 +26,7 @@ describe("DivisionsTableComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ DivisionsTableComponent ],
-			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
-			providers: [
-				{
-					provide: CurrentUserService,
-					useValue: {
-						currentUser: {
-						},
-						hasPermission: (): true => true,
-						userChanged: new BehaviorSubject({})
-					}
-				}
-			]
+			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ]
 		})
 			.compileComponents();
 

@@ -16,7 +16,7 @@ import { MatDialog } from "@angular/material/dialog";
 import { Router, ActivatedRoute } from "@angular/router";
 
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { AutocompleteValue } from "../utils";
 
@@ -50,15 +50,18 @@ export class LoginComponent implements OnInit {
 		private readonly router: Router,
 		private readonly auth: CurrentUserService,
 		private readonly dialog: MatDialog,
-		private readonly headerSvc: TpHeaderService
-	) { }
+		private readonly navSvc: NavigationService
+	) {
+		this.navSvc.headerHidden.next(true);
+		this.navSvc.sidebarHidden.next(true);
+
+	}
 
 	/**
 	 * Runs initialization, setting up the post-login redirection from the query
 	 * string parameters.
 	 */
 	public ngOnInit(): void {
-		this.headerSvc.headerHidden.next(true);
 		const params = this.route.snapshot.queryParamMap;
 		this.returnURL = params.get("returnUrl") ?? "core";
 		const token = params.get("token");
@@ -66,7 +69,8 @@ export class LoginComponent implements OnInit {
 			this.auth.login(token).then(
 				response => {
 					if (response) {
-						this.headerSvc.headerHidden.next(false);
+						this.navSvc.headerHidden.next(false);
+						this.navSvc.sidebarHidden.next(false);
 						this.router.navigate(["/core/me"], {queryParams: {edit: true, updatePassword: true}});
 					}
 				},
@@ -91,7 +95,8 @@ export class LoginComponent implements OnInit {
 		try {
 			const response = await this.auth.login(this.u, this.p);
 			if (response) {
-				this.headerSvc.headerHidden.next(false);
+				this.navSvc.headerHidden.next(false);
+				this.navSvc.sidebarHidden.next(false);
 				this.router.navigate([this.returnURL]);
 			}
 		} catch (err) {

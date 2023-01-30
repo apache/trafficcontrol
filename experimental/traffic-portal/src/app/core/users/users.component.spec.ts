@@ -22,7 +22,7 @@ import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
 import { UsersComponent } from "./users.component";
 

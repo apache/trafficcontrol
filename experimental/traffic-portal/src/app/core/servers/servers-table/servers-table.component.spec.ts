@@ -23,8 +23,8 @@ import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { defaultServer, type Server } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
 import { augment, type AugmentedServer, serverIsCache, ServersTableComponent } from "./servers-table.component";
 
@@ -53,7 +53,7 @@ describe("ServersTableComponent", () => {
 	beforeEach(() => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
 
-		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+		const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 		TestBed.configureTestingModule({
 			declarations: [ ServersTableComponent, TpHeaderComponent ],
 			imports: [
@@ -67,7 +67,7 @@ describe("ServersTableComponent", () => {
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				{ provide: MatDialog, useClass: MockDialog },
-				{ provide: TpHeaderService, useValue: headerSvc}
+				{ provide: NavigationService, useValue: navSvc}
 			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(ServersTableComponent);

@@ -23,8 +23,8 @@ import { defaultDeliveryService } from "src/app/models";
 import { AlertService } from "src/app/shared/alert/alert.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
 import { DeliveryserviceComponent } from "./deliveryservice.component";
 
@@ -35,7 +35,7 @@ describe("DeliveryserviceComponent", () => {
 	beforeEach(async () => {
 		// mock the API
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
-		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+		const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 
 		await TestBed.configureTestingModule({
 			declarations: [
@@ -53,7 +53,7 @@ describe("DeliveryserviceComponent", () => {
 			providers: [
 				AlertService,
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: TpHeaderService, useValue: headerSvc}
+				{ provide: NavigationService, useValue: navSvc}
 			]
 		}).compileComponents();
 		const dsService = TestBed.inject(DeliveryServiceService);

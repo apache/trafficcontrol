@@ -23,13 +23,13 @@ module.exports = {
 	custom_commands_path: "",
 
 	// See https://nightwatchjs.org/guide/#external-globals
-	globals_path: "../out-tsc/nightwatch/globals/globals.js",
+	globals_path: "../dist/nightwatch/globals/globals.js",
 
 	// See https://nightwatchjs.org/guide/working-with-page-objects/
-	page_objects_path: "./out-tsc/nightwatch/page_objects",
+	page_objects_path: "./dist/nightwatch/page_objects",
 	// An array of folders (excluding subfolders) where your tests are located;
 	// if this is not specified, the test source must be passed as the second argument to the test runner.
-	src_folders: ["./out-tsc/nightwatch/tests"],
+	src_folders: ["./dist/nightwatch/tests"],
 
 	test_settings: {
 		chrome: {

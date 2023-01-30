@@ -23,7 +23,7 @@ import {ServerService} from "src/app/api";
 import {UpdateStatusComponent} from "src/app/core/servers/update-status/update-status.component";
 import type {Interface, Server} from "src/app/models";
 import type {ContextMenuActionEvent, ContextMenuItem} from "src/app/shared/generic-table/generic-table.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import {IPV4, serviceInterface} from "src/app/utils";
 
 /**
@@ -334,15 +334,16 @@ export class ServersTableComponent implements OnInit {
 	 * @param api The Servers API which is used to provide row data.
 	 * @param route A reference to the route of this view which is used to set the fuzzy search box text from the 'search' query parameter.
 	 * @param router Angular router
-	 * @param headerSvc Manages the header
+	 * @param navSvc Manages the header
 	 * @param dialog Dialog manager
 	 */
 	constructor(private readonly api: ServerService,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly headerSvc: TpHeaderService,
+		private readonly navSvc: NavigationService,
 		private readonly dialog: MatDialog) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
+		this.navSvc.headerTitle.next("Servers");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -359,8 +360,6 @@ export class ServersTableComponent implements OnInit {
 				}
 			}
 		);
-
-		this.headerSvc.headerTitle.next("Servers");
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */

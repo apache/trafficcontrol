@@ -19,20 +19,20 @@ import { ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
 import { DivisionDetailComponent } from "src/app/core/cache-groups/divisions/detail/division-detail.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
-describe("DetailComponent", () => {
+describe("DivisionDetailComponent", () => {
 	let component: DivisionDetailComponent;
 	let fixture: ComponentFixture<DivisionDetailComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
 
-	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+	const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ DivisionDetailComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
-			providers: [ { provide: TpHeaderService, useValue: headerSvc } ]
+			providers: [ { provide: NavigationService, useValue: navSvc } ]
 		})
 			.compileComponents();
 

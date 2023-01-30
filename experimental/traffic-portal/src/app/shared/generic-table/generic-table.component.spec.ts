@@ -144,7 +144,7 @@ describe("GenericTableComponent", () => {
 
 			],
 			imports: [
-				AgGridModule.withComponents([]),
+				AgGridModule,
 				RouterTestingModule,
 				MatMenuModule
 			]

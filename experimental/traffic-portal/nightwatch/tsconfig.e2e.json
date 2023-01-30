@@ -1,13 +1,12 @@
 {
 	"extends": "../tsconfig.json",
 	"compilerOptions": {
-		"outDir": "../out-tsc/nightwatch",
+		"outDir": "../dist/nightwatch",
 		"module": "commonjs",
 		"target": "es5",
 		"types": [
 			"node",
 			"nightwatch"
-		],
-		"rootDirs": ["./page_objects", "./tests", "./globals"]
-	}
+		]
+	},
 }

@@ -21,7 +21,7 @@ import type {
 	RequestRegion,
 	ResponseCacheGroup,
 	ResponseDivision,
-	ResponseRegion,
+	ResponseRegion
 } from "trafficops-types";
 
 import { ServerService } from "./server.service";
@@ -436,7 +436,6 @@ export class CacheGroupService {
 			serverNames,
 		};
 	}
-
 	public async getDivisions(): Promise<Array<ResponseDivision>>;
 	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
 
@@ -488,11 +487,13 @@ export class CacheGroupService {
 	 * @returns The created division.
 	 */
 	public async createDivision(division: RequestDivision): Promise<ResponseDivision> {
-		return {
+		const div = {
 			...division,
 			id: ++this.lastID,
 			lastUpdated: new Date()
 		};
+		this.divisions.push(div);
+		return div;
 	}
 
 	/**
@@ -560,12 +561,14 @@ export class CacheGroupService {
 	 * @returns The created region.
 	 */
 	public async createRegion(region: RequestRegion): Promise<ResponseRegion> {
-		return {
-			divisionName: "Div1",
+		const reg = {
+			divisionName: this.divisions.find(d => d.id === region.division)?.name ?? "",
 			...region,
 			id: ++this.lastID,
 			lastUpdated: new Date()
 		};
+		this.regions.push(reg);
+		return reg;
 	}
 
 	/**

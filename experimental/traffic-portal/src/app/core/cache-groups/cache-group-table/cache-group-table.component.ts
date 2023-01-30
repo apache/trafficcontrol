@@ -35,7 +35,7 @@ import {
 } from "src/app/shared/dialogs/collection-choice-dialog/collection-choice-dialog.component";
 import { DecisionDialogComponent, type DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * CacheGroupTableComponent is the controller for the "Cache Groups" table.
@@ -193,13 +193,14 @@ export class CacheGroupTableComponent implements OnInit {
 		private readonly api: CacheGroupService,
 		private readonly cdnAPI: CDNService,
 		private readonly route: ActivatedRoute,
-		private readonly headerSvc: TpHeaderService,
 		private readonly dialog: MatDialog,
 		private readonly alerts: AlertService,
-		public readonly auth: CurrentUserService
+		public readonly auth: CurrentUserService,
+		private readonly navSvc: NavigationService
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.cacheGroups = this.api.getCacheGroups();
+		this.navSvc.headerTitle.next("Cache Groups");
 		this.cdns = this.cdnAPI.getCDNs();
 	}
 
@@ -214,7 +215,6 @@ export class CacheGroupTableComponent implements OnInit {
 				}
 			}
 		);
-		this.headerSvc.headerTitle.next("Cache Groups");
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */

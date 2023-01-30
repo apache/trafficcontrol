@@ -25,7 +25,7 @@ import { ReplaySubject } from "rxjs";
 
 import { CacheGroupService, TypeService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { CacheGroupDetailsComponent } from "./cache-group-details.component";
 
@@ -37,7 +37,7 @@ describe("CacheGroupDetailsComponent", () => {
 	let loader: HarnessLoader;
 	let cgSrv: CacheGroupService;
 
-	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+	const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ CacheGroupDetailsComponent ],
@@ -57,7 +57,7 @@ describe("CacheGroupDetailsComponent", () => {
 				NoopAnimationsModule,
 
 			],
-			providers: [ { provide: TpHeaderService, useValue: headerSvc } ]
+			providers: [ { provide: NavigationService, useValue: navSvc } ]
 		}).compileComponents();
 
 		route = TestBed.inject(ActivatedRoute);
