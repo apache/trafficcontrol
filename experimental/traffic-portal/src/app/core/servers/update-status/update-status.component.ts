@@ -13,9 +13,10 @@
 */
 import {Component, Inject, type OnInit} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import type { ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api/server.service";
-import type { Server, Status } from "src/app/models";
+import type { Server } from "src/app/models";
 
 /**
  * UpdateStatusComponent is the controller for the "Update Server Status" dialog box.
@@ -28,11 +29,11 @@ import type { Server, Status } from "src/app/models";
 export class UpdateStatusComponent implements OnInit {
 
 	/** The possible statuses of a server. */
-	public statuses = new Array<Status>();
+	public statuses = new Array<ResponseStatus>();
 	/** The ID of the current status of the server, or null if the servers have disparate statuses. */
 	public currentStatus: null | number = null;
 
-	public status: Status | null = null;
+	public status: ResponseStatus | null = null;
 
 	public servers: Array<Server>;
 

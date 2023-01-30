@@ -13,8 +13,9 @@
 */
 
 import { Injectable } from "@angular/core";
+import type { ResponseStatus } from "trafficops-types";
 
-import type { Server, Servercheck, Status } from "src/app/models";
+import type { Server, Servercheck } from "src/app/models";
 
 /**
  * Generates a `Servercheck` for a given `server`.
@@ -150,15 +151,15 @@ export class ServerService {
 		return this.servers.map(serverCheck);
 	}
 
-	public async getStatuses(idOrName: number | string): Promise<Status>;
-	public async getStatuses(): Promise<Array<Status>>;
+	public async getStatuses(idOrName: number | string): Promise<ResponseStatus>;
+	public async getStatuses(): Promise<Array<ResponseStatus>>;
 	/**
 	 * Retrieves Statuses from the API.
 	 *
 	 * @param idOrName An optional ID (number) or Name (string) used to fetch a single Status thereby identified.
 	 * @returns The requested Status(es).
 	 */
-	public async getStatuses(idOrName?: number | string): Promise<Array<Status> | Status> {
+	public async getStatuses(idOrName?: number | string): Promise<Array<ResponseStatus> | ResponseStatus> {
 		if (idOrName !== undefined) {
 			let status;
 			if (typeof(idOrName) === "number") {
