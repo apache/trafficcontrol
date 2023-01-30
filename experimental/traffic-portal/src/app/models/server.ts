@@ -130,31 +130,3 @@ export interface Server {
 	/** legacy field with no purpose. */
 	xmppPasswd?: string | null;
 }
-
-/**
- * Servercheck models the data returned by the /servercheck API endpoint.
- */
-export interface Servercheck {
-	/** contains the server's Status */
-	adminState: string;
-	/** the name of the Cache Group to which the server belongs */
-	cacheGroup: string;
-	/**
-	 * Checks emulates a map of check names to their numbers. All values are
-	 * numbers, but some may express boolean concepts; for example, the ORT
-	 * check uses 1 to represent "true" and any other value indicates "false".
-	 */
-	checks?: Record<string, number>;
-	/** the server's hostname */
-	hostName: string;
-	/** the server's ID */
-	id: number;
-	/** the name of the server's Profile */
-	profile: string;
-	/** whether or not the server has pending revalidations */
-	revalPending: boolean;
-	/** the name of the server's Type */
-	type: string;
-	/** whether or not the server has updates pending */
-	updPending: boolean;
-}
