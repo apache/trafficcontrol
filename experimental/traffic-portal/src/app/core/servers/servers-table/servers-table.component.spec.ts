@@ -14,14 +14,14 @@
 
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
-import {MatDialog} from "@angular/material/dialog";
+import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {Observable, of, ReplaySubject} from "rxjs";
+import { Observable, of, ReplaySubject } from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { defaultServer, type Server } from "src/app/models";
+import type { Server } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
@@ -44,6 +44,31 @@ class MockDialog {
 		};
 	}
 }
+
+const defaultServer: Server = {
+	cachegroupId: -1,
+	cdnId: -1,
+	domainName: "",
+	hostName: "",
+	httpsPort: null,
+	iloIpAddress: null,
+	iloIpGateway: null,
+	iloIpNetmask: null,
+	iloPassword: null,
+	iloUsername: null,
+	interfaces: [],
+	mgmtIpAddress: null,
+	mgmtIpGateway: null,
+	mgmtIpNetmask: null,
+	offlineReason: null,
+	physLocationId: -1,
+	profileId: -1,
+	revalPending: false,
+	statusId: -1,
+	tcpPort: null,
+	typeId: -1,
+	updPending: false
+};
 
 describe("ServersTableComponent", () => {
 	let component: ServersTableComponent;

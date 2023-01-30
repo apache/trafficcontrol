@@ -131,31 +131,6 @@ export interface Server {
 	xmppPasswd?: string | null;
 }
 
-export const defaultServer: Server = {
-	cachegroupId: -1,
-	cdnId: -1,
-	domainName: "",
-	hostName: "",
-	httpsPort: null,
-	iloIpAddress: null,
-	iloIpGateway: null,
-	iloIpNetmask: null,
-	iloPassword: null,
-	iloUsername: null,
-	interfaces: [],
-	mgmtIpAddress: null,
-	mgmtIpGateway: null,
-	mgmtIpNetmask: null,
-	offlineReason: null,
-	physLocationId: -1,
-	profileId: -1,
-	revalPending: false,
-	statusId: -1,
-	tcpPort: null,
-	typeId: -1,
-	updPending: false
-};
-
 /**
  * Servercheck models the data returned by the /servercheck API endpoint.
  */

@@ -12,19 +12,19 @@
 * limitations under the License.
 */
 
-import {Component, type OnInit} from "@angular/core";
-import {UntypedFormControl} from "@angular/forms";
-import {MatDialog} from "@angular/material/dialog";
-import {ActivatedRoute, Router} from "@angular/router";
-import type {ITooltipParams} from "ag-grid-community";
-import {BehaviorSubject} from "rxjs";
+import { Component , type OnInit} from "@angular/core";
+import { UntypedFormControl } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute , Router} from "@angular/router";
+import type { ITooltipParams } from "ag-grid-community";
+import { BehaviorSubject } from "rxjs";
 
-import {ServerService} from "src/app/api";
-import {UpdateStatusComponent} from "src/app/core/servers/update-status/update-status.component";
-import type {Interface, Server} from "src/app/models";
-import type {ContextMenuActionEvent, ContextMenuItem} from "src/app/shared/generic-table/generic-table.component";
+import { ServerService } from "src/app/api";
+import { UpdateStatusComponent } from "src/app/core/servers/update-status/update-status.component";
+import type { Interface, Server } from "src/app/models";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import {IPV4, serviceInterface} from "src/app/utils";
+import { IPV4 , serviceInterface } from "src/app/utils";
 
 /**
  * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
