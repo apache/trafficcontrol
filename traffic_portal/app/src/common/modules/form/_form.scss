@@ -374,6 +374,13 @@ input:checked + .slider::before {
 .checkbox-scroll-container {
 	max-height: 3.5em;
 	overflow-y: auto;
-	display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-content: space-between;
+
+	div {
+		min-width: 5em;
+		width: fit-content;
+	}
 }
