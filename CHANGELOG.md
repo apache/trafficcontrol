@@ -24,6 +24,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture
 - [#7113](https://github.com/apache/trafficcontrol/pull/7113) *Traffic Portal* Minimize the Server Server Capability part of the *Traffic Servers* section of the Snapshot Diff
 - [#7273](https://github.com/apache/trafficcontrol/pull/7273) *Traffic Ops* Adds SSL-KEY-EXPIRATION:READ permission to operations, portal, read-only, federation and steering roles
+- [#7322](https://github.com/apache/trafficcontrol/issues/7322) *t3c Adds support for anycast on http routed edges.
 
 ### Changed
 - [#7224](https://github.com/apache/trafficcontrol/pull/7224) *Traffic Ops* Required Capabilities are now a part of the `DeliveryService` structure.
