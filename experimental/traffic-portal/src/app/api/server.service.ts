@@ -14,9 +14,9 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { ResponseStatus } from "trafficops-types";
+import type { ResponseStatus, Servercheck } from "trafficops-types";
 
-import type { Server, Servercheck } from "src/app/models";
+import type { Server } from "src/app/models";
 
 import { APIService } from "./base-api.service";
 
