@@ -18,10 +18,11 @@ import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute , Router} from "@angular/router";
 import type { ITooltipParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
+import type { ResponseServer } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
 import { UpdateStatusComponent } from "src/app/core/servers/update-status/update-status.component";
-import type { Interface, Server } from "src/app/models";
+import type { Interface, } from "src/app/models";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IPV4 , serviceInterface } from "src/app/utils";
@@ -29,7 +30,7 @@ import { IPV4 , serviceInterface } from "src/app/utils";
 /**
  * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
  */
-export interface AugmentedServer extends Server {
+export interface AugmentedServer extends ResponseServer {
 	/** The server's IPv4 service address */
 	ipv4Address: string;
 	/** The server's IPv6 service address */
@@ -42,7 +43,7 @@ export interface AugmentedServer extends Server {
  * @param s The server to convert.
  * @returns The converted server.
  */
-export function augment(s: Server): AugmentedServer {
+export function augment(s: ResponseServer): AugmentedServer {
 	const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
 	let inf: Interface;
 	try {

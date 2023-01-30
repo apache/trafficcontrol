@@ -79,11 +79,8 @@ describe("ServerDetailsComponent", () => {
 			offlineReason: null,
 			physLocationId: 1,
 			profileId: 1,
-			revalPending: false,
 			statusId: 1,
-			tcpPort: null,
-			typeId: 1,
-			updPending: false
+			typeId: 1
 		});
 		fixture.detectChanges();
 	});
@@ -130,6 +127,7 @@ describe("ServerDetailsComponent", () => {
 
 	it("knows if it's a cache", () => {
 		const s = component.server;
+		s.type = "";
 		expect(component.isCache()).toBeFalse();
 		s.type = "EDGE";
 		expect(component.isCache()).toBeTrue();

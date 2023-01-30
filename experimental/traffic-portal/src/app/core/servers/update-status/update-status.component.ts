@@ -13,10 +13,9 @@
 */
 import {Component, Inject, type OnInit} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import type { ResponseStatus } from "trafficops-types";
+import type { ResponseServer, ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api/server.service";
-import type { Server } from "src/app/models";
 
 /**
  * UpdateStatusComponent is the controller for the "Update Server Status" dialog box.
@@ -35,7 +34,7 @@ export class UpdateStatusComponent implements OnInit {
 
 	public status: ResponseStatus | null = null;
 
-	public servers: Array<Server>;
+	public servers: Array<ResponseServer>;
 
 	public offlineReason = "";
 
@@ -55,7 +54,7 @@ export class UpdateStatusComponent implements OnInit {
 
 	/** Constructor. */
 	constructor(private readonly dialogRef: MatDialogRef<UpdateStatusComponent>,
-		@Inject(MAT_DIALOG_DATA) private readonly dialogServers: Array<Server>,
+		@Inject(MAT_DIALOG_DATA) private readonly dialogServers: Array<ResponseServer>,
 		private readonly api: ServerService) {
 		this.servers = this.dialogServers;
 	}

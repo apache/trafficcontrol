@@ -21,13 +21,14 @@ import type {
 	ResponseCDN,
 	ResponsePhysicalLocation,
 	ResponseProfile,
+	ResponseServer,
 	ResponseStatus,
 	TypeFromResponse
 } from "trafficops-types";
 
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
-import type { Interface, Server } from "src/app/models";
+import type { Interface } from "src/app/models";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
@@ -48,7 +49,7 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * The server being edited/created.
 	 */
-	public server!: Server;
+	public server!: ResponseServer;
 	/**
 	 * A Regular Expression that matches valid IP addresses - and allows IPv4 addresses to have CIDR-notation network prefixes.
 	 */

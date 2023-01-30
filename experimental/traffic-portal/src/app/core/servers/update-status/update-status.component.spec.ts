@@ -15,36 +15,65 @@ import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
 import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import { of } from "rxjs";
+import type { ResponseServer } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import type { Server } from "src/app/models";
 
 import { UpdateStatusComponent } from "./update-status.component";
 
-const defaultServer: Server = {
-	cachegroupId: -1,
-	cdnId: -1,
+const defaultServer = {
+	cachegroup: "",
+	cachegroupId: 1,
+	cdnId: 1,
+	cdnName: "",
 	domainName: "",
+	guid: null,
 	hostName: "",
 	httpsPort: null,
+	id: -1,
 	iloIpAddress: null,
 	iloIpGateway: null,
 	iloIpNetmask: null,
 	iloPassword: null,
 	iloUsername: null,
-	interfaces: [],
+	interfaces: [
+		{
+			ipAddresses: [
+				{
+					address: "1.2.3.4",
+					gateway: null,
+					serviceAddress: true
+				}
+			],
+			maxBandwidth:null,
+			monitor: false,
+			mtu: null,
+			name: "eth0",
+		}
+	],
+	lastUpdated: new Date(),
 	mgmtIpAddress: null,
 	mgmtIpGateway: null,
 	mgmtIpNetmask: null,
 	offlineReason: null,
-	physLocationId: -1,
-	profileId: -1,
+	physLocation: "",
+	physLocationId: 1,
+	profile: "",
+	profileDesc: "",
+	profileId: 1,
+	rack: null,
 	revalPending: false,
-	statusId: -1,
+	routerHostName: null,
+	routerPortName: null,
+	status: "",
+	statusId: 1,
+	statusLastUpdated: null,
 	tcpPort: null,
-	typeId: -1,
-	updPending: false
+	type: "",
+	typeId: 1,
+	updPending: false,
+	xmppId: "",
 };
 
 describe("UpdateStatusComponent", () => {
@@ -59,7 +88,7 @@ describe("UpdateStatusComponent", () => {
 			declarations: [ UpdateStatusComponent ],
 			imports: [ HttpClientModule, APITestingModule ],
 			providers: [ {provide: MatDialogRef, useValue: mockMatDialog },
-				{provide: MAT_DIALOG_DATA, useValue: (): Array<Server> => []}]
+				{provide: MAT_DIALOG_DATA, useValue: (): Array<ResponseServer> => []}]
 		}).compileComponents();
 		fixture = TestBed.createComponent(UpdateStatusComponent);
 		component = fixture.componentInstance;
