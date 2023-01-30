@@ -352,6 +352,7 @@ under the License.
                             <div class="checkbox-scroll-container">
                                 <div ng-repeat="capability in requiredCapabilities track by $index">
                                     <input
+                                        aria-label="{{capability.name}}"
                                         type="checkbox"
                                         id="capability-{{$index}}"
                                         name="capability-{{$index}}"
