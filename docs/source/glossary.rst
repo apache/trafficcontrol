@@ -153,8 +153,6 @@ Glossary
 
 		Federations only have meaning to DNS-routed :term:`Delivery Services` - HTTP-routed Delivery services should instead treat the external :abbr:`FQDN (Fully Qualified Domain Name)` as an :term:`Origin` to achieve the same effect.
 
-		.. seealso:: Federations are currently only manageable by directly using the :ref:`to-api`. The endpoints related to federations are :ref:`to-api-federations`, :ref:`to-api-federation_resolvers`, :ref:`to-api-federations-id-deliveryservices`, :ref:`to-api-federations-id-deliveryservices-id`, :ref:`to-api-federations-id-federation_resolvers`, :ref:`to-api-federations-id-users`, and :ref:`to-api-federations-id-users-id`.
-
 	First-tier
 	First-tier cache
 	First-tier caches
