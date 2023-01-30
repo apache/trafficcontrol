@@ -375,7 +375,7 @@ under the License.
                         </label>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <select id="serviceCategory" name="serviceCategory" class="form-control" ng-model="deliveryService.serviceCategory" ng-options="serviceCategory.name as serviceCategory.name for serviceCategory in serviceCategories">
-                                <option selected value="">Select...</option>
+                                <option value="">Select...</option>
                             </select>
                             <small ng-show="deliveryService.serviceCategory"><a href="/#!/service-categories/edit?name={{deliveryService.serviceCategory}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.serviceCategory != dsCurrent.serviceCategory">
