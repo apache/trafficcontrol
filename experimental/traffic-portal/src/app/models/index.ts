@@ -12,3 +12,4 @@
 * limitations under the License.
 */
 export * from "./data";
+export * from "./tree-select.model";
