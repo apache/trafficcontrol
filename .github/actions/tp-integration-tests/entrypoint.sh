@@ -58,9 +58,15 @@ import _postinstall
 print(_postinstall.hash_pass('${to_admin_password}'))
 PYTHON_COMMANDS
 )"
+admin_role_id="$(<<QUERY psql -t
+SELECT r.id
+FROM public."role" r
+WHERE r."name" = 'admin'
+QUERY
+)"
 <<QUERY psql
 INSERT INTO tm_user (username, role, tenant_id, local_passwd)
-  VALUES ('${to_admin_username}', 1, 1,
+  VALUES ('${to_admin_username}', ${admin_role_id}, 1,
     '${password_hash}'
   );
 QUERY

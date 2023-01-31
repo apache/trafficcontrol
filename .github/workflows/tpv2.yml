@@ -212,12 +212,33 @@ jobs:
       # Setup
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install postgresql-client gettext-base
+      - name: Hash TO user password
+        run: |2
+          password_hash="$(<<PYTHON_COMMANDS PYTHONPATH="${GITHUB_WORKSPACE}/traffic_ops/install/bin" python
+          import _postinstall
+          print(_postinstall.hash_pass('${{ env.PGPASSWORD }}12'))
+          PYTHON_COMMANDS
+          )" &&
+          echo "TO_USER_PASSWORD_HASH=${password_hash}" >> '${{ github.env }}'
+      - name: Get admin role
+        run: |2
+          admin_role_id="$(<<QUERY psql -t
+          SELECT r.id
+          FROM public."role" r
+          WHERE r."name" = 'admin'
+          QUERY
+          )" &&
+          echo "TO_ADMIN_ROLE_ID=${admin_role_id}" >> '${{ github.env }}'
       - name: Create admin user
-        run: |
-          psql -c "INSERT INTO tm_user (username, role, tenant_id, local_passwd) VALUES ('admin', 1, 1, 'SCRYPT:16384:8:1:p0Bppp/6IBeYxSwdLuYddsdMLBU/BNSlLY6fSIF7H1XW4eTbNVeMPVm7TuTEG4FM8PbqLlVwi8sPy8ZJznAlaQ==:sRcHWGe43mm/uEmXTIw37GcLEQZTlWAdf4vJqK8f0MDh8P+8gXoNx+nxWyb3r/0Bh+yyg0g/dUvti/ePZJL+Jw==');"
+        run: |2
+          <<QUERY psql
+          INSERT INTO tm_user (username, role, tenant_id, local_passwd)
+          VALUES ('admin', ${{ env.TO_ADMIN_ROLE_ID }}, 1, '${{ env.TO_USER_PASSWORD_HASH }}');
+          QUERY
       - name: Create SSL Certificates and AES key
         run: |
-          openssl rand 32 | base64 | tee "${GITHUB_WORKSPACE}/aes.key"
+          set -o pipefail
+          openssl rand 32 | base64 | tee "${GITHUB_WORKSPACE}/aes.key" &&
           openssl req -new -x509 -nodes -newkey rsa:4096 -out traffic_ops/traffic_ops_golang/localhost.crt -keyout traffic_ops/traffic_ops_golang/localhost.key -subj "/CN=tptests"
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
