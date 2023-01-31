@@ -292,6 +292,7 @@ export class DeliveryServiceService {
 			signingAlgorithm: ds.signingAlgorithm ?? "uri_signing",
 			sslKeyVersion: ds.sslKeyVersion ?? null,
 			tenant: tenant.name,
+			tlsVersions: ds.tlsVersions && ds.tlsVersions.length > 0 ? ds.tlsVersions : null,
 			topology: ds.topology ?? null,
 			trRequestHeaders: ds.trRequestHeaders ?? null,
 			trResponseHeaders: ds.trResponseHeaders ?? null,
