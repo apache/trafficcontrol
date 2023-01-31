@@ -26,12 +26,18 @@ on:
       - experimental/traffic-portal/**
       - .github/workflows/tpv2.yml
       - .github/actions/tpv2-integration-tests
+      - lib/go-tc/**
+      - traffic_ops/app/db/**
+      - traffic_ops/traffic_ops_golang/**.go
   create:
   pull_request:
     paths:
       - experimental/traffic-portal/**
       - .github/workflows/tpv2.yml
       - .github/actions/tpv2-integration-tests
+      - lib/go-tc/**
+      - traffic_ops/app/db/**
+      - traffic_ops/traffic_ops_golang/**.go
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:

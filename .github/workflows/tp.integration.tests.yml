@@ -31,6 +31,8 @@ on:
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
       - infrastructure/cdn-in-a-box/optional/traffic_vault/**
+      - lib/go-tc/**
+      - traffic_ops/app/db/**
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_portal/**
   create:
@@ -42,6 +44,8 @@ on:
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
       - infrastructure/cdn-in-a-box/optional/traffic_vault/**
+      - lib/go-tc/**
+      - traffic_ops/app/db/**
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_portal/**
     types: [ opened, reopened, ready_for_review, synchronize ]
