@@ -158,7 +158,10 @@ describe("CurrentuserComponent", () => {
 
 		expect(updateSpy).toHaveBeenCalledTimes(2);
 
-		component.editUser.id = -1;
+		component.editUser = {
+			...component.editUser,
+			id: -1
+		};
 		component.submitEdit(new Event("submit"));
 		tick();
 

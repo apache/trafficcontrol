@@ -31,6 +31,7 @@ export class CurrentUserTestingService {
 	public currentUser: ResponseCurrentUser = {
 		addressLine1: null,
 		addressLine2: null,
+		changeLogCount: 2,
 		city: null,
 		company: null,
 		country: null,
@@ -38,21 +39,23 @@ export class CurrentUserTestingService {
 		fullName: "admin",
 		gid: null,
 		id: 1,
+		lastAuthenticated: null,
 		lastUpdated: new Date(0),
 		localUser: true,
 		newUser: false,
 		phoneNumber: null,
 		postalCode: null,
 		publicSshKey: null,
-		role: 1,
-		roleName: "admin",
+		registrationSent: null,
+		role: "admin",
 		stateOrProvince: null,
 		tenant: "root",
 		tenantId: 1,
+		ucdn: "",
 		uid: null,
 		username: "admin"
 	};
-	public capabilities: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set(["ALL"]));
+	public permissions: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set(["ALL"]));
 	public readonly loggedIn = true;
 
 	/**
@@ -106,7 +109,7 @@ export class CurrentUserTestingService {
 		this.currentUser = u;
 		const capabilities = Array.isArray(caps) ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.currentUser);
-		this.capabilities.next(capabilities);
+		this.permissions.next(capabilities);
 	}
 
 	/**
@@ -116,7 +119,7 @@ export class CurrentUserTestingService {
 	 * @returns `true` if the user has the Permission `perm`, `false` otherwise.
 	 */
 	public hasPermission(perm: string): boolean {
-		return this.currentUser.roleName === CurrentUserTestingService.ADMIN_ROLE || this.capabilities.getValue().has(perm);
+		return this.currentUser.role === CurrentUserTestingService.ADMIN_ROLE || this.permissions.getValue().has(perm);
 	}
 
 	/**

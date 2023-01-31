@@ -32,6 +32,7 @@ describe("UsersComponent", () => {
 	const testUser = {
 		addressLine1: null,
 		addressLine2: null,
+		changeLogCount: 2,
 		city: null,
 		company: null,
 		country: null,
@@ -39,16 +40,18 @@ describe("UsersComponent", () => {
 		fullName: "admin",
 		gid: null,
 		id: 1,
+		lastAuthenticated: null,
 		lastUpdated: new Date(0),
 		newUser: false,
 		phoneNumber: null,
 		postalCode: null,
 		publicSshKey: null,
-		role: 1,
-		rolename: "admin",
+		registrationSent: null,
+		role: "admin",
 		stateOrProvince: null,
 		tenant: "root",
 		tenantId: 1,
+		ucdn: "",
 		uid: null,
 		username: "admin"
 	};
@@ -109,19 +112,6 @@ describe("UsersComponent", () => {
 		tick();
 		expect(spy).toHaveBeenCalledTimes(2);
 	}));
-
-	it("gets display strings for Roles", () => {
-		component.roles = new Map([[1, "admin"]]);
-		const roleColDef = component.columnDefs.find(d=>d.field === "role");
-		if (!roleColDef) {
-			return fail("table missing column definition for the 'role' property");
-		}
-		if (!roleColDef.valueGetter) {
-			return fail("column definition for 'role' property missing 'valueGetter' property");
-		}
-		expect(roleColDef.valueGetter({data: testUser} as ValueGetterParams)).toBe(`${testUser.username} (#${testUser.id})`);
-		expect(()=>component.roleDisplayString(2)).toThrow();
-	});
 
 	it("gets display strings for Tenants", () => {
 		const tenantColDef = component.columnDefs.find(d=>d.field === "tenant");

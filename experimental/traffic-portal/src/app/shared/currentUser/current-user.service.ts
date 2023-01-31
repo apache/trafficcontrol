@@ -45,7 +45,7 @@ export class CurrentUserService {
 	}
 
 	/** The Permissions afforded to the currently authenticated user. */
-	public capabilities: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set());
+	public permissions: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set());
 
 	/** Whether or not the user is authenticated. */
 	public get loggedIn(): boolean {
@@ -81,7 +81,7 @@ export class CurrentUserService {
 						throw new Error("current user had no Role");
 					}
 					const role = await this.api.getRoles(u.role);
-					this.setUser(u, new Set(role.capabilities));
+					this.setUser(u, new Set(role.permissions));
 					return true;
 				}
 			).catch(
@@ -130,7 +130,7 @@ export class CurrentUserService {
 		this.user = u;
 		const capabilities = caps instanceof Array ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.user);
-		this.capabilities.next(capabilities);
+		this.permissions.next(capabilities);
 	}
 
 	/**
@@ -143,7 +143,7 @@ export class CurrentUserService {
 		if (!this.user) {
 			return false;
 		}
-		return this.user.roleName === CurrentUserService.ADMIN_ROLE || this.capabilities.getValue().has(perm);
+		return this.user.role === CurrentUserService.ADMIN_ROLE || this.permissions.getValue().has(perm);
 	}
 
 	/**
@@ -155,7 +155,7 @@ export class CurrentUserService {
 	 */
 	public logout(withRedirect?: boolean): void {
 		this.user = null;
-		this.capabilities.next(new Set());
+		this.permissions.next(new Set());
 
 		const queryParams: Record<string | symbol, string> = {};
 		if (withRedirect) {

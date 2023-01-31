@@ -32,6 +32,7 @@ function newCurrentUser(): ResponseCurrentUser {
 	return {
 		addressLine1: "addressLine1",
 		addressLine2: "addressLine2",
+		changeLogCount: 2,
 		city: "city",
 		company: "company",
 		country: "country",
@@ -39,17 +40,19 @@ function newCurrentUser(): ResponseCurrentUser {
 		fullName: "fullName",
 		gid: null,
 		id: 1,
+		lastAuthenticated: null,
 		lastUpdated: new Date(),
 		localUser: true,
 		newUser: false,
 		phoneNumber: "phoneNumber",
 		postalCode: "postalCode",
 		publicSshKey: "publicSshKey",
-		role: 1,
-		roleName: "roleName",
+		registrationSent: null,
+		role: "roleName",
 		stateOrProvince: "stateOrProvince",
 		tenant: "tenant",
 		tenantId: 1,
+		ucdn: "",
 		uid: null,
 		username: "username"
 	};
@@ -63,7 +66,7 @@ describe("CurrentUserService", () => {
 	beforeEach(() => {
 		const mockAPIService = jasmine.createSpyObj(["updateCurrentUser", "getCurrentUser", "saveCurrentUser"]);
 		mockAPIService.getCurrentUser.and.returnValue(new Promise<ResponseCurrentUser>(resolve => resolve(
-			{id: 1, newUser: false, role: 1, username: "name"} as ResponseCurrentUser
+			{id: 1, newUser: false, role: "admin", username: "name"} as ResponseCurrentUser
 		)));
 		TestBed.configureTestingModule({
 			imports: [
@@ -88,7 +91,7 @@ describe("CurrentUserService", () => {
 		service.logout();
 		expect(service.loggedIn).toBeFalse();
 		expect(service.currentUser).toBeNull();
-		expect(service.capabilities.getValue().size).toBe(0);
+		expect(service.permissions.getValue().size).toBe(0);
 	});
 
 	it("should update user data properly", () => {
@@ -97,6 +100,7 @@ describe("CurrentUserService", () => {
 			{
 				addressLine1: "address line 1",
 				addressLine2: "address line 2",
+				changeLogCount: 2,
 				city: "city",
 				company: "company",
 				country: "country",
@@ -104,19 +108,21 @@ describe("CurrentUserService", () => {
 				fullName: "full name",
 				gid: 0,
 				id: 9000,
+				lastAuthenticated: null,
 				lastUpdated: upd,
 				localUser: true,
 				newUser: false,
 				phoneNumber: "7",
 				postalCode: "also 7",
 				publicSshKey: "ssh key",
-				role: 1,
-				roleName: "role name",
+				registrationSent: null,
+				role: "role name",
 				stateOrProvince: "state or province",
 				tenant: "tenant",
 				tenantId: 2,
+				ucdn: "",
 				uid: 3,
-				username: "quest"
+				username: "quest",
 			},
 			new Set(["a permission"])
 		);
@@ -126,6 +132,7 @@ describe("CurrentUserService", () => {
 			{
 				addressLine1: null,
 				addressLine2: null,
+				changeLogCount: 2,
 				city: null,
 				company: null,
 				country: null,
@@ -133,19 +140,21 @@ describe("CurrentUserService", () => {
 				fullName: "different full name",
 				gid: null,
 				id: 9001,
-				lastUpdated: new Date(upd.getTime()+1000),
+				lastAuthenticated: null,
+				lastUpdated: new Date(upd.getTime() + 1000),
 				localUser: false,
 				newUser: true,
 				phoneNumber: null,
 				postalCode: null,
 				publicSshKey: null,
-				role: 2,
-				roleName: "different role name",
+				registrationSent: null,
+				role: "different role name",
 				stateOrProvince: null,
 				tenant: "different tenant",
 				tenantId: 1,
+				ucdn: "",
 				uid: null,
-				username: "test"
+				username: "test",
 			},
 			new Set()
 		);
@@ -157,6 +166,7 @@ describe("CurrentUserService", () => {
 		expect(u).toEqual({
 			addressLine1: null,
 			addressLine2: null,
+			changeLogCount: 2,
 			city: null,
 			company: null,
 			country: null,
@@ -164,17 +174,19 @@ describe("CurrentUserService", () => {
 			fullName: "different full name",
 			gid: null,
 			id: 9001,
+			lastAuthenticated: null,
 			lastUpdated: new Date(upd.getTime()+1000),
 			localUser: false,
 			newUser: true,
 			phoneNumber: null,
 			postalCode: null,
 			publicSshKey: null,
-			role: 2,
-			roleName: "different role name",
+			registrationSent: null,
+			role: "different role name",
 			stateOrProvince: null,
 			tenant: "different tenant",
 			tenantId: 1,
+			ucdn: "",
 			uid: null,
 			username: "test",
 		});
@@ -198,8 +210,8 @@ describe("CurrentUserService", () => {
 	});
 
 	it("lets 'admin' users do things even when they don't have permission", () => {
-		service.setUser({...newCurrentUser(), roleName: "admin"}, new Set());
-		expect(service.capabilities.getValue().has("a permission")).toBeFalse();
+		service.setUser({...newCurrentUser(), role: CurrentUserService.ADMIN_ROLE}, new Set());
+		expect(service.permissions.getValue().has("a permission")).toBeFalse();
 		expect(service.hasPermission("a permission")).toBeTrue();
 	});
 

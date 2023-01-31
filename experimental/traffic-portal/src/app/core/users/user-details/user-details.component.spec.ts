@@ -64,7 +64,7 @@ describe("UserDetailsComponent", () => {
 	}));
 
 	it("throws errors for non-existent roles and tenants", () => {
-		component.user.role = -1;
+		component.user.role = "";
 		expect(()=>component.role()).toThrow();
 		component.user.tenantId = -1;
 		expect(()=>component.tenant()).toThrow();
@@ -79,7 +79,7 @@ describe("UserDetailsComponent", () => {
 			privLevel: 100
 		};
 		component.updateRole({source: {} as MatSelect, value: selectedRole});
-		expect(component.user.role).toBe(selectedRole.id);
+		expect(component.user.role).toBe(selectedRole.name);
 	});
 
 	it("updates the user's Tenant-related properties", () => {
@@ -109,7 +109,7 @@ describe("UserDetailsComponent", () => {
 		const oldValue = component.new;
 		const oldUser = component.user;
 		component.new = true;
-		component.user.tenantID = 1;
+		component.user.tenantId = 1;
 		component.submit(new Event("submit"));
 		tick();
 		expect(spy).toHaveBeenCalled();

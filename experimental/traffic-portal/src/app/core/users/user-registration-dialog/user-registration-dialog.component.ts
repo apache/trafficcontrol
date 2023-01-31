@@ -49,7 +49,7 @@ export class UserRegistrationDialogComponent implements OnInit {
 			rs => {
 				this.roles = rs;
 				for (const role of rs) {
-					if (role.id === this.auth.currentUser?.role) {
+					if (role.name === this.auth.currentUser?.role) {
 						this.role = role;
 					}
 				}

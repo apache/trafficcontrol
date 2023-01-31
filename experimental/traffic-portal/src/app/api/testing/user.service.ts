@@ -16,13 +16,13 @@ import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
 	Capability,
-	GetResponseUser,
 	PostRequestUser,
-	PutOrPostResponseUser,
+	PutRequestUser,
 	RequestTenant,
 	ResponseCurrentUser,
 	ResponseRole,
-	ResponseTenant
+	ResponseTenant,
+	ResponseUser
 } from "trafficops-types";
 
 /**
@@ -45,10 +45,11 @@ export class UserService {
 
 	private testAdminUsername = "test-admin";
 	private readonly testAdminPassword = "twelve12!";
-	private readonly users: Array<GetResponseUser> = [
+	private readonly users: Array<ResponseUser> = [
 		{
 			addressLine1: null,
 			addressLine2: null,
+			changeLogCount: 0,
 			city: null,
 			company: null,
 			country: null,
@@ -56,16 +57,18 @@ export class UserService {
 			fullName: "Test Admin",
 			gid: null,
 			id: ++this.lastID,
+			lastAuthenticated: new Date(),
 			lastUpdated: new Date(),
 			newUser: false,
 			phoneNumber: null,
 			postalCode: null,
 			publicSshKey: null,
-			role: 1,
-			rolename: "admin",
+			registrationSent: null,
+			role: "admin",
 			stateOrProvince: null,
 			tenant: "root",
 			tenantId: 1,
+			ucdn: "",
 			uid: null,
 			username: "test-admin"
 		}
@@ -170,7 +173,8 @@ export class UserService {
 	 */
 	public async getCurrentUser(): Promise<ResponseCurrentUser> {
 		let user = this.users.filter(u=>u.username === this.testAdminUsername)[0];
-		const transformUser = (u: GetResponseUser): ResponseCurrentUser => ({
+		const transformUser = (u: ResponseUser): ResponseCurrentUser => ({
+			...u,
 			addressLine1: u.addressLine1,
 			addressLine2: u.addressLine2,
 			city: u.city,
@@ -186,8 +190,8 @@ export class UserService {
 			phoneNumber: u.phoneNumber,
 			postalCode: u.postalCode,
 			publicSshKey: u.publicSshKey,
+			registrationSent: u.registrationSent ?? null,
 			role: u.role,
-			roleName: u.rolename ?? "",
 			stateOrProvince: u.stateOrProvince,
 			tenant: u.tenant,
 			tenantId: u.tenantId,
@@ -220,25 +224,20 @@ export class UserService {
 		this.testAdminUsername = user.username;
 		this.users[storedUser] = {
 			...user,
-			confirmLocalPasswd: undefined,
-			fullName: user.fullName ?? "",
 			lastUpdated: new Date(),
-			roleName: undefined,
-			rolename: user.roleName,
-			stateOrProvince: user.stateOrProvince ?? "",
 		};
 		return true;
 	}
 
-	public async getUsers(nameOrID: string | number): Promise<GetResponseUser>;
-	public async getUsers(): Promise<Array<GetResponseUser>>;
+	public async getUsers(nameOrID: string | number): Promise<ResponseUser>;
+	public async getUsers(): Promise<Array<ResponseUser>>;
 	/**
 	 * Gets an array of all users in Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the User with the given username (string) or ID (number).
 	 * @returns An Array of User objects - or a single User object if 'nameOrID' was given.
 	 */
-	public async getUsers(nameOrID?: string | number): Promise<Array<GetResponseUser> | GetResponseUser> {
+	public async getUsers(nameOrID?: string | number): Promise<Array<ResponseUser> | ResponseUser> {
 		if (nameOrID) {
 			let user;
 			switch (typeof nameOrID) {
@@ -259,27 +258,71 @@ export class UserService {
 	/**
 	 * Replaces the current definition of a user with the one given.
 	 *
-	 * @param user The new definition of the User.
+	 * @param user The full new definition of the User.
 	 * @returns The user as updated.
 	 */
-	 public async updateUser(user: PutOrPostResponseUser | GetResponseUser): Promise<PutOrPostResponseUser> {
-		const idx = this.users.findIndex(u=>u.id === user.id);
-		if (idx < 0) {
-			throw new Error(`no such User: ${user.id}`);
+	public async updateUser(user: ResponseUser): Promise<ResponseUser>;
+	/**
+	 * Replaces the current definition of a user with the one given.
+	 *
+	 * @param user The ID of the User being updated.
+	 * @param payload The new definition of the User.
+	 * @returns The user as updated.
+	 */
+	public async updateUser(user: number, payload: PutRequestUser): Promise<ResponseUser>;
+	/**
+	 * Replaces the current definition of a user with the one given.
+	 *
+	 * @param user The new definition of the User, or just its ID.
+	 * @param payload The new definition of the User. This is required if `user`
+	 * is an ID, and ignored otherwise.
+	 * @returns The user as updated.
+	 */
+	public async updateUser(user: ResponseUser | number, payload?: PutRequestUser): Promise<ResponseUser> {
+		if (typeof(user) !== "number") {
+			const idx = this.users.findIndex(u=>u.id === user.id);
+			if (idx < 0) {
+				throw new Error(`no such User: ${user.id}`);
+			}
+			const response = {
+				...user,
+				lastUpdated: new Date(),
+			};
+			this.users[idx] = response;
+			return response;
 		}
-		const response = {
-			...user,
-			confirmLocalPasswd: undefined,
+		if (!payload) {
+			throw new Error("must supply a request body along with ID to update a User");
+		}
+		const index = this.users.findIndex(u => u.id === user);
+		if (index < 0) {
+			throw new Error(`no such User: ${user}`);
+		}
+		const tenant = await this.getTenants(payload.tenantId);
+		const updated = {
+			...payload,
+			addressLine1: payload.addressLine1 ?? null,
+			addressLine2: payload.addressLine2 ?? null,
+			changeLogCount: 0,
+			city: payload.city ?? null,
+			company: payload.company ?? null,
+			country: payload.country ?? null,
+			gid: payload.gid ?? null,
+			id: user,
+			lastAuthenticated: null,
 			lastUpdated: new Date(),
-			roleName: undefined,
-			rolename: user.roleName ?? ""
+			newUser: payload.newUser ?? null,
+			phoneNumber: payload.phoneNumber ?? null,
+			postalCode: payload.postalCode ?? null,
+			publicSshKey: payload.publicSshKey ?? null,
+			registrationSent: null,
+			stateOrProvince: payload.stateOrProvince ?? null,
+			tenant: tenant.name,
+			ucdn: payload.ucdn ?? "",
+			uid: payload.uid ?? null,
 		};
-		this.users[idx] = response;
-		return {
-			...response,
-			roleName: response.rolename,
-			rolename: undefined
-		};
+		this.users[index] = updated;
+		return updated;
 	}
 
 	/**
@@ -288,43 +331,41 @@ export class UserService {
 	 * @param user The user to create.
 	 * @returns The created user.
 	 */
-	public async createUser(user: PostRequestUser): Promise<PutOrPostResponseUser> {
-		const role = this.roles.find(r=>r.id === user.role);
+	public async createUser(user: PostRequestUser): Promise<ResponseUser> {
+		const role = this.roles.find(r=>r.name === user.role);
 		if (!role) {
 			throw new Error(`no such Role: #${user.role}`);
 		}
-		const tenant = this.tenants.find(t=>t.id === user.tenantID);
+		const tenant = this.tenants.find(t=>t.id === user.tenantId);
 		if (!tenant) {
-			throw new Error(`no such Tenant: #${user.tenantID}`);
+			throw new Error(`no such Tenant: #${user.tenantId}`);
 		}
 		const response = {
 			...user,
 			addressLine1: user.addressLine1 ?? null,
 			addressLine2: user.addressLine2 ?? null,
+			changeLogCount: 0,
 			city: user.city ?? null,
 			company: user.company ?? null,
 			confirmLocalPasswd: undefined,
 			country: user.country ?? null,
 			gid: user.gid ?? null,
 			id: ++this.lastID,
+			lastAuthenticated: null,
 			lastUpdated: new Date(),
 			newUser: user.newUser ?? null,
 			phoneNumber: user.phoneNumber ?? null,
 			postalCode: user.postalCode ?? null,
 			publicSshKey: user.publicSshKey ?? null,
-			rolename: role.name,
+			registrationSent: null,
 			stateOrProvince: user.stateOrProvince ?? null,
 			tenant: tenant.name,
-			tenantID: undefined,
-			tenantId: user.tenantID,
-			uid: user.uid ?? null
+			tenantId: user.tenantId,
+			ucdn: user.ucdn ?? "",
+			uid: user.uid ?? null,
 		};
 		this.users.push(response);
-		return {
-			...response,
-			roleName: response.rolename,
-			rolename: undefined
-		};
+		return response;
 	}
 
 	/**
@@ -399,6 +440,19 @@ export class UserService {
 		return this.roles;
 	}
 
+	/**
+	 * Retrieves all (visible) Tenants from Traffic Ops.
+	 *
+	 * @returns All Tenants visible to the requesting user's Tenant.
+	 */
+	public async getTenants(): Promise<Array<ResponseTenant>>;
+	/**
+	 * Retrieves a specific Tenant from Traffic Ops.
+	 *
+	 * @param nameOrID Either the name or ID of a single desired Tenant.
+	 * @returns The Tenant identified by `nameOrID`.
+	 */
+	public async getTenants(nameOrID: string | number): Promise<ResponseTenant>;
 	/**
 	 * Retrieves one or all Tenants from Traffic Ops.
 	 *
