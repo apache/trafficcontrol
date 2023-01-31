@@ -12,10 +12,10 @@
 * limitations under the License.
 */
 import { Component, Inject } from "@angular/core";
-import { UntypedFormControl } from "@angular/forms";
+import { FormControl, UntypedFormControl } from "@angular/forms";
 import { MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { Subject } from "rxjs";
-import type { ResponseInvalidationJob } from "trafficops-types";
+import { JobType, ResponseInvalidationJob } from "trafficops-types";
 
 import { InvalidationJobService } from "src/app/api";
 
@@ -35,7 +35,7 @@ export function timeStringFromDate(d: Date): string {
 /** The type of parameters passable to the dialog. */
 interface DialogData {
 	/** The ID of the Delivery Service to which the created/edited Job belongs. */
-	dsID: number;
+	dsID: string;
 	/** If passed, the dialog will edit this Job instead of creating a new one. */
 	job?: ResponseInvalidationJob;
 }
@@ -82,7 +82,7 @@ export class NewInvalidationJobDialogComponent {
 	/** Control for users to enter new content invalidation jobs. */
 	public regexp = new UntypedFormControl("/");
 	/** Control for users to enter a new job's TTL. */
-	public ttl = new UntypedFormControl(178);
+	public ttl = new FormControl(178, {nonNullable: true});
 	/** Control for users to enter the starting time for a new job. */
 	public startTime = new UntypedFormControl("");
 
@@ -90,7 +90,7 @@ export class NewInvalidationJobDialogComponent {
 	public readonly regexpIsValid = new Subject<string>();
 
 	private readonly job: ResponseInvalidationJob | undefined;
-	private readonly dsID: number;
+	private readonly dsID: string;
 
 	constructor(
 		private readonly dialogRef: MatDialogRef<NewInvalidationJobDialogComponent>,
@@ -103,7 +103,7 @@ export class NewInvalidationJobDialogComponent {
 			const startTime  = timeStringFromDate(this.job.startTime);
 			this.startMinTime = startTime;
 			this.startTime.setValue(startTime);
-			this.ttl.setValue(parseInt(this.job.parameters.split(":")[1], 10));
+			this.ttl.setValue(this.job.ttlHours);
 			const regexp = this.job.assetUrl.split("/", 4).slice(3).join("/") || "/";
 			this.regexp.setValue(regexp);
 		} else {
@@ -140,21 +140,20 @@ export class NewInvalidationJobDialogComponent {
 	 * control).
 	 * @param startTime The Job's new Start Time (pre-parsed from Form Controls).
 	 */
-	private editJob(j: ResponseInvalidationJob, re: RegExp, startTime: Date): void {
+	private async editJob(j: ResponseInvalidationJob, re: RegExp, startTime: Date): Promise<void> {
 		const job = {
 			...j,
-			parameters: `TTL:${this.ttl.value as number}`,
-			startTime
+			assetUrl: `${j.assetUrl.split("/").slice(0, 3).join("/")}/${sanitizedRegExpString(re)}`,
+			startTime,
+			ttlHours: this.ttl.value,
 		};
-		job.assetUrl = `${job.assetUrl.split("/").slice(0, 3).join("/")}/${sanitizedRegExpString(re)}`;
 
-		this.jobAPI.updateInvalidationJob(job).then(
-			()=>this.dialogRef.close(true)
-		).catch(
-			e => {
-				console.error("error:", e);
-			}
-		);
+		try {
+			await this.jobAPI.updateInvalidationJob(job);
+			this.dialogRef.close(true);
+		} catch (e) {
+			console.error("error:", e);
+		}
 	}
 
 	/**
@@ -184,9 +183,10 @@ export class NewInvalidationJobDialogComponent {
 
 		const job = {
 			deliveryService: this.dsID,
+			invalidationType: JobType.REFRESH,
 			regex: re.toString().replace(/^\/|\/$/g, "").replace("\\/", "/"),
 			startTime,
-			ttl: this.ttl.value
+			ttlHours: this.ttl.value
 		};
 
 		try {

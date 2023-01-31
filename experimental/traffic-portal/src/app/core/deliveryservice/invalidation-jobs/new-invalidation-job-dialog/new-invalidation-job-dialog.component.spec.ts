@@ -14,6 +14,7 @@
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, tick, fakeAsync } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from "@angular/material/dialog";
+import { JobType } from "trafficops-types";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
@@ -134,8 +135,9 @@ describe("NewInvalidationJobDialogComponent - editing", () => {
 		job: {
 			assetUrl: "https://some-url.test/followed/by/a/p\\.attern\\.\\b",
 			id: -1,
-			parameters: "TTL:178",
-			startTime: new Date(0)
+			invalidationType: JobType.REFRESH,
+			startTime: new Date(0),
+			ttlHours: 178,
 		}
 	};
 
@@ -158,9 +160,10 @@ describe("NewInvalidationJobDialogComponent - editing", () => {
 		const now = new Date();
 		const job = await service.createInvalidationJob({
 			deliveryService: "test-xmlid",
+			invalidationType: JobType.REFRESH,
 			regex: "/",
 			startTime: new Date(now.setDate(now.getDate()+1)),
-			ttl: 178
+			ttlHours: 178
 		});
 		if (job.id === undefined) {
 			return fail("created Content Invalidation Job had no ID");

@@ -13,7 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-import { JobType, RequestInvalidationJob, ResponseDeliveryService, ResponseInvalidationJob, ResponseUser } from "trafficops-types";
+import { RequestInvalidationJob, ResponseDeliveryService, ResponseInvalidationJob, ResponseUser } from "trafficops-types";
 
 // This needs to be imported from above, because that's how the services are
 // specified in `providers`.
@@ -83,25 +83,15 @@ export class InvalidationJobService {
 	 * @returns whether or not creation succeeded.
 	 */
 	public async createInvalidationJob(job: RequestInvalidationJob): Promise<ResponseInvalidationJob> {
-		let deliveryService;
-		if (typeof job.deliveryService === "number") {
-			const ds = (await this.dsService.getDeliveryServices()).find(d=>d.id === job.deliveryService);
-			if (!ds) {
-				throw new Error(`no such Delivery Service: #${job.deliveryService}`);
-			}
-			deliveryService = ds.xmlId;
-		} else {
-			deliveryService = job.deliveryService;
-		}
 		const ret = {
 			// Yes, this is ill-formed.
 			assetUrl: job.regex,
 			createdBy: "test-admin",
-			deliveryService,
+			deliveryService: job.deliveryService,
 			id: ++this.idCounter,
-			keyword: JobType.PURGE,
-			parameters: typeof job.ttl === "string" ? job.ttl : `${job.ttl}h`,
-			startTime: job.startTime instanceof Date ? job.startTime : new Date(job.startTime)
+			invalidationType: job.invalidationType,
+			startTime: job.startTime instanceof Date ? job.startTime : new Date(job.startTime),
+			ttlHours: job.ttlHours
 		};
 		this.jobs.push(ret);
 		return ret;

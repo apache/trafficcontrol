@@ -113,9 +113,10 @@ describe("InvalidationJobsComponent", () => {
 		const jobService = TestBed.inject(InvalidationJobService);
 		job = await jobService.createInvalidationJob({
 			deliveryService: ds.xmlId,
+			invalidationType: JobType.REFRESH,
 			regex: "/",
 			startTime: new Date(),
-			ttl: 178
+			ttlHours: 178
 		});
 
 		fixture = TestBed.createComponent(InvalidationJobsComponent);
@@ -138,9 +139,9 @@ describe("InvalidationJobsComponent", () => {
 			createdBy: "",
 			deliveryService: "",
 			id: -1,
-			keyword: JobType.PURGE,
-			parameters: "TTL:1h",
-			startTime: new Date(component.now)
+			invalidationType: JobType.REFETCH,
+			startTime: new Date(component.now),
+			ttlHours: 1
 		};
 		j.startTime.setDate(j.startTime.getDate()-1);
 		expect(component.isInProgress(j)).toBeFalse();
@@ -157,21 +158,13 @@ describe("InvalidationJobsComponent", () => {
 			createdBy: "also doesn't matter",
 			deliveryService: "doesn't matter either",
 			id: -1,
-			keyword: JobType.PURGE,
-			parameters: "",
+			invalidationType: JobType.REFETCH,
 			startTime: new Date(0),
+			ttlHours: 178,
 		};
-		expect(()=>component.endDate(j)).toThrow();
-
-		j.parameters = "TTL";
-		expect(()=>component.endDate(j)).toThrow();
-
-		j.parameters = "TTL:not a number";
-		expect(()=>component.endDate(j)).toThrow();
 
 		const expected = new Date(0);
 		expected.setHours(expected.getHours()+178);
-		j.parameters = "TTL:178h";
 		expect(component.endDate(j)).toEqual(expected);
 	});
 

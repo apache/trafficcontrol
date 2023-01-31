@@ -117,22 +117,8 @@ export class InvalidationJobsComponent implements OnInit {
 	 * @returns The date at which the Job will stop being in effect.
 	 */
 	public endDate(j: ResponseInvalidationJob): Date {
-		if (!j.parameters) {
-			throw new Error("cannot get end date for job with no parameters");
-		}
-		const tmp = j.parameters.replace(/h$/, "").split(":");
-		if (tmp.length !== 2) {
-			throw new Error(`Malformed job parameters: "${j.parameters}" (id: ${j.id})`);
-		}
-		const ttl = parseInt(tmp[1], 10);
-		if (isNaN(ttl)) {
-			throw new Error(`Invalid TTL: "${tmp[1]}" (job id: ${j.id})`);
-		}
-		// I don't know why this is necessary, because Date.getTime *says* it
-		// returns a number, but if you take away the type of `start` here, it
-		// fails to compile.
-		const start: number = j.startTime.getTime();
-		return new Date(start + ttl * 60 * 60 * 1000);
+		const start = j.startTime.getTime();
+		return new Date(start + j.ttlHours * 60 * 60 * 1000);
 	}
 
 	/**
