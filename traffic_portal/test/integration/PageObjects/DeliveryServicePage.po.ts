@@ -76,11 +76,11 @@ export class DeliveryServicePage extends BasePage {
 			break;
 
 			case "DNS":
-				ps.push(element(by.name("capability")).click());
+				ps.push(element(by.name("capability-0")).click());
 			case "HTTP":
 				ps.push(
 					element(by.name("orgServerFqdn")).sendKeys("http://origin.infra.ciab.test"),
-					element(by.name("capability")).click()
+					element(by.name("capability-0")).click()
 				);
 			case "STEERING":
 				ps.push(element(by.name("protocol")).sendKeys("HTTP"));
