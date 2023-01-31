@@ -37,9 +37,10 @@
  * @param {import("../../../api/TenantService")} tenantService
  * @param {import("../../../models/PropertiesModel")} propertiesModel
  * @param {import("../../../models/UserModel")} userModel
+ * @param {import("../../../api/ServerCapabilityService")} serverCapabilityService
  * @param {import("../../../api/ServiceCategoryService")} serviceCategoryService
  */
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serverCapabilityService, serviceCategoryService) {
 
 	/**
 	 * This is used to cache TLS version settings when the checkbox is toggled.
@@ -195,6 +196,16 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		const tenant = tenants.find(t => t.id === userModel.user.tenantId);
 		$scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant?.parentId, []);
 		tenantUtils.addLevels($scope.tenants);
+	}
+
+	$scope.selectedCapabilities = {};
+	/**
+	 * Updates the server Capabilities on the $scope.
+	 * @returns {Promise<void>}
+	 */
+	async function getRequiredCapabilities() {
+		$scope.requiredCapabilities = await serverCapabilityService.getServerCapabilities();
+		$scope.selectedCapabilities = Object.fromEntries($scope.requiredCapabilities.map(dsc => [dsc.name, $scope.deliveryService.requiredCapabilities.includes(dsc.name)]))
 	}
 
 	/**
@@ -469,6 +480,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	getCDNs();
 	getProfiles();
 	getTenants();
+	getRequiredCapabilities();
 	getServiceCategories();
 	getSteeringTargets();
 	if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
@@ -488,5 +500,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 };
 
-FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serviceCategoryService"];
+FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serverCapabilityService", "serviceCategoryService"];
 module.exports = FormDeliveryServiceController;
