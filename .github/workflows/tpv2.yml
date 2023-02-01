@@ -213,27 +213,28 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install postgresql-client gettext-base
       - name: Hash TO user password
+        env:
+          PYTHONPATH: traffic_ops/install/bin
         run: |2
-          password_hash="$(<<PYTHON_COMMANDS PYTHONPATH="${GITHUB_WORKSPACE}/traffic_ops/install/bin" python
-          import _postinstall
-          print(_postinstall.hash_pass('${{ env.PGPASSWORD }}12'))
+          password_hash="$(<<PYTHON_COMMANDS python
+          from _postinstall import hash_pass
+          print(hash_pass('${{ env.PGPASSWORD }}12'))
           PYTHON_COMMANDS
           )" &&
           echo "TO_USER_PASSWORD_HASH=${password_hash}" >> '${{ github.env }}'
-      - name: Get admin role
-        run: |2
-          admin_role_id="$(<<QUERY psql -t
-          SELECT r.id
-          FROM public."role" r
-          WHERE r."name" = 'admin'
-          QUERY
-          )" &&
-          echo "TO_ADMIN_ROLE_ID=${admin_role_id}" >> '${{ github.env }}'
       - name: Create admin user
         run: |2
           <<QUERY psql
           INSERT INTO tm_user (username, role, tenant_id, local_passwd)
-          VALUES ('admin', ${{ env.TO_ADMIN_ROLE_ID }}, 1, '${{ env.TO_USER_PASSWORD_HASH }}');
+          VALUES ('admin', (
+            SELECT id
+            FROM "role"
+            WHERE "name" = 'admin'
+          ), (
+            SELECT id
+            FROM tenant
+            WHERE "name" = 'root'
+          ), '${{ env.TO_USER_PASSWORD_HASH }}');
           QUERY
       - name: Create SSL Certificates and AES key
         run: |
