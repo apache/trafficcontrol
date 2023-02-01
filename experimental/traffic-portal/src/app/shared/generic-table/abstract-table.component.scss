@@ -1,0 +1,49 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+ag-grid-angular {
+	width: 80vw;
+	margin: 10px auto 0;
+	height: 85vh;
+}
+
+@media(max-width: 1230px) {
+	mat-card > div {
+		width: 75%;
+	}
+}
+
+@media(max-width: 630px) {
+	mat-card > div {
+		width: 75%;
+		margin: auto;
+		position: fixed;
+		left: 12.5%;
+	}
+
+	ag-grid-angular {
+		margin: 25px auto 0;
+		width: 95%;
+	}
+}
+
+@media(max-width: 480px) {
+	mat-card > div {
+		left: 7px;
+		width: calc(100vw - 4em);
+	}
+
+	ag-grid-angular {
+		width: 100%;
+	}
+}
