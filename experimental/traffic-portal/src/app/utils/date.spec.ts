@@ -82,6 +82,15 @@ describe("date utilities", () => {
 		expect(parsedDate.getUTCMilliseconds()).toBe(678);
 	});
 
+	it("leaves unparsable dates alone", () => {
+		const data = {
+			lastAuthenticated: "not a valid date",
+			lastUpdated: "9999-99-99T99:99:99.99Z"
+		};
+		const parsed = JSON.parse(JSON.stringify(data), dateReviver);
+		expect(parsed).toEqual(data);
+	});
+
 	it("parses HTTP header dates", () => {
 		let date = "Sun, 02 Jan 2022 03:04:05 GMT";
 		let parsed = parseHTTPDate(date);

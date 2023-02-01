@@ -13,6 +13,8 @@
 * limitations under the License.
 */
 
+import { environment } from "src/environments/environment";
+
 /**
  * MalformedDateError is an Error that provides the raw date that caused it as a
  * readable property. Other than that, it's just like an Error.
@@ -28,8 +30,44 @@ export class MalformedDateError extends Error {
 	}
 }
 
-/** Matches both the legacy, custom TO timestamp strings and RFC3339 with optional sub-second precision.  */
+/**
+ * Matches both the legacy, custom TO timestamp strings and RFC3339 with
+ * optional sub-second precision. This is, unfortunately, necessary, because
+ * Chrome's overly permissive Date parser will attempt to recognize strings
+ * containing numbers as years, and parse them as 01-01 of that year at
+ * 00:00:00.
+ */
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)(?:[\+-]00|Z)$/;
+
+const knownDateProps = new Set([
+	"configApplyTime",
+	"configUpdateTime",
+	"createdAt",
+	"effectiveDate",
+	"expiration",
+	"lastAuthenticated",
+	"lastUpdated",
+	"registrationSent",
+	"revalApplyTime",
+	"revalUpdateTime",
+	"startTime",
+	"statusLastUpdated",
+	"summaryTime",
+
+	// UNIX Epoch timestamp in seconds
+	// "date",
+
+	// UNIX Epoch timestamp in seconds - but as a string
+	// "expirationDate",
+	// "inceptionDate",
+]);
+
+const exhaustiveCheck = (_: PropertyKey, v: unknown): v is string => typeof(v) === "string" && datePattern.test(v);
+const restrictiveCheck = (k: PropertyKey, v: unknown): v is string => knownDateProps.has(String(k)) && typeof(v) === "string";
+
+// TODO: figure out a way to do this that doesn't involve recalculating on every
+// property of every object on every API call, and yet allows testing.
+const check = environment.useExhaustiveDates ? exhaustiveCheck : restrictiveCheck;
 
 /**
  * dateReviver is meant to be passed into a JSON.parse call as a "reviver"
@@ -55,35 +93,21 @@ const datePattern = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2}(?:\.\d+)
  * console.log(typeof parsed.notADate); // prints "string"
  * console.log(parsed.myDate instanceof Date); // prints true
  *
- * @param _ The name of the property being parsed - unused here.
+ * @param k The name of the property being parsed.
  * @param v The value of the property being parsed.
  * @returns Either the parsed date, or just whatever the value is if it's not a
  * string that looks like a date.
  */
-export function dateReviver(_: PropertyKey, v: unknown): Date | unknown {
-	if (typeof v !== "string") {
+export function dateReviver(k: PropertyKey, v: unknown): Date | unknown {
+	if (!check(k, v)) {
 		return v;
 	}
-	const matches = datePattern.exec(v.trim());
-	if (!matches) {
-		return v;
-	}
-	const [year, month, day, hour, minute] = matches.slice(1, 6).map(Number);
-	let seconds;
-	let ms = 0;
 
-	if (matches[6].includes(".")) {
-		const [secondsStr, msStr] = matches[6].split(".", 2);
-		seconds = Number(secondsStr);
-		ms = Number(msStr.slice(0, 3));
-	} else {
-		seconds = Number(matches[6]);
+	const date = new Date(v.replace(" ", "T").replace("+00", "Z"));
+	if (!Number.isNaN(date.valueOf())) {
+		return date;
 	}
-
-	const date = new Date(0);
-	date.setUTCFullYear(year, month-1, day);
-	date.setUTCHours(hour, minute, seconds, ms);
-	return date;
+	return v;
 }
 
 /** A MonthName is the abbreviated name of a month as it appears in HTTP header dates. */

@@ -24,4 +24,5 @@ export const environment = {
 	apiVersion: "4.0",
 	customModule: false,
 	production: false,
+	useExhaustiveDates: true
 };
