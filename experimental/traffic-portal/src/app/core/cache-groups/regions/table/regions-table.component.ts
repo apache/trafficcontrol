@@ -13,15 +13,14 @@
 */
 
 import { Component, OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
-import { BehaviorSubject } from "rxjs";
 import { Region, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { AbstractTableComponent } from "src/app/shared/generic-table/abstract-table.component";
 import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -30,35 +29,12 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-regions",
-	styleUrls: ["./regions-table.component.scss"],
-	templateUrl: "./regions-table.component.html"
+	styleUrls: ["../../../../shared/generic-table/abstract-table.component.scss"],
+	templateUrl: "../../../../shared/generic-table/abstract-table.component.html",
 })
-export class RegionsTableComponent implements OnInit {
+export class RegionsTableComponent extends AbstractTableComponent<ResponseRegion> implements OnInit {
 	/** List of regions */
-	public regions: Promise<Array<ResponseRegion>>;
-
-	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: NavigationService,
-		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
-		this.fuzzySubject = new BehaviorSubject<string>("");
-		this.regions = this.api.getRegions();
-		this.headerSvc.headerTitle.next("Regions");
-	}
-
-	/** Initializes table data, loading it from Traffic Ops. */
-	public ngOnInit(): void {
-		this.route.queryParamMap.subscribe(
-			m => {
-				const search = m.get("search");
-				if (search) {
-					this.fuzzControl.setValue(decodeURIComponent(search));
-					this.updateURL();
-				}
-			},
-			e => {
-				console.error("Failed to get query parameters:", e);
-			}
-		);
-	}
+	public data: Promise<Array<ResponseRegion>>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
@@ -81,6 +57,24 @@ export class RegionsTableComponent implements OnInit {
 		}
 	];
 
+	public readonly context = "regions";
+	public readonly tableName = "Regions";
+
+	public override readonly fabTitle = "Add new Region";
+	public override readonly fabLink = "new";
+	public override readonly fabType = "link";
+
+	constructor(
+		route: ActivatedRoute,
+		headerSvc: NavigationService,
+		private readonly api: CacheGroupService,
+		private readonly dialog: MatDialog,
+		public readonly auth: CurrentUserService
+	) {
+		super(route, headerSvc);
+		this.data = this.api.getRegions();
+	}
+
 	/** Definitions for the context menu items (which act on augmented region data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseRegion>> = [
 		{
@@ -102,17 +96,6 @@ export class RegionsTableComponent implements OnInit {
 		}
 	];
 
-	/** A subject that child components can subscribe to for access to the fuzzy search query text */
-	public fuzzySubject: BehaviorSubject<string>;
-
-	/** Form controller for the user search input. */
-	public fuzzControl = new FormControl<string>("");
-
-	/** Update the URL's 'search' query parameter for the user's search input. */
-	public updateURL(): void {
-		this.fuzzySubject.next(this.fuzzControl.value ?? "");
-	}
-
 	/**
 	 * Handles a context menu event.
 	 *
@@ -127,10 +110,20 @@ export class RegionsTableComponent implements OnInit {
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
-						this.api.deleteRegion(data.id).then(async () => this.regions = this.api.getRegions());
+						this.api.deleteRegion(data.id).then(async () => this.data = this.api.getRegions());
 					}
 				});
 				break;
 		}
+	}
+
+	/**
+	 * Checks if the user has permission to use the Regions table FAB.
+	 *
+	 * @returns `true` if the user has permission to create Regions, `false`
+	 * otherwise.
+	 */
+	public override fabPermission(): boolean {
+		return this.auth.hasPermission("REGION:CREATE");
 	}
 }
