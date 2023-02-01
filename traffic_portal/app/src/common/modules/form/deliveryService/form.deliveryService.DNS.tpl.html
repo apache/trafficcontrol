@@ -555,6 +555,21 @@ under the License.
                             </aside>
                         </div>
                     </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.fqPacingRate), 'has-feedback': hasError(routingConfig.fqPacingRate)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="fqPacingRate">Fair Queueing Pacing Rate Bps<div class="helptooltip">
+                            <div class="helptext">The maximum bytes per second a cache will deliver on any single TCP connection. This uses the Linux kernel's Fair Queuing (<code>setsockopt(SO_MAX_PACING_RATE)</code>) to limit the rate of delivery.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="fqPacingRate" name="fqPacingRate" type="number" class="form-control" placeholder="Rate-limit connections to this Bytes per second" ng-model="deliveryService.fqPacingRate" step="1" min="0">
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.fqPacingRate, 'min')">Too Small (must be greater than or equal to 0)</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.fqPacingRate != dsCurrent.fqPacingRate">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
+                                <pre>{{::dsCurrent.fqPacingRate}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.signingAlgorithm), 'has-feedback': hasError(cacheConfig.signingAlgorithm)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="signingAlgorithm">Signing Algorithm<div class="helptooltip">
                             <div class="helptext">
@@ -1154,21 +1169,6 @@ under the License.
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.globalMaxTps}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.fqPacingRate), 'has-feedback': hasError(routingConfig.fqPacingRate)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="fqPacingRate">Fair Queueing Pacing Rate Bps<div class="helptooltip">
-                            <div class="helptext">The maximum bytes per second a cache will deliver on any single TCP connection. This uses the Linux kernel's Fair Queuing (<code>setsockopt(SO_MAX_PACING_RATE)</code>) to limit the rate of delivery.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="fqPacingRate" name="fqPacingRate" type="number" class="form-control" placeholder="Rate-limit connections to this Bytes per second" ng-model="deliveryService.fqPacingRate" step="1" min="0">
-                            <small class="input-error" ng-show="hasPropertyError(routingConfig.fqPacingRate, 'min')">Too Small (must be greater than or equal to 0)</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.fqPacingRate != dsCurrent.fqPacingRate">
-                                <h3 ng-if="open()">Current Value</h3>
-                                <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.fqPacingRate}}</pre>
                             </aside>
                         </div>
                     </div>
