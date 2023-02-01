@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"io"
 	"math"
 	"regexp"
@@ -73,7 +74,7 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 
 	ctx := pollCTX.(*poller.HTTPPollCtx)
 
-	via := ctx.HTTPHeader.Get("Via")
+	via := ctx.HTTPHeader.Get(rfc.Via)
 	if via != "" {
 		result := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
 		if len(result) > 0 {
@@ -104,7 +105,7 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 
 	statMap := sohData.Global
 
-	statMap["via"] = cacheName
+	statMap[rfc.Via] = cacheName
 
 	if stats.Loadavg, err = parseLoadAvg(statMap); err != nil {
 		return stats, nil, fmt.Errorf("Error parsing loadavg for cache '%s': %v", cacheName, err)

@@ -23,6 +23,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"io"
 	"strconv"
 	"strings"
@@ -128,7 +129,7 @@ func astatsCsvParseCsv(cacheName string, data io.Reader) (Statistics, map[string
 		return stats, nil, fmt.Errorf("cache '%s' had no interfaces", cacheName)
 	}
 
-	statMap["via"] = cacheName
+	statMap[rfc.Via] = cacheName
 
 	return stats, statMap, nil
 }

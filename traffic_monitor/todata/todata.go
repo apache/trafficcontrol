@@ -346,7 +346,7 @@ func getServerTypes(mc tc.TrafficMonitorConfigMap) (map[tc.CacheName]tc.CacheTyp
 	return serverTypes, nil
 }
 
-// getServerPartners gets the cache parners that have the same anycast VIP
+// getServerPartners gets the cache parners that have the same VIP
 func getServerParners(mc tc.TrafficMonitorConfigMap) map[tc.CacheName]map[tc.CacheName]bool {
 	serverPartners := map[tc.CacheName]map[tc.CacheName]bool{}
 

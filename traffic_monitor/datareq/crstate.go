@@ -122,6 +122,9 @@ func updateStatusAnycast(localStates peer.CRStatesThreadsafe, toData todata.TODa
 						if !partnerState.IsAvailable {
 							allIsAvailable = false
 						}
+						if !allAvailableV4 && !allAvailableV6 && !allIsAvailable {
+							break
+						}
 					}
 				}
 			}

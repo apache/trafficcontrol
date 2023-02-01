@@ -67,7 +67,7 @@ type AvailableStatus struct {
 	// Time of last poll
 	LastPoll time.Time
 	// Time of v6 last poll
-	LastPollv6 time.Time
+	LastPollV6 time.Time
 }
 
 // CacheAvailableStatuses is the available status of each cache.

@@ -21,6 +21,7 @@ package cache
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"io"
 	"time"
 
@@ -302,7 +303,7 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		handler.resultChan <- result
 		return
 	}
-	if value, ok := miscStats["via"]; ok {
+	if value, ok := miscStats[rfc.Via]; ok {
 		result.ID = fmt.Sprintf("%v", value)
 	}
 

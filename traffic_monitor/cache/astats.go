@@ -32,6 +32,7 @@ package cache
 import (
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"io"
 	"regexp"
 	"strings"
@@ -117,16 +118,16 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 		astats.Ats["system.proc.loadavg"] = astats.System.ProcLoadavg
 		astats.Ats["system.proc.net.dev"] = astats.System.ProcNetDev
 
-		via := ctx.HTTPHeader.Get("Via")
+		via := ctx.HTTPHeader.Get(rfc.Via)
 		if via != "" {
 			result := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
 			if len(result) > 0 {
-				astats.Ats["via"] = result[1]
+				astats.Ats[rfc.Via] = result[1]
 			}
 		}
 		return stats, astats.Ats, nil
 	} else if ctype == "text/csv" {
-		via := ctx.HTTPHeader.Get("Via")
+		via := ctx.HTTPHeader.Get(rfc.Via)
 		if via != "" {
 			result := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
 			if len(result) > 0 {
