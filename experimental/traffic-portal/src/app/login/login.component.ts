@@ -66,11 +66,15 @@ export class LoginComponent implements OnInit {
 		this.returnURL = params.get("returnUrl") ?? "core";
 		const token = params.get("token");
 		if (token) {
-			const response = await this.auth.login(token);
-			if (response) {
-				this.navSvc.headerHidden.next(false);
-				this.navSvc.sidebarHidden.next(false);
-				this.router.navigate(["/core/me"], {queryParams: {edit: true, updatePassword: true}});
+			try {
+				const response = await this.auth.login(token);
+				if (response) {
+					this.navSvc.headerHidden.next(false);
+					this.navSvc.sidebarHidden.next(false);
+					this.router.navigate(["/core/me"], {queryParams: {edit: true, updatePassword: true}});
+				}
+			} catch (e) {
+				console.error("token login failed:", e);
 			}
 		}
 	}
