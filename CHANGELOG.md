@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
-- [#7314](https://github.com/apache/trafficcontrol/pull/7314) *Traffic Portal* Added capability feature to Delivery Service Form (HTTP, DNS)
+- [#7314](https://github.com/apache/trafficcontrol/pull/7314) *Traffic Portal* Added capability feature to Delivery Service Form (HTTP, DNS).
 - [#7295](https://github.com/apache/trafficcontrol/pull/7295) *Traffic Portal* Added description and priority order for Layered Profile on server form.
 - [#6234](https://github.com/apache/trafficcontrol/issues/6234) *Traffic Ops, Traffic Portal* Added description field to Server Capabilities
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple servers per capability.
@@ -39,6 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7120](https://github.com/apache/trafficcontrol/pull/7120) *Docs* Update t3c documentation regarding parent.config parent_retry.
 
 ### Fixed
+- [#5557](https://github.com/apache/trafficcontrol/issues/5557) *Traffic Portal* Moved `Fair Queueing Pacing Rate Bps` DS field to `Cache Configuration Settings` section.
 - [#7252](https://github.com/apache/trafficcontrol/issues/7252) *Traffic Router* Fixed integer overflow for `czCount`, by resetting the count to max value when it overflows.
 - [#7221](https://github.com/apache/trafficcontrol/issues/7221) *Docs* Fixed request structure spec in cdn locks description in APIv4.
 - [#7225](https://github.com/apache/trafficcontrol/issues/7225) *Docs* Fixed docs for /roles response description in APIv4.
