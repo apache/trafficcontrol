@@ -12,7 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <mat-card>
-	<mat-card-content>
+	<tp-loading *ngIf="!server"></tp-loading>
+	<mat-card-content *ngIf="server">
 		<div class="actions-container" *ngIf="!isNew">
 			<button [disabled]="!isCache()" mat-button type="button">Manage Capabilities</button>
 			<button [disabled]="!isCache()" mat-button type="button">Manage Delivery Services</button>

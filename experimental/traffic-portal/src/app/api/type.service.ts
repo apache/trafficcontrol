@@ -67,12 +67,7 @@ export class TypeService extends APIService {
 	 * @returns The requested Types.
 	 */
 	public async getTypesInTable(useInTable: UseInTable): Promise<Array<TypeFromResponse>> {
-		return this.get<Array<TypeFromResponse>>("types", undefined, {useInTable}).toPromise().catch(
-			(e) => {
-				console.error("Failed to get Types:", e);
-				return [];
-			}
-		);
+		return this.get<Array<TypeFromResponse>>("types", undefined, {useInTable}).toPromise();
 	}
 
 	/**

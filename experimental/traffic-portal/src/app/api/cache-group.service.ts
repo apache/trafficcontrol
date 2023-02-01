@@ -84,12 +84,9 @@ export class CacheGroupService extends APIService {
 			if (resp.length !== 1) {
 				throw new Error(`Traffic Ops returned wrong number of results for Cache Group identifier: ${params}`);
 			}
-			const cg = resp[0];
-			//  lastUpdated comes in as a string
-			return {...cg, lastUpdated: new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"))};
+			return resp[0];
 		}
-		const r = await this.get<Array<ResponseCacheGroup>>(path).toPromise();
-		return r.map(cg => ({...cg, lastUpdated: new Date((cg.lastUpdated as unknown as string).replace("+00", "Z"))}));
+		return this.get<Array<ResponseCacheGroup>>(path).toPromise();
 	}
 
 	/**
@@ -249,14 +246,10 @@ export class CacheGroupService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			const r = await this.get<[ResponseDivision]>(path, undefined, params).toPromise();
-			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
+			return this.get<[ResponseDivision]>(path, undefined, params).toPromise();
 
 		}
-		const divisions = await this.get<Array<ResponseDivision>>(path).toPromise();
-		return divisions.map(
-			d => ({...d, lastUpdated: new Date((d.lastUpdated as unknown as string).replace("+00", "Z"))})
-		);
+		return this.get<Array<ResponseDivision>>(path).toPromise();
 	}
 
 	/**
@@ -267,11 +260,7 @@ export class CacheGroupService extends APIService {
 	 */
 	public async updateDivision(division: ResponseDivision): Promise<ResponseDivision> {
 		const path = `divisions/${division.id}`;
-		const response = await this.put<ResponseDivision>(path, division).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
+		return this.put<ResponseDivision>(path, division).toPromise();
 	}
 
 	/**
@@ -281,11 +270,7 @@ export class CacheGroupService extends APIService {
 	 * @returns The created division.
 	 */
 	public async createDivision(division: RequestDivision): Promise<ResponseDivision> {
-		const response = await this.post<ResponseDivision>("divisions", division).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
+		return this.post<ResponseDivision>("divisions", division).toPromise();
 	}
 
 	/**
@@ -321,13 +306,10 @@ export class CacheGroupService extends APIService {
 					params = {id: String(nameOrID)};
 			}
 			const r = await this.get<[ResponseRegion]>(path, undefined, params).toPromise();
-			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
+			return r[0];
 
 		}
-		const regions = await this.get<Array<ResponseRegion>>(path).toPromise();
-		return regions.map(
-			d => ({...d, lastUpdated: new Date((d.lastUpdated as unknown as string).replace("+00", "Z"))})
-		);
+		return this.get<Array<ResponseRegion>>(path).toPromise();
 	}
 
 	/**
@@ -338,11 +320,7 @@ export class CacheGroupService extends APIService {
 	 */
 	public async updateRegion(region: ResponseRegion): Promise<ResponseRegion> {
 		const path = `regions/${region.id}`;
-		const response = await this.put<ResponseRegion>(path, region).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
+		return this.put<ResponseRegion>(path, region).toPromise();
 	}
 
 	/**
@@ -352,11 +330,7 @@ export class CacheGroupService extends APIService {
 	 * @returns The created region.
 	 */
 	public async createRegion(region: RequestRegion): Promise<ResponseRegion> {
-		const response = await this.post<ResponseRegion>("regions", region).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
+		return this.post<ResponseRegion>("regions", region).toPromise();
 	}
 
 	/**
