@@ -271,18 +271,25 @@ func TestGetProfiles(t *testing.T) {
 
 	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{"profile", "name", "value"})
+	rows1 := sqlmock.NewRows([]string{"profile", "name", "value"})
 	for _, profile := range profiles {
 		for paramName, paramVal := range profile.Parameters {
-			rows = rows.AddRow(profile.Name, paramName, paramVal)
+			if profile.Name == "routerProfile" {
+				rows = rows.AddRow(profile.Name, paramName, paramVal)
+			} else if profile.Name == "cacheProfile" {
+				rows1 = rows1.AddRow(profile.Name, paramName, paramVal)
+			}
 		}
 	}
 
 	caches := []Cache{cache}
 	routers := []Router{router}
 
-	profileNames := []string{"cacheProfile"}
-
+	profileNames := []string{"routerProfile"}
 	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows)
+
+	profileNames = []string{"cacheProfile"}
+	mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows1)
 
 	dbCtx, f := context.WithTimeout(context.TODO(), time.Duration(10)*time.Second)
 	defer f()
@@ -494,19 +501,26 @@ func TestGetMonitoringJSON(t *testing.T) {
 		}
 
 		rows := sqlmock.NewRows([]string{"profile", "name", "value"})
+		rows1 := sqlmock.NewRows([]string{"profile", "name", "value"})
 		for _, profile := range profiles {
 			for paramName, paramVal := range profile.Parameters {
-				rows = rows.AddRow(profile.Name, paramName, paramVal)
+				if profile.Name == "routerProfile" {
+					rows = rows.AddRow(profile.Name, paramName, paramVal)
+				} else if profile.Name == "cacheProfile" {
+					rows1 = rows1.AddRow(profile.Name, paramName, paramVal)
+				}
 			}
 		}
 
 		// caches := []Cache{cache}
 		// routers := []Router{router}
 
-		profileNames := []string{"cacheProfile"}
-
+		profileNames := []string{"routerProfile"}
 		mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows)
 		resp.Response.Profiles = profiles
+
+		profileNames = []string{"cacheProfile"}
+		mock.ExpectQuery("SELECT").WithArgs(pq.Array(profileNames), CacheMonitorConfigFile).WillReturnRows(rows1)
 	}
 	{
 		//
