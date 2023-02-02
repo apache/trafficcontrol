@@ -712,11 +712,6 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			type: 2
 		},
 		{
-			getHref: ds => `#!/delivery-services/${ds.id}/required-server-capabilities?dsType=${ds.type}`,
-			text: "Manage Required Server Capabilities",
-			type: 2
-		},
-		{
 			getHref: ds => `#!/delivery-services/${ds.id}/servers?dsType=${ds.type}`,
 			text: "Manage Servers",
 			type: 2

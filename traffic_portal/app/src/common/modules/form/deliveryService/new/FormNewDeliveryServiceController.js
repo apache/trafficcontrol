@@ -155,6 +155,8 @@ var FormNewDeliveryServiceController = function(deliveryService, origin, topolog
 	 * @returns {Promise<void>}
 	 */
 	$scope.save = async function(deliveryService) {
+		deliveryService.requiredCapabilities = Object.entries($scope.selectedCapabilities).filter(sc => (sc[1])).map(sc => sc[0])
+
 		if (!$scope.restrictTLS) {
 			deliveryService.tlsVersions = null;
 		}
