@@ -370,3 +370,17 @@ input:checked + .slider::before {
 		text-shadow: none;
 	}
 }
+
+.checkbox-scroll-container {
+	max-height: 3.5em;
+	overflow-y: auto;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-content: space-between;
+
+	div {
+		min-width: 5em;
+		width: fit-content;
+	}
+}

@@ -21,7 +21,7 @@ import { GetResponseUser } from "trafficops-types";
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { orderBy } from "src/app/utils";
 
 import { UserRegistrationDialogComponent } from "./user-registration-dialog/user-registration-dialog.component";
@@ -239,7 +239,7 @@ export class UsersComponent implements OnInit {
 
 	constructor(
 		private readonly api: UserService,
-		private readonly headerSvc: TpHeaderService,
+		private readonly navSvc: NavigationService,
 		private readonly currentUserService: CurrentUserService,
 		private readonly dialog: MatDialog
 	) {
@@ -252,7 +252,7 @@ export class UsersComponent implements OnInit {
 		this.roles = new Map((await this.api.getRoles()).map(r => [r.id, r.name]));
 		this.users = orderBy(await this.api.getUsers(), "fullName");
 		this.loading = false;
-		this.headerSvc.headerTitle.next("Users");
+		this.navSvc.headerTitle.next("Users");
 	}
 
 	/**

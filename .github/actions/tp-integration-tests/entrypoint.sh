@@ -54,13 +54,21 @@ export PGPORT="5432"
 to_admin_username="$(jq -r '.params.login.username' "${GITHUB_WORKSPACE}/traffic_portal/test/integration/config.json")"
 to_admin_password="$(jq -r '.params.login.password' "${GITHUB_WORKSPACE}/traffic_portal/test/integration/config.json")"
 password_hash="$(<<PYTHON_COMMANDS PYTHONPATH="${GITHUB_WORKSPACE}/traffic_ops/install/bin" python
-import _postinstall
-print(_postinstall.hash_pass('${to_admin_password}'))
+from _postinstall import hash_pass
+print(hash_pass('${to_admin_password}'))
 PYTHON_COMMANDS
 )"
 <<QUERY psql
 INSERT INTO tm_user (username, role, tenant_id, local_passwd)
-  VALUES ('${to_admin_username}', 1, 1,
+	VALUES ('${to_admin_username}', (
+		SELECT id
+		FROM "role"
+		WHERE "name" = 'admin'
+	), (
+		SELECT id
+		FROM tenant
+		WHERE "name" = 'root'
+	),
     '${password_hash}'
   );
 QUERY

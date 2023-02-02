@@ -19,9 +19,9 @@ import { ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
 import { RegionDetailComponent } from "src/app/core/cache-groups/regions/detail/region-detail.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
-describe("DetailComponent", () => {
+describe("RegionDetailComponent", () => {
 	let component: RegionDetailComponent;
 	let fixture: ComponentFixture<RegionDetailComponent>;
 	let route: ActivatedRoute;
@@ -32,7 +32,7 @@ describe("DetailComponent", () => {
 		await TestBed.configureTestingModule({
 			declarations: [ RegionDetailComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
-			providers: [ { provide: TpHeaderService, useValue: headerSvc } ]
+			providers: [ { provide: NavigationService, useValue: headerSvc } ]
 		})
 			.compileComponents();
 

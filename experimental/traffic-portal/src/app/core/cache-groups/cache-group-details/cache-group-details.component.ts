@@ -21,7 +21,7 @@ import { LocalizationMethod, localizationMethodToString, TypeFromResponse, type 
 
 import { CacheGroupService, TypeService } from "src/app/api";
 import { DecisionDialogComponent, type DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * The controller for the form page for creating/updating a Cache Group.
@@ -84,7 +84,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 		private readonly typesAPI: TypeService,
 		private readonly location: Location,
 		private readonly dialog: MatDialog,
-		private readonly header: TpHeaderService
+		private readonly navSvc: NavigationService
 	) {
 	}
 
@@ -133,7 +133,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 	 */
 	private setTitle(): void {
 		const title = this.new ? "New Cache Group" : `Cache Group: ${this.cacheGroup.name}`;
-		this.header.headerTitle.next(title);
+		this.navSvc.headerTitle.next(title);
 	}
 
 	/**

@@ -25,10 +25,10 @@ import { AlertService } from "src/app/shared/alert/alert.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
-import { DsCardComponent } from "../ds-card/ds-card.component";
+import { DsCardComponent } from "../deliveryservice/ds-card/ds-card.component";
 
 import { DashboardComponent } from "./dashboard.component";
 
@@ -40,7 +40,7 @@ describe("DashboardComponent", () => {
 	beforeEach(async () => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"],
 			{capabilities: new Set<string>()});
-		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+		const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 
 		await TestBed.configureTestingModule({
 			declarations: [
@@ -62,7 +62,7 @@ describe("DashboardComponent", () => {
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				AlertService,
-				{ provide: TpHeaderService, useValue: headerSvc}
+				{ provide: NavigationService, useValue: navSvc}
 			]
 		}).compileComponents();
 		const service = TestBed.inject(DeliveryServiceService);

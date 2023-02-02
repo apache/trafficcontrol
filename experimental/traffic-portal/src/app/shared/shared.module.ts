@@ -18,6 +18,8 @@ import { MatMenuModule } from "@angular/material/menu";
 import { RouterModule } from "@angular/router";
 
 import { AppUIModule } from "src/app/app.ui.module";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
+import { TpSidebarComponent } from "src/app/shared/navigation/tp-sidebar/tp-sidebar.component";
 
 import { AlertComponent } from "./alert/alert.component";
 import { LinechartDirective } from "./charts/linechart.directive";
@@ -34,7 +36,6 @@ import { EmailCellRendererComponent } from "./table-components/email-cell-render
 import { SSHCellRendererComponent } from "./table-components/ssh-cell-renderer/ssh-cell-renderer.component";
 import { TelephoneCellRendererComponent } from "./table-components/telephone-cell-renderer/telephone-cell-renderer.component";
 import { UpdateCellRendererComponent } from "./table-components/update-cell-renderer/update-cell-renderer.component";
-import { TpHeaderComponent } from "./tp-header/tp-header.component";
 import { TreeSelectComponent } from "./tree-select/tree-select.component";
 import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 
@@ -46,6 +47,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		AlertComponent,
 		LoadingComponent,
 		TpHeaderComponent,
+		TpSidebarComponent,
 		GenericTableComponent,
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
@@ -64,6 +66,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		AlertComponent,
 		LoadingComponent,
 		TpHeaderComponent,
+		TpSidebarComponent,
 		GenericTableComponent,
 		BooleanFilterComponent,
 		UpdateCellRendererComponent,
@@ -80,7 +83,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 	],
 	providers: [
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
-		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
+		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor }
 	]
 })
 export class SharedModule { }

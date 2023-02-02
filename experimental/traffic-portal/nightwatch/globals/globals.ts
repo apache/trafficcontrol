@@ -16,22 +16,24 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
-import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroupDetails";
-import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroupsTable";
-import type { ChangeLogsPageObject } from "nightwatch/page_objects/changeLogs";
+import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
+import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
+import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGroups/divisionDetail";
+import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
+import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
+import type { RegionsPageObject } from "nightwatch/page_objects/cacheGroups/regionsTable";
 import type { CommonPageObject } from "nightwatch/page_objects/common";
-import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServiceCard";
-import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServiceDetail";
-import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServiceInvalidationJobs";
-import type { DivisionDetailPageObject } from "nightwatch/page_objects/divisionDetail";
-import type { DivisionsPageObject } from "nightwatch/page_objects/divisionsTable";
+import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceCard";
+import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
+import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceInvalidationJobs";
 import type { LoginPageObject } from "nightwatch/page_objects/login";
-import type { RegionDetailPageObject } from "nightwatch/page_objects/regionDetail";
-import type { RegionsPageObject } from "nightwatch/page_objects/regionsTable";
-import type { ServersPageObject } from "nightwatch/page_objects/servers";
-import type { TenantDetailPageObject } from "nightwatch/page_objects/tenantDetail";
-import type { TenantsPageObject } from "nightwatch/page_objects/tenants";
-import type { UsersPageObject } from "nightwatch/page_objects/users";
+import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
+import type { PhysLocTablePageObject } from "nightwatch/page_objects/servers/physLocTable";
+import type { ServersPageObject } from "nightwatch/page_objects/servers/servers";
+import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
+import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
+import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
+import type { UsersPageObject } from "nightwatch/page_objects/users/users";
 import {
 	CDN,
 	GeoLimit,
@@ -50,7 +52,9 @@ import {
 	ResponseRegion,
 	RequestRegion,
 	RequestCacheGroup,
-	ResponseCacheGroup
+	ResponseCacheGroup,
+	ResponsePhysicalLocation,
+	RequestPhysicalLocation
 } from "trafficops-types";
 
 declare module "nightwatch" {
@@ -58,22 +62,32 @@ declare module "nightwatch" {
 	 * Defines the global nightwatch browser type with our types mixed in.
 	 */
 	export interface NightwatchCustomPageObjects {
-		cacheGroupDetails: () => CacheGroupDetailPageObject;
-		cacheGroupsTable: () => CacheGroupsPageObject;
 		common: () => CommonPageObject;
-		changeLogs: () => ChangeLogsPageObject;
-		deliveryServiceCard: () => DeliveryServiceCardPageObject;
-		deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
-		deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
-		divisionDetail: () => DivisionDetailPageObject;
-		divisionsTable: () => DivisionsPageObject;
+		cacheGroups: {
+			cacheGroupDetails: () => CacheGroupDetailPageObject;
+			cacheGroupsTable: () => CacheGroupsPageObject;
+			divisionDetail: () => DivisionDetailPageObject;
+			divisionsTable: () => DivisionsPageObject;
+			regionDetail: () => RegionDetailPageObject;
+			regionsTable: () => RegionsPageObject;
+		};
+		deliveryServices: {
+			deliveryServiceCard: () => DeliveryServiceCardPageObject;
+			deliveryServiceDetail: () => DeliveryServiceDetailPageObject;
+			deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
+		};
 		login: () => LoginPageObject;
-		regionDetail: () => RegionDetailPageObject;
-		regionsTable: () => RegionsPageObject;
-		servers: () => ServersPageObject;
-		tenants: () => TenantsPageObject;
-		tenantDetail: () => TenantDetailPageObject;
-		users: () => UsersPageObject;
+		servers: {
+			physLocDetail: () => PhysLocDetailPageObject;
+			physLocTable: () => PhysLocTablePageObject;
+			servers: () => ServersPageObject;
+		};
+		users: {
+			changeLogs: () => ChangeLogsPageObject;
+			tenants: () => TenantsPageObject;
+			tenantDetail: () => TenantDetailPageObject;
+			users: () => UsersPageObject;
+		};
 	}
 
 	/**
@@ -95,12 +109,13 @@ declare module "nightwatch" {
 export interface CreatedData {
 	cacheGroup: ResponseCacheGroup;
 	cdn: ResponseCDN;
+	division: ResponseDivision;
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
+	physLoc: ResponsePhysicalLocation;
+	region: ResponseRegion;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
-	division: ResponseDivision;
-	region: ResponseRegion;
 }
 
 const testData = {};
@@ -279,6 +294,25 @@ const globals = {
 			const responseCG: ResponseCacheGroup = resp.data.response;
 			console.log("Successfully created Cache Group:", responseCG);
 			data.cacheGroup = responseCG;
+
+			const physLoc: RequestPhysicalLocation = {
+				address: "street",
+				city: "city",
+				comments: "someone set us up the bomb",
+				email: "email@test.com",
+				name: `phys${globals.uniqueString}`,
+				phone: "111-867-5309",
+				poc: "me",
+				regionId: respRegion.id,
+				shortName: `short${globals.uniqueString}`,
+				state: "CA",
+				zip: "80000"
+			};
+			resp = await client.post(`${apiUrl}/phys_locations`, JSON.stringify(physLoc));
+			const respPhysLoc: ResponsePhysicalLocation = resp.data.response;
+			respPhysLoc.region = respRegion.name;
+			console.log(`Successfully created Phys Loc ${respPhysLoc.name}`);
+			data.physLoc = respPhysLoc;
 		} catch(e) {
 			console.error((e as AxiosError).message);
 			throw e;

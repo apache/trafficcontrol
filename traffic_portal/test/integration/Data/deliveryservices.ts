@@ -127,6 +127,16 @@ export const deliveryservices = {
 			]
 		},
 		{
+			action: "CreateServerCapabilities",
+			route: "/server_capabilities",
+			method: "post",
+			data: [
+				{
+					name: "DSTestCap"
+				}
+			]
+		},
+		{
 			action: "CreateDeliveryServices",
 			route: "/deliveryservices",
 			method: "post",
@@ -151,6 +161,7 @@ export const deliveryservices = {
 					rangeRequestHandling: 0,
 					regional: false,
 					regionalGeoBlocking: false,
+					requiredCapabilities: ["DSTestCap"],
 					tenantId: 0,
 					typeId: 1,
 					xmlId: "dstestro1",
@@ -168,16 +179,6 @@ export const deliveryservices = {
 							replace: "cdnId"
 						}
 					]
-				}
-			]
-		},
-		{
-			action: "CreateServerCapabilities",
-			route: "/server_capabilities",
-			method: "post",
-			data: [
-				{
-					name: "DSTestCap"
 				}
 			]
 		},
@@ -357,13 +358,6 @@ export const deliveryservices = {
 					validationMessage: "server assignments complete"
 				}
 			],
-			assignRequiredCapabilities: [
-				{
-					rcName: "DSTestCap",
-					xmlID: "tpdservice2",
-					validationMessage: "This endpoint is deprecated, please use the deliveryservices endpoint instead"
-				}
-			],
 			remove: [
 				{
 					name: "tpdservice1",
@@ -406,13 +400,6 @@ export const deliveryservices = {
 					serverHostname: "DSTest",
 					xmlID: "dstestro1",
 					validationMessage: "missing required Permissions: SERVER:UPDATE, DELIVERY-SERVICE:UPDATE"
-				}
-			],
-			assignRequiredCapabilities: [
-				{
-					rcName: "DSTestCap",
-					xmlID: "dstestro1",
-					validationMessage: "missing required Permissions: DELIVERY-SERVICE:UPDATE"
 				}
 			],
 			remove: [
@@ -463,13 +450,6 @@ export const deliveryservices = {
 					serverHostname: "DSTest",
 					xmlID: "opTPServiceNew1",
 					validationMessage: "server assignments complete"
-				}
-			],
-			assignRequiredCapabilities: [
-				{
-					rcName: "DSTestCap",
-					xmlID: "optpdservice2",
-					validationMessage: "This endpoint is deprecated, please use the deliveryservices endpoint instead"
 				}
 			],
 			remove: [

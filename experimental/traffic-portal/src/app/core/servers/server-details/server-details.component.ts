@@ -21,7 +21,7 @@ import type { ResponseCacheGroup, ResponseCDN } from "trafficops-types";
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
 import { DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
 /**
@@ -136,7 +136,7 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly profileService: ProfileService,
 		private readonly typeService: TypeService,
 		private readonly physlocService: PhysicalLocationService,
-		private readonly headerSvc: TpHeaderService
+		private readonly navSvc: NavigationService
 	) {
 		this.server = DUMMY_SERVER;
 	}
@@ -195,7 +195,7 @@ export class ServerDetailsComponent implements OnInit {
 			this.serverService.getServers(Number(ID)).then(
 				s => {
 					this.server = s;
-					this.headerSvc.headerTitle.next(`Server #${this.server.id}`);
+					this.navSvc.headerTitle.next(`Server #${this.server.id}`);
 				}
 			).catch(
 				e => {
@@ -214,7 +214,7 @@ export class ServerDetailsComponent implements OnInit {
 				mtu: null,
 				name: "",
 			}];
-			this.headerSvc.headerTitle.next("New Server");
+			this.navSvc.headerTitle.next("New Server");
 		}
 	}
 

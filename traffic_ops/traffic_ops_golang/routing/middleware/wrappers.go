@@ -39,6 +39,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
+
+	"github.com/lestrrat-go/jwx/jwt"
 )
 
 // DefaultRequestTimeout is the default request timeout, if no timeout is configured.
@@ -188,6 +190,32 @@ func GetWrapAccessLog(secret string) Middleware {
 	}
 }
 
+func getCookieToken(r *http.Request) string {
+	cookie, err := r.Cookie(tocookie.Name)
+	if err == nil && cookie != nil {
+		return cookie.Value
+	} else if r.Header.Get(rfc.Cookie) != "" && strings.Contains(r.Header.Get(rfc.Cookie), tocookie.AccessToken) {
+		cookie, err := r.Cookie(tocookie.AccessToken)
+		if err == nil && cookie != nil {
+			decodedToken, err := jwt.Parse([]byte(cookie.Value))
+			if err == nil && cookie != nil {
+				return fmt.Sprintf("%s", decodedToken.PrivateClaims()[tocookie.MojoCookie])
+			}
+		}
+	} else if r.Header.Get(rfc.Authorization) != "" && strings.Contains(r.Header.Get(rfc.Authorization), tocookie.BearerToken) {
+		givenTokenSplit := strings.Split(r.Header.Get(rfc.Authorization), " ")
+		if len(givenTokenSplit) < 2 {
+			return ""
+		}
+		decodedToken, err := jwt.Parse([]byte(givenTokenSplit[1]))
+		if err == nil && decodedToken != nil {
+			return fmt.Sprintf("%s", decodedToken.PrivateClaims()[tocookie.MojoCookie])
+		}
+		return givenTokenSplit[1]
+	}
+	return ""
+}
+
 // WrapAccessLog takes the cookie secret and a http.Handler, and returns a HandlerFunc which writes to the Access Log (which is the lib/go-log EventLog) after the HandlerFunc finishes.
 // This is not a Middleware, because it needs the secret as a parameter. For a Middleware, see GetWrapAccessLog.
 func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
@@ -195,12 +223,12 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		var imsType = NONIMS
 		iw := &util.Interceptor{W: w}
 		user := "-"
-		cookie, err := r.Cookie(tocookie.Name)
-		if err == nil && cookie != nil {
-			cookie, userErr, sysErr := tocookie.Parse(secret, cookie.Value)
-			if userErr == nil && sysErr == nil {
-				user = cookie.AuthData
-			}
+		cookieToken := getCookieToken(r)
+		cookie, userErr, sysErr := tocookie.Parse(secret, cookieToken)
+		if userErr == nil && sysErr == nil {
+			user = cookie.AuthData
+		} else {
+			log.Errorf("Error retrieving user from cookie: User Error: %v System Error: %v", userErr, sysErr)
 		}
 		start := time.Now()
 		defer func() {

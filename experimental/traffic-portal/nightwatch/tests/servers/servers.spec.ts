@@ -14,7 +14,7 @@
 
 describe("Servers Spec", () => {
 	it("Filter by hostname", async () => {
-		const page = browser.page.servers();
+		const page = browser.page.servers.servers();
 		page.navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		page.section.serversTable.searchText("edge");

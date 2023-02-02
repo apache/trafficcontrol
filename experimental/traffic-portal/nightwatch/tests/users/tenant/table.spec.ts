@@ -14,7 +14,7 @@
 
 describe("Tenants Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.tenants().navigate()
+		browser.page.users.tenants().navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);

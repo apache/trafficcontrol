@@ -44,6 +44,7 @@ const (
 	Location           = "Location"            // RFC7231§7.1.2
 	Authorization      = "Authorization"       // RFC7235§4.2
 	Via                = "Via"                 // RFC3261§8.1.1.7
+	Cookie             = "Cookie"              // RFC7873
 )
 
 // These are (some) valid values for content encoding and MIME types, for

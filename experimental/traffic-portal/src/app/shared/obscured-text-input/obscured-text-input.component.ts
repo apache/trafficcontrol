@@ -230,9 +230,9 @@ export class ObscuredTextInputComponent implements OnDestroy, MatFormFieldContro
 
 	constructor(
 		private readonly focusMonitor: FocusMonitor,
-		@Optional() @Self() public ngControl: NgControl,
-		@Optional() public parentFormField: MatFormField,
 		public readonly elementRef: ElementRef,
+		@Optional() @Self() public ngControl: NgControl | null,
+		@Optional() public parentFormField: MatFormField | null,
 	) {
 		if (this.ngControl !== null) {
 			this.ngControl.valueAccessor = this;

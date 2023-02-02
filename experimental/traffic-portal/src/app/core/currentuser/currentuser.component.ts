@@ -19,8 +19,8 @@ import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { UserService } from "src/app/api";
 import type { CurrentUser } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
@@ -56,7 +56,7 @@ export class CurrentuserComponent implements OnInit {
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly headerSvc: TpHeaderService,
+		private readonly navSvc: NavigationService,
 		public readonly themeSvc: ThemeManagerService
 	) {
 		this.currentUser = this.auth.currentUser;
@@ -72,12 +72,12 @@ export class CurrentuserComponent implements OnInit {
 				r => {
 					if (r) {
 						this.currentUser = this.auth.currentUser;
-						this.headerSvc.headerTitle.next(this.currentUser?.username ?? "");
+						this.navSvc.headerTitle.next(this.currentUser?.username ?? "");
 					}
 				}
 			);
 		} else {
-			this.headerSvc.headerTitle.next(this.currentUser?.username ?? "");
+			this.navSvc.headerTitle.next(this.currentUser?.username ?? "");
 		}
 		const edit = this.route.snapshot.queryParamMap.get("edit");
 		if (edit === "true") {
