@@ -23,7 +23,7 @@ import {
 	Output,
 	ViewChild
 } from "@angular/core";
-import { Router } from "@angular/router";
+import { ActivatedRoute, ParamMap, Router } from "@angular/router";
 import { faCaretDown, faColumns, faDownload } from "@fortawesome/free-solid-svg-icons";
 import type {
 	CellContextMenuEvent,
@@ -151,6 +151,126 @@ export interface TableTitleButton {
 }
 
 /**
+ * Given some query parameters, the columns of a table, and a hook into the
+ * AG-Grid API of said table, sets up filtering based on matches between the
+ * names of query parameters and the raw data fields of the columns.
+ *
+ * @param params The query string parameters.
+ * @param columns The column definitions.
+ * @param api An API handle to the grid.
+ */
+export function setUpQueryParamFilter<T>(params: ParamMap, columns: ColDef<T>[], api: GridApi): void {
+	for (const col of columns) {
+		if (typeof(col.field) !== "string") {
+			continue;
+		}
+
+		// According to the AG-Grid docs, you can pass
+		const filter = api.getFilterInstance(col.field);
+		if (!filter || !col.field) {
+			continue;
+		}
+		const values = params.getAll(col.field);
+		if (values.length < 1) {
+			continue;
+		}
+
+		let colType!: "string" | "number" | "date";
+		if (!Object.prototype.hasOwnProperty.call(col, "filter")) {
+			colType = "string";
+		} else if (typeof(filter) !== "string") {
+			continue;
+		} else {
+			let bail = false;
+			switch(filter) {
+				case "agTextColumnFilter":
+					colType = "string";
+					break;
+				case "agNumberColumnFilter":
+					colType = "number";
+					break;
+				case "agDateColumnFilter":
+					colType = "date";
+					break;
+				default:
+					bail = true;
+					break;
+			}
+			if (bail) {
+				continue;
+			}
+		}
+
+		let filterModel;
+		switch(colType) {
+			case "string":
+				if (values.length === 1) {
+					filterModel = {
+						filter: values[0],
+						type: "equals"
+					};
+				} else {
+					filterModel = {
+						condition1: {
+							filter: values[0],
+							type: "equals"
+						},
+						condition2: {
+							filter: values[1],
+							type: "equals"
+						},
+						operator: "OR",
+					};
+				}
+				break;
+			case "number":
+				if (values.length === 1) {
+					filterModel = {
+						filter: parseInt(values[0], 10),
+						type: "equals"
+					};
+					if (isNaN(filterModel.filter)) {
+						continue;
+					}
+				} else {
+					filterModel = {
+						condition1: {
+							filter: parseInt(values[0], 10),
+							type: "equals"
+						},
+						condition2: {
+							filter: parseInt(values[1], 10),
+							type: "equals"
+						},
+						operator: "OR",
+					};
+					if (isNaN(filterModel.condition1.filter) || isNaN(filterModel.condition2.filter)) {
+						continue;
+					}
+				}
+				break;
+			case "date":
+				const date = new Date(values[0]);
+				if (Number.isNaN(date.getTime())) {
+					continue;
+				}
+				const pad = (num: number): string => String(num).padStart(2,"0");
+				filterModel = {
+					dateFrom: [
+						`${date.getUTCFullYear()}-${pad(date.getUTCMonth()+1)}-${pad(date.getUTCDate())}`,
+						`${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`,
+					].join(" "),
+					type: "equals"
+				};
+				break;
+		}
+		filter.setModel(filterModel);
+		// filter.applyModel();
+	}
+	api.onFilterChanged();
+}
+
+/**
  * GenericTableComponent is the controller for generic tables.
  */
 @Component({
@@ -259,12 +379,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		return this.columnAPI.getColumns() ?? [];
 	}
 
-	/**
-	 * Contructs the component with its required injections.
-	 *
-	 * @param router Used to update the 'search' query parameter on fuzzy filter changes.
-	 */
-	constructor(private readonly router: Router) {
+	constructor(private readonly router: Router, private readonly route: ActivatedRoute) {
 		this.gridOptions = {
 			defaultColDef: {
 				filter: true,
@@ -300,7 +415,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 					if (this.gridAPI) {
 						this.gridAPI.onFilterChanged();
 					}
-					this.router.navigate([], {queryParams: {search: query}, replaceUrl: true});
+					this.router.navigate([], {queryParams: {search: query}, queryParamsHandling: "merge", relativeTo: this.route});
 				}
 			);
 		}
@@ -317,6 +432,15 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		this.columnAPI = params.columnApi;
 		if (this.initialize) {
 			this.initialize = false;
+			try {
+				const filterState = localStorage.getItem(`${this.context}_table_filter`);
+				if (filterState) {
+					this.gridAPI.setFilterModel(JSON.parse(filterState));
+				}
+			} catch (e) {
+				console.error(`Failed to retrieve stored column sort info from localStorage (key=${this.context}_table_filter:`, e);
+			}
+			setUpQueryParamFilter(this.route.snapshot.queryParamMap, this.cols, this.gridAPI);
 			this.gridAPI.onFilterChanged();
 		}
 
@@ -339,14 +463,6 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			console.error(`Failure to retrieve required column info from localStorage (key=${this.context}_table_columns):`, e);
 		}
 
-		try {
-			const filterState = localStorage.getItem(`${this.context}_table_filter`);
-			if (filterState) {
-				this.gridAPI.setFilterModel(JSON.parse(filterState));
-			}
-		} catch (e) {
-			console.error(`Failure to retrieve stored column sort info from localStorage (key=${this.context}_table_filter:`, e);
-		}
 	}
 
 	/** When filter changes, stores the filter state if a context was provided. */
