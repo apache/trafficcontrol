@@ -102,12 +102,12 @@ func updateStatusAnycast(localStates peer.CRStatesThreadsafe, toData todata.TODa
 	toDataC := toData.Get()
 
 	for cache, _ := range localStatesC.Caches {
-		if _, ok := toDataC.ServerPartners[cache]; ok {
+		if _, ok := toDataC.SameIpServers[cache]; ok {
 			// all server partners must be available if they are in reported state
 			allAvailableV4 := true
 			allAvailableV6 := true
 			allIsAvailable := true
-			for partner, _ := range toDataC.ServerPartners[cache] {
+			for partner, _ := range toDataC.SameIpServers[cache] {
 				if partnerState, ok := localStatesC.Caches[partner]; ok {
 					// a partner host is reported but is marked down for too high traffic or load
 					// this host also needs to be marked down to divert all traffic for their

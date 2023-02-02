@@ -78,7 +78,7 @@ type TOData struct {
 	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
 	ServerDeliveryServices map[tc.CacheName][]tc.DeliveryServiceName
 	ServerTypes            map[tc.CacheName]tc.CacheType
-	ServerPartners         map[tc.CacheName]map[tc.CacheName]bool
+	SameIpServers          map[tc.CacheName]map[tc.CacheName]bool
 }
 
 // New returns a new empty TOData object, initializing pointer members.
@@ -90,7 +90,7 @@ func New() *TOData {
 		DeliveryServiceTypes:   map[tc.DeliveryServiceName]tc.DSTypeCategory{},
 		DeliveryServiceRegexes: NewRegexes(),
 		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
-		ServerPartners:         map[tc.CacheName]map[tc.CacheName]bool{},
+		SameIpServers:          map[tc.CacheName]map[tc.CacheName]bool{},
 	}
 }
 
@@ -181,7 +181,7 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 		return fmt.Errorf("getting server types from monitoring config: %v", err)
 	}
 
-	newTOData.ServerPartners = getServerParners(mc)
+	newTOData.SameIpServers = getServerParners(mc)
 
 	d.set(newTOData)
 	return nil

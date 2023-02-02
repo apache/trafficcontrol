@@ -79,7 +79,7 @@ func MakeDispatchMap(
 		}
 	}
 
-	// if any server has partners listed in toData.ServerPartners, this is an anycast enabled server
+	// if any server has partners listed in toData.SameIpServers, this is an anycast enabled server
 	// tm can not control traffic to individual anycast enabled servers, since all of them have the same
 	// service IP
 	// It can poll all of them, but will only detect not available status on the last server that becomes
