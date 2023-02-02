@@ -260,6 +260,10 @@ INSERT INTO interface (
 	TRUE,
 	'eth0',
 	(SELECT id FROM "server" WHERE host_name = 'edge' LIMIT 1)
+), (
+	FALSE,
+	'eth0',
+	(SELECT id FROM "server" WHERE host_name = 'trafficrouter' LIMIT 1)
 )
 ON CONFLICT DO NOTHING;
 
@@ -277,6 +281,11 @@ INSERT INTO ip_address (
 	'129.0.0.2'::inet,
 	'eth0',
 	(SELECT id FROM "server" WHERE host_name = 'edge' LIMIT 1),
+	TRUE
+), (
+	'129.0.0.2'::inet,
+	'eth0',
+	(SELECT id FROM "server" WHERE host_name = 'trafficrouter' LIMIT 1),
 	TRUE
 )
 ON CONFLICT DO NOTHING;
