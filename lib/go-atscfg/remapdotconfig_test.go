@@ -280,13 +280,14 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 		}
 	}
 }
+
 func TestMakeRemapDotConfig0(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -405,7 +406,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -507,7 +508,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -623,7 +624,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -725,7 +726,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -827,7 +828,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -966,7 +967,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	hdr := "myHeaderComment"
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
 	dsType := tc.DSType("HTTP_LIVE_NATNL")
@@ -1068,7 +1069,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -1171,7 +1172,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -1311,7 +1312,7 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -1453,7 +1454,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -1571,7 +1572,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeTestRemapServer()
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -1700,7 +1701,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -1855,7 +1856,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	dses := []DeliveryService{}
 	{ // see regexes - has invalid regex type
@@ -2243,7 +2244,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -2366,7 +2367,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -2489,7 +2490,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -2612,7 +2613,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -2735,7 +2736,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -2854,7 +2855,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -2979,7 +2980,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -3104,7 +3105,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -3233,7 +3234,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -3362,7 +3363,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -3491,7 +3492,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -3626,7 +3627,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -3750,7 +3751,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -3874,7 +3875,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -3998,7 +3999,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -4122,7 +4123,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -4244,7 +4245,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -4369,7 +4370,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -4517,7 +4518,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -4635,7 +4636,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -4775,7 +4776,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -4900,7 +4901,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -5021,7 +5022,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -5146,7 +5147,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -5295,7 +5296,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -5441,7 +5442,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -5571,7 +5572,7 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -5711,7 +5712,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -5865,7 +5866,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -6012,7 +6013,7 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -6146,7 +6147,7 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -6280,7 +6281,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -6421,7 +6422,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -6550,7 +6551,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -6671,7 +6672,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -6792,7 +6793,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -6913,7 +6914,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -7038,7 +7039,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -7159,7 +7160,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -7270,7 +7271,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -7382,7 +7383,7 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -7503,7 +7504,7 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -7624,7 +7625,7 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -7747,7 +7748,7 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 	edge.Type = "EDGE"
 	edge.Cachegroup = util.StrPtr("edgeCG")
 
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	mid := makeTestParentServer()
 	mid.Type = "MID"
@@ -7982,7 +7983,7 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -8111,7 +8112,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -8240,7 +8241,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -8366,7 +8367,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
 	server.Cachegroup = util.StrPtr("edgeCG")
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -8548,7 +8549,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "MID"
 	server.Cachegroup = util.StrPtr("midCG")
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -8726,7 +8727,7 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "MID"
 	server.Cachegroup = util.StrPtr("midCG")
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -8945,7 +8946,7 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "MID"
 	server.Cachegroup = util.StrPtr("midCG")
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -9136,7 +9137,7 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "MID"
 	server.Cachegroup = util.StrPtr("midCG")
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -9335,7 +9336,7 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 	server := makeTestRemapServer()
 	server.Type = "MID"
 	server.Cachegroup = util.StrPtr("midCG")
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	ds := DeliveryService{}
 	ds.ID = util.IntPtr(48)
@@ -9530,7 +9531,7 @@ func TestMakeRemapDotConfigRemapTemplate(t *testing.T) {
 	edge := makeTestRemapServer()
 	edge.Type = "EDGE"
 	edge.Cachegroup = util.StrPtr("edgeCG")
-	servers := makeTestAnyCastServers()
+	servers := []Server{}
 
 	mid := makeTestParentServer()
 	mid.Type = "MID"
