@@ -44,7 +44,7 @@ Users with the Operations or Admin :term:`Role` can associate one or more server
 
 Configure delivery service required server capabilities
 =======================================================
-Users with the Operations or Admin :term:`Role` can associate one or more required server capabilities with a :term:`Delivery Service` by navigating to a :term:`Delivery Service` via :menuselection:`Services --> Delivery Services` and clicking on Required Capabilities checkbox present on Delivery Services form (HTTPS and DNS)`.
+Users with the DELIVERY-SERVICE:CREATE or DELIVERY-SERVICE:UPDATE permission can associate one or more required server capabilities with a :term:`Delivery Service` by navigating to a :term:`Delivery Service` via :menuselection:`Services --> Delivery Services` and clicking on Required Capabilities checkbox present on Delivery Services form (HTTPS and DNS)`.
 
 Adding a required server capability to a :term:`Delivery Service` will ensure two things:
 
