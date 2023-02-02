@@ -39,7 +39,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7120](https://github.com/apache/trafficcontrol/pull/7120) *Docs* Update t3c documentation regarding parent.config parent_retry.
 
 ### Fixed
-- [](https://github.com/apache/trafficcontrol/pull/) *Traffic Router* Fixed TR logging for the `cqhv` field when absent.
+- [#7340](https://github.com/apache/trafficcontrol/pull/7340) *Traffic Router* Fixed TR logging for the `cqhv` field when absent.
 - [#7252](https://github.com/apache/trafficcontrol/issues/7252) *Traffic Router* Fixed integer overflow for `czCount`, by resetting the count to max value when it overflows.
 - [#7221](https://github.com/apache/trafficcontrol/issues/7221) *Docs* Fixed request structure spec in cdn locks description in APIv4.
 - [#7225](https://github.com/apache/trafficcontrol/issues/7225) *Docs* Fixed docs for /roles response description in APIv4.
