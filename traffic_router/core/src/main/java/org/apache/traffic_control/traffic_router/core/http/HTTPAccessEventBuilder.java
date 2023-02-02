@@ -74,6 +74,14 @@ public class HTTPAccessEventBuilder {
         return stringBuilder.toString();
     }
 
+    private static boolean validProtocol(final String protocol) {
+        if (protocol != null &&
+        !protocol.equals("")) {
+            return true;
+        }
+        return false;
+    }
+
     @SuppressWarnings({"PMD.UseStringBufferForStringAppends", "PMD.NPathComplexity"})
     public static String create(final HTTPAccessRecord httpAccessRecord) {
         final long start = httpAccessRecord.getRequestDate().getTime();
@@ -84,7 +92,11 @@ public class HTTPAccessEventBuilder {
         String chi = formatObject(httpServletRequest.getRemoteAddr());
         final String url = formatRequest(httpServletRequest);
         final String cqhm = formatObject(httpServletRequest.getMethod());
-        final String cqhv = formatObject(httpServletRequest.getProtocol());
+        String cqhv = "-";
+        final String protocol = formatObject(httpServletRequest.getProtocol());
+        if (validProtocol(protocol)) {
+            cqhv = protocol;
+        }
 
         final String resultType = formatObject(httpAccessRecord.getResultType());
         final String rerr = formatObject(httpAccessRecord.getRerr());
