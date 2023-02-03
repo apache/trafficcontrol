@@ -23,7 +23,7 @@ import {
 	Output,
 	ViewChild
 } from "@angular/core";
-import { ActivatedRoute, ParamMap, Params, Router } from "@angular/router";
+import { ActivatedRoute, type ParamMap, type Params, Router } from "@angular/router";
 import { faCaretDown, faColumns, faDownload } from "@fortawesome/free-solid-svg-icons";
 import type {
 	CellContextMenuEvent,
@@ -114,15 +114,19 @@ interface ContextMenuLink<T> {
 	 * initialization, unfortunately.
 	 */
 	disabled?: (selection: T | Array<T>) => boolean;
+	/** If present, determines the URL fragment used during navigation. */
+	fragment?: string | ((selectedRow: T) => (string | null));
 	/**
 	 * href is inserted literally as the 'href' property of an anchor. Which means that if it's not relative it will be mangled for security
 	 * reasons.
 	 */
-	href: string | ((selectedRow: T) => string);
+	href: string | ((selectedRow: T) => (string | Array<string>));
 	/** A human-readable name for the link which is displayed to the user. */
 	name: string;
 	/** If given and true, sets the link to open in a new browsing context (or "tab"). */
 	newTab?: boolean;
+	/** If present, query string parameters to pass during navigation. */
+	queryParams?: Params | ParamMap | ((selectedRow: T) => (Params | ParamMap | null));
 }
 
 /** ContextMenuItems represent items in a context menu. They can be links or arbitrary actions. */
@@ -823,7 +827,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 * @param item The item being constructed into a link.
 	 * @returns A URL or router path as determined by the settings of `item`.
 	 */
-	public href(item: ContextMenuLink<T>): string {
+	public href(item: ContextMenuLink<T>): string | Array<string> {
 		if (typeof(item.href) === "string") {
 			return item.href;
 		}
@@ -832,5 +836,47 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			return "";
 		}
 		return item.href(this.selected);
+	}
+
+	/**
+	 * Gets query string parameters for a link context menu item.
+	 *
+	 * @param item The item being constructed into a link.
+	 * @returns A set of query string parameters to pass, or `null` if the link
+	 * doesn't specify any.
+	 */
+	public queryParameters(item: ContextMenuLink<T>): Params | ParamMap | null {
+		if (!item.queryParams) {
+			return null;
+		}
+		if (typeof(item.queryParams) !== "function") {
+			return item.queryParams;
+		}
+		if (!this.selected) {
+			// This happens when the context menu is hidden.
+			return null;
+		}
+		return item.queryParams(this.selected);
+	}
+
+	/**
+	 * Gets a URL document fragment for a link context menu item.
+	 *
+	 * @param item The item being constructed into a link.
+	 * @returns A document fragment to pass to the routerLink, or `null` if the
+	 * link doesn't specify one.
+	 */
+	public fragment(item: ContextMenuLink<T>): string | null {
+		if (!item.fragment) {
+			return null;
+		}
+		if (typeof(item.fragment) !== "function") {
+			return item.fragment;
+		}
+		if (!this.selected) {
+			// This happens when the context menu is hidden.
+			return null;
+		}
+		return item.fragment(this.selected);
 	}
 }
