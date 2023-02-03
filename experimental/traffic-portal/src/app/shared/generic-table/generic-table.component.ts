@@ -428,7 +428,8 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 					if (this.gridAPI) {
 						this.gridAPI.onFilterChanged();
 					}
-					this.router.navigate([], {queryParams: {search: query}, queryParamsHandling: "merge", relativeTo: this.route});
+					const queryParams = {search: query ? query : null};
+					this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route, replaceUrl: true});
 				}
 			);
 		}
