@@ -51,6 +51,7 @@ type SNIDotYAMLOpts struct {
 
 func MakeSNIDotYAML(
 	server *Server,
+	servers []Server,
 	dses []DeliveryService,
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
@@ -71,6 +72,7 @@ func MakeSNIDotYAML(
 
 	sslDatas, warnings, err := GetServerSSLData(
 		server,
+		servers,
 		dses,
 		dss,
 		dsRegexArr,

@@ -79,6 +79,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 	}
 
 	server := makeTestParentServer()
+	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
 	mid0.Cachegroup = util.StrPtr("midCG")
@@ -141,7 +142,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 	}
 
 	t.Run("sni.yaml http2 param enabled", func(t *testing.T) {
-		cfg, err := MakeSNIDotYAML(server, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
+		cfg, err := MakeSNIDotYAML(server, servers, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -189,7 +190,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 			},
 		}
 
-		cfg, err := MakeSNIDotYAML(server, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
+		cfg, err := MakeSNIDotYAML(server, servers, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -236,7 +237,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 			},
 		}
 
-		cfg, err := MakeSNIDotYAML(server, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
+		cfg, err := MakeSNIDotYAML(server, servers, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -283,7 +284,7 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 			},
 		}
 
-		cfg, err := MakeSNIDotYAML(server, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
+		cfg, err := MakeSNIDotYAML(server, servers, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
 		if err != nil {
 			t.Fatal(err)
 		}
