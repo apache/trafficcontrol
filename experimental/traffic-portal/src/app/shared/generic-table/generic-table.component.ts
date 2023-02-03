@@ -385,7 +385,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		if (!this.columnAPI) {
 			return [];
 		}
-		return this.columnAPI.getColumns() ?? [];
+		return (this.columnAPI.getColumns() ?? []).sort().reverse();
 	}
 
 	constructor(private readonly router: Router, private readonly route: ActivatedRoute) {
@@ -472,6 +472,13 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			console.error(`Failure to retrieve required column info from localStorage (key=${this.context}_table_columns):`, e);
 		}
 
+	}
+
+	/**
+	 * Triggered by a table button, clears all the filters on the table.
+	 */
+	public clearFilters(): void {
+		this.gridAPI.setFilterModel(null);
 	}
 
 	/**
