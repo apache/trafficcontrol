@@ -15,7 +15,7 @@
 import { Component , type OnInit} from "@angular/core";
 import { UntypedFormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute , Router} from "@angular/router";
+import { ActivatedRoute } from "@angular/router";
 import type { ITooltipParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 import { type ResponseServer, serviceAddresses } from "trafficops-types";
@@ -218,7 +218,8 @@ export class ServersTableComponent implements OnInit {
 		{
 			field: "physLocation",
 			headerName: "Phys Location",
-			hide: true
+			hide: true,
+			valueFormatter: ({data}: {data: AugmentedServer}): string => `${data.physLocation} (#${data.physLocationId})`
 		},
 		{
 			field: "profile",
@@ -280,8 +281,21 @@ export class ServersTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented server data). */
 	public contextMenuItems: Array<ContextMenuItem<AugmentedServer>> = [
 		{
-			action: "viewDetails",
+			href: (row: AugmentedServer): string => `${row.id}`,
 			name: "View Server Details"
+		},
+		{
+			href: (row: AugmentedServer): string => `${row.id}`,
+			name: "Open in New Tab",
+			newTab: true
+		},
+		{
+			href: (row: AugmentedServer): string => `/core/cache-groups/${row.cachegroupId}`,
+			name: "View Cache Group"
+		},
+		{
+			href: (row: AugmentedServer): string => `/core/phys-locs/${row.physLocationId}`,
+			name: "View Physical Location"
 		},
 		{
 			action: "updateStatus",
@@ -319,7 +333,6 @@ export class ServersTableComponent implements OnInit {
 	 */
 	constructor(private readonly api: ServerService,
 		private readonly route: ActivatedRoute,
-		private readonly router: Router,
 		private readonly navSvc: NavigationService,
 		private readonly dialog: MatDialog) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
@@ -354,12 +367,6 @@ export class ServersTableComponent implements OnInit {
 	 */
 	public async handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): Promise<void> {
 		switch (action.action) {
-			case "viewDetails":
-				if (action.data instanceof Array) {
-					throw new Error("'viewDetails' is a single-row action, but was called with multiple rows");
-				}
-				await this.router.navigate(["/core/server", action.data.id]);
-				break;
 			case "updateStatus":
 				const dialogRef = this.dialog.open(UpdateStatusComponent, {
 					data: action.data instanceof Array ? action.data : [action.data]
