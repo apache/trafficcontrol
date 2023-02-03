@@ -484,6 +484,9 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 */
 	public clearFilters(): void {
 		this.gridAPI.setFilterModel(null);
+		const queryParams = Object.fromEntries(this.cols.filter((c: ColDef) => c.field).map((c: ColDef) => [c.field, null]));
+		queryParams.search = null;
+		this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route, replaceUrl: true});
 	}
 
 	/**
@@ -515,7 +518,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		if (!model) {
 			queryParams = {...this.route.snapshot.queryParams};
 			queryParams[col.field] = null;
-			this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route});
+			this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route, replaceUrl: true});
 			return;
 		}
 		let value = null;
@@ -547,7 +550,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			return;
 		}
 		queryParams[col.field] = value;
-		this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route});
+		this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route, replaceUrl: true});
 	}
 
 	/**
