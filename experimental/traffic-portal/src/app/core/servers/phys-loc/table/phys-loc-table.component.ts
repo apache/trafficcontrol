@@ -11,17 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import { ResponsePhysicalLocation } from "trafficops-types";
 
 import { CacheGroupService, PhysicalLocationService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -58,7 +58,8 @@ export class PhysLocTableComponent implements OnInit {
 		headerName: "State"
 	}, {
 		field: "region",
-		headerName: "Region"
+		headerName: "Region",
+		valueFormatter: ({data}: {data: ResponsePhysicalLocation}): string => `${data.region} (#${data.regionId})`
 	}, {
 		field: "lastUpdated",
 		headerName: "Last Updated"
@@ -67,8 +68,13 @@ export class PhysLocTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponsePhysicalLocation>> = [
 		{
-			href: (physLoc: ResponsePhysicalLocation): string => `/core/phys-locs/${physLoc.id}`,
+			href: (physLoc: ResponsePhysicalLocation): string => `${physLoc.id}`,
 			name: "Edit"
+		},
+		{
+			href: (physLoc: ResponsePhysicalLocation): string => `${physLoc.id}`,
+			name: "Open in New Tab",
+			newTab: true
 		},
 		{
 			action: "delete",
@@ -78,6 +84,11 @@ export class PhysLocTableComponent implements OnInit {
 		{
 			href: (physLoc: ResponsePhysicalLocation): string => `/core/regions/${physLoc.regionId}`,
 			name: "View Region"
+		},
+		{
+			href: "/core/servers",
+			name: "View Servers",
+			queryParams: (physLoc: ResponsePhysicalLocation): Params => ({physLocation: physLoc.name})
 		}
 	];
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
