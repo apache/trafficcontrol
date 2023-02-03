@@ -23,7 +23,7 @@ import {
 	Output,
 	ViewChild
 } from "@angular/core";
-import { ActivatedRoute, ParamMap, Router } from "@angular/router";
+import { ActivatedRoute, ParamMap, Params, Router } from "@angular/router";
 import { faCaretDown, faColumns, faDownload } from "@fortawesome/free-solid-svg-icons";
 import type {
 	CellContextMenuEvent,
@@ -32,11 +32,15 @@ import type {
 	Column,
 	ColumnApi,
 	CsvExportParams,
+	DateFilterModel,
+	FilterChangedEvent,
 	GridApi,
 	GridOptions,
 	GridReadyEvent,
 	ITooltipParams,
-	RowNode
+	NumberFilterModel,
+	RowNode,
+	TextFilterModel
 } from "ag-grid-community";
 import type { BehaviorSubject, Subscription } from "rxjs";
 
@@ -151,6 +155,32 @@ export interface TableTitleButton {
 }
 
 /**
+ * Gets a basic type from a column definition.
+ *
+ * @param col The definition of the column
+ * @returns The basic type of the column - or `null` if it couldn't be
+ * determined.
+ */
+export function getColType(col: ColDef): "string" | "number" | "date" | null {
+	if (!Object.prototype.hasOwnProperty.call(col, "filter") || col.filter === true) {
+		return "string";
+	}
+	if (typeof(col.filter) !== "string") {
+		return null;
+	}
+	switch(col.filter) {
+		case "textFilter":
+		case "agTextColumnFilter":
+			return "string";
+		case "agNumberColumnFilter":
+			return "number";
+		case "agDateColumnFilter":
+			return "date";
+	}
+	return null;
+}
+
+/**
  * Given some query parameters, the columns of a table, and a hook into the
  * AG-Grid API of said table, sets up filtering based on matches between the
  * names of query parameters and the raw data fields of the columns.
@@ -175,30 +205,9 @@ export function setUpQueryParamFilter<T>(params: ParamMap, columns: ColDef<T>[],
 			continue;
 		}
 
-		let colType!: "string" | "number" | "date";
-		if (!Object.prototype.hasOwnProperty.call(col, "filter")) {
-			colType = "string";
-		} else if (typeof(filter) !== "string") {
-			continue;
-		} else {
-			let bail = false;
-			switch(filter) {
-				case "agTextColumnFilter":
-					colType = "string";
-					break;
-				case "agNumberColumnFilter":
-					colType = "number";
-					break;
-				case "agDateColumnFilter":
-					colType = "date";
-					break;
-				default:
-					bail = true;
-					break;
-			}
-			if (bail) {
-				continue;
-			}
+		const colType = getColType(col);
+		if (!colType) {
+			return;
 		}
 
 		let filterModel;
@@ -465,11 +474,68 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 
 	}
 
-	/** When filter changes, stores the filter state if a context was provided. */
-	public storeFilter(): void {
-		if (this.context && this.gridAPI) {
+	/**
+	 * When filter changes, stores the filter state if a context was provided,
+	 * and updates query string parameters.
+	 *
+	 * @param e The filter change event fired by AG-Grid.
+	 */
+	public storeFilter(e: FilterChangedEvent<T>): void {
+		if (this.context) {
 			localStorage.setItem(`${this.context}_table_filter`, JSON.stringify(this.gridAPI.getFilterModel()));
 		}
+		// the user can only set one filter at a time, so that's all we gotta
+		// handle.
+		if (e.columns.length !== 1) {
+			return;
+		}
+		const col = e.columns[0].getColDef();
+		if (!col.field) {
+			return;
+		}
+		const filter = this.gridAPI.getFilterInstance(e.columns[0]);
+		if (!filter) {
+			return;
+		}
+
+		let queryParams: Params = {};
+		const model = filter.getModel();
+		if (!model) {
+			queryParams = {...this.route.snapshot.queryParams};
+			queryParams[col.field] = null;
+			this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route});
+			return;
+		}
+		let value = null;
+		// Default filter (indicated by 'true') is the text filter
+		switch(getColType(col)) {
+			case "string":
+				if ((model as TextFilterModel).type !== "equals") {
+					return;
+				}
+				value = (model as TextFilterModel).filter;
+				break;
+			case "number":
+				if ((model as NumberFilterModel).type !== "equals") {
+					return;
+				}
+				value = (model as NumberFilterModel).filter;
+				break;
+			case "date":
+				if ((model as DateFilterModel).type !== "equals") {
+					return;
+				}
+				value = (model as DateFilterModel).dateFrom;
+				if (value) {
+					value = `${value.replace(" ", "T")}Z`;
+				}
+				break;
+		}
+		if (value === null || value === undefined) {
+			return;
+		}
+		queryParams[col.field] = value;
+		this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route});
 	}
 
 	/**

@@ -38,7 +38,7 @@ limitations under the License.
 	[components]="components"
 	[gridOptions]="gridOptions"
 	(gridReady)="setAPI($event)"
-	(filterChanged)="storeFilter()"
+	(filterChanged)="storeFilter($event)"
 	(sortChanged)="storeColumns()"
 	(columnMoved)="storeColumns()"
 	(columnVisible)="storeColumns(true)"
