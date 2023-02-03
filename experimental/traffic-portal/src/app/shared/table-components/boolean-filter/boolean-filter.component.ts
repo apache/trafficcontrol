@@ -111,7 +111,13 @@ export class BooleanFilterComponent implements AgFilterComponent {
 	 *
 	 * @param model A full representation of a filter state.
 	 */
-	public setModel(model: BooleanFilterModel): void {
+	public setModel(model: BooleanFilterModel | null): void {
+		if (!model) {
+			model = {
+				should: false,
+				value: false
+			};
+		}
 		this.shouldFilter = model.should;
 		this.value = model.value;
 	}
