@@ -12,17 +12,17 @@
 * limitations under the License.
 */
 
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import { ResponseDivision } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -80,8 +80,13 @@ export class DivisionsTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented division data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseDivision>> = [
 		{
-			href: (div: ResponseDivision): string => `core/divisions/${div.id}`,
+			href: (div: ResponseDivision): string => `${div.id}`,
 			name: "Edit"
+		},
+		{
+			href: (div: ResponseDivision): string => `${div.id}`,
+			name: "Open in New Tab",
+			newTab: true
 		},
 		{
 			action: "delete",
@@ -89,8 +94,9 @@ export class DivisionsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			href: (div: ResponseDivision): string => `core/regions?search=${div.name}`,
-			name: "View Regions"
+			href: "/core/regions",
+			name: "View Regions",
+			queryParams: (div: ResponseDivision): Params => ({divisionName: div.name})
 		}
 	];
 
