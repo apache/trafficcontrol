@@ -351,7 +351,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	public readonly downloadIcon = faDownload;
 
 	/** Used to handle the case that Angular loads faster than AG-Grid (as it usually does) */
-	private initialize = false;
+	private initialize = true;
 
 	/** Tracks whether the menu button has been clicked. */
 	private menuClicked = false;
