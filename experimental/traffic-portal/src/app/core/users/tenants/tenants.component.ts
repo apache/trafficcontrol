@@ -13,7 +13,8 @@
 */
 
 import { Component, type OnDestroy, type OnInit } from "@angular/core";
-import type { ValueGetterParams } from "ag-grid-community";
+import type { Params } from "@angular/router";
+import type { ValueFormatterParams } from "ag-grid-community";
 import { BehaviorSubject, type Subscription } from "rxjs";
 import { ResponseTenant } from "trafficops-types";
 
@@ -74,7 +75,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 			field: "parentId",
 			headerName: "Parent",
 			hide: false,
-			valueGetter: (params: ValueGetterParams): string => this.getParentString(params.data)
+			valueFormatter: (params: ValueFormatterParams): string => this.getParentString(params.data)
 		}
 	];
 
@@ -104,28 +105,34 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 */
 	private loadContextMenuItems(): void {
 		this.contextMenuItems = [];
-		if (this.auth.hasPermission("USER:READ")) {
-			this.contextMenuItems.push({
-				action: "viewUsers",
-				multiRow: true,
-				name: "View Users"
-			});
-		}
 		if (this.auth.hasPermission("TENANT:UPDATE")) {
+			this.contextMenuItems.push({
+				href: (t: ResponseTenant): string => `${t.id}`,
+				name: "View Details"
+			});
+			this.contextMenuItems.push({
+				href: (t: ResponseTenant): string => `${t.id}`,
+				name: "Open in New Tab",
+				newTab: true
+			});
 			this.contextMenuItems.push({
 				action: "disable",
 				disabled: (ts): boolean => ts.some(t=>t.name === "root" || t.id === this.auth.currentUser?.tenantId),
 				multiRow: true,
 				name: "Disable"
 			});
+		}
+		this.contextMenuItems.push({
+			disabled: (t: ResponseTenant | ResponseTenant[]): boolean =>
+				Array.isArray(t) || t.id === this.auth.currentUser?.tenantId || t.parentId === null,
+			href: (t: ResponseTenant): string => `${t.parentId}`,
+			name: "View Parent Details"
+		});
+		if (this.auth.hasPermission("USER:READ")) {
 			this.contextMenuItems.push({
-				href: (t: ResponseTenant): string => `core/tenants/${t.id}`,
-				name: "View Details"
-			});
-			this.contextMenuItems.push({
-				href: (t: ResponseTenant): string => `core/tenants/${t.id}`,
-				name: "Open in New Tab",
-				newTab: true
+				href: "/core/users",
+				name: "View Users",
+				queryParams: (t: ResponseTenant): Params => ({tenant: t.name})
 			});
 		}
 	}

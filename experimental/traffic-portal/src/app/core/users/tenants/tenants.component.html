@@ -27,4 +27,4 @@ limitations under the License.
 	<div id="loading" *ngIf="loading"><tp-loading></tp-loading></div>
 </mat-card>
 
-<button class="page-fab" mat-fab title="Create a new Tenant" *ngIf="auth.hasPermission('TENANT:CREATE')" routerLink="new"><mat-icon>add</mat-icon></button>
+<a class="page-fab" mat-fab title="Create a new Tenant" *ngIf="auth.hasPermission('TENANT:CREATE')" routerLink="new"><mat-icon>add</mat-icon></a>
