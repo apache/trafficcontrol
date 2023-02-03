@@ -20,7 +20,10 @@ import { ResponseDeliveryService, ResponseInvalidationJob } from "trafficops-typ
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
-import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
+import {
+	NewInvalidationJobDialogComponent,
+	type NewInvalidationJobDialogData
+} from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
 /**
  * InvalidationJobsComponent is the controller for the page that displays the
@@ -68,7 +71,7 @@ export class InvalidationJobsComponent implements OnInit {
 	 * Runs initialization, fetching the jobs and Delivery Service data from
 	 * Traffic Ops and setting the pageload date/time.
 	 */
-	public ngOnInit(): void {
+	public async ngOnInit(): Promise<void> {
 		this.navSvc.headerTitle.next("Loading - Content Invalidation Jobs");
 		this.now = new Date();
 		const idParam = this.route.snapshot.paramMap.get("id");
@@ -77,17 +80,9 @@ export class InvalidationJobsComponent implements OnInit {
 			return;
 		}
 		this.dsID = parseInt(idParam, 10);
-		this.jobAPI.getInvalidationJobs({dsID: this.dsID}).then(
-			r => {
-				this.jobs = r;
-			}
-		);
-		this.dsAPI.getDeliveryServices(this.dsID).then(
-			r => {
-				this.deliveryservice = r;
-				this.navSvc.headerTitle.next(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
-			}
-		);
+		this.jobs = await this.jobAPI.getInvalidationJobs({dsID: this.dsID});
+		this.deliveryservice = await this.dsAPI.getDeliveryServices(this.dsID);
+		this.navSvc.headerTitle.next(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
 	}
 
 	/**
@@ -127,7 +122,10 @@ export class InvalidationJobsComponent implements OnInit {
 	 * @param e The DOM event that triggered the creation.
 	 */
 	public newJob(): void {
-		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data: {dsID: this.dsID}});
+		const data: NewInvalidationJobDialogData = {
+			dsID: this.deliveryservice.xmlId
+		};
+		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data});
 		dialogRef.afterClosed().subscribe(
 			(created) => {
 				if (created) {

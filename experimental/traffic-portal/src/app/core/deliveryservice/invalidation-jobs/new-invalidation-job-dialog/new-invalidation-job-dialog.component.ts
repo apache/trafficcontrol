@@ -33,7 +33,7 @@ export function timeStringFromDate(d: Date): string {
 }
 
 /** The type of parameters passable to the dialog. */
-interface DialogData {
+export interface NewInvalidationJobDialogData {
 	/** The ID of the Delivery Service to which the created/edited Job belongs. */
 	dsID: string;
 	/** If passed, the dialog will edit this Job instead of creating a new one. */
@@ -95,7 +95,7 @@ export class NewInvalidationJobDialogComponent {
 	constructor(
 		private readonly dialogRef: MatDialogRef<NewInvalidationJobDialogComponent>,
 		private readonly jobAPI: InvalidationJobService,
-		@Inject(MAT_DIALOG_DATA) data: DialogData
+		@Inject(MAT_DIALOG_DATA) data: NewInvalidationJobDialogData
 	) {
 		this.job = data.job;
 		if (this.job) {
