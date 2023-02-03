@@ -43,7 +43,7 @@ public class HTTPAccessEventBuilder {
     }
 
     private static String formatObject(final Object o) {
-        return (o == null) ? "-" : o.toString();
+        return (o == null || o.toString().equals("")) ? "-" : o.toString();
     }
 
     private static String formatRequestHeaders(final Map<String, String> requestHeaders) {
@@ -74,14 +74,6 @@ public class HTTPAccessEventBuilder {
         return stringBuilder.toString();
     }
 
-    private static boolean validProtocol(final String protocol) {
-        if (protocol != null &&
-        !protocol.equals("")) {
-            return true;
-        }
-        return false;
-    }
-
     @SuppressWarnings({"PMD.UseStringBufferForStringAppends", "PMD.NPathComplexity"})
     public static String create(final HTTPAccessRecord httpAccessRecord) {
         final long start = httpAccessRecord.getRequestDate().getTime();
@@ -92,11 +84,7 @@ public class HTTPAccessEventBuilder {
         String chi = formatObject(httpServletRequest.getRemoteAddr());
         final String url = formatRequest(httpServletRequest);
         final String cqhm = formatObject(httpServletRequest.getMethod());
-        String cqhv = "-";
-        final String protocol = formatObject(httpServletRequest.getProtocol());
-        if (validProtocol(protocol)) {
-            cqhv = protocol;
-        }
+        final String cqhv = formatObject(httpServletRequest.getProtocol());
 
         final String resultType = formatObject(httpAccessRecord.getResultType());
         final String rerr = formatObject(httpAccessRecord.getRerr());
