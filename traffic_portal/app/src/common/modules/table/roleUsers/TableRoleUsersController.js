@@ -35,7 +35,7 @@ var TableRoleUsersController = function(roles, roleUsers, $controller, $scope, $
 
 	$scope.role = roles[0];
 
-	$scope.relativeLoginTime = dateUtils.relativeLoginTime;
+	$scope.relativeLoginTime = arg => dateUtils.relativeLoginTime(arg);
 
 	$scope.editUser = function(id) {
 		locationUtils.navigateToPath('/users/' + id);

@@ -35,7 +35,7 @@ var TableTenantUsersController = function(tenant, tenantUsers, $controller, $sco
 
 	$scope.tenant = tenant;
 
-	$scope.relativeLoginTime = dateUtils.relativeLoginTime;
+	$scope.relativeLoginTime = arg => dateUtils.relativeLoginTime(arg);
 
 	$scope.editUser = function(id) {
 		locationUtils.navigateToPath('/users/' + id);
