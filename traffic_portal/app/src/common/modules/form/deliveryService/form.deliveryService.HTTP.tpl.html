@@ -17,7 +17,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
-<div class="x_panel">
+<div class="x_panel" xmlns="http://www.w3.org/1999/html">
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li ng-if="!settings.isRequest"><a href="/#!/delivery-services">Delivery Services</a></li>
@@ -343,13 +343,14 @@ under the License.
                         </div>
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.requiredCapabilities), 'has-feedback': hasError(generalConfig.requiredCapabilities)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="capability">Required Capability
+                        <div class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="capability">
+                            <label>Required Capability</label>
                             <div class="helptooltip">
                                 <div class="helptext">
                                     Required Server capability(ies) associated with this Delivery Service. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/server_capabililty.html?highlight=Capabilities#configure-delivery-service-required-server-capabilities" target="_blank"> See Required Server Capabilities</a>
                                 </div>
                             </div>
-                        </label>
+                        </div>
                         <div class="col-md-10 col-sm-10 col-xs-12">
                             <div class="checkbox-scroll-container">
                                 <div ng-repeat="capability in requiredCapabilities track by $index">
@@ -361,7 +362,12 @@ under the License.
                                         ng-model="selectedCapabilities[capability.name]"
                                         ng-checked="selectedCapabilities[capability.name]"
                                     />
-                                   <a ng-href="/#!/server-capabilities/edit?name={{capability.name}}" target="_blank">{{capability.name}}</a>
+                                    <a ng-href="/#!/server-capabilities/edit?name={{capability.name}}" target="_blank">{{capability.name}}</a>
+                                    <div class="has-tooltip control-label" ng-if="capability.description" for="description">
+                                        <div class="helptooltip">
+                                            <div class="helptext">{{capability.description}}</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.requiredCapabilities !== dsCurrent.requiredCapabilities">
