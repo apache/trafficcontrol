@@ -243,7 +243,7 @@ describe("GenericTableComponent", () => {
 		expect(
 			component.columns.map(c=>c.getDefinition())
 		).toEqual(
-			component.cols.map(c=>({... component.gridOptions.defaultColDef, ...c}))
+			component.cols.map(c=>({... component.gridOptions.defaultColDef, ...c})).reverse()
 		);
 	});
 

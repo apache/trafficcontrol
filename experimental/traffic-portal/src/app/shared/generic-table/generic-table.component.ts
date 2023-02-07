@@ -389,7 +389,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		if (!this.columnAPI) {
 			return [];
 		}
-		return (this.columnAPI.getColumns() ?? []).sort().reverse();
+		return (this.columnAPI.getColumns() ?? []).reverse();
 	}
 
 	constructor(private readonly router: Router, private readonly route: ActivatedRoute) {
