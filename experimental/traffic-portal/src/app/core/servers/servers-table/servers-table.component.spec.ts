@@ -262,14 +262,12 @@ describe("ServersTableComponent", () => {
 		expect((await component.servers).length).toBeGreaterThan(0);
 	});
 
-	it("handles its context menu actions", fakeAsync(() => {
+	it("handles its context menu actions", fakeAsync(async () => {
 		const augmentFields = {ipv4Address: "192.0.2.0", ipv6Address: "2001::1"};
 		const server = {...defaultServer, id: 9001, type: "EDGE", ...augmentFields};
 
-		component.handleContextMenu({action: "viewDetails", data: server});
-		tick();
-		expect(router.url).toBe("/core/server/9001");
-		expectAsync(component.handleContextMenu({action: "viewDetails", data: [server]})).toBeRejected();
+		await expectAsync(component.handleContextMenu({action: "viewDetails", data: [server]})).toBeRejected();
+		await expectAsync(component.handleContextMenu({action: "viewDetails", data: server})).toBeRejected();
 
 		component.handleContextMenu({action: "updateStatus", data: server});
 
