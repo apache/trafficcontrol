@@ -121,18 +121,18 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 
 		via := ctx.HTTPHeader.Get(rfc.Via)
 		if via != "" {
-			result := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
-			if len(result) > 0 {
-				astats.Ats[rfc.Via] = result[1]
+			viaRegexSubmatch := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
+			if len(viaRegexSubmatch) > 0 {
+				astats.Ats[rfc.Via] = viaRegexSubmatch[1]
 			}
 		}
 		return stats, astats.Ats, nil
 	} else if ctype == "text/csv" {
 		via := ctx.HTTPHeader.Get(rfc.Via)
 		if via != "" {
-			result := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
-			if len(result) > 0 {
-				cacheName = result[1]
+			viaRegexSubmatch := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
+			if len(viaRegexSubmatch) > 0 {
+				cacheName = viaRegexSubmatch[1]
 			}
 		}
 		return astatsCsvParseCsv(cacheName, rdr)

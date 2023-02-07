@@ -181,7 +181,7 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 		return fmt.Errorf("getting server types from monitoring config: %v", err)
 	}
 
-	newTOData.SameIpServers = getServerParners(mc)
+	newTOData.SameIpServers = getSameIPServers(mc)
 
 	d.set(newTOData)
 	return nil
@@ -346,9 +346,9 @@ func getServerTypes(mc tc.TrafficMonitorConfigMap) (map[tc.CacheName]tc.CacheTyp
 	return serverTypes, nil
 }
 
-// getServerPartners gets the cache parners that have the same VIP
-func getServerParners(mc tc.TrafficMonitorConfigMap) map[tc.CacheName]map[tc.CacheName]bool {
-	serverPartners := map[tc.CacheName]map[tc.CacheName]bool{}
+// getSameIPServers gets the caches that have the same VIP
+func getSameIPServers(mc tc.TrafficMonitorConfigMap) map[tc.CacheName]map[tc.CacheName]bool {
+	sameIPServers := map[tc.CacheName]map[tc.CacheName]bool{}
 
 	// get service addresses
 	serviceAddress := map[string][]string{}
@@ -371,12 +371,12 @@ func getServerParners(mc tc.TrafficMonitorConfigMap) map[tc.CacheName]map[tc.Cac
 				if addr.ServiceAddress {
 					// if service addresses belongs to more than one server
 					if len(serviceAddress[addr.Address]) > 1 {
-						if _, ok := serverPartners[tc.CacheName(server)]; !ok {
-							serverPartners[tc.CacheName(server)] = map[tc.CacheName]bool{}
+						if _, ok := sameIPServers[tc.CacheName(server)]; !ok {
+							sameIPServers[tc.CacheName(server)] = map[tc.CacheName]bool{}
 						}
 						for _, partner := range serviceAddress[addr.Address] {
 							if partner != server {
-								serverPartners[tc.CacheName(server)][tc.CacheName(partner)] = true
+								sameIPServers[tc.CacheName(server)][tc.CacheName(partner)] = true
 							}
 						}
 					}
@@ -385,7 +385,7 @@ func getServerParners(mc tc.TrafficMonitorConfigMap) map[tc.CacheName]map[tc.Cac
 		}
 	}
 
-	return serverPartners
+	return sameIPServers
 }
 
 // canUseMonitorConfig returns true if we can prefer monitor config data to crconfig data.

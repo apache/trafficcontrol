@@ -76,9 +76,9 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 
 	via := ctx.HTTPHeader.Get(rfc.Via)
 	if via != "" {
-		result := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
-		if len(result) > 0 {
-			cacheName = result[1]
+		viaRegexSubmatch := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
+		if len(viaRegexSubmatch) > 0 {
+			cacheName = viaRegexSubmatch[1]
 		}
 	}
 
