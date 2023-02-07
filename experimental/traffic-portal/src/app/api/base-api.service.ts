@@ -26,7 +26,7 @@ export abstract class APIService {
 	 * The API version used by the service(s) - this will be overridden by the
 	 * environment if a different API version is therein found.
 	 */
-	public apiVersion = "3.0";
+	public apiVersion = "4.0";
 
 	/**
 	 * Sends an HTTP DELETE request to the API.

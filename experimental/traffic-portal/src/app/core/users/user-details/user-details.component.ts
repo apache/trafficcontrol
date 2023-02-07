@@ -15,10 +15,9 @@
 import { Component, type OnInit } from "@angular/core";
 import type { MatSelectChange } from "@angular/material/select";
 import { ActivatedRoute } from "@angular/router";
-import type { GetResponseUser, PostRequestUser, PutOrPostResponseUser, User } from "trafficops-types";
+import type { PostRequestUser, ResponseRole, ResponseTenant, ResponseUser, User } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { Role, Tenant } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
@@ -32,9 +31,9 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 })
 export class UserDetailsComponent implements OnInit {
 
-	public user!: GetResponseUser | PostRequestUser | PutOrPostResponseUser;
-	public roles = new Array<Role>();
-	public tenants = new Array<Tenant>();
+	public user!: ResponseUser | PostRequestUser;
+	public roles = new Array<ResponseRole>();
+	public tenants = new Array<ResponseTenant>();
 	public new = false;
 
 	constructor(
@@ -63,8 +62,8 @@ export class UserDetailsComponent implements OnInit {
 				email: "user@example.com",
 				fullName: "",
 				localPasswd: "",
-				role: this.currentUserService.currentUser?.role ?? 1,
-				tenantID: this.currentUserService.currentUser?.tenantId ?? 1,
+				role: this.currentUserService.currentUser?.role ?? "",
+				tenantId: this.currentUserService.currentUser?.tenantId ?? 1,
 				username: "",
 			};
 			return;
@@ -112,13 +111,13 @@ export class UserDetailsComponent implements OnInit {
 	 *
 	 * @returns The user's current Role.
 	 */
-	public role(): Role | null {
+	public role(): ResponseRole | null {
 		if (this.isNew(this.user)) {
 			return null;
 		}
-		const role = this.roles.find(r=>r.id === this.user.role);
+		const role = this.roles.find(r=>r.name === this.user.role);
 		if (!role) {
-			throw new Error(`user's Role "${this.user.rolename}" (#${this.user.role}) does not exist`);
+			throw new Error(`user's Role "${this.user.role}" does not exist`);
 		}
 		return role;
 	}
@@ -128,7 +127,7 @@ export class UserDetailsComponent implements OnInit {
 	 *
 	 * @returns The user's current Tenant.
 	 */
-	public tenant(): Tenant | null {
+	public tenant(): ResponseTenant | null {
 		if (this.isNew(this.user)) {
 			return null;
 		}
@@ -145,11 +144,8 @@ export class UserDetailsComponent implements OnInit {
 	 *
 	 * @param r The Role selected by the user.
 	 */
-	public updateRole(r: MatSelectChange & {value: Role}): void {
-		this.user.role = r.value.id;
-		if (!this.isNew(this.user)) {
-			this.user.rolename = r.value.name;
-		}
+	public updateRole(r: MatSelectChange & {value: ResponseRole}): void {
+		this.user.role = r.value.name;
 	}
 
 	/**
@@ -158,7 +154,7 @@ export class UserDetailsComponent implements OnInit {
 	 *
 	 * @param t The Tenant selected by the user.
 	 */
-	public updateTenant(t: MatSelectChange & {value: Tenant}): void {
+	public updateTenant(t: MatSelectChange & {value: ResponseTenant}): void {
 		this.user.tenantId = t.value.id;
 		if (!this.isNew(this.user)) {
 			this.user.tenant = t.value.name;

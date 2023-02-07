@@ -13,21 +13,23 @@
 */
 import { DOCUMENT } from "@angular/common";
 import { Component, type OnInit, ViewChild, Inject } from "@angular/core";
-import { UntypedFormControl } from "@angular/forms";
+import { FormControl } from "@angular/forms";
 import type { MatStepper } from "@angular/material/stepper";
 import { Router } from "@angular/router";
-import type { ResponseCDN } from "trafficops-types";
-
-import { CDNService, DeliveryServiceService } from "src/app/api";
 import {
 	bypassable,
-	defaultDeliveryService,
-	type DeliveryService,
+	GeoLimit,
+	GeoProvider,
 	Protocol,
 	protocolToString,
-	type Type,
-	type User
-} from "src/app/models";
+	QStringHandling,
+	RangeRequestHandling,
+	TypeFromResponse,
+	type RequestDeliveryService,
+	type ResponseCDN
+} from "trafficops-types";
+
+import { CDNService, DeliveryServiceService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -69,28 +71,55 @@ const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])?(\.[A-z\d]([A-z0-9\-]*[A-z
 export class NewDeliveryServiceComponent implements OnInit {
 
 	/** The Delivery Service being created */
-	public deliveryService: DeliveryService = {...defaultDeliveryService};
+	public deliveryService: RequestDeliveryService = {
+		active: true,
+		anonymousBlockingEnabled: true,
+		cacheurl: null,
+		cdnId: 1,
+		deepCachingType: "NEVER",
+		displayName: "",
+		dscp: 0,
+		geoLimit: GeoLimit.NONE,
+		geoProvider: GeoProvider.MAX_MIND,
+		httpBypassFqdn: null,
+		infoUrl: null,
+		ipv6RoutingEnabled: true,
+		logsEnabled: true,
+		missLat: 0,
+		missLong: 0,
+		multiSiteOrigin: false,
+		orgServerFqdn: "",
+		protocol: Protocol.HTTP,
+		qstringIgnore: QStringHandling.USE,
+		rangeRequestHandling: RangeRequestHandling.NONE,
+		regionalGeoBlocking: false,
+		remapText: null,
+		routingName: "",
+		tenantId: 1,
+		typeId: 1,
+		xmlId: ""
+	};
 
 	/** Allows the user to set 'active' */
-	public activeImmediately = new UntypedFormControl();
+	public activeImmediately = new FormControl(false);
 	/** Allows the user to set 'bypass*' fields */
-	public bypassLoc = new UntypedFormControl("");
+	public bypassLoc = new FormControl("");
 	/** Allows the user to set 'cdn'/'cdnName' */
-	public cdnObject = new UntypedFormControl("");
+	public cdnObject = new FormControl<ResponseCDN | null>(null);
 	/** Allows the user to set the 'longDesc' */
-	public description = new UntypedFormControl("");
+	public description = new FormControl("");
 	/** Allows the user to set 'ipv6Enabled' */
-	public disableIPv6 = new UntypedFormControl();
+	public disableIPv6 = new FormControl(false);
 	/** Allows the user to set the 'displayName'/'xml_id' */
-	public displayName = new UntypedFormControl("");
+	public displayName = new FormControl("");
 	/** Allows the user to set 'type'/'typeId' */
-	public dsType = new UntypedFormControl();
+	public dsType = new FormControl<TypeFromResponse | null>(null);
 	/** Allows the user to set 'infoUrl' */
-	public infoURL = new UntypedFormControl("");
+	public infoURL = new FormControl("");
 	/** Allows the user to set 'originFqdn' */
-	public originURL = new UntypedFormControl("");
+	public originURL = new FormControl("");
 	/** Allows the user to set 'protocol' */
-	public protocol = new UntypedFormControl();
+	public protocol = new FormControl(Protocol.HTTP);
 
 	/** Need This to be a property for template access. */
 	public readonly protocolToString = protocolToString;
@@ -110,7 +139,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * The available useInTable=delivery_service Types from which for the user
 	 * to choose.
 	 */
-	public dsTypes: Array<Type> = [];
+	public dsTypes: Array<TypeFromResponse> = [];
 
 	/** Need public access to models.bypassable in the template. */
 	public bypassable = bypassable;
@@ -140,14 +169,12 @@ export class NewDeliveryServiceComponent implements OnInit {
 		}
 		this.navSvc.headerTitle.next("New Delivery Service");
 
-		this.deliveryService.tenant = this.auth.currentUser.tenant;
 		this.deliveryService.tenantId = this.auth.currentUser.tenantId;
-		const typeP = this.dsAPI.getDSTypes().then(
-			(types: Array<Type>) => {
+		const typeP = await this.dsAPI.getDSTypes().then(
+			types => {
 				this.dsTypes = types;
 				for (const t of types) {
 					if (t.name === "HTTP") {
-						this.deliveryService.type = t.name;
 						this.deliveryService.typeId = t.id;
 						this.dsType.setValue(t);
 						break;
@@ -163,7 +190,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			d => {
 				const cdnsInUse = new Map<number, number>();
 				for (const ds of d) {
-					if (ds.tenantId === (this.auth.currentUser as User).tenantId) {
+					if (ds.tenantId === this.auth.currentUser?.tenantId) {
 						const usedCDNs = cdnsInUse.get(ds.tenantId);
 						if (!usedCDNs) {
 							cdnsInUse.set(ds.tenantId, 1);
@@ -224,7 +251,6 @@ export class NewDeliveryServiceComponent implements OnInit {
 			def = this.cdns[0];
 		}
 		this.deliveryService.cdnId = def.id;
-		this.deliveryService.cdnName = def.name;
 		this.cdnObject.setValue(def);
 	}
 
@@ -232,7 +258,8 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * Updates the header text based on the status of the current delivery service
 	 */
 	public updateDisplayName(): void {
-		this.navSvc.headerTitle.next(this.displayName.value === "" ? "New Delivery Service" : this.displayName.value);
+		const value = this.displayName.value ?? "";
+		this.navSvc.headerTitle.next(value === "" ? "New Delivery Service" : value);
 	}
 
 	/**
@@ -240,14 +267,19 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * related DS fields.
 	 */
 	public setOriginURL(): void {
-		const parser = this.document.createElement("a");
-		parser.href = this.originURL.value;
-		this.deliveryService.orgServerFqdn = parser.origin;
-		if (parser.pathname) {
-			this.deliveryService.checkPath = parser.pathname;
+		let url;
+		try {
+			url = new URL(this.originURL.value ?? "");
+		} catch (e) {
+			console.error("invalid origin URL:", e);
+			return;
+		}
+		this.deliveryService.orgServerFqdn = url.origin;
+		if (url.pathname) {
+			this.deliveryService.checkPath = url.pathname;
 		}
 
-		switch (parser.protocol) {
+		switch (url.protocol) {
 			case "http:":
 				this.deliveryService.protocol = Protocol.HTTP_AND_HTTPS;
 				this.protocol.setValue(Protocol.HTTP_AND_HTTPS);
@@ -263,10 +295,10 @@ export class NewDeliveryServiceComponent implements OnInit {
 		}
 
 		if (this.activeImmediately.dirty) {
-			this.deliveryService.active = this.activeImmediately.value;
+			this.deliveryService.active = this.activeImmediately.value ?? false;
 		}
 
-		this.deliveryService.displayName = `Delivery Service for ${parser.hostname}`;
+		this.deliveryService.displayName = `Delivery Service for ${url.hostname}`;
 		this.displayName.setValue(this.deliveryService.displayName);
 		this.stepper.next();
 	}
@@ -280,7 +312,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * string.
 	 */
 	public setMetaInformation(): void {
-		this.deliveryService.displayName = this.displayName.value;
+		this.deliveryService.displayName = this.displayName.value ?? "";
 		this.deliveryService.xmlId = this.deliveryService.displayName.toLocaleLowerCase().replace(XML_ID_SANITIZE, "-");
 		if (! VALID_XML_ID.test(this.deliveryService.xmlId)) {
 			// According to https://stackoverflow.com/questions/39642547/is-it-possible-to-get-native-element-for-formcontrol
@@ -310,11 +342,9 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * DNS and redirects
 	 */
 	public setInfrastructureInformation(): void {
-		this.deliveryService.cdnName = this.cdnObject.value.name;
-		this.deliveryService.cdnId = this.cdnObject.value.id;
+		this.deliveryService.cdnId = this.cdnObject.value?.id ?? -1;
 		if (this.dsType.dirty) {
-			this.deliveryService.typeId = this.dsType.value.id;
-			this.deliveryService.type = this.dsType.value.name;
+			this.deliveryService.typeId = this.dsType.value?.id ?? -1;
 		}
 
 		if (this.protocol.dirty) {
@@ -326,12 +356,12 @@ export class NewDeliveryServiceComponent implements OnInit {
 		}
 
 		if (this.bypassLoc.dirty) {
-			switch (this.deliveryService.type) {
+			switch (this.dsType.value?.name) {
 				case "DNS":
 				case "DNS_LIVE":
 				case "DNS_LIVE_NATNL":
 					try {
-						this.setDNSBypass(this.bypassLoc.value);
+						this.setDNSBypass(this.bypassLoc.value ?? "");
 					} catch (e) {
 						console.error(e);
 						const nativeBypassElement = this.document.getElementById("bypass-loc") as HTMLInputElement;

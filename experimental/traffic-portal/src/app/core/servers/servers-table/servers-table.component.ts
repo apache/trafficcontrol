@@ -12,24 +12,23 @@
 * limitations under the License.
 */
 
-import {Component, type OnInit} from "@angular/core";
-import {UntypedFormControl} from "@angular/forms";
-import {MatDialog} from "@angular/material/dialog";
-import {ActivatedRoute, Router} from "@angular/router";
-import type {ITooltipParams} from "ag-grid-community";
-import {BehaviorSubject} from "rxjs";
+import { Component , type OnInit} from "@angular/core";
+import { UntypedFormControl } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute , Router} from "@angular/router";
+import type { ITooltipParams } from "ag-grid-community";
+import { BehaviorSubject } from "rxjs";
+import { type ResponseServer, serviceAddresses } from "trafficops-types";
 
-import {ServerService} from "src/app/api";
-import {UpdateStatusComponent} from "src/app/core/servers/update-status/update-status.component";
-import type {Interface, Server} from "src/app/models";
-import type {ContextMenuActionEvent, ContextMenuItem} from "src/app/shared/generic-table/generic-table.component";
+import { ServerService } from "src/app/api";
+import { UpdateStatusComponent } from "src/app/core/servers/update-status/update-status.component";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import {IPV4, serviceInterface} from "src/app/utils";
 
 /**
  * AugmentedServer has fields that give direct access to its service addresses without needing to recalculate them.
  */
-export interface AugmentedServer extends Server {
+export interface AugmentedServer extends ResponseServer {
 	/** The server's IPv4 service address */
 	ipv4Address: string;
 	/** The server's IPv6 service address */
@@ -42,32 +41,13 @@ export interface AugmentedServer extends Server {
  * @param s The server to convert.
  * @returns The converted server.
  */
-export function augment(s: Server): AugmentedServer {
-	const aug: AugmentedServer = {ipv4Address: "", ipv6Address: "", ...s};
-	let inf: Interface;
-	try {
-		inf = serviceInterface(aug.interfaces);
-	} catch (e) {
-		console.error(`server #${s.id}:`, e);
-		return aug;
-	}
-	for (const ip of inf.ipAddresses) {
-		if (!ip.serviceAddress) {
-			continue;
-		}
-		if (IPV4.test(ip.address)) {
-			if (aug.ipv4Address !== "") {
-				console.warn("found more than one IPv4 service address for server:", s.id);
-			}
-			aug.ipv4Address = ip.address;
-		} else {
-			if (aug.ipv6Address !== "") {
-				console.warn("found more than one IPv6 service address for server:", s.id);
-			}
-			aug.ipv6Address = ip.address;
-		}
-	}
-	return aug;
+export function augment(s: ResponseServer): AugmentedServer {
+	const [ipv4Address, ipv6Address] = serviceAddresses(s.interfaces);
+	return {
+		...s,
+		ipv4Address: ipv4Address ? ipv4Address.address : "" ,
+		ipv6Address: ipv6Address ? ipv6Address.address : ""
+	};
 }
 
 /**

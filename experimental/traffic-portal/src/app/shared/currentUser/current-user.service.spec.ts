@@ -15,13 +15,48 @@ import { Location } from "@angular/common";
 import { fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
+import type { ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { LoginComponent } from "src/app/login/login.component";
-import { newCurrentUser, type User } from "src/app/models";
 
 import { CurrentUserService } from "./current-user.service";
+
+/**
+ * Creates a new user for testing purposes.
+ *
+ * @returns A new current user.
+ */
+function newCurrentUser(): ResponseCurrentUser {
+	return {
+		addressLine1: "addressLine1",
+		addressLine2: "addressLine2",
+		changeLogCount: 2,
+		city: "city",
+		company: "company",
+		country: "country",
+		email: "em@i.l",
+		fullName: "fullName",
+		gid: null,
+		id: 1,
+		lastAuthenticated: null,
+		lastUpdated: new Date(),
+		localUser: true,
+		newUser: false,
+		phoneNumber: "phoneNumber",
+		postalCode: "postalCode",
+		publicSshKey: "publicSshKey",
+		registrationSent: null,
+		role: "roleName",
+		stateOrProvince: "stateOrProvince",
+		tenant: "tenant",
+		tenantId: 1,
+		ucdn: "",
+		uid: null,
+		username: "username"
+	};
+}
 
 describe("CurrentUserService", () => {
 	let service: CurrentUserService;
@@ -30,8 +65,8 @@ describe("CurrentUserService", () => {
 
 	beforeEach(() => {
 		const mockAPIService = jasmine.createSpyObj(["updateCurrentUser", "getCurrentUser", "saveCurrentUser"]);
-		mockAPIService.getCurrentUser.and.returnValue(new Promise<User>(resolve => resolve(
-			{id: 1, newUser: false, role: 1, username: "name"}
+		mockAPIService.getCurrentUser.and.returnValue(new Promise<ResponseCurrentUser>(resolve => resolve(
+			{id: 1, newUser: false, role: "admin", username: "name"} as ResponseCurrentUser
 		)));
 		TestBed.configureTestingModule({
 			imports: [
@@ -56,7 +91,7 @@ describe("CurrentUserService", () => {
 		service.logout();
 		expect(service.loggedIn).toBeFalse();
 		expect(service.currentUser).toBeNull();
-		expect(service.capabilities.getValue().size).toBe(0);
+		expect(service.permissions.getValue().size).toBe(0);
 	});
 
 	it("should update user data properly", () => {
@@ -65,26 +100,29 @@ describe("CurrentUserService", () => {
 			{
 				addressLine1: "address line 1",
 				addressLine2: "address line 2",
+				changeLogCount: 2,
 				city: "city",
 				company: "company",
 				country: "country",
-				email: "email",
+				email: "em@i.l",
 				fullName: "full name",
 				gid: 0,
 				id: 9000,
+				lastAuthenticated: null,
 				lastUpdated: upd,
 				localUser: true,
 				newUser: false,
 				phoneNumber: "7",
 				postalCode: "also 7",
 				publicSshKey: "ssh key",
-				role: 1,
-				roleName: "role name",
+				registrationSent: null,
+				role: "role name",
 				stateOrProvince: "state or province",
 				tenant: "tenant",
 				tenantId: 2,
+				ucdn: "",
 				uid: 3,
-				username: "quest"
+				username: "quest",
 			},
 			new Set(["a permission"])
 		);
@@ -94,26 +132,29 @@ describe("CurrentUserService", () => {
 			{
 				addressLine1: null,
 				addressLine2: null,
+				changeLogCount: 2,
 				city: null,
 				company: null,
 				country: null,
-				email: "different email",
+				email: "different em@i.l",
 				fullName: "different full name",
 				gid: null,
 				id: 9001,
-				lastUpdated: new Date(upd.getTime()+1000),
+				lastAuthenticated: null,
+				lastUpdated: new Date(upd.getTime() + 1000),
 				localUser: false,
 				newUser: true,
 				phoneNumber: null,
 				postalCode: null,
 				publicSshKey: null,
-				role: 2,
-				roleName: "different role name",
+				registrationSent: null,
+				role: "different role name",
 				stateOrProvince: null,
 				tenant: "different tenant",
 				tenantId: 1,
+				ucdn: "",
 				uid: null,
-				username: "test"
+				username: "test",
 			},
 			new Set()
 		);
@@ -125,24 +166,27 @@ describe("CurrentUserService", () => {
 		expect(u).toEqual({
 			addressLine1: null,
 			addressLine2: null,
+			changeLogCount: 2,
 			city: null,
 			company: null,
 			country: null,
-			email: "different email",
+			email: "different em@i.l",
 			fullName: "different full name",
 			gid: null,
 			id: 9001,
+			lastAuthenticated: null,
 			lastUpdated: new Date(upd.getTime()+1000),
 			localUser: false,
 			newUser: true,
 			phoneNumber: null,
 			postalCode: null,
 			publicSshKey: null,
-			role: 2,
-			roleName: "different role name",
+			registrationSent: null,
+			role: "different role name",
 			stateOrProvince: null,
 			tenant: "different tenant",
 			tenantId: 1,
+			ucdn: "",
 			uid: null,
 			username: "test",
 		});
@@ -160,14 +204,14 @@ describe("CurrentUserService", () => {
 		expect(service.hasPermission("a permission")).toBeTrue();
 		expect(service.hasPermission("a different permission")).toBeFalse();
 
-		service.setUser(newCurrentUser(), [{description: "", name: "a permission"}]);
+		service.setUser(newCurrentUser(), [{description: "", lastUpdated: new Date(), name: "a permission"}]);
 		expect(service.hasPermission("a permission")).toBeTrue();
 		expect(service.hasPermission("a different permission")).toBeFalse();
 	});
 
 	it("lets 'admin' users do things even when they don't have permission", () => {
-		service.setUser({...newCurrentUser(), roleName: "admin"}, new Set());
-		expect(service.capabilities.getValue().has("a permission")).toBeFalse();
+		service.setUser({...newCurrentUser(), role: CurrentUserService.ADMIN_ROLE}, new Set());
+		expect(service.permissions.getValue().has("a permission")).toBeFalse();
 		expect(service.hasPermission("a permission")).toBeTrue();
 	});
 

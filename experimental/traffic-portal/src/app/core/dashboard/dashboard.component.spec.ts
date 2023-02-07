@@ -16,11 +16,11 @@ import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/t
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {ReplaySubject} from "rxjs";
+import { ReplaySubject } from "rxjs";
+import { GeoLimit, GeoProvider } from "trafficops-types";
 
-import { DeliveryServiceService } from "src/app/api";
+import { CDNService, DeliveryServiceService, TypeService, UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { defaultDeliveryService } from "src/app/models";
 import { AlertService } from "src/app/shared/alert/alert.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -66,15 +66,66 @@ describe("DashboardComponent", () => {
 			]
 		}).compileComponents();
 		const service = TestBed.inject(DeliveryServiceService);
+		const cdnService = TestBed.inject(CDNService);
+		const cdn = (await cdnService.getCDNs()).find(c => c.name !== "ALL");
+		if (!cdn) {
+			throw new Error("can't test a DS card component without any CDNs");
+		}
+		const typeService = TestBed.inject(TypeService);
+		const type = (await typeService.getTypesInTable("deliveryservice")).find(t => t.name === "ANY_MAP");
+		if (!type) {
+			throw new Error("can't test a DS card component without DS types");
+		}
+		const tenantService = TestBed.inject(UserService);
+		const tenant = (await tenantService.getTenants())[0];
+
 		const dss = [
 			await service.createDeliveryService({
-				...defaultDeliveryService,
+				active: false,
+				anonymousBlockingEnabled: false,
+				cacheurl: null,
+				cdnId: cdn.id,
 				displayName: "FIZZbuzz",
-				xmlId: "fizz-buzz"
+				dscp: 0,
+				geoLimit: GeoLimit.NONE,
+				geoProvider: GeoProvider.MAX_MIND,
+				httpBypassFqdn: null,
+				infoUrl: null,
+				ipv6RoutingEnabled: true,
+				logsEnabled: true,
+				longDesc: "",
+				missLat: 0,
+				missLong: 0,
+				multiSiteOrigin: false,
+				regionalGeoBlocking: false,
+				remapText: null,
+				routingName: "",
+				tenantId: tenant.id,
+				typeId: type.id,
+				xmlId: "fizz-buzz",
 			}),
 			await service.createDeliveryService({
-				...defaultDeliveryService,
+				active: false,
+				anonymousBlockingEnabled: false,
+				cacheurl: null,
+				cdnId: cdn.id,
 				displayName: "fooBAR",
+				dscp: 0,
+				geoLimit: GeoLimit.NONE,
+				geoProvider: GeoProvider.MAX_MIND,
+				httpBypassFqdn: null,
+				infoUrl: null,
+				ipv6RoutingEnabled: true,
+				logsEnabled: true,
+				longDesc: "",
+				missLat: 0,
+				missLong: 0,
+				multiSiteOrigin: false,
+				regionalGeoBlocking: false,
+				remapText: null,
+				routingName: "",
+				tenantId: tenant.id,
+				typeId: type.id,
 				xmlId: "foo-bar"
 			})
 		];

@@ -13,14 +13,68 @@
 */
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {of} from "rxjs";
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { of } from "rxjs";
+import type { ResponseServer } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import {defaultServer, Server} from "src/app/models";
 
 import { UpdateStatusComponent } from "./update-status.component";
+
+const defaultServer = {
+	cachegroup: "",
+	cachegroupId: 1,
+	cdnId: 1,
+	cdnName: "",
+	domainName: "",
+	guid: null,
+	hostName: "",
+	httpsPort: null,
+	id: -1,
+	iloIpAddress: null,
+	iloIpGateway: null,
+	iloIpNetmask: null,
+	iloPassword: null,
+	iloUsername: null,
+	interfaces: [
+		{
+			ipAddresses: [
+				{
+					address: "1.2.3.4",
+					gateway: null,
+					serviceAddress: true
+				}
+			],
+			maxBandwidth:null,
+			monitor: false,
+			mtu: null,
+			name: "eth0",
+		}
+	],
+	lastUpdated: new Date(),
+	mgmtIpAddress: null,
+	mgmtIpGateway: null,
+	mgmtIpNetmask: null,
+	offlineReason: null,
+	physLocation: "",
+	physLocationId: 1,
+	profile: "",
+	profileDesc: "",
+	profileId: 1,
+	rack: null,
+	revalPending: false,
+	routerHostName: null,
+	routerPortName: null,
+	status: "",
+	statusId: 1,
+	statusLastUpdated: null,
+	tcpPort: null,
+	type: "",
+	typeId: 1,
+	updPending: false,
+	xmppId: "",
+};
 
 describe("UpdateStatusComponent", () => {
 	let component: UpdateStatusComponent;
@@ -34,7 +88,7 @@ describe("UpdateStatusComponent", () => {
 			declarations: [ UpdateStatusComponent ],
 			imports: [ HttpClientModule, APITestingModule ],
 			providers: [ {provide: MatDialogRef, useValue: mockMatDialog },
-				{provide: MAT_DIALOG_DATA, useValue: (): Array<Server> => []}]
+				{provide: MAT_DIALOG_DATA, useValue: (): Array<ResponseServer> => []}]
 		}).compileComponents();
 		fixture = TestBed.createComponent(UpdateStatusComponent);
 		component = fixture.componentInstance;
@@ -95,16 +149,16 @@ describe("UpdateStatusComponent", () => {
 		component.status = null;
 		expect(component.isOffline).toBeFalse();
 
-		component.status = {description: "", name: "OFFLINE"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "OFFLINE"};
 		expect(component.isOffline).toBeTrue();
 
-		component.status = {description: "", name: "some weird custom status"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "some weird custom status"};
 		expect(component.isOffline).toBeTrue();
 
-		component.status = {description: "", name: "ONLINE"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "ONLINE"};
 		expect(component.isOffline).toBeFalse();
 
-		component.status = {description: "", name: "REPORTED"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "REPORTED"};
 		expect(component.isOffline).toBeFalse();
 	});
 
@@ -131,7 +185,7 @@ describe("UpdateStatusComponent", () => {
 
 		result = false;
 		mockMatDialog.afterClosed.and.returnValue(of(result));
-		component.status = {description: "", name: "no such status"};
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "no such status"};
 		await component.submit(new Event("click"));
 		expect(mockMatDialog.close.calls.count()).toBe(3);
 	});

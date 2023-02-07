@@ -17,12 +17,12 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {type Observable, of, ReplaySubject} from "rxjs";
+import { type Observable, of, ReplaySubject } from "rxjs";
+import { GeoLimit, GeoProvider, JobType, ResponseInvalidationJob } from "trafficops-types";
 
-import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
+import { CDNService, DeliveryServiceService, InvalidationJobService, TypeService, UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { InvalidationJobsComponent } from "src/app/core/deliveryservice/invalidation-jobs/invalidation-jobs.component";
-import { defaultDeliveryService, type InvalidationJob, JobType } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
@@ -32,7 +32,7 @@ describe("InvalidationJobsComponent", () => {
 	let component: InvalidationJobsComponent;
 	let fixture: ComponentFixture<InvalidationJobsComponent>;
 	let router: Router;
-	let job: InvalidationJob;
+	let job: ResponseInvalidationJob;
 
 	beforeEach(async () => {
 		// mock the API
@@ -65,7 +65,42 @@ describe("InvalidationJobsComponent", () => {
 		}).compileComponents();
 
 		const dsService = TestBed.inject(DeliveryServiceService);
-		const ds = await dsService.createDeliveryService({...defaultDeliveryService});
+		const cdnService = TestBed.inject(CDNService);
+		const cdn = (await cdnService.getCDNs()).find(c => c.name !== "ALL");
+		if (!cdn) {
+			throw new Error("can't test a DS card component without any CDNs");
+		}
+		const typeService = TestBed.inject(TypeService);
+		const type = (await typeService.getTypesInTable("deliveryservice")).find(t => t.name === "ANY_MAP");
+		if (!type) {
+			throw new Error("can't test a DS card component without DS types");
+		}
+		const tenantService = TestBed.inject(UserService);
+		const tenant = (await tenantService.getTenants())[0];
+
+		const ds = await dsService.createDeliveryService({
+			active: false,
+			anonymousBlockingEnabled: false,
+			cacheurl: null,
+			cdnId: cdn.id,
+			displayName: "FIZZbuzz",
+			dscp: 0,
+			geoLimit: GeoLimit.NONE,
+			geoProvider: GeoProvider.MAX_MIND,
+			httpBypassFqdn: null,
+			infoUrl: null,
+			ipv6RoutingEnabled: true,
+			logsEnabled: true,
+			longDesc: "",
+			missLat: 0,
+			missLong: 0,
+			multiSiteOrigin: false,
+			regionalGeoBlocking: false,
+			remapText: null,
+			tenantId: tenant.id,
+			typeId: type.id,
+			xmlId: "fizz-buzz",
+		});
 
 		router = TestBed.inject(Router);
 		router.initialNavigation();
@@ -78,13 +113,15 @@ describe("InvalidationJobsComponent", () => {
 		const jobService = TestBed.inject(InvalidationJobService);
 		job = await jobService.createInvalidationJob({
 			deliveryService: ds.xmlId,
+			invalidationType: JobType.REFRESH,
 			regex: "/",
 			startTime: new Date(),
-			ttl: 178
+			ttlHours: 178
 		});
 
 		fixture = TestBed.createComponent(InvalidationJobsComponent);
 		component = fixture.componentInstance;
+		component.deliveryservice = ds;
 		fixture.detectChanges();
 	});
 
@@ -102,9 +139,9 @@ describe("InvalidationJobsComponent", () => {
 			createdBy: "",
 			deliveryService: "",
 			id: -1,
-			keyword: JobType.PURGE,
-			parameters: "TTL:1h",
-			startTime: new Date(component.now)
+			invalidationType: JobType.REFETCH,
+			startTime: new Date(component.now),
+			ttlHours: 1
 		};
 		j.startTime.setDate(j.startTime.getDate()-1);
 		expect(component.isInProgress(j)).toBeFalse();
@@ -121,21 +158,13 @@ describe("InvalidationJobsComponent", () => {
 			createdBy: "also doesn't matter",
 			deliveryService: "doesn't matter either",
 			id: -1,
-			keyword: JobType.PURGE,
-			parameters: "",
+			invalidationType: JobType.REFETCH,
 			startTime: new Date(0),
+			ttlHours: 178,
 		};
-		expect(()=>component.endDate(j)).toThrow();
-
-		j.parameters = "TTL";
-		expect(()=>component.endDate(j)).toThrow();
-
-		j.parameters = "TTL:not a number";
-		expect(()=>component.endDate(j)).toThrow();
 
 		const expected = new Date(0);
 		expected.setHours(expected.getHours()+178);
-		j.parameters = "TTL:178h";
 		expect(component.endDate(j)).toEqual(expected);
 	});
 

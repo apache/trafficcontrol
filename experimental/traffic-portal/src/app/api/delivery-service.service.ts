@@ -13,19 +13,20 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { SteeringConfiguration } from "trafficops-types";
+import type {
+	Capacity,
+	Health,
+	RequestDeliveryService,
+	ResponseDeliveryService,
+	SteeringConfiguration,
+	TypeFromResponse
+} from "trafficops-types";
 
-import {
-	type DataPoint,
-	type DataSet,
-	type DataSetWithSummary,
-	defaultDeliveryService,
-	type DeliveryService,
-	type DSCapacity,
-	type DSHealth,
-	type InvalidationJob,
-	type TPSData,
-	type Type
+import type {
+	DataPoint,
+	DataSet,
+	DataSetWithSummary,
+	TPSData,
 } from "src/app/models";
 
 import { APIService } from "./base-api.service";
@@ -147,7 +148,7 @@ function constructDataSetFromResponse(r: object): DataSetWithSummary {
 export class DeliveryServiceService extends APIService {
 
 	/** This is where DS Types are cached, as they are presumed to not change (often). */
-	private deliveryServiceTypes: Array<Type>;
+	private deliveryServiceTypes: Array<TypeFromResponse>;
 
 	/**
 	 * Injects the Angular HTTP client service into the parent constructor.
@@ -156,7 +157,7 @@ export class DeliveryServiceService extends APIService {
 	 */
 	constructor(http: HttpClient) {
 		super(http);
-		this.deliveryServiceTypes = new Array<Type>();
+		this.deliveryServiceTypes = new Array<TypeFromResponse>();
 	}
 
 	/**
@@ -169,8 +170,8 @@ export class DeliveryServiceService extends APIService {
 		return this.get<Array<SteeringConfiguration>>(path).toPromise();
 	}
 
-	public async getDeliveryServices(id: string | number): Promise<DeliveryService>;
-	public async getDeliveryServices(): Promise<Array<DeliveryService>>;
+	public async getDeliveryServices(id: string | number): Promise<ResponseDeliveryService>;
+	public async getDeliveryServices(): Promise<Array<ResponseDeliveryService>>;
 	/**
 	 * Gets a list of all visible Delivery Services
 	 *
@@ -178,7 +179,7 @@ export class DeliveryServiceService extends APIService {
 	 * @throws TypeError if ``id`` is not a proper type
 	 * @returns An array of `DeliveryService` objects.
 	 */
-	public async getDeliveryServices(id?: string | number): Promise<DeliveryService[] | DeliveryService> {
+	public async getDeliveryServices(id?: string | number): Promise<ResponseDeliveryService[] | ResponseDeliveryService> {
 		const path = "deliveryservices";
 		if (id) {
 			let params;
@@ -191,29 +192,19 @@ export class DeliveryServiceService extends APIService {
 				case "number":
 					params = {id: String(id)};
 			}
-			return this.get<[DeliveryService]>(path, undefined, params).toPromise().then(
-				r => {
-					const ds = r[0];
-					ds.lastUpdated = new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"));
-					return ds;
-				}
-			).catch(
-				e => {
-					console.error("Error getting Delivery Services:", e);
-					return {...defaultDeliveryService};
-				}
-			);
+			const r = await this.get<[ResponseDeliveryService]>(path, undefined, params).toPromise();
+			const ds = r[0];
+			return {
+				...ds,
+				lastUpdated: new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"))
+			};
 		}
-		return this.get<Array<DeliveryService>>(path).toPromise().then(r => r.map(
-			ds => {
-				ds.lastUpdated = new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"));
-				return ds;
-			}
-		)).catch(
-			e => {
-				console.error("Error getting Delivery Services:", e);
-				return [];
-			}
+		const resp = await this.get<Array<ResponseDeliveryService>>(path).toPromise();
+		return resp.map(
+			ds => ({
+				...ds,
+				lastUpdated: new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"))
+			})
 		);
 	}
 
@@ -223,9 +214,9 @@ export class DeliveryServiceService extends APIService {
 	 * @param ds The new Delivery Service object
 	 * @returns A boolean value indicating the success of the operation
 	 */
-	public async createDeliveryService(ds: DeliveryService): Promise<DeliveryService> {
+	public async createDeliveryService(ds: RequestDeliveryService): Promise<ResponseDeliveryService> {
 		const path = "deliveryservices";
-		return this.post<DeliveryService>(path, ds).toPromise();
+		return this.post<ResponseDeliveryService>(path, ds).toPromise();
 	}
 
 	/**
@@ -236,7 +227,7 @@ export class DeliveryServiceService extends APIService {
 	 * @returns An object that hopefully has the right keys to represent capacity.
 	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
 	 */
-	public async getDSCapacity(d: number | DeliveryService): Promise<DSCapacity> {
+	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<Capacity> {
 		let id: number;
 		if (typeof d === "number") {
 			id = d;
@@ -249,13 +240,7 @@ export class DeliveryServiceService extends APIService {
 		}
 
 		const path = `deliveryservices/${id}/capacity`;
-		return this.get<DSCapacity>(path).toPromise().catch(
-			() => ({
-				availablePercent: 0,
-				maintenancePercent: 0,
-				utilizedPercent: 0
-			})
-		);
+		return this.get<Capacity>(path).toPromise();
 	}
 
 	/**
@@ -265,14 +250,9 @@ export class DeliveryServiceService extends APIService {
 	 * @param d The integral, unique identifier of a Delivery Service
 	 * @returns A response from the health endpoint
 	 */
-	public async getDSHealth(d: number): Promise<DSHealth> {
+	public async getDSHealth(d: number): Promise<Health> {
 		const path = `deliveryservices/${d}/health`;
-		return this.get<DSHealth>(path).toPromise().catch(
-			() => ({
-				totalOffline: 0,
-				totalOnline: 0
-			})
-		);
+		return this.get<Health>(path).toPromise();
 	}
 
 	public async getDSKBPS(
@@ -463,35 +443,13 @@ export class DeliveryServiceService extends APIService {
 	 * @returns An array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
 	 * 	types.
 	 */
-	public async getDSTypes(): Promise<Array<Type>> {
+	public async getDSTypes(): Promise<Array<TypeFromResponse>> {
 		if (this.deliveryServiceTypes.length > 0) {
 			return this.deliveryServiceTypes;
 		}
 		const path = "types";
-		return this.get<Array<Type>>(path, undefined, {useInTable: "deliveryservice"}).toPromise().catch(
-			e => {
-				console.error("Failed to get Delivery Service Types:", e);
-				return [];
-			}
-		).then(
-			r => {
-				this.deliveryServiceTypes = r;
-				return r;
-			}
-		);
-	}
-
-	/**
-	 * Creates a new content invalidation job.
-	 *
-	 * @param job The content invalidation job to be created.
-	 * @returns whether or not creation succeeded.
-	 */
-	public async createInvalidationJob(job: InvalidationJob): Promise<boolean> {
-		const path = "user/current/jobs";
-		return this.post<InvalidationJob>(path, job).toPromise().then(
-			() => true,
-			() => false
-		);
+		const r = await this.get<Array<TypeFromResponse>>(path, undefined, {useInTable: "deliveryservice"}).toPromise();
+		this.deliveryServiceTypes = r;
+		return r;
 	}
 }

@@ -16,8 +16,7 @@ import { Injectable } from "@angular/core";
 import { Router } from "@angular/router";
 import { type Observable, throwError } from "rxjs";
 import { catchError } from "rxjs/operators";
-
-import type { Alert } from "src/app/models";
+import type { Alert } from "trafficops-types";
 
 import { AlertService } from "../alert/alert.service";
 

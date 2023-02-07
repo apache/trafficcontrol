@@ -14,9 +14,9 @@
 import { EventEmitter, Injectable } from "@angular/core";
 import { Router } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
+import { Capability, ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import { type Capability, type CurrentUser, ADMIN_ROLE } from "src/app/models";
 
 /**
  * This service keeps track of the currently authenticated user.
@@ -30,20 +30,22 @@ import { type Capability, type CurrentUser, ADMIN_ROLE } from "src/app/models";
 	providedIn: "root"
 })
 export class CurrentUserService {
+	/** The special Role that's always allowed to do everything. */
+	public static readonly ADMIN_ROLE = "admin";
 	/** Makes updateCurrentUser able to be called from multiple places without regard to order */
 	private updatingUserPromise: Promise<boolean> | null = null;
 	/** To allow downstream code to stay up to date with the current user */
-	public userChanged = new EventEmitter<CurrentUser>();
+	public userChanged = new EventEmitter<ResponseCurrentUser>();
 	/** The currently authenticated user - or `null` if not authenticated. */
-	private user: CurrentUser | null = null;
+	private user: ResponseCurrentUser | null = null;
 
 	/** The currently authenticated user - or `null` if not authenticated. */
-	public get currentUser(): CurrentUser | null {
+	public get currentUser(): ResponseCurrentUser | null {
 		return this.user;
 	}
 
 	/** The Permissions afforded to the currently authenticated user. */
-	public capabilities: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set());
+	public permissions: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set());
 
 	/** Whether or not the user is authenticated. */
 	public get loggedIn(): boolean {
@@ -79,7 +81,7 @@ export class CurrentUserService {
 						throw new Error("current user had no Role");
 					}
 					const role = await this.api.getRoles(u.role);
-					this.setUser(u, new Set(role.capabilities));
+					this.setUser(u, new Set(role.permissions));
 					return true;
 				}
 			).catch(
@@ -98,7 +100,7 @@ export class CurrentUserService {
 	 * @param user User to e saved
 	 * @returns A promise returning the status of the update.
 	 */
-	public async saveCurrentUser(user: CurrentUser): Promise<boolean> {
+	public async saveCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		return this.api.updateCurrentUser(user);
 	}
 
@@ -124,11 +126,11 @@ export class CurrentUserService {
 	 * @param u The new user who has been authenticated.
 	 * @param caps The newly authenticated user's Permissions.
 	 */
-	public setUser(u: CurrentUser, caps: Set<string> | Array<Capability>): void {
+	public setUser(u: ResponseCurrentUser, caps: Set<string> | Array<Capability>): void {
 		this.user = u;
 		const capabilities = caps instanceof Array ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.user);
-		this.capabilities.next(capabilities);
+		this.permissions.next(capabilities);
 	}
 
 	/**
@@ -141,7 +143,7 @@ export class CurrentUserService {
 		if (!this.user) {
 			return false;
 		}
-		return this.user.roleName === ADMIN_ROLE || this.capabilities.getValue().has(perm);
+		return this.user.role === CurrentUserService.ADMIN_ROLE || this.permissions.getValue().has(perm);
 	}
 
 	/**
@@ -153,7 +155,7 @@ export class CurrentUserService {
 	 */
 	public logout(withRedirect?: boolean): void {
 		this.user = null;
-		this.capabilities.next(new Set());
+		this.permissions.next(new Set());
 
 		const queryParams: Record<string | symbol, string> = {};
 		if (withRedirect) {

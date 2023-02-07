@@ -25,7 +25,6 @@ import { of } from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { defaultServer } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { SharedModule } from "src/app/shared/shared.module";
 
@@ -62,7 +61,27 @@ describe("ServerDetailsComponent", () => {
 		fixture = TestBed.createComponent(ServerDetailsComponent);
 		const service = TestBed.inject(ServerService);
 		component = fixture.componentInstance;
-		component.server = await service.createServer({...defaultServer, interfaces: []});
+		component.server = await service.createServer({
+			cachegroupId: 1,
+			cdnId: 1,
+			domainName: "",
+			hostName: "",
+			httpsPort: null,
+			iloIpAddress: null,
+			iloIpGateway: null,
+			iloIpNetmask: null,
+			iloPassword: null,
+			iloUsername: null,
+			interfaces: [],
+			mgmtIpAddress: null,
+			mgmtIpGateway: null,
+			mgmtIpNetmask: null,
+			offlineReason: null,
+			physLocationId: 1,
+			profileId: 1,
+			statusId: 1,
+			typeId: 1
+		});
 		fixture.detectChanges();
 	});
 
@@ -108,6 +127,7 @@ describe("ServerDetailsComponent", () => {
 
 	it("knows if it's a cache", () => {
 		const s = component.server;
+		s.type = "";
 		expect(component.isCache()).toBeFalse();
 		s.type = "EDGE";
 		expect(component.isCache()).toBeTrue();

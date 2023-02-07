@@ -14,8 +14,8 @@
 
 import {Component, OnInit} from "@angular/core";
 import { Router } from "@angular/router";
+import { ResponseCurrentUser } from "trafficops-types";
 
-import { CurrentUser } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 
 /**
@@ -29,7 +29,7 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 export class AppComponent implements OnInit {
 
 	/** The currently logged-in user */
-	public currentUser: CurrentUser | null = null;
+	public currentUser: ResponseCurrentUser | null = null;
 
 	constructor(private readonly router: Router, private readonly auth: CurrentUserService) {
 	}

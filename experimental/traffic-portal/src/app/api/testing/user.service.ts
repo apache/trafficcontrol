@@ -15,14 +15,15 @@
 import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
-	GetResponseUser,
+	Capability,
 	PostRequestUser,
-	PutOrPostResponseUser,
+	PutRequestUser,
 	RequestTenant,
-	ResponseTenant
+	ResponseCurrentUser,
+	ResponseRole,
+	ResponseTenant,
+	ResponseUser
 } from "trafficops-types";
-
-import type { Role, Capability, CurrentUser, Tenant } from "src/app/models";
 
 /**
  * Represents a request to register a user via email using the `/users/register`
@@ -44,10 +45,11 @@ export class UserService {
 
 	private testAdminUsername = "test-admin";
 	private readonly testAdminPassword = "twelve12!";
-	private readonly users: Array<GetResponseUser> = [
+	private readonly users: Array<ResponseUser> = [
 		{
 			addressLine1: null,
 			addressLine2: null,
+			changeLogCount: 0,
 			city: null,
 			company: null,
 			country: null,
@@ -55,16 +57,18 @@ export class UserService {
 			fullName: "Test Admin",
 			gid: null,
 			id: ++this.lastID,
+			lastAuthenticated: new Date(),
 			lastUpdated: new Date(),
 			newUser: false,
 			phoneNumber: null,
 			postalCode: null,
 			publicSshKey: null,
-			role: 1,
-			rolename: "admin",
+			registrationSent: null,
+			role: "admin",
 			stateOrProvince: null,
 			tenant: "root",
 			tenantId: 1,
+			ucdn: "",
 			uid: null,
 			username: "test-admin"
 		}
@@ -167,27 +171,42 @@ export class UserService {
 	 *
 	 * @returns A `User` object representing the current user.
 	 */
-	public async getCurrentUser(): Promise<CurrentUser> {
+	public async getCurrentUser(): Promise<ResponseCurrentUser> {
 		let user = this.users.filter(u=>u.username === this.testAdminUsername)[0];
+		const transformUser = (u: ResponseUser): ResponseCurrentUser => ({
+			...u,
+			addressLine1: u.addressLine1,
+			addressLine2: u.addressLine2,
+			city: u.city,
+			company: u.company,
+			country: u.country,
+			email: u.email,
+			fullName: u.fullName,
+			gid: u.gid,
+			id: u.id,
+			lastUpdated: u.lastUpdated,
+			localUser: true,
+			newUser: u.newUser ?? false,
+			phoneNumber: u.phoneNumber,
+			postalCode: u.postalCode,
+			publicSshKey: u.publicSshKey,
+			registrationSent: u.registrationSent ?? null,
+			role: u.role,
+			stateOrProvince: u.stateOrProvince,
+			tenant: u.tenant,
+			tenantId: u.tenantId,
+			uid: u.uid,
+			username: u.username
+		});
 		if (user) {
-			return {
-				...user,
-				localUser: true,
-				newUser: user.newUser ?? false,
-				roleName: user.rolename ?? "",
-			};
+			return transformUser(user);
 		}
 		console.warn("stored admin username not found in stored users: from now on the current user will be (more or less) random");
 		user = this.users[0];
 		if (!user) {
 			throw new Error("no users exist");
 		}
-		return {
-			...user,
-			localUser: true,
-			newUser: user.newUser ?? false,
-			roleName: user.rolename ?? "",
-		};
+		return transformUser(user);
 	}
 
 	/**
@@ -196,7 +215,7 @@ export class UserService {
 	 * @param user Unused. This method does nothing in the testing environment yet.
 	 * @returns whether or not the request was successful.
 	 */
-	public async updateCurrentUser(user: CurrentUser): Promise<boolean> {
+	public async updateCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		const storedUser = this.users.findIndex(u=>u.id === user.id);
 		if (storedUser < 0) {
 			console.error(`no such User: #${user.id}`);
@@ -205,26 +224,20 @@ export class UserService {
 		this.testAdminUsername = user.username;
 		this.users[storedUser] = {
 			...user,
-			confirmLocalPasswd: undefined,
-			email: user.email as `${string}@${string}.${string}`,
-			fullName: user.fullName ?? "",
 			lastUpdated: new Date(),
-			roleName: undefined,
-			rolename: user.roleName,
-			stateOrProvince: user.stateOrProvince ?? "",
 		};
 		return true;
 	}
 
-	public async getUsers(nameOrID: string | number): Promise<GetResponseUser>;
-	public async getUsers(): Promise<Array<GetResponseUser>>;
+	public async getUsers(nameOrID: string | number): Promise<ResponseUser>;
+	public async getUsers(): Promise<Array<ResponseUser>>;
 	/**
 	 * Gets an array of all users in Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the User with the given username (string) or ID (number).
 	 * @returns An Array of User objects - or a single User object if 'nameOrID' was given.
 	 */
-	public async getUsers(nameOrID?: string | number): Promise<Array<GetResponseUser> | GetResponseUser> {
+	public async getUsers(nameOrID?: string | number): Promise<Array<ResponseUser> | ResponseUser> {
 		if (nameOrID) {
 			let user;
 			switch (typeof nameOrID) {
@@ -245,27 +258,71 @@ export class UserService {
 	/**
 	 * Replaces the current definition of a user with the one given.
 	 *
-	 * @param user The new definition of the User.
+	 * @param user The full new definition of the User.
 	 * @returns The user as updated.
 	 */
-	 public async updateUser(user: PutOrPostResponseUser | GetResponseUser): Promise<PutOrPostResponseUser> {
-		const idx = this.users.findIndex(u=>u.id === user.id);
-		if (idx < 0) {
-			throw new Error(`no such User: ${user.id}`);
+	public async updateUser(user: ResponseUser): Promise<ResponseUser>;
+	/**
+	 * Replaces the current definition of a user with the one given.
+	 *
+	 * @param user The ID of the User being updated.
+	 * @param payload The new definition of the User.
+	 * @returns The user as updated.
+	 */
+	public async updateUser(user: number, payload: PutRequestUser): Promise<ResponseUser>;
+	/**
+	 * Replaces the current definition of a user with the one given.
+	 *
+	 * @param user The new definition of the User, or just its ID.
+	 * @param payload The new definition of the User. This is required if `user`
+	 * is an ID, and ignored otherwise.
+	 * @returns The user as updated.
+	 */
+	public async updateUser(user: ResponseUser | number, payload?: PutRequestUser): Promise<ResponseUser> {
+		if (typeof(user) !== "number") {
+			const idx = this.users.findIndex(u=>u.id === user.id);
+			if (idx < 0) {
+				throw new Error(`no such User: ${user.id}`);
+			}
+			const response = {
+				...user,
+				lastUpdated: new Date(),
+			};
+			this.users[idx] = response;
+			return response;
 		}
-		const response = {
-			...user,
-			confirmLocalPasswd: undefined,
+		if (!payload) {
+			throw new Error("must supply a request body along with ID to update a User");
+		}
+		const index = this.users.findIndex(u => u.id === user);
+		if (index < 0) {
+			throw new Error(`no such User: ${user}`);
+		}
+		const tenant = await this.getTenants(payload.tenantId);
+		const updated = {
+			...payload,
+			addressLine1: payload.addressLine1 ?? null,
+			addressLine2: payload.addressLine2 ?? null,
+			changeLogCount: 0,
+			city: payload.city ?? null,
+			company: payload.company ?? null,
+			country: payload.country ?? null,
+			gid: payload.gid ?? null,
+			id: user,
+			lastAuthenticated: null,
 			lastUpdated: new Date(),
-			roleName: undefined,
-			rolename: user.roleName ?? ""
+			newUser: payload.newUser ?? null,
+			phoneNumber: payload.phoneNumber ?? null,
+			postalCode: payload.postalCode ?? null,
+			publicSshKey: payload.publicSshKey ?? null,
+			registrationSent: null,
+			stateOrProvince: payload.stateOrProvince ?? null,
+			tenant: tenant.name,
+			ucdn: payload.ucdn ?? "",
+			uid: payload.uid ?? null,
 		};
-		this.users[idx] = response;
-		return {
-			...response,
-			roleName: response.rolename,
-			rolename: undefined
-		};
+		this.users[index] = updated;
+		return updated;
 	}
 
 	/**
@@ -274,43 +331,41 @@ export class UserService {
 	 * @param user The user to create.
 	 * @returns The created user.
 	 */
-	public async createUser(user: PostRequestUser): Promise<PutOrPostResponseUser> {
-		const role = this.roles.find(r=>r.id === user.role);
+	public async createUser(user: PostRequestUser): Promise<ResponseUser> {
+		const role = this.roles.find(r=>r.name === user.role);
 		if (!role) {
 			throw new Error(`no such Role: #${user.role}`);
 		}
-		const tenant = this.tenants.find(t=>t.id === user.tenantID);
+		const tenant = this.tenants.find(t=>t.id === user.tenantId);
 		if (!tenant) {
-			throw new Error(`no such Tenant: #${user.tenantID}`);
+			throw new Error(`no such Tenant: #${user.tenantId}`);
 		}
 		const response = {
 			...user,
 			addressLine1: user.addressLine1 ?? null,
 			addressLine2: user.addressLine2 ?? null,
+			changeLogCount: 0,
 			city: user.city ?? null,
 			company: user.company ?? null,
 			confirmLocalPasswd: undefined,
 			country: user.country ?? null,
 			gid: user.gid ?? null,
 			id: ++this.lastID,
+			lastAuthenticated: null,
 			lastUpdated: new Date(),
 			newUser: user.newUser ?? null,
 			phoneNumber: user.phoneNumber ?? null,
 			postalCode: user.postalCode ?? null,
 			publicSshKey: user.publicSshKey ?? null,
-			rolename: role.name,
+			registrationSent: null,
 			stateOrProvince: user.stateOrProvince ?? null,
 			tenant: tenant.name,
-			tenantID: undefined,
-			tenantId: user.tenantID,
-			uid: user.uid ?? null
+			tenantId: user.tenantId,
+			ucdn: user.ucdn ?? "",
+			uid: user.uid ?? null,
 		};
 		this.users.push(response);
-		return {
-			...response,
-			roleName: response.rolename,
-			rolename: undefined
-		};
+		return response;
 	}
 
 	/**
@@ -330,7 +385,7 @@ export class UserService {
 	 * @param role The new user's Role (or just its ID).
 	 * @param tenant The new user's Tenant (or just its ID).
 	 */
-	public async registerUser(email: string, role: number | Role, tenant: number | Tenant): Promise<void>;
+	public async registerUser(email: string, role: number | ResponseRole, tenant: number | ResponseTenant): Promise<void>;
 	/**
 	 * Registers a new user via email.
 	 *
@@ -345,8 +400,8 @@ export class UserService {
 	 */
 	public async registerUser(
 		userOrEmail: UserRegistrationRequest | string,
-		role?: number | Role,
-		tenant?: number | Tenant
+		role?: number | ResponseRole,
+		tenant?: number | ResponseTenant
 	): Promise<void> {
 		if (typeof(userOrEmail) === "string") {
 			if (role === undefined || tenant === undefined) {
@@ -356,9 +411,9 @@ export class UserService {
 	}
 
 	/** Fetches the Role with the given ID. */
-	public async getRoles (nameOrID: number | string): Promise<Role>;
+	public async getRoles (nameOrID: number | string): Promise<ResponseRole>;
 	/** Fetches all Roles. */
-	public async getRoles (): Promise<Array<Role>>;
+	public async getRoles (): Promise<Array<ResponseRole>>;
 	/**
 	 * Fetches one or all Roles from Traffic Ops.
 	 *
@@ -367,7 +422,7 @@ export class UserService {
 	 * @returns Either an Array of Roles, or a single Role, depending on whether
 	 * `name`/`id` was passed
 	 */
-	public async getRoles(nameOrID?: string | number): Promise<Array<Role> | Role> {
+	public async getRoles(nameOrID?: string | number): Promise<Array<ResponseRole> | ResponseRole> {
 		if (nameOrID !== undefined) {
 			let role;
 			switch (typeof nameOrID) {
@@ -386,13 +441,26 @@ export class UserService {
 	}
 
 	/**
+	 * Retrieves all (visible) Tenants from Traffic Ops.
+	 *
+	 * @returns All Tenants visible to the requesting user's Tenant.
+	 */
+	public async getTenants(): Promise<Array<ResponseTenant>>;
+	/**
+	 * Retrieves a specific Tenant from Traffic Ops.
+	 *
+	 * @param nameOrID Either the name or ID of a single desired Tenant.
+	 * @returns The Tenant identified by `nameOrID`.
+	 */
+	public async getTenants(nameOrID: string | number): Promise<ResponseTenant>;
+	/**
 	 * Retrieves one or all Tenants from Traffic Ops.
 	 *
 	 * @param nameOrID Either the name or ID of a single desired Tenant.
 	 * @returns The Tenant identified by `nameOrID` if given, otherwise all
 	 * Tenants visible to the requesting user's Tenant.
 	 */
-	public async getTenants(nameOrID?: string | number): Promise<Array<Tenant> | Tenant> {
+	public async getTenants(nameOrID?: string | number): Promise<Array<ResponseTenant> | ResponseTenant> {
 		if (nameOrID !== undefined) {
 			let tenant;
 			switch (typeof nameOrID) {

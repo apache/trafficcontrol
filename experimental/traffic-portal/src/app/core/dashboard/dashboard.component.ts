@@ -14,9 +14,9 @@
 import { Component, type OnInit } from "@angular/core";
 import { UntypedFormControl } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
+import { ResponseDeliveryService } from "trafficops-types";
 
 import { DeliveryServiceService } from "src/app/api";
-import type { DeliveryService } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { orderBy, fuzzyScore } from "src/app/utils/index";
@@ -34,12 +34,12 @@ export class DashboardComponent implements OnInit {
 	/**
 	 * The set of all Delivery Services (visible to the Tenant).
 	 */
-	public deliveryServices: DeliveryService[] = [];
+	public deliveryServices: ResponseDeliveryService[] = [];
 
 	/**
 	 * The set of Delivery Services filtered according to the search box text.
 	 */
-	public get filteredDSes(): DeliveryService[] {
+	public get filteredDSes(): ResponseDeliveryService[] {
 		return this.deliveryServices.map(
 			x => [
 				x,
@@ -55,7 +55,7 @@ export class DashboardComponent implements OnInit {
 				}
 				return 0;
 			}
-		).map(x => x[0]) as Array<DeliveryService>;
+		).map(x => x[0]) as Array<ResponseDeliveryService>;
 	}
 
 	/** Whether or not the page is still loading. */
@@ -96,7 +96,7 @@ export class DashboardComponent implements OnInit {
 				// look at 'orderBy' to understand.
 				this.deliveryServices = (
 					orderBy((r as unknown[]) as Record<string, unknown>[], "displayName") as unknown[]
-				) as DeliveryService[];
+				) as ResponseDeliveryService[];
 				this.loading = false;
 			}
 		);
@@ -140,7 +140,7 @@ export class DashboardComponent implements OnInit {
 	 * @param d The Delivery Service to identify.
 	 * @returns A unique identifier for 'd' to facilitate tracking.
 	 */
-	public tracker(_: number, d: DeliveryService): number {
+	public tracker(_: number, d: ResponseDeliveryService): number {
 		return d.id || 0;
 	}
 }

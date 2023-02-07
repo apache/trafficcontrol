@@ -186,9 +186,10 @@ const globals = {
 			throw new Error("Unable to find any Cache Group Types");
 		}
 
+		let url = `${apiUrl}/cdns`;
 		try {
 			const data = testData as CreatedData;
-			resp = await client.post(`${apiUrl}/cdns`, JSON.stringify(cdn));
+			resp = await client.post(url, JSON.stringify(cdn));
 			respCDN = resp.data.response;
 			console.log(`Successfully created CDN ${respCDN.name}`);
 			data.cdn = respCDN;
@@ -228,14 +229,15 @@ const globals = {
 				typeId: httpType.id,
 				xmlId: `testDS${globals.uniqueString}`
 			};
-			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
+			url = `${apiUrl}/deliveryservices`;
+			resp = await client.post(url, JSON.stringify(ds));
 			let respDS: ResponseDeliveryService = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
 			data.ds = respDS;
 
 			ds.displayName = `test DS2${globals.uniqueString}`;
 			ds.xmlId = `testDS2${globals.uniqueString}`;
-			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
+			resp = await client.post(url, JSON.stringify(ds));
 			respDS = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
 			data.ds2 = respDS;
@@ -243,7 +245,7 @@ const globals = {
 			ds.displayName = `test steering DS${globals.uniqueString}`;
 			ds.xmlId = `testSDS${globals.uniqueString}`;
 			ds.typeId = steeringType.id;
-			resp = await client.post(`${apiUrl}/deliveryservices`, JSON.stringify(ds));
+			resp = await client.post(url, JSON.stringify(ds));
 			respDS = resp.data.response[0];
 			console.log(`Successfully created DS '${respDS.displayName}'`);
 			data.steeringDS = respDS;
@@ -253,9 +255,10 @@ const globals = {
 				typeId: steeringWeightType.id,
 				value: 1
 			};
-			await client.post(`${apiUrl}/steering/${data.steeringDS.id}/targets`, JSON.stringify(target));
+			url = `${apiUrl}/steering/${data.steeringDS.id}/targets`;
+			await client.post(url, JSON.stringify(target));
 			target.targetId = data.ds2.id;
-			await client.post(`${apiUrl}/steering/${data.steeringDS.id}/targets`, JSON.stringify(target));
+			await client.post(url, JSON.stringify(target));
 			console.log(`Created steering targets for ${data.steeringDS.displayName}`);
 
 			const tenant: RequestTenant = {
@@ -263,7 +266,8 @@ const globals = {
 				name: `testT${globals.uniqueString}`,
 				parentId: 1
 			};
-			resp = await client.post(`${apiUrl}/tenants`, JSON.stringify(tenant));
+			url = `${apiUrl}/tenants`;
+			resp = await client.post(url, JSON.stringify(tenant));
 			const respTenant: ResponseTenant = resp.data.response;
 			console.log(`Successfully created Tenant ${respTenant.name}`);
 			data.tenant = respTenant;
@@ -271,7 +275,8 @@ const globals = {
 			const division: RequestDivision = {
 				name: `testD${globals.uniqueString}`
 			};
-			resp = await client.post(`${apiUrl}/divisions`, JSON.stringify(division));
+			url = `${apiUrl}/divisions`;
+			resp = await client.post(url, JSON.stringify(division));
 			const respDivision: ResponseDivision = resp.data.response;
 			console.log(`Successfully created Division ${respDivision.name}`);
 			data.division = respDivision;
@@ -280,7 +285,8 @@ const globals = {
 				division: 1,
 				name: `testR${globals.uniqueString}`
 			};
-			resp = await client.post(`${apiUrl}/regions`, JSON.stringify(region));
+			url = `${apiUrl}/regions`;
+			resp = await client.post(url, JSON.stringify(region));
 			const respRegion: ResponseRegion = resp.data.response;
 			console.log(`Successfully created Region ${respRegion.name}`);
 			data.region = respRegion;
@@ -290,7 +296,8 @@ const globals = {
 				shortName: `test${globals.uniqueString}`,
 				typeId: cgType.id
 			};
-			resp = await client.post(`${apiUrl}/cachegroups`, JSON.stringify(cacheGroup));
+			url = `${apiUrl}/cachegroups`;
+			resp = await client.post(url, JSON.stringify(cacheGroup));
 			const responseCG: ResponseCacheGroup = resp.data.response;
 			console.log("Successfully created Cache Group:", responseCG);
 			data.cacheGroup = responseCG;
@@ -308,13 +315,14 @@ const globals = {
 				state: "CA",
 				zip: "80000"
 			};
-			resp = await client.post(`${apiUrl}/phys_locations`, JSON.stringify(physLoc));
+			url = `${apiUrl}/phys_locations`;
+			resp = await client.post(url, JSON.stringify(physLoc));
 			const respPhysLoc: ResponsePhysicalLocation = resp.data.response;
 			respPhysLoc.region = respRegion.name;
 			console.log(`Successfully created Phys Loc ${respPhysLoc.name}`);
 			data.physLoc = respPhysLoc;
 		} catch(e) {
-			console.error((e as AxiosError).message);
+			console.error("Request for", url, "failed:", (e as AxiosError).message);
 			throw e;
 		}
 		done();

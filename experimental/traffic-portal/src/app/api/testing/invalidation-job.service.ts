@@ -13,8 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-
-import { type DeliveryService, type InvalidationJob, JobType, type NewInvalidationJob, type User } from "src/app/models";
+import { RequestInvalidationJob, ResponseDeliveryService, ResponseInvalidationJob, ResponseUser } from "trafficops-types";
 
 // This needs to be imported from above, because that's how the services are
 // specified in `providers`.
@@ -25,13 +24,13 @@ import { DeliveryServiceService } from "..";
  */
 interface JobOpts {
 	/** return only the Jobs that operate on this Delivery Service */
-	deliveryService?: DeliveryService;
+	deliveryService?: ResponseDeliveryService;
 	/** return only the Jobs that operate on the Delivery Service with this ID */
 	dsID?: number;
 	/** return only the Job that has this ID */
 	id?: number;
 	/** return only the Jobs that were created by this user */
-	user?: User;
+	user?: ResponseUser;
 	/** return only the Jobs that were created by the user that has this ID */
 	userId?: number;
 }
@@ -42,7 +41,7 @@ interface JobOpts {
 @Injectable()
 export class InvalidationJobService {
 
-	private readonly jobs = new Array<InvalidationJob>();
+	private readonly jobs = new Array<ResponseInvalidationJob>();
 	private idCounter = 0;
 
 	constructor(private readonly dsService: DeliveryServiceService) {}
@@ -53,7 +52,7 @@ export class InvalidationJobService {
 	 * @param opts Optional identifiers for the requested Jobs.
 	 * @returns The request Jobs.
 	 */
-	public async getInvalidationJobs(opts?: JobOpts): Promise<Array<InvalidationJob>> {
+	public async getInvalidationJobs(opts?: JobOpts): Promise<Array<ResponseInvalidationJob>> {
 		let ret = this.jobs;
 		if (opts) {
 			if (opts.id) {
@@ -83,26 +82,16 @@ export class InvalidationJobService {
 	 * @param job The Job to create.
 	 * @returns whether or not creation succeeded.
 	 */
-	public async createInvalidationJob(job: NewInvalidationJob): Promise<InvalidationJob> {
-		let deliveryService;
-		if (typeof job.deliveryService === "number") {
-			const ds = (await this.dsService.getDeliveryServices()).find(d=>d.id === job.deliveryService);
-			if (!ds) {
-				throw new Error(`no such Delivery Service: #${job.deliveryService}`);
-			}
-			deliveryService = ds.xmlId;
-		} else {
-			deliveryService = job.deliveryService;
-		}
+	public async createInvalidationJob(job: RequestInvalidationJob): Promise<ResponseInvalidationJob> {
 		const ret = {
 			// Yes, this is ill-formed.
 			assetUrl: job.regex,
 			createdBy: "test-admin",
-			deliveryService,
+			deliveryService: job.deliveryService,
 			id: ++this.idCounter,
-			keyword: JobType.PURGE,
-			parameters: typeof job.ttl === "string" ? job.ttl : `${job.ttl}h`,
-			startTime: job.startTime instanceof Date ? job.startTime : new Date(job.startTime)
+			invalidationType: job.invalidationType,
+			startTime: job.startTime instanceof Date ? job.startTime : new Date(job.startTime),
+			ttlHours: job.ttlHours
 		};
 		this.jobs.push(ret);
 		return ret;
@@ -114,7 +103,7 @@ export class InvalidationJobService {
 	 * @param job The new definition of the Job.
 	 * @returns The edited Job as returned by the server.
 	 */
-	public async updateInvalidationJob(job: InvalidationJob): Promise<InvalidationJob> {
+	public async updateInvalidationJob(job: ResponseInvalidationJob): Promise<ResponseInvalidationJob> {
 		const idx = this.jobs.findIndex(j=>j.id===job.id);
 		if (idx < 0) {
 			throw new Error(`no such Job: #${job.id}`);
@@ -129,7 +118,7 @@ export class InvalidationJobService {
 	 * @param id The ID of the Job to delete.
 	 * @returns The deleted Job.
 	 */
-	public async deleteInvalidationJob(id: number): Promise<InvalidationJob> {
+	public async deleteInvalidationJob(id: number): Promise<ResponseInvalidationJob> {
 		const idx = this.jobs.findIndex(j=>j.id===id);
 		if (idx < 0) {
 			throw new Error(`no such Job: #${id}`);

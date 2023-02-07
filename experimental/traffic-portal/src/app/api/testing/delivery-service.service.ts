@@ -12,18 +12,22 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import { SteeringConfiguration } from "trafficops-types";
+import type {
+	Capacity,
+	Health,
+	RequestDeliveryService,
+	ResponseDeliveryService,
+	SteeringConfiguration,
+	TypeFromResponse
+} from "trafficops-types";
 
 import type {
 	DataPoint,
 	DataSetWithSummary,
-	DeliveryService,
-	DSCapacity,
-	DSHealth,
-	InvalidationJob,
 	TPSData,
-	Type
 } from "src/app/models";
+
+import { CDNService, ProfileService, TypeService, UserService } from "..";
 
 /**
  * The type of a raw response returned from the API that has to be massaged
@@ -93,7 +97,7 @@ function generateDataSet(start: Date, end: Date, step: number): GeneratedDataSet
 @Injectable()
 export class DeliveryServiceService {
 
-	private readonly deliveryServices = new Array<DeliveryService>();
+	private readonly deliveryServices = new Array<ResponseDeliveryService>();
 	private idCounter = 0;
 	private readonly dsTypes = [
 		{
@@ -168,6 +172,13 @@ export class DeliveryServiceService {
 		}
 	];
 
+	constructor(
+		private readonly cdnService: CDNService,
+		private readonly profileService: ProfileService,
+		private readonly userService: UserService,
+		private readonly typeService: TypeService
+	) {}
+
 	/**
 	 * Gets a list of all Steering Configurations
 	 *
@@ -177,8 +188,8 @@ export class DeliveryServiceService {
 		return [];
 	}
 
-	public async getDeliveryServices(id: string | number): Promise<DeliveryService>;
-	public async getDeliveryServices(): Promise<Array<DeliveryService>>;
+	public async getDeliveryServices(id: string | number): Promise<ResponseDeliveryService>;
+	public async getDeliveryServices(): Promise<Array<ResponseDeliveryService>>;
 	/**
 	 * Gets a list of all visible Delivery Services
 	 *
@@ -186,7 +197,7 @@ export class DeliveryServiceService {
 	 * @throws TypeError if ``id`` is not a proper type
 	 * @returns An array of `DeliveryService` objects.
 	 */
-	public async getDeliveryServices(id?: string | number): Promise<DeliveryService[] | DeliveryService> {
+	public async getDeliveryServices(id?: string | number): Promise<ResponseDeliveryService[] | ResponseDeliveryService> {
 		if (id !== undefined) {
 			let ds;
 			switch (typeof id) {
@@ -210,22 +221,107 @@ export class DeliveryServiceService {
 	 * @param ds The new Delivery Service object
 	 * @returns A boolean value indicating the success of the operation
 	 */
-	public async createDeliveryService(ds: DeliveryService): Promise<DeliveryService> {
-		ds.id = ++this.idCounter;
-		ds.lastUpdated = new Date();
-		this.deliveryServices.push(ds);
-		return ds;
+	public async createDeliveryService(ds: RequestDeliveryService): Promise<ResponseDeliveryService> {
+		const cdn = await this.cdnService.getCDNs(ds.cdnId);
+		let profile = null;
+		if (ds.profileId !== null && ds.profileId !== undefined) {
+			profile = await this.profileService.getProfiles(ds.profileId);
+		}
+		const tenant = await this.userService.getTenants(ds.tenantId);
+		const type = await this.typeService.getTypes(ds.typeId);
+		let created: ResponseDeliveryService = {
+			...ds,
+			anonymousBlockingEnabled: ds.anonymousBlockingEnabled ?? false,
+			ccrDnsTtl: ds.ccrDnsTtl ?? null,
+			cdnName: cdn.name,
+			checkPath: ds.checkPath ?? null,
+			consistentHashQueryParams: null,
+			consistentHashRegex: ds.consistentHashRegex ?? null,
+			deepCachingType: ds.deepCachingType ?? "NEVER",
+			dnsBypassCname: ds.dnsBypassCname ?? null,
+			dnsBypassIp: ds.dnsBypassIp ?? null,
+			dnsBypassIp6: ds.dnsBypassIp6 ?? null,
+			dnsBypassTtl: ds.dnsBypassTtl ? Number(ds.dnsBypassTtl) : null,
+			ecsEnabled: ds.ecsEnabled ?? false,
+			edgeHeaderRewrite: ds.edgeHeaderRewrite ?? null,
+			exampleURLs: [
+				`https://${ds.routingName ?? "cdn"}.${ds.xmlId}.${cdn.name}.${cdn.domainName}`
+			],
+			firstHeaderRewrite: ds.firstHeaderRewrite ?? null,
+			fqPacingRate: ds.fqPacingRate ?? 0,
+			geoLimitCountries: ds.geoLimitCountries ?? null,
+			geoLimitRedirectURL: ds.geoLimitRedirectUrl ?? null,
+			globalMaxMbps: ds.globalMaxMbps ?? null,
+			globalMaxTps: ds.globalMaxTps ?? null,
+			id: ++this.idCounter,
+			initialDispersion: ds.initialDispersion || 1,
+			innerHeaderRewrite: ds.innerHeaderRewrite ?? null,
+			ipv6RoutingEnabled: ds.ipv6RoutingEnabled ?? false,
+			lastHeaderRewrite: ds.lastHeaderRewrite ?? null,
+			lastUpdated: new Date(),
+			longDesc: ds.longDesc ?? null,
+			longDesc1: ds.longDesc1 ?? undefined,
+			longDesc2: ds.longDesc2 ?? undefined,
+			matchList: [
+				{
+					pattern: `.*\\\\.${ds.xmlId}\\\\..*`,
+					setNumber: 0,
+					type: "HOST_REGEX",
+				}
+			],
+			maxDnsAnswers: ds.maxDnsAnswers ?? null,
+			maxOriginConnections: ds.maxOriginConnections ?? 0,
+			maxRequestHeaderBytes: ds.maxRequestHeaderBytes ?? 0,
+			midHeaderRewrite: ds.midHeaderRewrite ?? null,
+			missLat: ds.missLat ?? 0,
+			missLong: ds.missLat ?? 0,
+			multiSiteOrigin: ds.multiSiteOrigin ?? false,
+			orgServerFqdn: ds.orgServerFqdn ?? null,
+			originShield: ds.originShield ?? null,
+			profileDescription: null,
+			profileId: null,
+			profileName: null,
+			protocol: ds.protocol ?? null,
+			qstringIgnore: ds.qstringIgnore ?? null,
+			rangeRequestHandling: ds.rangeRequestHandling ?? null,
+			rangeSliceBlockSize: ds.rangeSliceBlockSize ?? null,
+			regexRemap: ds.regexRemap ?? null,
+			routingName: ds.routingName || "cdn",
+			serviceCategory: ds.serviceCategory ?? null,
+			signed: ds.signed ?? false,
+			signingAlgorithm: ds.signingAlgorithm ?? "uri_signing",
+			sslKeyVersion: ds.sslKeyVersion ?? null,
+			tenant: tenant.name,
+			tlsVersions: ds.tlsVersions && ds.tlsVersions.length > 0 ? ds.tlsVersions : null,
+			topology: ds.topology ?? null,
+			trRequestHeaders: ds.trRequestHeaders ?? null,
+			trResponseHeaders: ds.trResponseHeaders ?? null,
+			type: type.name
+		};
+		if (ds.consistentHashQueryParams && ds.consistentHashQueryParams.length > 0) {
+			created.consistentHashQueryParams = [ds.consistentHashQueryParams[0], ...ds.consistentHashQueryParams.slice(1)];
+		}
+		if (profile) {
+			created = {
+				...created,
+				profileDescription: profile.description,
+				profileId: profile.id,
+				profileName: profile.name,
+			};
+		}
+		this.deliveryServices.push(created);
+		return created;
 	}
 
 	/**
 	 * Retrieves capacity statistics for the Delivery Service identified by a given, unique,
 	 * integral value.
 	 *
-	 * @param d Either a {@link DeliveryService} or an integral, unique identifier of a Delivery Service
+	 * @param d Either a {@link ResponseDeliveryService} or an integral, unique identifier of a Delivery Service
 	 * @returns An object that hopefully has the right keys to represent capacity.
-	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
+	 * @throws If `d` is a {@link ResponseDeliveryService} that has no (valid) id
 	 */
-	public async getDSCapacity(d: number | DeliveryService): Promise<DSCapacity> {
+	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<Capacity> {
 		let id: number;
 		if (typeof d === "number") {
 			id = d;
@@ -246,6 +342,7 @@ export class DeliveryServiceService {
 		return {
 			availablePercent: val %40,
 			maintenancePercent: val %40,
+			unavailablePercent: val %10,
 			utilizedPercent: val %20
 		};
 	}
@@ -257,13 +354,14 @@ export class DeliveryServiceService {
 	 * @param d The integral, unique identifier of a Delivery Service
 	 * @returns A response from the health endpoint
 	 */
-	public async getDSHealth(d: number): Promise<DSHealth> {
+	public async getDSHealth(d: number): Promise<Health> {
 		const ds = this.deliveryServices.filter(service => service.id === d)[0];
 		if (!ds) {
 			throw new Error(`no such Delivery Service: #${d}`);
 		}
 		const val = ds.lastUpdated ? ds.lastUpdated.valueOf() : 100;
 		return {
+			cacheGroups: [],
 			totalOffline: val % 50,
 			totalOnline: 100-(val%50)
 		};
@@ -436,19 +534,7 @@ export class DeliveryServiceService {
 	 * @returns An array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
 	 * 	types.
 	 */
-	public async getDSTypes(): Promise<Array<Type>> {
+	public async getDSTypes(): Promise<Array<TypeFromResponse>> {
 		return this.dsTypes;
-	}
-
-	/**
-	 * Creates a new content invalidation job.
-	 *
-	 * @todo Implement this when the Jobs Service is moved to the API module.
-	 *
-	 * @param job The content invalidation job to be created.
-	 * @returns whether or not creation succeeded.
-	 */
-	public async createInvalidationJob(job: InvalidationJob): Promise<boolean> {
-		return this.deliveryServices.findIndex(ds=>ds.xmlId === job.deliveryService) >= 0;
 	}
 }
