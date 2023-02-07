@@ -13,10 +13,12 @@
 * limitations under the License.
 */
 
+import type { Environment } from "./environment.type";
+
 /**
  * environment contains information about the running environment.
  */
-export const environment = {
+export const environment: Environment = {
 	apiVersion: "4.0",
 	customModule: false,
 	production: true
