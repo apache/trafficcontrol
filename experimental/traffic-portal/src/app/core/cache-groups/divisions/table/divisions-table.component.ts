@@ -37,29 +37,6 @@ export class DivisionsTableComponent implements OnInit {
 	/** List of divisions */
 	public divisions: Promise<Array<ResponseDivision>>;
 
-	constructor(private readonly route: ActivatedRoute, private readonly navSvc: NavigationService,
-		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
-		this.fuzzySubject = new BehaviorSubject<string>("");
-		this.divisions = this.api.getDivisions();
-		this.navSvc.headerTitle.next("Divisions");
-	}
-
-	/** Initializes table data, loading it from Traffic Ops. */
-	public ngOnInit(): void {
-		this.route.queryParamMap.subscribe(
-			m => {
-				const search = m.get("search");
-				if (search) {
-					this.fuzzControl.setValue(decodeURIComponent(search));
-					this.updateURL();
-				}
-			},
-			e => {
-				console.error("Failed to get query parameters:", e);
-			}
-		);
-	}
-
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
 		{
@@ -104,11 +81,31 @@ export class DivisionsTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl = new FormControl<string>("");
+	public fuzzControl = new FormControl<string>("", {nonNullable: true});
+
+	constructor(private readonly route: ActivatedRoute, private readonly navSvc: NavigationService,
+		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
+		this.fuzzySubject = new BehaviorSubject<string>("");
+		this.divisions = this.api.getDivisions();
+		this.navSvc.headerTitle.next("Divisions");
+	}
+
+	/** Initializes table data, loading it from Traffic Ops. */
+	public ngOnInit(): void {
+		this.route.queryParamMap.subscribe(
+			m => {
+				const search = m.get("search");
+				if (search) {
+					this.fuzzControl.setValue(decodeURIComponent(search));
+					this.updateURL();
+				}
+			}
+		);
+	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
-		this.fuzzySubject.next(this.fuzzControl.value ?? "");
+		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
 	/**
