@@ -16,9 +16,9 @@ import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { ResponsePhysicalLocation } from "trafficops-types";
+import type { ResponsePhysicalLocation } from "trafficops-types";
 
-import { CacheGroupService, PhysicalLocationService } from "src/app/api";
+import { PhysicalLocationService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
@@ -97,11 +97,15 @@ export class PhysLocTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl<string>("");
 
-	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute,
-		private readonly navSvc: NavigationService,  public readonly auth: CurrentUserService, private readonly dialog: MatDialog,
-		private readonly physLocService: PhysicalLocationService) {
+	constructor(
+		private readonly api: PhysicalLocationService,
+		private readonly route: ActivatedRoute,
+		private readonly navSvc: NavigationService,
+		public readonly auth: CurrentUserService,
+		private readonly dialog: MatDialog,
+	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
-		this.physLocations = this.physLocService.getPhysicalLocations();
+		this.physLocations = this.api.getPhysicalLocations();
 		this.navSvc.headerTitle.next("Physical Locations");
 	}
 
@@ -114,9 +118,6 @@ export class PhysLocTableComponent implements OnInit {
 					this.fuzzControl.setValue(decodeURIComponent(search));
 					this.updateURL();
 				}
-			},
-			e => {
-				console.error("Failed to get query parameters:", e);
 			}
 		);
 	}
@@ -136,12 +137,16 @@ export class PhysLocTableComponent implements OnInit {
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
-					data: {message: `Are you sure you want to delete physical location ${data.name} with id ${data.id}`,
-						title: "Confirm Delete"}
+					data: {
+						message: `Are you sure you want to delete Physical Location ${data.name} with id ${data.id}?`,
+						title: "Confirm Delete"
+					}
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
-						this.api.deleteDivision(data.id).then(async () => this.physLocations = this.physLocService.getPhysicalLocations());
+						this.api.deletePhysicalLocation(data.id).then(
+							async () => this.physLocations = this.api.getPhysicalLocations()
+						);
 					}
 				});
 				break;
