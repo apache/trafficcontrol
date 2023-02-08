@@ -142,6 +142,8 @@ describe("UsersComponent", () => {
 			return fail(`should use a function to generate an href, but uses static string: '${item.href}'`);
 		}
 		expect(item.href(testUser)).toBe(`${testUser.id}`, "generated incorrect href");
+		expect(item.queryParams).toBeUndefined();
+		expect(item.fragment).toBeUndefined();
 	});
 
 	it("has a proper 'Open in New Tab' context menu item", () => {
@@ -163,6 +165,8 @@ describe("UsersComponent", () => {
 			return fail(`should use a function to generate an href, but uses static string: '${item.href}'`);
 		}
 		expect(item.href(testUser)).toBe(`${testUser.id}`, "generated incorrect href");
+		expect(item.queryParams).toBeUndefined();
+		expect(item.fragment).toBeUndefined();
 	});
 
 	it("has a proper 'View User Changelogs' context menu item", () => {
