@@ -188,7 +188,7 @@ func TestGetSameIPServers(t *testing.T) {
 	if _, ok := sameIpServers["server1_ip1"]["server2_ip1"]; !ok {
 		t.Fatal("getSameIPServers expected to find server1_ip1 to have same ip as server2_ip1")
 	}
-	if _, ok := sameIpServers[tc.CacheName("server2_ip1")]; !ok {
+	if _, ok := sameIpServers["server2_ip1"]; !ok {
 		t.Fatal("getSameIPServers expected to find server2_ip1")
 	}
 	if _, ok := sameIpServers["server1_ip1"]["server2_ip1"]; !ok {
@@ -197,7 +197,16 @@ func TestGetSameIPServers(t *testing.T) {
 	if _, ok := sameIpServers["server1_ip1"]["server4_ip1_no_service"]; ok {
 		t.Fatal("getSameIPServers expected to find server1_ip1 not to have same ip as server4_ip1_no_service")
 	}
-	if _, ok := sameIpServers[tc.CacheName("server3_ip3")]; ok {
+	if _, ok := sameIpServers["server3_ip3"]; ok {
 		t.Fatal("getSameIPServers expected to not find server3_ip3")
 	}
+
+	expectedSameIpServers := map[string]map[string]bool{}
+	expectedSameIpServers["server1_ip1"] = map[string]bool{"server2_ip1": true}
+	expectedSameIpServers["server2_ip1"] = map[string]bool{"server1_ip1": true}
+
+	if !reflect.DeepEqual(expectedSameIpServers, sameIpServers) {
+
+	}
+
 }

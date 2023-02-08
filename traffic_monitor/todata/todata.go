@@ -120,6 +120,12 @@ func (d TODataThreadsafe) set(newTOData TOData) {
 	d.m.Unlock()
 }
 
+func (d TODataThreadsafe) SetForTest(newTOData TOData) {
+	d.m.Lock()
+	*d.toData = newTOData
+	d.m.Unlock()
+}
+
 // CRConfig is the CrConfig data needed by TOData. Note this is not all data in the CRConfig.
 // TODO change strings to type?
 type CRConfig struct {

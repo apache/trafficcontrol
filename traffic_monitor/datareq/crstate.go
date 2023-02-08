@@ -68,10 +68,10 @@ func srvTRState(
 
 func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe, directlyPolledOnly bool, toData todata.TODataThreadsafe) ([]byte, error) {
 	if !directlyPolledOnly {
-		combinedStatesC := updateStatusAnycast(combinedStates, toData)
+		combinedStatesC := updateStatusSameIpServers(combinedStates, toData)
 		return tc.CRStatesMarshall(combinedStatesC)
 	}
-	unfiltered := updateStatusAnycast(combinedStates, toData)
+	unfiltered := updateStatusSameIpServers(combinedStates, toData)
 	return tc.CRStatesMarshall(filterDirectlyPolledCaches(unfiltered))
 }
 
@@ -90,14 +90,14 @@ func filterDirectlyPolledCaches(crstates tc.CRStates) tc.CRStates {
 
 func srvTRStateSelf(localStates peer.CRStatesThreadsafe, directlyPolledOnly bool, toData todata.TODataThreadsafe) ([]byte, error) {
 	if !directlyPolledOnly {
-		localStatesC := updateStatusAnycast(localStates, toData)
+		localStatesC := updateStatusSameIpServers(localStates, toData)
 		return tc.CRStatesMarshall(localStatesC)
 	}
-	unfiltered := updateStatusAnycast(localStates, toData)
+	unfiltered := updateStatusSameIpServers(localStates, toData)
 	return tc.CRStatesMarshall(filterDirectlyPolledCaches(unfiltered))
 }
 
-func updateStatusAnycast(localStates peer.CRStatesThreadsafe, toData todata.TODataThreadsafe) tc.CRStates {
+func updateStatusSameIpServers(localStates peer.CRStatesThreadsafe, toData todata.TODataThreadsafe) tc.CRStates {
 	localStatesC := localStates.Get()
 	toDataC := toData.Get()
 
@@ -111,8 +111,8 @@ func updateStatusAnycast(localStates peer.CRStatesThreadsafe, toData todata.TODa
 				if partnerState, ok := localStatesC.Caches[partner]; ok {
 					// a partner host is reported but is marked down for too high traffic or load
 					// this host also needs to be marked down to divert all traffic for their
-					// common anycast ip
-					if tc.CacheStatusFromString(partnerState.Status) == tc.CacheStatusReported &&
+					// common ip
+					if strings.Contains(partnerState.Status, string(tc.CacheStatusReported)) &&
 						strings.Contains(partnerState.Status, "too high") {
 						if !partnerState.Ipv4Available {
 							allAvailableV4 = false
