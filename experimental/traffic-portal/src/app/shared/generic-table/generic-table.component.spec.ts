@@ -14,12 +14,13 @@
 
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatMenuModule } from "@angular/material/menu";
+import { Params } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { AgGridModule } from "ag-grid-angular";
 import type { CellContextMenuEvent, ColDef, GridApi, RowNode, ValueGetterParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 
-import { type ContextMenuAction, GenericTableComponent } from "./generic-table.component";
+import { type ContextMenuAction, GenericTableComponent, getColType, ContextMenuItem } from "./generic-table.component";
 
 /**
  * TestData is the type of a row of data for the generic table component tests.
@@ -243,7 +244,7 @@ describe("GenericTableComponent", () => {
 		expect(
 			component.columns.map(c=>c.getDefinition())
 		).toEqual(
-			component.cols.map(c=>({... component.gridOptions.defaultColDef, ...c}))
+			component.cols.map(c=>({... component.gridOptions.defaultColDef, ...c})).reverse()
 		);
 	});
 
@@ -358,5 +359,64 @@ describe("GenericTableComponent", () => {
 
 		action.disabled = (): boolean => true;
 		expect(component.isDisabled(action)).toBeTrue();
+	});
+
+	it("calculates an href for a context menu link item", () => {
+		const hrefValue = "href value";
+		const menuLinkItem: ContextMenuItem<unknown> = {
+			href: hrefValue,
+			name: "test",
+		};
+		component.selected = {};
+		expect(component.href(menuLinkItem)).toBe(hrefValue);
+		menuLinkItem.href = (): string => hrefValue;
+		expect(component.href(menuLinkItem)).toBe(hrefValue);
+		component.selected = null;
+		expect(component.href(menuLinkItem)).toBe("");
+	});
+
+	it("calculates a fragment for a context menu link item", () => {
+		const fragmentValue = "fragment value";
+		const menuLinkItem: ContextMenuItem<unknown> = {
+			href: "inconsequential",
+			name: "test",
+		};
+		component.selected = {};
+		expect(component.fragment(menuLinkItem)).toBeNull();
+		menuLinkItem.fragment = fragmentValue;
+		expect(component.fragment(menuLinkItem)).toBe(fragmentValue);
+		menuLinkItem.fragment = (): string => fragmentValue;
+		expect(component.fragment(menuLinkItem)).toBe(fragmentValue);
+		component.selected = null;
+		expect(component.fragment(menuLinkItem)).toBeNull();
+	});
+
+	it("calculates query parameters for a context menu link item", () => {
+		const qParamsValue = {query: "params"};
+		const menuLinkItem: ContextMenuItem<unknown> = {
+			href: "inconsequential",
+			name: "test",
+		};
+		component.selected = {};
+		expect(component.queryParameters(menuLinkItem)).toBeNull();
+		menuLinkItem.queryParams = qParamsValue;
+		expect(component.queryParameters(menuLinkItem)).toEqual(qParamsValue);
+		menuLinkItem.queryParams = (): Params => qParamsValue;
+		expect(component.queryParameters(menuLinkItem)).toEqual(qParamsValue);
+		component.selected = null;
+		expect(component.queryParameters(menuLinkItem)).toBeNull();
+	});
+});
+
+describe("generic table utility functions", () => {
+	it("gets the correct column type from a definition", () => {
+		expect(getColType({})).toBe("string");
+		expect(getColType({filter: true})).toBe("string");
+		expect(getColType({filter: "textFilter"})).toBe("string");
+		expect(getColType({filter: "agTextColumnFilter"})).toBe("string");
+		expect(getColType({filter: "agNumberColumnFilter"})).toBe("number");
+		expect(getColType({filter: "agDateColumnFilter"})).toBe("date");
+		expect(getColType({filter: "unrecognized filter name"})).toBeNull();
+		expect(getColType({filter: {}})).toBeNull();
 	});
 });

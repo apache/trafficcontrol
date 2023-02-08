@@ -14,7 +14,8 @@
 import { animate, style, transition, trigger } from "@angular/animations";
 import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import type { ValueGetterParams } from "ag-grid-community";
+import { Params } from "@angular/router";
+import type { ValueFormatterParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 import { ResponseUser } from "trafficops-types";
 
@@ -202,7 +203,7 @@ export class UsersComponent implements OnInit {
 			field: "tenant",
 			headerName: "Tenant",
 			hide: false,
-			valueGetter: (params: ValueGetterParams): string => `${params.data.tenant} (#${params.data.tenantId})`
+			valueFormatter: (params: ValueFormatterParams): string => `${params.data.tenant} (#${params.data.tenantId})`
 		},
 		{
 			field: "uid",
@@ -220,17 +221,22 @@ export class UsersComponent implements OnInit {
 	/** Definitions for the context menu items (which act on user data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseUser>> = [
 		{
-			href: (u: ResponseUser): string => `/core/users/${u.id}`,
+			href: (u: ResponseUser): string => `${u.id}`,
 			name: "View User Details"
 		},
 		{
-			href: (u: ResponseUser): string => `/core/users/${u.id}`,
+			href: (u: ResponseUser): string => `${u.id}`,
 			name: "Open in New Tab",
 			newTab: true
 		},
 		{
-			href: (u: ResponseUser): string => `/core/change-logs?search=${u.username}`,
-			name: "View User Changelogs"
+			href: (u: ResponseUser): string => `/core/tenants/${u.tenantId}`,
+			name: "View Tenant"
+		},
+		{
+			href: "/core/change-logs",
+			name: "View User Changelogs",
+			queryParams: (u: ResponseUser): Params => ({user: u.username})
 		}
 	];
 

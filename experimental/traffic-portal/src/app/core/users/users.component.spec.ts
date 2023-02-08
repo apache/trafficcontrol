@@ -16,7 +16,7 @@ import { waitForAsync, ComponentFixture, TestBed, fakeAsync, tick } from "@angul
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
-import type { ValueGetterParams } from "ag-grid-community";
+import type { ValueFormatterParams } from "ag-grid-community";
 
 import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
@@ -118,10 +118,10 @@ describe("UsersComponent", () => {
 		if (!tenantColDef) {
 			return fail("table missing column definition for the 'tenant' property");
 		}
-		if (!tenantColDef.valueGetter) {
+		if (!tenantColDef.valueFormatter) {
 			return fail("column definition for 'tenant' property missing 'valueGetter' property");
 		}
-		expect(tenantColDef.valueGetter({data: testUser} as ValueGetterParams)).toBe(`${testUser.tenant} (#${testUser.tenantId})`);
+		expect(tenantColDef.valueFormatter({data: testUser} as ValueFormatterParams)).toBe(`${testUser.tenant} (#${testUser.tenantId})`);
 	});
 
 	it("has a proper 'View User Details' context menu item", () => {
@@ -141,7 +141,9 @@ describe("UsersComponent", () => {
 		if (typeof(item.href) === "string") {
 			return fail(`should use a function to generate an href, but uses static string: '${item.href}'`);
 		}
-		expect(item.href(testUser)).toBe(`/core/users/${testUser.id}`, "generated incorrect href");
+		expect(item.href(testUser)).toBe(`${testUser.id}`, "generated incorrect href");
+		expect(item.queryParams).toBeUndefined();
+		expect(item.fragment).toBeUndefined();
 	});
 
 	it("has a proper 'Open in New Tab' context menu item", () => {
@@ -162,16 +164,15 @@ describe("UsersComponent", () => {
 		if (typeof(item.href) === "string") {
 			return fail(`should use a function to generate an href, but uses static string: '${item.href}'`);
 		}
-		expect(item.href(testUser)).toBe(`/core/users/${testUser.id}`, "generated incorrect href");
+		expect(item.href(testUser)).toBe(`${testUser.id}`, "generated incorrect href");
+		expect(item.queryParams).toBeUndefined();
+		expect(item.fragment).toBeUndefined();
 	});
 
 	it("has a proper 'View User Changelogs' context menu item", () => {
-		const item = component.contextMenuItems[2];
+		const item = component.contextMenuItems.find(i => i.name === "View User Changelogs");
 		if (!item) {
-			return fail("table is missing 'contextMenuItems' property");
-		}
-		if (item.name !== "View User Changelogs") {
-			return fail(`The third context menu item should've been 'View User Changelogs', but it was '${item.name}'`);
+			return fail("table is missing 'view user changelogs' context menu item");
 		}
 		if (isAction(item)) {
 			return fail("the third context menu item should've been a link but it was an action");
@@ -179,9 +180,14 @@ describe("UsersComponent", () => {
 		if (!item.href) {
 			return fail("missing 'href' property");
 		}
-		if (typeof(item.href) === "string") {
-			return fail(`should use a function to generate an href, but uses static string: '${item.href}'`);
+		if (typeof(item.href) !== "string") {
+			return fail("should use a static string: for href, but instead uses a function");
 		}
-		expect(item.href(testUser)).toBe(`/core/change-logs?search=${testUser.username}`, "generated incorrect href");
+		expect(item.href).toBe("/core/change-logs");
+		if (typeof(item.queryParams) !== "function") {
+			return fail(`should use a function to determine query string parameters, instead uses: ${item.queryParams}`);
+		}
+		expect(item.queryParams(testUser)).toEqual({user: testUser.username});
+		expect(item.fragment).toBeUndefined();
 	});
 });
