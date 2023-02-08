@@ -13,11 +13,9 @@
 */
 
 import { Component, type OnInit } from "@angular/core";
-import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import type { ColDef } from "ag-grid-community";
-import { BehaviorSubject } from "rxjs";
 import {
 	AlertLevel,
 	LocalizationMethod,
@@ -34,6 +32,7 @@ import {
 	type CollectionChoiceDialogData
 } from "src/app/shared/dialogs/collection-choice-dialog/collection-choice-dialog.component";
 import { DecisionDialogComponent, type DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { AbstractTableComponent } from "src/app/shared/generic-table/abstract-table.component";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -42,13 +41,18 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-cache-group-table",
-	styleUrls: ["./cache-group-table.component.scss"],
-	templateUrl: "./cache-group-table.component.html",
+	styleUrls: ["../../../shared/generic-table/abstract-table.component.scss"],
+	templateUrl: "../../../shared/generic-table/abstract-table.component.html",
 })
-export class CacheGroupTableComponent implements OnInit {
+export class CacheGroupTableComponent extends AbstractTableComponent<ResponseCacheGroup> implements OnInit {
+	public readonly context = "cache-groups";
+	public readonly tableName = "Cache Groups";
+
+	public override readonly fabType = "link";
+	public override readonly fabLink = "new";
 
 	/** All of the servers which should appear in the table. */
-	public cacheGroups: Promise<Array<ResponseCacheGroup>>;
+	public data: Promise<Array<ResponseCacheGroup>>;
 
 	/** All of the CDNs (on which a user might (de/)queue updates). */
 	public readonly cdns: Promise<Array<ResponseCDN>>;
@@ -180,46 +184,18 @@ export class CacheGroupTableComponent implements OnInit {
 		}
 	];
 
-	/**
-	 * A subject that child components can subscribe to for access to the fuzzy
-	 * search query text.
-	 */
-	public fuzzySubject: BehaviorSubject<string>;
-
-	/** Form controller for the user search input. */
-	public fuzzControl: FormControl = new FormControl("");
-
 	constructor(
 		private readonly api: CacheGroupService,
 		private readonly cdnAPI: CDNService,
-		private readonly route: ActivatedRoute,
+		route: ActivatedRoute,
 		private readonly dialog: MatDialog,
 		private readonly alerts: AlertService,
 		public readonly auth: CurrentUserService,
-		private readonly navSvc: NavigationService
+		navSvc: NavigationService
 	) {
-		this.fuzzySubject = new BehaviorSubject<string>("");
-		this.cacheGroups = this.api.getCacheGroups();
-		this.navSvc.headerTitle.next("Cache Groups");
+		super(route, navSvc);
+		this.data = this.api.getCacheGroups();
 		this.cdns = this.cdnAPI.getCDNs();
-	}
-
-	/** Initializes table data, loading it from Traffic Ops. */
-	public ngOnInit(): void {
-		this.route.queryParamMap.subscribe(
-			m => {
-				const search = m.get("search");
-				if (search) {
-					this.fuzzControl.setValue(decodeURIComponent(search));
-					this.updateURL();
-				}
-			}
-		);
-	}
-
-	/** Update the URL's 'search' query parameter for the user's search input. */
-	public updateURL(): void {
-		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
 	/**
@@ -269,7 +245,7 @@ export class CacheGroupTableComponent implements OnInit {
 		});
 		if (await ref.afterClosed().toPromise()) {
 			await this.api.deleteCacheGroup(cg);
-			this.cacheGroups = this.api.getCacheGroups();
+			this.data = this.api.getCacheGroups();
 		}
 	}
 
@@ -296,5 +272,15 @@ export class CacheGroupTableComponent implements OnInit {
 			default:
 				console.error("unrecognized context menu action:", a.action);
 		}
+	}
+
+	/**
+	 * Checks if the user has permission to use the CG table FAB.
+	 *
+	 * @returns `true` if the user has permission to create Cache Groups,
+	 * `false` otherwise.
+	 */
+	public override fabPermission(): boolean {
+		return this.auth.hasPermission("CACHE-GROUP:CREATE");
 	}
 }

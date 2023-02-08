@@ -11,19 +11,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-
 <mat-card class="table-page-content">
 	<div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Divisions" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
+		<input type="search" name="fuzzControl" attr.aria-label="Fuzzy Search {{tableName}}" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
 	</div>
 	<tp-generic-table
-		[data]="divisions | async"
+		[data]="data | async"
 		[cols]="columnDefs"
 		[fuzzySearch]="fuzzySubject"
-		context="divisions"
+		[context]="context"
 		[contextMenuItems]="contextMenuItems"
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </mat-card>
 
-<button class="page-fab" mat-fab title="Create a new Division" *ngIf="auth.hasPermission('DIVISION:CREATE')" routerLink="new"><mat-icon>add</mat-icon></button>
+<a *ngIf="fabType === 'link' && fabPermission()" class="page-fab" mat-fab title="{{fabTitle}}" [routerLink]="fabLink"><mat-icon>{{fabIcon}}</mat-icon></a>
+<!-- We're gonna have to uncomment this if we ever need a button, because unfortunately until that happens, it won't compile otherwise.-->
+<!-- <button *ngIf="fabType === 'button' && fabPermission()" class="page-fab" mat-fab title="{{fabTitle}}" (click)="handleFAB($event)"><mat-icon>{{fabIcon}}</mat-icon></button> -->
