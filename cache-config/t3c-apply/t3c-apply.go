@@ -146,6 +146,19 @@ func Main() int {
 	}
 
 	if cfg.UseGit == config.UseGitYes || cfg.UseGit == config.UseGitAuto {
+		//need to see if there is an old lock file laying around.
+		const gitMaxLockAge = 5
+		oldLock, err := util.IsGitLockFileOld(cfg, time.Now(), gitMaxLockAge)
+		if err != nil {
+			log.Errorln("checking for git lock file: " + err.Error())
+		}
+		if oldLock {
+			log.Errorf("removing git lock file older than %dm", gitMaxLockAge)
+			err := util.RemoveGitLock(cfg)
+			if err != nil {
+				log.Errorf("couldn't remove git lock file: %v", err.Error())
+			}
+		}
 		// commit anything someone else changed when we weren't looking,
 		// with a keyword indicating it wasn't our change
 		if err := util.MakeGitCommitAll(cfg, util.GitChangeNotSelf, true); err != nil {
