@@ -246,7 +246,8 @@ export class CacheGroupService extends APIService {
 				case "number":
 					params = {id: String(nameOrID)};
 			}
-			return this.get<[ResponseDivision]>(path, undefined, params).toPromise();
+			const div = await this.get<[ResponseDivision]>(path, undefined, params).toPromise();
+			return div[0];
 
 		}
 		return this.get<Array<ResponseDivision>>(path).toPromise();
