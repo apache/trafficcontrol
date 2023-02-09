@@ -35,6 +35,7 @@
     "build": "ng build",
     "test": "ng test",
     "clean": "rm -rf dist nightwatch/junit nightwatch/screens tests_output logs",
+    "very-clean": "npm run clean && rm -rf node_modules",
     "coverage": "ng test --code-coverage",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCustom",
     "coverage:ci": "ng test --code-coverage --watch=false --browsers=ChromeHeadlessCustom",
@@ -44,8 +45,7 @@
     "e2e:ci": "npm run e2e:build && ./node_modules/.bin/nightwatch --env chrome_headless --config './nightwatch/nightwatch.conf.js'",
     "dev:ssr": "ng run traffic-portal:serve-ssr",
     "serve:ssr": "node dist/traffic-portal/server/main.js",
-    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production",
-    "prerender": "ng run traffic-portal:prerender"
+    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production"
   },
   "private": true,
   "dependencies": {
@@ -70,6 +70,7 @@
     "argparse": "^2.0.1",
     "chart.js": "^2.9.4",
     "express": "^4.15.2",
+    "pm2": "^5.2.2",
     "rxjs": "~6.6.0",
     "trafficops-types": "^4.0.6",
     "tslib": "^2.0.0",

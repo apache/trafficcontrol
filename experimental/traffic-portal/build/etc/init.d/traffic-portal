@@ -1,0 +1,114 @@
+#!/bin/bash
+#
+# An init.d script for running a Node.js process as a service using PM2 as
+# the process monitor.
+#
+# This was written for Debian distributions such as Ubuntu, but should still
+# work on RedHat, Fedora, or other RPM-based distributions, since none of the
+# built-in service functions are used. So information is provided for both.
+#
+### BEGIN INIT INFO
+# Provides:             traffic-portal
+# Required-Start:       $syslog $remote_fs
+# Required-Stop:        $syslog $remote_fs
+# Should-Start:         $local_fs
+# Should-Stop:          $local_fs
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    Traffic Portal
+# Description:          Traffic Portal
+### END INIT INFO
+#
+### BEGIN CHKCONFIG INFO
+# chkconfig: 2345 55 25
+# description: Traffic Portal
+### END CHKCONFIG INFO
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+NAME="Traffic Portal Application"
+NODE_BIN_DIR="/usr/bin"
+NODE_PATH="/opt/traffic_portal/node_modules"
+PM2_BIN_DIR="/opt/traffic_portal/node_modules/pm2/bin"
+APPLICATION_PATH="/opt/traffic_portal/server.js"
+PIDFILE="/var/run/traffic_portal.pid"
+LOGFILE="/var/log/traffic_portal/traffic_portal.log"
+RESTART_TIME="2000"
+
+PATH=$PM2_BIN_DIR:$NODE_BIN_DIR:$PATH
+export NODE_PATH=$NODE_PATH
+set -o pipefail
+
+start() {
+    echo "Starting $NAME"
+    # The pidfile contains the child process pid, and is named of format [pidfile]-[pm2Id].pid
+  pm2 \
+      start "$APPLICATION_PATH" \
+      -p $PIDFILE \
+      -l $LOGFILE \
+      --restart-delay $RESTART_TIME \
+      --time \
+      --name "$NAME" > /dev/null 2>&1
+    RETVAL=$?
+}
+
+stop() {
+    if pm2 list | grep -q "$NAME"; then
+        echo "Shutting down $NAME"
+        pm2 stop $APPLICATION_PATH > /dev/null 2>&1
+        RETVAL=$?
+    else
+        echo "$NAME is not running."
+        RETVAL=0
+    fi
+}
+
+restart() {
+    stop
+    start
+}
+
+status() {
+    if pm2 list | grep -q "$NAME"; then
+        echo "$NAME is running."
+        RETVAL=0
+    else
+        echo "$NAME is not running."
+        RETVAL=3
+    fi
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status
+        ;;
+    restart | force-reload)
+        restart
+        ;;
+    *)
+        echo "Usage: {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
+exit $RETVAL

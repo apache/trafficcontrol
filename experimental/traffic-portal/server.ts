@@ -129,7 +129,6 @@ function run(): number {
 			" verification of any passed SSL keys/certificates"
 	});
 	parser.add_argument("-p", "--port", {
-		default: 4200,
 		help: "Specify the port on which Traffic Portal will listen (Default: 4200)",
 		type: "int"
 	});

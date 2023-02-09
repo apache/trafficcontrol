@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  asdf-traffic-portal:
+    image: trafficportal2
+    ports:
+      - 443:443
+    build:
+      dockerfile: traffic-portal/build/Dockerfile
+      context: ../..
+      args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+      x-bake:
+        platforms:
+          - linux/amd64
+          - linux/arm64
+    volumes:
+      - ../..:/trafficcontrol:z
+      - ../../.npm:/root/.npm:z
