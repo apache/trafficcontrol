@@ -26,7 +26,6 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -204,24 +203,18 @@ func makeGitCommitMsg(cfg config.Cfg, now time.Time, self bool, success bool) st
 	return strings.Join([]string{appStr, selfStr, modeStr, successStr, timeStr}, sep)
 }
 
-const gitLock = ".git/index.lock"
-
-func IsGitLockFileOld(cfg config.Cfg, now time.Time, maxAge time.Duration) (bool, error) {
-
-	lockFile := filepath.Join(cfg.TsConfigDir, gitLock)
-	oldLock := maxAge * time.Minute
+func IsGitLockFileOld(lockFile string, now time.Time, maxAge time.Duration) (bool, error) {
 	lockFileInfo, err := os.Stat(lockFile)
 	if err != nil {
 		return false, fmt.Errorf("stat returned error: %v on file %v", err, lockFile)
 	}
-	if diff := now.Sub(lockFileInfo.ModTime()); diff > oldLock {
+	if diff := now.Sub(lockFileInfo.ModTime()); diff > maxAge {
 		return true, nil
 	}
 	return false, nil
 }
 
-func RemoveGitLock(cfg config.Cfg) error {
-	lockFile := filepath.Join(cfg.TsConfigDir, gitLock)
+func RemoveGitLock(lockFile string) error {
 	err := os.Remove(lockFile)
 	if err != nil {
 		return fmt.Errorf("error removing file: %v, %v", lockFile, err.Error())
