@@ -33,6 +33,17 @@ export class ErrorInterceptor implements HttpInterceptor {
 	) {}
 
 	/**
+	 * Raises all passed alerts to the AlertService.
+	 *
+	 * @param alerts The alerts to be raised.
+	 */
+	private raiseAlerts(alerts: Alert[]): void {
+		for (const alert of alerts) {
+			this.alerts.newAlert(alert);
+		}
+	}
+
+	/**
 	 * Intercepts HTTP responses and checks for erroneous responses, displaying
 	 * appropriate error Alerts and redirecting unauthenticated users to the
 	 * login form.
@@ -42,13 +53,20 @@ export class ErrorInterceptor implements HttpInterceptor {
 	 * @returns An Observable that will emit an event if the request fails.
 	 */
 	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-		return next.handle(request).pipe(catchError((err) => {
+		return next.handle(request).pipe(catchError((err: HttpErrorResponse) => {
 			console.error("HTTP Error: ", err);
 
-			if (err.hasOwnProperty("error") && (err as {error: object}).error.hasOwnProperty("alerts")) {
-				for (const a of (err as {error: {alerts: Alert[]}}).error.alerts) {
-					this.alerts.newAlert(a);
+			if (typeof(err.error) === "string") {
+				try {
+					const body: {alerts: Alert[] | undefined} = JSON.parse(err.error);
+					if (Array.isArray(body.alerts)) {
+						this.raiseAlerts(body.alerts);
+					}
+				} catch (e) {
+					console.error("non-JSON HTTP error response:", e);
 				}
+			} else if (typeof(err.error) === "object" && Array.isArray(err.error.alerts)) {
+				this.raiseAlerts(err.error.alerts);
 			}
 
 			if (err instanceof HttpErrorResponse && err.status === 401 && this.router.getCurrentNavigation() === null) {
