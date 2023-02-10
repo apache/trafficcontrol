@@ -151,7 +151,7 @@ func Main() int {
 		const gitMaxLockAgeMinutes = 5
 		const gitLock = ".git/index.lock"
 		gitLockFile := filepath.Join(cfg.TsConfigDir, gitLock)
-		oldLock, err := util.IsGitLockFileOld(gitLockFile, time.Now(), gitMaxLockAgeMinutes * time.Minute)
+		oldLock, err := util.IsGitLockFileOld(gitLockFile, time.Now(), gitMaxLockAgeMinutes*time.Minute)
 		if err != nil {
 			log.Errorln("checking for git lock file: " + err.Error())
 		}
