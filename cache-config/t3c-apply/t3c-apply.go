@@ -149,13 +149,15 @@ func Main() int {
 		//need to see if there is an old lock file laying around.
 		//older than 5 minutes
 		const gitMaxLockAgeMinutes = 5
-		oldLock, err := util.IsGitLockFileOld(cfg, time.Now(), gitMaxLockAgeMinutes)
+		const gitLock = ".git/index.lock"
+		gitLockFile := filepath.Join(cfg.TsConfigDir, gitLock)
+		oldLock, err := util.IsGitLockFileOld(gitLockFile, time.Now(), gitMaxLockAgeMinutes * time.Minute)
 		if err != nil {
 			log.Errorln("checking for git lock file: " + err.Error())
 		}
 		if oldLock {
 			log.Errorf("removing git lock file older than %dm", gitMaxLockAgeMinutes)
-			err := util.RemoveGitLock(cfg)
+			err := util.RemoveGitLock(gitLockFile)
 			if err != nil {
 				log.Errorf("couldn't remove git lock file: %v", err.Error())
 			}
