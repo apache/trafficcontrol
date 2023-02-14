@@ -384,3 +384,7 @@ input:checked + .slider::before {
 		width: fit-content;
 	}
 }
+
+.label-underline {
+	text-decoration: underline dotted
+}
