@@ -19,33 +19,6 @@ import type { RequestServer, ResponseServer, ResponseStatus, Servercheck } from 
 import { APIService } from "./base-api.service";
 
 /**
- * Shared mapping for massaging Status requests.
- *
- * @param s The Status to format.
- * @returns The Status object with a proper Date lastUpdated time.
- */
-function statusMap(s: ResponseStatus): ResponseStatus {
-	return {
-		...s,
-		lastUpdated: new Date((s.lastUpdated as unknown as string).replace("+00", "Z"))
-	};
-}
-
-/**
- * Shared mapping for massaging Server requests.
- *
- * @param s The Server to massage.
- * @returns A Server that is identical to `s` except that its date/time fields are now actual Date objects.
- */
-function serverMap(s: ResponseServer): ResponseServer {
-	return {
-		...s,
-		lastUpdated: !s.lastUpdated ? s.lastUpdated : new Date((s.lastUpdated as unknown as string).replace("+00", "Z")),
-		statusLastUpdated: !s.statusLastUpdated ? s.statusLastUpdated : new Date(s.statusLastUpdated as unknown as string)
-	};
-}
-
-/**
  * ServerService exposes API functionality related to Servers.
  */
 @Injectable()
@@ -70,34 +43,30 @@ export class ServerService extends APIService {
 	 */
 	public async getServers(idOrName?: number | string): Promise<Array<ResponseServer> | ResponseServer> {
 		const path = "servers";
-		let prom;
 		if (idOrName !== undefined) {
+			let servers;
 			switch (typeof idOrName) {
 				case "number":
-					prom = this.get<[ResponseServer]>(path, undefined, {id: String(idOrName)}).toPromise();
+					servers = await this.get<[ResponseServer]>(path, undefined, {id: String(idOrName)}).toPromise();
 					break;
 				case "string":
-					prom = this.get<Array<ResponseServer>>(path, undefined, {hostName: idOrName}).toPromise();
+					servers = await this.get<Array<ResponseServer>>(path, undefined, {hostName: idOrName}).toPromise();
 			}
-			prom = prom.then(
-				servers => {
-					if (servers.length < 1) {
-						throw new Error(`no such server '${idOrName}'`);
-					}
-					if (servers.length > 1) {
-						console.warn(
-							"Traffic Ops returned",
-							servers.length,
-							`servers with host name '${idOrName}' - selecting the first arbitrarily`
-						);
-					}
-					return servers[0];
-				}
-			).then(serverMap);
-		} else {
-			prom = this.get<Array<ResponseServer>>(path).toPromise().then(ss=>ss.map(serverMap));
+			if (servers.length < 1) {
+				throw new Error(`no such server '${idOrName}'`);
+			}
+			// This is, unfortunately, possible, despite the many assumptions to
+			// the contrary.
+			if (servers.length > 1) {
+				console.warn(
+					"Traffic Ops returned",
+					servers.length,
+					`servers with host name '${idOrName}' - selecting the first arbitrarily`
+				);
+			}
+			return servers[0];
 		}
-		return prom;;
+		return this.get<Array<ResponseServer>>(path).toPromise();
 	}
 
 	/**
@@ -107,7 +76,7 @@ export class ServerService extends APIService {
 	 * @returns The server as created and returned by the API.
 	 */
 	public async createServer(s: RequestServer): Promise<ResponseServer> {
-		return this.post<ResponseServer>("servers", s).toPromise().then(serverMap);
+		return this.post<ResponseServer>("servers", s).toPromise();
 	}
 
 	public async getServerChecks(): Promise<Servercheck[]>;
@@ -149,13 +118,13 @@ export class ServerService extends APIService {
 		let ret;
 		switch (typeof idOrName) {
 			case "number":
-				ret = this.get<[ResponseStatus]>(path, {params: {id: String(idOrName)}}).toPromise().then(r=>r[0]).then(statusMap);
+				ret = this.get<[ResponseStatus]>(path, {params: {id: String(idOrName)}}).toPromise();
 				break;
 			case "string":
-				ret = this.get<[ResponseStatus]>(path, {params: {name: idOrName}}).toPromise().then(r=>r[0]).then(statusMap);
+				ret = this.get<[ResponseStatus]>(path, {params: {name: idOrName}}).toPromise();
 				break;
 			default:
-				ret = this.get<Array<ResponseStatus>>(path).toPromise().then(ss=>ss.map(statusMap));
+				ret = this.get<Array<ResponseStatus>>(path).toPromise();
 		}
 		return ret;
 	}
@@ -176,12 +145,7 @@ export class ServerService extends APIService {
 			id = server.id;
 		}
 
-		return this.post<{serverId: number; action: "queue"}>(`servers/${id}/queue_update`, {action: "queue"}).toPromise().catch(
-			e => {
-				console.error("Failed to queue updates:", e);
-				return {action: "queue", serverId: -1};
-			}
-		);
+		return this.post<{serverId: number; action: "queue"}>(`servers/${id}/queue_update`, {action: "queue"}).toPromise();
 	}
 
 	/**
@@ -200,12 +164,7 @@ export class ServerService extends APIService {
 			id = server.id;
 		}
 
-		return this.post<{serverId: number; action: "dequeue"}>(`servers/${id}/queue_update`, {action: "dequeue"}).toPromise().catch(
-			e => {
-				console.error("Failed to clear updates:", e);
-				return {action: "dequeue", serverId: -1};
-			}
-		);
+		return this.post<{serverId: number; action: "dequeue"}>(`servers/${id}/queue_update`, {action: "dequeue"}).toPromise();
 	}
 
 	/**
@@ -214,7 +173,6 @@ export class ServerService extends APIService {
 	 * @param server Either the server that will have its status changed, or the integral, unique identifier thereof.
 	 * @param status The name of the status to which to set the server.
 	 * @param offlineReason The reason why the server was placed into a non-ONLINE or REPORTED status.
-	 * @returns Nothing.
 	 */
 	public async updateStatus(server: number | ResponseServer, status: string, offlineReason?: string): Promise<undefined> {
 		let id: number;
@@ -226,11 +184,6 @@ export class ServerService extends APIService {
 			id = server.id;
 		}
 
-		return this.put(`servers/${id}/status`, {offlineReason, status}).toPromise().catch(
-			e=> {
-				console.error("Failed to update server status:", e);
-				return undefined;
-			}
-		);
+		return this.put(`servers/${id}/status`, {offlineReason, status}).toPromise();
 	}
 }

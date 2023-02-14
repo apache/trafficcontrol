@@ -70,14 +70,7 @@ export class InvalidationJobService extends APIService {
 				params.userId = String(opts.user.id);
 			}
 		}
-		const js = await this.get<Array<ResponseInvalidationJob>>(path, undefined, params).toPromise();
-		const jobs = new Array<ResponseInvalidationJob>();
-		for (const j of js) {
-			const tmp = String(j.startTime).replace(" ", "T").replace("+00", "Z");
-			j.startTime = new Date(tmp);
-			jobs.push(j);
-		}
-		return jobs;
+		return this.get<Array<ResponseInvalidationJob>>(path, undefined, params).toPromise();
 	}
 
 	/**

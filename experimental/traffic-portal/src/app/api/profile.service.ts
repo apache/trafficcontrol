@@ -19,21 +19,6 @@ import { ResponseProfile } from "trafficops-types";
 import { APIService } from "./base-api.service";
 
 /**
- * Shared mapping function for converting Profile 'lastUpdated' fields to
- * actual dates, as well as the `lastUpdated` property of any and all
- * constituent Parameters thereof.
- *
- * @param p The Profile being converted.
- * @returns the converted Profile.
- */
-function profileMap(p: ResponseProfile): ResponseProfile {
-	return {
-		...p,
-		lastUpdated: new Date((p.lastUpdated as unknown as string).replace("+00", "Z"))
-	};
-}
-
-/**
  * ProfileService exposes API functionality related to Profiles.
  */
 @Injectable()
@@ -58,7 +43,6 @@ export class ProfileService extends APIService {
 	 */
 	public async getProfiles(idOrName?: number | string): Promise<Array<ResponseProfile> | ResponseProfile> {
 		const path = "profiles";
-		let prom;
 		if (idOrName !== undefined) {
 			let params;
 			switch (typeof idOrName) {
@@ -68,10 +52,9 @@ export class ProfileService extends APIService {
 				case "string":
 					params = {name: idOrName};
 			}
-			prom = this.get<[ResponseProfile]>(path, undefined, params).toPromise().then(r=>r[0]).then(profileMap);
-		} else {
-			prom = this.get<Array<ResponseProfile>>(path).toPromise().then(r=>r.map(profileMap));
+			const r = await this.get<[ResponseProfile]>(path, undefined, params).toPromise();
+			return r[0];
 		}
-		return prom;
+		return this.get<Array<ResponseProfile>>(path).toPromise();
 	}
 }

@@ -28,6 +28,7 @@ import { DecisionDialogComponent } from "./dialogs/decision-dialog/decision-dial
 import { TextDialogComponent } from "./dialogs/text-dialog/text-dialog.component";
 import { GenericTableComponent } from "./generic-table/generic-table.component";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
+import { DateReviverInterceptor } from "./interceptor/date-reviver.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
 import { LoadingComponent } from "./loading/loading.component";
 import { ObscuredTextInputComponent } from "./obscured-text-input/obscured-text-input.component";
@@ -83,7 +84,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 	],
 	providers: [
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
-		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor }
+		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
+		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: DateReviverInterceptor}
 	]
 })
 export class SharedModule { }

@@ -12,18 +12,18 @@
 * limitations under the License.
 */
 
-import { HttpClient, HttpResponse } from "@angular/common/http";
+import { HttpClient, type HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import {
-	Capability,
-	ResponseUser,
-	PostRequestUser,
-	RequestTenant,
-	ResponseCurrentUser,
-	ResponseRole,
-	ResponseTenant,
-	PutRequestUser,
-	RegistrationRequest,
+	type Capability,
+	type ResponseUser,
+	type PostRequestUser,
+	type RequestTenant,
+	type ResponseCurrentUser,
+	type ResponseRole,
+	type ResponseTenant,
+	type PutRequestUser,
+	type RegistrationRequest,
 	userEmailIsValid
 } from "trafficops-types";
 
@@ -50,20 +50,10 @@ export class UserService extends APIService {
 	public async login(uOrT: string, p?: string): Promise<HttpResponse<object> | null> {
 		let path = `/api/${this.apiVersion}/user/login`;
 		if (p !== undefined) {
-			return this.http.post(path, {p, u: uOrT}, this.defaultOptions).toPromise().catch(
-				e => {
-					console.error("Failed to login:", e);
-					return null;
-				}
-			);
+			return this.http.post(path, {p, u: uOrT}, this.defaultOptions).toPromise();
 		}
 		path += "/token";
-		return this.http.post(path, {t: uOrT}, this.defaultOptions).toPromise().catch(
-			e => {
-				console.error("Failed to login with token:", e);
-				return null;
-			}
-		);
+		return this.http.post(path, {t: uOrT}, this.defaultOptions).toPromise();
 	}
 
 	/**
@@ -74,12 +64,7 @@ export class UserService extends APIService {
 	 */
 	public async logout(): Promise<HttpResponse<object> | null> {
 		const path = `/api/${this.apiVersion}/user/logout`;
-		return this.http.post(path, undefined, this.defaultOptions).toPromise().catch(
-			e => {
-				console.error("Failed to logout:", e);
-				return null;
-			}
-		);
+		return this.http.post(path, undefined, this.defaultOptions).toPromise();
 	}
 
 	/**
@@ -89,11 +74,7 @@ export class UserService extends APIService {
 	 */
 	public async getCurrentUser(): Promise<ResponseCurrentUser> {
 		const path = "user/current";
-		const r = await this.get<ResponseCurrentUser>(path).toPromise();
-		return {
-			...r,
-			lastUpdated: new Date((r.lastUpdated as unknown as string).replace("+00", "Z"))
-		};
+		return this.get<ResponseCurrentUser>(path).toPromise();
 	}
 
 	/**
@@ -149,22 +130,9 @@ export class UserService extends APIService {
 					params = {id: String(nameOrID)};
 			}
 			const r = await this.get<[ResponseUser]>(path, undefined, params).toPromise();
-			return {
-				...r[0],
-				lastAuthenticated: r[0].lastAuthenticated ? new Date((r[0].lastAuthenticated as unknown as string)) : null,
-				lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z")),
-				registrationSent: r[0].registrationSent ? new Date((r[0].registrationSent as unknown as string)) : null
-			};
+			return r[0];
 		}
-		const users = await this.get<Array<ResponseUser>>(path).toPromise();
-		return users.map(
-			u => ({
-				...u,
-				lastAuthenticated: u.lastAuthenticated ? new Date((u.lastAuthenticated as unknown as string)) : null,
-				lastUpdated: new Date((u.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z")),
-				registrationSent: u.registrationSent ? new Date((u.registrationSent as unknown as string)) : null
-			})
-		);
+		return this.get<Array<ResponseUser>>(path).toPromise();
 	}
 
 	/**
@@ -204,13 +172,7 @@ export class UserService extends APIService {
 			id = user.id;
 		}
 		const path = `users/${id}`;
-		const response = await this.put<ResponseUser>(path, body).toPromise();
-		return {
-			...response,
-			lastAuthenticated: response.lastAuthenticated ? new Date((response.lastAuthenticated as unknown as string)) : null,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z")),
-			registrationSent: response.registrationSent ? new Date((response.registrationSent as unknown as string)) : null
-		};
+		return this.put<ResponseUser>(path, body).toPromise();
 	}
 
 	/**
@@ -220,13 +182,7 @@ export class UserService extends APIService {
 	 * @returns The created user.
 	 */
 	public async createUser(user: PostRequestUser): Promise<ResponseUser> {
-		const response = await  this.post<ResponseUser>("users", user).toPromise();
-		return {
-			...response,
-			lastAuthenticated: response.lastAuthenticated ? new Date((response.lastAuthenticated as unknown as string)) : null,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z")),
-			registrationSent: response.registrationSent ? new Date((response.registrationSent as unknown as string)) : null
-		};
+		return this.post<ResponseUser>("users", user).toPromise();
 	}
 
 	/**
@@ -354,11 +310,7 @@ export class UserService extends APIService {
 	 * @returns The created tenant.
 	 */
 	public async createTenant(tenant: RequestTenant): Promise<ResponseTenant> {
-		const response = await this.post<ResponseTenant>("tenants", tenant).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
+		return this.post<ResponseTenant>("tenants", tenant).toPromise();
 	}
 
 	/**
@@ -368,12 +320,7 @@ export class UserService extends APIService {
 	 * @returns The updated tenant.
 	 */
 	public async updateTenant(tenant: ResponseTenant): Promise<ResponseTenant> {
-		const response = await this.put<ResponseTenant>(`tenants/${tenant.id}`, tenant).toPromise();
-
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
+		return this.put<ResponseTenant>(`tenants/${tenant.id}`, tenant).toPromise();
 	}
 
 	/**

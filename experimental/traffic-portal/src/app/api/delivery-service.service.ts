@@ -193,19 +193,9 @@ export class DeliveryServiceService extends APIService {
 					params = {id: String(id)};
 			}
 			const r = await this.get<[ResponseDeliveryService]>(path, undefined, params).toPromise();
-			const ds = r[0];
-			return {
-				...ds,
-				lastUpdated: new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"))
-			};
+			return r[0];
 		}
-		const resp = await this.get<Array<ResponseDeliveryService>>(path).toPromise();
-		return resp.map(
-			ds => ({
-				...ds,
-				lastUpdated: new Date((ds.lastUpdated as unknown as string).replace("+00", "Z"))
-			})
-		);
+		return this.get<Array<ResponseDeliveryService>>(path).toPromise();
 	}
 
 	/**
