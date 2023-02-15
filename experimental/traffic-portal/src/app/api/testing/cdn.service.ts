@@ -27,14 +27,14 @@ export class CDNService {
 			domainName: "-",
 			id: 1,
 			lastUpdated: new Date(),
-			name: "ALL"
+			name: "ALL",
 		},
 		{
 			dnssecEnabled: false,
 			domainName: "mycdn.test.test",
 			id: 2,
 			lastUpdated: new Date(),
-			name: "test"
+			name: "test",
 		}
 	];
 
