@@ -87,4 +87,14 @@ export class TypeService extends APIService {
 	constructor(http: HttpClient) {
 		super(http);
 	}
+
+	/**
+	 * Deletes an existing type.
+	 *
+	 * @param name Name of the type to delete.
+	 * @returns The deleted type.
+	 */
+	public async deleteType(name: string): Promise<ResponseType> {
+		return this.delete<ResponseType>(`types/${name}`).toPromise();
+	}
 }
