@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import { TypeFromResponse } from "trafficops-types";
+import {RequestType, TypeFromResponse} from "trafficops-types";
 
 /** The allowed values for the 'useInTables' query parameter of GET requests to /types. */
 type UseInTable = "cachegroup" |
@@ -29,7 +29,7 @@ type UseInTable = "cachegroup" |
  */
 @Injectable()
 export class TypeService {
-
+	private lastID = 20;
 	private readonly types = [
 		{
 			description: "Mid Logical Location",
@@ -181,5 +181,35 @@ export class TypeService {
 	 */
 	public async getServerTypes(): Promise<Array<TypeFromResponse>> {
 		return this.getTypesInTable("server");
+	}
+
+	/**
+	 * Deletes an existing division.
+	 *
+	 * @param id Id of the division to delete.
+	 * @returns The deleted division.
+	 */
+	public async deleteType(id: number): Promise<TypeFromResponse> {
+		const index = this.types.findIndex(t => t.id === id);
+		if (index === -1) {
+			throw new Error(`no such Type: ${id}`);
+		}
+		return this.types.splice(index, 1)[0];
+	}
+
+	/**
+	 * Creates a new division.
+	 *
+	 * @param division The division to create.
+	 * @returns The created division.
+	 */
+	public async createType(type: RequestType): Promise<TypeFromResponse> {
+		const t = {
+			...type,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+		this.types.push(t);
+		return t;
 	}
 }

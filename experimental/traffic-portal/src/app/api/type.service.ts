@@ -80,15 +80,6 @@ export class TypeService extends APIService {
 	}
 
 	/**
-	 * Injects the Angular HTTP client service into the parent constructor.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
-	constructor(http: HttpClient) {
-		super(http);
-	}
-
-	/**
 	 * Deletes an existing type.
 	 *
 	 * @param name Name of the type to delete.
@@ -99,24 +90,32 @@ export class TypeService extends APIService {
 	}
 
 	/**
-	 * Creates a new division.
+	 * Creates a new type.
 	 *
-	 * @param division The division to create.
-	 * @returns The created division.
+	 * @param type The type to create.
+	 * @returns The created type.
 	 */
 	public async createType(type: RequestType): Promise<TypeFromResponse> {
 		return this.post<TypeFromResponse>("types", type).toPromise();
 	}
 
 	/**
-	 * Replaces the current definition of a division with the one given.
+	 * Replaces the current definition of a type with the one given.
 	 *
-	 * @param division The new division.
-	 * @returns The updated division.
+	 * @param type The new type.
+	 * @returns The updated type.
 	 */
 	public async updateType(type: TypeFromResponse): Promise<TypeFromResponse> {
-		console.log(type);
 		const path = `types/${type.id}`;
 		return this.put<TypeFromResponse>(path, type).toPromise();
+	}
+
+	/**
+	 * Injects the Angular HTTP client service into the parent constructor.
+	 *
+	 * @param http The Angular HTTP client service.
+	 */
+	constructor(http: HttpClient) {
+		super(http);
 	}
 }

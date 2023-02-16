@@ -18,19 +18,19 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
-import { DivisionDetailComponent } from "src/app/core/cache-groups/divisions/detail/division-detail.component";
+import { TypeDetailComponent } from "src/app/core/types/detail/type-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 describe("DivisionDetailComponent", () => {
-	let component: DivisionDetailComponent;
-	let fixture: ComponentFixture<DivisionDetailComponent>;
+	let component: TypeDetailComponent;
+	let fixture: ComponentFixture<TypeDetailComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
 
 	const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ DivisionDetailComponent ],
+			declarations: [ TypeDetailComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
 			providers: [ { provide: NavigationService, useValue: navSvc } ]
 		})
@@ -39,7 +39,7 @@ describe("DivisionDetailComponent", () => {
 		route = TestBed.inject(ActivatedRoute);
 		paramMap = spyOn(route.snapshot.paramMap, "get");
 		paramMap.and.returnValue(null);
-		fixture = TestBed.createComponent(DivisionDetailComponent);
+		fixture = TestBed.createComponent(TypeDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});
@@ -52,26 +52,26 @@ describe("DivisionDetailComponent", () => {
 	it("new division", async () => {
 		paramMap.and.returnValue("new");
 
-		fixture = TestBed.createComponent(DivisionDetailComponent);
+		fixture = TestBed.createComponent(TypeDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
-		expect(component.division).not.toBeNull();
-		expect(component.division.name).toBe("");
+		expect(component.type).not.toBeNull();
+		expect(component.type.name).toBe("");
 		expect(component.new).toBeTrue();
 	});
 
-	it("existing division", async () => {
+	it("existing type", async () => {
 		paramMap.and.returnValue("1");
 
-		fixture = TestBed.createComponent(DivisionDetailComponent);
+		fixture = TestBed.createComponent(TypeDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
-		expect(component.division).not.toBeNull();
-		expect(component.division.name).toBe("Div1");
+		expect(component.type).not.toBeNull();
+		expect(component.type.name).toBe("MID_LOC");
 		expect(component.new).toBeFalse();
 	});
 });

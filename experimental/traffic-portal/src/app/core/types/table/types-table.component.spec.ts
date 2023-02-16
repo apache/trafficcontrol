@@ -18,24 +18,26 @@ import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { of } from "rxjs";
 
-import { CacheGroupService } from "src/app/api";
+import { TypeService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { DivisionsTableComponent } from "src/app/core/cache-groups/divisions/table/divisions-table.component";
+import { TypesTableComponent } from "src/app/core/types/table/types-table.component";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
 
-const testDivision = {
+const testType = {
 	id: 1,
 	lastUpdated: new Date(),
 	name: "TestQuest",
+	description: "TestDescription",
+	useInTable: "server"
 };
 
-describe("DivisionsTableComponent", () => {
-	let component: DivisionsTableComponent;
-	let fixture: ComponentFixture<DivisionsTableComponent>;
+describe("TypesTableComponent", () => {
+	let component: TypesTableComponent;
+	let fixture: ComponentFixture<TypesTableComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ DivisionsTableComponent ],
+			declarations: [ TypesTableComponent ],
 			imports: [
 				APITestingModule,
 				RouterTestingModule,
@@ -43,7 +45,7 @@ describe("DivisionsTableComponent", () => {
 			]
 		}).compileComponents();
 
-		fixture = TestBed.createComponent(DivisionsTableComponent);
+		fixture = TestBed.createComponent(TypesTableComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});
@@ -91,7 +93,7 @@ describe("DivisionsTableComponent", () => {
 	it("handles unrecognized contextmenu events", () => {
 		expect(async () => component.handleContextMenu({
 			action: component.contextMenuItems[0].name,
-			data: {id: 1, lastUpdated: new Date(), name: "Div"}
+			data: {id: 1, lastUpdated: new Date(), name: "Type", description: "Type Description", useInTable: "server"}
 		})).not.toThrow();
 	});
 
@@ -106,8 +108,8 @@ describe("DivisionsTableComponent", () => {
 		expect(item.multiRow).toBeFalsy();
 		expect(item.disabled).toBeUndefined();
 
-		const api = TestBed.inject(CacheGroupService);
-		const spy = spyOn(api, "deleteDivision").and.callThrough();
+		const api = TestBed.inject(TypeService);
+		const spy = spyOn(api, "deleteType").and.callThrough();
 		expect(spy).not.toHaveBeenCalled();
 
 		const dialogService = TestBed.inject(MatDialog);
@@ -115,7 +117,7 @@ describe("DivisionsTableComponent", () => {
 			afterClosed: () => of(true)
 		} as MatDialogRef<unknown>);
 
-		const div = await api.createDivision({name: "test"});
+		const div = await api.createType({description: "blah", useInTable: "server", name: "test"});
 		expect(openSpy).not.toHaveBeenCalled();
 		const asyncExpectation = expectAsync(component.handleContextMenu({action: "delete", data: div})).toBeResolvedTo(undefined);
 		tick();
@@ -139,7 +141,7 @@ describe("DivisionsTableComponent", () => {
 		if (typeof(item.href) !== "function") {
 			return fail(`'Edit' context menu item should use a function to determine href, instead uses: ${item.href}`);
 		}
-		expect(item.href(testDivision)).toBe(String(testDivision.id));
+		expect(item.href(testType)).toBe(String(testType.id));
 		expect(item.queryParams).toBeUndefined();
 		expect(item.fragment).toBeUndefined();
 		expect(item.newTab).toBeFalsy();
@@ -156,34 +158,9 @@ describe("DivisionsTableComponent", () => {
 		if (typeof(item.href) !== "function") {
 			return fail(`'Open in New Tab' context menu item should use a function to determine href, instead uses: ${item.href}`);
 		}
-		expect(item.href(testDivision)).toBe(String(testDivision.id));
+		expect(item.href(testType)).toBe(String(testType.id));
 		expect(item.queryParams).toBeUndefined();
 		expect(item.fragment).toBeUndefined();
 		expect(item.newTab).toBeTrue();
-	});
-
-	it("generates 'View Regions' context menu item href", () => {
-		const item = component.contextMenuItems.find(i => i.name === "View Regions");
-		if (!item) {
-			return fail("missing 'View Regions' context menu item");
-		}
-		if (isAction(item)) {
-			return fail("expected a link, not an action");
-		}
-		if (!item.href) {
-			return fail("missing 'href' property");
-		}
-		if (typeof(item.href) !== "string") {
-			return fail("'View Regions' context menu item should use a static string to determine href, instead uses a function");
-		}
-		expect(item.href).toBe("/core/regions");
-		if (typeof(item.queryParams) !== "function") {
-			return fail(
-				`'View Regions' context menu item should use a function to determine query params, instead uses: ${item.queryParams}`
-			);
-		}
-		expect(item.queryParams(testDivision)).toEqual({divisionName: testDivision.name});
-		expect(item.fragment).toBeUndefined();
-		expect(item.newTab).toBeFalsy();
 	});
 });

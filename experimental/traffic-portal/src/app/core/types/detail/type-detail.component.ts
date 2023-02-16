@@ -40,7 +40,6 @@ export class TypeDetailComponent implements OnInit {
 	 * Angular lifecycle hook where data is initialized.
 	 */
 	public async ngOnInit(): Promise<void> {
-		let Name: string | null = "";
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
 			console.error("missing required route parameter 'id'");
@@ -62,18 +61,11 @@ export class TypeDetailComponent implements OnInit {
 
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
-			Name = ID;
-			if (Name === null) {
-				console.error("route parameter 'id' was non-number: ", ID, " and no name was supplied: ", Name);
-				return
-			}
+			console.error("route parameter 'id' was non-number: ", ID);
+			return
 		}
 
-		if (!Number.isNaN(numID)) {
-			this.type = await this.typeService.getTypes(numID);
-		} else {
-			this.type = await this.typeService.getTypes(Name);
-		}
+		this.type = await this.typeService.getTypes(numID);
 		this.navSvc.headerTitle.next(`Type: ${this.type.name}`);
 	}
 

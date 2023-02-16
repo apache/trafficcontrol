@@ -40,6 +40,10 @@ export class TypesTableComponent implements OnInit {
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
 		{
+			field: "id",
+			headerName: "ID"
+		},
+		{
 			field: "name",
 			headerName: "Name"
 		},
@@ -60,11 +64,11 @@ export class TypesTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented type data). */
 	public contextMenuItems: Array<ContextMenuItem<TypeFromResponse>> = [
 		{
-			href: (type: TypeFromResponse): string => `${type.name}`,
+			href: (type: TypeFromResponse): string => `${type.id}`,
 			name: "Edit"
 		},
 		{
-			href: (type: TypeFromResponse): string => `${type.name}`,
+			href: (type: TypeFromResponse): string => `${type.id}`,
 			name: "Open in New Tab",
 			newTab: true
 		},
