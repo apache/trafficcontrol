@@ -116,6 +116,7 @@ export interface CreatedData {
 	region: ResponseRegion;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
+	type: TypeFromResponse;
 }
 
 const testData = {};

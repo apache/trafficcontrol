@@ -82,7 +82,7 @@ export class TypeService extends APIService {
 	/**
 	 * Deletes an existing type.
 	 *
-	 * @param name Name of the type to delete.
+	 * @param id ID of the type to delete.
 	 * @returns The deleted type.
 	 */
 	public async deleteType(id: number): Promise<TypeFromResponse> {

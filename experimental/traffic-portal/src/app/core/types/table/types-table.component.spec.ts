@@ -93,7 +93,7 @@ describe("TypesTableComponent", () => {
 	it("handles unrecognized contextmenu events", () => {
 		expect(async () => component.handleContextMenu({
 			action: component.contextMenuItems[0].name,
-			data: {id: 1, lastUpdated: new Date(), description: "Type Description", name: "Type", useInTable: "server"}
+			data: {description: "Type Description", id: 1, lastUpdated: new Date(), name: "Type", useInTable: "server"}
 		})).not.toThrow();
 	});
 

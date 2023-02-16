@@ -21,6 +21,9 @@ export type TypeDetailPageObject = EnhancedPageObject<{}, typeof typeDetailPageO
 
 const typeDetailPageObject = {
 	elements: {
+		description: {
+			selector: "input[name='description']"
+		},
 		id: {
 			selector: "input[name='id']"
 		},
@@ -30,14 +33,11 @@ const typeDetailPageObject = {
 		name: {
 			selector: "input[name='name']"
 		},
-		description: {
-			selector: "input[name='description']"
+		saveBtn: {
+			selector: "button[type='submit']"
 		},
 		useInTable: {
 			selector: "input[name='useInTable']"
-		},
-		saveBtn: {
-			selector: "button[type='submit']"
 		}
 	},
 };

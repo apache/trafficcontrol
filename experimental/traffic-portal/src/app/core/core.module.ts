@@ -47,13 +47,13 @@ import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.c
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
+import {TypeDetailComponent} from "./types/detail/type-detail.component";
+import {TypesTableComponent} from "./types/table/types-table.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
-import {TypesTableComponent} from "./types/table/types-table.component";
-import {TypeDetailComponent} from "./types/detail/type-detail.component";
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },

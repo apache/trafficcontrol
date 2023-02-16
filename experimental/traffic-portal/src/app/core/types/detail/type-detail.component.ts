@@ -51,11 +51,11 @@ export class TypeDetailComponent implements OnInit {
 			this.navSvc.headerTitle.next("New Type");
 			this.new = true;
 			this.type = {
-				id: -1,
 				description: "",
-				useInTable: "server",
+				id: -1,
 				lastUpdated: new Date(),
-				name: ""
+				name: "",
+				useInTable: "server"
 			};
 			return;
 		}

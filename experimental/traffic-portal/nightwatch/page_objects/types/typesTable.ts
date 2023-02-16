@@ -24,8 +24,7 @@ type TypesTableCommands = TableSectionCommands;
 /**
  * Defines the Page Object for the Types page.
  */
-export type TypesPageObject = EnhancedPageObject<{}, {},
-	EnhancedSectionInstance<TypesTableCommands>>;
+export type TypesPageObject = EnhancedPageObject<{}, {}, EnhancedSectionInstance<TypesTableCommands>>;
 
 const typesPageObject = {
 	api: {} as NightwatchAPI,
