@@ -11,6 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
@@ -62,7 +63,7 @@ export class TypeDetailComponent implements OnInit {
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
 			console.error("route parameter 'id' was non-number: ", ID);
-			return
+			return;
 		}
 
 		this.type = await this.typeService.getTypes(numID);

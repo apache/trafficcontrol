@@ -24,10 +24,10 @@ import { TypesTableComponent } from "src/app/core/types/table/types-table.compon
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
 
 const testType = {
+	description: "TestDescription",
 	id: 1,
 	lastUpdated: new Date(),
 	name: "TestQuest",
-	description: "TestDescription",
 	useInTable: "server"
 };
 
@@ -93,7 +93,7 @@ describe("TypesTableComponent", () => {
 	it("handles unrecognized contextmenu events", () => {
 		expect(async () => component.handleContextMenu({
 			action: component.contextMenuItems[0].name,
-			data: {id: 1, lastUpdated: new Date(), name: "Type", description: "Type Description", useInTable: "server"}
+			data: {id: 1, lastUpdated: new Date(), description: "Type Description", name: "Type", useInTable: "server"}
 		})).not.toThrow();
 	});
 
@@ -117,7 +117,7 @@ describe("TypesTableComponent", () => {
 			afterClosed: () => of(true)
 		} as MatDialogRef<unknown>);
 
-		const div = await api.createType({description: "blah", useInTable: "server", name: "test"});
+		const div = await api.createType({description: "blah", name: "test", useInTable: "server"});
 		expect(openSpy).not.toHaveBeenCalled();
 		const asyncExpectation = expectAsync(component.handleContextMenu({action: "delete", data: div})).toBeResolvedTo(undefined);
 		tick();

@@ -184,10 +184,10 @@ export class TypeService {
 	}
 
 	/**
-	 * Deletes an existing division.
+	 * Deletes an existing type.
 	 *
-	 * @param id Id of the division to delete.
-	 * @returns The deleted division.
+	 * @param id Id of the type to delete.
+	 * @returns The deleted type.
 	 */
 	public async deleteType(id: number): Promise<TypeFromResponse> {
 		const index = this.types.findIndex(t => t.id === id);
@@ -198,10 +198,10 @@ export class TypeService {
 	}
 
 	/**
-	 * Creates a new division.
+	 * Creates a new type.
 	 *
-	 * @param division The division to create.
-	 * @returns The created division.
+	 * @param type The type to create.
+	 * @returns The created type.
 	 */
 	public async createType(type: RequestType): Promise<TypeFromResponse> {
 		const t = {
