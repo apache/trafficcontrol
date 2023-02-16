@@ -15,7 +15,7 @@
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute, type Params } from "@angular/router";
+import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import { TypeFromResponse } from "trafficops-types";
 
@@ -72,11 +72,6 @@ export class TypesTableComponent implements OnInit {
 			action: "delete",
 			multiRow: false,
 			name: "Delete"
-		},
-		{
-			href: "/core/regions",
-			name: "View Regions",
-			queryParams: (type: TypeFromResponse): Params => ({typeName: type.name})
 		}
 	];
 
