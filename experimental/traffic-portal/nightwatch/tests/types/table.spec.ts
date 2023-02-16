@@ -14,7 +14,7 @@
 
 describe("Types Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.typesTable().navigate()
+		browser.page.types.typesTable().navigate()
 			.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);

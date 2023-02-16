@@ -57,6 +57,9 @@ import {
 	RequestPhysicalLocation
 } from "trafficops-types";
 
+import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
+import {TypesPageObject} from "../page_objects/types/typesTable";
+
 declare module "nightwatch" {
 	/**
 	 * Defines the global nightwatch browser type with our types mixed in.
@@ -87,6 +90,10 @@ declare module "nightwatch" {
 			tenants: () => TenantsPageObject;
 			tenantDetail: () => TenantDetailPageObject;
 			users: () => UsersPageObject;
+		};
+		types: {
+			typesTable: () => TypesPageObject;
+			typeDetail: () => TypeDetailPageObject;
 		};
 	}
 

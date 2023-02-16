@@ -14,7 +14,7 @@
 
 describe("Type Detail Spec", () => {
 	it("Test type", () => {
-		const page = browser.page.typeDetail();
+		const page = browser.page.types.typeDetail();
 		browser.url(`${page.api.launchUrl}/core/types/${browser.globals.testData.type.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
@@ -30,7 +30,7 @@ describe("Type Detail Spec", () => {
 	});
 
 	it("New type", () => {
-		const page = browser.page.typeDetail();
+		const page = browser.page.types.typeDetail();
 		browser.url(`${page.api.launchUrl}/core/types/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
