@@ -53,6 +53,7 @@ import { UserDetailsComponent } from "./users/user-details/user-details.componen
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
 import {TypesTableComponent} from "./types/table/types-table.component";
+import {TypeDetailComponent} from "./types/detail/type-detail.component";
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
@@ -76,6 +77,7 @@ export const ROUTES: Routes = [
 	{ component: PhysLocDetailComponent, path: "phys-locs/:id" },
 	{ component: PhysLocTableComponent, path: "phys-locs" },
 	{ component: TypesTableComponent, path: "types" },
+	{ component: TypeDetailComponent, path: "types/:id"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -110,7 +112,8 @@ export const ROUTES: Routes = [
 		RegionsTableComponent,
 		RegionDetailComponent,
 		CacheGroupDetailsComponent,
-		TypesTableComponent
+		TypesTableComponent,
+		TypeDetailComponent
 	],
 	exports: [],
 	imports: [

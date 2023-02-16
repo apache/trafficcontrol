@@ -44,6 +44,14 @@ export class TypesTableComponent implements OnInit {
 			headerName: "Name"
 		},
 		{
+			field: "description",
+			headerName: "Description"
+		},
+		{
+			field: "useInTable",
+			headerName: "Use In Table"
+		},
+		{
 			field: "lastUpdated",
 			headerName: "Last Updated"
 		}
@@ -113,11 +121,11 @@ export class TypesTableComponent implements OnInit {
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
-					data: {message: `Are you sure you want to delete type ${data.name} with id ${data.id}`, title: "Confirm Delete"}
+					data: {message: `Are you sure you want to delete type ${data.name} with id ${data.id} ?`, title: "Confirm Delete"}
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
-						this.api.deleteType(data.name).then(async () => this.types = this.api.getTypes());
+						this.api.deleteType(data.id).then(async () => this.types = this.api.getTypes());
 					}
 				});
 				break;
