@@ -107,9 +107,11 @@ func Main() int {
 			log.Infoln(FailureExitMsg)
 			return ExitCodeAlreadyRunning
 		}
+		log.Errorf("Unable to acquire app lock retrying in: %v ", LockFileRetryInterval)
 		time.Sleep(LockFileRetryInterval)
 	}
 	log.Infoln("Acquired app lock")
+	defer lock.Unlock()
 
 	// Note failing to load old metadata is not fatal!
 	// oldMetaData must always be checked for nil before usage!
