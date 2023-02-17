@@ -16,6 +16,10 @@ limitations under the License.
 	<tp-loading *ngIf="!type"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="type">
 		<mat-card-content>
+			<mat-form-field *ngIf="!new">
+				<mat-label>ID</mat-label>
+				<input matInput type="text" name="id" disabled readonly [defaultValue]="type.id" />
+			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Name</mat-label>
 				<input matInput type="text" name="name" required [(ngModel)]="type.name" />
