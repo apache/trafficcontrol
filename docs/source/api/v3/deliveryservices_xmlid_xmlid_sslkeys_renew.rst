@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-deliveryservices-xmlid-xmlid-sslkeys-renew:
+.. _to-api-v3-deliveryservices-xmlid-xmlid-sslkeys-renew:
 
 **************************************************
 ``deliveryservices/xmlId/{{XMLID}}/sslkeys/renew``
