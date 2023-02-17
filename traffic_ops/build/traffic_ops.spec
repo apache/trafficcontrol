@@ -21,7 +21,7 @@
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
 %define debug_package %{nil}
 
-Summary:          Traffic Ops UI
+Summary:          Traffic Ops
 Name:             traffic_ops
 Version:          %{traffic_control_version}
 Release:          %{build_number}
@@ -31,7 +31,6 @@ Prefix:           /opt/traffic_ops
 Source:           %{_sourcedir}/traffic_ops-%{version}.tgz
 URL:              https://github.com/apache/trafficcontrol/
 Vendor:           Apache Software Foundation
-Packager:         daniel_kirkwood at Cable dot Comcast dot com
 AutoReqProv:      no
 Requires:         cpanminus, expat-devel, libcurl, libpcap-devel, mkisofs, tar
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1

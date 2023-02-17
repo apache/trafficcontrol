@@ -42,13 +42,26 @@ initBuildArea() {
 	 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
 
 	# tar/gzip the source
-	local tp_dest
-	tp_dest="$(createSourceDir traffic-portal)"
 	cd "$TP_DIR" || \
 		 { echo "Could not cd to $TP_DIR: $?"; return 1; }
-	rsync -av ./ "$tp_dest"/ || \
-		 { echo "Could not copy to $to_dest: $?"; return 1; }
-	cp -r "$TP_DIR"/ "$tp_dest" || { echo "Could not copy $TP_DIR to $tp_dest: $?"; return 1; }
+
+	echo "Installing npm dependencies"
+	npm ci || \
+		{ echo "Could not install packages from $TP_DIR: $?"; return 1; }
+
+	cd build || \
+		{ echo "Could not cd to $TP_DIR/build: $?"; return 1; }
+
+	npm ci || \
+		{ echo "Could not install packages from $TP_DIR/build: $?"; return 1; }
+
+	cd ..
+
+	local tp_dest
+	tp_dest="$(createSourceDir traffic-portal)"
+
+	rsync -av --exclude=/.angular ./ "$tp_dest"/ || \
+		 { echo "Could not copy to $tp_dest: $?"; return 1; }
 
 	# include LICENSE in the tarball
 	cp "${TC_DIR}/LICENSE" "$tp_dest"

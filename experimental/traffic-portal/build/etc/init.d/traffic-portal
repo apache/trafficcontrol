@@ -43,11 +43,13 @@
 
 NAME="Traffic Portal Application"
 NODE_BIN_DIR="/usr/bin"
-NODE_PATH="/opt/traffic_portal/node_modules"
-PM2_BIN_DIR="/opt/traffic_portal/node_modules/pm2/bin"
-APPLICATION_PATH="/opt/traffic_portal/server.js"
-PIDFILE="/var/run/traffic_portal.pid"
-LOGFILE="/var/log/traffic_portal/traffic_portal.log"
+APPLICATION_DIR="/opt/traffic-portal"
+NODE_PATH="$APPLICATION_DIR/node_modules"
+PM2_BIN_DIR="$APPLICATION_DIR/node_modules/pm2/bin"
+APPLICATION_PATH="$APPLICATION_DIR/server/main.js"
+PIDFILE="/var/run/traffic-portal.pid"
+LOGFILE="/var/log/traffic-portal/traffic-portal.log"
+CONFIG_PATH="/etc/traffic-portal/config.json"
 RESTART_TIME="2000"
 
 PATH=$PM2_BIN_DIR:$NODE_BIN_DIR:$PATH
@@ -63,7 +65,8 @@ start() {
       -l $LOGFILE \
       --restart-delay $RESTART_TIME \
       --time \
-      --name "$NAME" > /dev/null 2>&1
+      --name "$NAME" \
+      -- -C "$CONFIG_PATH" > /dev/null 2>&1
     RETVAL=$?
 }
 

@@ -20,7 +20,6 @@ Name:     traffic_monitor
 Version:  %{traffic_control_version}
 Release:  %{build_number}
 Summary:  Monitor the caches
-Packager: david_neuman2 at Cable dot Comcast dot com
 Vendor:   Apache Software Foundation
 Group:    Applications/Communications
 License:  Apache License, Version 2.0
@@ -65,7 +64,6 @@ cp "$src"/build/traffic_monitor.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/t
 
 %pre
 /usr/bin/getent group traffic_monitor >/dev/null
-
 if [ $? -ne 0 ]; then
 	/usr/sbin/groupadd -g 423 traffic_monitor
 fi

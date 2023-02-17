@@ -26,61 +26,71 @@ URL:      https://github.com/apache/trafficcontrol/
 Source:   %{_sourcedir}/traffic-portal-%{traffic_control_version}.tgz
 AutoReqProv: no
 Requires: nodejs >= 2:16.0.0
+Requires(pre): /usr/sbin/useradd, /usr/bin/getent
 
 %define traffic_portal_home /opt/traffic-portal
+%define traffic_portal_log /var/log/traffic-portal
+%define traffic_portal_conf /etc/traffic-portal
+%define traffic_portal traffic-portal-%{version}
+%define traffic_portal_user trafficportal
 %description
 Installs Traffic Portal
 
 Built: @BUILT@
 
 %prep
-rm -rf $RPM_BUILD_DIR/traffic-portal-%{version}
-tar -xzvf $RPM_SOURCE_DIR/traffic-portal-%{version}.tgz
+%__rm -rf $RPM_BUILD_DIR/%{traffic_portal}
+tar -xzvf $RPM_SOURCE_DIR/%{traffic_portal}.tgz
 
-%setup
+%pre
+/usr/bin/getent group %{traffic_portal_user} || /usr/sbin/groupadd -r %{traffic_portal_user}
+/usr/bin/getent passwd %{traffic_portal_user} || /usr/sbin/useradd -r -d %{traffic_portal_home} -s /sbin/nologin %{traffic_portal_user} -g %{traffic_portal_user}
 
 %build
-		npm ci
-		npm run build:ssr
+cd ${RPM_BUILD_DIR}/%{traffic_portal}
+npm run build:ssr
 
 %install
-		%__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
-		%__mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
-		%__mkdir -p ${RPM_BUILD_ROOT}/etc/traffic-portal
-		%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/browser
-		%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/server
-		%__mkdir -p ${RPM_BUILD_ROOT}/var/log/traffic-portal
+%__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d
+%__mkdir -p ${RPM_BUILD_ROOT}/etc/logrotate.d
+%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_conf}
+%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/browser
+%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/server
+%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_home}/node_modules
+%__mkdir -p ${RPM_BUILD_ROOT}%{traffic_portal_log}
 
-		%__cp ${RPM_BUILD_DIR}/traffic-portal-%{version}/build/config.json ${RPM_BUILD_ROOT}/etc/traffic-portal/.
-		%__cp -r ${RPM_BUILD_DIR}/traffic-portal-%{version}/dist/traffic-portal/* ${RPM_BUILD_ROOT}/%{traffic_portal_home}/.
-		%__cp -r ${RPM_BUILD_DIR}/traffic-portal-%{version}/package-lock.json ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
-		#%__cp ${RPM_BUILD_DIR}/traffic_portal-%{version}/build/etc/init.d/traffic-portal ${RPM_BUILD_ROOT}/etc/init.d/.
+%__cp ${RPM_BUILD_DIR}/%{traffic_portal}/build/config.json ${RPM_BUILD_ROOT}%{traffic_portal_conf}/.
+%__cp -r ${RPM_BUILD_DIR}/%{traffic_portal}/dist/traffic-portal/* ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
+%__cp -r ${RPM_BUILD_DIR}/%{traffic_portal}/build/node_modules ${RPM_BUILD_ROOT}%{traffic_portal_home}/.
+%__cp ${RPM_BUILD_DIR}/%{traffic_portal}/build/etc/init.d/traffic-portal ${RPM_BUILD_ROOT}/etc/init.d/.
+%__cp ${RPM_BUILD_DIR}/%{traffic_portal}/build/etc/logrotate.d/traffic-portal ${RPM_BUILD_ROOT}/etc/logrotate.d/.
+%__cp ${RPM_BUILD_DIR}/%{traffic_portal}/LICENSE ${RPM_BUILD_DIR}/.
 
-
-	# creates dynamic json file needed at runtime for traffic portal to display release info
-	VERSION=%{version}-%{build_number}
-	BUILD_DATE=$(date +'%Y-%m-%d %H:%M')
-	VERSION="\"Version\":\"$VERSION\""
-	BUILD_DATE="\"Build Date\":\"$BUILD_DATE\""
-	JSON_VERSION="{\n$VERSION,\n$BUILD_DATE\n}"
-	echo -e $JSON_VERSION > ${RPM_BUILD_ROOT}%{traffic_portal_home}/traffic-portal_release.json
+# creates dynamic json file needed at runtime for traffic portal to display release info
+echo "{
+	\"date\": \"$(date +'%Y-%m-%d %H:%M')\",
+	\"elRelease\": \"%{rhel_vers}\",
+	\"hash\": \"%{build_number}\",
+	\"version\": \"%{version}\"
+}" > ${RPM_BUILD_ROOT}%{traffic_portal_conf}/version.json
 
 %post
-		echo "Successfully installed the traffic-portal assets to " %{traffic_portal_home}
-		#%__chmod +x /etc/init.d/traffic-portal
-		echo "Successfully installed the 'traffic-portal' service"
-		#/sbin/chkconfig traffic-portal on
-		echo ""
-		echo "Start with 'service traffic-portal start'"
+%__chmod +x %{traffic_portal_home}/node_modules/pm2/bin/pm2
+echo "Successfully installed traffic-portal to " %{traffic_portal_home}
+/sbin/chkconfig traffic-portal on
+echo ""
+echo "Start with 'systemctl start traffic-portal' or by running '%{traffic_portal_conf}/traffic-portal'"
+
 
 %files
 %license LICENSE
-%defattr(644,root,root,755)
-#%attr(755,root,root) /etc/init.d/traffic-portal
-%config(noreplace)/etc/traffic-portal/config.json
-%config(noreplace)%{traffic_portal_home}/traffic-portal_release.json
-%dir /var/log/traffic-portal
+%defattr(644,%{traffic_portal_user},%{traffic_portal_user},755)
+%attr(755,%{traffic_portal_user},%{traffic_portal_user}) /etc/init.d/traffic-portal
+%config(noreplace)%{traffic_portal_conf}/config.json
+%config(noreplace)%{traffic_portal_conf}/version.json
+%config(noreplace)/etc/logrotate.d/traffic-portal
+%dir %{traffic_portal_log}
 %{traffic_portal_home}/browser
 %{traffic_portal_home}/server
-%{traffic_portal_home}/package-lock.json
+%{traffic_portal_home}/node_modules
 

@@ -25,8 +25,8 @@ envsubst <../../.github/actions/tpv2-integration-tests/cdn.json >./cdn.conf
 
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ../../.github/actions/tpv2-integration-tests/database.json > out.log 2>&1 &
 
-cd "${GITHUB_WORKSPACE}/experimental/traffic-portal"
-node ./dist/traffic-portal/server/main.js --port 4200 -k -t 'https://localhost:6443/' &
+cd "${GITHUB_WORKSPACE}/experimental/traffic-portal/dist/traffic-portal"
+node ./server/main.js --port 4200 -k -t 'https://localhost:6443/' &
 
 timeout 15m bash <<TMOUT
 	while ! curl -k "http://localhost:4200/api/4.0/ping" >/dev/null 2>&1; do
@@ -34,5 +34,7 @@ timeout 15m bash <<TMOUT
 		sleep 5
 	done
 TMOUT
+
+cd "${GITHUB_WORKSPACE}/experimental/traffic-portal"
 timeout 15m npm run e2e:ci
 kill %%

@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-/var/log/traffic_portal/access.log {
+/var/log/traffic-portal/traffic-portal.log {
     daily
     copytruncate
     missingok

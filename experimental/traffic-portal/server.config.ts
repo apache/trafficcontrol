@@ -23,6 +23,8 @@ import { existsSync, readFileSync } from "fs";
 export interface ServerVersion {
 	/** The ATC version of the server e.g. 5.0.0 */
 	version: string;
+	/** Datetime when the current version was built*/
+	date?: string;
 	/**
 	 * The number of commits in the development branch that produced this
 	 * version of ATC - if known.
