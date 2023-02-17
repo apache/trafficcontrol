@@ -250,11 +250,11 @@ export function getVersion(path?: string): ServerVersion {
 		throw new Error(`contents of version file '${path}' does not represent an ATC version`);
 	}
 
-	if (!existsSync("../../VERSION")) {
-		throw new Error(`'${path}' doesn't exist and '../../VERSION' doesn't exist`);
+	if (!existsSync("../../../../VERSION")) {
+		throw new Error(`'${path}' doesn't exist and '../../../../VERSION' doesn't exist`);
 	}
 	const ver: ServerVersion = {
-		version: readFileSync("../../VERSION", {encoding: "utf8"}).trimEnd()
+		version: readFileSync("../../../../VERSION", {encoding: "utf8"}).trimEnd()
 	};
 
 	try {
