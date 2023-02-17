@@ -54,7 +54,7 @@ import {
 	RequestCacheGroup,
 	ResponseCacheGroup,
 	ResponsePhysicalLocation,
-	RequestPhysicalLocation
+	RequestPhysicalLocation, RequestType
 } from "trafficops-types";
 
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
@@ -329,6 +329,18 @@ const globals = {
 			respPhysLoc.region = respRegion.name;
 			console.log(`Successfully created Phys Loc ${respPhysLoc.name}`);
 			data.physLoc = respPhysLoc;
+
+			const type: RequestType = {
+				description: "blah",
+				name: `type${globals.uniqueString}`,
+				useInTable: "server"
+			};
+			url = `${apiUrl}/types`;
+			resp = await client.post(url, JSON.stringify(type));
+			const respType: TypeFromResponse = resp.data.response;
+			console.log(`Successfully created Type ${respType.name}`);
+			data.type = respType;
+
 		} catch(e) {
 			console.error("Request for", url, "failed:", (e as AxiosError).message);
 			throw e;
