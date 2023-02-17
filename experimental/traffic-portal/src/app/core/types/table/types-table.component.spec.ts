@@ -117,9 +117,9 @@ describe("TypesTableComponent", () => {
 			afterClosed: () => of(true)
 		} as MatDialogRef<unknown>);
 
-		const div = await api.createType({description: "blah", name: "test", useInTable: "server"});
+		const type = await api.createType({description: "blah", name: "test", useInTable: "server"});
 		expect(openSpy).not.toHaveBeenCalled();
-		const asyncExpectation = expectAsync(component.handleContextMenu({action: "delete", data: div})).toBeResolvedTo(undefined);
+		const asyncExpectation = expectAsync(component.handleContextMenu({action: "delete", data: type})).toBeResolvedTo(undefined);
 		tick();
 
 		expect(openSpy).toHaveBeenCalled();

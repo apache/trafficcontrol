@@ -22,7 +22,7 @@ import { APITestingModule } from "src/app/api/testing";
 import { TypeDetailComponent } from "src/app/core/types/detail/type-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
-describe("DivisionDetailComponent", () => {
+describe("TypeDetailComponent", () => {
 	let component: TypeDetailComponent;
 	let fixture: ComponentFixture<TypeDetailComponent>;
 	let route: ActivatedRoute;
@@ -50,7 +50,7 @@ describe("DivisionDetailComponent", () => {
 		expect(paramMap).toHaveBeenCalled();
 	});
 
-	it("new division", async () => {
+	it("new type", async () => {
 		paramMap.and.returnValue("new");
 
 		fixture = TestBed.createComponent(TypeDetailComponent);
