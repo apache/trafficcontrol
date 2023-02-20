@@ -128,8 +128,6 @@ export abstract class APIService {
 			params,
 			...this.defaultOptions
 		};
-		// TODO pass alerts to the alert service
-		// (TODO create the alert service)
 		return this.http.request<{response: T}>(method, `/api/${this.apiVersion}/${path.replace(/^\/+/, "")}`, options).pipe(map(
 			r => {
 				if (!r.body) {
