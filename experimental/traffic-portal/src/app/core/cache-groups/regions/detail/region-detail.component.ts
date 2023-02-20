@@ -26,7 +26,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-regions-detail",
-	styleUrls: ["./region-detail.component.scss"],
+	styleUrls: ["../../../styles/form.page.scss"],
 	templateUrl: "./region-detail.component.html"
 })
 export class RegionDetailComponent implements OnInit {

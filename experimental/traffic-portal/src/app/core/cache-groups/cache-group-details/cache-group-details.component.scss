@@ -16,26 +16,12 @@ form {
 	max-width: calc(100% - 32px);
 }
 
-mat-card {
-	margin: 1em auto;
-	box-sizing: border-box;
-	width: 80%;
-	min-width: 350px;
-
-	mat-card-content {
-		display: grid;
-		grid-template-columns: 1fr;
-		row-gap: 2em;
-		margin: 1em auto 50px;
-
-		.pair {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			column-gap: 48px;
-			align-items: center;
-			justify-content: space-between;
-		}
-	}
+mat-card mat-card-content .pair {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	column-gap: 48px;
+	align-items: center;
+	justify-content: space-between;
 }
 
 /* Chosen more or less arbitrarily. */
