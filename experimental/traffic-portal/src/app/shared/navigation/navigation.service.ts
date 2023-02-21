@@ -145,6 +145,12 @@ export class NavigationService {
 			name: "Users"
 		}, {
 			children: [{
+				href: "/core/statuses",
+				name: "Statuses"
+			}],
+			name: "Configure"
+		}, {
+			children: [{
 				href: "/core/change-logs",
 				name: "Change Logs"
 			}],
