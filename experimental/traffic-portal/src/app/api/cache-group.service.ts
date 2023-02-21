@@ -23,6 +23,8 @@ import type {
 	CDN,
 	CacheGroupQueueResponse,
 	CacheGroupQueueRequest,
+	RequestCoordinate,
+	ResponseCoordinate,
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
@@ -308,7 +310,6 @@ export class CacheGroupService extends APIService {
 			}
 			const r = await this.get<[ResponseRegion]>(path, undefined, params).toPromise();
 			return r[0];
-
 		}
 		return this.get<Array<ResponseRegion>>(path).toPromise();
 	}
@@ -343,6 +344,66 @@ export class CacheGroupService extends APIService {
 	public async deleteRegion(regionOrId: number | ResponseRegion): Promise<void> {
 		const id = typeof(regionOrId) === "number" ? regionOrId : regionOrId.id;
 		await this.delete("regions/", undefined, { id : String(id) }).toPromise();
+	}
+
+	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
+	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
+
+	/**
+	 * Gets an array of coordinates from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the Coordinate with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of Coordinate objects - or a single Coordinate object if 'nameOrID'
+	 * was given.
+	 */
+	public async getCoordinates(nameOrID?: string | number): Promise<Array<ResponseCoordinate> | ResponseCoordinate> {
+		const path = "coordinates";
+		if(nameOrID) {
+			let params;
+			switch (typeof nameOrID) {
+				case "string":
+					params = {name: nameOrID};
+					break;
+				case "number":
+					params = {id: String(nameOrID)};
+			}
+			const r = await this.get<[ResponseCoordinate]>(path, undefined, params).toPromise();
+			return r[0];
+		}
+		return this.get<Array<ResponseCoordinate>>(path).toPromise();
+	}
+
+	/**
+	 * Replaces the current definition of a coordinate with the one given.
+	 *
+	 * @param coordinate The new coordinate.
+	 * @returns The updated coordinate.
+	 */
+	public async updateCoordinate(coordinate: ResponseCoordinate): Promise<ResponseCoordinate> {
+		const path = `coordinates/${coordinate.id}`;
+		return this.put<ResponseCoordinate>(path, coordinate).toPromise();
+	}
+
+	/**
+	 * Creates a new coordinate.
+	 *
+	 * @param coordinate The coordinate to create.
+	 * @returns The created coordinate.
+	 */
+	public async createCoordinate(coordinate: RequestCoordinate): Promise<ResponseCoordinate> {
+		return this.post<ResponseCoordinate>("coordinates", coordinate).toPromise();
+	}
+
+	/**
+	 * Deletes an existing coordinate.
+	 *
+	 * @param coordinateOrId Id of the coordinate to delete.
+	 * @returns The deleted coordinate.
+	 */
+	public async deleteCoordinate(coordinateOrId: number | ResponseCoordinate): Promise<void> {
+		const id = typeof(coordinateOrId) === "number" ? coordinateOrId : coordinateOrId.id;
+		await this.delete("coordinates/", undefined, { id : String(id) }).toPromise();
 	}
 
 	constructor(http: HttpClient) {

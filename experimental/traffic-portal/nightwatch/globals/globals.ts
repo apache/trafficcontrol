@@ -18,6 +18,8 @@ import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
+import type { CoordinateDetailPageObject } from "nightwatch/page_objects/cacheGroups/coordinateDetail";
+import type { CoordinatesPageObject } from "nightwatch/page_objects/cacheGroups/coordinatesTable";
 import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGroups/divisionDetail";
 import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
 import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
@@ -54,8 +56,10 @@ import {
 	RequestCacheGroup,
 	ResponseCacheGroup,
 	ResponsePhysicalLocation,
-	RequestPhysicalLocation
+	RequestPhysicalLocation,
+	ResponseCoordinate,
 } from "trafficops-types";
+import {RequestCoordinate} from "trafficops-types/dist/coordinate";
 
 declare module "nightwatch" {
 	/**
@@ -66,6 +70,8 @@ declare module "nightwatch" {
 		cacheGroups: {
 			cacheGroupDetails: () => CacheGroupDetailPageObject;
 			cacheGroupsTable: () => CacheGroupsPageObject;
+			coordinateDetail: () => CoordinateDetailPageObject;
+			coordinatesTable: () => CoordinatesPageObject;
 			divisionDetail: () => DivisionDetailPageObject;
 			divisionsTable: () => DivisionsPageObject;
 			regionDetail: () => RegionDetailPageObject;
@@ -109,6 +115,7 @@ declare module "nightwatch" {
 export interface CreatedData {
 	cacheGroup: ResponseCacheGroup;
 	cdn: ResponseCDN;
+	coordinate: ResponseCoordinate;
 	division: ResponseDivision;
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
@@ -321,6 +328,17 @@ const globals = {
 			respPhysLoc.region = respRegion.name;
 			console.log(`Successfully created Phys Loc ${respPhysLoc.name}`);
 			data.physLoc = respPhysLoc;
+
+			const coordinate: RequestCoordinate = {
+				latitude: 0,
+				longitude: 0,
+				name: `coord${globals.uniqueString}`
+			};
+			url = `${apiUrl}/coordinates`;
+			resp = await client.post(url, JSON.stringify(coordinate));
+			const respCoordinate: ResponseCoordinate = resp.data.response;
+			console.log(`Successfully created Coordinate ${respCoordinate.name}`);
+			data.coordinate = respCoordinate;
 		} catch(e) {
 			console.error("Request for", url, "failed:", (e as AxiosError).message);
 			throw e;
@@ -338,7 +356,7 @@ const globals = {
 		});
 	},
 	testData,
-	trafficOpsURL: "https://localhost:6443",
+	trafficOpsURL: "https://localhost:8443",
 	uniqueString: new Date().getTime().toString()
 };
 

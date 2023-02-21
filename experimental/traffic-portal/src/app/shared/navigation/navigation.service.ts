@@ -122,6 +122,9 @@ export class NavigationService {
 					href: "/core/cache-groups",
 					name: "Cache Groups"
 				}, {
+					href: "/core/coordinates",
+					name: "Coordinates"
+				}, {
 					href: "/core/divisions",
 					name: "Divisions"
 				}, {
@@ -240,3 +243,5 @@ export class NavigationService {
 		return present;
 	}
 }
+
+//TODO
