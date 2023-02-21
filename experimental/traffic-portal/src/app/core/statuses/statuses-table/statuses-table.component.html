@@ -1,0 +1,9 @@
+<mat-card class="table-page-content">
+    <div>
+        <input type="search" name="fuzzControl" aria-label="Fuzzy Search Users" autofocus inputmode="search"
+            role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()" />
+    </div>
+    <tp-generic-table [data]="statuses" [cols]="columnDefs" [fuzzySearch]="fuzzySubject" context="statuses"
+        [contextMenuItems]="contextMenuItems">
+    </tp-generic-table>
+</mat-card>

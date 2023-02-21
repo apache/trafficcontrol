@@ -1,0 +1,26 @@
+<mat-card class="statuses-details">
+    <ul class="breadcrumb">
+        <li><a routerLink="/core/statuses">Statuses</a></li>
+        <li>{{title}}</li>
+    </ul>
+    <tp-loading *ngIf="loading"></tp-loading>
+    <form [formGroup]="statusDetailsForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+        <mat-card-content>
+            <mat-form-field class="example-full-width">
+                <mat-label>Name</mat-label>
+                <input matInput placeholder="Ex. Pizza" formControlName="name">
+            </mat-form-field>
+            <mat-form-field class="example-full-width">
+                <mat-label>Description</mat-label>
+                <input matInput placeholder="Ex. Pizza" formControlName="description">
+            </mat-form-field>
+        </mat-card-content>
+        <mat-card-actions align="end">
+            <button mat-raised-button type="button" color="warn" (click)="deleteStatus()" *ngIf="!isNew">Delete</button>
+            <button mat-raised-button type="button" routerLink="/core/statuses">Cancel</button>
+            <button mat-raised-button type="submit" color="primary" [disabled]="statusDetailsForm.invalid">
+                {{isNew ? 'Create' : 'Save'}}
+            </button>
+        </mat-card-actions>
+    </form>
+</mat-card>
