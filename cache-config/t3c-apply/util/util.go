@@ -387,17 +387,17 @@ func CleanTmpDir(cfg config.Cfg) bool {
 	return true
 }
 
-func MkDir(name string, cfg config.Cfg) bool {
-	return doMkDirWithOwner(name, cfg, nil, nil)
+func MkDir(name string, reportOnly bool) bool {
+	return doMkDirWithOwner(name, reportOnly, nil, nil)
 }
 
-func MkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int) bool {
-	return doMkDirWithOwner(name, cfg, uid, gid)
+func MkDirWithOwner(name string, reportOnly bool, uid *int, gid *int) bool {
+	return doMkDirWithOwner(name, reportOnly, uid, gid)
 }
 
-func doMkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int) bool {
+func doMkDirWithOwner(name string, reportOnly bool, uid *int, gid *int) bool {
+	// Check if already exists
 	fileInfo, err := os.Stat(name)
-
 	if err == nil {
 		if fileInfo.IsDir() {
 			log.Debugf("the directory '%s' already exists", name)
@@ -408,14 +408,14 @@ func doMkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int) bool {
 		}
 	}
 
-	if cfg.ReportOnly {
+	if reportOnly {
 		log.Infof("Reporting only: the directory %s does not exist and was not created", name)
 		return true
 	}
 
 	err = os.Mkdir(name, 0755)
 	if err != nil {
-		log.Errorf("unable to chown directory uid/gid, '%s': %v", name, err)
+		log.Errorf("unable to create the directory '%s': %v", name, err)
 		return false
 	}
 
