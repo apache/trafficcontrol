@@ -15,8 +15,41 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import type { Observable } from "rxjs";
 import { map } from "rxjs/operators";
+import type { Alert } from "trafficops-types";
 
 import { environment } from "src/environments/environment";
+
+import { hasProperty, isArray } from "../utils";
+
+/**
+ * Checks if something is an Alert.
+ *
+ * @param x The thing to check.
+ * @returns `true` if `x` is an Alert (or at least close enough), `false`
+ * otherwise.
+ */
+function isAlert(x: unknown): x is Alert {
+	if (typeof(x) !== "object" || !x) {
+		return false;
+	}
+
+	return hasProperty(x, "level", "string") && hasProperty(x, "text", "string");
+}
+
+/**
+ * Checks if an arbitrary object parsed from a response body is Alerts. This is
+ * useful for methods that typically return non-JSON data - except in the event
+ * of failures.
+ *
+ * @param x The object to check.
+ * @returns `true` if `x` has an `alerts` array, `false` otherwise.
+ */
+export function hasAlerts(x: object): x is ({alerts: Alert[]}) {
+	if (!hasProperty(x, "alerts")) {
+		return false;
+	}
+	return isArray(x.alerts, isAlert);
+}
 
 /**
  * This is the base class from which all other API classes inherit.
