@@ -283,3 +283,349 @@ export const enum AutocompleteValue {
 	/** A nickname or handle. */
 	NICKNAME = "nickname",
 }
+
+/**
+ * Checks if an object is a string. Useful for passing as a type guard into
+ * generic functions. In general, you should just use `typeof` instead.
+ *
+ * @param x The object to check.
+ * @returns `true` if `x` is a string, `false` otherwise.
+ */
+export function isString(x: unknown): x is string {
+	return typeof(x) === "string";
+}
+
+/**
+ * Checks if an object is a number. Useful for passing as a type guard into
+ * generic functions. In general, you should just use `typeof` instead.
+ *
+ * @param x The object to check.
+ * @returns `true` if `x` is a number, `false` otherwise.
+ */
+export function isNumber(x: unknown): x is number {
+	return typeof(x) === "number";
+}
+
+/**
+ * Checks if an object is a boolean. Useful for passing as a type guard into
+ * generic functions. In general, you should just use `typeof` instead.
+ *
+ * @param x The object to check.
+ * @returns `true` if `x` is a boolean, `false` otherwise.
+ */
+export function isBoolean(x: unknown): x is boolean {
+	return typeof(x) === "boolean";
+}
+
+/**
+ * isRecord checks that the passed object is a Record (object).
+ *
+ * @param x The object to check.
+ * @returns `true` if `x` is a Record, `false` otherwise.
+ */
+export function isRecord(x: unknown): x is Record<PropertyKey, unknown>;
+/**
+ * isRecord checks that the passed object is a Record with string property
+ * values.
+ *
+ * @param x The object to check.
+ * @param type Indicates we are checking for string properties.
+ * @returns `true` if `x` is a Record of properties with string values, `false`
+ * otherwise.
+ */
+export function isRecord(x: unknown, type: "string"): x is Record<PropertyKey, string>;
+/**
+ * isRecord checks that the passed object is a Record with numeric property
+ * values.
+ *
+ * @param x The object to check.
+ * @param type Indicates we are checking for number properties.
+ * @returns `true` if `x` is a Record of properties with numeric values, `false`
+ * otherwise.
+ */
+export function isRecord(x: unknown, type: "number"): x is Record<PropertyKey, number>;
+/**
+ * isRecord checks that the passed object is a Record with a certain, homogenous
+ * type.
+ *
+ * @param x The object to check.
+ * @param checker A type guard that will be used to ensure each property is of
+ * the type for which it checks.
+ * @returns `true` if `x` is a Record of properties with values that satisfy
+ * `checker`, `false` otherwise.
+ */
+export function isRecord<T>(x: unknown, checker: (p: unknown) => p is T): x is Record<PropertyKey, T>;
+/**
+ * isRecord checks that the passed object is a Record, optionally of a certain,
+ * homogenous type.
+ *
+ * @param x The object to check.
+ * @param checker Either the name of a primitive type to check, or a custom
+ * type checker function to use to check the type of each property value. If not
+ * given, the values of properties is not verified.
+ * @returns `true` if `x` is a Record of properties with values optionally given
+ * by `checker`.
+ */
+export function isRecord<T>(x: unknown, checker?: "string" | "number" | ((p: unknown) => p is T)): x is Record<PropertyKey, T> {
+	if (typeof x !== "object" || x === null) {
+		return false;
+	}
+	if (!checker) {
+		return true;
+	}
+	let chk;
+	switch (checker) {
+		case "string":
+			chk = isString;
+			break;
+		case "number":
+			chk = isNumber;
+			break;
+		default:
+			chk = checker;
+	}
+	return Object.values(x).every(chk);
+}
+
+/**
+ * isArray checks if something is an Array. This call signature is provided for
+ * generic completeness - it should basically never be used. Instead, use the
+ * built-in `Array.isArray` method.
+ *
+ * @param a The possible array to check.
+ * @returns `true` if `a` is any kind of Array, `false` otherwise.
+ */
+export function isArray(a: unknown): a is Array<unknown>;
+/**
+ * isArray checks if some object is an array of strings. This is exactly
+ * equivalent to using {@link isStringArray}.
+ *
+ * @param a The possible array to check.
+ * @param type Indicates we are checking for an array of strings.
+ * @returns `true` if `a` is an array containing only strings, `false`
+ * otherwise.
+ */
+export function isArray(a: unknown, type: "string"): a is Array<string>;
+/**
+ * isArray checks if some object is an array of numbers. This is exactly
+ * equivalent to using {@link isNumberArray}.
+ *
+ * @param a The possible array to check.
+ * @param type Indicates we are checking for an array of numbers.
+ * @returns `true` if `a` is an array containing only numbers, `false`
+ * otherwise.
+ */
+export function isArray(a: unknown, type: "number"): a is Array<number>;
+/**
+ * isArray checks if some object is a homogenous array of some specific type.
+ *
+ * @param a The possible array to check.
+ * @param checker A type guard that will be used to verify that `a` - if it
+ * indeed be an array - contains only types of data that satisfy the guard.
+ * @returns `true` if `a` is an array containing only values of type `T`,
+ * `false` otherwise.
+ */
+export function isArray<T>(a: unknown, checker: (x: unknown) => x is T): a is Array<T>;
+/**
+ * isArray checks if something is an Array, optionally with some homogenous
+ * value.
+ *
+ * @param a The possible array to check.
+ * @param checker If given, this enforces that `a` is a homogenous array. If
+ * this is the name of a primitive, it automatically checks for that primitive.
+ * More complex types require that this be a type guard in its own right, to
+ * match against each element of `a`.
+ * @returns `true` if `a` is an array, satisfying a homogeneity checker if one
+ * is provided, `false` otherwise.
+ */
+export function isArray<T>(a: unknown, checker?: "string" | "number" | ((x: unknown) => x is T)): a is Array<T> {
+	if (!Array.isArray(a)) {
+		return false;
+	}
+	if (!checker) {
+		return true;
+	}
+
+	let chk: (x: unknown) => x is T | string | number;
+	switch (checker) {
+		case "number":
+			chk = isNumber;
+			break;
+		case "string":
+			chk = isString;
+			break;
+		default:
+			chk = checker;
+	}
+
+	return a.every(chk);
+}
+
+/**
+ * isStringArray checks if the passed object is a homogeneous array of strings.
+ *
+ * @param sa The potential string array.
+ * @returns `true` if `sa` is an array and contains only strings, `false`
+ * otherwise.
+ */
+export const isStringArray = (sa: unknown): sa is Array<string> => isArray(sa, "string");
+/**
+ * isNumberArray checks if the passed object is a homogeneous array of numbers.
+ *
+ * @param na The potential numeric array.
+ * @returns `true` if `na` is an array and contains only numbers, `false`
+ * otherwise.
+ */
+export const isNumberArray = (na: unknown): na is Array<number> => isArray(na, "number");
+
+/**
+ * hasProperty checks, generically, whether some variable passed as `o` has the
+ * property `k`, where `k` is of some specific type.
+ *
+ * @note This only works for 'object' sub-types. Other basic types have easier
+ * checks.
+ *
+ * @example
+ * hasProperty({}, "id", isNumber); // returns `false`.
+ *
+ * @example
+ * const isNum: (x: unknown) => x is number = x => typeof x === number;
+ * // returns `false`
+ * hasProperty({wrong: "type"}, "wrong", isNum, "number");
+ *
+ * @param o The object to check.
+ * @param k The key for which to check in the object.
+ * @param s This type guard will be used to narrow the *type* of the property,
+ * as well as its existence.
+ * @returns `true` if o has a property `k` such that the value of `o.k`
+ * satisfies `s`, `false` otherwise.
+ * @throws {TypeError} when called improperly.
+ */
+export function hasProperty<T extends object, K extends PropertyKey, S>
+(o: T, k: K, s: (x: unknown) => x is S): o is T & Record<K, S>;
+/**
+ * hasProperty checks, generically, whether some variable passed as `o` has the
+ * property `k` such that `o.k` is a string.
+ *
+ * @note This only works for 'object' sub-types. Other basic types have easier
+ * checks.
+ *
+ * @example
+ * hasProperty({}, "id", "string"); // returns `false`.
+ *
+ * @example
+ * hasProperty({wrongType: 5}, "wrongType", "string"); // returns `false`
+ *
+ * @param o The object to check.
+ * @param k The key for which to check in the object.
+ * @param s indicates that we are checking for a string value of `o.k`.
+ * @returns `true` if o has a property `k` such that the value of `o.k` is a
+ * string, `false` otherwise.
+ * @throws {TypeError} when called improperly.
+ */
+export function hasProperty<T extends object, K extends PropertyKey>
+(o: T, k: K, s: "string"): o is T & Record<K, string>;
+/**
+ * hasProperty checks, generically, whether some variable passed as `o` has the
+ * property `k` such that `o.k` is a number.
+ *
+ * @note This only works for 'object' sub-types. Other basic types have easier
+ * checks.
+ *
+ * @example
+ * hasProperty({}, "id", "number"); // returns `false`.
+ *
+ * @example
+ * hasProperty({wrong: "type"}, "wrong", "number"); // returns `false`
+ *
+ * @param o The object to check.
+ * @param k The key for which to check in the object.
+ * @param s indicates that we are checking for a numeric value of `o.k`.
+ * @returns `true` if o has a property `k` such that the value of `o.k` is a
+ * number, `false` otherwise.
+ * @throws {TypeError} when called improperly.
+ */
+export function hasProperty<T extends object, K extends PropertyKey>
+(o: T, k: K, s: "number"): o is T & Record<K, number>;
+/**
+ * hasProperty checks, generically, whether some variable passed as `o` has the
+ * property `k` such that `o.k` is a boolean.
+ *
+ * @note This only works for 'object' sub-types. Other basic types have easier
+ * checks.
+ *
+ * @example
+ * hasProperty({}, "id", "boolean"); // returns `false`.
+ *
+ * @example
+ * hasProperty({wrong: "type"}, "wrong", "boolean"); // returns `false`
+ *
+ * @param o The object to check.
+ * @param k The key for which to check in the object.
+ * @param s indicates that we are checking for a boolean value of `o.k`.
+ * @returns `true` if o has a property `k` such that the value of `o.k` is a
+ * boolean, `false` otherwise.
+ * @throws {TypeError} when called improperly.
+ */
+export function hasProperty<T extends object, K extends PropertyKey>
+(o: T, k: K, s: "boolean"): o is T & Record<K, boolean>;
+/**
+ * hasProperty checks, generically, whether some variable passed as `o` has the
+ * property `k`.
+ *
+ * @note This only works for 'object' sub-types. Other basic types have easier
+ * checks.
+ *
+ * @example
+ * hasProperty({}, "id"); // returns `false`.
+ *
+ * @param o The object to check.
+ * @param k The key for which to check in the object.
+ * @returns `true` if o has a property `k`, `false` otherwise.
+ * @throws {TypeError} when called improperly.
+ */
+export function hasProperty<T extends object, K extends PropertyKey>
+(o: T, k: K): o is T & Record<K, unknown>;
+/**
+ * hasProperty checks, generically, whether some variable passed as `o` has the
+ * property `k`. It can also optionally narrow the type of `o.k`.
+ *
+ * @note This only works for 'object' sub-types. Other basic types have easier
+ * checks.
+ *
+ * @example
+ * hasProperty({}, "id"); // returns `false`
+ *
+ * @example
+ * const isNum: (x: unknown) => x is number = x => typeof x === number;
+ * // returns `false`.
+ * hasProperty({wrong: "type"}, "wrong", isNum);
+ *
+ * @param o The object to check.
+ * @param k The key for which to check in the object.
+ * @param s If provided, this type guard can be used to narrow the *type* of
+ * the property, as well as its existence.
+ * @returns `true` if `o` has a property `k` such that any provided `s` is
+ * satisfied by `o.k`.
+ * @throws {Error} when the type check fails.
+ */
+export function hasProperty<T extends object, K extends string | number, S = unknown>(
+	o: T,
+	k: K,
+	s?: "string" | "number" | "boolean" | ((x: unknown) => x is S)
+): o is T & Record<K, S> {
+	if (o === null || !Object.prototype.hasOwnProperty.call(o, k)) {
+		return false;
+	}
+	if (s) {
+		const val = (o as Record<K, unknown>)[k];
+		switch (s) {
+			case "string":
+			case "number":
+			case "boolean":
+				return typeof(val) === s;
+		}
+		return s(val);
+	}
+	return true;
+}
