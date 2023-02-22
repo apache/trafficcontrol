@@ -82,10 +82,11 @@ export class TypeService extends APIService {
 	/**
 	 * Deletes an existing type.
 	 *
-	 * @param id ID of the type to delete.
+	 * @param typeOrId Id of the type to delete.
 	 * @returns The deleted type.
 	 */
-	public async deleteType(id: number): Promise<TypeFromResponse> {
+	public async deleteType(typeOrId: number | TypeFromResponse): Promise<TypeFromResponse> {
+		const id = typeof(typeOrId) === "number" ? typeOrId : typeOrId.id;
 		return this.delete<TypeFromResponse>(`types/${id}`).toPromise();
 	}
 

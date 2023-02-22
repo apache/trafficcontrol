@@ -28,13 +28,9 @@ limitations under the License.
 				<mat-label>Description</mat-label>
 				<input matInput type="text" name="description" required [(ngModel)]="type.description" />
 			</mat-form-field>
-			<mat-form-field *ngIf="!new">
+			<mat-form-field>
 				<mat-label>Use In Table</mat-label>
-				<input matInput type="text" name="useInTable" disabled readonly [(ngModel)]="type.useInTable" />
-			</mat-form-field>
-			<mat-form-field *ngIf="new">
-				<mat-label>Use In Table</mat-label>
-				<input matInput type="text" name="useInTable" disabled readonly value="server" />
+				<input matInput type="text" name="useInTable" disabled readonly [defaultValue]="new ? 'server' : type.useInTable" />
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>

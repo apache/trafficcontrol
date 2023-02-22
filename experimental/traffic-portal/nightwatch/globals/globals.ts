@@ -54,7 +54,8 @@ import {
 	RequestCacheGroup,
 	ResponseCacheGroup,
 	ResponsePhysicalLocation,
-	RequestPhysicalLocation, RequestType
+	RequestPhysicalLocation,
+	RequestType
 } from "trafficops-types";
 
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
