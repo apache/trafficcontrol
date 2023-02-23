@@ -45,6 +45,7 @@ import {
 	NewInvalidationJobDialogComponent
 } from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
+import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
 import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
 import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
@@ -84,6 +85,7 @@ export const ROUTES: Routes = [
 	{ component: CoordinatesTableComponent, path: "coordinates" },
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
+	{ component: ISOGenerationFormComponent, path: "gen-iso"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -123,6 +125,7 @@ export const ROUTES: Routes = [
 		CoordinateDetailComponent,
 		TypesTableComponent,
 		TypeDetailComponent,
+		ISOGenerationFormComponent,
 	],
 	exports: [],
 	imports: [
