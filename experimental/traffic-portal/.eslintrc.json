@@ -314,6 +314,7 @@
 				"no-else-return": "error",
 				"no-empty": "error",
 				"no-extra-bind": "error",
+				"no-fallthrough": "off",
 				"no-invalid-this": "off",
 				"no-multiple-empty-lines": [
 					"error",
