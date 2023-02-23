@@ -84,7 +84,7 @@ export class CDNService {
 			...cdn,
 			id: ++this.lastID,
 			lastUpdated: new Date(),
-		}
+		};
 		this.cdns.push(c);
 		return c;
 	}
@@ -116,20 +116,20 @@ export class CDNService {
 	 */
 	public async updateCDN(cdnOrID: ResponseCDN | number, payload?: RequestCDN): Promise<ResponseCDN> {
 		let idx;
-		let c;
+		let cdn;
 		if (typeof cdnOrID === "number") {
 			if (!payload) {
 				throw new TypeError("invalid call signature - missing request payload");
 			}
 			idx = this.cdns.findIndex(c => c.id === cdnOrID);
-			c = {
+			cdn = {
 				...payload,
 				id: ++this.lastID,
 				lastUpdated: new Date(),
 			};
 		} else {
 			idx = this.cdns.findIndex(c => c.id === cdnOrID.id);
-			c = {
+			cdn = {
 				...cdnOrID,
 				lastUpdated: new Date()
 			};
@@ -139,7 +139,7 @@ export class CDNService {
 			throw new Error(`no such CDN: #${cdnOrID}`);
 		}
 
-		this.cdns[idx] = c;
-		return c;
+		this.cdns[idx] = cdn;
+		return cdn;
 	}
 }
