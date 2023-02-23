@@ -66,8 +66,8 @@ export class CDNDetailComponent implements OnInit {
 
 		const cdnsPromise = this.api.getCDNs().then(cdns => this.cdns = cdns);
 		if (ID === "new") {
-			this.setTitle();
 			this.new = true;
+			this.setTitle();
 			await cdnsPromise;
 			return;
 		}
