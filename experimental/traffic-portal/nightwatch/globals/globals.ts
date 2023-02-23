@@ -18,6 +18,7 @@ import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
+import type { ASNPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGroups/divisionDetail";
 import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
 import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
@@ -47,6 +48,7 @@ import {
 	ResponseTenant,
 	TypeFromResponse,
 	RequestSteeringTarget,
+	ResponseASN,
 	ResponseDivision,
 	RequestDivision,
 	ResponseRegion,
@@ -74,6 +76,7 @@ declare module "nightwatch" {
 			divisionsTable: () => DivisionsPageObject;
 			regionDetail: () => RegionDetailPageObject;
 			regionsTable: () => RegionsPageObject;
+			asnsTable: () => ASNPageObject;
 		};
 		deliveryServices: {
 			deliveryServiceCard: () => DeliveryServiceCardPageObject;
@@ -122,6 +125,7 @@ export interface CreatedData {
 	ds2: ResponseDeliveryService;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
+	asn: ResponseASN;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;

@@ -22,7 +22,7 @@ import type {
 	RequestCacheGroup,
 	CDN,
 	CacheGroupQueueResponse,
-	CacheGroupQueueRequest,
+	CacheGroupQueueRequest, ResponseASN,
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
@@ -342,6 +342,37 @@ export class CacheGroupService extends APIService {
 	 */
 	public async deleteRegion(regionOrId: number | ResponseRegion): Promise<void> {
 		const id = typeof(regionOrId) === "number" ? regionOrId : regionOrId.id;
+		await this.delete("regions/", undefined, { id : String(id) }).toPromise();
+	}
+
+	public async getASNs(): Promise<Array<ResponseASN>>;
+	public async getASNs(id: number): Promise<ResponseASN>;
+
+	/**
+	 * Gets an array of asns from Traffic Ops.
+	 *
+	 * @param id If given, returns only the asn with the given id (number).
+	 * @returns An Array of Region objects - or a single Region object if 'id'
+	 * was given.
+	 */
+	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
+		const path = "asns";
+		if(id) {
+			const r = await this.get<[ResponseASN]>(path, undefined, { id: String(id) }).toPromise();
+			return r[0];
+
+		}
+		return this.get<Array<ResponseASN>>(path).toPromise();
+	}
+
+	/**
+	 * Deletes an existing asn.
+	 *
+	 * @param asnOrId Id of the asn to delete.
+	 * @returns The deleted asn.
+	 */
+	public async deleteASN(asnOrId: number | ResponseASN): Promise<void> {
+		const id = typeof(asnOrId) === "number" ? asnOrId : asnOrId.id;
 		await this.delete("regions/", undefined, { id : String(id) }).toPromise();
 	}
 
