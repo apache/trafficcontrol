@@ -13,13 +13,14 @@
 */
 
 import { Injectable } from "@angular/core";
-import { ResponseCDN } from "trafficops-types";
+import { RequestCDN, ResponseCDN } from "trafficops-types";
 
 /**
  * CDNService expose API functionality relating to CDNs.
  */
 @Injectable()
 export class CDNService {
+	private lastID = 10;
 
 	private readonly cdns = [
 		{
@@ -50,12 +51,95 @@ export class CDNService {
 	 */
 	public async getCDNs(id?: number): Promise<Array<ResponseCDN> | ResponseCDN> {
 		if (id !== undefined) {
-			const cdn = this.cdns.find(c=>c.id===id);
+			const cdn = this.cdns.find(c => c.id === id);
 			if (!cdn) {
 				throw new Error(`no such CDN #${id}`);
 			}
 			return cdn;
 		}
 		return this.cdns;
+	}
+
+	/**
+	 * Deletes a CDN.
+	 *
+	 * @param cdn The CDN to be deleted, or just its ID.
+	 */
+	public async deleteCDN(cdn: ResponseCDN | number): Promise<void> {
+		const id = typeof cdn === "number" ? cdn : cdn.id;
+		const idx = this.cdns.findIndex(c => c.id === id);
+		if (idx < 0) {
+			throw new Error(`no such CDN: #${id}`);
+		}
+		this.cdns.splice(idx, 1);
+	}
+
+	/**
+	 * Creates a new CDN.
+	 *
+	 * @param cdn The CDN to create.
+	 */
+	public async createCDN(cdn: RequestCDN): Promise<ResponseCDN> {
+		const c = {
+			...cdn,
+			id: ++this.lastID,
+			lastUpdated: new Date(),
+		}
+		this.cdns.push(c);
+		return c;
+	}
+
+	/**
+	 * Replaces an existing CDN with the provided new definition of a
+	 * CDN.
+	 *
+	 * @param id The if of the CDN being updated.
+	 * @param cdn The new definition of the CDN.
+	 */
+	public async updateCDN(id: number, cdn: RequestCDN): Promise<ResponseCDN>;
+	/**
+	 * Replaces an existing CDN with the provided new definition of a
+	 * CDN.
+	 *
+	 * @param cdn The full new definition of the CDN being
+	 * updated.
+	 */
+	public async updateCDN(cdn: ResponseCDN): Promise<ResponseCDN>;
+	/**
+	 * Replaces an existing CDN with the provided new definition of a
+	 * CDN.
+	 *
+	 * @param cdnOrID The full new definition of the CDN being
+	 * updated, or just its ID.
+	 * @param payload The new definition of the CDN. This is required if
+	 * `cdnOrID` is an ID, and ignored otherwise.
+	 */
+	public async updateCDN(cdnOrID: ResponseCDN | number, payload?: RequestCDN): Promise<ResponseCDN> {
+		let idx;
+		let c;
+		if (typeof cdnOrID === "number") {
+			if (!payload) {
+				throw new TypeError("invalid call signature - missing request payload");
+			}
+			idx = this.cdns.findIndex(c => c.id === cdnOrID);
+			c = {
+				...payload,
+				id: ++this.lastID,
+				lastUpdated: new Date(),
+			};
+		} else {
+			idx = this.cdns.findIndex(c => c.id === cdnOrID.id);
+			c = {
+				...cdnOrID,
+				lastUpdated: new Date()
+			};
+		}
+
+		if (idx < 0) {
+			throw new Error(`no such CDN: #${cdnOrID}`);
+		}
+
+		this.cdns[idx] = c;
+		return c;
 	}
 }
