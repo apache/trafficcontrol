@@ -14,7 +14,7 @@
  */
 import { TestBed } from "@angular/core/testing";
 
-import { hasProperty, isArray, isNumber, isNumberArray, isRecord, isString, isStringArray } from ".";
+import { hasProperty, isArray, isArrayBufferView, isBoolean, isNumber, isNumberArray, isRecord, isString, isStringArray } from ".";
 
 describe("Typing utility functions", () => {
 	beforeEach(() => TestBed.configureTestingModule({}));
@@ -50,10 +50,22 @@ describe("Typing utility functions", () => {
 	});
 
 	it("should check for numeric types correctly", () => {
-		let test: string | number = "";
+		let test: string | number = "0";
 		expect(isNumber(test)).toBeFalse();
 		test = 5;
 		expect(isNumber(test)).toBeTrue();
+	});
+
+	it("should check for boolean types correctly", () => {
+		let test: string | boolean = "true";
+		expect(isBoolean(test)).toBeFalse();
+		test = true;
+		expect(isBoolean(test)).toBeTrue();
+	});
+
+	it("should check ambiguous record types correctly", () => {
+		expect(isRecord(null)).toBeFalse();
+		expect(isRecord({})).toBeTrue();
 	});
 
 	it("should check homogenous record types correctly", () => {
@@ -62,6 +74,12 @@ describe("Typing utility functions", () => {
 			are: "strings"
 		};
 		expect(isRecord(passes, "string")).toBeTrue();
+		const numbers = {
+			numeric: 1,
+			only: 5.23e7,
+			properties: 0x2e,
+		};
+		expect(isRecord(numbers, "number")).toBeTrue();
 		const fails = {
 			not: "all",
 			properties: "are",
@@ -110,5 +128,21 @@ describe("Typing utility functions", () => {
 		expect(hasProperty(a, "test", isArray)).toBeTrue();
 		expect(hasProperty(a, "test", isStringArray)).toBeFalse();
 		expect(hasProperty(a, "test", isNumberArray)).toBeFalse();
+	});
+
+	it("knows if an object is an ArrayBufferView", () => {
+		expect(isArrayBufferView(undefined)).toBeFalse();
+		expect(isArrayBufferView(undefined)).toBeFalse();
+		expect(isArrayBufferView(undefined)).toBeFalse();
+		expect(isArrayBufferView(new Int8Array())).toBeTrue();
+		expect(isArrayBufferView(new Uint8Array())).toBeTrue();
+		expect(isArrayBufferView(new Uint8ClampedArray())).toBeTrue();
+		expect(isArrayBufferView(new Int16Array())).toBeTrue();
+		expect(isArrayBufferView(new Uint16Array())).toBeTrue();
+		expect(isArrayBufferView(new Int32Array())).toBeTrue();
+		expect(isArrayBufferView(new Uint32Array())).toBeTrue();
+		expect(isArrayBufferView(new DataView(new ArrayBuffer(0)))).toBeTrue();
+		expect(isArrayBufferView([1, 2, 3])).toBeFalse();
+		expect(isArrayBufferView([0x01n, 2n, 3n])).toBeFalse();
 	});
 });

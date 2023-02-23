@@ -629,3 +629,28 @@ export function hasProperty<T extends object, K extends string | number, S = unk
 	}
 	return true;
 }
+
+/**
+ * Checks if the input implements the ArrayBufferView interface. NodeJS has a
+ * built-in for this, but that won't be available in the browser.
+ *
+ * @param x The object to check.
+ * @returns `true` if `x` is a typed array or a DataView, `false` otherwise.
+ */
+export function isArrayBufferView(x: unknown): x is ArrayBufferView {
+	if (!x || typeof(x) !== "object") {
+		return false;
+	}
+	switch(x.constructor) {
+		case Int8Array:
+		case Uint8Array:
+		case Uint8ClampedArray:
+		case Int16Array:
+		case Uint16Array:
+		case Int32Array:
+		case Uint32Array:
+		case DataView:
+			return true;
+	}
+	return false;
+}
