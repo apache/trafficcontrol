@@ -26,6 +26,8 @@ import { SharedModule } from "../shared/shared.module";
 
 import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/cache-group-details.component";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { CoordinateDetailComponent } from "./cache-groups/coordinates/detail/coordinate-detail.component";
+import { CoordinatesTableComponent } from "./cache-groups/coordinates/table/coordinates-table.component";
 import { DivisionDetailComponent } from "./cache-groups/divisions/detail/division-detail.component";
 import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
 import { RegionDetailComponent } from "./cache-groups/regions/detail/region-detail.component";
@@ -47,8 +49,6 @@ import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.c
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
-import {CoordinateDetailComponent } from "./topology/topology/detail/coordinate-detail.component";
-import {CoordinatesTableComponent } from "./topology/topology/table/coordinates-table.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";

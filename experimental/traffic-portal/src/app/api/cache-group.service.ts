@@ -381,8 +381,8 @@ export class CacheGroupService extends APIService {
 	 * @returns The updated coordinate.
 	 */
 	public async updateCoordinate(coordinate: ResponseCoordinate): Promise<ResponseCoordinate> {
-		const path = `coordinates/${coordinate.id}`;
-		return this.put<ResponseCoordinate>(path, coordinate).toPromise();
+		const id = coordinate.id;
+		return this.put<ResponseCoordinate>("coordinates", coordinate, { id : String(id) }).toPromise();
 	}
 
 	/**

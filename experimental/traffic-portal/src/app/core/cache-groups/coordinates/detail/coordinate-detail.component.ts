@@ -11,6 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
@@ -52,8 +53,8 @@ export class CoordinateDetailComponent implements OnInit {
 			this.coordinate = {
 				id: -1,
 				lastUpdated: new Date(),
-				latitude: 0,
-				longitude: 0,
+				latitude: NaN,
+				longitude: NaN,
 				name: ""
 			};
 			return;
