@@ -53,8 +53,8 @@ export class CoordinateDetailComponent implements OnInit {
 			this.coordinate = {
 				id: -1,
 				lastUpdated: new Date(),
-				latitude: NaN,
-				longitude: NaN,
+				latitude: 0,
+				longitude: 0,
 				name: ""
 			};
 			return;
