@@ -21,6 +21,7 @@ package datareq
 
 import (
 	"fmt"
+	"github.com/apache/trafficcontrol/traffic_monitor/health"
 	"net/http"
 	"net/url"
 	"strings"
@@ -109,11 +110,11 @@ func updateStatusSameIpServers(localStates peer.CRStatesThreadsafe, toData todat
 			allIsAvailable := true
 			for partner, _ := range toDataC.SameIpServers[cache] {
 				if partnerState, ok := localStatesC.Caches[partner]; ok {
-					// a partner host is reported but is marked down for too high traffic or load
+					// a partner host is reported but is marked down for exceeding a threshold
 					// this host also needs to be marked down to divert all traffic for their
 					// common ip
 					if strings.Contains(partnerState.Status, string(tc.CacheStatusReported)) &&
-						strings.Contains(partnerState.Status, "too high") {
+						strings.Contains(partnerState.Status, fmt.Sprint(health.TooHigh)) {
 						if !partnerState.Ipv4Available {
 							allAvailableV4 = false
 						}

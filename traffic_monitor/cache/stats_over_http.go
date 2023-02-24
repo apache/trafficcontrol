@@ -56,6 +56,7 @@ const LOADAVG_SHIFT = 65536
 func init() {
 	// AddStatsType("stats_over_http", statsParse, statsPrecompute)
 	registerDecoder("stats_over_http", statsOverHTTPParse, statsOverHTTPPrecompute)
+	hostnameRegex = regexp.MustCompile(`(?:http|https)/\d+\.\d+ ([A-Za-z0-9\-]{0,61})`)
 }
 
 type stats_over_httpData struct {
@@ -76,7 +77,7 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 
 	via := ctx.HTTPHeader.Get(rfc.Via)
 	if via != "" {
-		viaRegexSubmatch := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
+		viaRegexSubmatch := hostnameRegex.FindStringSubmatch(via)
 		if len(viaRegexSubmatch) > 0 {
 			cacheName = viaRegexSubmatch[1]
 		}

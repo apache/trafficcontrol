@@ -47,6 +47,7 @@ import (
 
 func init() {
 	registerDecoder("astats", astatsParse, astatsPrecompute)
+	hostnameRegex = regexp.MustCompile(`(?:http|https)/\d+\.\d+ ([A-Za-z0-9\-]{0,61})`)
 }
 
 // AstatsSystem represents fixed system stats returned from the
@@ -121,7 +122,7 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 
 		via := ctx.HTTPHeader.Get(rfc.Via)
 		if via != "" {
-			viaRegexSubmatch := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
+			viaRegexSubmatch := hostnameRegex.FindStringSubmatch(via)
 			if len(viaRegexSubmatch) > 0 {
 				astats.Ats[rfc.Via] = viaRegexSubmatch[1]
 			}
@@ -130,7 +131,7 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 	} else if ctype == "text/csv" {
 		via := ctx.HTTPHeader.Get(rfc.Via)
 		if via != "" {
-			viaRegexSubmatch := regexp.MustCompile(` ([^.]+)`).FindStringSubmatch(via)
+			viaRegexSubmatch := hostnameRegex.FindStringSubmatch(via)
 			if len(viaRegexSubmatch) > 0 {
 				cacheName = viaRegexSubmatch[1]
 			}

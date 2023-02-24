@@ -22,6 +22,7 @@ package cache
 import (
 	"fmt"
 	"io"
+	"regexp"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -35,6 +36,8 @@ type Handler struct {
 	resultChan chan Result
 	ToData     *todata.TODataThreadsafe
 }
+
+var hostnameRegex *regexp.Regexp
 
 func (h Handler) ResultChan() <-chan Result {
 	return h.resultChan
