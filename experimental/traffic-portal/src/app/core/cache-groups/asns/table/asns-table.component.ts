@@ -15,7 +15,7 @@
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import type { ResponseASN } from "trafficops-types";
 
@@ -24,7 +24,6 @@ import { CurrentUserService } from "src/app/shared/currentUser/current-user.serv
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import {ResponseCacheGroup} from "trafficops-types";
 
 /**
  * RegionsTableComponent is the controller for the "Regions" table.
@@ -70,7 +69,7 @@ export class AsnsTableComponent implements OnInit {
 		{
 			field: "name",
 			headerName: "Cache Group",
-			valueGetter: ({data}: {data: ResponseCacheGroup}): string => `${data.name} (#${data.name})`
+			valueGetter: ({data}: {data: ResponseASN}): string => `${data.cachegroup}`
 		},
 		{
 			field: "lastUpdated",
@@ -95,9 +94,11 @@ export class AsnsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			href: (selectedRow: ResponseASN): string => `/core/cache-group-table/${selectedRow.cachegroup}`,
-			name: "View Cache Group"
-		}
+			href: "/core/cache-groups",
+			name: "View Cache Group",
+			queryParams: (selectedRow: ResponseASN): Params => ({cachegroup: selectedRow.cachegroup}),
+
+}
 	];
 
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
