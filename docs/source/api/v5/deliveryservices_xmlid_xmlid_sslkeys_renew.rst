@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v3-deliveryservices-xmlid-xmlid-sslkeys-renew:
+.. _to-api-deliveryservices-xmlid-xmlid-sslkeys-renew:
 
 **************************************************
 ``deliveryservices/xmlId/{{XMLID}}/sslkeys/renew``
@@ -25,6 +25,7 @@ Uses :abbr:`ACME (Automatic Certificate Management Environment)` protocol to ren
 
 :Auth. Required: Yes
 :Roles Required: "admin"
+:Permissions Required: ACME:READ, DS-SECURITY-KEY:DELETE, DS-SECURITY-KEY:READ, DS-SECURITY-KEY:CREATE, DS-SECURITY-KEY:UPDATE, DELIVERY-SERVICE:READ, DELIVERY-SERVICE:UPDATE
 :Response Type:  Object
 
 Request Structure
