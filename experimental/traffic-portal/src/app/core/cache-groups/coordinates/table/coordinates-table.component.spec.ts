@@ -164,29 +164,4 @@ describe("CoordinatesTableComponent", () => {
 		expect(item.fragment).toBeUndefined();
 		expect(item.newTab).toBeTrue();
 	});
-
-	it("generates 'View Regions' context menu item href", () => {
-		const item = component.contextMenuItems.find(i => i.name === "View Regions");
-		if (!item) {
-			return fail("missing 'View Regions' context menu item");
-		}
-		if (isAction(item)) {
-			return fail("expected a link, not an action");
-		}
-		if (!item.href) {
-			return fail("missing 'href' property");
-		}
-		if (typeof(item.href) !== "string") {
-			return fail("'View Regions' context menu item should use a static string to determine href, instead uses a function");
-		}
-		expect(item.href).toBe("/core/regions");
-		if (typeof(item.queryParams) !== "function") {
-			return fail(
-				`'View Regions' context menu item should use a function to determine query params, instead uses: ${item.queryParams}`
-			);
-		}
-		expect(item.queryParams(testCoordinate)).toEqual({coordinateName: testCoordinate.name});
-		expect(item.fragment).toBeUndefined();
-		expect(item.newTab).toBeFalsy();
-	});
 });

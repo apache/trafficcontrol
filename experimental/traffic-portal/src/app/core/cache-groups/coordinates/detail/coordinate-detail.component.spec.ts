@@ -72,7 +72,7 @@ describe("CoordinateDetailComponent", () => {
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.coordinate).not.toBeNull();
-		expect(component.coordinate.name).toBe("Div1");
+		expect(component.coordinate.name).toBe("Coord1");
 		expect(component.new).toBeFalse();
 	});
 });
