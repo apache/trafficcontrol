@@ -349,10 +349,10 @@ export class CacheGroupService extends APIService {
 	public async getASNs(id: number): Promise<ResponseASN>;
 
 	/**
-	 * Gets an array of asns from Traffic Ops.
+	 * Gets an array of ASNs from Traffic Ops.
 	 *
 	 * @param id If given, returns only the asn with the given id (number).
-	 * @returns An Array of Region objects - or a single Region object if 'id'
+	 * @returns An Array of ASNs objects - or a single ASN object if 'id'
 	 * was given.
 	 */
 	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
