@@ -13,7 +13,7 @@
 #
 
 """
-The setuptools-based install script for the audit-checker GitHub Action
+The setuptools-based install script for the chromedriver-updater GitHub Action
 """
 from setuptools import setup
 
