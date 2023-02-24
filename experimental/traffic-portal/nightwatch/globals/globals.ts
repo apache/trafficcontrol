@@ -356,7 +356,7 @@ const globals = {
 		});
 	},
 	testData,
-	trafficOpsURL: "https://localhost:8443",
+	trafficOpsURL: "https://localhost:6443",
 	uniqueString: new Date().getTime().toString()
 };
 
