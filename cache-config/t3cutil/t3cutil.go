@@ -364,7 +364,6 @@ func (md *ApplyMetaData) Format() ([]byte, error) {
 	return bts, nil
 }
 
-
 // CombineOwnedFilePaths combines the owned file paths of two metadata objects.
 //
 // This is primarily useful when a config run, such as revalidate, adds owned files, but not
