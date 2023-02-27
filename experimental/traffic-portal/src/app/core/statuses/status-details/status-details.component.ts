@@ -65,14 +65,14 @@ export class StatusDetailsComponent implements OnInit {
    * @param id is the id passed in route for this page if this is a edit view.
   */
 	async getStatusDetails(): Promise<void> {
-		const id = this.id as string; // id Type 'null' is not assignable to type 'string' 
+		const id = this.id as string; // id Type 'null' is not assignable to type 'string'
 		this.statusDetails = await this.statusesService.getStatuses(id);
-		const data:ResponseStatus = {
+		const data: ResponseStatus = {
 			name: this.statusDetails.name,
 			description: this.statusDetails.description,
 			lastUpdated: new Date(),
 			id: this.statusDetails.id
-		}
+		};
 		this.statusDetailsForm.patchValue(data);
 		this.loading = false;
 	}

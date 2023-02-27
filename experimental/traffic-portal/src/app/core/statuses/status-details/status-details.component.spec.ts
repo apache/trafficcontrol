@@ -11,26 +11,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 
-import { StatusDetailsComponent } from './status-details.component';
+import { StatusDetailsComponent } from "./status-details.component";
 
-describe('StatusDetailsComponent', () => {
-  let component: StatusDetailsComponent;
-  let fixture: ComponentFixture<StatusDetailsComponent>;
+describe("StatusDetailsComponent", () => {
+	let component: StatusDetailsComponent;
+	let fixture: ComponentFixture<StatusDetailsComponent>;
 
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [ StatusDetailsComponent ]
-    })
-    .compileComponents();
+	beforeEach(async () => {
+		await TestBed.configureTestingModule({
+			declarations: [ StatusDetailsComponent ]
+		})
+			.compileComponents();
 
-    fixture = TestBed.createComponent(StatusDetailsComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
+		fixture = TestBed.createComponent(StatusDetailsComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+	});
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+	it("should create", () => {
+		expect(component).toBeTruthy();
+	});
 });
