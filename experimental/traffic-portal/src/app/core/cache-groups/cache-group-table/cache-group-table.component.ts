@@ -165,8 +165,7 @@ export class CacheGroupTableComponent implements OnInit {
 		},
 		{
 			action: "asns",
-			disabled: (): true => true,
-			name: "Manage ASNs"
+			name: "Manage ASNs",
 		},
 		{
 			action: "parameters",
@@ -285,6 +284,9 @@ export class CacheGroupTableComponent implements OnInit {
 				break;
 			case "dequeue":
 				this.queueUpdates(Array.isArray(a.data) ? a.data : [a.data], false);
+				break;
+			case "asn":
+				this.api.getASNs();
 				break;
 			case "delete":
 				if (Array.isArray(a.data)) {

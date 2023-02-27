@@ -185,23 +185,7 @@ describe("CacheGroupTableComponent", () => {
 		expect(menuItem.href({...sampleCG, id: 5})).toBe("core/cache-groups/5");
 	});
 	it("doesn't allow selection of unimplemented context menu items", () => {
-		let menuItem = component.contextMenuItems.find(i => i.name === "Manage ASNs");
-		if (!menuItem) {
-			return fail("'Manage ASNs' context menu item not found");
-		}
-		if (!isAction(menuItem)) {
-			return fail(`Invalid 'Manage ASNs' context menu item; not an action: ${menuItem}`);
-		}
-		if (typeof(menuItem.disabled) !== "function") {
-			return fail("'Manage ASNs' context menu item should be disabled, but no disabled function is defined");
-		}
-		if (menuItem.multiRow) {
-			expect(menuItem.disabled([sampleCG])).toBeTrue();
-		} else {
-			expect(menuItem.disabled(sampleCG)).toBeTrue();
-		}
-
-		menuItem = component.contextMenuItems.find(i => i.name === "Manage Servers");
+		let menuItem = component.contextMenuItems.find(i => i.name === "Manage Servers");
 		if (!menuItem) {
 			return fail("'Manage Servers' context menu item not found");
 		}

@@ -373,7 +373,7 @@ export class CacheGroupService extends APIService {
 	 */
 	public async deleteASN(asnOrId: number | ResponseASN): Promise<void> {
 		const id = typeof(asnOrId) === "number" ? asnOrId : asnOrId.id;
-		await this.delete("regions/", undefined, { id : String(id) }).toPromise();
+		await this.delete("asns/", undefined, { id : String(id) }).toPromise();
 	}
 
 	constructor(http: HttpClient) {
