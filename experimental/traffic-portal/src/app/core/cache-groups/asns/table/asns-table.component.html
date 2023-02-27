@@ -14,7 +14,7 @@ limitations under the License.
 
 <mat-card class="table-page-content">
 	<div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Regions" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search ASNs" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
 	</div>
 	<tp-generic-table
 		[data]="asns | async"

@@ -14,6 +14,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
+	ResponseASN,
 	RequestDivision,
 	ResponseDivision,
 	RequestRegion,
@@ -22,7 +23,7 @@ import type {
 	RequestCacheGroup,
 	CDN,
 	CacheGroupQueueResponse,
-	CacheGroupQueueRequest, ResponseASN,
+	CacheGroupQueueRequest,
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";

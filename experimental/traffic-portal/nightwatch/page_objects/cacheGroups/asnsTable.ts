@@ -17,20 +17,20 @@ import { EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI } from "nigh
 import { TABLE_COMMANDS, TableSectionCommands } from "../../globals/tables";
 
 /**
- * Defines the Regions table commands
+ * Defines the ASNs table commands
  */
-type ASNsTableCommands = TableSectionCommands;
+type AsnsTableCommands = TableSectionCommands;
 
 /**
- * Defines the Page Object for the Regions page.
+ * Defines the Page Object for the ASNs page.
  */
-export type RegionsPageObject = EnhancedPageObject<{}, {},
-	EnhancedSectionInstance<ASNsTableCommands>>;
+export type AsnsPageObject = EnhancedPageObject<{}, {},
+	EnhancedSectionInstance<AsnsTableCommands>>;
 
 const asnsPageObject = {
 	api: {} as NightwatchAPI,
 	sections: {
-		regionsTable: {
+		asnsTable: {
 			commands: {
 				...TABLE_COMMANDS
 			},
