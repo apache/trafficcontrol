@@ -26,7 +26,7 @@ import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/gen
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
- * RegionsTableComponent is the controller for the "Regions" table.
+ * AsnsTableComponent is the controller for the "Asns" table.
  */
 @Component({
 	selector: "tp-asns",
@@ -77,7 +77,7 @@ export class AsnsTableComponent implements OnInit {
 		}
 	];
 
-	/** Definitions for the context menu items (which act on augmented region data). */
+	/** Definitions for the context menu items (which act on augmented asn data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseASN>> = [
 		{
 			href: (selectedRow: ResponseASN): string => `${selectedRow.asn}`,
