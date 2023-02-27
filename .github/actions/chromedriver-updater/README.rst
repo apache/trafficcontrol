@@ -13,9 +13,9 @@
 .. limitations under the License.
 ..
 
-******************
+********************
 chromedriver-updater
-******************
+********************
 
 Assigns the GitHub Triage role to non-committers who have fixed 2 Issues in the past month.
 
@@ -41,15 +41,16 @@ Outputs
 Exit code is 0 unless an error was encountered.
 
 Inputs
-=======
+======
 Optionally takes a file that contains a line for each project update of the form: `{project path}:{old version},{new version}`
 
 Example usage
 =============
 
 .. code-block:: yaml
-	- name: Update Chromedriver Versions
-	  run: python3 -m chromedriver_updater
-	  env:
-	    GIT_AUTHOR_NAME: asf-ci
-	    GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Update Chromedriver Versions
+      run: python3 -m chromedriver_updater
+      env:
+        GIT_AUTHOR_NAME: asf-ci
+        GITHUB_TOKEN: ${{ github.token }}

@@ -17,7 +17,7 @@ def getenv(env_name: str) -> str:
 	"""
 	Gets environment variable :param env_name:
 	"""
-	env_var: Optional[str, None] = os.environ.get(env_name)
+	env_var: Optional[str] = os.environ.get(env_name)
 	if env_var is None:
 		raise NameError(f"Environment variable {env_name} is not defined")
 	return env_var
@@ -29,3 +29,5 @@ GITHUB_REF_NAME = getenv("GITHUB_REF_NAME")
 PR_GITHUB_TOKEN = getenv("PR_GITHUB_TOKEN")
 GITHUB_TOKEN = getenv("GITHUB_TOKEN")
 BRANCH_NAME = "ATC-Chromedriver-Updater"
+TRAFFIC_PORTAL_V2 = "Traffic Portal v2"
+TRAFFIC_PORTAL = "Traffic Portal"

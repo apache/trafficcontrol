@@ -24,7 +24,7 @@ This PR updates chromedriver in:
 {PROJECTS}
 
 ## What is the best way to verify this PR?
-Verify that the effected e2e tests pass.
+Verify that the affected e2e tests pass.
 
 ## PR submission checklist
 - [ ] This PR has tests
