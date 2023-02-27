@@ -1,7 +1,21 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 import { Component, OnInit } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { StatusesModel, StatusesService } from 'src/app/api/statuses.service';
+import { ServerService } from 'src/app/api';
 import { ContextMenuItem } from 'src/app/shared/generic-table/generic-table.component';
+import { ResponseStatus } from 'trafficops-types';
 
 @Component({
   selector: 'tp-statuses-table',
@@ -10,7 +24,7 @@ import { ContextMenuItem } from 'src/app/shared/generic-table/generic-table.comp
 })
 export class StatusesTableComponent implements OnInit {
 
-  statuses: any | null = null;
+  statuses: ResponseStatus[] | null = null;
   columnDefs = [
     {
       field: "name",
@@ -27,9 +41,9 @@ export class StatusesTableComponent implements OnInit {
   public searchText = "";
 
   /** Definitions for the context menu items (which act on user data). */
-  public contextMenuItems: Array<ContextMenuItem<StatusesModel>> = [
+  public contextMenuItems: Array<ContextMenuItem<ResponseStatus>> = [
     {
-      href: (u: StatusesModel): string => `${u.id}`,
+      href: (u: ResponseStatus): string => `${u.id}`,
       name: "View Status Details"
     },
     {
@@ -41,7 +55,7 @@ export class StatusesTableComponent implements OnInit {
   /** Emits changes to the fuzzy search text. */
   public fuzzySubject = new BehaviorSubject("");
   constructor(
-    private statusesService: StatusesService
+    private serverService: ServerService,
   ) { }
 
   ngOnInit(): void {
@@ -50,7 +64,7 @@ export class StatusesTableComponent implements OnInit {
 
   /** Reloads the servers table data. */
   async getStatuses(): Promise<void> {
-    this.statuses = await this.statusesService.getStatuses();
+    this.statuses = await this.serverService.getStatuses();
   }
 
   /**

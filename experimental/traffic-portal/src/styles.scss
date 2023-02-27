@@ -152,33 +152,3 @@ button {
 	bottom: 16px;
 	right: 16px;
 }
-// Breadcrumbs
-/* Style the list */
-ul.breadcrumb {
-	padding: 5px 0px 10px 0px;
-    margin-bottom: 1.5em;
-	list-style: none;
-	border-bottom: 1px solid #efefef;
-  }
-  
-  /* Display list items side by side */
-  ul.breadcrumb li {
-	display: inline;
-	font-size: 16px;
-  }
-  
-  /* Add a slash symbol (/) before/behind each list item */
-  ul.breadcrumb li+li:before {
-	padding: 8px;
-	content: "/\00a0";
-  }
-  
-  /* Add a color to all links inside the list */
-  ul.breadcrumb li a {
-	text-decoration: none;
-  }
-  
-  /* Add a color on mouse-over */
-  ul.breadcrumb li a:hover {
-	text-decoration: underline;
-  }
