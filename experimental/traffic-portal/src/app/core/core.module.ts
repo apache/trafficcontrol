@@ -75,12 +75,12 @@ export const ROUTES: Routes = [
 	{ component: PhysLocDetailComponent, path: "phys-locs/:id" },
 	{ component: PhysLocTableComponent, path: "phys-locs" },
 	{
-		path: 'statuses',
-		loadChildren: () => import('./statuses/statuses-table/statuses-table.module').then(m => m.StatusesTableModule)
+		path: "statuses",
+		loadChildren: async () => import("./statuses/statuses-table/statuses-table.module").then(m => m.StatusesTableModule)
 	},
 	{
-		path: 'statuses/:id',
-		loadChildren: () => import('./statuses/status-details/status-details.module').then(m => m.StatusDetailsModule)
+		path: "statuses/:id",
+		loadChildren: async () => import("./statuses/status-details/status-details.module").then(m => m.StatusDetailsModule)
 	}
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 

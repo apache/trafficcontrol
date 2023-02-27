@@ -11,43 +11,45 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { StatusDetailsComponent } from './status-details.component';
-import { RouterModule } from '@angular/router';
-import { ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import {MatGridListModule} from '@angular/material/grid-list';
-import { MatCardModule } from '@angular/material/card';
-import { SharedModule } from 'src/app/shared/shared.module';
-import { MatButtonModule } from '@angular/material/button';
-import { StatusesService } from 'src/app/api/statuses.service';
+import { CommonModule } from "@angular/common";
+import { NgModule } from "@angular/core";
+import { ReactiveFormsModule } from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatCardModule } from "@angular/material/card";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import {MatGridListModule} from "@angular/material/grid-list";
+import { MatInputModule } from "@angular/material/input";
+import { RouterModule } from "@angular/router";
+
+import { StatusesService } from "src/app/api/statuses.service";
+import { SharedModule } from "src/app/shared/shared.module";
+
+import { StatusDetailsComponent } from "./status-details.component";
 
 const StatusDetailRouting = RouterModule.forChild([
-  {
-    path: '',
-    component: StatusDetailsComponent
-  }
+	{
+		path: "",
+		component: StatusDetailsComponent
+	}
 ]);
 
 @NgModule({
-  declarations: [
-    StatusDetailsComponent
-  ],
-  imports: [
-    CommonModule,
-    StatusDetailRouting,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatGridListModule,
-    MatCardModule,
-    MatButtonModule,
-    SharedModule
-  ],
-  providers:[
-    StatusesService
-  ]
+	declarations: [
+		StatusDetailsComponent
+	],
+	imports: [
+		CommonModule,
+		StatusDetailRouting,
+		ReactiveFormsModule,
+		MatFormFieldModule,
+		MatInputModule,
+		MatGridListModule,
+		MatCardModule,
+		MatButtonModule,
+		SharedModule
+	],
+	providers:[
+		StatusesService
+	]
 })
 export class StatusDetailsModule { }

@@ -1,13 +1,15 @@
-import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
-import { ResponseStatus } from 'trafficops-types';
-import { APIService } from './base-api.service';
+import { HttpClient } from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { ResponseStatus } from "trafficops-types";
+
+import { APIService } from "./base-api.service";
 
 @Injectable()
 export class StatusesService extends APIService {
 
 	/**
 	 * Injects the Angular HTTP client service into the parent constructor.
+	 *
 	 * @param http The Angular HTTP client service.
 	 */
 	constructor(http: HttpClient) {
@@ -35,6 +37,7 @@ export class StatusesService extends APIService {
 
 	/**
 	 * Creating new Status.
+	 *
 	 * @param data containes name and description for the status.
 	 * @returns The 'response' property of the TO status response. See TO API docs.
 	 */
@@ -45,6 +48,7 @@ export class StatusesService extends APIService {
 
 	/**
 	 * Updates status.
+	 *
 	 * @param data containes name and description for the status., unique identifier thereof.
 	 * @param id The Status ID
 	 */
@@ -55,6 +59,7 @@ export class StatusesService extends APIService {
 
 	/**
 	 * Deletes an existing Status.
+	 *
 	 * @param id The Status ID
 	 */
 	public async deleteStatus(id: number): Promise<void> {
