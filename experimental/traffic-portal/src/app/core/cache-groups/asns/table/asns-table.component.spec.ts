@@ -62,7 +62,7 @@ describe("CacheGroupTableComponent", () => {
 	it("handles contextmenu events", () => {
 		expect(async () => component.handleContextMenu({
 			action: component.contextMenuItems[0].name,
-			data: {asn: 0, id: 1, lastUpdated: new Date(), cachegroup: "mb", cachegroupId: 1}
+			data: {asn: 0, cachegroup: "mb", cachegroupId: 1, id: 1, lastUpdated: new Date()}
 		})).not.toThrow();
 	});
 });

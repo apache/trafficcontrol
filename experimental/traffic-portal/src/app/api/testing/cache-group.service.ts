@@ -20,12 +20,12 @@ import type {
 	RequestDivision,
 	RequestRegion,
 	ResponseCacheGroup,
+	ResponseASN,
 	ResponseDivision,
 	ResponseRegion
 } from "trafficops-types";
 
 import { ServerService } from "./server.service";
-import {ResponseASN} from "trafficops-types";
 
 /**
  * The names of properties of {@link ResponseCacheGroup}s that define its
@@ -89,11 +89,11 @@ export class CacheGroupService {
 	private lastID = 10;
 
 	private readonly asns: Array<ResponseASN> = [{
-		id: 1,
-		lastUpdated: new Date(),
 		asn: 0,
 		cachegroup: "Mid",
-		cachegroupId: 1
+		cachegroupId: 1,
+		id: 1,
+		lastUpdated: new Date()
 	}
 	];
 	private readonly divisions: Array<ResponseDivision> = [{
@@ -606,8 +606,8 @@ export class CacheGroupService {
 	 */
 	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
 		if(id) {
-			let asn;
-			asn = this.asns.find(a=>a.asn == id);
+			var asn;
+			asn = this.asns.find(a=>a.asn === id);
 
 			if (!asn) {
 				throw new Error(`no such asn: ${id}`);
@@ -623,7 +623,7 @@ export class CacheGroupService {
 	 * @param asn Id of the asn to delete.
 	 * @returns The deleted asn.
 	 */
-	public async deleteASN(asn: number | ResponseASN) {
+	public async deleteASN(asn: number): Promise<ResponseASN> {
 		const index = this.asns.findIndex(a => a.asn === asn);
 		if (index === -1) {
 			throw new Error(`no such asn: ${asn}`);

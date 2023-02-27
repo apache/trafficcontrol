@@ -38,7 +38,7 @@ export class AsnsTableComponent implements OnInit {
 	public asns: Promise<Array<ResponseASN>>;
 
 	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: NavigationService,
-				private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
+		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.asns = this.api.getASNs();
 		this.headerSvc.headerTitle.next("ASNs");
@@ -97,8 +97,7 @@ export class AsnsTableComponent implements OnInit {
 			href: "/core/cache-groups",
 			name: "View Cache Group",
 			queryParams: (selectedRow: ResponseASN): Params => ({cachegroup: selectedRow.cachegroup}),
-
-}
+		}
 	];
 
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */

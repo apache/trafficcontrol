@@ -25,7 +25,7 @@ type AsnsTableCommands = TableSectionCommands;
  * Defines the Page Object for the ASNs page.
  */
 export type AsnsPageObject = EnhancedPageObject<{}, {},
-	EnhancedSectionInstance<AsnsTableCommands>>;
+EnhancedSectionInstance<AsnsTableCommands>>;
 
 const asnsPageObject = {
 	api: {} as NightwatchAPI,
