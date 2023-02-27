@@ -121,7 +121,7 @@ export class NavigationService {
 			{
 				href: "/core/statuses",
 				name: "Statuses"
-			}, 
+			},
 			{
 				children: [{
 					href: "/core/cache-groups",

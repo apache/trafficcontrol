@@ -11,35 +11,37 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { StatusesTableComponent } from './statuses-table.component';
-import { RouterModule } from '@angular/router';
-import { SharedModule } from 'src/app/shared/shared.module';
-import { MatCardModule } from '@angular/material/card';
-import { StatusesService } from 'src/app/api/statuses.service';
-import { FormsModule } from '@angular/forms';
+import { CommonModule } from "@angular/common";
+import { NgModule } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { MatCardModule } from "@angular/material/card";
+import { RouterModule } from "@angular/router";
+
+import { StatusesService } from "src/app/api/statuses.service";
+import { SharedModule } from "src/app/shared/shared.module";
+
+import { StatusesTableComponent } from "./statuses-table.component";
 
 const StatusesTableRouting = RouterModule.forChild([
-  {
-    path: '',
-    component: StatusesTableComponent
-  }
+	{
+		path: "",
+		component: StatusesTableComponent
+	}
 ]);
 
 @NgModule({
-  declarations: [
-    StatusesTableComponent
-  ],
-  imports: [
-    CommonModule,
-    StatusesTableRouting,
-    FormsModule,
-    MatCardModule,
-    SharedModule
-  ],
-  providers:[
-    StatusesService
-  ]
+	declarations: [
+		StatusesTableComponent
+	],
+	imports: [
+		CommonModule,
+		StatusesTableRouting,
+		FormsModule,
+		MatCardModule,
+		SharedModule
+	],
+	providers:[
+		StatusesService
+	]
 })
 export class StatusesTableModule { }

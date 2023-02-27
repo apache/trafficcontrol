@@ -16,13 +16,13 @@ limitations under the License.
     <tp-loading *ngIf="loading"></tp-loading>
     <form [formGroup]="statusDetailsForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
         <mat-card-content>
-            <mat-form-field class="example-full-width">
+            <mat-form-field>
                 <mat-label>Name</mat-label>
-                <input matInput placeholder="Ex. Pizza" formControlName="name">
+                <input matInput placeholder="Name" formControlName="name">
             </mat-form-field>
-            <mat-form-field class="example-full-width">
+            <mat-form-field>
                 <mat-label>Description</mat-label>
-                <input matInput placeholder="Ex. Pizza" formControlName="description">
+                <input matInput placeholder="Description" formControlName="description">
             </mat-form-field>
         </mat-card-content>
         <mat-card-actions align="end">
