@@ -117,7 +117,12 @@ export class NavigationService {
 			}, {
 				href: "/core/phys-locs",
 				name: "Physical Locations"
-			}, {
+			},
+			{
+				href: "/core/statuses",
+				name: "Statuses"
+			}, 
+			{
 				children: [{
 					href: "/core/cache-groups",
 					name: "Cache Groups"
@@ -143,12 +148,6 @@ export class NavigationService {
 				name: "Tenants"
 			}],
 			name: "Users"
-		}, {
-			children: [{
-				href: "/core/statuses",
-				name: "Statuses"
-			}],
-			name: "Configure"
 		}, {
 			children: [{
 				href: "/core/change-logs",
