@@ -33,6 +33,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Adds better labels to routing methods widget on the TP dashboard.
+- [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Simplifies DS button bar by moving DS changes / DSRs under More menu and renaming to 'View Change Requests'.
 - [#7224](https://github.com/apache/trafficcontrol/pull/7224) *Traffic Ops* Required Capabilities are now a part of the `DeliveryService` structure.
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
 - [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
