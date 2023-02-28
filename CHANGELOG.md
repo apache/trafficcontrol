@@ -42,6 +42,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7242](https://github.com/apache/trafficcontrol/pull/7276) *Traffic Portal* Now depends on NodeJS version 16 or later.
 - [#7120](https://github.com/apache/trafficcontrol/pull/7120) *Docs* Update t3c documentation regarding parent.config parent_retry.
 - [#7044](https://github.com/apache/trafficcontrol/issues/7044) *CDN in a Box* [CDN in a Box, the t3c integration tests, and the tc health client integration tests now use Apache Traffic Server 9.1.
+- [#7366](https://github.com/apache/trafficcontrol/pull/7366) *t3c* Removed timestamp from metadata file since it's changing every minute and causing excessive commits to git repo.
 
 ### Fixed
 - [#7340](https://github.com/apache/trafficcontrol/pull/7340) *Traffic Router* Fixed TR logging for the `cqhv` field when absent.

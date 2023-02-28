@@ -423,7 +423,6 @@ const MetaDataFileMode = 0600
 //
 // On error, an error is written to the log, but no error is returned.
 func WriteMetaData(cfg config.Cfg, metaData *t3cutil.ApplyMetaData) {
-	metaData.SetTime(time.Now())
 	bts, err := metaData.Format()
 	if err != nil {
 		log.Errorln("formatting metadata file: " + err.Error())
