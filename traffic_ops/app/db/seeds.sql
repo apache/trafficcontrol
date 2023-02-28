@@ -183,6 +183,10 @@ INSERT INTO public.role_capability
 SELECT id, perm
 FROM public.role
 CROSS JOIN ( VALUES
+    ('ACME:CREATE'),
+    ('ACME:DELETE'),
+    ('ACME:READ'),
+    ('ACME:UPDATE'),
 	('ASN:CREATE'),
 	('ASN:DELETE'),
 	('ASN:UPDATE'),
