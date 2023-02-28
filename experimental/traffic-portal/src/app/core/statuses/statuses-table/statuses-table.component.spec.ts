@@ -11,17 +11,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { HttpClientTestingModule } from "@angular/common/http/testing";
+import { ComponentFixture, fakeAsync, TestBed } from "@angular/core/testing";
+import { FormsModule } from "@angular/forms";
+import { MatCardModule } from "@angular/material/card";
+import { RouterTestingModule } from "@angular/router/testing";
+import { ServerService } from "src/app/api";
+import { SharedModule } from "src/app/shared/shared.module";
 
 import { StatusesTableComponent } from "./statuses-table.component";
 
+const statuses = [{id:1,name:'test',description:'test',lastUpdated:new Date('02/02/2023')}];
 describe("StatusesTableComponent", () => {
 	let component: StatusesTableComponent;
 	let fixture: ComponentFixture<StatusesTableComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ StatusesTableComponent ]
+			imports:[
+				RouterTestingModule,
+				HttpClientTestingModule,
+				FormsModule,
+				MatCardModule,
+				SharedModule
+			],
+			declarations: [ StatusesTableComponent ],
+			providers:[ServerService]
 		})
 			.compileComponents();
 
@@ -33,4 +48,13 @@ describe("StatusesTableComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it("should get all statuses from getStatuses",fakeAsync(()=>{
+		const service = fixture.debugElement.injector.get(ServerService);
+		spyOn(service, 'getStatuses').and.returnValue(Promise.resolve(statuses));
+		
+		service.getStatuses().then((result)=>{
+			expect(result).toEqual(statuses);
+		})
+	}))
 });

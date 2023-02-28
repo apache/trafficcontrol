@@ -16,8 +16,8 @@ import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatCardModule } from "@angular/material/card";
 import { RouterModule } from "@angular/router";
+import { ServerService } from "src/app/api";
 
-import { StatusesService } from "src/app/api/statuses.service";
 import { SharedModule } from "src/app/shared/shared.module";
 
 import { StatusesTableComponent } from "./statuses-table.component";
@@ -41,7 +41,7 @@ const StatusesTableRouting = RouterModule.forChild([
 		SharedModule
 	],
 	providers:[
-		StatusesService
+		ServerService
 	]
 })
 export class StatusesTableModule { }

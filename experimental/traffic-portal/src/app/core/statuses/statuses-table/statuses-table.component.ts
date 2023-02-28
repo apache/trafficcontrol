@@ -25,7 +25,7 @@ import { ContextMenuItem } from "src/app/shared/generic-table/generic-table.comp
 })
 export class StatusesTableComponent implements OnInit {
 
-	statuses: ResponseStatus[] | null = null;
+	statuses: ResponseStatus[] = [];
 	columnDefs = [
 		{
 			field: "name",
