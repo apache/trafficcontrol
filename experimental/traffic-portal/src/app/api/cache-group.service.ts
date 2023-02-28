@@ -357,7 +357,7 @@ export class CacheGroupService extends APIService {
 	 * was given.
 	 */
 	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
-		const path = "asns";
+		const path = "/asns";
 		if(id) {
 			const r = await this.get<[ResponseASN]>(path, undefined, { id: String(id) }).toPromise();
 			return r[0];

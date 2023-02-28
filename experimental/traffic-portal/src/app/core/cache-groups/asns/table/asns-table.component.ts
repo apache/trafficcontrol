@@ -67,7 +67,7 @@ export class AsnsTableComponent implements OnInit {
 			headerName: "ASN"
 		},
 		{
-			field: "name",
+			field: "cachegroup",
 			headerName: "Cache Group",
 			valueGetter: ({data}: {data: ResponseASN}): string => `${data.cachegroup}`
 		},
@@ -96,7 +96,7 @@ export class AsnsTableComponent implements OnInit {
 		{
 			href: "/core/cache-groups",
 			name: "View Cache Group",
-			queryParams: (selectedRow: ResponseASN): Params => ({cachegroup: selectedRow.cachegroup}),
+			queryParams: (selectedRow: ResponseASN): Params => ({name: selectedRow.cachegroup}),
 		}
 	];
 
