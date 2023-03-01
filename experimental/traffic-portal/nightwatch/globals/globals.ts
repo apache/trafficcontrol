@@ -58,8 +58,8 @@ import {
 	ResponsePhysicalLocation,
 	RequestPhysicalLocation,
 	ResponseCoordinate,
+	RequestCoordinate
 } from "trafficops-types";
-import {RequestCoordinate} from "trafficops-types/dist/coordinate";
 
 declare module "nightwatch" {
 	/**
