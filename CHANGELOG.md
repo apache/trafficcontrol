@@ -86,6 +86,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7966](https://github.com/apache/trafficcontrol/pull/7696) *Traffic Control Cache Config (t3c)*: will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit.
 - [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server*: Use GCC 11 for building.
 - [#7742](https://github.com/apache/trafficcontrol/pull/7742) *Traffic Ops*: Changed api tests to supply the absolute path of certs.
+- Updated the module path to [`github.com/apache/trafficcontrol/v7`](https://pkg.go.dev/github.com/apache/trafficcontrol/v7). Module https://pkg.go.dev/github.com/apache/trafficcontrol will not receive further updates.
 
 ### Fixed
 - [#7802](https://github.com/apache/trafficcontrol/pull/7802) *Traffic Control Health Client*: Fixed ReadMe.md typos and duplicates.

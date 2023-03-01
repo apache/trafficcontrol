@@ -1,4 +1,4 @@
-module github.com/apache/trafficcontrol
+module github.com/apache/trafficcontrol/v7
 
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
