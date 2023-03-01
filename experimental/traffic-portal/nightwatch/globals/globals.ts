@@ -49,6 +49,7 @@ import {
 	TypeFromResponse,
 	RequestSteeringTarget,
 	ResponseASN,
+	RequestASN,
 	ResponseDivision,
 	RequestDivision,
 	ResponseRegion,
@@ -314,6 +315,16 @@ const globals = {
 			const responseCG: ResponseCacheGroup = resp.data.response;
 			console.log("Successfully created Cache Group:", responseCG);
 			data.cacheGroup = responseCG;
+
+			const asn: RequestASN = {
+				asn: 0,
+				cachegroupId: 1
+			};
+			url = `${apiUrl}/asns`;
+			resp = await client.post(url, JSON.stringify(asn));
+			const respAsn: ResponseASN = resp.data.response;
+			console.log(`Successfully created ASN ${respAsn.asn}`);
+			data.asn = respAsn;
 
 			const physLoc: RequestPhysicalLocation = {
 				address: "street",
