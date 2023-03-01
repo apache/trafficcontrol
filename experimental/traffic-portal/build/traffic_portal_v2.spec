@@ -90,7 +90,5 @@ echo "Start with 'systemctl start traffic-portal' or by running '%{traffic_porta
 %config(noreplace)%{traffic_portal_conf}/version.json
 %config(noreplace)/etc/logrotate.d/traffic-portal
 %dir %{traffic_portal_log}
-%{traffic_portal_home}/browser
-%{traffic_portal_home}/server
-%{traffic_portal_home}/node_modules
+%{traffic_portal_home}
 
