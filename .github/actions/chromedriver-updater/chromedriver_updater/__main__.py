@@ -9,41 +9,54 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+"""
+Utility for automatically updating chromedriver. See README.rst for more details.
+"""
 import os
+import sys
 from typing import Optional, NamedTuple
 
 from github.MainClass import Github
 from github.Repository import Repository
-from github.GithubException import GithubException, UnknownObjectException
+from github.GithubException import UnknownObjectException
 from github.GitRef import GitRef
 from github.PullRequest import PullRequest
 from github.InputGitTreeElement import InputGitTreeElement
 
 try:
-	from chromedriver_updater.constants import PR_GITHUB_TOKEN, GITHUB_REPO, GITHUB_REF_NAME, BRANCH_NAME, \
-		GIT_AUTHOR_NAME, TRAFFIC_PORTAL, TRAFFIC_PORTAL_V2
+	from chromedriver_updater.constants import PR_GITHUB_TOKEN, GITHUB_REPO, GITHUB_REF_NAME, \
+		BRANCH_NAME, GIT_AUTHOR_NAME, TRAFFIC_PORTAL, TRAFFIC_PORTAL_V2
 except ModuleNotFoundError:
-	from constants import PR_GITHUB_TOKEN, GITHUB_REPO, GITHUB_REF_NAME, BRANCH_NAME, GIT_AUTHOR_NAME, TRAFFIC_PORTAL, \
-		TRAFFIC_PORTAL_V2
-import sys
+	from constants import PR_GITHUB_TOKEN, GITHUB_REPO, GITHUB_REF_NAME, BRANCH_NAME, \
+		GIT_AUTHOR_NAME, TRAFFIC_PORTAL, TRAFFIC_PORTAL_V2
 
 
 class UpdateEntry(NamedTuple):
+	"""
+	Named tuple surrounding each line in the updates file
+	"""
 	path: str
 	old_version: str
 	new_version: str
 
 	def __str__(self) -> str:
-		return "%s: %s -> %s\n" % (self.path, self.old_version, self.new_version)
+		return f"{self.path}: {self.old_version} -> {self.new_version}\n"
 
 
 def parse_update_entry(entry: str) -> UpdateEntry:
+	"""
+	Parses string to UpdateEntry
+	:param entry: String to parse
+	:return: Parsed string as UpdateEntry
+	"""
 	if ":" not in entry:
-		print("Invalid update entry '%s', expected format {path}:{old},{new}" % entry, file=sys.stderr)
+		print(f"Invalid update entry '{entry}', expected format {{path}}:{{old}},{{new}}",
+			  file=sys.stderr)
 		sys.exit(1)
 	parts = entry.split(":")
 	if len(parts) != 2 or "," not in parts[1]:
-		print("Invalid update entry '%s', expected format {path}:{old},{new}" % entry, file=sys.stderr)
+		print(f"Invalid update entry '{entry}', expected format {{path}}:{{old}},{{new}}",
+			  file=sys.stderr)
 		sys.exit(1)
 	if parts[0].endswith("/"):
 		project = parts[0][:-1]
@@ -51,21 +64,30 @@ def parse_update_entry(entry: str) -> UpdateEntry:
 		project = parts[0]
 	parts = parts[1].split(",")
 	if len(parts) != 2:
-		print("Invalid update entry '%s', expected format {path}:{old},{new}" % entry, file=sys.stderr)
+		print(f"Invalid update entry '{entry}', expected format {{path}}:{{old}},{{new}}",
+			  file=sys.stderr)
 		sys.exit(1)
 
 	return UpdateEntry(path=project, old_version=parts[0], new_version=parts[1])
 
 
 def path_to_project(path: str) -> Optional[str]:
+	"""
+	Converts paths to projects
+	:param path: Path to check
+	:return: The project string, or None
+	"""
 	if "traffic_portal" in path:
 		return TRAFFIC_PORTAL
-	elif "traffic-portal" in path:
+	if "traffic-portal" in path:
 		return TRAFFIC_PORTAL_V2
 	return None
 
 
 class PRCreator(Github):
+	"""
+	Creates the PR to update chromedriver
+	"""
 	repo: Repository
 
 	def __init__(self, *args, **kwargs):
@@ -73,29 +95,50 @@ class PRCreator(Github):
 		self.repo = self.get_repo(GITHUB_REPO)
 
 	def get_pr(self) -> Optional[PullRequest]:
-		for pr in self.search_issues("repo:%s is:pr is:open head:%s" % (self.repo.full_name, BRANCH_NAME)):
-			return pr.as_pull_request()
+		"""
+		Retrieve the PR opened by this script if available
+		:return:
+		"""
+		for issue in self.search_issues("repo:%s is:pr is:open head:%s" %
+									 (self.repo.full_name, BRANCH_NAME)):
+			return issue.as_pull_request()
 		return None
 
 	def get_branch(self) -> Optional[GitRef]:
+		"""
+		Retrieve the git reference to this scripts branch if available
+		:return:
+		"""
 		try:
-			return self.repo.get_git_ref("heads/%s" % BRANCH_NAME)
+			return self.repo.get_git_ref(f"heads/{BRANCH_NAME}")
 		except UnknownObjectException:
 			return None
 
 	def create_git_tree_from_entry(self, entry: UpdateEntry, file: str) -> InputGitTreeElement:
+		"""
+		Creates a git element for the purposes of committing
+		:param entry:
+		:param file:
+		:return:
+		"""
 		file_path = os.path.join(entry.path, file)
 		if not os.path.exists(file_path):
-			print("Could not find '%s' to commit" % file_path, file=sys.stderr)
+			print(f"Could not find '{file_path}' to commit", file=sys.stderr)
 			sys.exit(1)
-		with open(file_path, "r") as f:
-			change_file = f.read()
+		with open(file_path, "r", encoding="utf-8") as changed_file:
+			change_file = changed_file.read()
 		blob = self.repo.create_git_blob(change_file, "utf-8")
 		return InputGitTreeElement(path=file_path, mode='100644', type='blob', sha=blob.sha)
 
 	def create_pull_request(self, update_entries: [UpdateEntry]) -> PullRequest:
-		with open(os.path.join(os.path.dirname(__file__), "templates", "pr.md"), encoding="utf-8") as f:
-			pr_template = f.read()
+		"""
+		Create a pull request based on update entries
+		:param update_entries:
+		:return:
+		"""
+		with open(os.path.join(os.path.dirname(__file__), "templates", "pr.md"),
+				  encoding="utf-8") as template_file:
+			pr_template = template_file.read()
 		tree_elements = []
 		projects = ""
 		updated = ""
@@ -105,37 +148,33 @@ class PRCreator(Github):
 			updated += str(update)
 			project = path_to_project(update.path)
 			if project is None:
-				print("Unknown project from path %s" % update.path)
+				print(f"Unknown project from path {update.path}")
 			elif project not in projects:
-				projects += "* %s\n" % project
-		head_branch = self.repo.get_branch(GITHUB_REF_NAME)
-		ref = self.repo.create_git_ref(ref="refs/heads/%s" % BRANCH_NAME, sha=head_branch.commit.sha)
+				projects += f"* {project}\n"
+		ref = self.repo.create_git_ref(ref=f"refs/heads/{BRANCH_NAME}",
+									   sha=self.repo.get_branch(GITHUB_REF_NAME).commit.sha)
 		branch = self.repo.get_branch(BRANCH_NAME)
 		base_tree = self.repo.get_git_tree(sha=branch.commit.sha)
-		tree = self.repo.create_git_tree(tree_elements, base_tree)
-		parent = self.repo.get_git_commit(sha=branch.commit.sha)
-		commit = self.repo.create_git_commit("Update chromedriver", tree, [parent])
+		commit = self.repo.create_git_commit("Update chromedriver",
+											 self.repo.create_git_tree(tree_elements, base_tree),
+											 [self.repo.get_git_commit(sha=branch.commit.sha)])
 		ref.edit(sha=commit.sha)
 
-		pr = self.repo.create_pull(title="Update Chromedriver Versions", maintainer_can_modify=True,
-								   body=pr_template.format(UPDATES=updated, PROJECTS=projects),
-								   head="%s:%s" % (GIT_AUTHOR_NAME, BRANCH_NAME), base=GITHUB_REF_NAME)
+		pull = self.repo.create_pull(title="Update Chromedriver Versions", maintainer_can_modify=True,
+									 body=pr_template.format(UPDATES=updated, PROJECTS=projects),
+									 head=f"{GIT_AUTHOR_NAME}:{BRANCH_NAME}", base=GITHUB_REF_NAME)
 
 		try:
-			test_label = self.repo.get_label("tests")
-			deps_label = self.repo.get_label("dependencies")
-			labels = [test_label, deps_label]
+			labels = [self.repo.get_label("tests"), self.repo.get_label("dependencies")]
 			if TRAFFIC_PORTAL in projects:
-				tp_label = self.repo.get_label(TRAFFIC_PORTAL)
-				labels.append(tp_label)
+				labels.append(self.repo.get_label(TRAFFIC_PORTAL))
 			if TRAFFIC_PORTAL_V2 in projects:
-				tpv2_label = self.repo.get_label(TRAFFIC_PORTAL_V2)
-				labels.append(tpv2_label)
-			pr.add_to_labels(*labels)
+				labels.append(self.repo.get_label(TRAFFIC_PORTAL_V2))
+			pull.add_to_labels(*labels)
 		except UnknownObjectException:
 			print("Could not find labels", file=sys.stderr)
 
-		return pr
+		return pull
 
 
 if __name__ == "__main__":
@@ -146,19 +185,18 @@ if __name__ == "__main__":
 		print("chromedriver_updater [updates file]", file=sys.stderr)
 		sys.exit(1)
 
-	pr = gh.get_pr()
-	if pr is not None:
-		print("PR already exists; number: %s, url: %s" % (pr.number, pr.html_url))
+	pull_request = gh.get_pr()
+	if pull_request is not None:
+		print(f"PR already exists; number: {pull_request.number}, url: {pull_request.html_url}")
 		sys.exit(0)
 
 	if len(sys.argv) == 1:
 		sys.exit(0)
 
-	updatesFile = sys.argv[1]
-	if not os.path.exists(updatesFile):
-		print("File '%s' does not exist" % updatesFile, file=sys.stderr)
+	if not os.path.exists(sys.argv[1]):
+		print(f"File '{sys.argv[1]}' does not exist", file=sys.stderr)
 		sys.exit(1)
-	with open(updatesFile, "r") as f:
+	with open(sys.argv[1], "r", encoding="utf-8") as f:
 		updates = [line.rstrip() for line in f.readlines()]
 	if len(updates) == 0:
 		print("Nothing to update")
