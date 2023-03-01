@@ -28,7 +28,7 @@ envsubst <../../.github/actions/tpv2-integration-tests/cdn.json >./cdn.conf
 
 cd "${GITHUB_WORKSPACE}/experimental/traffic-portal/dist/traffic-portal"
 envsubst <${GITHUB_WORKSPACE}/.github/actions/tpv2-integration-tests/config.json >./config.json
-node ./server/main.js -C config.json > "${GITHUB_WORKSPACE}/tp.log" 2&>1 &
+node ./server/main.js -C config.json > "${GITHUB_WORKSPACE}/tp.log" 2>&1 &
 
 timeout 3m bash <<TMOUT
 	while ! curl -k "http://localhost:4200/api/4.0/ping" >/dev/null 2>&1; do
