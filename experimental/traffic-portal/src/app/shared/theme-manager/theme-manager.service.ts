@@ -91,7 +91,7 @@ export class ThemeManagerService {
 	 * @param theme Theme to be stored
 	 */
 	private storeTheme(theme: Theme): void {
-		if(window) {
+		if(typeof(window) !== "undefined") {
 			try {
 				window.localStorage.setItem(this.storageKey, JSON.stringify(theme));
 			} catch (e) {
@@ -106,7 +106,7 @@ export class ThemeManagerService {
 	 * @returns The stored theme name or null
 	 */
 	private loadStoredTheme(): Theme | null {
-		if(window) {
+		if(typeof(window) !== "undefined") {
 			try {
 				return JSON.parse(window.localStorage.getItem(this.storageKey) ?? "null");
 			} catch (e) {
@@ -120,7 +120,7 @@ export class ThemeManagerService {
 	 * Clears theme saved in local storage
 	 */
 	private clearStoredTheme(): void {
-		if(window) {
+		if(typeof(window) !== "undefined") {
 			window.localStorage.removeItem(this.storageKey);
 		}
 	}

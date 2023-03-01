@@ -48,5 +48,4 @@ RUN mkdir -p /trafficcontrol/experimental/traffic-portal
 RUN ln -s /trafficcontrol/experimental/traffic-portal/ /trafficcontrol/traffic_portal_v2
 CMD /trafficcontrol/build/clean_build.sh traffic_portal_v2
 
-
 # vi:syntax=Dockerfile

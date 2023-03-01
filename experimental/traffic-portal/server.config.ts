@@ -321,7 +321,6 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 	let cfg = defaultConfig;
 	cfg.version = ver;
 
-
 	let readFromFile = false;
 	if (existsSync(args.configFile)) {
 		const cfgFromFile = JSON.parse(readFileSync(args.configFile, {encoding: "utf8"}));
@@ -383,8 +382,8 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 				throw new Error("must specify either both a key path and a cert path, or neither");
 			}
 			cfg = {
-				certPath: args.certPath,
 				browserFolder: cfg.browserFolder,
+				certPath: args.certPath,
 				insecure: cfg.insecure,
 				keyPath: args.keyPath,
 				port: cfg.port,

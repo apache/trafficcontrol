@@ -264,6 +264,7 @@ jobs:
             experimental/traffic-portal/nightwatch/junit
             experimental/traffic-portal/nightwatch/screens
             experimental/traffic-portal/tests_output
+            tp.log
 
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
