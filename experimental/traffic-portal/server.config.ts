@@ -339,14 +339,14 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 	}
 
 	let folder = cfg.browserFolder;
-	if(args.browserFolder) {
+	if(args.browserFolder !== defaultConfig.browserFolder) {
 		folder = args.browserFolder;
 	}
 	if(!existsSync(folder)) {
-		throw new Error("");
+		throw new Error(`no such folder: ${folder}`);
 	}
 	if(!existsSync(join(folder, "index.html"))) {
-		throw new Error("");
+		throw new Error(`no such browser file: ${join(folder, "index.html")}`);
 	}
 
 	if(args.port !== defaultConfig.port) {
