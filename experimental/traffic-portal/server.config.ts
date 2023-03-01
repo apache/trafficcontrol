@@ -202,7 +202,7 @@ function isConfig(c: unknown): c is ServerConfig {
 	if (!Object.prototype.hasOwnProperty.call(c, "browserFolder")) {
 		throw new Error("'browserFolder' is required");
 	}
-	if (typeof((c as {distFolder: unknown}).distFolder) !== "string") {
+	if (typeof((c as {browserFolder: unknown}).browserFolder) !== "string") {
 		throw new Error("'browserFolder' must be a string");
 	}
 
@@ -298,7 +298,7 @@ interface Args {
 	certPath?: string;
 	keyPath?: string;
 	configFile: string;
-	distFolder: string;
+	browserFolder: string;
 }
 
 export const defaultConfigFile = "/etc/traffic-portal/config.json";
@@ -339,8 +339,8 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 	}
 
 	let folder = cfg.browserFolder;
-	if(args.distFolder) {
-		folder = args.distFolder;
+	if(args.browserFolder) {
+		folder = args.browserFolder;
 	}
 	if(!existsSync(folder)) {
 		throw new Error("");
