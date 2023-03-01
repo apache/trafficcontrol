@@ -17,6 +17,7 @@
 # under the License.
 
 set -ex
+export BROWSER_FOLDER="/experimental/traffic-portal/dist/traffic-portal/browser"
 
 cd "${GITHUB_WORKSPACE}/traffic_ops/traffic_ops_golang"
 
@@ -26,7 +27,8 @@ envsubst <../../.github/actions/tpv2-integration-tests/cdn.json >./cdn.conf
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ../../.github/actions/tpv2-integration-tests/database.json > out.log 2>&1 &
 
 cd "${GITHUB_WORKSPACE}/experimental/traffic-portal/dist/traffic-portal"
-node ./server/main.js --port 4200 -d ${GITHUB_WORKSPACE}/experimental/traffic-portal/dist/traffic-portal/browser -k -t 'https://localhost:6443/' &
+envsubst <../../../../.github/actions/tpv2-integration-tests/config.json >./config.json
+node ./server/main.js -C config.json &
 
 timeout 3m bash <<TMOUT
 	while ! curl -k "http://localhost:4200/api/4.0/ping" >/dev/null 2>&1; do
