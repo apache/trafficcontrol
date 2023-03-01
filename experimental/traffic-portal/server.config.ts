@@ -291,7 +291,7 @@ interface Args {
 	configFile: string;
 }
 
-export const defaultConfigFile = "/etc/traffic-portal/config.js";
+export const defaultConfigFile = "/etc/traffic-portal/config.json";
 
 /**
  * Gets the configuration for the Traffic Portal server.
