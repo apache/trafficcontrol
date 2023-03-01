@@ -4,5 +4,6 @@
   "trafficOps": "https://localhost:6443",
   "useSSL": true,
   "certPath": "/server.crt",
-  "keyPath": "/server.key"
+  "keyPath": "/server.key",
+  "distFolder": "/opt/traffic-portal/browser"
 }

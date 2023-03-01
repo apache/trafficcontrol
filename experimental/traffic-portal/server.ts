@@ -23,27 +23,28 @@ import { APP_BASE_HREF } from "@angular/common";
 import { ngExpressEngine } from "@nguniversal/express-engine";
 import { ArgumentParser } from "argparse";
 import * as express from "express";
-import { getConfig, getVersion, ServerConfig, versionToString } from "server.config";
+import {
+	defaultConfig,
+	defaultConfigFile,
+	getConfig,
+	getVersion,
+	ServerConfig,
+	versionToString
+} from "server.config";
 
 import { AppServerModule } from "./src/main.server";
 
 let config: ServerConfig;
 
-const prodDistFolder = "/opt/traffic-portal/browser";
 /**
  * The Express app is exported so that it can be used by serverless Functions.
  *
+ * @param serverConfig Server configuration
  * @returns The Express.js application.
  */
-export function app(): express.Express {
+export function app(serverConfig: ServerConfig): express.Express {
 	const server = express();
-	let distFolder = "";
-	if (existsSync(prodDistFolder)) {
-		distFolder = prodDistFolder;
-	} else {
-		distFolder = join(process.cwd(), "browser");
-	}
-	const indexHtml = join(distFolder, "index.html");
+	const indexHtml = join(serverConfig.browserFolder, "index.html");
 	if(!existsSync(indexHtml)) {
 		throw new Error(`Unable to start TP server, unable to find browser index.html at: ${indexHtml}`);
 	}
@@ -54,12 +55,12 @@ export function app(): express.Express {
 	}));
 
 	server.set("view engine", "html");
-	server.set("views", distFolder);
+	server.set("views", serverConfig.browserFolder);
 
 	// Example Express Rest API endpoints
 	// server.get('/api/**', (req, res) => { });
 	// Serve static files from /browser
-	server.get("*.*", express.static(distFolder, {
+	server.get("*.*", express.static(serverConfig.browserFolder, {
 		maxAge: "1y"
 	}));
 
@@ -138,6 +139,7 @@ function run(): number {
 			" verification of any passed SSL keys/certificates"
 	});
 	parser.add_argument("-p", "--port", {
+		default: defaultConfig.port,
 		help: "Specify the port on which Traffic Portal will listen (Default: 4200)",
 		type: "int"
 	});
@@ -147,6 +149,12 @@ function run(): number {
 			" will serve using HTTP)",
 		type: "str"
 	});
+	parser.add_argument("-d", "--browser-folder", {
+		default: defaultConfig.browserFolder,
+		dest: "browserFolder",
+		help: "Specify location for the folder that holds the browser files",
+		type: "str"
+	});
 	parser.add_argument("-K", "--key-path", {
 		dest: "keyPath",
 		help: "Specify a location for an SSL certificate to be used by Traffic Portal. (Requires `-c`/`--cert-path`. If both are omitted," +
@@ -154,7 +162,7 @@ function run(): number {
 		type: "str"
 	});
 	parser.add_argument("-C", "--config-file", {
-		default: "/etc/traffic-portal/config.json",
+		default: defaultConfigFile,
 		dest: "configFile",
 		help: "Specify a path to a configuration file - options are overridden by command-line flags.",
 		type: "str"
@@ -172,7 +180,7 @@ function run(): number {
 	}
 
 	// Start up the Node server
-	const server = app();
+	const server = app(config);
 
 	if (config.useSSL) {
 		let cert: string;

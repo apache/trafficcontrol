@@ -14,6 +14,7 @@
 
 import { execSync } from "child_process";
 import { existsSync, readFileSync } from "fs";
+import { join } from "path";
 
 /**
  * ServerVersion contains versioning information for the server,
@@ -136,6 +137,8 @@ interface BaseConfig {
 	useSSL?: boolean;
 	/** Contains all of the versioning information. */
 	version: ServerVersion;
+	/** Path to the folder containing browser files. **/
+	browserFolder: string;
 }
 
 /**
@@ -195,6 +198,12 @@ function isConfig(c: unknown): c is ServerConfig {
 	}
 	if (typeof((c as {trafficOps: unknown}).trafficOps) !== "string") {
 		throw new Error("'trafficOps' must be a string");
+	}
+	if (!Object.prototype.hasOwnProperty.call(c, "browserFolder")) {
+		throw new Error("'browserFolder' is required");
+	}
+	if (typeof((c as {distFolder: unknown}).distFolder) !== "string") {
+		throw new Error("'browserFolder' must be a string");
 	}
 
 	try {
@@ -284,15 +293,23 @@ export function getVersion(path?: string): ServerVersion {
 /** The type of command line arguments to Traffic Portal. */
 interface Args {
 	trafficOps?: URL;
-	insecure?: boolean;
-	port?: number;
+	insecure: boolean;
+	port: number;
 	certPath?: string;
 	keyPath?: string;
 	configFile: string;
+	distFolder: string;
 }
 
 export const defaultConfigFile = "/etc/traffic-portal/config.json";
 
+export const defaultConfig: ServerConfig = {
+	browserFolder: "/opt/traffic-portal/browser",
+	insecure: false,
+	port: 4200,
+	trafficOps: new URL("https://example.com"),
+	version: { version: "" }
+};
 /**
  * Gets the configuration for the Traffic Portal server.
  *
@@ -301,13 +318,9 @@ export const defaultConfigFile = "/etc/traffic-portal/config.json";
  * @returns A full configuration for the server.
  */
 export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
-	let cfg: ServerConfig = {
-		insecure: false,
-		port: 4200,
-		trafficOps: new URL("https://example.com"),
-		useSSL: false,
-		version: ver
-	};
+	let cfg = defaultConfig;
+	cfg.version = ver;
+
 
 	let readFromFile = false;
 	if (existsSync(args.configFile)) {
@@ -325,7 +338,18 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 		throw new Error(`no such configuration file: ${args.configFile}`);
 	}
 
-	if (args.port) {
+	let folder = cfg.browserFolder;
+	if(args.distFolder) {
+		folder = args.distFolder;
+	}
+	if(!existsSync(folder)) {
+		throw new Error("");
+	}
+	if(!existsSync(join(folder, "index.html"))) {
+		throw new Error("");
+	}
+
+	if(args.port !== defaultConfig.port) {
 		cfg.port = args.port;
 	}
 	if (isNaN(cfg.port) || cfg.port <= 0 || cfg.port > 65535) {
@@ -360,6 +384,7 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 			}
 			cfg = {
 				certPath: args.certPath,
+				browserFolder: cfg.browserFolder,
 				insecure: cfg.insecure,
 				keyPath: args.keyPath,
 				port: cfg.port,
@@ -372,7 +397,7 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 		}
 	}
 
-	if(args.insecure === true) {
+	if(args.insecure) {
 		cfg.insecure = args.insecure;
 	}
 

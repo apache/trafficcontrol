@@ -161,6 +161,19 @@
 						}
 					}
 				},
+				"prerender": {
+					"builder": "@nguniversal/builders:prerender",
+					"options": {
+						"browserTarget": "traffic-portal:build:production",
+						"serverTarget": "traffic-portal:server:production",
+						"routes": [
+							"/"
+						]
+					},
+					"configurations": {
+						"production": {}
+					}
+				},
 				"nightwatch-run": {
 					"builder": "@nightwatch/schematics:nightwatch",
 					"options": {
