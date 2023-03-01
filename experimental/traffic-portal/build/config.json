@@ -5,5 +5,5 @@
   "useSSL": true,
   "certPath": "/server.crt",
   "keyPath": "/server.key",
-  "distFolder": "/opt/traffic-portal/browser"
+	"browserFolder": "/opt/traffic-portal/browser"
 }
