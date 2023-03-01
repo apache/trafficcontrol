@@ -19,11 +19,11 @@ import (
 	"database/sql"
 	"testing"
 
-	totest "github.com/apache/trafficcontrol/lib/go-tc/totestv4"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	totest "github.com/apache/trafficcontrol/v7/lib/go-tc/totestv4"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-util/assert"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/testing/api/utils"
+	toclient "github.com/apache/trafficcontrol/v7/traffic_ops/v4-client"
 )
 
 // WithObjs creates the objs in order, runs f, and defers deleting the objs in the same order.

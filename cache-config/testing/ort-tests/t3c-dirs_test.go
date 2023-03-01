@@ -18,7 +18,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3c-apply/util"
 )
 
 // TestDirs tests that the t3c rpm creates directories that t3c-apply requires to run.

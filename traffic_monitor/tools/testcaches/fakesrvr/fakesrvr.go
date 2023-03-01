@@ -25,7 +25,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/tools/testcaches/fakesrvrdata"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/tools/testcaches/fakesrvrdata"
 )
 
 func News(portStart int, numPorts int, remaps []string) ([]*http.Server, error) {

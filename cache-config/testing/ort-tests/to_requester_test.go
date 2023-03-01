@@ -22,9 +22,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v7/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 type Package struct {

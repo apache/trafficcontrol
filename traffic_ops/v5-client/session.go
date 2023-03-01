@@ -22,7 +22,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/toclientlib"
 )
 
 // RequestOptions is the set of options commonly available to pass to methods

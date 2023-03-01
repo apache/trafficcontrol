@@ -23,7 +23,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 func TestMakeChkconfig(t *testing.T) {

@@ -27,8 +27,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
 
 	"github.com/kylelemons/godebug/diff"
 	"github.com/pborman/getopt/v2"

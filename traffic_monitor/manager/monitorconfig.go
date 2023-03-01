@@ -29,15 +29,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/trafficcontrol/traffic_monitor/poller"
-	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/poller"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/towrap"
 )
 
 type PollIntervals struct {

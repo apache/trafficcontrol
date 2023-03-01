@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/toclientlib"
 )
 
 // Login authenticates with Traffic Ops and returns the client object.

@@ -28,9 +28,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	util "github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	util "github.com/apache/trafficcontrol/v7/lib/go-util"
 
 	_ "github.com/lib/pq"
 )

@@ -26,7 +26,7 @@ import (
 	"io/ioutil"
 	"net"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 // TODO put in lib/go-tc

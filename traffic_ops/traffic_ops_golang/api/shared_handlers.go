@@ -32,9 +32,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 const nilVersionErrorMsg = "a wrapped handler was called without an API version"

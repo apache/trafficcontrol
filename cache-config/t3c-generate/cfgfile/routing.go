@@ -23,10 +23,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v7/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
 )
 
 // # DO NOT EDIT - Generated for odol-atsec-sea-22 by Traffic Ops (https://trafficops.comcast.net/) on Mon Oct 26 16:22:19 UTC 2020

@@ -19,9 +19,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/remapdata"
-	"github.com/apache/trafficcontrol/grove/web"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/apache/trafficcontrol/v7/grove/remapdata"
+	"github.com/apache/trafficcontrol/v7/grove/web"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/test"
 )
 
 func StatsInc(m *web.ConnMap, num int, addrs *[]string) {

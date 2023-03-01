@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
+	"github.com/apache/trafficcontrol/v7/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v7/cache-config/testing/ort-tests/util"
 )
 
 func TestApplyDiff(t *testing.T) {

@@ -1,7 +1,7 @@
 package tc
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 	"time"
 )
 

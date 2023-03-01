@@ -24,11 +24,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/health"
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/health"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/todata"
 )
 
 // StartStateCombiner starts the State Combiner goroutine, and returns the threadsafe CombinedStates, and a func to signal to combine states.

@@ -27,8 +27,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-rfc"
 )
 
 type astatsDataCsv struct {

@@ -24,7 +24,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 const ContentTypeCacheDotConfig = ContentTypeTextASCII

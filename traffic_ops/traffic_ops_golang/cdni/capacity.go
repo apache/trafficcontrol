@@ -22,8 +22,8 @@ package cdni
 import (
 	"fmt"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api"
 )
 
 func getCapacities(inf *api.APIInfo, ucdn string) (Capabilities, error) {

@@ -38,12 +38,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/toreqold"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil/toreq/toreqold"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil/toreq/torequtil"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/toclientlib"
+	toclient "github.com/apache/trafficcontrol/v7/traffic_ops/v5-client"
 )
 
 type TOClient struct {

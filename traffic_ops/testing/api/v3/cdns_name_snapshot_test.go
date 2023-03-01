@@ -20,8 +20,8 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/testing/api/utils"
 )
 
 func TestCDNNameSnapshot(t *testing.T) {

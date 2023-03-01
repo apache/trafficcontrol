@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
 )
 
 type Hdr struct {

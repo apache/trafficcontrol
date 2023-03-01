@@ -24,10 +24,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/health"
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/health"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/todata"
 )
 
 func TestCombineCacheState(t *testing.T) {

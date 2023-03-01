@@ -23,7 +23,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/apache/trafficcontrol/traffic_stats/influxdb"
+	"github.com/apache/trafficcontrol/v7/traffic_stats/influxdb"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 

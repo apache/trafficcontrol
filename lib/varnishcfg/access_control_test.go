@@ -24,10 +24,10 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v7/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 )
 
 func TestConfigureAccessControl(t *testing.T) {

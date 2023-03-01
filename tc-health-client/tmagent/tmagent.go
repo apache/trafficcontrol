@@ -34,11 +34,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/tc-health-client/config"
-	"github.com/apache/trafficcontrol/tc-health-client/util"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/config"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/util"
+	toclient "github.com/apache/trafficcontrol/v7/traffic_ops/v4-client"
 
 	"gopkg.in/yaml.v3"
 )

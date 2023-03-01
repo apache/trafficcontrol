@@ -22,10 +22,10 @@ import (
 	"strings"
 	"testing"
 
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	tc "github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-util/assert"
+	client "github.com/apache/trafficcontrol/v7/traffic_ops/v4-client"
 )
 
 func TestCDNsDNSSEC(t *testing.T) {

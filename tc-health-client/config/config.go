@@ -33,9 +33,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/tc-health-client/util"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/util"
 
 	"github.com/pborman/getopt/v2"
 )

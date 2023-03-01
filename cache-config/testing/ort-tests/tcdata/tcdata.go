@@ -20,8 +20,8 @@ package tcdata
 */
 
 import (
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/config"
-	"github.com/apache/trafficcontrol/lib/go-tc/totest"
+	"github.com/apache/trafficcontrol/v7/cache-config/testing/ort-tests/config"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc/totest"
 )
 
 type TCData struct {

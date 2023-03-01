@@ -18,8 +18,8 @@ package client
 import (
 	"fmt"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/toclientlib"
 )
 
 // apiDivisions is the API version-relative path to the /divisions API route.

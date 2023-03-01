@@ -34,13 +34,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	to "github.com/apache/trafficcontrol/v7/traffic_ops/v3-client"
 
-	"github.com/apache/trafficcontrol/grove/config"
-	"github.com/apache/trafficcontrol/grove/remap"
-	"github.com/apache/trafficcontrol/grove/remapdata"
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/v7/grove/config"
+	"github.com/apache/trafficcontrol/v7/grove/remap"
+	"github.com/apache/trafficcontrol/v7/grove/remapdata"
+	"github.com/apache/trafficcontrol/v7/grove/web"
 )
 
 const Version = "0.2"

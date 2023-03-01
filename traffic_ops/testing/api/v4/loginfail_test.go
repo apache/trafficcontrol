@@ -22,11 +22,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
+	"github.com/apache/trafficcontrol/v7/lib/go-util/assert"
 	"golang.org/x/net/publicsuffix"
 
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	client "github.com/apache/trafficcontrol/v7/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/v7/traffic_ops/v4-client"
 )
 
 func TestLoginFail(t *testing.T) {

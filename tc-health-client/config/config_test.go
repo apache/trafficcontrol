@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/apache/trafficcontrol/tc-health-client/util"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/util"
 )
 
 const (

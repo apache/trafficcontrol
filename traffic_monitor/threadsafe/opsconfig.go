@@ -22,7 +22,7 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/handler"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/handler"
 )
 
 // OpsConfig provides safe access for multiple reader goroutines and a single writer to a stored OpsConfig object.

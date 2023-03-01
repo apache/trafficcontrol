@@ -81,7 +81,7 @@ type FederationResolverResponseV50 struct {
 	Response FederationResolverV5 `json:"response"`
 }
 
-// Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// Validate implements the github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (fr *FederationResolver) Validate(tx *sql.Tx) error {
 	return validation.ValidateStruct(fr,

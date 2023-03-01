@@ -22,9 +22,9 @@ package totest
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-util/assert"
+	toclient "github.com/apache/trafficcontrol/v7/traffic_ops/v5-client"
 )
 
 func CreateTestSteeringTargets(t *testing.T, cl *toclient.Session, td TrafficControl) {

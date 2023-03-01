@@ -27,7 +27,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-llog"
+	"github.com/apache/trafficcontrol/v7/lib/go-llog"
 )
 
 var (

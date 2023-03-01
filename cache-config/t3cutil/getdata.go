@@ -27,11 +27,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil/toreq"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil/toreq/torequtil"
+	"github.com/apache/trafficcontrol/v7/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 type TCCfg struct {

@@ -19,8 +19,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/toclientlib"
 )
 
 // apiCachegroups is the API version-relative path for the /cachegroups API endpoint.

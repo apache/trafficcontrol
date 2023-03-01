@@ -23,8 +23,8 @@ import (
 	"fmt"
 	"net/url"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/toclientlib"
 )
 
 // TopologiesQueueUpdate queues updates for the Topology with the given Name.

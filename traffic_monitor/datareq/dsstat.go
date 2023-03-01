@@ -23,8 +23,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/todata"
 
 	"github.com/json-iterator/go"
 )

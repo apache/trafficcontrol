@@ -26,8 +26,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
@@ -55,7 +55,7 @@ type StatsSummary struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (ss StatsSummary) Validate(tx *sql.Tx) error {
 	errs := tovalidate.ToErrors(validation.Errors{
@@ -204,7 +204,7 @@ type StatsSummaryV50 struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (ss StatsSummaryV5) Validate(tx *sql.Tx) error {
 	errs := tovalidate.ToErrors(validation.Errors{

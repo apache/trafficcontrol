@@ -18,8 +18,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v7/cache-config/testing/ort-tests/tcdata"
 )
 
 func TestT3cActionLog(t *testing.T) {

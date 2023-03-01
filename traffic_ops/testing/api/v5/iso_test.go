@@ -22,9 +22,9 @@ package v5
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-util/assert"
+	client "github.com/apache/trafficcontrol/v7/traffic_ops/v5-client"
 )
 
 func TestGetOSVersions(t *testing.T) {

@@ -25,13 +25,13 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 	"github.com/lib/pq"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/dbhelpers"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/tenant"
 )
 
 // GetDSRouting is the handler for getting aggregated routing percentages for a DS.

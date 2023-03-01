@@ -25,7 +25,7 @@ package cache
 import (
 	"io"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/todata"
 )
 
 func init() {

@@ -26,12 +26,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/monitorhlp"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/util/monitorhlp"
 )
 
 func GetCapacity(w http.ResponseWriter, r *http.Request) {

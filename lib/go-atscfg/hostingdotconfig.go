@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 const HostingConfigFileName = `hosting.config`

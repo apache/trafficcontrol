@@ -22,7 +22,7 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/cache"
 )
 
 // CacheKbpses wraps a map of cache kbps measurements to be safe for multiple

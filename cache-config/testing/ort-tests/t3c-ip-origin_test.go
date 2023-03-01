@@ -20,8 +20,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 )
 
 func TestT3CIPOrigin(t *testing.T) {

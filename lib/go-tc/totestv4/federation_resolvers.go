@@ -23,9 +23,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-util/assert"
+	toclient "github.com/apache/trafficcontrol/v7/traffic_ops/v4-client"
 )
 
 func CreateTestFederationResolvers(t *testing.T, cl *toclient.Session, td TrafficControl) {

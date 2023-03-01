@@ -22,7 +22,7 @@ package threadsafe
 import (
 	"sync"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/dsdata"
 )
 
 // LastStats wraps a deliveryservice.LastStats object to be safe for multiple readers and one writer.

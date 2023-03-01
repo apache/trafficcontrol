@@ -26,11 +26,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_monitor/poller"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v7/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/poller"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/todata"
 )
 
 func TestHandlerPrecompute(t *testing.T) {

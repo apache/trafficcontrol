@@ -26,8 +26,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/config"
 )
 
 const PollerTypeHTTP = "http"

@@ -25,10 +25,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/deliveryservice"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/routing/middleware"
 )
 
 // GetStatus is the handler for GET requests to

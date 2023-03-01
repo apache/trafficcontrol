@@ -19,7 +19,7 @@ package totest
  * under the License.
  */
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/v7/lib/go-tc"
 
 // TrafficControl - maps to the tc-fixtures.json file
 type TrafficControl struct {

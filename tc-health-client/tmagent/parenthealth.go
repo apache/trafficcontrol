@@ -27,9 +27,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/tc-health-client/sar"
-	"github.com/apache/trafficcontrol/tc-health-client/util"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/sar"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/util"
 )
 
 const ParentHealthVersion = "1.0"

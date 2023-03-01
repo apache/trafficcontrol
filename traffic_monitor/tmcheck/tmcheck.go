@@ -27,10 +27,10 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
-	to "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/datareq"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/dsdata"
+	to "github.com/apache/trafficcontrol/v7/traffic_ops/v4-client"
 
 	jsoniter "github.com/json-iterator/go"
 )

@@ -22,8 +22,8 @@ package tc
 import (
 	"database/sql"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 
 	"github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"

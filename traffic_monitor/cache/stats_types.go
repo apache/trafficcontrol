@@ -10,7 +10,7 @@
 // format:
 //
 //  1. Create a file for your type in the traffic_monitor/cache directory and
-//     package, `github.com/apache/trafficcontrol/traffic_monitor/cache/`
+//     package, `github.com/apache/trafficcontrol/v7/traffic_monitor/cache/`
 //  2. Create Parse and (optionally) Precompute functions in your file, with the
 //     signature of `StatisticsParser` and `StatisticsPrecomputer`, respectively
 //  3. In your file's special `init` func, call `registerDecoder` with your two
@@ -86,7 +86,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/todata"
 )
 
 const DefaultStatsType = "astats"

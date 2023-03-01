@@ -25,12 +25,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v7/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/test"
 )
 
 func TestWriteConfigs(t *testing.T) {

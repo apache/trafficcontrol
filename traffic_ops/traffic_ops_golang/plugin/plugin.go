@@ -25,8 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/config"
 )
 
 // List returns the list of plugin names compiled into the calling executable.

@@ -32,8 +32,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/test/fakeOrigin/endpoint"
-	"github.com/apache/trafficcontrol/test/fakeOrigin/m3u8"
+	"github.com/apache/trafficcontrol/v7/test/fakeOrigin/endpoint"
+	"github.com/apache/trafficcontrol/v7/test/fakeOrigin/m3u8"
 )
 
 type httpEndpoint struct {

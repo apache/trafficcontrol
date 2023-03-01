@@ -19,7 +19,7 @@ package v13
  * under the License.
  */
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/v7/lib/go-tc"
 
 // CDNs -  CDNsResponse to get the "response" top level key
 // swagger:response CDNs

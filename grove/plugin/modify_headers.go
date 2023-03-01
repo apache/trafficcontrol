@@ -17,9 +17,9 @@ package plugin
 import (
 	"encoding/json"
 
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/v7/grove/web"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
 )
 
 func init() {

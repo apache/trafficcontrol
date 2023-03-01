@@ -23,7 +23,7 @@ import "bytes"
 import "net/mail"
 import "testing"
 
-import "github.com/apache/trafficcontrol/lib/go-rfc"
+import "github.com/apache/trafficcontrol/v7/lib/go-rfc"
 
 func TestRegistrationTemplateRender(t *testing.T) {
 	to := rfc.EmailAddress{

@@ -20,9 +20,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v7/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/v7/traffic_ops/v4-client"
 )
 
 func TestCDNDomains(t *testing.T) {

@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v7/lib/go-atscfg"
 )
 
 // GetHitchConfig returns Hitch config using TO data

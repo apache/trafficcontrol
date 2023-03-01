@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/v7/lib/go-util/assert"
+	toclient "github.com/apache/trafficcontrol/v7/traffic_ops/v3-client"
 
 	"golang.org/x/net/publicsuffix"
 )

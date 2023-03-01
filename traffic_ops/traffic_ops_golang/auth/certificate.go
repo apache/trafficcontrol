@@ -28,8 +28,8 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc/ldap"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-rfc/ldap"
 )
 
 // VerifyClientCertificate takes a http.Request, pulls the (optionally) provided client TLS

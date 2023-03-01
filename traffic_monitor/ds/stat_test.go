@@ -28,15 +28,15 @@ import (
 	"regexp"
 	"testing"
 
-	tc_log "github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
-	"github.com/apache/trafficcontrol/traffic_monitor/health"
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	tc_log "github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/dsdata"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/health"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/test"
 )
 
 func checkLogOutput(t *testing.T, buffer *bytes.Buffer, toData todata.TOData, caches []tc.CacheName) {

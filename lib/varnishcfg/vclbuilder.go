@@ -25,8 +25,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v7/lib/go-atscfg"
 )
 
 // VCLBuilder builds the default VCL file using TO data.

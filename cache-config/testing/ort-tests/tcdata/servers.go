@@ -18,8 +18,8 @@ package tcdata
 import (
 	"fmt"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil/toreq"
+	toclient "github.com/apache/trafficcontrol/v7/traffic_ops/v5-client"
 )
 
 func (r *TCData) QueueUpdatesForServer(hostname string, queue bool) error {

@@ -22,7 +22,7 @@ package cdn
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 func TestGetStatsFromServiceInterface(t *testing.T) {

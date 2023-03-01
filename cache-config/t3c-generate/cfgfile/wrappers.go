@@ -20,10 +20,10 @@ package cfgfile
  */
 
 import (
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/v7/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v7/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
 )
 
 // This file has wrappers that turn lib/go-atscfg Make funcs into ConfigFileFunc types.

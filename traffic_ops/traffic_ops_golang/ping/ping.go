@@ -22,8 +22,8 @@ package ping
 import (
 	"net/http"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v7/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api"
 )
 
 const pingResponse = `{"ping":"pong"}`

@@ -30,10 +30,10 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/tc-health-client/config"
-	"github.com/apache/trafficcontrol/tc-health-client/tmagent"
-	"github.com/apache/trafficcontrol/tc-health-client/util"
+	"github.com/apache/trafficcontrol/v7/lib/go-log"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/config"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/tmagent"
+	"github.com/apache/trafficcontrol/v7/tc-health-client/util"
 )
 
 const (

@@ -1,6 +1,6 @@
 package v13
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/v7/lib/go-tc"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one

@@ -27,7 +27,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -1212,7 +1212,7 @@ type StatusChangeRequest struct {
 }
 
 // Validate satisfies the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (*StatusChangeRequest) Validate(*sql.Tx) error {
 	return nil

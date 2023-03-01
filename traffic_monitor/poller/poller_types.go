@@ -22,7 +22,7 @@ package poller
 import (
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/config"
 )
 
 const DefaultPollerType = PollerTypeHTTP

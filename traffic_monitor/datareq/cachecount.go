@@ -22,7 +22,7 @@ package datareq
 import (
 	"strconv"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/peer"
 )
 
 // TODO determine if this should use peerStates

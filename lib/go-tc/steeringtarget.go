@@ -24,7 +24,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 )
 
 // A SteeringTarget is a relationship between a Steering Delivery Service and
@@ -56,7 +56,7 @@ type SteeringTargetNullable struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (st SteeringTargetNullable) Validate(tx *sql.Tx) (error, error) {
 	errs := []string{}

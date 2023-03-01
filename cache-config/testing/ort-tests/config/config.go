@@ -28,12 +28,12 @@ import (
 	"reflect"
 	"strings"
 
-	log "github.com/apache/trafficcontrol/lib/go-log"
+	log "github.com/apache/trafficcontrol/v7/lib/go-log"
 	"github.com/kelseyhightower/envconfig"
 )
 
 // Config reflects the structure of the test-to-api.conf file. It also
-// implements github.com/apache/trafficcontrol/lib/go-log.Config for logging.
+// implements github.com/apache/trafficcontrol/v7/lib/go-log.Config for logging.
 type Config struct {
 	TrafficOps   TrafficOps   `json:"trafficOps"`
 	TrafficOpsDB TrafficOpsDB `json:"trafficOpsDB"`
@@ -170,7 +170,7 @@ type Session struct {
 }
 
 // Locations is a set of logging locations as defined by the
-// github.com/apache/trafficcontrol/lib/go-log package.
+// github.com/apache/trafficcontrol/v7/lib/go-log package.
 type Locations struct {
 	Debug   string `json:"debug"`
 	Event   string `json:"event"`

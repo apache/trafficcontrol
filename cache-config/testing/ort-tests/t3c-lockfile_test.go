@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v7/cache-config/testing/ort-tests/tcdata"
 )
 
 func TestLockfile(t *testing.T) {

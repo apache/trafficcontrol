@@ -26,8 +26,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v7/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v7/lib/go-util"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -558,7 +558,7 @@ type UserRegistrationRequestV40 struct {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (urr *UserRegistrationRequestV4) Validate(tx *sql.Tx) error {
 	var errs = []error{}
@@ -580,7 +580,7 @@ func (urr *UserRegistrationRequestV4) Validate(tx *sql.Tx) error {
 }
 
 // Validate implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
+// github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/api.ParseValidator
 // interface.
 func (urr *UserRegistrationRequest) Validate(tx *sql.Tx) error {
 	var errs = []error{}

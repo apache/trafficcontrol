@@ -26,8 +26,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/srvhttp"
+	"github.com/apache/trafficcontrol/v7/lib/go-tc"
+	"github.com/apache/trafficcontrol/v7/traffic_monitor/srvhttp"
 )
 
 // Filter encapsulates functions to filter a given set of Stats, e.g. from HTTP query parameters.
