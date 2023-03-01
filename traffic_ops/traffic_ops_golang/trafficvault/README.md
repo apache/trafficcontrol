@@ -61,7 +61,7 @@ func init() {
 7. In `./backends/backends.go`, import your new package:
 ```go
 import (
-    _ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/foo"
+    _ "github.com/apache/trafficcontrol/v7/traffic_ops/traffic_ops_golang/trafficvault/backends/foo"
 )
 ```
 This is required for the package `init()` function to run and register the new backend.

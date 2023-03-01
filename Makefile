@@ -35,7 +35,7 @@ lint:
 	golangci-lint run ./...
 
 cache-config/t3c-check-refs/t3c-check-refs: cache-config/t3c-check-refs/config/config.go cache-config/t3c-check-refs/t3c-check-refs.go
-	go build "github.com/apache/trafficcontrol/cache-config/t3c-check-refs"
+	go build "github.com/apache/trafficcontrol/v7/cache-config/t3c-check-refs"
 	mv -f t3c-check-refs $@
 
 unit: cache-config/t3c-check-refs/t3c-check-refs

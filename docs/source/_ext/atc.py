@@ -154,7 +154,7 @@ def godoc_role(unused_typ,
 	return [refnode], []
 
 # -- GoDoc role (atc-relative) ----------------------------------------------
-ATC_GODOC_PREFIX = "github.com/apache/trafficcontrol/"
+ATC_GODOC_PREFIX = "github.com/apache/trafficcontrol/v7/"
 ATC_GODOC_URI = GODOC_URI + ATC_GODOC_PREFIX
 def atc_godoc_role(unused_typ,
                    unused_rawtext,

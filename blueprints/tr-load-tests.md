@@ -86,7 +86,7 @@ No Traffic Ops REST API impact is anticipated.
 
 If new endpoints are required, will corresponding client methods be added?
 -->
-Clients importing the `github.com/apache/trafficcontrol/lib/go-tc` package will optionally be able to import a constant for `X-MM-Client-IP`, a request header Traffic Router to specify to Traffic Router the IP address to use to geolocate that client:  
+Clients importing the `github.com/apache/trafficcontrol/v7/lib/go-tc` package will optionally be able to import a constant for `X-MM-Client-IP`, a request header Traffic Router to specify to Traffic Router the IP address to use to geolocate that client:
 https://github.com/apache/trafficcontrol/blob/1ed2964d16618aeebef142b01a538336a44d07dd/traffic_router/core/src/main/java/org/apache/traffic_control/traffic_router/core/request/HTTPRequest.java#L29
 
 Additionally, a struct used to unmarshall a Coverage Zone File could be placed in `lib/go-tc`.
