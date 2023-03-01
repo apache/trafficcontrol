@@ -77,4 +77,4 @@ initBuildArea() {
 importFunctions
 checkEnvironment -i npm,rsync,git
 initBuildArea
-buildRpm traffic-portal
+buildRpm traffic_portal_v2

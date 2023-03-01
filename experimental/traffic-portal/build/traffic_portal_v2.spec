@@ -16,7 +16,7 @@
 # RPM spec file for the Traffic Portal
 #
 %define   debug_package %{nil}
-Name:     traffic-portal
+Name:     traffic_portal_v2
 Version:  %{traffic_control_version}
 Release:  %{build_number}
 Summary:  Traffic Portal v2

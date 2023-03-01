@@ -372,7 +372,9 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 		}
 	}
 
-	cfg.insecure = args.insecure ?? cfg.insecure;
+	if(args.insecure === true) {
+		cfg.insecure = args.insecure;
+	}
 
 	if (cfg.useSSL) {
 		if (!existsSync(cfg.certPath)) {

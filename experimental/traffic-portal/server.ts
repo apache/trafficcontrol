@@ -16,7 +16,7 @@ import "zone.js/node";
 
 import { existsSync, readFileSync } from "fs";
 import { createServer as createRedirectServer } from "http";
-import { createServer, request } from "https";
+import { createServer, request, RequestOptions } from "https";
 import { join } from "path";
 
 import { APP_BASE_HREF } from "@angular/common";
@@ -29,6 +29,7 @@ import { AppServerModule } from "./src/main.server";
 
 let config: ServerConfig;
 
+const prodDistFolder = "/opt/traffic-portal/browser";
 /**
  * The Express app is exported so that it can be used by serverless Functions.
  *
@@ -36,8 +37,16 @@ let config: ServerConfig;
  */
 export function app(): express.Express {
 	const server = express();
-	const distFolder = join(process.cwd(), "browser");
-	const indexHtml = existsSync(join(distFolder, "index.original.html")) ? "index.original.html" : "index";
+	let distFolder = "";
+	if (existsSync(prodDistFolder)) {
+		distFolder = prodDistFolder;
+	} else {
+		distFolder = join(process.cwd(), "browser");
+	}
+	const indexHtml = join(distFolder, "index.html");
+	if(!existsSync(indexHtml)) {
+		throw new Error(`Unable to start TP server, unable to find browser index.html at: ${indexHtml}`);
+	}
 
 	// Our Universal express-engine (found @ https://github.com/angular/universal/tree/master/modules/express-engine)
 	server.engine("html", ngExpressEngine({
@@ -63,7 +72,7 @@ export function app(): express.Express {
 	function toProxyHandler(req: express.Request, res: express.Response): void {
 		console.log(`Making TO API request to \`${req.originalUrl}\``);
 
-		const fwdRequest = {
+		const fwdRequest: RequestOptions = {
 			headers:            req.headers,
 			host:               config.trafficOps.hostname,
 			method:             req.method,
@@ -145,7 +154,7 @@ function run(): number {
 		type: "str"
 	});
 	parser.add_argument("-C", "--config-file", {
-		default: "/etc/traffic-portal/config.js",
+		default: "/etc/traffic-portal/config.json",
 		dest: "configFile",
 		help: "Specify a path to a configuration file - options are overridden by command-line flags.",
 		type: "str"

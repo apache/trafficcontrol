@@ -104,6 +104,7 @@ services:
     image: apache/traffic_portal_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
+      target: traffic_portal_v1
       context: ../../..
       args:
         # Change BASE_IMAGE to centos when RHEL_VERSION=7
@@ -117,10 +118,12 @@ services:
       - ../../..:/trafficcontrol:z
       - ../../../.npm:/root/.npm:z
 
-  traffic-portal_build:
-    image: apache/traffic-portal_builder:master
+  traffic_portal_v2_build:
+    container_name: traffic_portal_v2
+    image: apache/traffic_portal_v2_builder:master
     build:
-      dockerfile: infrastructure/docker/build/Dockerfile-traffic-portal
+      dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
+      target: traffic_portal_v2
       context: ../../..
       args:
         # Change BASE_IMAGE to centos when RHEL_VERSION=7
