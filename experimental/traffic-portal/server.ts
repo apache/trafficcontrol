@@ -16,14 +16,21 @@ import "zone.js/node";
 
 import { existsSync, readFileSync } from "fs";
 import { createServer as createRedirectServer } from "http";
-import { createServer, request } from "https";
+import { createServer, request, RequestOptions } from "https";
 import { join } from "path";
 
 import { APP_BASE_HREF } from "@angular/common";
 import { ngExpressEngine } from "@nguniversal/express-engine";
 import { ArgumentParser } from "argparse";
 import * as express from "express";
-import { getConfig, getVersion, ServerConfig, versionToString } from "server.config";
+import {
+	defaultConfig,
+	defaultConfigFile,
+	getConfig,
+	getVersion,
+	ServerConfig,
+	versionToString
+} from "server.config";
 
 import { AppServerModule } from "./src/main.server";
 
@@ -32,12 +39,15 @@ let config: ServerConfig;
 /**
  * The Express app is exported so that it can be used by serverless Functions.
  *
+ * @param serverConfig Server configuration
  * @returns The Express.js application.
  */
-export function app(): express.Express {
+export function app(serverConfig: ServerConfig): express.Express {
 	const server = express();
-	const distFolder = join(process.cwd(), "dist/traffic-portal/browser");
-	const indexHtml = existsSync(join(distFolder, "index.original.html")) ? "index.original.html" : "index";
+	const indexHtml = join(serverConfig.browserFolder, "index.html");
+	if(!existsSync(indexHtml)) {
+		throw new Error(`Unable to start TP server, unable to find browser index.html at: ${indexHtml}`);
+	}
 
 	// Our Universal express-engine (found @ https://github.com/angular/universal/tree/master/modules/express-engine)
 	server.engine("html", ngExpressEngine({
@@ -45,12 +55,12 @@ export function app(): express.Express {
 	}));
 
 	server.set("view engine", "html");
-	server.set("views", distFolder);
+	server.set("views", serverConfig.browserFolder);
 
 	// Example Express Rest API endpoints
 	// server.get('/api/**', (req, res) => { });
 	// Serve static files from /browser
-	server.get("*.*", express.static(distFolder, {
+	server.get("*.*", express.static(serverConfig.browserFolder, {
 		maxAge: "1y"
 	}));
 
@@ -63,7 +73,7 @@ export function app(): express.Express {
 	function toProxyHandler(req: express.Request, res: express.Response): void {
 		console.log(`Making TO API request to \`${req.originalUrl}\``);
 
-		const fwdRequest = {
+		const fwdRequest: RequestOptions = {
 			headers:            req.headers,
 			host:               config.trafficOps.hostname,
 			method:             req.method,
@@ -129,7 +139,7 @@ function run(): number {
 			" verification of any passed SSL keys/certificates"
 	});
 	parser.add_argument("-p", "--port", {
-		default: 4200,
+		default: defaultConfig.port,
 		help: "Specify the port on which Traffic Portal will listen (Default: 4200)",
 		type: "int"
 	});
@@ -139,6 +149,12 @@ function run(): number {
 			" will serve using HTTP)",
 		type: "str"
 	});
+	parser.add_argument("-d", "--browser-folder", {
+		default: defaultConfig.browserFolder,
+		dest: "browserFolder",
+		help: "Specify location for the folder that holds the browser files",
+		type: "str"
+	});
 	parser.add_argument("-K", "--key-path", {
 		dest: "keyPath",
 		help: "Specify a location for an SSL certificate to be used by Traffic Portal. (Requires `-c`/`--cert-path`. If both are omitted," +
@@ -146,7 +162,7 @@ function run(): number {
 		type: "str"
 	});
 	parser.add_argument("-C", "--config-file", {
-		default: "/etc/traffic-portal/config.js",
+		default: defaultConfigFile,
 		dest: "configFile",
 		help: "Specify a path to a configuration file - options are overridden by command-line flags.",
 		type: "str"
@@ -164,7 +180,7 @@ function run(): number {
 	}
 
 	// Start up the Node server
-	const server = app();
+	const server = app(config);
 
 	if (config.useSSL) {
 		let cert: string;
