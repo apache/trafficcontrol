@@ -35,6 +35,7 @@ import { isAction } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { CacheGroupTableComponent } from "./cache-group-table.component";
+// import {ResponseASN} from "trafficops-types";
 
 const sampleCG: ResponseCacheGroup = {
 	fallbackToClosest: true,
@@ -184,6 +185,32 @@ describe("CacheGroupTableComponent", () => {
 		expect(menuItem.newTab).toBeFalsy();
 		expect(menuItem.href({...sampleCG, id: 5})).toBe("core/cache-groups/5");
 	});
+
+	it("generates 'Manage ASNs' context menu item href", () => {
+		const item = component.contextMenuItems.find(i => i.name === "Manage ASNs");
+		if (!item) {
+			return fail("missing 'Manage ASNs' context menu item");
+		}
+		if (isAction(item)) {
+			return fail("expected an action, not a link");
+		}
+		if (!item.href) {
+			return fail("missing 'href' property");
+		}
+		if (typeof(item.href) !== "string") {
+			return fail("'Manage ASNs' context menu item should use a static string to determine href, instead uses a function");
+		}
+		expect(item.href).toBe("/core/asns");
+		if (typeof(item.queryParams) !== "function") {
+			return fail(
+				`'Mange ASNs' context menu item should use a function to determine query params, instead uses: ${item.queryParams}`
+			);
+		}
+		expect(item.queryParams(sampleCG)).toEqual({cachegroup: sampleCG.name});
+		expect(item.fragment).toBeUndefined();
+		expect(item.newTab).toBeFalsy();
+	});
+
 	it("doesn't allow selection of unimplemented context menu items", () => {
 		let menuItem = component.contextMenuItems.find(i => i.name === "Manage Servers");
 		if (!menuItem) {

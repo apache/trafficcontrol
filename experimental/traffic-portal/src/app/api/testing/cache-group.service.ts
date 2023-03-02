@@ -606,9 +606,9 @@ export class CacheGroupService {
 	 */
 	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
 		if(id) {
-			const asn = this.asns.find(a=>a.asn === id);
+			const asn = this.asns.find(a=>a.id === id);
 			if (!asn) {
-				throw new Error(`no such asn: ${id}`);
+				throw new Error(`no such asn with id: ${id}`);
 			}
 			return asn;
 		}

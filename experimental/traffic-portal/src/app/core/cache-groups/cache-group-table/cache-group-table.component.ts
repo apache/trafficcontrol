@@ -15,7 +15,7 @@
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import {ActivatedRoute, Router} from "@angular/router";
+import {ActivatedRoute, type Params} from "@angular/router";
 import type { ColDef } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 import {
@@ -164,8 +164,9 @@ export class CacheGroupTableComponent implements OnInit {
 			name: "Clear Queued Updates"
 		},
 		{
-			action: "asns",
-			name: "Manage ASNs"
+			href: "/core/asns",
+			name: "Manage ASNs",
+			queryParams: (selectedRow):  Params => ({cachegroup: selectedRow.name})
 		},
 		{
 			action: "parameters",
@@ -192,7 +193,6 @@ export class CacheGroupTableComponent implements OnInit {
 		private readonly api: CacheGroupService,
 		private readonly cdnAPI: CDNService,
 		private readonly route: ActivatedRoute,
-		private readonly router: Router,
 		private readonly dialog: MatDialog,
 		private readonly alerts: AlertService,
 		public readonly auth: CurrentUserService,
@@ -285,15 +285,6 @@ export class CacheGroupTableComponent implements OnInit {
 				break;
 			case "dequeue":
 				this.queueUpdates(Array.isArray(a.data) ? a.data : [a.data], false);
-				break;
-			case "asns":
-				let cg: ResponseCacheGroup;
-				if (Array.isArray(a.data)) {
-					cg = a.data[0];
-				} else {
-					cg = a.data;
-				}
-				this.router.navigate(["/core/asns"], {queryParams: {cachegroup: cg.name}});
 				break;
 			case "delete":
 				if (Array.isArray(a.data)) {

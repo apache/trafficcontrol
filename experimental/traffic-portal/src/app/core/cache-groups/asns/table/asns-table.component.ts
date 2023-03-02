@@ -69,7 +69,6 @@ export class AsnsTableComponent implements OnInit {
 		{
 			field: "cachegroup",
 			headerName: "Cache Group",
-			valueGetter: ({data}: {data: ResponseASN}): string => `${data.cachegroup}`
 		},
 		{
 			field: "lastUpdated",
@@ -80,11 +79,11 @@ export class AsnsTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented asn data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseASN>> = [
 		{
-			href: (selectedRow: ResponseASN): string => `${selectedRow.asn}`,
+			href: (selectedRow: ResponseASN): string => `${selectedRow.id}`,
 			name: "Edit"
 		},
 		{
-			href: (selectedRow: ResponseASN): string => `${selectedRow.asn}`,
+			href: (selectedRow: ResponseASN): string => `${selectedRow.id}`,
 			name: "Open in New Tab",
 			newTab: true
 		},
@@ -121,7 +120,7 @@ export class AsnsTableComponent implements OnInit {
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
-					data: {message: `Are you sure you want to delete asn ${data.asn}`, title: "Confirm Delete"}
+					data: {message: `Are you sure you want to delete asn ${data.asn}?`, title: "Confirm Delete"}
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
