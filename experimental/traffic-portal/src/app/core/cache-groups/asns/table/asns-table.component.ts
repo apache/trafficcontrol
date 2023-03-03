@@ -120,7 +120,7 @@ export class AsnsTableComponent implements OnInit {
 			console.error("cannot delete multiple ASNs at once:", evt.data);
 			return;
 		}
-		const data = evt.data
+		const data = evt.data;
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
