@@ -39,13 +39,7 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 RUN	curl -sL https://rpm.nodesource.com/setup_16.x | bash - && \
 	yum -y install nodejs
 
-FROM common-dependencies as traffic_portal_v1
 RUN npm -g install make grunt-cli sass
 CMD /trafficcontrol/build/clean_build.sh traffic_portal
-
-FROM common-dependencies as traffic_portal_v2
-RUN mkdir -p /trafficcontrol/experimental/traffic-portal
-RUN ln -s /trafficcontrol/experimental/traffic-portal/ /trafficcontrol/traffic_portal_v2
-CMD /trafficcontrol/build/clean_build.sh traffic_portal_v2
 
 # vi:syntax=Dockerfile
