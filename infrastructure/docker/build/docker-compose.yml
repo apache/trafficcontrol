@@ -133,7 +133,7 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
       - ../../../.npm:/root/.npm:z
-    command: [ "/bin/bash", "-c", "mkdir -p /trafficcontrol/experimental/traffic-portal && ln -s /trafficcontrol/experimental/traffic-portal/ /trafficcontrol/traffic_portal_v2 && /trafficcontrol/build/clean_build.sh traffic_portal_v2", ]
+    command: [ "/bin/bash", "-c", "/trafficcontrol/build/clean_build.sh traffic_portal_v2" ]
 
   traffic_router_build:
     image: apache/traffic_router_builder:master
