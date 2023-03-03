@@ -39,7 +39,8 @@ export class MalformedDateError extends Error {
  */
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)(?:[\+-]00|Z)$/;
 
-const knownDateProps = new Set([
+const knownDateProps: Set<PropertyKey> = new Set([
+	0,
 	"configApplyTime",
 	"configUpdateTime",
 	"createdAt",
