@@ -208,11 +208,49 @@ export class DeliveryServiceService extends APIService {
 	 * @param d The integral, unique identifier of a Delivery Service
 	 * @returns A response from the health endpoint
 	 */
-	public async getDSHealth(d: number): Promise<Health> {
-		const path = `deliveryservices/${d}/health`;
-		return this.get<Health>(path).toPromise();
+	public async getDSHealth(d: number | ResponseDeliveryService): Promise<Health> {
+		const id = typeof(d) === "number" ? d : d.id;
+		return this.get<Health>(`deliveryservices/${id}/health`).toPromise();
 	}
 
+	/**
+	 * Retrieves Delivery Service throughput statistics for a given time period,
+	 * averaged over a given interval.
+	 *
+	 * @param d The `xml_id` of a Delivery Service, or the Delivery Service
+	 * itself.
+	 * @param start A date/time from which to start data collection.
+	 * @param end A date/time at which to end data collection.
+	 * @param interval A unit-suffixed interval over which data will be
+	 * "binned".
+	 * @param useMids Collect data regarding Mid-tier cache servers rather than
+	 * Edge-tier cache servers
+	 * @param dataOnly Only returns the data series, not any supplementing meta
+	 * info found in the API response.
+	 * @returns An Array of {@link DataPoint}s.
+	 */
+	public async getDSKBPS(
+		d: string | ResponseDeliveryService,
+		start: Date,
+		end: Date,
+		interval: string,
+		useMids: boolean,
+		dataOnly: true
+	): Promise<Array<DataPoint>>;
+	/**
+	 * Retrieves Delivery Service throughput statistics for a given time period,
+	 * averaged over a given interval.
+	 *
+	 * @param d The `xml_id` of a Delivery Service, or the Delivery Service
+	 * itself.
+	 * @param start A date/time from which to start data collection.
+	 * @param end A date/time at which to end data collection.
+	 * @param interval A unit-suffixed interval over which data will be
+	 * "binned".
+	 * @param useMids Collect data regarding Mid-tier cache servers rather than
+	 * Edge-tier cache servers
+	 * @returns The API response.
+	 */
 	public async getDSKBPS(
 		d: string | ResponseDeliveryService,
 		start: Date,
@@ -238,7 +276,7 @@ export class DeliveryServiceService extends APIService {
 	 * the entire API response otherwise.
 	 */
 	public async getDSKBPS(
-		d: string,
+		d: string | ResponseDeliveryService,
 		start: Date,
 		end: Date,
 		interval: string,
@@ -247,7 +285,7 @@ export class DeliveryServiceService extends APIService {
 	): Promise<Array<DataPoint> | DSStats> {
 		const path = "deliveryservice_stats";
 		const params = {
-			deliveryServiceName: d,
+			deliveryServiceName: typeof(d) === "string" ? d : d.xmlId,
 			endDate: end.toISOString(),
 			interval,
 			metricType: "kbps",
@@ -276,17 +314,23 @@ export class DeliveryServiceService extends APIService {
 	}
 
 	/**
-	 * Gets total TPS data for a Delivery Service. To get TPS data broken down by HTTP status, use {@link getAllDSTPSData}.
+	 * Gets total TPS data for a Delivery Service. To get TPS data broken down
+	 * by HTTP status, use {@link getAllDSTPSData}.
 	 *
-	 * @param d The name (xmlid) of the Delivery Service for which TPS stats will be fetched
-	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
-	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
-	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
-	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior).
-	 * @returns The requested DataResponse.
+	 * @param d The Delivery Service or its "XML_ID" for which TPS stats will be
+	 * fetched.
+	 * @param start The desired start date/time of the data range (must not have
+	 * nonzero milliseconds!).
+	 * @param end The desired end date/time of the data range (must not have
+	 * nonzero milliseconds!).
+	 * @param interval A string that describes the interval across which to
+	 * 'bucket' data e.g. '60s'.
+	 * @param useMids If given (and true) will get stats for the Mid-tier
+	 * instead of the Edge-tier (which is the default behavior).
+	 * @returns The requested stats data.
 	 */
 	public async getDSTPS(
-		d: string,
+		d: string | ResponseDeliveryService,
 		start: Date,
 		end: Date,
 		interval: string,
@@ -294,7 +338,7 @@ export class DeliveryServiceService extends APIService {
 	): Promise<DSStats> {
 		const path = "deliveryservice_stats";
 		const params = {
-			deliveryServiceName: d,
+			deliveryServiceName: typeof(d) === "string" ? d : d.xmlId,
 			endDate: end.toISOString(),
 			interval,
 			metricType: "tps_total",
@@ -305,17 +349,23 @@ export class DeliveryServiceService extends APIService {
 	}
 
 	/**
-	 * Gets total TPS data for a Delivery Service, as well as TPS data by HTTP response type.
+	 * Gets total TPS data for a Delivery Service, as well as TPS data by HTTP
+	 * response type.
 	 *
-	 * @param d The name (xmlid) of the Delivery Service for which TPS stats will be fetched
-	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
-	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
-	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
-	 * @param useMids If given (and true) will get stats for the Mid-tier instead of the Edge-tier (which is the default behavior)
+	 * @param d The Delivery Service or its "XML_ID" for which TPS stats will be
+	 * fetched.
+	 * @param start The desired start date/time of the data range (must not have
+	 * nonzero milliseconds!).
+	 * @param end The desired end date/time of the data range (must not have
+	 * nonzero milliseconds!).
+	 * @param interval A string that describes the interval across which to
+	 * 'bucket' data e.g. '60s'.
+	 * @param useMids If given (and true) will get stats for the Mid-tier
+	 * instead of the Edge-tier (which is the default behavior).
 	 * @returns The requested TPSData.
 	 */
 	public async getAllDSTPSData(
-		d: string,
+		d: string | ResponseDeliveryService,
 		start: Date,
 		end: Date,
 		interval: string,
@@ -323,7 +373,7 @@ export class DeliveryServiceService extends APIService {
 	): Promise<TPSData> {
 		const path = "deliveryservice_stats";
 		const params: Record<string, string> = {
-			deliveryServiceName: d,
+			deliveryServiceName: typeof(d) === "string" ? d : d.xmlId,
 			endDate: end.toISOString(),
 			interval,
 			serverType: useMids ? "mid" : "edge",
