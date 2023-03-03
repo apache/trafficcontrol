@@ -35,7 +35,6 @@ import { isAction } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { CacheGroupTableComponent } from "./cache-group-table.component";
-// import {ResponseASN} from "trafficops-types";
 
 const sampleCG: ResponseCacheGroup = {
 	fallbackToClosest: true,

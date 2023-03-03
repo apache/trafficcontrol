@@ -116,11 +116,15 @@ export class AsnsTableComponent implements OnInit {
 	 * @param evt The action selected from the context menu.
 	 */
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseASN>): Promise<void> {
-		const data = evt.data as ResponseASN;
+		if (Array.isArray(evt.data)) {
+			console.error("cannot delete multiple ASNs at once:", evt.data);
+			return;
+		}
+		const data = evt.data
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
-					data: {message: `Are you sure you want to delete asn ${data.asn}?`, title: "Confirm Delete"}
+					data: {message: `Are you sure you want to delete ASN ${data.asn}?`, title: "Confirm Delete"}
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {

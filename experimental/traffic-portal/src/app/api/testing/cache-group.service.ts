@@ -586,7 +586,7 @@ export class CacheGroupService {
 	 * @param id Id of the region to delete.
 	 * @returns The deleted region.
 	 */
-	public async deleteRegion(id: number): Promise<ResponseRegion> {
+	public async deleteRegion(id: number | ResponseRegion): Promise<ResponseRegion> {
 		const index = this.regions.findIndex(d => d.id === id);
 		if (index === -1) {
 			throw new Error(`no such Region: ${id}`);
@@ -621,7 +621,7 @@ export class CacheGroupService {
 	 * @param asn Id of the asn to delete.
 	 * @returns The deleted asn.
 	 */
-	public async deleteASN(asn: number): Promise<ResponseASN> {
+	public async deleteASN(asn: number | ResponseASN): Promise<ResponseASN> {
 		const index = this.asns.findIndex(a => a.asn === asn);
 		if (index === -1) {
 			throw new Error(`no such asn: ${asn}`);
