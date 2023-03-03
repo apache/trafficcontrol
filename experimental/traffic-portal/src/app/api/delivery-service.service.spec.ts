@@ -21,6 +21,81 @@ import { constructDataSetFromResponse, DeliveryServiceService } from "./delivery
 const now = new Date();
 const twoSecondsAgo = new Date(now.getTime() - 2000);
 
+/** A dummy DS for testing */
+export const testDS = {
+	active: false,
+	anonymousBlockingEnabled: false,
+	cacheurl: null,
+	ccrDnsTtl: null,
+	cdnId: 1,
+	cdnName: "cdn",
+	checkPath: null,
+	consistentHashQueryParams: null,
+	consistentHashRegex: null,
+	deepCachingType: "NEVER" as const,
+	displayName: "Test Quest",
+	dnsBypassCname: null,
+	dnsBypassIp: null,
+	dnsBypassIp6: null,
+	dnsBypassTtl: null,
+	dscp: 2,
+	ecsEnabled: false,
+	edgeHeaderRewrite: null,
+	exampleURLs: [],
+	firstHeaderRewrite: null,
+	fqPacingRate: 0,
+	geoLimit: 0,
+	geoLimitCountries: null,
+	geoLimitRedirectURL: null,
+	geoProvider: 1,
+	globalMaxMbps: null,
+	globalMaxTps: null,
+	httpBypassFqdn: null,
+	id: 1,
+	infoUrl: null,
+	initialDispersion: 2,
+	innerHeaderRewrite: null,
+	ipv6RoutingEnabled: true,
+	lastHeaderRewrite: null,
+	lastUpdated: new Date(),
+	logsEnabled: false,
+	longDesc: null,
+	matchList: [],
+	maxDnsAnswers: null,
+	maxOriginConnections: 0,
+	maxRequestHeaderBytes: 0,
+	midHeaderRewrite: null,
+	missLat: 0,
+	missLong: 0,
+	multiSiteOrigin: false,
+	orgServerFqdn: "",
+	originShield: null,
+	profileDescription: null,
+	profileId: null,
+	profileName: null,
+	protocol: null,
+	qstringIgnore: null,
+	rangeRequestHandling: null,
+	rangeSliceBlockSize: null,
+	regexRemap: null,
+	regionalGeoBlocking: false,
+	remapText: null,
+	routingName: "cdn",
+	serviceCategory: null,
+	signed: false,
+	signingAlgorithm: null,
+	sslKeyVersion: null,
+	tenant: "root",
+	tenantId: 1,
+	tlsVersions: null,
+	topology: null,
+	trRequestHeaders: null,
+	trResponseHeaders: null,
+	type: "HTTP",
+	typeId: 1,
+	xmlId: "testquest",
+};
+
 /**
  * Generates a basic set of DSStats data for use in tests.
  *
@@ -139,80 +214,6 @@ describe("DeliveryServiceService", () => {
 	let service: DeliveryServiceService;
 	let httpTestingController: HttpTestingController;
 
-	const ds = {
-		active: false,
-		anonymousBlockingEnabled: false,
-		cacheurl: null,
-		ccrDnsTtl: null,
-		cdnId: 1,
-		cdnName: "cdn",
-		checkPath: null,
-		consistentHashQueryParams: null,
-		consistentHashRegex: null,
-		deepCachingType: "NEVER" as const,
-		displayName: "Test Quest",
-		dnsBypassCname: null,
-		dnsBypassIp: null,
-		dnsBypassIp6: null,
-		dnsBypassTtl: null,
-		dscp: 2,
-		ecsEnabled: false,
-		edgeHeaderRewrite: null,
-		exampleURLs: [],
-		firstHeaderRewrite: null,
-		fqPacingRate: 0,
-		geoLimit: 0,
-		geoLimitCountries: null,
-		geoLimitRedirectURL: null,
-		geoProvider: 1,
-		globalMaxMbps: null,
-		globalMaxTps: null,
-		httpBypassFqdn: null,
-		id: 1,
-		infoUrl: null,
-		initialDispersion: 2,
-		innerHeaderRewrite: null,
-		ipv6RoutingEnabled: true,
-		lastHeaderRewrite: null,
-		lastUpdated: new Date(),
-		logsEnabled: false,
-		longDesc: null,
-		matchList: [],
-		maxDnsAnswers: null,
-		maxOriginConnections: 0,
-		maxRequestHeaderBytes: 0,
-		midHeaderRewrite: null,
-		missLat: 0,
-		missLong: 0,
-		multiSiteOrigin: false,
-		orgServerFqdn: "",
-		originShield: null,
-		profileDescription: null,
-		profileId: null,
-		profileName: null,
-		protocol: null,
-		qstringIgnore: null,
-		rangeRequestHandling: null,
-		rangeSliceBlockSize: null,
-		regexRemap: null,
-		regionalGeoBlocking: false,
-		remapText: null,
-		routingName: "cdn",
-		serviceCategory: null,
-		signed: false,
-		signingAlgorithm: null,
-		sslKeyVersion: null,
-		tenant: "root",
-		tenantId: 1,
-		tlsVersions: null,
-		topology: null,
-		trRequestHeaders: null,
-		trResponseHeaders: null,
-		type: "HTTP",
-		typeId: 1,
-		xmlId: "testquest",
-	};
-
 	beforeEach(() => {
 		TestBed.configureTestingModule({
 			imports: [HttpClientTestingModule],
@@ -280,10 +281,10 @@ describe("DeliveryServiceService", () => {
 		const interval = "60s";
 
 		it("sends requests for KBPS stats", async () => {
-			const responseP = service.getDSKBPS(ds, twoSecondsAgo, now, interval, false);
+			const responseP = service.getDSKBPS(testDS, twoSecondsAgo, now, interval, false);
 			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/deliveryservice_stats`);
 			expect(req.request.params.keys().length).toBe(6);
-			expect(req.request.params.get("deliveryServiceName")).toBe(ds.xmlId);
+			expect(req.request.params.get("deliveryServiceName")).toBe(testDS.xmlId);
 			expect(req.request.params.get("endDate")).toBe(now.toISOString());
 			expect(req.request.params.get("startDate")).toBe(twoSecondsAgo.toISOString());
 			expect(req.request.params.get("metricType")).toBe("kbps");
@@ -295,10 +296,10 @@ describe("DeliveryServiceService", () => {
 		});
 
 		it("sends requests for KBPS stats, returning only the data series", async () => {
-			const responseP = service.getDSKBPS(ds.xmlId, twoSecondsAgo, now, interval, true, true);
+			const responseP = service.getDSKBPS(testDS.xmlId, twoSecondsAgo, now, interval, true, true);
 			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/deliveryservice_stats`);
 			expect(req.request.params.keys().length).toBe(7);
-			expect(req.request.params.get("deliveryServiceName")).toBe(ds.xmlId);
+			expect(req.request.params.get("deliveryServiceName")).toBe(testDS.xmlId);
 			expect(req.request.params.get("endDate")).toBe(now.toISOString());
 			expect(req.request.params.get("startDate")).toBe(twoSecondsAgo.toISOString());
 			expect(req.request.params.get("metricType")).toBe("kbps");
@@ -311,17 +312,17 @@ describe("DeliveryServiceService", () => {
 		});
 
 		it("throws an error when only data is requested, but TO omits it", async () => {
-			const responseP = service.getDSKBPS(ds.xmlId, twoSecondsAgo, now, interval, true, true);
+			const responseP = service.getDSKBPS(testDS.xmlId, twoSecondsAgo, now, interval, true, true);
 			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/deliveryservice_stats`);
 			req.flush({response: {}});
 			await expectAsync(responseP).toBeRejectedWithError("no data series found");
 		});
 
 		it("sends requests for TPS stats", async () => {
-			let responseP = service.getDSTPS(ds, twoSecondsAgo, now, interval, false);
+			let responseP = service.getDSTPS(testDS, twoSecondsAgo, now, interval, false);
 			let req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/deliveryservice_stats`);
 			expect(req.request.params.keys().length).toBe(6);
-			expect(req.request.params.get("deliveryServiceName")).toBe(ds.xmlId);
+			expect(req.request.params.get("deliveryServiceName")).toBe(testDS.xmlId);
 			expect(req.request.params.get("endDate")).toBe(now.toISOString());
 			expect(req.request.params.get("startDate")).toBe(twoSecondsAgo.toISOString());
 			expect(req.request.params.get("metricType")).toBe("tps_total");
@@ -331,10 +332,10 @@ describe("DeliveryServiceService", () => {
 			req.flush({response});
 			await expectAsync(responseP).toBeResolvedTo(response);
 
-			responseP = service.getDSTPS(ds.xmlId, twoSecondsAgo, now, interval, true);
+			responseP = service.getDSTPS(testDS.xmlId, twoSecondsAgo, now, interval, true);
 			req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/deliveryservice_stats`);
 			expect(req.request.params.keys().length).toBe(6);
-			expect(req.request.params.get("deliveryServiceName")).toBe(ds.xmlId);
+			expect(req.request.params.get("deliveryServiceName")).toBe(testDS.xmlId);
 			expect(req.request.params.get("endDate")).toBe(now.toISOString());
 			expect(req.request.params.get("startDate")).toBe(twoSecondsAgo.toISOString());
 			expect(req.request.params.get("metricType")).toBe("tps_total");
@@ -351,7 +352,7 @@ describe("DeliveryServiceService", () => {
 			const redirectionResponse = getDSStats(DSStatsMetricType.TPS_3XX);
 			const clientErrorResponse = getDSStats(DSStatsMetricType.TPS_4XX);
 			const serverErrorResponse = getDSStats(DSStatsMetricType.TPS_5XX);
-			const responseP = service.getAllDSTPSData(ds, twoSecondsAgo, now, interval);
+			const responseP = service.getAllDSTPSData(testDS, twoSecondsAgo, now, interval);
 
 			const requests = httpTestingController.match(r => r.url === `/api/${service.apiVersion}/deliveryservice_stats`);
 			if (requests.length !== 5) {
@@ -362,7 +363,7 @@ describe("DeliveryServiceService", () => {
 				expect(req.request.params.keys().length).toBe(6);
 				expect(req.request.params.get("serverType")).toBe("edge");
 				expect(req.request.params.get("interval")).toBe(interval);
-				expect(req.request.params.get("deliveryServiceName")).toBe(ds.xmlId);
+				expect(req.request.params.get("deliveryServiceName")).toBe(testDS.xmlId);
 				expect(req.request.params.get("startDate")).toBe(twoSecondsAgo.toISOString());
 				expect(req.request.params.get("endDate")).toBe(now.toISOString());
 				expect(req.request.method).toBe("GET");
@@ -399,7 +400,7 @@ describe("DeliveryServiceService", () => {
 		});
 
 		it("throws an error when encountering an unknown data series type", async () => {
-			const responseP = service.getAllDSTPSData(ds.xmlId, twoSecondsAgo, now, interval, true);
+			const responseP = service.getAllDSTPSData(testDS.xmlId, twoSecondsAgo, now, interval, true);
 
 			const requests = httpTestingController.match(r => r.url === `/api/${service.apiVersion}/deliveryservice_stats`);
 			if (requests.length !== 5) {
@@ -410,7 +411,7 @@ describe("DeliveryServiceService", () => {
 				expect(req.request.params.keys().length).toBe(6);
 				expect(req.request.params.get("serverType")).toBe("mid");
 				expect(req.request.params.get("interval")).toBe(interval);
-				expect(req.request.params.get("deliveryServiceName")).toBe(ds.xmlId);
+				expect(req.request.params.get("deliveryServiceName")).toBe(testDS.xmlId);
 				expect(req.request.params.get("startDate")).toBe(twoSecondsAgo.toISOString());
 				expect(req.request.params.get("endDate")).toBe(now.toISOString());
 				expect(req.request.method).toBe("GET");
@@ -447,8 +448,8 @@ describe("DeliveryServiceService", () => {
 		});
 
 		it("gets DS health", async () => {
-			const responseP = service.getDSHealth(ds);
-			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices/${ds.id}/health`);
+			const responseP = service.getDSHealth(testDS);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices/${testDS.id}/health`);
 			expect(req.request.params.keys().length).toBe(0);
 			expect(req.request.method).toBe("GET");
 			req.flush(health);
@@ -456,8 +457,8 @@ describe("DeliveryServiceService", () => {
 		});
 
 		it("gets DS health by DS ID", async () => {
-			const responseP = service.getDSHealth(ds.id);
-			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices/${ds.id}/health`);
+			const responseP = service.getDSHealth(testDS.id);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices/${testDS.id}/health`);
 			expect(req.request.params.keys().length).toBe(0);
 			expect(req.request.method).toBe("GET");
 			req.flush(health);
@@ -465,8 +466,8 @@ describe("DeliveryServiceService", () => {
 		});
 
 		it("gets DS capacity", async () => {
-			const responseP = service.getDSCapacity(ds);
-			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices/${ds.id}/capacity`);
+			const responseP = service.getDSCapacity(testDS);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices/${testDS.id}/capacity`);
 			expect(req.request.params.keys().length).toBe(0);
 			expect(req.request.method).toBe("GET");
 			req.flush(capacity);
@@ -474,8 +475,8 @@ describe("DeliveryServiceService", () => {
 		});
 
 		it("gets DS capacity by DS ID", async () => {
-			const responseP = service.getDSCapacity(ds.id);
-			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices/${ds.id}/capacity`);
+			const responseP = service.getDSCapacity(testDS.id);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices/${testDS.id}/capacity`);
 			expect(req.request.params.keys().length).toBe(0);
 			expect(req.request.method).toBe("GET");
 			req.flush(capacity);
@@ -489,37 +490,37 @@ describe("DeliveryServiceService", () => {
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices`);
 			expect(req.request.params.keys().length).toBe(0);
 			expect(req.request.method).toBe("GET");
-			req.flush({response: [ds]});
-			await expectAsync(responseP).toBeResolvedTo([ds]);
+			req.flush({response: [testDS]});
+			await expectAsync(responseP).toBeResolvedTo([testDS]);
 		});
 
 		it("gets a single Delivery Service by ID", async () => {
-			const responseP = service.getDeliveryServices(ds.id);
+			const responseP = service.getDeliveryServices(testDS.id);
 			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/deliveryservices`);
 			expect(req.request.params.keys().length).toBe(1);
-			expect(req.request.params.get("id")).toBe(String(ds.id));
+			expect(req.request.params.get("id")).toBe(String(testDS.id));
 			expect(req.request.method).toBe("GET");
-			req.flush({response: [ds]});
-			await expectAsync(responseP).toBeResolvedTo(ds);
+			req.flush({response: [testDS]});
+			await expectAsync(responseP).toBeResolvedTo(testDS);
 		});
 
 		it("throws an error when more than one Delivery Service exists by a given XMLID", async () => {
-			const responseP = service.getDeliveryServices(ds.xmlId);
+			const responseP = service.getDeliveryServices(testDS.xmlId);
 			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/deliveryservices`);
 			expect(req.request.params.keys().length).toBe(1);
-			expect(req.request.params.get("xmlId")).toBe(ds.xmlId);
+			expect(req.request.params.get("xmlId")).toBe(testDS.xmlId);
 			expect(req.request.method).toBe("GET");
-			req.flush({response: [ds, ds]});
+			req.flush({response: [testDS, testDS]});
 			await expectAsync(responseP).toBeRejected();
 		});
 
 		it("submits requests to create new Delivery Services", async () => {
-			const responseP = service.createDeliveryService(ds);
+			const responseP = service.createDeliveryService(testDS);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/deliveryservices`);
 			expect(req.request.method).toBe("POST");
-			expect(req.request.body).toEqual(ds);
-			req.flush({response: ds});
-			await expectAsync(responseP).toBeResolvedTo(ds);
+			expect(req.request.body).toEqual(testDS);
+			req.flush({response: testDS});
+			await expectAsync(responseP).toBeResolvedTo(testDS);
 		});
 	});
 

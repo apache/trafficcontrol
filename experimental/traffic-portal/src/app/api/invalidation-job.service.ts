@@ -16,7 +16,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type { RequestInvalidationJob, ResponseDeliveryService, ResponseInvalidationJob, ResponseUser } from "trafficops-types";
 
-import { APIService } from "./base-api.service";
+import { APIService, type QueryParams } from "./base-api.service";
 
 /**
  * JobOpts defines the options that can be passed to getInvalidationJobs.
@@ -52,22 +52,22 @@ export class InvalidationJobService extends APIService {
 	 */
 	public async getInvalidationJobs(opts?: JobOpts): Promise<Array<ResponseInvalidationJob>> {
 		const path = "jobs";
-		const params: Record<string, string> = {};
+		const params: QueryParams = {};
 		if (opts) {
 			if (opts.id) {
-				params.id = String(opts.id);
+				params.id = opts.id;
 			}
 			if (opts.dsID) {
-				params.dsId = String(opts.dsID);
+				params.dsId = opts.dsID;
 			}
 			if (opts.userId) {
-				params.userId = String(opts.userId);
+				params.userId = opts.userId;
 			}
-			if (opts.deliveryService && opts.deliveryService.id) {
-				params.dsId = String(opts.deliveryService.id);
+			if (opts.deliveryService) {
+				params.dsId = opts.deliveryService.id;
 			}
-			if (opts.user && opts.user.id) {
-				params.userId = String(opts.user.id);
+			if (opts.user) {
+				params.userId = opts.user.id;
 			}
 		}
 		return this.get<Array<ResponseInvalidationJob>>(path, undefined, params).toPromise();
@@ -80,8 +80,7 @@ export class InvalidationJobService extends APIService {
 	 * @returns whether or not creation succeeded.
 	 */
 	public async createInvalidationJob(job: RequestInvalidationJob): Promise<ResponseInvalidationJob> {
-		const path = "jobs";
-		return this.post<ResponseInvalidationJob>(path, job).toPromise();
+		return this.post<ResponseInvalidationJob>("jobs", job).toPromise();
 	}
 
 	/**
@@ -91,16 +90,17 @@ export class InvalidationJobService extends APIService {
 	 * @returns The edited Job as returned by the server.
 	 */
 	public async updateInvalidationJob(job: ResponseInvalidationJob): Promise<ResponseInvalidationJob> {
-		return this.put<ResponseInvalidationJob>("jobs", job, {id: String(job.id)}).toPromise();
+		return this.put<ResponseInvalidationJob>("jobs", job, {id: job.id}).toPromise();
 	}
 
 	/**
 	 * Deletes a Job.
 	 *
-	 * @param id The ID of the Job to delete.
+	 * @param job The Job to delete, or just its ID.
 	 * @returns The deleted Job.
 	 */
-	public async deleteInvalidationJob(id: number): Promise<ResponseInvalidationJob> {
-		return this.delete<ResponseInvalidationJob>("jobs", undefined, {id: String(id)}).toPromise();
+	public async deleteInvalidationJob(job: number | ResponseInvalidationJob): Promise<ResponseInvalidationJob> {
+		const id = typeof(job) === "number" ? job : job.id;
+		return this.delete<ResponseInvalidationJob>("jobs", undefined, {id}).toPromise();
 	}
 }
