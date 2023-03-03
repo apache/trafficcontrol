@@ -22,7 +22,7 @@ services:
     image: licenseweasel/weasel:v0.4
     volumes:
       - ../../..:/trafficcontrol:z
-    command: ['-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol']
+    command: [ '-f', '/trafficcontrol/dist/weasel.txt', '/trafficcontrol' ]
 
   source:
     image: apache/traffic_source_tarballer:master
@@ -104,7 +104,6 @@ services:
     image: apache/traffic_portal_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
-      target: traffic_portal_v1
       context: ../../..
       args:
         # Change BASE_IMAGE to centos when RHEL_VERSION=7
@@ -119,11 +118,9 @@ services:
       - ../../../.npm:/root/.npm:z
 
   traffic_portal_v2_build:
-    container_name: traffic_portal_v2
-    image: apache/traffic_portal_v2_builder:master
+    image: apache/traffic_portal_builder:master
     build:
       dockerfile: infrastructure/docker/build/Dockerfile-traffic_portal
-      target: traffic_portal_v2
       context: ../../..
       args:
         # Change BASE_IMAGE to centos when RHEL_VERSION=7
@@ -136,6 +133,7 @@ services:
     volumes:
       - ../../..:/trafficcontrol:z
       - ../../../.npm:/root/.npm:z
+    command: [ "/bin/bash", "-c", "mkdir -p /trafficcontrol/experimental/traffic-portal && ln -s /trafficcontrol/experimental/traffic-portal/ /trafficcontrol/traffic_portal_v2 && /trafficcontrol/build/clean_build.sh traffic_portal_v2", ]
 
   traffic_router_build:
     image: apache/traffic_router_builder:master
