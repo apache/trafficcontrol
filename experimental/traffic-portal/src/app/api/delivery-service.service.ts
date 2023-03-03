@@ -16,6 +16,7 @@ import { Injectable } from "@angular/core";
 import type {
 	Capacity,
 	Health,
+	DSStats,
 	RequestDeliveryService,
 	ResponseDeliveryService,
 	SteeringConfiguration,
@@ -24,7 +25,6 @@ import type {
 
 import type {
 	DataPoint,
-	DataSet,
 	DataSetWithSummary,
 	TPSData,
 } from "src/app/models";
@@ -32,56 +32,24 @@ import type {
 import { APIService } from "./base-api.service";
 
 /**
- * The type of a raw response returned from the API that has to be massaged
- * into a DataSet.
- */
-interface DataResponse {
-	series: {
-		name: string;
-		values: Array<[number, number | null]>;
-	};
-	summary?: {
-		min: number;
-		max: number;
-		fifthPercentile: number;
-		ninetyFifthPercentile: number;
-		ninetyEightPercentile: number;
-		mean: number;
-	};
-}
-
-/**
- * Checks that a given object represents a proper data set.
+ * Generates a default, blank data set with the given label.
  *
- * @param r The 'response' object from the API response.
- * @returns Always 'true' - if the assertion fails, an error is thrown rather than returning 'false'.
- * @throws When 'r' is not a 'DataResponse'.
+ * @param label The dataset's label.
+ * @returns A dataset with no data points and all metrics set to `0`.
  */
-function isDataResponse(r: object): r is DataResponse {
-	if (!Object.prototype.hasOwnProperty.call(r, "series")) {
-		throw new Error("no series data");
-	}
-	if (!Object.prototype.hasOwnProperty.call((r as {series: unknown}), "series")) {
-		throw new Error("series data has no name");
-	}
-	const nameType = typeof((r as {series: {name: unknown}}).series.name);
-	if (nameType !== "string") {
-		throw new Error(`invalid series name, expected a string, got ${nameType}`);
-	}
-	if (!Object.prototype.hasOwnProperty.call((r as {series: object}).series, "values") ||
-		(r as {series: {values: unknown}}).series === null) {
-		// just fix this silently.
-		(r as {series: Record<symbol | string, unknown>}).series.values = new Array<[number, number]>();
-	} else if (!((r as {series: {values: unknown}}).series.values instanceof Array)) {
-		throw new Error(`series values are not an array or missing/null, got: ${typeof(r as {series: {values: unknown}}).series.values}`);
-	}
-
-	// At this point we assume the summary data either isn't present or
-	// is fully compliant with the expected format. That's because the
-	// common problem is old API versions not returning the 'series'
-	// property - there is no known issue that would cause it to not
-	// return a proper 'summary' (if one is returned at all).
-	return true;
+function defaultDataSet(label: string): DataSetWithSummary {
+	return {
+		dataSet: {
+			data: [],
+			label,
+		},
+		fifthPercentile: 0,
+		max: 0,
+		mean: 0,
+		min: 0,
+		ninetyEighthPercentile: 0,
+		ninetyFifthPercentile: 0,
+	};
 }
 
 /**
@@ -90,14 +58,10 @@ function isDataResponse(r: object): r is DataResponse {
  * @param r The parsed response body.
  * @returns A DataSetWithSummary that was massaged out of the raw response.
  */
-function constructDataSetFromResponse(r: object): DataSetWithSummary {
-	try {
-		if (!isDataResponse(r)) {
-			throw new Error("response is not a data series");
-		}
-	} catch (e) {
-		console.log("response:", r);
-		throw new Error(`invalid data set response: ${e}`);
+export function constructDataSetFromResponse(r: DSStats): DataSetWithSummary {
+	if (!r.series) {
+		console.error("raw DS stats response:", r);
+		throw new Error("invalid data set response");
 	}
 
 	const data = new Array<DataPoint>();
@@ -120,7 +84,7 @@ function constructDataSetFromResponse(r: object): DataSetWithSummary {
 		fifth = r.summary.fifthPercentile;
 		nfifth = r.summary.ninetyFifthPercentile;
 		neight = r.summary.ninetyEightPercentile;
-		mean = r.summary.mean;
+		mean = r.summary.average;
 	} else {
 		min = -1;
 		max = -1;
@@ -131,14 +95,14 @@ function constructDataSetFromResponse(r: object): DataSetWithSummary {
 	}
 
 	return {
-		dataSet: {data, label: r.series.name.split(".")[0]} as DataSet,
+		dataSet: {data, label: r.series.name.split(".")[0]},
 		fifthPercentile: fifth,
 		max,
 		mean,
 		min,
 		ninetyEighthPercentile: neight,
 		ninetyFifthPercentile: nfifth
-	} as DataSetWithSummary;
+	};
 }
 
 /**
@@ -161,23 +125,37 @@ export class DeliveryServiceService extends APIService {
 	}
 
 	/**
-	 * Gets a list of all Steering Configurations
+	 * Gets a list of all Steering Configurations.
 	 *
-	 * @returns An array of Steering Configurations
+	 * @returns An array of Steering Configurations.
 	 */
 	public async getSteering(): Promise<Array<SteeringConfiguration>> {
 		const path = "steering";
 		return this.get<Array<SteeringConfiguration>>(path).toPromise();
 	}
 
+	/**
+	 * Get a single Delivery Service.
+	 *
+	 * @param id A unique identifier for a Delivery Service - either its numeric
+	 * ID or its "XML_ID".
+	 * @returns the Delivery Service with the given identifier.
+	 */
 	public async getDeliveryServices(id: string | number): Promise<ResponseDeliveryService>;
+	/**
+	 * Gets a list of all visible Delivery Services
+	 *
+	 * @returns An array of {@link ResponseDeliveryService} objects.
+	 */
 	public async getDeliveryServices(): Promise<Array<ResponseDeliveryService>>;
 	/**
 	 * Gets a list of all visible Delivery Services
 	 *
-	 * @param id A unique identifier for a Delivery Service - either a numeric id or an "xml_id"
-	 * @throws TypeError if ``id`` is not a proper type
-	 * @returns An array of `DeliveryService` objects.
+	 * @param id A unique identifier for a single Delivery Service to fetch.
+	 * This may be either its numeric ID or its "XML_ID".
+	 * @throws {Error} If no DS with a given `id` is found, or if more than one
+	 * is found.
+	 * @returns One or more Delivery Services.
 	 */
 	public async getDeliveryServices(id?: string | number): Promise<ResponseDeliveryService[] | ResponseDeliveryService> {
 		const path = "deliveryservices";
@@ -190,7 +168,7 @@ export class DeliveryServiceService extends APIService {
 					params = {xml_id: id};
 					break;
 				case "number":
-					params = {id: String(id)};
+					params = { id };
 			}
 			const r = await this.get<[ResponseDeliveryService]>(path, undefined, params).toPromise();
 			return r[0];
@@ -218,19 +196,8 @@ export class DeliveryServiceService extends APIService {
 	 * @throws If `d` is a {@link DeliveryService} that has no (valid) id
 	 */
 	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<Capacity> {
-		let id: number;
-		if (typeof d === "number") {
-			id = d;
-		} else {
-			d = d;
-			if (!d.id || d.id < 0) {
-				throw new Error("Delivery Service id must be defined!");
-			}
-			id = d.id;
-		}
-
-		const path = `deliveryservices/${id}/capacity`;
-		return this.get<Capacity>(path).toPromise();
+		const id = typeof(d) === "number" ? d : d.id;
+		return this.get<Capacity>(`deliveryservices/${id}/capacity`).toPromise();
 	}
 
 	/**
@@ -246,19 +213,28 @@ export class DeliveryServiceService extends APIService {
 	}
 
 	public async getDSKBPS(
-		d: string, start: Date, end: Date, interval: string, useMids: boolean, dataOnly: true): Promise<Array<DataPoint>>;
-	public async getDSKBPS(d: string, start: Date, end: Date, interval: string, useMids: boolean, dataOnly?: false): Promise<DataResponse>;
+		d: string | ResponseDeliveryService,
+		start: Date,
+		end: Date,
+		interval: string,
+		useMids: boolean
+	): Promise<DSStats>;
 	/**
-	 * Retrieves Delivery Service throughput statistics for a given time period, averaged over a given
-	 * interval.
+	 * Retrieves Delivery Service throughput statistics for a given time period,
+	 * averaged over a given interval.
 	 *
-	 * @param d The `xml_id` of a Delivery Service
-	 * @param start A date/time from which to start data collection
-	 * @param end A date/time at which to end data collection
-	 * @param interval A unit-suffixed interval over which data will be "binned"
-	 * @param useMids Collect data regarding Mid-tier cache servers rather than Edge-tier cache servers
-	 * @param dataOnly Only returns the data series, not any supplementing meta info found in the API response
-	 * @returns An Array of datapoint Arrays (length 2 containing a date string and data value)
+	 * @param d The `xml_id` of a Delivery Service, or the Delivery Service
+	 * itself.
+	 * @param start A date/time from which to start data collection.
+	 * @param end A date/time at which to end data collection.
+	 * @param interval A unit-suffixed interval over which data will be
+	 * "binned".
+	 * @param useMids Collect data regarding Mid-tier cache servers rather than
+	 * Edge-tier cache servers
+	 * @param dataOnly Only returns the data series, not any supplementing meta
+	 * info found in the API response.
+	 * @returns An Array of {@link DataPoint}s if only data was requested, or
+	 * the entire API response otherwise.
 	 */
 	public async getDSKBPS(
 		d: string,
@@ -267,7 +243,7 @@ export class DeliveryServiceService extends APIService {
 		interval: string,
 		useMids: boolean,
 		dataOnly?: boolean
-	): Promise<Array<DataPoint> | DataResponse> {
+	): Promise<Array<DataPoint> | DSStats> {
 		const path = "deliveryservice_stats";
 		const params = {
 			deliveryServiceName: d,
@@ -277,39 +253,25 @@ export class DeliveryServiceService extends APIService {
 			serverType: useMids ? "mid" : "edge",
 			startDate: start.toISOString()
 		};
-		return this.get<object>(path, undefined, params).toPromise().then(
-			r => {
-				try {
-					if (!isDataResponse(r)) {
-						throw new Error("invalid data from getDSKBPS");
+
+		if (dataOnly) {
+			const r = await this.get<DSStats>(path, undefined, {exclude: "summary", ...params}).toPromise();
+			if (r.series && r.series.values) {
+				const series = [];
+				for (const [t, y] of r.series.values) {
+					if (y !== null) {
+						series.push({
+							t,
+							y: y.toFixed(3)
+						});
 					}
-				} catch (e) {
-					throw new Error(`invalid data set returned from ${path}: ${e}`);
 				}
-				if (dataOnly) {
-					if (r.hasOwnProperty("series") && (r.series.hasOwnProperty("values"))) {
-						return r.series.values.filter(ds => ds[1] !== null).map(
-							ds => ({
-								t: new Date(ds[0]),
-								y: (ds[1] as number).toFixed(3)
-							})
-						);
-					}
-					throw new Error(`no data series found (path was "${path}")`);
-				}
-				return r;
+				return series;
 			}
-		).catch(
-			e => {
-				console.error("Failed to get Delivery Service KBPS data:", e);
-				return dataOnly ? [] : {
-					series: {
-						name: "",
-						values: []
-					}
-				};
-			}
-		);
+			console.error("data response:", r);
+			throw new Error("no data series found");
+		}
+		return this.get<DSStats>(path, undefined, params).toPromise();
 	}
 
 	/**
@@ -328,7 +290,7 @@ export class DeliveryServiceService extends APIService {
 		end: Date,
 		interval: string,
 		useMids?: boolean
-	): Promise<DataResponse> {
+	): Promise<DSStats> {
 		const path = "deliveryservice_stats";
 		const params = {
 			deliveryServiceName: d,
@@ -338,17 +300,7 @@ export class DeliveryServiceService extends APIService {
 			serverType: useMids ? "mid" : "edge",
 			startDate: start.toISOString()
 		};
-		return this.get<DataResponse>(path, undefined, params).toPromise().catch(
-			e => {
-				console.error("Failed to get Delivery Service TPS data:", e);
-				return {
-					series: {
-						name: "",
-						values: []
-					}
-				};
-			}
-		);
+		return this.get<DSStats>(path, undefined, params).toPromise();
 	}
 
 	/**
@@ -385,53 +337,49 @@ export class DeliveryServiceService extends APIService {
 		];
 
 		const observables = metricTypes.map(
-			async x => this.get<object>(path, undefined, {metricType: x, ...params}).toPromise().then(constructDataSetFromResponse)
+			async x => this.get<DSStats>(path, undefined, {metricType: x, ...params}).toPromise().then(constructDataSetFromResponse)
 		);
 
-		return Promise.all(observables).then(data => data.reduce(
-			(output: TPSData, result: DataSetWithSummary): TPSData => {
-				switch (result.dataSet.label) {
-					case "tps_total":
-						output.total = result;
-						break;
-					case "tps_1xx":
-						output.informational = result;
-						break;
-					case "tps_2xx":
-						output.success = result;
-						break;
-					case "tps_3xx":
-						output.redirection = result;
-						break;
-					case "tps_4xx":
-						output.clientError = result;
-						break;
-					case "tps_5xx":
-						output.serverError = result;
-						break;
-					default:
-						throw new Error(`Unknown data set type: "${result.dataSet.label}"`);
-				}
-				return output;
-			},
-			({
-				clientError: null,
-				informational: null,
-				redirection: null,
-				serverError: null,
-				success: null,
-				total: null
-			} as unknown) as TPSData
-		));
+		const data = await Promise.all(observables);
+		const output: TPSData = {
+			clientError: defaultDataSet("tps_4xx"),
+			redirection: defaultDataSet("tps_3xx"),
+			serverError: defaultDataSet("tps_5xx"),
+			success: defaultDataSet("tps_2xx"),
+			total: defaultDataSet("tps_total"),
+		};
+		for (const dataSet of data) {
+			switch (dataSet.dataSet.label) {
+				case "tps_total":
+					output.total = dataSet;
+					break;
+				case "tps_2xx":
+					output.success = dataSet;
+					break;
+				case "tps_3xx":
+					output.redirection = dataSet;
+					break;
+				case "tps_4xx":
+					output.clientError = dataSet;
+					break;
+				case "tps_5xx":
+					output.serverError = dataSet;
+					break;
+				default:
+					throw new Error(`Unknown data set type: "${dataSet.dataSet.label}"`);
+			}
+		}
+		return output;
 	}
 
 	/**
-	 * This method is handled seperately from :js:method:`APIService.getTypes` because this information
-	 * (should) never change, and therefore can be cached. This method makes an HTTP request iff the values are not already
+	 * This method is handled separately from `TypeService.getTypes`
+	 * because this information (should) never change, and therefore can be
+	 * cached. This method makes an HTTP request iff the values are not already
 	 * cached.
 	 *
-	 * @returns An array of all of the Type objects in Traffic Ops that refer specifically to Delivery Service
-	 * 	types.
+	 * @returns An array of all of the Type objects in Traffic Ops that refer
+	 * specifically to Delivery Service types.
 	 */
 	public async getDSTypes(): Promise<Array<TypeFromResponse>> {
 		if (this.deliveryServiceTypes.length > 0) {
