@@ -163,14 +163,15 @@ export class DeliveryServiceService extends APIService {
 			let params;
 			switch (typeof id) {
 				case "string":
-					// Part of the API spec, unfortunately
-					// eslint-disable-next-line @typescript-eslint/naming-convention
-					params = {xml_id: id};
+					params = {xmlId: id};
 					break;
 				case "number":
 					params = { id };
 			}
 			const r = await this.get<[ResponseDeliveryService]>(path, undefined, params).toPromise();
+			if (r.length !== 1) {
+				throw new Error(`expected exactly one Delivery Service by identifier '${id}', got: ${r.length}`);
+			}
 			return r[0];
 		}
 		return this.get<Array<ResponseDeliveryService>>(path).toPromise();
