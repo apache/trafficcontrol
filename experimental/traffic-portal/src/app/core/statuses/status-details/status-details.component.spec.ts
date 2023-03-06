@@ -22,12 +22,14 @@ import { MatInputModule } from "@angular/material/input";
 import { BrowserDynamicTestingModule } from "@angular/platform-browser-dynamic/testing";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
+
 import { StatusesService } from "src/app/api/statuses.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { SharedModule } from "src/app/shared/shared.module";
+
 import { StatusDetailsComponent } from "./status-details.component";
 
-const status = { id: 1, name: 'test', description: 'test', lastUpdated: new Date('02/02/2023') };
+const status = { id: 1, name: "test", description: "test", lastUpdated: new Date("02/02/2023") };
 
 describe("StatusDetailsComponent", () => {
 	let component: StatusDetailsComponent;
@@ -39,7 +41,7 @@ describe("StatusDetailsComponent", () => {
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule.withRoutes([
-					{ path: 'core/statuses/:id', component: StatusDetailsComponent }
+					{ path: "core/statuses/:id", component: StatusDetailsComponent }
 				]),
 				ReactiveFormsModule,
 				MatFormFieldModule,
@@ -71,24 +73,24 @@ describe("StatusDetailsComponent", () => {
 	it("submits a update status request", fakeAsync(() => {
 		const service = TestBed.inject(StatusesService);
 		component.statusDetailsForm.setValue(status);
-		spyOn(service, 'updateStatus').and.returnValue(Promise.resolve(status));
+		spyOn(service, "updateStatus").and.returnValue(Promise.resolve(status));
 		component.updateStatus();
 
 		service.updateStatus(component.statusDetailsForm.value, 1).then((result) => {
 			expect(result).toEqual(status);
-		})
+		});
 	}));
 
 	it("submits a status creation request", fakeAsync(() => {
 		const service = TestBed.inject(StatusesService);
 		component.statusDetailsForm.setValue(status);
-		spyOn(service, 'createStatus').and.returnValue(Promise.resolve(status));
+		spyOn(service, "createStatus").and.returnValue(Promise.resolve(status));
 		component.createStatus();
 
 		service.createStatus(component.statusDetailsForm.value).then((result) => {
 			expect(result).toEqual(status);
-			router.navigate(['/core/statuses/1']);
-		})
+			router.navigate(["/core/statuses/1"]);
+		});
 	}));
 
 });
