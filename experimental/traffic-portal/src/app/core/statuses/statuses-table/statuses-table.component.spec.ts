@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 import { HttpClientTestingModule } from "@angular/common/http/testing";
-import { ComponentFixture, fakeAsync, TestBed } from "@angular/core/testing";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule } from "@angular/forms";
 import { MatCardModule } from "@angular/material/card";
 import { RouterTestingModule } from "@angular/router/testing";
@@ -22,13 +22,14 @@ import { SharedModule } from "src/app/shared/shared.module";
 
 import { StatusesTableComponent } from "./statuses-table.component";
 
-const statuses = [{id:1,name:"test",description:"test",lastUpdated:new Date("02/02/2023")}];
+const statuses = [{description: "test", id: 1,lastUpdated: new Date("02/02/2023"), name: "test"}];
 describe("StatusesTableComponent", () => {
 	let component: StatusesTableComponent;
 	let fixture: ComponentFixture<StatusesTableComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
+			declarations: [ StatusesTableComponent ],
 			imports:[
 				RouterTestingModule,
 				HttpClientTestingModule,
@@ -36,7 +37,6 @@ describe("StatusesTableComponent", () => {
 				MatCardModule,
 				SharedModule
 			],
-			declarations: [ StatusesTableComponent ],
 			providers:[ServerService]
 		})
 			.compileComponents();
@@ -50,7 +50,7 @@ describe("StatusesTableComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it("should get all statuses from getStatuses",fakeAsync(()=>{
+	it("should get all statuses from getStatuses",(()=>{
 		const service = fixture.debugElement.injector.get(ServerService);
 		spyOn(service, "getStatuses").and.returnValue(Promise.resolve(statuses));
 

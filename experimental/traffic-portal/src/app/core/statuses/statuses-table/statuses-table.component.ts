@@ -17,16 +17,25 @@ import { ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
 import { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
+/**
+ * StatusesTableComponent is the controller for the statuses page - which
+ * principally contains a table.
+ */
 @Component({
+	providers:[ ServerService ],
 	selector: "tp-statuses-table",
+	styleUrls: ["./statuses-table.component.scss"],
 	templateUrl: "./statuses-table.component.html",
-	styleUrls: ["./statuses-table.component.scss"]
 })
 export class StatusesTableComponent implements OnInit {
 
-	statuses: ResponseStatus[] = [];
-	columnDefs = [
+	/** All of the statues which should appear in the table. */
+	public statuses: ResponseStatus[] = [];
+
+	/** Definitions of the table's columns according to the ag-grid API */
+	public columnDefs = [
 		{
 			field: "name",
 			headerName: "Name",
@@ -41,7 +50,7 @@ export class StatusesTableComponent implements OnInit {
 	/** The current search text. */
 	public searchText = "";
 
-	/** Definitions for the context menu items (which act on user data). */
+	/** Definitions for the context menu items (which act on statuses data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseStatus>> = [
 		{
 			href: (u: ResponseStatus): string => `${u.id}`,
@@ -55,16 +64,28 @@ export class StatusesTableComponent implements OnInit {
 
 	/** Emits changes to the fuzzy search text. */
 	public fuzzySubject = new BehaviorSubject("");
+
+	/**
+	 * Constructs the component with its required injections.
+	 *
+	 * @param serverService The Servers API which is used to provide row data.
+	 * @param navSvc Manages the header
+	 */
 	constructor(
 		private readonly serverService: ServerService,
-	) { }
+		private readonly navSvc: NavigationService,
+	) {
+		this.fuzzySubject = new BehaviorSubject<string>("");
+		this.navSvc.headerTitle.next("Statuses");
+	}
 
-	ngOnInit(): void {
+	/** Initializes table data, loading it from Traffic Ops. */
+	public ngOnInit(): void {
 		this.getStatuses();
 	}
 
 	/** Reloads the servers table data. */
-	async getStatuses(): Promise<void> {
+	public async getStatuses(): Promise<void> {
 		this.statuses = await this.serverService.getStatuses();
 	}
 

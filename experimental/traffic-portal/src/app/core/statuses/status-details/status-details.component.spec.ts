@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 import { HttpClientTestingModule } from "@angular/common/http/testing";
-import { ComponentFixture, fakeAsync, TestBed } from "@angular/core/testing";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
 import { MatCardModule } from "@angular/material/card";
@@ -23,13 +23,13 @@ import { BrowserDynamicTestingModule } from "@angular/platform-browser-dynamic/t
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 
-import { StatusesService } from "src/app/api/statuses.service";
+import { ServerService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { SharedModule } from "src/app/shared/shared.module";
 
 import { StatusDetailsComponent } from "./status-details.component";
 
-const status = { id: 1, name: "test", description: "test", lastUpdated: new Date("02/02/2023") };
+const status = { description: "test", id: 1,lastUpdated: new Date("02/02/2023"), name: "test"};
 
 describe("StatusDetailsComponent", () => {
 	let component: StatusDetailsComponent;
@@ -38,10 +38,11 @@ describe("StatusDetailsComponent", () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
+			declarations: [StatusDetailsComponent, DecisionDialogComponent],
 			imports: [
 				HttpClientTestingModule,
 				RouterTestingModule.withRoutes([
-					{ path: "core/statuses/:id", component: StatusDetailsComponent }
+					{ component: StatusDetailsComponent, path: "core/statuses/:id" }
 				]),
 				ReactiveFormsModule,
 				MatFormFieldModule,
@@ -51,8 +52,7 @@ describe("StatusDetailsComponent", () => {
 				MatButtonModule,
 				SharedModule
 			],
-			declarations: [StatusDetailsComponent, DecisionDialogComponent],
-			providers: [StatusesService]
+			providers: [ServerService]
 		})
 			.compileComponents();
 		TestBed.overrideModule(BrowserDynamicTestingModule, {
@@ -70,20 +70,21 @@ describe("StatusDetailsComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it("submits a update status request", fakeAsync(() => {
-		const service = TestBed.inject(StatusesService);
+	it("submits a update status request", (() => {
+		const service = TestBed.inject(ServerService);
 		component.statusDetailsForm.setValue(status);
-		spyOn(service, "updateStatus").and.returnValue(Promise.resolve(status));
+		spyOn(service, "updateStatusDetail").and.returnValue(Promise.resolve(status));
 		component.updateStatus();
 
-		service.updateStatus(component.statusDetailsForm.value, 1).then((result) => {
+		service.updateStatus(component.statusDetailsForm.value, "1").then((result) => {
 			expect(result).toEqual(status);
 		});
 	}));
 
-	it("submits a status creation request", fakeAsync(() => {
-		const service = TestBed.inject(StatusesService);
+	it("submits a status creation request", (() => {
+		const service = TestBed.inject(ServerService);
 		component.statusDetailsForm.setValue(status);
+
 		spyOn(service, "createStatus").and.returnValue(Promise.resolve(status));
 		component.createStatus();
 
