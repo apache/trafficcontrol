@@ -16,12 +16,13 @@ import { ComponentFixture, fakeAsync, TestBed } from "@angular/core/testing";
 import { FormsModule } from "@angular/forms";
 import { MatCardModule } from "@angular/material/card";
 import { RouterTestingModule } from "@angular/router/testing";
+
 import { ServerService } from "src/app/api";
 import { SharedModule } from "src/app/shared/shared.module";
 
 import { StatusesTableComponent } from "./statuses-table.component";
 
-const statuses = [{id:1,name:'test',description:'test',lastUpdated:new Date('02/02/2023')}];
+const statuses = [{id:1,name:"test",description:"test",lastUpdated:new Date("02/02/2023")}];
 describe("StatusesTableComponent", () => {
 	let component: StatusesTableComponent;
 	let fixture: ComponentFixture<StatusesTableComponent>;
@@ -51,10 +52,10 @@ describe("StatusesTableComponent", () => {
 
 	it("should get all statuses from getStatuses",fakeAsync(()=>{
 		const service = fixture.debugElement.injector.get(ServerService);
-		spyOn(service, 'getStatuses').and.returnValue(Promise.resolve(statuses));
-		
+		spyOn(service, "getStatuses").and.returnValue(Promise.resolve(statuses));
+
 		service.getStatuses().then((result)=>{
 			expect(result).toEqual(statuses);
-		})
-	}))
+		});
+	}));
 });

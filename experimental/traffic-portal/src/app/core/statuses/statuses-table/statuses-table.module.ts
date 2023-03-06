@@ -16,8 +16,8 @@ import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatCardModule } from "@angular/material/card";
 import { RouterModule } from "@angular/router";
-import { ServerService } from "src/app/api";
 
+import { ServerService } from "src/app/api";
 import { SharedModule } from "src/app/shared/shared.module";
 
 import { StatusesTableComponent } from "./statuses-table.component";
