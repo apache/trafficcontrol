@@ -18,6 +18,7 @@
  */
 import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
+import { ReactiveFormsModule } from "@angular/forms";
 import { RouterModule, type Routes } from "@angular/router";
 
 import { AppUIModule } from "../app.ui.module";
@@ -47,6 +48,8 @@ import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.c
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
+import { StatusDetailsComponent } from "./statuses/status-details/status-details.component";
+import { StatusesTableComponent } from "./statuses/statuses-table/statuses-table.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
@@ -74,14 +77,8 @@ export const ROUTES: Routes = [
 	{ component: TenantDetailsComponent, path: "tenants/:id"},
 	{ component: PhysLocDetailComponent, path: "phys-locs/:id" },
 	{ component: PhysLocTableComponent, path: "phys-locs" },
-	{
-		path: "statuses",
-		loadChildren: async () => import("./statuses/statuses-table/statuses-table.module").then(m => m.StatusesTableModule)
-	},
-	{
-		path: "statuses/:id",
-		loadChildren: async () => import("./statuses/status-details/status-details.module").then(m => m.StatusDetailsModule)
-	}
+	{ component: StatusesTableComponent, path: "statuses" },
+	{ component: StatusDetailsComponent, path: "statuses/:id" },
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -115,14 +112,17 @@ export const ROUTES: Routes = [
 		DivisionDetailComponent,
 		RegionsTableComponent,
 		RegionDetailComponent,
-		CacheGroupDetailsComponent
+		CacheGroupDetailsComponent,
+		StatusesTableComponent,
+		StatusDetailsComponent
 	],
 	exports: [],
 	imports: [
 		SharedModule,
 		AppUIModule,
 		CommonModule,
-		RouterModule.forChild(ROUTES)
+		RouterModule.forChild(ROUTES),
+		ReactiveFormsModule
 	]
 })
 export class CoreModule { }
