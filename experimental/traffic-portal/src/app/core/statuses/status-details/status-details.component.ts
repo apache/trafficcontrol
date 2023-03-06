@@ -12,40 +12,61 @@
  * limitations under the License.
  */
 import { Component, OnInit } from "@angular/core";
-import { FormBuilder, FormControl, FormGroup, Validators } from "@angular/forms";
+import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
 import { ResponseStatus } from "trafficops-types";
 
-import { StatusesService } from "src/app/api/statuses.service";
+import { ServerService } from "src/app/api";
 import { DecisionDialogComponent, DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
+/**
+ * StatusDetailsComponent is the controller for a status "details" page.
+ */
 @Component({
+	providers: [ServerService],
 	selector: "tp-status-details",
+	styleUrls: ["./status-details.component.scss"],
 	templateUrl: "./status-details.component.html",
-	styleUrls: ["./status-details.component.scss"]
 })
 export class StatusDetailsComponent implements OnInit {
 
-	id: string | null = null;
-	statusDetails: ResponseStatus | null = null;
-	statusDetailsForm!: FormGroup;
-	loading = false;
-	submitting = false;
-	submitted = false;
+	/** Status ID expected from the route param using which we identify whether we are creating new status or load existing status */
+	public id: string | number | null = null;
 
+	/** All details of status requested */
+	public statusDetails: ResponseStatus | null = null;
+
+	/** Reactive form intialized to creat / edit status details */
+	public statusDetailsForm!: FormGroup;
+
+	/** Loader status for the actions */
+	public loading = false;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param serverService The Servers API which is used to provide row data.
+	 * @param route A reference to the route of this view which is used to get the 'id' query parameter of status.
+	 * @param router Angular router
+	 * @param dialog Dialog manager
+	 * @param fb Form builder
+	 * @param navSvc Manages the header
+	 */
 	constructor(
+		private readonly serverService: ServerService,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly fb: FormBuilder,
 		private readonly dialog: MatDialog,
-		private readonly statusesService: StatusesService) { }
+		private readonly navSvc: NavigationService,
+	) { }
 
-	ngOnInit(): void {
-		// Form is built here
-		this.statusDetailsForm = this.fb.group({
-			name: ["", Validators.required],
-			description: ["", Validators.required],
+	/** Initializes table data, loading it from Traffic Ops. */
+	public ngOnInit(): void {
+		this.statusDetailsForm = new FormGroup({
+			description: new FormControl("",Validators.required),
+			name: new FormControl("",Validators.required),
 		});
 
 		// Getting id from the route
@@ -57,28 +78,38 @@ export class StatusDetailsComponent implements OnInit {
 			this.statusDetailsForm.addControl("id", new FormControl(""));
 			this.statusDetailsForm.addControl("lastUpdated", new FormControl(""));
 			this.getStatusDetails();
+		} else {
+			this.navSvc.headerTitle.next("New Status");
 		}
 	}
 
-	/*
-   * Reloads the servers table data.
-   * @param id is the id passed in route for this page if this is a edit view.
-  */
-	async getStatusDetails(): Promise<void> {
-		const id = this.id as string; // id Type 'null' is not assignable to type 'string'
-		this.statusDetails = await this.statusesService.getStatuses(id);
+	/**
+	 * Reloads the servers table data.
+	 *
+	 * @param id is the id passed in route for this page if this is a edit view.
+	 */
+	public async getStatusDetails(): Promise<void> {
+		const id = Number(this.id) ; // id Type 'null' is not assignable to type 'string'
+		this.statusDetails = await this.serverService.getStatuses(id);
 		const data: ResponseStatus = {
-			name: this.statusDetails.name,
 			description: this.statusDetails.description,
+			id: this.statusDetails.id,
 			lastUpdated: new Date(),
-			id: this.statusDetails.id
+			name: this.statusDetails.name
 		};
+
+		// Set page title with status ID
+		this.navSvc.headerTitle.next(`Status #${data.id}`);
+
+		// Patch the form with existing data we got from service requested above.
 		this.statusDetailsForm.patchValue(data);
 		this.loading = false;
 	}
 
-	// On submitting the form we check for whether we are performing Create or Edit
-	onSubmit() {
+	/**
+	 * On submitting the form we check for whether we are performing Create or Edit
+	 */
+	public onSubmit(): void {
 		if (this.isNew) {
 			this.createStatus();
 
@@ -87,23 +118,30 @@ export class StatusDetailsComponent implements OnInit {
 		}
 	}
 
-	// For Creating a new status
-	createStatus() {
-		this.statusesService.createStatus(this.statusDetailsForm.value).then((res: any) => {
+	/**
+	 * For Creating a new status
+	 */
+	public createStatus(): void {
+		this.serverService.createStatus(this.statusDetailsForm.value).then((res: ResponseStatus) => {
 			if (res) {
-				this.id = res?.id;
+				this.id = (res?.id);
 				this.router.navigate([`/core/statuses/${this.id}`]);
+				this.navSvc.headerTitle.next(`Status #${this.id}`);
 			}
 		});
 	}
 
-	// For updating the Status
-	updateStatus() {
-		this.statusesService.updateStatus(this.statusDetailsForm.value, Number(this.id));
+	/**
+	 * For updating the Status
+	 */
+	public updateStatus(): void {
+		this.serverService.updateStatusDetail(this.statusDetailsForm.value, Number(this.id));
 	}
 
-	// Deleteting status
-	async deleteStatus() {
+	/**
+	 * Deleteting status
+	 */
+	public async deleteStatus(): Promise<void> {
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
 			data: {
 				message: `This action CANNOT be undone. This will permanently delete '${this.statusDetails?.name}'.`,
@@ -111,22 +149,27 @@ export class StatusDetailsComponent implements OnInit {
 			}
 		});
 
-		if (await ref.afterClosed().toPromise()) {
-			const id = Number(this.id);
-			this.statusesService.deleteStatus(id).then(() => {
-				this.router.navigate(["/core/statuses"]);
-			});
-		}
-
+		ref.afterClosed().subscribe(result => {
+			if (result) {
+				const id = Number(this.id);
+				this.serverService.deleteStatus(id).then(() => {
+					this.router.navigate(["/core/statuses"]);
+				});
+			}
+		});
 	}
 
-	// Title for the page
-	get title(): string {
+	/**
+	 * Title for the page
+	 */
+	public get title(): string {
 		return this.isNew ? "Add New Status" : "Edit Status";
 	}
 
-	// Checking for params to ensure given id is a number
-	get isNew() {
+	/**
+	 * Checking for params to ensure given id is a number
+	 */
+	public get isNew(): boolean {
 		return this.id === "new" && isNaN(Number(this.id));
 	}
 }

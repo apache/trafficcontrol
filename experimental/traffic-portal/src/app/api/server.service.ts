@@ -118,7 +118,8 @@ export class ServerService extends APIService {
 		let ret;
 		switch (typeof idOrName) {
 			case "number":
-				ret = this.get<[ResponseStatus]>(path, {params: {id: String(idOrName)}}).toPromise();
+				const response = await this.get<[ResponseStatus]>(path, undefined, { id: String(idOrName) }).toPromise();
+				ret = response[0];
 				break;
 			case "string":
 				ret = this.get<[ResponseStatus]>(path, {params: {name: idOrName}}).toPromise();
@@ -185,5 +186,34 @@ export class ServerService extends APIService {
 		}
 
 		return this.put(`servers/${id}/status`, {offlineReason, status}).toPromise();
+	}
+
+	/**
+	 * Creating new Status.
+	 *
+	 * @param data containes name and description for the status.
+	 * @returns The 'response' property of the TO status response. See TO API docs.
+	 */
+	public async createStatus(data: ResponseStatus): Promise<ResponseStatus> {
+		return this.post<ResponseStatus>("statuses", data).toPromise();
+	}
+
+	/**
+	 * Updates status Details.
+	 *
+	 * @param data containes name and description for the status., unique identifier thereof.
+	 * @param id The Status ID
+	 */
+	public async updateStatusDetail(data: ResponseStatus, id: number): Promise<ResponseStatus | undefined> {
+		return this.put<ResponseStatus>(`statuses/${id}`, data).toPromise();
+	}
+
+	/**
+	 * Deletes an existing Status.
+	 *
+	 * @param id The Status ID
+	 */
+	public async deleteStatus(id: number): Promise<void> {
+		return this.delete(`statuses/${id}`).toPromise();
 	}
 }
