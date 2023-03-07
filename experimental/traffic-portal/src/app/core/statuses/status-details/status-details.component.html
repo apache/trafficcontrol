@@ -25,10 +25,10 @@ limitations under the License.
             </mat-form-field>
         </mat-card-content>
         <mat-card-actions align="end">
-            <button mat-raised-button type="button" color="warn" (click)="deleteStatus()" *ngIf="!isNew">Delete</button>
+            <button mat-raised-button type="button" color="warn" (click)="deleteStatus()" *ngIf="id!=='new'">Delete</button>
             <button mat-raised-button type="button" routerLink="/core/statuses">Cancel</button>
             <button mat-raised-button type="submit" color="primary" [disabled]="statusDetailsForm.invalid">
-                {{isNew ? 'Create' : 'Save'}}
+                {{id==="new" ? 'Create' : 'Save'}}
             </button>
         </mat-card-actions>
     </form>
