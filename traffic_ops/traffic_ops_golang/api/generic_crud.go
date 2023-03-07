@@ -119,19 +119,21 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	}
 	defer resultRows.Close()
 
+	var name interface{}
 	lastUpdated := tc.TimeNoMod{}
 	rowsAffected := 0
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
+		if err := resultRows.Scan(&name, &lastUpdated); err != nil {
 			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
 		}
 	}
 	if rowsAffected == 0 {
-		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no row was returned"), http.StatusInternalServerError
+		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no name was returned"), http.StatusInternalServerError
 	} else if rowsAffected > 1 {
-		return nil, errors.New("too many rows returned from " + val.GetType() + " insert"), http.StatusInternalServerError
+		return nil, errors.New("too many names returned from " + val.GetType() + " insert"), http.StatusInternalServerError
 	}
+	val.SetKeys(map[string]interface{}{"name": name})
 	val.SetLastUpdated(lastUpdated)
 	return nil, nil, http.StatusOK
 }
