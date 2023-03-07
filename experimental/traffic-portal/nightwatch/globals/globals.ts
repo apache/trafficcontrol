@@ -16,6 +16,7 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
+import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
 import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGroups/divisionDetail";
@@ -47,6 +48,8 @@ import {
 	ResponseTenant,
 	TypeFromResponse,
 	RequestSteeringTarget,
+	ResponseASN,
+	RequestASN,
 	ResponseDivision,
 	RequestDivision,
 	ResponseRegion,
@@ -74,6 +77,7 @@ declare module "nightwatch" {
 			divisionsTable: () => DivisionsPageObject;
 			regionDetail: () => RegionDetailPageObject;
 			regionsTable: () => RegionsPageObject;
+			asnsTable: () => AsnsPageObject;
 		};
 		deliveryServices: {
 			deliveryServiceCard: () => DeliveryServiceCardPageObject;
@@ -122,6 +126,7 @@ export interface CreatedData {
 	ds2: ResponseDeliveryService;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
+	asn: ResponseASN;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;
@@ -310,6 +315,16 @@ const globals = {
 			const responseCG: ResponseCacheGroup = resp.data.response;
 			console.log("Successfully created Cache Group:", responseCG);
 			data.cacheGroup = responseCG;
+
+			const asn: RequestASN = {
+				asn: 0,
+				cachegroupId: 1
+			};
+			url = `${apiUrl}/asns`;
+			resp = await client.post(url, JSON.stringify(asn));
+			const respAsn: ResponseASN = resp.data.response;
+			console.log(`Successfully created ASN ${respAsn.asn}`);
+			data.asn = respAsn;
 
 			const physLoc: RequestPhysicalLocation = {
 				address: "street",

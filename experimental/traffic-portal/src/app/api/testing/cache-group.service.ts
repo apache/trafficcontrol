@@ -20,6 +20,7 @@ import type {
 	RequestDivision,
 	RequestRegion,
 	ResponseCacheGroup,
+	ResponseASN,
 	ResponseDivision,
 	ResponseRegion
 } from "trafficops-types";
@@ -87,6 +88,14 @@ function isRequest(x: CacheGroupQueueRequest | CDN | string | number): x is Cach
 export class CacheGroupService {
 	private lastID = 10;
 
+	private readonly asns: Array<ResponseASN> = [{
+		asn: 0,
+		cachegroup: "Mid",
+		cachegroupId: 1,
+		id: 1,
+		lastUpdated: new Date()
+	}
+	];
 	private readonly divisions: Array<ResponseDivision> = [{
 		id: 1,
 		lastUpdated: new Date(),
@@ -577,11 +586,46 @@ export class CacheGroupService {
 	 * @param id Id of the region to delete.
 	 * @returns The deleted region.
 	 */
-	public async deleteRegion(id: number): Promise<ResponseRegion> {
+	public async deleteRegion(id: number | ResponseRegion): Promise<ResponseRegion> {
 		const index = this.regions.findIndex(d => d.id === id);
 		if (index === -1) {
 			throw new Error(`no such Region: ${id}`);
 		}
 		return this.regions.splice(index, 1)[0];
+	}
+
+	public async getASNs(): Promise<Array<ResponseASN>>;
+	public async getASNs(id: number): Promise<ResponseASN>;
+
+	/**
+	 * Gets an array of ASNs from Traffic Ops.
+	 *
+	 * @param id If given, returns only the asn with the given id (number).
+	 * @returns An Array of ASNs objects - or a single ASN object if 'id'
+	 * was given.
+	 */
+	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
+		if(id) {
+			const asn = this.asns.find(a=>a.id === id);
+			if (!asn) {
+				throw new Error(`no such asn with id: ${id}`);
+			}
+			return asn;
+		}
+		return this.asns;
+	}
+
+	/**
+	 * Deletes an existing asn.
+	 *
+	 * @param asn Id of the asn to delete.
+	 * @returns The deleted asn.
+	 */
+	public async deleteASN(asn: number | ResponseASN): Promise<ResponseASN> {
+		const index = this.asns.findIndex(a => a.asn === asn);
+		if (index === -1) {
+			throw new Error(`no such asn: ${asn}`);
+		}
+		return this.asns.splice(index, 1)[0];
 	}
 }

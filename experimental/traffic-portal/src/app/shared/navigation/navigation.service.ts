@@ -127,6 +127,9 @@ export class NavigationService {
 				}, {
 					href: "/core/regions",
 					name: "Regions"
+				}, {
+					href: "/core/asns",
+					name: "ASNs"
 				}],
 				name: "Cache Groups"
 			}],
