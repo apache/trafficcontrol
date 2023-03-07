@@ -18,7 +18,6 @@
  */
 import { CommonModule } from "@angular/common";
 import { NgModule } from "@angular/core";
-import { ReactiveFormsModule } from "@angular/forms";
 import { RouterModule, type Routes } from "@angular/router";
 
 import { AppUIModule } from "../app.ui.module";
@@ -121,8 +120,7 @@ export const ROUTES: Routes = [
 		SharedModule,
 		AppUIModule,
 		CommonModule,
-		RouterModule.forChild(ROUTES),
-		ReactiveFormsModule
+		RouterModule.forChild(ROUTES)
 	]
 })
 export class CoreModule { }
