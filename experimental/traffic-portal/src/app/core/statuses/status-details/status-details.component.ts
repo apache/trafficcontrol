@@ -35,14 +35,17 @@ export class StatusDetailsComponent implements OnInit {
 	/** Status ID expected from the route param using which we identify whether we are creating new status or load existing status */
 	public id: string | number | null = null;
 
-	/** All details of status requested */
-	public statusDetails: ResponseStatus | null = null;
-
-	/** Reactive form intialized to creat / edit status details */
-	public statusDetailsForm!: FormGroup;
-
 	/** Loader status for the actions */
 	public loading = false;
+
+	/** All details of status requested */
+	public statusDetails!: ResponseStatus;
+
+	/** Reactive form intialized to creat / edit status details */
+	public statusDetailsForm: FormGroup = new FormGroup({
+		description: new FormControl("", Validators.required),
+		name: new FormControl("", Validators.required),
+	});
 
 	/**
 	 * Constructor.
@@ -60,20 +63,16 @@ export class StatusDetailsComponent implements OnInit {
 		private readonly router: Router,
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
-	) { }
+	) {
+		// Getting id from the route
+		this.id = this.route.snapshot.paramMap.get("id");
+	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.statusDetailsForm = new FormGroup({
-			description: new FormControl("",Validators.required),
-			name: new FormControl("",Validators.required),
-		});
-
-		// Getting id from the route
-		this.id = this.route.snapshot.paramMap.get("id");
 
 		// we check whether params is a number if not we shall assume user wants to add a new status.
-		if (!this.isNew) {
+		if (this.id !== "new") {
 			this.loading = true;
 			this.statusDetailsForm.addControl("id", new FormControl(""));
 			this.statusDetailsForm.addControl("lastUpdated", new FormControl(""));
@@ -89,20 +88,14 @@ export class StatusDetailsComponent implements OnInit {
 	 * @param id is the id passed in route for this page if this is a edit view.
 	 */
 	public async getStatusDetails(): Promise<void> {
-		const id = Number(this.id) ; // id Type 'null' is not assignable to type 'string'
+		const id = Number(this.id); // id Type 'null' is not assignable to type 'string'
 		this.statusDetails = await this.serverService.getStatuses(id);
-		const data: ResponseStatus = {
-			description: this.statusDetails.description,
-			id: this.statusDetails.id,
-			lastUpdated: new Date(),
-			name: this.statusDetails.name
-		};
 
-		// Set page title with status ID
-		this.navSvc.headerTitle.next(`Status #${data.id}`);
+		// Set page title with status Name
+		this.navSvc.headerTitle.next(`Status #${this.statusDetails.name}`);
 
 		// Patch the form with existing data we got from service requested above.
-		this.statusDetailsForm.patchValue(data);
+		this.statusDetailsForm.patchValue(this.statusDetails);
 		this.loading = false;
 	}
 
@@ -110,7 +103,7 @@ export class StatusDetailsComponent implements OnInit {
 	 * On submitting the form we check for whether we are performing Create or Edit
 	 */
 	public onSubmit(): void {
-		if (this.isNew) {
+		if (this.id === "new") {
 			this.createStatus();
 
 		} else {
@@ -124,9 +117,8 @@ export class StatusDetailsComponent implements OnInit {
 	public createStatus(): void {
 		this.serverService.createStatus(this.statusDetailsForm.value).then((res: ResponseStatus) => {
 			if (res) {
-				this.id = (res?.id);
-				this.router.navigate([`/core/statuses/${this.id}`]);
-				this.navSvc.headerTitle.next(`Status #${this.id}`);
+				this.statusDetails = res;
+				this.router.navigate(["/core/statuses"]);
 			}
 		});
 	}
@@ -157,19 +149,5 @@ export class StatusDetailsComponent implements OnInit {
 				});
 			}
 		});
-	}
-
-	/**
-	 * Title for the page
-	 */
-	public get title(): string {
-		return this.isNew ? "Add New Status" : "Edit Status";
-	}
-
-	/**
-	 * Checking for params to ensure given id is a number
-	 */
-	public get isNew(): boolean {
-		return this.id === "new" && isNaN(Number(this.id));
 	}
 }

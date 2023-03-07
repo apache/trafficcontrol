@@ -13,9 +13,10 @@
 */
 
 import { Injectable } from "@angular/core";
-import type { RequestServer, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
+import type { RequestServer, RequestStatus, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
 
 import { CDNService, PhysicalLocationService, ProfileService, TypeService } from "..";
+import { HttpResponse } from "@angular/common/http";
 
 /**
  * Generates a `Servercheck` for a given `server`.
@@ -47,7 +48,7 @@ export class ServerService {
 
 	public servers = new Array<ResponseServer>();
 
-	private readonly statuses = [
+	private statuses = [
 		{
 			description: "Sever is administrative down and does not receive traffic.",
 			id: 4,
@@ -87,6 +88,7 @@ export class ServerService {
 	];
 
 	private idCounter = 1;
+	private statusIdCounter = 6;
 
 	constructor(
 		private readonly cdnService: CDNService,
@@ -301,5 +303,57 @@ export class ServerService {
 		srv.status = statusName;
 		srv.statusId = status.id;
 		srv.offlineReason = offlineReason ?? null;
+	}
+
+	/**
+	 * Creates a status.
+	 *
+	 * @param status The status details (name & description) to create.
+	 * @returns The status as created and returned by the API.
+	 */
+	public async createStatus(status: RequestStatus): Promise<ResponseStatus> {
+		const newStatus = {
+			...status,
+			id: ++this.statusIdCounter,
+			lastUpdated: new Date()
+		} as { description: string; id: number; lastUpdated: Date; name: string; };
+		this.statuses.push(newStatus);
+		return newStatus;
+	}
+
+	/**
+	 * Updates status Details.
+	 *
+	 * @param data containes name and description for the status., unique identifier thereof.
+	 * @param id The Status ID
+	 */
+	public async updateStatusDetail(payload: ResponseStatus, id: number): Promise<ResponseStatus> {
+		const index = this.statuses.findIndex(u => u.id === id);
+		if (index < 0) {
+			throw new Error(`no such status with id: ${id}`);
+		}
+		const updated = {
+			...payload,
+			lastUpdated: new Date()
+		} as { description: string; id: number; lastUpdated: Date; name: string; };
+		this.statuses[index] = updated;
+
+		return updated;
+	}
+
+
+	/**
+	 * Deletes a Status.
+	 *
+	 * @param id The ID of the Status to delete.
+	 * @returns The response.
+	 */
+	public async deleteStatus(id: number): Promise<HttpResponse<object> | null> {
+		const idx = this.statuses.findIndex(j => j.id === id);
+		if (idx < 0) {
+			throw new Error(`no such status: #${id}`);
+		}
+		this.statuses.splice(idx, 1);
+		return new HttpResponse({ body: { alerts: [{ level: "success", text: "Successfully logged in." }] }, status: 200 })
 	}
 }

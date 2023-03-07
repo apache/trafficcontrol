@@ -14,7 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { RequestServer, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
+import type { RequestServer, RequestStatus, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -194,8 +194,8 @@ export class ServerService extends APIService {
 	 * @param data containes name and description for the status.
 	 * @returns The 'response' property of the TO status response. See TO API docs.
 	 */
-	public async createStatus(data: ResponseStatus): Promise<ResponseStatus> {
-		return this.post<ResponseStatus>("statuses", data).toPromise();
+	public async createStatus(payload: RequestStatus): Promise<ResponseStatus> {
+		return this.post<ResponseStatus>("statuses", payload).toPromise();
 	}
 
 	/**
@@ -204,8 +204,8 @@ export class ServerService extends APIService {
 	 * @param data containes name and description for the status., unique identifier thereof.
 	 * @param id The Status ID
 	 */
-	public async updateStatusDetail(data: ResponseStatus, id: number): Promise<ResponseStatus | undefined> {
-		return this.put<ResponseStatus>(`statuses/${id}`, data).toPromise();
+	public async updateStatusDetail(payload: ResponseStatus, id: number): Promise<ResponseStatus> {
+		return this.put<ResponseStatus>(`statuses/${id}`, payload).toPromise();
 	}
 
 	/**
