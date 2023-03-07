@@ -12,11 +12,11 @@
 * limitations under the License.
 */
 
+import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type { RequestServer, RequestStatus, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
 
 import { CDNService, PhysicalLocationService, ProfileService, TypeService } from "..";
-import { HttpResponse } from "@angular/common/http";
 
 /**
  * Generates a `Servercheck` for a given `server`.
@@ -316,7 +316,7 @@ export class ServerService {
 			...status,
 			id: ++this.statusIdCounter,
 			lastUpdated: new Date()
-		} as { description: string; id: number; lastUpdated: Date; name: string; };
+		} as { description: string; id: number; lastUpdated: Date; name: string };
 		this.statuses.push(newStatus);
 		return newStatus;
 	}
@@ -324,7 +324,7 @@ export class ServerService {
 	/**
 	 * Updates status Details.
 	 *
-	 * @param data containes name and description for the status., unique identifier thereof.
+	 * @param payload containes name and description for the status., unique identifier thereof.
 	 * @param id The Status ID
 	 */
 	public async updateStatusDetail(payload: ResponseStatus, id: number): Promise<ResponseStatus> {
@@ -335,12 +335,11 @@ export class ServerService {
 		const updated = {
 			...payload,
 			lastUpdated: new Date()
-		} as { description: string; id: number; lastUpdated: Date; name: string; };
+		} as { description: string; id: number; lastUpdated: Date; name: string };
 		this.statuses[index] = updated;
 
 		return updated;
 	}
-
 
 	/**
 	 * Deletes a Status.
@@ -354,6 +353,6 @@ export class ServerService {
 			throw new Error(`no such status: #${id}`);
 		}
 		this.statuses.splice(idx, 1);
-		return new HttpResponse({ body: { alerts: [{ level: "success", text: "Successfully logged in." }] }, status: 200 })
+		return new HttpResponse({ body: { alerts: [{ level: "success", text: "Successfully logged in." }] }, status: 200 });
 	}
 }

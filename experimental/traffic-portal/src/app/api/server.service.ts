@@ -191,7 +191,7 @@ export class ServerService extends APIService {
 	/**
 	 * Creating new Status.
 	 *
-	 * @param data containes name and description for the status.
+	 * @param payload containes name and description for the status.
 	 * @returns The 'response' property of the TO status response. See TO API docs.
 	 */
 	public async createStatus(payload: RequestStatus): Promise<ResponseStatus> {
@@ -201,7 +201,7 @@ export class ServerService extends APIService {
 	/**
 	 * Updates status Details.
 	 *
-	 * @param data containes name and description for the status., unique identifier thereof.
+	 * @param payload containes name and description for the status., unique identifier thereof.
 	 * @param id The Status ID
 	 */
 	public async updateStatusDetail(payload: ResponseStatus, id: number): Promise<ResponseStatus> {
