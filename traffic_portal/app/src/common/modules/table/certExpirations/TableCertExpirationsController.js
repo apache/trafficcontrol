@@ -96,7 +96,12 @@ var TableCertExpirationsController = function(certExpirations, $scope, locationU
 				const now = new Date();
 				return params.data.expiration < now;
 			},
-			'soon-expired-cert': function(params) {
+			'seven-days-until-expired': function(params) {
+				const sevenDays = new Date();
+				sevenDays.setDate(sevenDays.getDate()+7);
+				return params.data.expiration >= new Date() && params.data.expiration <= sevenDays;
+			},
+			'thirty-days-until-expired': function(params) {
 				const thirtyDays = new Date();
 				thirtyDays.setDate(thirtyDays.getDate()+30);
 				return params.data.expiration >= new Date() && params.data.expiration <= thirtyDays;

@@ -221,9 +221,15 @@ div.dropdown button.menu-item-button {
     }
   }
   .ag-row.expired-cert {
+    background-color: #fcfcfc;
+    .ag-cell {
+      text-decoration: line-through;
+    }
+  }
+  .ag-row.seven-days-until-expired {
     background-color: #f8d7da;
   }
-  .ag-row.soon-expired-cert {
+  .ag-row.thirty-days-until-expired {
     background-color: #fff3cd;
   }
 }
