@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
