@@ -162,3 +162,63 @@ func RequireNotEqual(t *testing.T, a, b interface{}, msgAndArgs ...interface{}) 
 		t.FailNow()
 	}
 }
+
+// Empty takes a value and checks whether it is empty for the given type
+// supports slices, arrays, channels, strings, and maps
+func Empty(t *testing.T, a interface{}) {
+	val := reflect.ValueOf(a)
+	switch val.Kind() {
+	case reflect.Slice:
+		if val.Len() != 0 {
+			t.Errorf("expected %v to be empty, but it is not", a)
+		}
+	case reflect.Array:
+		if val.Len() != 0 {
+			t.Errorf("expected %v to be empty, but it is not", a)
+		}
+	case reflect.Chan:
+		if val.Len() != 0 {
+			t.Errorf("expected %v to be empty, but it is not", a)
+		}
+	case reflect.String:
+		if val.Len() != 0 {
+			t.Errorf("expected %v to be empty, but it is not", a)
+		}
+	case reflect.Map:
+		if val.Len() != 0 {
+			t.Errorf("expected %v to be empty, but it is not", a)
+		}
+	default:
+		t.Errorf("can't check that %v of type %T is empty", a, a)
+	}
+}
+
+// NotEmpty takes a value and checks whether it isvnot empty for the given type
+// supports slices, arrays, channels, strings, and maps
+func NotEmpty(t *testing.T, a interface{}) {
+	val := reflect.ValueOf(a)
+	switch val.Kind() {
+	case reflect.Slice:
+		if val.Len() == 0 {
+			t.Errorf("expected %v to not be empty, but it is", a)
+		}
+	case reflect.Array:
+		if val.Len() == 0 {
+			t.Errorf("expected %v to not be empty, but it is", a)
+		}
+	case reflect.Chan:
+		if val.Len() == 0 {
+			t.Errorf("expected %v to not be empty, but it is", a)
+		}
+	case reflect.String:
+		if val.Len() == 0 {
+			t.Errorf("expected %v to not be empty, but it is", a)
+		}
+	case reflect.Map:
+		if val.Len() == 0 {
+			t.Errorf("expected %v to not be empty, but it is", a)
+		}
+	default:
+		t.Errorf("can't check that %v of type %T is not empty", a, a)
+	}
+}

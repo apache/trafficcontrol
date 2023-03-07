@@ -45,7 +45,6 @@ else
 	done
 fi
 
-
 badproj=''
 goodproj=''
 for p in ${projects}; do
@@ -59,6 +58,9 @@ for p in ${projects}; do
 			echo "---- Skipping tarball creation"
 		fi
 		continue
+	fi
+	if [ "$p" = traffic_portal_v2 ]; then
+		ln -s experimental/traffic-portal/ traffic_portal_v2
 	fi
 	if [ "$p" = docs ]; then
 		if isInGitTree; then

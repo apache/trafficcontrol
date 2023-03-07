@@ -89,6 +89,9 @@ Optional arguments:
                         AND signature verification of any passed SSL
   -p PORT, --port PORT  Specify the port on which Traffic Portal will listen
                         (Default: 4200)
+  -d DIST_PATH, --browser-folder DIST_PATH
+                        Specifiy locaiton for the folder that holds the 
+                        browser files
   -c CERT_PATH, --cert-path CERT_PATH
                         Specify a location for an SSL certificate to be used
                         by Traffic Portal. (Requires `-K`/`--key-path`. If

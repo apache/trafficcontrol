@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-# ATC Collaborators for February 2023
+# ATC Collaborators for March 2023
 # Collaborators are contributors, other than committers, who have had 2 or more Issue-closing Pull Requests merged
 # in the past 31 days. If you want to be an Apache Traffic Control collaborator:
 # 1. Read our contribution guidelines at https://github.com/apache/trafficcontrol/blob/master/CONTRIBUTING.md
@@ -24,11 +24,13 @@
 #   - The #traffic-control channel of the ASF Slack (invite link: https://s.apache.org/tc-slack-request)
 #   - The ATC Development mailing list: https://trafficcontrol.apache.org/mailing_lists
 github:
-  collaborators:
-  - joobisb
-  - srijeet0406
+  collaborators: []
   description: Apache Traffic Control is an Open Source implementation of a Content
     Delivery Network
+  enabled_merge_buttons:
+    merge: false
+    rebase: false
+    squash: true
   features:
     issues: true
     projects: true

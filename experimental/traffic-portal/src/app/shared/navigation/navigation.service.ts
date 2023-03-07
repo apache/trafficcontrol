@@ -154,6 +154,12 @@ export class NavigationService {
 				name: "Change Logs"
 			}],
 			name: "Other"
+		}, {
+			children: [{
+				href: "/core/types",
+				name: "Types"
+			}],
+			name: "Configuration"
 		}]);
 	}
 

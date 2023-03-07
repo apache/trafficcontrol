@@ -1,0 +1,7 @@
+{
+  "insecure": true,
+  "port": 4200,
+  "trafficOps": "https://localhost:6443",
+  "useSSL": false,
+  "browserFolder": "$GITHUB_WORKSPACE/$BROWSER_FOLDER"
+}

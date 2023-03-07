@@ -24,7 +24,7 @@ under the License.
 <div class="x_content">
     <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <label for="cz-meter">Native</label>
+            <label for="cz-meter">Coverage Zone</label>
         </div>
         <div class="w_center w_55">
             <meter id="cz-meter" min="0" max="100" value="{{native | number:3}}"> {{native | number:3}}% </meter>
@@ -48,7 +48,7 @@ under the License.
     </div>
     <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <label for="third-party-meter">3rd Party</label>
+            <label for="third-party-meter">3rd Party (MaxMind)</label>
         </div>
         <div class="w_center w_55">
             <meter id="third-party-meter" min="0" max="100" value="{{thirdParty | number:3}}"> {{thirdParty | number:3}}% </meter>
@@ -96,7 +96,7 @@ under the License.
     </div>
     <div class="widget_summary" style="margin-bottom: 20px;">
         <div class="w_left w_25">
-            <label for="dsr-meter">DSR</label>
+            <label for="dsr-meter">DS Overflow</label>
         </div>
         <div class="w_center w_55">
             <meter id="dsr-meter" min="0" max="100" value="{{dsr | number:3}}"> {{dsr | number:3}}% </meter>

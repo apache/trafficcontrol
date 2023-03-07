@@ -13,7 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { TypeFromResponse } from "trafficops-types";
+import type {RequestType, TypeFromResponse} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -77,6 +77,38 @@ export class TypeService extends APIService {
 	 */
 	public async getServerTypes(): Promise<Array<TypeFromResponse>> {
 		return this.getTypesInTable("server");
+	}
+
+	/**
+	 * Deletes an existing type.
+	 *
+	 * @param typeOrId Id of the type to delete.
+	 * @returns The deleted type.
+	 */
+	public async deleteType(typeOrId: number | TypeFromResponse): Promise<TypeFromResponse> {
+		const id = typeof(typeOrId) === "number" ? typeOrId : typeOrId.id;
+		return this.delete<TypeFromResponse>(`types/${id}`).toPromise();
+	}
+
+	/**
+	 * Creates a new type.
+	 *
+	 * @param type The type to create.
+	 * @returns The created type.
+	 */
+	public async createType(type: RequestType): Promise<TypeFromResponse> {
+		return this.post<TypeFromResponse>("types", type).toPromise();
+	}
+
+	/**
+	 * Replaces the current definition of a type with the one given.
+	 *
+	 * @param type The new type.
+	 * @returns The updated type.
+	 */
+	public async updateType(type: TypeFromResponse): Promise<TypeFromResponse> {
+		const path = `types/${type.id}`;
+		return this.put<TypeFromResponse>(path, type).toPromise();
 	}
 
 	/**

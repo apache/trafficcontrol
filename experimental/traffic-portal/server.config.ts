@@ -14,6 +14,7 @@
 
 import { execSync } from "child_process";
 import { existsSync, readFileSync } from "fs";
+import { join } from "path";
 
 /**
  * ServerVersion contains versioning information for the server,
@@ -23,6 +24,8 @@ import { existsSync, readFileSync } from "fs";
 export interface ServerVersion {
 	/** The ATC version of the server e.g. 5.0.0 */
 	version: string;
+	/** Datetime when the current version was built*/
+	date?: string;
 	/**
 	 * The number of commits in the development branch that produced this
 	 * version of ATC - if known.
@@ -134,6 +137,8 @@ interface BaseConfig {
 	useSSL?: boolean;
 	/** Contains all of the versioning information. */
 	version: ServerVersion;
+	/** Path to the folder containing browser files. **/
+	browserFolder: string;
 }
 
 /**
@@ -194,6 +199,12 @@ function isConfig(c: unknown): c is ServerConfig {
 	if (typeof((c as {trafficOps: unknown}).trafficOps) !== "string") {
 		throw new Error("'trafficOps' must be a string");
 	}
+	if (!Object.prototype.hasOwnProperty.call(c, "browserFolder")) {
+		throw new Error("'browserFolder' is required");
+	}
+	if (typeof((c as {browserFolder: unknown}).browserFolder) !== "string") {
+		throw new Error("'browserFolder' must be a string");
+	}
 
 	try {
 		(c as {trafficOps: URL}).trafficOps = new URL((c as {trafficOps: string}).trafficOps);
@@ -248,11 +259,11 @@ export function getVersion(path?: string): ServerVersion {
 		throw new Error(`contents of version file '${path}' does not represent an ATC version`);
 	}
 
-	if (!existsSync("../../VERSION")) {
-		throw new Error(`'${path}' doesn't exist and '../../VERSION' doesn't exist`);
+	if (!existsSync("../../../../VERSION")) {
+		throw new Error(`'${path}' doesn't exist and '../../../../VERSION' doesn't exist`);
 	}
 	const ver: ServerVersion = {
-		version: readFileSync("../../VERSION", {encoding: "utf8"}).trimEnd()
+		version: readFileSync("../../../../VERSION", {encoding: "utf8"}).trimEnd()
 	};
 
 	try {
@@ -282,15 +293,23 @@ export function getVersion(path?: string): ServerVersion {
 /** The type of command line arguments to Traffic Portal. */
 interface Args {
 	trafficOps?: URL;
-	insecure?: boolean;
-	port?: number;
+	insecure: boolean;
+	port: number;
 	certPath?: string;
 	keyPath?: string;
 	configFile: string;
+	browserFolder: string;
 }
 
-export const defaultConfigFile = "/etc/traffic-portal/config.js";
+export const defaultConfigFile = "/etc/traffic-portal/config.json";
 
+export const defaultConfig: ServerConfig = {
+	browserFolder: "/opt/traffic-portal/browser",
+	insecure: false,
+	port: 4200,
+	trafficOps: new URL("https://example.com"),
+	version: { version: "" }
+};
 /**
  * Gets the configuration for the Traffic Portal server.
  *
@@ -299,13 +318,8 @@ export const defaultConfigFile = "/etc/traffic-portal/config.js";
  * @returns A full configuration for the server.
  */
 export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
-	let cfg: ServerConfig = {
-		insecure: false,
-		port: 4200,
-		trafficOps: new URL("https://example.com"),
-		useSSL: false,
-		version: ver
-	};
+	let cfg = defaultConfig;
+	cfg.version = ver;
 
 	let readFromFile = false;
 	if (existsSync(args.configFile)) {
@@ -323,7 +337,18 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 		throw new Error(`no such configuration file: ${args.configFile}`);
 	}
 
-	if (args.port) {
+	let folder = cfg.browserFolder;
+	if(args.browserFolder !== defaultConfig.browserFolder) {
+		folder = args.browserFolder;
+	}
+	if(!existsSync(folder)) {
+		throw new Error(`no such folder: ${folder}`);
+	}
+	if(!existsSync(join(folder, "index.html"))) {
+		throw new Error(`no such browser file: ${join(folder, "index.html")}`);
+	}
+
+	if(args.port !== defaultConfig.port) {
 		cfg.port = args.port;
 	}
 	if (isNaN(cfg.port) || cfg.port <= 0 || cfg.port > 65535) {
@@ -357,6 +382,7 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 				throw new Error("must specify either both a key path and a cert path, or neither");
 			}
 			cfg = {
+				browserFolder: cfg.browserFolder,
 				certPath: args.certPath,
 				insecure: cfg.insecure,
 				keyPath: args.keyPath,
@@ -370,7 +396,9 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 		}
 	}
 
-	cfg.insecure = args.insecure ?? cfg.insecure;
+	if(args.insecure) {
+		cfg.insecure = args.insecure;
+	}
 
 	if (cfg.useSSL) {
 		if (!existsSync(cfg.certPath)) {

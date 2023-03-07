@@ -34,7 +34,8 @@
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
-    "clean": "rm -rf dist nightwatch/junit nightwatch/screens tests_output logs",
+    "clean": "rm -rf dist docs nightwatch/junit nightwatch/screens tests_output logs",
+    "very-clean": "npm run clean && rm -rf node_modules",
     "coverage": "ng test --code-coverage",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCustom",
     "coverage:ci": "ng test --code-coverage --watch=false --browsers=ChromeHeadlessCustom",
@@ -43,9 +44,8 @@
     "e2e:build": "./node_modules/.bin/tsc -p ./nightwatch/tsconfig.e2e.json",
     "e2e:ci": "npm run e2e:build && ./node_modules/.bin/nightwatch --env chrome_headless --config './nightwatch/nightwatch.conf.js'",
     "dev:ssr": "ng run traffic-portal:serve-ssr",
-    "serve:ssr": "node dist/traffic-portal/server/main.js",
-    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production",
-    "prerender": "ng run traffic-portal:prerender"
+    "serve:ssr": "pushd dist/traffic-portal && node ./server/main.js && popd",
+    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production"
   },
   "private": true,
   "dependencies": {
@@ -95,7 +95,7 @@
     "@typescript-eslint/eslint-plugin": "^5.36.2",
     "@typescript-eslint/parser": "^5.36.2",
     "axios": "^0.27.2",
-    "chromedriver": "^108.0.0",
+    "chromedriver": "^110.0.0",
     "codelyzer": "^6.0.0",
     "eslint": "^8.23.0",
     "eslint-plugin-import": "^2.25.3",

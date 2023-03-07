@@ -49,6 +49,8 @@ import { ServersTableComponent } from "./servers/servers-table/servers-table.com
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
 import { StatusDetailsComponent } from "./statuses/status-details/status-details.component";
 import { StatusesTableComponent } from "./statuses/statuses-table/statuses-table.component";
+import { TypeDetailComponent } from "./types/detail/type-detail.component";
+import { TypesTableComponent } from "./types/table/types-table.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
@@ -78,6 +80,8 @@ export const ROUTES: Routes = [
 	{ component: PhysLocTableComponent, path: "phys-locs" },
 	{ component: StatusesTableComponent, path: "statuses" },
 	{ component: StatusDetailsComponent, path: "statuses/:id" },
+	{ component: TypesTableComponent, path: "types" },
+	{ component: TypeDetailComponent, path: "types/:id"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -113,7 +117,9 @@ export const ROUTES: Routes = [
 		RegionDetailComponent,
 		CacheGroupDetailsComponent,
 		StatusesTableComponent,
-		StatusDetailsComponent
+		StatusDetailsComponent,
+		TypesTableComponent,
+		TypeDetailComponent,
 	],
 	exports: [],
 	imports: [
