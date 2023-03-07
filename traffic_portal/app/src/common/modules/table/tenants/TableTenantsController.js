@@ -17,7 +17,19 @@
  * under the License.
  */
 
-var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $timeout, $uibModal, locationUtils, fileUtils, tenantUtils, tenantService, messageModel) {
+/**
+ * @param {*} currentUserTenant
+ * @param {*} tenants
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/FileUtils")} fileUtils
+ * @param {import("../../../service/utils/TenantUtils")} tenantUtils
+ * @param {import("../../../api/TenantService")} tenantService
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
+var TableTenantsController = function(currentUserTenant, tenants, $scope, $state, $uibModal, locationUtils, fileUtils, tenantUtils, tenantService, messageModel) {
 
     $scope.tenantTree = [];
 
@@ -75,5 +87,5 @@ var TableTenantsController = function(currentUserTenant, tenants, $scope, $state
 
 };
 
-TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$timeout', '$uibModal', 'locationUtils', 'fileUtils', 'tenantUtils', 'tenantService', 'messageModel'];
+TableTenantsController.$inject = ['currentUserTenant', 'tenants', '$scope', '$state', '$uibModal', 'locationUtils', 'fileUtils', 'tenantUtils', 'tenantService', 'messageModel'];
 module.exports = TableTenantsController;

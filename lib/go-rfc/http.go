@@ -43,6 +43,7 @@ const (
 	Age                = "Age"                 // RFC7234§5.1
 	Location           = "Location"            // RFC7231§7.1.2
 	Authorization      = "Authorization"       // RFC7235§4.2
+	Cookie             = "Cookie"              // RFC7873
 )
 
 // These are (some) valid values for content encoding and MIME types, for

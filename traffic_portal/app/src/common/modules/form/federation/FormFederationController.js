@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} cdn
+ * @param {*} federation
+ * @param {*} deliveryServices
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormFederationController = function(cdn, federation, deliveryServices, $scope, $location, formUtils, locationUtils) {
 
 	$scope.cdn = cdn;
@@ -33,7 +42,7 @@ var FormFederationController = function(cdn, federation, deliveryServices, $scop
 		$location.path($location.path() + '/users');
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

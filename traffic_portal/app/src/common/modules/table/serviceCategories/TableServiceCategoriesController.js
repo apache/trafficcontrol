@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} serviceCategories
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableServiceCategoriesController = function(serviceCategories, $scope, $state, locationUtils) {
 
     $scope.serviceCategories = serviceCategories;

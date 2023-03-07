@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var FormEditUserController = function(user, $scope, $controller, $uibModal, $anchorScroll, locationUtils, userService) {
+var FormEditUserController = function(user, $scope, $controller, $anchorScroll, userService) {
 
     // extends the FormUserController to inherit common methods
     angular.extend(this, $controller('FormUserController', { user: user, $scope: $scope }));
@@ -55,5 +55,5 @@ var FormEditUserController = function(user, $scope, $controller, $uibModal, $anc
 
 };
 
-FormEditUserController.$inject = ['user', '$scope', '$controller', '$uibModal', '$anchorScroll', 'locationUtils', 'userService'];
+FormEditUserController.$inject = ['user', '$scope', '$controller', '$anchorScroll', 'userService'];
 module.exports = FormEditUserController;

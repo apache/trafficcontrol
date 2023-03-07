@@ -13,8 +13,7 @@
 */
 import { EventEmitter, Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
-
-import { ADMIN_ROLE, Capability, CurrentUser } from "src/app/models";
+import { Capability, ResponseCurrentUser } from "trafficops-types";
 
 /**
  * This is a mock for the {@link CurrentUserService} service for testing.
@@ -26,11 +25,13 @@ import { ADMIN_ROLE, Capability, CurrentUser } from "src/app/models";
  */
 @Injectable()
 export class CurrentUserTestingService {
+	public static readonly ADMIN_ROLE = "admin";
 	public static readonly PASSWORD = "twelve12!";
-	public userChanged = new EventEmitter<CurrentUser>();
-	public currentUser: CurrentUser = {
+	public userChanged = new EventEmitter<ResponseCurrentUser>();
+	public currentUser: ResponseCurrentUser = {
 		addressLine1: null,
 		addressLine2: null,
+		changeLogCount: 2,
 		city: null,
 		company: null,
 		country: null,
@@ -38,21 +39,23 @@ export class CurrentUserTestingService {
 		fullName: "admin",
 		gid: null,
 		id: 1,
+		lastAuthenticated: null,
 		lastUpdated: new Date(0),
 		localUser: true,
 		newUser: false,
 		phoneNumber: null,
 		postalCode: null,
 		publicSshKey: null,
-		role: 1,
-		roleName: "admin",
+		registrationSent: null,
+		role: "admin",
 		stateOrProvince: null,
 		tenant: "root",
 		tenantId: 1,
+		ucdn: "",
 		uid: null,
 		username: "admin"
 	};
-	public capabilities: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set(["ALL"]));
+	public permissions: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set(["ALL"]));
 	public readonly loggedIn = true;
 
 	/**
@@ -79,7 +82,7 @@ export class CurrentUserTestingService {
 	 * @param user User to e saved
 	 * @returns A promise returning the status of the update.
 	 */
-	public async saveCurrentUser(user: CurrentUser): Promise<boolean> {
+	public async saveCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		this.currentUser = user;
 		return true;
 	}
@@ -102,11 +105,11 @@ export class CurrentUserTestingService {
 	 * @param u The new user who has been authenticated.
 	 * @param caps The newly authenticated user's Permissions.
 	 */
-	public setUser(u: CurrentUser, caps: Set<string> | Array<Capability>): void {
+	public setUser(u: ResponseCurrentUser, caps: Set<string> | Array<Capability>): void {
 		this.currentUser = u;
 		const capabilities = Array.isArray(caps) ? new Set(caps.map(c=>c.name)) : caps;
 		this.userChanged.emit(this.currentUser);
-		this.capabilities.next(capabilities);
+		this.permissions.next(capabilities);
 	}
 
 	/**
@@ -116,7 +119,7 @@ export class CurrentUserTestingService {
 	 * @returns `true` if the user has the Permission `perm`, `false` otherwise.
 	 */
 	public hasPermission(perm: string): boolean {
-		return this.currentUser.roleName === ADMIN_ROLE || this.capabilities.getValue().has(perm);
+		return this.currentUser.role === CurrentUserTestingService.ADMIN_ROLE || this.permissions.getValue().has(perm);
 	}
 
 	/**

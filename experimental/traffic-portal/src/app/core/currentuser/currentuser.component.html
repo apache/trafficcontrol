@@ -13,7 +13,7 @@ limitations under the License.
 -->
 <mat-card>
 	<mat-card-content *ngIf="currentUser && !editMode">
-		<h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}}, </span>{{currentUser.roleName}} user</h1>
+		<h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}}, </span>{{currentUser.role}} user</h1>
 		<address>
 			<p *ngIf="currentUser.email || currentUser.phoneNumber"><a *ngIf=currentUser.email href="mailto:{{currentUser.email}}">{{currentUser.email}}</a><span *ngIf="currentUser.email && currentUser.phoneNumber">, </span><a *ngIf="currentUser.phoneNumber" href="tel:{{currentUser.phoneNumber}}">{{currentUser.phoneNumber}}</a></p>
 			<p *ngIf=currentUser.addressLine1>{{currentUser.addressLine1}}</p>

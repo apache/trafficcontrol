@@ -17,13 +17,23 @@
  * under the License.
  */
 
+/**
+ * @param {*} $scope
+ * @param {*} $stateParams
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../api/CdniService")} cdniService
+ * @param {*} cdniRequest
+ * @param {*} currentConfig
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../models/MessageModel")} messageModel
+ */
 var FormCdniRequestController = function($scope, $stateParams, $uibModal, cdniService, cdniRequest, currentConfig, locationUtils, messageModel) {
 	$scope.reqId = $stateParams.reqId;
 	$scope.cdniRequest = cdniRequest;
 	$scope.cdniRequest.data = JSON.stringify($scope.cdniRequest.data, null, 5);
 	$scope.currentConfig = JSON.stringify(currentConfig, null, 5);
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.respondToRequest = function(approve) {
 		const titleStart = approve ? 'Approve' : 'Deny';

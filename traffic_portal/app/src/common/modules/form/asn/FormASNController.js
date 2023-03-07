@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} asn
+ * @param {*} $scope
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/CacheGroupService")} cacheGroupService
+ */
 var FormASNController = function(asn, $scope, formUtils, locationUtils, cacheGroupService) {
 
     var getCacheGroups = function() {
@@ -28,7 +35,7 @@ var FormASNController = function(asn, $scope, formUtils, locationUtils, cacheGro
 
     $scope.asn = asn;
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

@@ -33,7 +33,7 @@ describe("UserRegistrationDialogComponent", () => {
 					provide: CurrentUserService,
 					useValue: {
 						currentUser: {
-							role: 1,
+							role: "admin",
 							tenantId: 1
 						},
 						hasCapability: (): true => true,

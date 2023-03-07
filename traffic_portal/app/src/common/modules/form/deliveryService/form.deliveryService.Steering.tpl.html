@@ -42,7 +42,6 @@ under the License.
             <button type="button" class="btn btn-danger" ng-if="!settings.isNew && !settings.isRequest" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
             <button class="btn btn-success" ng-if="!settings.isRequest" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             <button type="button" class="btn btn-primary" ng-if="!settings.isRequest && !settings.isNew" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
-            <a class="btn btn-primary" ng-if="!settings.isRequest" ng-href="/#!/delivery-service-requests?xmlId={{deliveryService.xmlId}}">View Linked Delivery Service Requests</a>
             <div class="btn-group" ng-if="!settings.isRequest && !settings.isNew" role="group" uib-dropdown is-open="more.isopen">
                 <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
@@ -52,6 +51,7 @@ under the License.
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/clone?dsType={{deliveryService.type}}">Clone Delivery Service</a></li>
                     <hr class="divider"/>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/charts">View Charts</a></li>
+                    <li role="menuitem" ng-if="!settings.isRequest"><a ng-href="/#!/delivery-service-requests?xmlId={{deliveryService.xmlId}}">View Change Requests</a></li>
                     <hr class="divider"/>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/ssl-keys">Manage SSL Keys</a></li>
                     <hr class="divider"/>
@@ -121,8 +121,8 @@ under the License.
                             <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required>
                                 <option disabled hidden value="">Select...</option>
                                 <option value="ACTIVE">Active</option>
-                                <option value="PRIMED">Primed</option>
-								<option value="INACTIVE">Inactive</option>
+                                <option value="PRIMED">{{exposeInactive ? 'Primed' : 'Inactive'}}</option>
+								<option ng-if="exposeInactive" value="INACTIVE">Inactive</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.active != dsCurrent.active">

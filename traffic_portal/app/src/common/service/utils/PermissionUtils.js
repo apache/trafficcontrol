@@ -17,13 +17,43 @@
  * under the License.
  */
 
-var PermissionUtils = function(userModel) {
+/**
+ * PermissionUtils provides methods for checking the user's Permissions.
+ */
+class PermissionUtils {
+	/**
+	 * @param {import("../../models/UserModel")} userModel
+	 */
+	constructor(userModel) {
+		this.userModel = userModel;
+	}
 
-	this.hasCapability = function(cap) {
-		return userModel.hasCapability(cap);
-	};
+	/**
+	 * Checks if the user has the given "Capability" (now called a
+	 * "Permission").
+	 *
+	 * @deprecated "Capabilities" have been (more or less) renamed to
+	 * Permissions, so further checks should use `hasPermission` instead. Note
+	 * also that this doesn't check for the special "admin" Role that is
+	 * afforded every Permission.
+	 *
+	 * @param {string} cap
+	 * @returns {boolean}
+	 */
+	hasCapability(cap) {
+		return this.userModel.hasCapability(cap);
+	}
 
-};
+	/**
+	 * Checks if the user has the given Permission.
+	 *
+	 * @param {string} permission
+	 * @returns {boolean}
+	 */
+	hasPermission(permission) {
+		return this.userModel.user.role === "admin" || this.userModel.hasCapability(permission);
+	}
+}
 
-PermissionUtils.$inject = ['userModel'];
+PermissionUtils.$inject = ["userModel"];
 module.exports = PermissionUtils;

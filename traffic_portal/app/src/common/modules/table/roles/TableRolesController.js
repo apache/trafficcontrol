@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} roles
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableRolesController = function(roles, $scope, $state, locationUtils) {
 
 	$scope.roles = roles;

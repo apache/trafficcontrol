@@ -11,7 +11,7 @@
     "test:ci": "karma start --single-run --browsers=ChromeHeadlessCustom karma.conf.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=16"
   },
   "engineStrict": true,
   "devDependencies": {

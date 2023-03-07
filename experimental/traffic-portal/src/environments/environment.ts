@@ -13,6 +13,8 @@
 * limitations under the License.
 */
 
+import { Environment } from "./environment.type";
+
 // This file can be replaced during build by using the `fileReplacements` array.
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
@@ -20,8 +22,9 @@
 /**
  * environment contains information about the running environment.
  */
-export const environment = {
-	apiVersion: "3.0",
+export const environment: Environment = {
+	apiVersion: "4.0",
 	customModule: false,
 	production: false,
+	useExhaustiveDates: true
 };

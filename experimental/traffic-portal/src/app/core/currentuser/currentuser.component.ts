@@ -15,12 +15,12 @@ import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { CurrentUser } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
 
 import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-password-dialog.component";
 
@@ -35,7 +35,7 @@ import { UpdatePasswordDialogComponent } from "./update-password-dialog/update-p
 export class CurrentuserComponent implements OnInit {
 
 	/** The currently logged-in user - or 'null' if not logged-in. */
-	public currentUser: CurrentUser | null = null;
+	public currentUser: ResponseCurrentUser | null = null;
 	/** Whether the page is in 'edit' mode. */
 	private editing = false;
 	/** Whether the page is in 'edit' mode. */
@@ -48,7 +48,7 @@ export class CurrentuserComponent implements OnInit {
 	 * The editing copy of the current user - used so that you don't need to
 	 * reload the page to see accurate information when the edits are cancelled.
 	 */
-	public editUser: CurrentUser | null = null;
+	public editUser: ResponseCurrentUser | null = null;
 
 	constructor(
 		private readonly auth: CurrentUserService,
@@ -56,7 +56,7 @@ export class CurrentuserComponent implements OnInit {
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
-		private readonly headerSvc: TpHeaderService,
+		private readonly navSvc: NavigationService,
 		public readonly themeSvc: ThemeManagerService
 	) {
 		this.currentUser = this.auth.currentUser;
@@ -72,12 +72,12 @@ export class CurrentuserComponent implements OnInit {
 				r => {
 					if (r) {
 						this.currentUser = this.auth.currentUser;
-						this.headerSvc.headerTitle.next(this.currentUser?.username ?? "");
+						this.navSvc.headerTitle.next(this.currentUser?.username ?? "");
 					}
 				}
 			);
 		} else {
-			this.headerSvc.headerTitle.next(this.currentUser?.username ?? "");
+			this.navSvc.headerTitle.next(this.currentUser?.username ?? "");
 		}
 		const edit = this.route.snapshot.queryParamMap.get("edit");
 		if (edit === "true") {
@@ -140,9 +140,6 @@ export class CurrentuserComponent implements OnInit {
 		}
 
 		// There's a separate form for editing passwords, we don't intend to do that here.
-		this.editUser.localPasswd = undefined;
-		this.editUser.confirmLocalPasswd = undefined;
-
 		const success = await this.api.updateCurrentUser(this.editUser);
 		if (success) {
 			const updated = await this.auth.updateCurrentUser();

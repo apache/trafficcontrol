@@ -1,0 +1,26 @@
+{
+  "name": "traffic-portal-server",
+  "version": "1.0.0",
+  "description": "Node dependencies used for running traffic-portal",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/apache/trafficcontrol.git"
+	},
+	"bugs": {
+		"email": "dev@trafficcontrol.apache.org",
+		"url": "https://github.com/apache/trafficcontrol/issues"
+	},
+	"author": {
+		"email": "dev@trafficcontrol.apache.org",
+		"name": "Apache Software Foundation",
+		"url": "https://trafficcontrol.apache.org"
+	},
+	"engines": {
+		"node": ">=16"
+	},
+	"private": true,
+	"license": "Apache-2.0",
+  "dependencies": {
+    "pm2": "^5.2.2"
+  }
+}

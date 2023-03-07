@@ -265,6 +265,8 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 	 * @returns
 	 */
 	$scope.save = async function(deliveryService) {
+		deliveryService.requiredCapabilities = Object.entries($scope.selectedCapabilities).filter(sc => (sc[1])).map(sc => sc[0])
+
 		if (
 			deliveryService.sslKeyVersion !== null &&
 			deliveryService.sslKeyVersion !== 0 &&

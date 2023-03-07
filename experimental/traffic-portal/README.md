@@ -21,7 +21,7 @@ CDN architectures. The eventual goal is to slowly eat Traffic Portal by
 importing all of its functionality once the self-service UI is complete.
 
 ## Prerequisites
-Traffic Portal runs on [NodeJS](https://nodejs.org/) version 18 (or later) and
+Traffic Portal runs on [NodeJS](https://nodejs.org/) version 16 (or later) and
 uses its built-in NPM package manager to manage dependencies.
 
 ## Building and Running
@@ -89,6 +89,9 @@ Optional arguments:
                         AND signature verification of any passed SSL
   -p PORT, --port PORT  Specify the port on which Traffic Portal will listen
                         (Default: 4200)
+  -d DIST_PATH, --browser-folder DIST_PATH
+                        Specifiy locaiton for the folder that holds the 
+                        browser files
   -c CERT_PATH, --cert-path CERT_PATH
                         Specify a location for an SSL certificate to be used
                         by Traffic Portal. (Requires `-K`/`--key-path`. If

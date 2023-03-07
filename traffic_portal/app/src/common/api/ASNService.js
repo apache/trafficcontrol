@@ -17,7 +17,13 @@
  * under the License.
  */
 
-var ASNService = function($http, $q, locationUtils, messageModel, ENV) {
+/**
+ * @param {import("angular").IHttpService} $http
+ * @param {import("../service/utils/LocationUtils")} locationUtils
+ * @param {import("../models/MessageModel")} messageModel
+ * @param {{api: Record<PropertyKey, string>}} ENV
+ */
+var ASNService = function($http, locationUtils, messageModel, ENV) {
 
     this.getASNs = function(queryParams) {
         return $http.get(ENV.api.unstable + 'asns', {params: queryParams}).then(
@@ -87,5 +93,5 @@ var ASNService = function($http, $q, locationUtils, messageModel, ENV) {
 
 };
 
-ASNService.$inject = ['$http', '$q', 'locationUtils', 'messageModel', 'ENV'];
+ASNService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
 module.exports = ASNService;

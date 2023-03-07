@@ -16,11 +16,20 @@ import { Component, OnInit } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
+import type {
+	Interface,
+	ResponseCacheGroup,
+	ResponseCDN,
+	ResponsePhysicalLocation,
+	ResponseProfile,
+	ResponseServer,
+	ResponseStatus,
+	TypeFromResponse
+} from "trafficops-types";
 
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
-import { CacheGroup, CDN, DUMMY_SERVER, Interface, PhysicalLocation, Profile, Server, Status, Type } from "src/app/models";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
 /**
@@ -40,7 +49,7 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * The server being edited/created.
 	 */
-	public server: Server;
+	public server!: ResponseServer;
 	/**
 	 * A Regular Expression that matches valid IP addresses - and allows IPv4 addresses to have CIDR-notation network prefixes.
 	 */
@@ -99,27 +108,27 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * The set of all Cache Groups.
 	 */
-	public cacheGroups = new Array<CacheGroup>();
+	public cacheGroups = new Array<ResponseCacheGroup>();
 	/**
 	 * The set of all CDNs.
 	 */
-	public cdns = new Array<CDN>();
+	public cdns = new Array<ResponseCDN>();
 	/**
 	 * The set of all Physical Locations.
 	 */
-	public physicalLocations = new Array<PhysicalLocation>();
+	public physicalLocations = new Array<ResponsePhysicalLocation>();
 	/**
 	 * The set of all Profiles.
 	 */
-	public profiles = new Array<Profile>();
+	public profiles = new Array<ResponseProfile>();
 	/**
 	 * The set of all Statuses.
 	 */
-	public statuses = new Array<Status>();
+	public statuses = new Array<ResponseStatus>();
 	/**
 	 * The set of all Types that can be applied to a server.
 	 */
-	public types = new Array<Type>();
+	public types = new Array<TypeFromResponse>();
 
 	public autocompleteNew = AutocompleteValue.NEW_PASSWORD;
 
@@ -135,9 +144,8 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly profileService: ProfileService,
 		private readonly typeService: TypeService,
 		private readonly physlocService: PhysicalLocationService,
-		private readonly headerSvc: TpHeaderService
+		private readonly navSvc: NavigationService
 	) {
-		this.server = DUMMY_SERVER;
 	}
 
 	/**
@@ -194,7 +202,7 @@ export class ServerDetailsComponent implements OnInit {
 			this.serverService.getServers(Number(ID)).then(
 				s => {
 					this.server = s;
-					this.headerSvc.headerTitle.next(`Server #${this.server.id}`);
+					this.navSvc.headerTitle.next(`Server #${this.server.id}`);
 				}
 			).catch(
 				e => {
@@ -213,7 +221,7 @@ export class ServerDetailsComponent implements OnInit {
 				mtu: null,
 				name: "",
 			}];
-			this.headerSvc.headerTitle.next("New Server");
+			this.navSvc.headerTitle.next("New Server");
 		}
 	}
 

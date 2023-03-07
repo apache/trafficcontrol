@@ -45,6 +45,7 @@ RUN dnf -y install epel-release && \
         net-tools \
         iproute \
         nc \
+        procps-ng \
         wget \
         tar \
         unzip \

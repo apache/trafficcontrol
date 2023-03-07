@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} asns
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableASNsController = function(asns, $scope, $state, locationUtils) {
 
     $scope.asns = asns;

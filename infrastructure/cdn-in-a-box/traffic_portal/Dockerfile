@@ -30,7 +30,8 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
-RUN curl -sL https://rpm.nodesource.com/setup_18.x | bash -
+RUN set -o pipefail && \
+    curl -sLf https://rpm.nodesource.com/setup_16.x | bash
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
 ARG TRAFFIC_PORTAL_RPM=traffic_portal/traffic_portal.rpm
@@ -43,6 +44,7 @@ RUN dnf install -y epel-release && \
       jq \
       nodejs \
       openssl \
+      procps-ng \
       # find is required by to-access.sh
       findutils \
       gettext \

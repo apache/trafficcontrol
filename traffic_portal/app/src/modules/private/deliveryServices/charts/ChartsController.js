@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../../common/service/utils/LocationUtils")} locationUtils
+ */
 var ChartsController = function(deliveryService, $scope, $state, locationUtils) {
 
 	$scope.deliveryService = deliveryService;
@@ -25,7 +31,7 @@ var ChartsController = function(deliveryService, $scope, $state, locationUtils) 
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 };
 

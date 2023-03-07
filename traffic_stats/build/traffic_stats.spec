@@ -20,7 +20,6 @@ Name:     traffic_stats
 Version:  %{traffic_control_version}
 Release:  %{build_number}
 Summary:  Tool to pull data from traffic monitor and store in Influxdb
-Packager: david_neuman2 at Cable dot Comcast dot com
 Vendor:   Apache Software Foundation
 Group:    Applications/Communications
 License:  Apache License, Version 2.0

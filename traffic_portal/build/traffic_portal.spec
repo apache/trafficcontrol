@@ -25,7 +25,7 @@ License:  Apache License, Version 2.0
 URL:      https://github.com/apache/trafficcontrol/
 Source:   %{_sourcedir}/traffic_portal-%{traffic_control_version}.tgz
 AutoReqProv: no
-Requires: nodejs >= 2:18.0.0
+Requires: nodejs >= 2:16.0.0
 
 %define traffic_portal_home /opt/traffic_portal
 %description
@@ -43,7 +43,7 @@ tar -xzvf $RPM_SOURCE_DIR/traffic_portal-%{version}.tgz
 		npm install
 		grunt dist
 		cd app/dist
-		npm install -production
+		npm install --omit-dev
 
 %install
 		%__mkdir -p ${RPM_BUILD_ROOT}/etc/init.d

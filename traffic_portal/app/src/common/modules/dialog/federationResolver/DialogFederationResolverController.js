@@ -17,6 +17,14 @@
  * under the License.
  */
 
+/**
+ * @param {*} federation
+ * @param {*} resolver
+ * @param {*} types
+ * @param {*} $scope
+ * @param {*} $uibModalInstance
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ */
 var DialogFederationResolverController = function(federation, resolver, types, $scope, $uibModalInstance, formUtils) {
 
 	$scope.federation = federation;

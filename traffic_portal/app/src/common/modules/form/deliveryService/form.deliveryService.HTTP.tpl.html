@@ -43,7 +43,6 @@ under the License.
             <button type="button" class="btn btn-danger" ng-if="!settings.isNew && !settings.isRequest" ng-disabled="!deletable()" ng-click="confirmDelete(deliveryService)">{{settings.deleteLabel}}</button>
             <button class="btn btn-success" ng-if="!settings.isRequest" ng-disabled="deliveryServiceForm.$pristine || deliveryServiceForm.$invalid || !saveable()" ng-click="save(deliveryService)">{{settings.saveLabel}}</button>
             <button type="button" class="btn btn-primary" ng-if="!settings.isRequest && !settings.isNew" title="Delivery Service Charts" ng-if="showChartsButton" ng-click="openCharts(deliveryService)"><i class="fa fa-bar-chart fa-fw"></i></button>
-            <a class="btn btn-primary" ng-if="!settings.isRequest" ng-href="/#!/delivery-service-requests?xmlId={{deliveryService.xmlId}}">View Linked Delivery Service Requests</a>
             <div class="btn-group" ng-if="!settings.isRequest && !settings.isNew" role="group" uib-dropdown is-open="more.isopen">
                 <button name="moreBtn" type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
                     More&nbsp;
@@ -53,6 +52,7 @@ under the License.
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/clone?dsType={{deliveryService.type}}">Clone Delivery Service</a></li>
                     <hr class="divider"/>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/charts">View Charts</a></li>
+                    <li role="menuitem" ng-if="!settings.isRequest"><a ng-href="/#!/delivery-service-requests?xmlId={{deliveryService.xmlId}}">View Change Requests</a></li>
                     <hr class="divider"/>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/ssl-keys">Manage SSL Keys</a></li>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/url-sig-keys">Manage URL Sig Keys</a></li>
@@ -61,7 +61,6 @@ under the License.
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/jobs">Manage Invalidation Requests</a></li>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/origins">Manage Origins</a></li>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/regexes">Manage Regexes</a></li>
-                    <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/required-server-capabilities">Manage Required Server Capabilities</a></li>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/servers">Manage Servers</a></li>
                     <li role="menuitem"><a ng-href="/#!/delivery-services/{{deliveryService.id}}/static-dns-entries">Manage Static DNS Entries</a></li>
                 </ul>
@@ -126,8 +125,8 @@ under the License.
                             <select id="active" name="active" class="form-control" ng-model="deliveryService.active" required>
                                 <option disabled hidden value="">Select...</option>
                                 <option value="ACTIVE">Active</option>
-                                <option value="PRIMED">Primed</option>
-								<option value="INACTIVE">Inactive</option>
+                                <option value="PRIMED">{{exposeInactive ? 'Primed' : 'Inactive'}}</option>
+								<option ng-if="exposeInactive" value="INACTIVE">Inactive</option>
                             </select>
                             <small class="input-error" ng-show="hasPropertyError(generalConfig.active, 'required')">Required</small>
                             <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.active != dsCurrent.active">
@@ -343,6 +342,36 @@ under the License.
                             </div>
                         </div>
                     </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(generalConfig.requiredCapabilities), 'has-feedback': hasError(generalConfig.requiredCapabilities)}">
+                        <div class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12">
+                            <label class="label-underline" for="capability">Required Capability</label>
+                            <div class="helptooltip">
+                                <div class="helptext">
+                                    Required Server capability(ies) associated with this Delivery Service. <a href="https://traffic-control-cdn.readthedocs.io/en/latest/admin/quick_howto/server_capabililty.html?highlight=Capabilities#configure-delivery-service-required-server-capabilities" target="_blank"> See Required Server Capabilities</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <div class="checkbox-scroll-container">
+                                <div ng-repeat="capability in requiredCapabilities track by $index">
+                                    <input
+                                        aria-label="{{capability.name}}"
+                                        type="checkbox"
+                                        id="capability-{{$index}}"
+                                        name="capability-{{$index}}"
+                                        ng-model="selectedCapabilities[capability.name]"
+                                        ng-checked="selectedCapabilities[capability.name]"
+                                    />
+                                    <a ng-href="/#!/server-capabilities/edit?name={{capability.name}}" target="_blank">{{capability.name}}</a>
+                                </div>
+                            </div>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.requiredCapabilities !== dsCurrent.requiredCapabilities">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
+                                <pre>{{::dsCurrent.requiredCapabilities}}</pre>
+                            </aside>
+                        </div>
+                    </div>
                     <div class="form-group" ng-class="{'has-error': hasError(generalConfig.serviceCategory), 'has-feedback': hasError(generalConfig.serviceCategory)}">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="serviceCategory">Service Category<div class="helptooltip">
                                 <div class="helptext">The type of content being delivered. Some examples are linear and vod.</div>
@@ -526,6 +555,21 @@ under the License.
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.maxRequestHeaderBytes}}</pre>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.fqPacingRate), 'has-feedback': hasError(routingConfig.fqPacingRate)}">
+                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="fqPacingRate">Fair Queueing Pacing Rate Bps<div class="helptooltip">
+                            <div class="helptext">The maximum bytes per second a cache will deliver on any single TCP connection. This uses the Linux kernel's Fair Queuing (<code>setsockopt(SO_MAX_PACING_RATE)</code>) to limit the rate of delivery.</div>
+                        </div>
+                        </label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="fqPacingRate" name="fqPacingRate" type="number" class="form-control" placeholder="Rate-limit connections to this Bytes per second" ng-model="deliveryService.fqPacingRate" step="1" min="0">
+                            <small class="input-error" ng-show="hasPropertyError(routingConfig.fqPacingRate, 'min')">Too Small (must be greater than or equal to 0)</small>
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.fqPacingRate != dsCurrent.fqPacingRate">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
+                                <pre>{{::dsCurrent.fqPacingRate}}</pre>
                             </aside>
                         </div>
                     </div>
@@ -1192,21 +1236,6 @@ under the License.
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.globalMaxTps}}</pre>
-                            </aside>
-                        </div>
-                    </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.fqPacingRate), 'has-feedback': hasError(routingConfig.fqPacingRate)}">
-                        <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="fqPacingRate">Fair Queueing Pacing Rate Bps<div class="helptooltip">
-                            <div class="helptext">The maximum bytes per second a cache will deliver on any single TCP connection. This uses the Linux kernel's Fair Queuing (<code>setsockopt(SO_MAX_PACING_RATE)</code>) to limit the rate of delivery.</div>
-                        </div>
-                        </label>
-                        <div class="col-md-10 col-sm-10 col-xs-12">
-                            <input id="fqPacingRate" name="fqPacingRate" type="number" class="form-control" placeholder="Rate-limit connections to this Bytes per second" ng-model="deliveryService.fqPacingRate" step="1" min="0">
-                            <small class="input-error" ng-show="hasPropertyError(routingConfig.fqPacingRate, 'min')">Too Small (must be greater than or equal to 0)</small>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.fqPacingRate != dsCurrent.fqPacingRate">
-                                <h3 ng-if="open()">Current Value</h3>
-                                <h3 ng-if="!open()">Previous Value</h3>
-                                <pre>{{::dsCurrent.fqPacingRate}}</pre>
                             </aside>
                         </div>
                     </div>

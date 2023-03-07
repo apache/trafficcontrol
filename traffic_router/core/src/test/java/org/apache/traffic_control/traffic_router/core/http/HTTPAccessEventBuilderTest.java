@@ -79,8 +79,19 @@ public class HTTPAccessEventBuilderTest {
         HTTPAccessRecord httpAccessRecord = builder.build();
 
         String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
-
         assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 rhi=- url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=HTTP/1.1 rtype=- rloc=\"-\" rdtl=- rerr=\"-\" rgb=\"-\" rurl=\"-\" rurls=\"-\" uas=\"null\" svc=\"-\" rh=\"-\""));
+    }
+
+    @Test
+    public void itGeneratesAccessEventsWithCorrectCqhvDefaultValues() throws Exception {
+        HTTPAccessRecord.Builder builder = new HTTPAccessRecord.Builder(new Date(144140678000L), request);
+        HTTPAccessRecord httpAccessRecord = builder.build();
+        when(request.getProtocol()).thenReturn(null);
+        String httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 rhi=- url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=- rtype=- rloc=\"-\" rdtl=- rerr=\"-\" rgb=\"-\" rurl=\"-\" rurls=\"-\" uas=\"null\" svc=\"-\" rh=\"-\""));
+        when(request.getProtocol()).thenReturn("");
+        httpAccessEvent = HTTPAccessEventBuilder.create(httpAccessRecord);
+        assertThat(httpAccessEvent, equalTo("144140678.000 qtype=HTTP chi=192.168.7.6 rhi=- url=\"http://example.com/index.html?foo=bar\" cqhm=GET cqhv=- rtype=- rloc=\"-\" rdtl=- rerr=\"-\" rgb=\"-\" rurl=\"-\" rurls=\"-\" uas=\"null\" svc=\"-\" rh=\"-\""));
     }
 
     @Test

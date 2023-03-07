@@ -14,7 +14,7 @@
 
 describe("Tenant Detail Spec", () => {
 	it("Root tenant", () => {
-		const page = browser.page.tenantDetail();
+		const page = browser.page.users.tenantDetail();
 		browser.url(`${page.api.launchUrl}/core/tenants/1`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
@@ -28,7 +28,7 @@ describe("Tenant Detail Spec", () => {
 	});
 
 	it("Test tenant", () => {
-		const page = browser.page.tenantDetail();
+		const page = browser.page.users.tenantDetail();
 		browser.url(`${page.api.launchUrl}/core/tenants/${browser.globals.testData.tenant.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
@@ -40,7 +40,7 @@ describe("Tenant Detail Spec", () => {
 	});
 
 	it("New tenant", () => {
-		const page = browser.page.tenantDetail();
+		const page = browser.page.users.tenantDetail();
 		browser.url(`${page.api.launchUrl}/core/tenants/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")

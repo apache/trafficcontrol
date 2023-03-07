@@ -17,7 +17,13 @@
  * under the License.
  */
 
-var TableCertExpirationsController = function(tableName, certExpirations, $scope, locationUtils, deliveryservices) {
+/**
+ * @param {*} certExpirations
+ * @param {*} $scope
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {*} deliveryservices
+ */
+var TableCertExpirationsController = function(certExpirations, $scope, locationUtils, deliveryservices) {
 
 	/** All of the expiration fields converted to actual Dates */
 	$scope.certExpirations = certExpirations.map(
@@ -100,5 +106,5 @@ var TableCertExpirationsController = function(tableName, certExpirations, $scope
 
 };
 
-TableCertExpirationsController.$inject = ['tableName', 'certExpirations', '$scope', 'locationUtils', 'deliveryservices'];
+TableCertExpirationsController.$inject = ['certExpirations', '$scope', 'locationUtils', 'deliveryservices'];
 module.exports = TableCertExpirationsController;

@@ -113,7 +113,7 @@ button.right-button {
 }
 
 /******* tooltip styling *******/
-form label.has-tooltip {
+form .has-tooltip {
 	text-decoration: underline dotted;
 	position: relative;
 	cursor: help;
@@ -189,7 +189,7 @@ textarea.autosize:read-only {
 }
 
 @media (min-width: 768px) {
-	form label.has-tooltip {
+	form .has-tooltip {
 		div.helptooltip {
 			left: calc(100% - 140px);
 		}
@@ -201,7 +201,7 @@ textarea.autosize:read-only {
 }
 
 @media (max-width: 767px) {
-	form label.has-tooltip {
+	form .has-tooltip {
 		div.helptooltip {
 			left: 0;
 		}
@@ -369,4 +369,22 @@ input:checked + .slider::before {
 		color: inherit;
 		text-shadow: none;
 	}
+}
+
+.checkbox-scroll-container {
+	max-height: 3.5em;
+	overflow-y: auto;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-content: space-between;
+
+	div {
+		min-width: 5em;
+		width: fit-content;
+	}
+}
+
+.label-underline {
+	text-decoration: underline dotted
 }

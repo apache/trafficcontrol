@@ -119,6 +119,7 @@ type RemapDotConfigOpts struct {
 
 func MakeRemapDotConfig(
 	server *Server,
+	servers []Server,
 	unfilteredDSes []DeliveryService,
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
@@ -173,6 +174,7 @@ func MakeRemapDotConfig(
 	}
 
 	nameTopologies := makeTopologyNameMap(topologies)
+	anyCastPartners := getAnyCastPartners(server, servers)
 
 	hdr := makeHdrComment(opt.HdrComment)
 	txt := ""
@@ -180,7 +182,7 @@ func MakeRemapDotConfig(
 	if tc.CacheTypeFromString(server.Type) == tc.CacheTypeMid {
 		txt, typeWarns, err = getServerConfigRemapDotConfigForMid(atsMajorVersion, dsProfilesConfigParams, dses, dsRegexes, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, configDir, opt)
 	} else {
-		txt, typeWarns, err = getServerConfigRemapDotConfigForEdge(dsProfilesConfigParams, serverPackageParamData, dses, dsRegexes, atsMajorVersion, hdr, server, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, cdnDomain, configDir, opt)
+		txt, typeWarns, err = getServerConfigRemapDotConfigForEdge(dsProfilesConfigParams, serverPackageParamData, dses, dsRegexes, atsMajorVersion, hdr, server, anyCastPartners, nameTopologies, cacheGroups, serverCapabilities, dsRequiredCapabilities, cdnDomain, configDir, opt)
 	}
 	warnings = append(warnings, typeWarns...)
 	if err != nil {
@@ -324,9 +326,6 @@ func getServerConfigRemapDotConfigForMid(
 	postRemapLines := []string{}
 
 	for _, ds := range dses {
-		if *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive {
-			continue
-		}
 		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
@@ -504,6 +503,7 @@ func getServerConfigRemapDotConfigForEdge(
 	atsMajorVersion uint,
 	header string,
 	server *Server,
+	anyCastPartners map[string][]string,
 	nameTopologies map[TopologyName]tc.Topology,
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
 	serverCapabilities map[int]map[ServerCapability]struct{},
@@ -543,7 +543,7 @@ func getServerConfigRemapDotConfigForEdge(
 			continue
 		}
 
-		requestFQDNs, err := getDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, cdnDomain)
+		requestFQDNs, err := getDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, anyCastPartners, cdnDomain)
 		if err != nil {
 			warnings = append(warnings, "error getting ds '"+*ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
 			continue
@@ -1062,6 +1062,32 @@ func makeDSRegexMap(regexes []tc.DeliveryServiceRegexes) map[tc.DeliveryServiceN
 	return dsRegexMap
 }
 
+func getAnyCastPartners(server *Server, servers []Server) map[string][]string {
+	anyCastIPs := make(map[string][]string)
+	for _, int := range server.Interfaces {
+		if int.Name == "lo" {
+			for _, addr := range int.IPAddresses {
+				anyCastIPs[addr.Address] = []string{}
+			}
+		}
+	}
+	for _, srv := range servers {
+		if *server.HostName == *srv.HostName {
+			continue
+		}
+		for _, int := range srv.Interfaces {
+			if int.Name == "lo" {
+				for _, address := range int.IPAddresses {
+					if _, ok := anyCastIPs[address.Address]; ok && address.ServiceAddress {
+						anyCastIPs[address.Address] = append(anyCastIPs[address.Address], *srv.HostName)
+					}
+				}
+			}
+		}
+	}
+	return anyCastIPs
+}
+
 type keyVal struct {
 	Key string
 	Val string
@@ -1079,12 +1105,13 @@ func (ks keyVals) Less(i, j int) bool {
 }
 
 // getDSRequestFQDNs returns the FQDNs that clients will request from the edge.
-func getDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, server *Server, cdnDomain string) ([]string, error) {
+func getDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, server *Server, anyCastPartners map[string][]string, cdnDomain string) ([]string, error) {
 	if server.HostName == nil {
 		return nil, errors.New("server missing hostname")
 	}
 
 	fqdns := []string{}
+	seenFQDNs := map[string]struct{}{}
 	for _, dsRegex := range regexes {
 		if tc.DSMatchType(dsRegex.Type) != tc.DSMatchTypeHostRegex || ds.OrgServerFQDN == nil || *ds.OrgServerFQDN == "" {
 			continue
@@ -1100,26 +1127,49 @@ func getDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, s
 		}
 
 		hostRegex := dsRegex.Pattern
-		fqdn := hostRegex
 
-		if strings.HasSuffix(hostRegex, `.*`) {
-			re := hostRegex
-			re = strings.Replace(re, `\`, ``, -1)
-			re = strings.Replace(re, `.*`, ``, -1)
-
-			hName := *server.HostName
-			if ds.Type.IsDNS() {
-				if ds.RoutingName == nil {
-					return nil, errors.New("ds is dns, but missing routing name")
-				}
-				hName = *ds.RoutingName
-			}
-
-			fqdn = hName + re + cdnDomain
+		fqdn, err := makeFQDN(hostRegex, ds, *server.HostName, cdnDomain)
+		if err != nil {
+			return nil, err
 		}
 		fqdns = append(fqdns, fqdn)
+
+		if ds.Type.IsHTTP() && strings.HasSuffix(hostRegex, `.*`) {
+			for _, ip := range anyCastPartners {
+				for _, hn := range ip {
+					fqdn, err := makeFQDN(hostRegex, ds, hn, cdnDomain)
+					if err != nil {
+						return nil, err
+					}
+					if _, ok := seenFQDNs[fqdn]; ok {
+						continue
+					}
+					seenFQDNs[fqdn] = struct{}{}
+					fqdns = append(fqdns, fqdn)
+				}
+			}
+		}
 	}
 	return fqdns, nil
+}
+
+func makeFQDN(hostRegex string, ds *DeliveryService, server string, cdnDomain string) (string, error) {
+	fqdn := hostRegex
+	if strings.HasSuffix(hostRegex, `.*`) {
+		re := hostRegex
+		re = strings.Replace(re, `\`, ``, -1)
+		re = strings.Replace(re, `.*`, ``, -1)
+
+		hName := server
+		if ds.Type.IsDNS() {
+			if ds.RoutingName == nil {
+				return "", errors.New("ds is dns, but missing routing name")
+			}
+			hName = *ds.RoutingName
+		}
+		fqdn = hName + re + cdnDomain
+	}
+	return fqdn, nil
 }
 
 func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[TopologyName]tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) (bool, error) {

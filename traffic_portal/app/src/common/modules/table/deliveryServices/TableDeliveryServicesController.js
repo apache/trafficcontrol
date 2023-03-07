@@ -22,16 +22,12 @@
  *
  * @param {string} tableName
  * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
- * @param {unknown[]} steeringTargets
+ * @param {{deliveryService: string; targets: {deliveryService: string}[]}[]} steeringTargets
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {*} $scope
  * @param {*} $state
  * @param {import("angular").ILocationService} $location
- * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
- * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
- * @param {import("../../../api/DeliveryServiceRequestService")} deliveryServiceRequestService
  * @param {import("../../../service/utils/DeliveryServiceUtils")} deliveryServiceUtils
- * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../models/MessageModel")} messageModel
  * @param {import("../../../models/PropertiesModel")} propertiesModel
  * @param {import("../../../models/UserModel")} userModel
@@ -44,7 +40,13 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 		{
 			headerName: "Active",
 			field: "active",
-			hide: false
+			hide: false,
+			valueGetter: ({data}) => {
+				if (propertiesModel.properties.deliveryServices?.exposeInactive || data.active === "ACTIVE") {
+					return data.active;
+				}
+				return "INACTIVE";
+			}
 		},
 		{
 			headerName: "Anonymous Blocking",
@@ -382,9 +384,9 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 		}
 	];
 
-	let dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+	let dsRequestsEnabled = propertiesModel.properties?.dsRequests?.enabled;
 
-	let showCustomCharts = propertiesModel.properties.deliveryServices.charts.customLink.show;
+	let showCustomCharts = propertiesModel.properties.deliveryServices?.charts.customLink.show;
 
 	/**
 	 * @param {string} typeName
@@ -480,7 +482,7 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 						{ id: $scope.DRAFT, name: "Save Request as Draft" },
 						{ id: $scope.SUBMITTED, name: "Submit Request for Review and Deployment" }
 					];
-					if (userModel.user.role == propertiesModel.properties.dsRequests.overrideRole) {
+					if (userModel.user.role === propertiesModel.properties?.dsRequests?.overrideRole) {
 						statuses.push({ id: $scope.COMPLETE, name: "Fulfill Request Immediately" });
 					}
 					return statuses;
@@ -545,7 +547,8 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 	$scope.COMPLETE = 4;
 
 	/**
-	 * @param {{readonly id: number; type: string}} ds
+	 * @deprecated This should instead just be an ng-href.
+	 * @param {{readonly id: number; type: string; xmlId: string}} ds
 	 */
 	function viewCharts(ds) {
 		if (showCustomCharts) {
@@ -706,11 +709,6 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 		{
 			getHref: ds => `#!/delivery-services/${ds.id}/regexes?dsType=${ds.type}`,
 			text: "Manage Regexes",
-			type: 2
-		},
-		{
-			getHref: ds => `#!/delivery-services/${ds.id}/required-server-capabilities?dsType=${ds.type}`,
-			text: "Manage Required Server Capabilities",
 			type: 2
 		},
 		{

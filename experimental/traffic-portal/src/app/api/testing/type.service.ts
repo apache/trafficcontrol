@@ -12,8 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-
-import type { Type } from "src/app/models";
+import {RequestType, TypeFromResponse} from "trafficops-types";
 
 /** The allowed values for the 'useInTables' query parameter of GET requests to /types. */
 type UseInTable = "cachegroup" |
@@ -30,7 +29,7 @@ type UseInTable = "cachegroup" |
  */
 @Injectable()
 export class TypeService {
-
+	private lastID = 20;
 	private readonly types = [
 		{
 			description: "Mid Logical Location",
@@ -139,15 +138,15 @@ export class TypeService {
 		}
 	];
 
-	public async getTypes(idOrName: number | string): Promise<Type>;
-	public async getTypes(): Promise<Array<Type>>;
+	public async getTypes(idOrName: number | string): Promise<TypeFromResponse>;
+	public async getTypes(): Promise<Array<TypeFromResponse>>;
 	/**
 	 * Gets one or all Types from Traffic Ops
 	 *
 	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single Type to be returned.
 	 * @returns The requested Type(s).
 	 */
-	public async getTypes(idOrName?: number | string): Promise<Type | Array<Type>> {
+	public async getTypes(idOrName?: number | string): Promise<TypeFromResponse | Array<TypeFromResponse>> {
 		if (idOrName !== undefined) {
 			let type;
 			switch (typeof idOrName) {
@@ -171,7 +170,7 @@ export class TypeService {
 	 * @param useInTable The database table for which to retrieve Types.
 	 * @returns The requested Types.
 	 */
-	public async getTypesInTable(useInTable: UseInTable): Promise<Array<Type>> {
+	public async getTypesInTable(useInTable: UseInTable): Promise<Array<TypeFromResponse>> {
 		return this.types.filter(t=>t.useInTable === useInTable);
 	}
 
@@ -180,7 +179,37 @@ export class TypeService {
 	 *
 	 * @returns All Types that have 'server' as their 'useInTable'.
 	 */
-	public async getServerTypes(): Promise<Array<Type>> {
+	public async getServerTypes(): Promise<Array<TypeFromResponse>> {
 		return this.getTypesInTable("server");
+	}
+
+	/**
+	 * Deletes an existing type.
+	 *
+	 * @param id Id of the type to delete.
+	 * @returns The deleted type.
+	 */
+	public async deleteType(id: number): Promise<TypeFromResponse> {
+		const index = this.types.findIndex(t => t.id === id);
+		if (index === -1) {
+			throw new Error(`no such Type: ${id}`);
+		}
+		return this.types.splice(index, 1)[0];
+	}
+
+	/**
+	 * Creates a new type.
+	 *
+	 * @param type The type to create.
+	 * @returns The created type.
+	 */
+	public async createType(type: RequestType): Promise<TypeFromResponse> {
+		const t = {
+			...type,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+		this.types.push(t);
+		return t;
 	}
 }

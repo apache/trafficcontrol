@@ -27,6 +27,12 @@ else
 	RHEL_VERSION := $(shell echo $(RHEL_VERSION) | cut -f1 -d.)
 endif
 
+ifeq ($(shell echo $(RHEL_VERSION) | grep -Eo '^[0-9]+'),7)
+	export BASE_IMAGE := centos
+else
+	BASE_IMAGE := rockylinux
+endif
+
 CIAB_DIR_RELATIVE := $(dir $(MAKEFILE_LIST))
 CIAB_DIR_ABSOLUTE := $(shell cd $(CIAB_DIR_RELATIVE) && pwd)
 TC_DIR := $(CIAB_DIR_RELATIVE)../..
@@ -35,7 +41,8 @@ PKG_COMMAND := $(TC_DIR)/pkg
 PKG_FLAGS := -v -$(RHEL_VERSION)
 BUILD_SUFFIX := _build
 BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l | tr -d '[[:space:]]').$(shell git rev-parse --short=8 HEAD)
-BUILD_ARCH   := $(shell rpm --eval %_arch)
+# no --rm on the docker command to speed up reuse for shell completion
+BUILD_ARCH   := $(shell docker run --name=ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch $(BASE_IMAGE):$(RHEL_VERSION) rpm --eval %_arch)
 TC_VERSION := $(shell cat "$(TC_DIR)/VERSION")
 TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
 TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)

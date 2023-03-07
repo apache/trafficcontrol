@@ -17,33 +17,57 @@
  * under the License.
  */
 
-var LocationUtils = function($location, $uibModal) {
+/**
+ * LocationUtils provides methods for performing common actions that affect
+ * routing.
+ */
+class LocationUtils {
+	/**
+	 * @param {import("angular").ILocationService} $location
+	 * @param {import("./angular.ui.bootstrap").IModalService} $uibModal
+	 */
+	constructor($location, $uibModal) {
+		this.$location = $location;
+		this.$uibModal = $uibModal;
+	}
 
-    this.navigateToPath = function(path, unsavedChanges) {
-        if (unsavedChanges) {
-            const params = {
-                title: 'Confirm Navigation',
-                message: 'You have unsaved changes that will be lost if you decide to continue.<br><br>Do you want to continue?'
-            };
-            let modalInstance = $uibModal.open({
-                templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-                controller: 'DialogConfirmController',
-                size: 'md',
-                resolve: {
-                    params: function () {
-                        return params;
-                    }
-                }
-            });
-            modalInstance.result.then(function() {
-                $location.url(path);
-            });
-        } else {
-            $location.url(path);
-        }
-    };
+	/**
+	 * Navigates the current browsing context to the provided relative or
+	 * absolute URL.
+	 *
+	 * **In almost all cases, you should be using an Anchor element with
+	 * `ng-href` instead!**
+	 *
+	 * @param {string} path The path to which to navigate (may include query
+	 * string and document fragment).
+	 * @param {boolean} [unsavedChanges] If true, the user is asked if they want
+	 * to navigate away from unsaved changes, allowing them to cancel the
+	 * action.
+	 * @returns {Promise<void>}
+	 */
+	async navigateToPath(path, unsavedChanges) {
+		if (!unsavedChanges) {
+			this.$location.url(path);
+			return;
+		}
+		const params = {
+			title: "Confirm Navigation",
+			message: "You have unsaved changes that will be lost if you decide to continue.<br><br>Do you want to continue?"
+		};
+		const modalInstance = this.$uibModal.open({
+			templateUrl: "common/modules/dialog/confirm/dialog.confirm.tpl.html",
+			controller: "DialogConfirmController",
+			size: "md",
+			resolve: { params }
+		});
+		try {
+			await modalInstance.result;
+			this.$location.url(path);
+		} catch {
+			// this means the user cancelled
+		}
+	}
+}
 
-};
-
-LocationUtils.$inject = ['$location', '$uibModal'];
+LocationUtils.$inject = ["$location", "$uibModal"];
 module.exports = LocationUtils;

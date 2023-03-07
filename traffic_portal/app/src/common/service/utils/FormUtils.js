@@ -17,17 +17,33 @@
  * under the License.
  */
 
-var FormUtils = function() {
+/**
+ * FormUtils contains helper methods that make it easier to interact with
+ * angular forms.
+ */
+class FormUtils {
 
-    this.hasError = function(input) {
-        return input && !input.$focused && input.$invalid;
-    };
+	/**
+	 * Checks if the given controller has any errors.
+	 *
+	 * @param {import("angular").IFormController} input
+	 * @returns {boolean}
+	 */
+	hasError(input) {
+		return input && !input.$focused && input.$invalid;
+	}
 
-    this.hasPropertyError = function(input, property) {
-        return input && !input.$focused && input.$error[property];
-    };
-
-};
+	/**
+	 * Checks if the given controller has a specific error.
+	 *
+	 * @param {import("angular").IFormController} input
+	 * @param {string} property The name of the error for which to check.
+	 * @returns {boolean}
+	 */
+	hasPropertyError(input, property) {
+		return input && !input.$focused && !!input.$error[property];
+	}
+}
 
 FormUtils.$inject = [];
 module.exports = FormUtils;

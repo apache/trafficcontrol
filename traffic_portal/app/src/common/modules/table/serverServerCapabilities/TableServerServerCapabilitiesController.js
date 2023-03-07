@@ -17,6 +17,18 @@
  * under the License.
  */
 
+/**
+ * @param {*} server
+ * @param {*} serverCapabilities
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/ServerUtils")} serverUtils
+ * @param {import("../../../api/ServerService")} serverService
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../api/ServerCapabilityService")} serverCapabilityService
+ */
 var TableServerServerCapabilitiesController = function(server, serverCapabilities, $scope, $state, $uibModal, locationUtils, serverUtils, serverService, messageModel, serverCapabilityService) {
 
 	$scope.server = server[0];
@@ -154,7 +166,7 @@ var TableServerServerCapabilitiesController = function(server, serverCapabilitie
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#serverCapabilitiesTable').dataTable({

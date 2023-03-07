@@ -26,7 +26,7 @@ Requirements
 
 * For snapshot:
   * [jq](https://stedolan.github.io/jq/)
-  * [json_diff](https://json-delta.readthedocs.io/en/latest/)
+  * [jd](https://github.com/josephburnett/jd)
 
 Role Variables
 --------------

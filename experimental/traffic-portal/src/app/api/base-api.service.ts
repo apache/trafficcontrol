@@ -26,7 +26,7 @@ export abstract class APIService {
 	 * The API version used by the service(s) - this will be overridden by the
 	 * environment if a different API version is therein found.
 	 */
-	public apiVersion = "3.0";
+	public apiVersion = "4.0";
 
 	/**
 	 * Sends an HTTP DELETE request to the API.
@@ -36,7 +36,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected delete<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected delete<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
 		return this.do<T>("delete", path, data, params);
 	}
 
@@ -48,7 +48,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected get<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected get<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
 		return this.do<T>("get", path, data, params);
 	}
 
@@ -60,7 +60,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected head<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected head<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
 		return this.do<T>("head", path, data, params);
 	}
 
@@ -72,7 +72,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected options<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected options<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
 		return this.do<T>("options", path, data, params);
 	}
 
@@ -84,7 +84,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected patch<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected patch<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
 		return this.do<T>("patch", path, data, params);
 	}
 
@@ -96,7 +96,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected post<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected post<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
 		return this.do<T>("post", path, data, params);
 	}
 
@@ -108,7 +108,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected put<T>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected put<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
 		return this.do<T>("put", path, data, params);
 	}
 

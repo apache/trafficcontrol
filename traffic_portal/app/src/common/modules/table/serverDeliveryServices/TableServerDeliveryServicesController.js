@@ -18,14 +18,13 @@
  */
 
 /**
- *
  * @param {{cdnId: number; id: number; hostName: string; type: string}} server
  * @param {import("../../../api/DeliveryServiceService").DeliveryService[]} deliveryServices
  * @param {unknown[]} steeringTargets
  * @param {unknown} filter
  * @param {import("angular").IControllerService} $controller
  * @param {*} $scope
- * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../service/utils/ServerUtils")} serverUtils
  * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService

@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {import("angular").IHttpService} $http
+ * @param {import("../service/utils/LocationUtils")} locationUtils
+ * @param {import("../models/MessageModel")} messageModel
+ * @param {{api: Record<PropertyKey, string>}} ENV
+ */
 var ProfileService = function($http, locationUtils, messageModel, ENV) {
 
     this.getProfiles = function(queryParams) {
@@ -94,7 +100,7 @@ var ProfileService = function($http, locationUtils, messageModel, ENV) {
     };
 
     this.cloneProfile = function(sourceName, cloneName) {
-        return $http.post(ENV.api.unstable + "profiles/name/" + cloneName + "/copy/" + sourceName).then(
+        return $http.post(ENV.api.unstable + "profiles/name/" + cloneName + "/copy/" + sourceName, undefined).then(
             function(result) {
                 messageModel.setMessages(result.data.alerts, true);
                 locationUtils.navigateToPath('/profiles/' + result.data.response.id);

@@ -37,15 +37,18 @@
  * @param {import("../../../api/TenantService")} tenantService
  * @param {import("../../../models/PropertiesModel")} propertiesModel
  * @param {import("../../../models/UserModel")} userModel
+ * @param {import("../../../api/ServerCapabilityService")} serverCapabilityService
  * @param {import("../../../api/ServiceCategoryService")} serviceCategoryService
  */
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serviceCategoryService) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serverCapabilityService, serviceCategoryService) {
 
 	/**
 	 * This is used to cache TLS version settings when the checkbox is toggled.
 	 * @type null | [string, ...string[]]
 	 */
 	let cachedTLSVersions = null;
+
+	$scope.exposeInactive = !!(propertiesModel.properties.deliveryServices?.exposeInactive);
 
 	$scope.showSensitive = false;
 
@@ -54,7 +57,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 * Checks if a TLS version is unknown.
 	 * @param {string} v
 	 */
-	$scope.tlsVersionUnknown = v  => v && !knownVersions.has(v);
+	$scope.tlsVersionUnknown = v => v && !knownVersions.has(v);
 
 	const insecureVersions = new Set(["1.0", "1.1"]);
 	/**
@@ -189,11 +192,20 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 * @returns {Promise<void>}
 	 */
 	async function getTenants() {
-		/** @type {{id: number; parentId: number}[]} */
 		const tenants = await tenantService.getTenants();
 		const tenant = tenants.find(t => t.id === userModel.user.tenantId);
 		$scope.tenants = tenantUtils.hierarchySort(tenantUtils.groupTenantsByParent(tenants), tenant?.parentId, []);
 		tenantUtils.addLevels($scope.tenants);
+	}
+
+	$scope.selectedCapabilities = {};
+	/**
+	 * Updates the server Capabilities on the $scope.
+	 * @returns {Promise<void>}
+	 */
+	async function getRequiredCapabilities() {
+		$scope.requiredCapabilities = await serverCapabilityService.getServerCapabilities();
+		$scope.selectedCapabilities = Object.fromEntries($scope.requiredCapabilities.map(dsc => [dsc.name, $scope.deliveryService.requiredCapabilities.includes(dsc.name)]))
 	}
 
 	/**
@@ -214,7 +226,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		if (!dsCurrent) {
 			return "";
 		}
-		return dsCurrent.active.split(" ").map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(" ");
+		let {active} = dsCurrent;
+		if (!propertiesModel.properties.deliveryServices?.exposeInactive && active !== "ACTIVE") {
+			active = "INACTIVE";
+		}
+		return active.split(" ").map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(" ");
 	}
 
 	$scope.formatCurrentActive = formatCurrentActive;
@@ -233,11 +249,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 
 	$scope.topologies = topologies;
 
-	$scope.showChartsButton = propertiesModel.properties.deliveryServices.charts.customLink.show;
+	$scope.showChartsButton = !!(propertiesModel.properties.deliveryServices?.charts?.customLink?.show);
 
-	$scope.openCharts = deliveryServiceUtils.openCharts;
+	$scope.openCharts = ds => deliveryServiceUtils.openCharts(ds);
 
-	$scope.dsRequestsEnabled = propertiesModel.properties.dsRequests.enabled;
+	$scope.dsRequestsEnabled = !!(propertiesModel.properties.dsRequests?.enabled);
 
 	/**
 	 * Gods have mercy.
@@ -411,7 +427,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		$scope.deliveryServiceForm.$pristine = false; // this enables the 'update' button in the ds form
 	};
 
-	$scope.hasError = formUtils.hasError;
+	$scope.hasError = input => formUtils.hasError(input);
 
 	/**
 	 * Checks if a TLS Version has a specific error.
@@ -453,7 +469,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 	$scope.tlsVersionHasError = tlsVersionHasError;
 
-	$scope.hasPropertyError = formUtils.hasPropertyError;
+	$scope.hasPropertyError = (input, property) => formUtils.hasPropertyError(input, property);
 
 	$scope.rangeRequestSelected = function() {
 		if ($scope.deliveryService.rangeRequestHandling != 3) {
@@ -464,6 +480,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	getCDNs();
 	getProfiles();
 	getTenants();
+	getRequiredCapabilities();
 	getServiceCategories();
 	getSteeringTargets();
 	if (!deliveryService.consistentHashQueryParams || deliveryService.consistentHashQueryParams.length < 1) {
@@ -472,11 +489,16 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 	if (deliveryService.lastUpdated) {
 		// TS checkers hate him for this one weird trick:
+		// @ts-ignore
 		deliveryService.lastUpdated = new Date(deliveryService.lastUpdated.replace("+00", "Z"));
 		// ... the right way to do this is with an interceptor, but nobody
 		// wants to put in that kinda work on a legacy product.
 	}
+
+	if (!$scope.exposeInactive && deliveryService.active === "INACTIVE") {
+		deliveryService.active = "PRIMED";
+	}
 };
 
-FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serviceCategoryService"];
+FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serverCapabilityService", "serviceCategoryService"];
 module.exports = FormDeliveryServiceController;

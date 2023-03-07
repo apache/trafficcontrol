@@ -134,6 +134,13 @@ function setUpQueryParamFilter(params, columns, api) {
 	}
 }
 
+/**
+ * @param {*} $scope
+ * @param {import("angular").IDocumentService} $document
+ * @param {*} $state
+ * @param {import("../../../models/UserModel")} userModel
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ */
 let CommonGridController = function ($scope, $document, $state, userModel, dateUtils) {
 	this.entry = null;
 	this.quickSearch = "";

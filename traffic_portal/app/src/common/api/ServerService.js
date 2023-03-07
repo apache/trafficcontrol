@@ -17,7 +17,7 @@
  * under the License.
  */
 
-var ServerService = function($http, locationUtils, messageModel, ENV) {
+var ServerService = function($http, messageModel, ENV) {
 
     this.getServers = function(queryParams) {
         return $http.get(ENV.api.unstable + 'servers', {params: queryParams}).then(
@@ -186,5 +186,5 @@ var ServerService = function($http, locationUtils, messageModel, ENV) {
 
 };
 
-ServerService.$inject = ['$http', 'locationUtils', 'messageModel', 'ENV'];
+ServerService.$inject = ['$http', 'messageModel', 'ENV'];
 module.exports = ServerService;

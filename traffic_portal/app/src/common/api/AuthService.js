@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {import("angular").IRootScopeService} $rootScope
+ * @param {import("angular").IHttpService} $http
+ * @param {*} $state
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../models/UserModel")} userModel
+ * @param {import("../models/MessageModel")} messageModel
+ * @param {{api: Record<PropertyKey, string>}} ENV
+ * @param {import("../service/utils/LocationUtils")} locationUtils
+ */
 var AuthService = function($rootScope, $http, $state, $location, userModel, messageModel, ENV, locationUtils) {
 
     this.login = function(username, password) {
@@ -55,11 +65,11 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
     this.oauthLogin = function(authCodeTokenUrl, code, clientId, redirectUri) {
         return $http.post(ENV.api.unstable + 'user/login/oauth', { authCodeTokenUrl: authCodeTokenUrl, code: code, clientId: clientId, redirectUri: redirectUri})
             .then(
-                function(result) {
+                function() {
                     $rootScope.$broadcast('authService::login');
-                    var redirect = localStorage.getItem('redirectParam');
+                    let redirect = localStorage.getItem('redirectParam');
                     localStorage.clear();
-                    if (redirect === undefined || redirect === '') {
+                    if (!redirect) {
                         redirect = decodeURIComponent($location.search().redirect);
                     }
                     if (redirect !== undefined) {
@@ -78,13 +88,13 @@ var AuthService = function($rootScope, $http, $state, $location, userModel, mess
 
     this.logout = function() {
         userModel.resetUser();
-        return $http.post(ENV.api.unstable + 'user/logout').then(
+        return $http.post(`${ENV.api.unstable}user/logout`, undefined).then(
             function(result) {
                 $rootScope.$broadcast('trafficPortal::exit');
                 if ($state.current.name == 'trafficPortal.public.login') {
-                    messageModel.setMessages(result.alerts, false);
+                    messageModel.setMessages(result.data.alerts, false);
                 } else {
-                    messageModel.setMessages(result.alerts, true);
+                    messageModel.setMessages(result.data.alerts, true);
                     $state.go('trafficPortal.public.login');
                 }
                 return result;

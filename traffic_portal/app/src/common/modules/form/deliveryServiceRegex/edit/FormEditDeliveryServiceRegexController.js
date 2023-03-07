@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} regex
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/DeliveryServiceRegexService")} deliveryServiceRegexService
+ */
 var FormEditDeliveryServiceRegexController = function(deliveryService, regex, $scope, $controller, $uibModal, $anchorScroll, locationUtils, deliveryServiceRegexService) {
 
 	// extends the FormDeliveryServiceController to inherit common methods

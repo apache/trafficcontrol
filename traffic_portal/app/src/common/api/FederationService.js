@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {import("angular").IHttpService} $http
+ * @param {import("angular").IQService} $q
+ * @param {{api: Record<PropertyKey, string>}} ENV
+ * @param {import("../service/utils/LocationUtils")} locationUtils
+ * @param {import("../models/MessageModel")} messageModel
+ */
 var FederationService = function($http, $q, ENV, locationUtils, messageModel) {
 
 	const service = this;

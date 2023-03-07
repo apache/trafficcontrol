@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} coordinates
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableCoordinatesController = function(coordinates, $scope, $state, locationUtils) {
 
     $scope.coordinates = coordinates;

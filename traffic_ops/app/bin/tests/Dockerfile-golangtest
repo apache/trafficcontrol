@@ -20,6 +20,7 @@ ARG DIR=github.com/apache/trafficcontrol
 COPY --from=get-go /usr/local/go /usr/local/go
 ENV PATH=/usr/local/go/bin:${PATH} \
     GOPATH=/go
+ENV PATH=${GOPATH}/bin:${PATH}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -39,6 +40,6 @@ ADD vendor /go/src/$DIR/vendor
 
 WORKDIR /go/src/$DIR/traffic_ops/traffic_ops_golang
 
-CMD bash -c 'go mod vendor -v && go test -cover -v ./... ../../lib/go-tc/...'
+CMD go mod vendor -v && go test -cover -v ./... ../../lib/go-tc/...
 #
 # vi:syntax=Dockerfile

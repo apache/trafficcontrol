@@ -16,7 +16,7 @@ import { Component, EventEmitter, HostListener, Input, OnInit, Output } from "@a
 import { MatTreeNestedDataSource } from "@angular/material/tree";
 import { Subject } from "rxjs";
 
-import { TreeData } from "src/app/models/tree-select.model";
+import { TreeData } from "src/app/models";
 import { fuzzyScore } from "src/app/utils";
 
 /**

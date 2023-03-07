@@ -14,17 +14,17 @@
 
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
-import {MatDialog} from "@angular/material/dialog";
+import { MatDialog } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {Observable, of, ReplaySubject} from "rxjs";
+import { Observable, of, ReplaySubject } from "rxjs";
+import type { ResponseServer } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { defaultServer, type Server } from "src/app/models";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { TpHeaderComponent } from "src/app/shared/tp-header/tp-header.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
 import { augment, type AugmentedServer, serverIsCache, ServersTableComponent } from "./servers-table.component";
 
@@ -45,6 +45,60 @@ class MockDialog {
 	}
 }
 
+const defaultServer: ResponseServer = {
+	cachegroup: "",
+	cachegroupId: 1,
+	cdnId: 1,
+	cdnName: "",
+	domainName: "",
+	guid: null,
+	hostName: "",
+	httpsPort: null,
+	id: -1,
+	iloIpAddress: null,
+	iloIpGateway: null,
+	iloIpNetmask: null,
+	iloPassword: null,
+	iloUsername: null,
+	interfaces: [
+		{
+			ipAddresses: [
+				{
+					address: "1.2.3.4",
+					gateway: null,
+					serviceAddress: true
+				}
+			],
+			maxBandwidth: null,
+			monitor: false,
+			mtu: null,
+			name: "eth0"
+		}
+	],
+	lastUpdated: new Date(),
+	mgmtIpAddress: null,
+	mgmtIpGateway: null,
+	mgmtIpNetmask: null,
+	offlineReason: null,
+	physLocation: "",
+	physLocationId: 1,
+	profile: "",
+	profileDesc: "",
+	profileId: 1,
+	rack: null,
+	revalPending: false,
+	routerHostName: null,
+	routerPortName: null,
+	status: "",
+	statusId: 1,
+	statusLastUpdated: null,
+	tcpPort: null,
+	type: "",
+	typeId: 1,
+	updPending: false,
+	xmppId: "",
+};
+
 describe("ServersTableComponent", () => {
 	let component: ServersTableComponent;
 	let fixture: ComponentFixture<ServersTableComponent>;
@@ -53,7 +107,7 @@ describe("ServersTableComponent", () => {
 	beforeEach(() => {
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"]);
 
-		const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+		const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 		TestBed.configureTestingModule({
 			declarations: [ ServersTableComponent, TpHeaderComponent ],
 			imports: [
@@ -67,7 +121,7 @@ describe("ServersTableComponent", () => {
 			providers: [
 				{ provide: CurrentUserService, useValue: mockCurrentUserService },
 				{ provide: MatDialog, useClass: MockDialog },
-				{ provide: TpHeaderService, useValue: headerSvc}
+				{ provide: NavigationService, useValue: navSvc}
 			]
 		}).compileComponents();
 		fixture = TestBed.createComponent(ServersTableComponent);
@@ -82,7 +136,7 @@ describe("ServersTableComponent", () => {
 	});
 
 	it("knows if a server is a cache", () => {
-		const s: AugmentedServer = {...defaultServer, ipv4Address: "", ipv6Address: "", type: undefined};
+		const s: AugmentedServer = {...defaultServer, ipv4Address: "", ipv6Address: "", type: ""};
 		expect(serverIsCache(s)).toBeFalse();
 		s.type = "EDGE";
 		expect(serverIsCache(s)).toBeTrue();
@@ -99,7 +153,7 @@ describe("ServersTableComponent", () => {
 	});
 
 	it("augments servers", () => {
-		const s: Server = {...defaultServer, interfaces: []};
+		const s: ResponseServer = {...defaultServer, interfaces: []};
 		let a = augment(s);
 		expect(a.ipv4Address).toBe("");
 		expect(a.ipv6Address).toBe("");
@@ -194,7 +248,7 @@ describe("ServersTableComponent", () => {
 
 	it("reloads servers when one or more servers' statuses are updated", async () => {
 		const service = TestBed.inject(ServerService);
-		await service.createServer({...defaultServer});
+		await service.createServer({...defaultServer, interfaces: []});
 		component.ngOnInit();
 		const servers = await component.servers;
 		if (!servers) {
@@ -208,14 +262,12 @@ describe("ServersTableComponent", () => {
 		expect((await component.servers).length).toBeGreaterThan(0);
 	});
 
-	it("handles its context menu actions", fakeAsync(() => {
+	it("handles its context menu actions", fakeAsync(async () => {
 		const augmentFields = {ipv4Address: "192.0.2.0", ipv6Address: "2001::1"};
 		const server = {...defaultServer, id: 9001, type: "EDGE", ...augmentFields};
 
-		component.handleContextMenu({action: "viewDetails", data: server});
-		tick();
-		expect(router.url).toBe("/core/server/9001");
-		expectAsync(component.handleContextMenu({action: "viewDetails", data: [server]})).toBeRejected();
+		await expectAsync(component.handleContextMenu({action: "viewDetails", data: [server]})).toBeRejected();
+		await expectAsync(component.handleContextMenu({action: "viewDetails", data: server})).toBeRejected();
 
 		component.handleContextMenu({action: "updateStatus", data: server});
 

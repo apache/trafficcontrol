@@ -18,7 +18,7 @@
 name: T3C Integration Tests
 
 env:
-  ATS_VERSION: 8.1.x
+  ATS_VERSION: 9.1.x
   RHEL_VERSION: 8
   TARGET_ARCH: x86_64
 

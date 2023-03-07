@@ -22,7 +22,7 @@
  * @property {boolean} dnssecEnabled
  * @property {string} domainName
  * @property {number} id
- * @property {Date} lastUpdated
+ * @property {string} lastUpdated
  * @property {string} name
  */
 
@@ -34,6 +34,11 @@ const getHref = cdn => `#!/cdns/${cdn.id}`;
 
 /**
  * @param {CDN[]} cdns
+ * @param {*} $scope
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/CDNService")} cdnService
+ * @param {import("../../../models/MessageModel")} messageModel
  */
 var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnService, messageModel) {
 
@@ -71,7 +76,7 @@ var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnSe
 		}
 	];
 
-	/** @type CGC.DropDownOption[] */
+	/** @type {import("../agGrid/CommonGridController").CGC.DropDownOption[]} */
 	$scope.dropDownOptions = [{
 		name: "createCDNMenuItem",
 		href: "#!/cdns/new",
@@ -159,7 +164,7 @@ var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnSe
 		});
 	};
 
-	/** @type CGC.ContextMenuOption[] */
+	/** @type {import("../agGrid/CommonGridController").CGC.ContextMenuOption[]} */
 	$scope.contextMenuOptions = [
 		{
 			getHref,
@@ -229,7 +234,7 @@ var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnSe
 	];
 
 	/** Options, configuration, data and callbacks for the ag-grid table. */
-	/** @type CGC.GridSettings */
+	/** @type {import("../agGrid/CommonGridController").CGC.GridSettings} */
 	$scope.gridOptions = {
 		onRowClick: function(row) {
 			locationUtils.navigateToPath(`/cdns/${row.data.id}`);
@@ -243,12 +248,7 @@ var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnSe
 	};
 
 	$scope.cdns = cdns.map(
-		cdn => {
-			/** @type string */
-			const lastUpdated = cdn.lastUpdated
-			cdn.lastUpdated = new Date(lastUpdated.replace(" ", "T").replace("+00", "Z"));
-			return cdn;
-		}
+		cdn => ({...cdn, lastUpdated: new Date(cdn.lastUpdated.replace(" ", "T").replace("+00", "Z"))})
 	);
 
 };

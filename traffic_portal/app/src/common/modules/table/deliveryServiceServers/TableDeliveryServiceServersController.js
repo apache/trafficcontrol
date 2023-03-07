@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/** @typedef { import('../agGrid/CommonGridController').CGC } CGC */
 
 /**
  * This is the controller for the table of servers assigned to a Delivery
@@ -27,7 +26,7 @@
  * @param {unknown} filter
  * @param {import("angular").IControllerService} $controller
  * @param {*} $scope
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  */
@@ -148,7 +147,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 		});
 	};
 
-	/** @type CGC.TitleButton */
+	/** @type {import("../agGrid/CommonGridController").CGC.TitleButton} */
 	$scope.titleButton = {
 		onClick: function() {
 			locationUtils.navigateToPath("topologies/edit?name=" + encodeURIComponent($scope.deliveryService.topology));
@@ -158,7 +157,7 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 		}
 	};
 
-	/** @type CGC.TitleBreadCrumbs */
+	/** @type {import("../agGrid/CommonGridController").CGC.TitleBreadCrumbs} */
 	$scope.breadCrumbs = [{
 			href: "#!/delivery-services",
 			text: "Delivery Services"

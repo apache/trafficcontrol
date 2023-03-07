@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {*} regions
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableRegionsController = function(regions, $scope, $state, locationUtils) {
 
     $scope.regions = regions;

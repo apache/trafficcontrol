@@ -12,18 +12,18 @@
 * limitations under the License.
 */
 
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute, Router } from "@angular/router";
+import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { Division, ResponseDivision } from "trafficops-types";
+import { ResponseDivision } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * DivisionsTableComponent is the controller for the "Divisions" table.
@@ -36,29 +36,6 @@ import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
 export class DivisionsTableComponent implements OnInit {
 	/** List of divisions */
 	public divisions: Promise<Array<ResponseDivision>>;
-
-	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: TpHeaderService, private readonly router: Router,
-		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
-		this.fuzzySubject = new BehaviorSubject<string>("");
-		this.divisions = this.api.getDivisions();
-	}
-
-	/** Initializes table data, loading it from Traffic Ops. */
-	public ngOnInit(): void {
-		this.route.queryParamMap.subscribe(
-			m => {
-				const search = m.get("search");
-				if (search) {
-					this.fuzzControl.setValue(decodeURIComponent(search));
-					this.updateURL();
-				}
-			},
-			e => {
-				console.error("Failed to get query parameters:", e);
-			}
-		);
-		this.headerSvc.headerTitle.next("Divisions");
-	}
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
@@ -78,11 +55,15 @@ export class DivisionsTableComponent implements OnInit {
 	];
 
 	/** Definitions for the context menu items (which act on augmented division data). */
-	public contextMenuItems: Array<ContextMenuItem<Division>> = [
+	public contextMenuItems: Array<ContextMenuItem<ResponseDivision>> = [
 		{
-			action: "edit",
-			multiRow: false,
+			href: (div: ResponseDivision): string => `${div.id}`,
 			name: "Edit"
+		},
+		{
+			href: (div: ResponseDivision): string => `${div.id}`,
+			name: "Open in New Tab",
+			newTab: true
 		},
 		{
 			action: "delete",
@@ -90,9 +71,9 @@ export class DivisionsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			action: "viewRegions",
-			multiRow: false,
-			name: "View Regions"
+			href: "/core/regions",
+			name: "View Regions",
+			queryParams: (div: ResponseDivision): Params => ({divisionName: div.name})
 		}
 	];
 
@@ -100,11 +81,31 @@ export class DivisionsTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl = new FormControl<string>("");
+	public fuzzControl = new FormControl<string>("", {nonNullable: true});
+
+	constructor(private readonly route: ActivatedRoute, private readonly navSvc: NavigationService,
+		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
+		this.fuzzySubject = new BehaviorSubject<string>("");
+		this.divisions = this.api.getDivisions();
+		this.navSvc.headerTitle.next("Divisions");
+	}
+
+	/** Initializes table data, loading it from Traffic Ops. */
+	public ngOnInit(): void {
+		this.route.queryParamMap.subscribe(
+			m => {
+				const search = m.get("search");
+				if (search) {
+					this.fuzzControl.setValue(decodeURIComponent(search));
+					this.updateURL();
+				}
+			}
+		);
+	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
-		this.fuzzySubject.next(this.fuzzControl.value ?? "");
+		this.fuzzySubject.next(this.fuzzControl.value);
 	}
 
 	/**
@@ -125,11 +126,6 @@ export class DivisionsTableComponent implements OnInit {
 					}
 				});
 				break;
-			case "edit":
-				await this.router.navigate(["/core/division", data.id]);
-				break;
-			case "viewRegions":
-				console.log("Regions not implemented");
 		}
 	}
 }

@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} origin
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/OriginService")} originService
+ */
 var FormEditOriginController = function(origin, $scope, $state, $controller, $uibModal, $anchorScroll, locationUtils, originService) {
 
     $scope.origin = origin[0]

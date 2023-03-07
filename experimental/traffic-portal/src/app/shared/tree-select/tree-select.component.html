@@ -31,7 +31,7 @@ limitations under the License.
 				<div class="mat-tree-node" *ngIf="isVisible(node)">
 					<button mat-icon-button matTreeNodeToggle [attr.aria-label]="'Toggle ' + node.name" type="button">
 						<mat-icon class="mat-icon-rt1-mirror">
-							{{treeControl.isExpanded(node) ? 'expanded_more' : 'chevron_right' }}
+							{{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
 						</mat-icon>
 					</button>
 					<div mat-menu-item (click)="select(node)">

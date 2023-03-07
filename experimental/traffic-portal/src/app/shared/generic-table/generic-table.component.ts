@@ -23,7 +23,7 @@ import {
 	Output,
 	ViewChild
 } from "@angular/core";
-import { Router } from "@angular/router";
+import { ActivatedRoute, type ParamMap, type Params, Router } from "@angular/router";
 import { faCaretDown, faColumns, faDownload } from "@fortawesome/free-solid-svg-icons";
 import type {
 	CellContextMenuEvent,
@@ -32,11 +32,15 @@ import type {
 	Column,
 	ColumnApi,
 	CsvExportParams,
+	DateFilterModel,
+	FilterChangedEvent,
 	GridApi,
 	GridOptions,
 	GridReadyEvent,
 	ITooltipParams,
-	RowNode
+	NumberFilterModel,
+	RowNode,
+	TextFilterModel
 } from "ag-grid-community";
 import type { BehaviorSubject, Subscription } from "rxjs";
 
@@ -110,15 +114,19 @@ interface ContextMenuLink<T> {
 	 * initialization, unfortunately.
 	 */
 	disabled?: (selection: T | Array<T>) => boolean;
+	/** If present, determines the URL fragment used during navigation. */
+	fragment?: string | ((selectedRow: T) => (string | null));
 	/**
 	 * href is inserted literally as the 'href' property of an anchor. Which means that if it's not relative it will be mangled for security
 	 * reasons.
 	 */
-	href: string | ((selectedRow: T) => string);
+	href: string | ((selectedRow: T) => (string | Array<string>));
 	/** A human-readable name for the link which is displayed to the user. */
 	name: string;
 	/** If given and true, sets the link to open in a new browsing context (or "tab"). */
 	newTab?: boolean;
+	/** If present, query string parameters to pass during navigation. */
+	queryParams?: Params | ParamMap | ((selectedRow: T) => (Params | ParamMap | null));
 }
 
 /** ContextMenuItems represent items in a context menu. They can be links or arbitrary actions. */
@@ -148,6 +156,131 @@ export function isAction<T=unknown>(i: ContextMenuItem<T>): i is ContextMenuActi
 export interface TableTitleButton {
 	action: string;
 	text: string;
+}
+
+/**
+ * Gets a basic type from a column definition.
+ *
+ * @param col The definition of the column
+ * @returns The basic type of the column - or `null` if it couldn't be
+ * determined.
+ */
+export function getColType(col: ColDef): "string" | "number" | "date" | null {
+	if (!Object.prototype.hasOwnProperty.call(col, "filter") || col.filter === true) {
+		return "string";
+	}
+	if (typeof(col.filter) !== "string") {
+		return null;
+	}
+	switch(col.filter) {
+		case "textFilter":
+		case "agTextColumnFilter":
+			return "string";
+		case "agNumberColumnFilter":
+			return "number";
+		case "agDateColumnFilter":
+			return "date";
+	}
+	return null;
+}
+
+/**
+ * Given some query parameters, the columns of a table, and a hook into the
+ * AG-Grid API of said table, sets up filtering based on matches between the
+ * names of query parameters and the raw data fields of the columns.
+ *
+ * @param params The query string parameters.
+ * @param columns The column definitions.
+ * @param api An API handle to the grid.
+ */
+export function setUpQueryParamFilter<T>(params: ParamMap, columns: ColDef<T>[], api: GridApi): void {
+	for (const col of columns) {
+		if (typeof(col.field) !== "string") {
+			continue;
+		}
+
+		// According to the AG-Grid docs, you can pass
+		const filter = api.getFilterInstance(col.field);
+		if (!filter || !col.field) {
+			continue;
+		}
+		const values = params.getAll(col.field);
+		if (values.length < 1) {
+			continue;
+		}
+
+		const colType = getColType(col);
+		if (!colType) {
+			return;
+		}
+
+		let filterModel;
+		switch(colType) {
+			case "string":
+				if (values.length === 1) {
+					filterModel = {
+						filter: values[0],
+						type: "equals"
+					};
+				} else {
+					filterModel = {
+						condition1: {
+							filter: values[0],
+							type: "equals"
+						},
+						condition2: {
+							filter: values[1],
+							type: "equals"
+						},
+						operator: "OR",
+					};
+				}
+				break;
+			case "number":
+				if (values.length === 1) {
+					filterModel = {
+						filter: parseInt(values[0], 10),
+						type: "equals"
+					};
+					if (isNaN(filterModel.filter)) {
+						continue;
+					}
+				} else {
+					filterModel = {
+						condition1: {
+							filter: parseInt(values[0], 10),
+							type: "equals"
+						},
+						condition2: {
+							filter: parseInt(values[1], 10),
+							type: "equals"
+						},
+						operator: "OR",
+					};
+					if (isNaN(filterModel.condition1.filter) || isNaN(filterModel.condition2.filter)) {
+						continue;
+					}
+				}
+				break;
+			case "date":
+				const date = new Date(values[0]);
+				if (Number.isNaN(date.getTime())) {
+					continue;
+				}
+				const pad = (num: number): string => String(num).padStart(2,"0");
+				filterModel = {
+					dateFrom: [
+						`${date.getUTCFullYear()}-${pad(date.getUTCMonth()+1)}-${pad(date.getUTCDate())}`,
+						`${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`,
+					].join(" "),
+					type: "equals"
+				};
+				break;
+		}
+		filter.setModel(filterModel);
+		// filter.applyModel();
+	}
+	api.onFilterChanged();
 }
 
 /**
@@ -204,7 +337,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	/** Options to pass into the AG-Grid object. */
 	public gridOptions: GridOptions;
 	/** Holds a reference to the AG-Grid API (once it has been initialized) */
-	private gridAPI!: GridApi;
+	public gridAPI!: GridApi;
 	/** Holds a reference to the AG-Grid Column API (once it has been initialized)  */
 	public columnAPI: ColumnApi | undefined;
 
@@ -218,7 +351,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	public readonly downloadIcon = faDownload;
 
 	/** Used to handle the case that Angular loads faster than AG-Grid (as it usually does) */
-	private initialize = false;
+	private initialize = true;
 
 	/** Tracks whether the menu button has been clicked. */
 	private menuClicked = false;
@@ -256,15 +389,10 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		if (!this.columnAPI) {
 			return [];
 		}
-		return this.columnAPI.getAllColumns() ?? [];
+		return (this.columnAPI.getColumns() ?? []).reverse();
 	}
 
-	/**
-	 * Contructs the component with its required injections.
-	 *
-	 * @param router Used to update the 'search' query parameter on fuzzy filter changes.
-	 */
-	constructor(private readonly router: Router) {
+	constructor(private readonly router: Router, private readonly route: ActivatedRoute) {
 		this.gridOptions = {
 			defaultColDef: {
 				filter: true,
@@ -300,7 +428,8 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 					if (this.gridAPI) {
 						this.gridAPI.onFilterChanged();
 					}
-					this.router.navigate([], {queryParams: {search: query}, replaceUrl: true});
+					const queryParams = {search: query ? query : null};
+					this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route, replaceUrl: true});
 				}
 			);
 		}
@@ -317,6 +446,15 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		this.columnAPI = params.columnApi;
 		if (this.initialize) {
 			this.initialize = false;
+			try {
+				const filterState = localStorage.getItem(`${this.context}_table_filter`);
+				if (filterState) {
+					this.gridAPI.setFilterModel(JSON.parse(filterState));
+				}
+			} catch (e) {
+				console.error(`Failed to retrieve stored column sort info from localStorage (key=${this.context}_table_filter:`, e);
+			}
+			setUpQueryParamFilter(this.route.snapshot.queryParamMap, this.cols, this.gridAPI);
 			this.gridAPI.onFilterChanged();
 		}
 
@@ -329,7 +467,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		try {
 			const colstates = localStorage.getItem(`${this.context}_table_columns`);
 			if (colstates) {
-				if (!this.columnAPI.setColumnState(JSON.parse(colstates))) {
+				if (!this.columnAPI.applyColumnState(JSON.parse(colstates))) {
 					console.error("Failed to load stored column state: one or more columns not found");
 				}
 			} else {
@@ -339,21 +477,80 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			console.error(`Failure to retrieve required column info from localStorage (key=${this.context}_table_columns):`, e);
 		}
 
-		try {
-			const filterState = localStorage.getItem(`${this.context}_table_filter`);
-			if (filterState) {
-				this.gridAPI.setFilterModel(JSON.parse(filterState));
-			}
-		} catch (e) {
-			console.error(`Failure to retrieve stored column sort info from localStorage (key=${this.context}_table_filter:`, e);
-		}
 	}
 
-	/** When filter changes, stores the filter state if a context was provided. */
-	public storeFilter(): void {
-		if (this.context && this.gridAPI) {
+	/**
+	 * Triggered by a table button, clears all the filters on the table.
+	 */
+	public clearFilters(): void {
+		this.gridAPI.setFilterModel(null);
+		const queryParams = Object.fromEntries(this.cols.filter((c: ColDef) => c.field).map((c: ColDef) => [c.field, null]));
+		queryParams.search = null;
+		this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route, replaceUrl: true});
+	}
+
+	/**
+	 * When filter changes, stores the filter state if a context was provided,
+	 * and updates query string parameters.
+	 *
+	 * @param e The filter change event fired by AG-Grid.
+	 */
+	public storeFilter(e: FilterChangedEvent<T>): void {
+		if (this.context) {
 			localStorage.setItem(`${this.context}_table_filter`, JSON.stringify(this.gridAPI.getFilterModel()));
 		}
+		// the user can only set one filter at a time, so that's all we gotta
+		// handle.
+		if (e.columns.length !== 1) {
+			return;
+		}
+		const col = e.columns[0].getColDef();
+		if (!col.field) {
+			return;
+		}
+		const filter = this.gridAPI.getFilterInstance(e.columns[0]);
+		if (!filter) {
+			return;
+		}
+
+		let queryParams: Params = {};
+		const model = filter.getModel();
+		if (!model) {
+			queryParams = {...this.route.snapshot.queryParams};
+			queryParams[col.field] = null;
+			this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route, replaceUrl: true});
+			return;
+		}
+		let value = null;
+		// Default filter (indicated by 'true') is the text filter
+		switch(getColType(col)) {
+			case "string":
+				if ((model as TextFilterModel).type !== "equals") {
+					return;
+				}
+				value = (model as TextFilterModel).filter;
+				break;
+			case "number":
+				if ((model as NumberFilterModel).type !== "equals") {
+					return;
+				}
+				value = (model as NumberFilterModel).filter;
+				break;
+			case "date":
+				if ((model as DateFilterModel).type !== "equals") {
+					return;
+				}
+				value = (model as DateFilterModel).dateFrom;
+				if (value) {
+					value = `${value.replace(" ", "T")}Z`;
+				}
+				break;
+		}
+		if (value === null || value === undefined) {
+			return;
+		}
+		queryParams[col.field] = value;
+		this.router.navigate([], {queryParams, queryParamsHandling: "merge", relativeTo: this.route, replaceUrl: true});
 	}
 
 	/**
@@ -634,7 +831,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 * @param item The item being constructed into a link.
 	 * @returns A URL or router path as determined by the settings of `item`.
 	 */
-	public href(item: ContextMenuLink<T>): string {
+	public href(item: ContextMenuLink<T>): string | Array<string> {
 		if (typeof(item.href) === "string") {
 			return item.href;
 		}
@@ -643,5 +840,47 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			return "";
 		}
 		return item.href(this.selected);
+	}
+
+	/**
+	 * Gets query string parameters for a link context menu item.
+	 *
+	 * @param item The item being constructed into a link.
+	 * @returns A set of query string parameters to pass, or `null` if the link
+	 * doesn't specify any.
+	 */
+	public queryParameters(item: ContextMenuLink<T>): Params | ParamMap | null {
+		if (!item.queryParams) {
+			return null;
+		}
+		if (typeof(item.queryParams) !== "function") {
+			return item.queryParams;
+		}
+		if (!this.selected) {
+			// This happens when the context menu is hidden.
+			return null;
+		}
+		return item.queryParams(this.selected);
+	}
+
+	/**
+	 * Gets a URL document fragment for a link context menu item.
+	 *
+	 * @param item The item being constructed into a link.
+	 * @returns A document fragment to pass to the routerLink, or `null` if the
+	 * link doesn't specify one.
+	 */
+	public fragment(item: ContextMenuLink<T>): string | null {
+		if (!item.fragment) {
+			return null;
+		}
+		if (typeof(item.fragment) !== "function") {
+			return item.fragment;
+		}
+		if (!this.selected) {
+			// This happens when the context menu is hidden.
+			return null;
+		}
+		return item.fragment(this.selected);
 	}
 }

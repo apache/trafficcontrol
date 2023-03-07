@@ -17,6 +17,8 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} */
+
 /**
  * This is the controller for the table that lists the Parameters used by a
  * Profile.
@@ -25,7 +27,7 @@
  * @param {unknown[]} parameters
  * @param {import("angular").IControllerService} $controller
  * @param {*} $scope
- * @param {{open: ({})=>{result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../api/DeliveryServiceService")} deliveryServiceService
  * @param {import("../../../api/ProfileParameterService")} profileParameterService
@@ -145,9 +147,11 @@ var TableProfileParametersController = function(profile, parameters, $controller
 		profileParametersTable.rows().invalidate().draw();
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
+		// Datatables should be replaced, so their typings aren't included.
+		// @ts-ignore
 		profileParametersTable = $('#profileParametersTable').DataTable({
 			"aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
 			"iDisplayLength": 25,
@@ -166,7 +170,7 @@ var TableProfileParametersController = function(profile, parameters, $controller
 			"initComplete": function(settings, json) {
 				try {
 					// need to create the show/hide column checkboxes and bind to the current visibility
-					$scope.columns = JSON.parse(localStorage.getItem('DataTables_profileParametersTable_/')).columns;
+					$scope.columns = JSON.parse(localStorage.getItem("DataTables_profileParametersTable_/") ?? "null").columns;
 				} catch (e) {
 					console.error("Failure to retrieve required column info from localStorage (key=DataTables_profileParametersTable_/):", e);
 				}

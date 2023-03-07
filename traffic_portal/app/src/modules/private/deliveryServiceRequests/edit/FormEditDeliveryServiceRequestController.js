@@ -31,7 +31,7 @@
  * @param {*} $state
  * @param {*} $stateParams
  * @param {import("angular").IControllerService} $controller
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../../common/service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {import("angular").IQService} $q
  * @param {import("angular").ILocationService} $location
@@ -132,7 +132,7 @@ var FormEditDeliveryServiceRequestController = function(deliveryServiceRequest, 
 	};
 
 	/**
-	 * @param {import("../../../../common/api/DeliveryServiceService").DeliveryService} ds
+	 * @param {import("../../../../common/api/DeliveryServiceService").DeliveryService & {id: number}} ds
 	 */
 	$scope.fulfillRequest = async function(ds) {
 		/** @type {{title: string; message?: string; key?: string}} */

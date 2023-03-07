@@ -1,6 +1,6 @@
 {
   "name": "traffic-portal",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "The web UI for interacting with the Apache Traffic Control CDN management and operation system.",
   "homepage": "https://github.com/apache/trafficcontrol",
   "repository": {
@@ -24,7 +24,7 @@
     "Traffic Portal"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=16"
   },
   "engineStrict": true,
   "scripts": {
@@ -34,7 +34,8 @@
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
-    "clean": "rm -rf out-tsc nightwatch/junit nightwatch/screens tests_output logs",
+    "clean": "rm -rf dist docs nightwatch/junit nightwatch/screens tests_output logs",
+    "very-clean": "npm run clean && rm -rf node_modules",
     "coverage": "ng test --code-coverage",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCustom",
     "coverage:ci": "ng test --code-coverage --watch=false --browsers=ChromeHeadlessCustom",
@@ -43,9 +44,8 @@
     "e2e:build": "./node_modules/.bin/tsc -p ./nightwatch/tsconfig.e2e.json",
     "e2e:ci": "npm run e2e:build && ./node_modules/.bin/nightwatch --env chrome_headless --config './nightwatch/nightwatch.conf.js'",
     "dev:ssr": "ng run traffic-portal:serve-ssr",
-    "serve:ssr": "node dist/traffic-portal/server/main.js",
-    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production",
-    "prerender": "ng run traffic-portal:prerender"
+    "serve:ssr": "pushd dist/traffic-portal && node ./server/main.js && popd",
+    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production"
   },
   "private": true,
   "dependencies": {
@@ -65,12 +65,13 @@
     "@fortawesome/free-regular-svg-icons": "^6.2.0",
     "@fortawesome/free-solid-svg-icons": "^6.2.0",
     "@nguniversal/express-engine": "^14.2.0",
-    "ag-grid-angular": "^27.3.0",
-    "ag-grid-community": "^27.3.0",
+    "ag-grid-angular": "^28.2.1",
+    "ag-grid-community": "^28.2.1",
     "argparse": "^2.0.1",
     "chart.js": "^2.9.4",
     "express": "^4.15.2",
     "rxjs": "~6.6.0",
+    "trafficops-types": "^4.0.6",
     "tslib": "^2.0.0",
     "zone.js": "~0.11.4"
   },
@@ -90,11 +91,11 @@
     "@types/jasmine": "~3.6.0",
     "@types/jasminewd2": "~2.0.3",
     "@types/nightwatch": "^2.3.14",
-    "@types/node": "^18.11.12",
+    "@types/node": "^16.18.11",
     "@typescript-eslint/eslint-plugin": "^5.36.2",
     "@typescript-eslint/parser": "^5.36.2",
     "axios": "^0.27.2",
-    "chromedriver": "^108.0.0",
+    "chromedriver": "^110.0.0",
     "codelyzer": "^6.0.0",
     "eslint": "^8.23.0",
     "eslint-plugin-import": "^2.25.3",
@@ -108,7 +109,6 @@
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "^1.5.0",
     "nightwatch": "^2.5.1",
-    "trafficops-types": "^3.1.2",
     "ts-node": "~8.3.0",
     "typescript": "^4.5.4"
   },
