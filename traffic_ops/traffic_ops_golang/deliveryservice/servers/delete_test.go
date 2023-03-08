@@ -22,7 +22,7 @@ package servers
 import (
 	"net/http"
 	"testing"
-	
+
 	"github.com/jmoiron/sqlx"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
