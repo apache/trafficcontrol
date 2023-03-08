@@ -1,0 +1,33 @@
+{
+    "cdn_keys": [
+        "dnssecEnabled",
+        "domainName",
+        "id",
+        "lastUpdated",
+        "name"
+    ],
+    "asns_keys": [
+        "asn",
+        "cachegroup",
+        "id",
+        "cachegroupId",
+        "lastUpdated"
+    ],
+    "cachegroup_keys": [
+        "id",
+        "name",
+        "shortName",
+        "latitude",
+        "longitude",
+        "parentCachegroupName",
+        "parentCachegroupId",
+        "secondaryParentCachegroupName",
+        "secondaryParentCachegroupId",
+        "fallbackToClosest",
+        "localizationMethods",
+        "typeName",
+        "typeId",
+        "lastUpdated",
+        "fallbacks"
+    ]
+}

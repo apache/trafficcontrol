@@ -1,0 +1,8 @@
+{
+    "test": {
+        "user": "admin",
+        "password": "twelve",
+        "url": "https://localhost/api/4.0",
+        "localhost": "localhost"
+    }
+}
