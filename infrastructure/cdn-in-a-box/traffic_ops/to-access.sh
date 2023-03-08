@@ -244,11 +244,11 @@ to-enroll() {
 			export MY_PROFILE="TRAFFIC_PORTAL"
 			export MY_STATUS="ONLINE"
 			;;
-	  "tpv2" )
-      export MY_TYPE="TRAFFIC_PORTAL"
-      export MY_PROFILE="TRAFFIC_PORTAL"
-      export MY_STATUS="ONLINE"
-      ;;
+		"tpv2" )
+			export MY_TYPE="TRAFFIC_PORTAL"
+			export MY_PROFILE="TRAFFIC_PORTAL"
+			export MY_STATUS="ONLINE"
+			;;
 		"ts" )
 			export MY_TYPE="TRAFFIC_STATS"
 			export MY_PROFILE="TRAFFIC_STATS"
