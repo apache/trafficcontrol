@@ -19,17 +19,17 @@ describe("Login Spec", () => {
 			.navigate().section.loginForm
 			.fillOut("test", "asdf")
 			.click("@clearBtn")
-			.assert.containsText("@usernameTxt", "")
-			.assert.containsText("@passwordTxt", "");
+			.assert.textContains("@usernameTxt", "")
+			.assert.textContains("@passwordTxt", "");
 	});
 	it("Incorrect password test", () => {
 		browser.page.login()
 			.navigate().section.loginForm
 			.login("test", "asdf")
-			.assert.value("@usernameTxt", "test")
-			.assert.value("@passwordTxt", "asdf");
+			.assert.valueEquals("@usernameTxt", "test")
+			.assert.valueEquals("@passwordTxt", "asdf");
 		browser.page.common()
-			.assert.containsText("@snackbarEle", "Invalid");
+			.assert.textContains("@snackbarEle", "Invalid");
 	});
 	it("Login test", () => {
 		browser.page.login()

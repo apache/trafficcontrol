@@ -15,7 +15,7 @@ import { Injectable } from "@angular/core";
 import { ReplaySubject } from "rxjs";
 
 import { UserService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * Defines the type of the header nav

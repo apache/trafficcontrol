@@ -19,7 +19,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import type { ValueFormatterParams } from "ag-grid-community";
 
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";

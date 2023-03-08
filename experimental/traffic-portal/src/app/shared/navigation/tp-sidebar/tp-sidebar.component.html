@@ -13,7 +13,7 @@ limitations under the License.
 -->
 
 <mat-sidenav-container [autosize]="true">
-	<mat-sidenav #sidenav mode="side" opened>
+	<mat-sidenav #sidenav mode="side" opened [class.hidden]="hidden">
 		<mat-tree [dataSource]="dataSource" [treeControl]="treeCtrl">
 			<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
 				<a class="mat-tree-node" mat-menu-item [routerLink]="node.href" [routerLinkActive]="['boldNode']">

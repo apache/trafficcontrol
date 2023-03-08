@@ -18,7 +18,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { of, ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService, TreeNavNode } from "src/app/shared/navigation/navigation.service";
 
 import { TpSidebarComponent } from "./tp-sidebar.component";

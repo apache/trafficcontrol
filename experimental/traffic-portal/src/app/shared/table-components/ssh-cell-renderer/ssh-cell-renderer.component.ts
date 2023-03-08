@@ -17,7 +17,7 @@ import { DomSanitizer, SafeUrl } from "@angular/platform-browser";
 import { ICellRendererAngularComp } from "ag-grid-angular";
 import { ICellRendererParams } from "ag-grid-community";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * SSHCellRendererComponent is an AG-Grid cell renderer that provides ssh:// links as content.

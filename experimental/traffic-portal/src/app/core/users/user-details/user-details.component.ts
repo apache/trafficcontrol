@@ -18,7 +18,7 @@ import { ActivatedRoute } from "@angular/router";
 import type { PostRequestUser, ResponseRole, ResponseTenant, ResponseUser, User } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * UserDetailsComponent is the controller for the page for viewing/editing a
