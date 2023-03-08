@@ -60,6 +60,13 @@ app.use(function(_, resp, next) {
     next();
 });
 
+let morganOpts = {
+};
+if (logStream !== null) {
+    morganOpts.stream = logStream;
+}
+app.use(morgan('combined', morganOpts));
+
 app.use(function(req, res, next) {
     var err = null;
     try {
@@ -95,14 +102,6 @@ app.use(modRewrite([
 
 app.use(express.static(config.files.static));
 
-let morganOpts = {
-    skip: (_, res) => res.statusCode < 400
-};
-if (logStream !== null) {
-    morganOpts.stream = logStream;
-}
-
-app.use(morgan('combined', morganOpts));
 app.use(timeout(config.timeout));
 
 if (app.get('env') === 'dev') {
