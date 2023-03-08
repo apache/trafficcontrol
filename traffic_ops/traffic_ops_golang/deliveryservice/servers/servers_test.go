@@ -21,7 +21,6 @@ package servers
 
 import (
 	"fmt"
-	"github.com/lib/pq"
 	"net/http"
 	"strconv"
 	"strings"
@@ -34,6 +33,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 

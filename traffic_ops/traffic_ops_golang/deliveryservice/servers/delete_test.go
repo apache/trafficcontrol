@@ -20,10 +20,12 @@ package servers
  */
 
 import (
-	"github.com/jmoiron/sqlx"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"net/http"
 	"testing"
+	
+	"github.com/jmoiron/sqlx"
+
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestCheckLastAvailableEdgeOrOrigin(t *testing.T) {
