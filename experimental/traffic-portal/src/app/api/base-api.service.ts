@@ -78,7 +78,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected delete<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
+	public delete<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("delete", path, data, params);
 	}
 
@@ -90,7 +90,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected get<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
+	public get<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("get", path, data, params);
 	}
 
@@ -102,7 +102,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected head<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
+	public head<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("head", path, data, params);
 	}
 
@@ -114,7 +114,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected options<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
+	public options<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("options", path, data, params);
 	}
 
@@ -126,7 +126,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected patch<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
+	public patch<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("patch", path, data, params);
 	}
 
@@ -138,7 +138,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected post<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
+	public post<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("post", path, data, params);
 	}
 
@@ -150,7 +150,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected put<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
+	public put<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("put", path, data, params);
 	}
 
@@ -163,7 +163,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected do<T>(method: string, path: string, body?: object, params?: QueryParams): Observable<T> {
+	public do<T>(method: string, path: string, body?: object, params?: QueryParams): Observable<T> {
 
 		const options = {
 			body,
@@ -185,12 +185,12 @@ export abstract class APIService {
 	 * make raw requests, they are encouraged to extend this rather than duplicate
 	 * it.
 	 */
-	protected readonly defaultOptions = {
+	public readonly defaultOptions = {
 		// This is part of the HTTP spec. I can't - and shouldn't - change it.
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		headers: new HttpHeaders({"Content-Type": "application/json"}),
-		observe: "response" as "response",
-		responseType: "json" as "json",
+		observe: "response" as const,
+		responseType: "json" as const,
 	};
 
 	/**
@@ -198,7 +198,7 @@ export abstract class APIService {
 	 *
 	 * @param http The Angular HTTP client service.
 	 */
-	constructor(protected readonly http: HttpClient) {
+	constructor(public readonly http: HttpClient) {
 		if (environment.apiVersion) {
 			this.apiVersion = environment.apiVersion;
 		}
