@@ -122,14 +122,14 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 	// Perform certificate verification to ensure it is valid against Root CAs
 	err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir)
 	if err != nil {
-		log.Warnf("ClientCertAuth: error attempting to verify client provided TLS certificate. err: %s\n", err)
+		log.Warnf("client cert auth: error attempting to verify client provided TLS certificate. err: %s\n", err)
 		return false
 	}
 
 	// Client provided a verified certificate. Extract UID value.
 	form.Username = auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0])
 	if len(form.Username) == 0 {
-		log.Infoln("ClientCertAuth: client provided certificate did not contain a UID object identifier or value")
+		log.Infoln("client cert auth: client provided certificate did not contain a UID object identifier or value")
 		return false
 	}
 
@@ -141,14 +141,14 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 		return false
 	}
 	if err != nil {
-		log.Warnf("ClientCertAuth: checking local user: %s\n", err.Error())
+		log.Warnf("client cert auth: checking local user: %s\n", err.Error())
 	}
 
 	// Check LDAP if enabled
 	if !authenticated && cfg.LDAPEnabled {
 		_, authenticated, err = auth.LookupUserDN(form.Username, cfg.ConfigLDAP)
 		if err != nil {
-			log.Warnf("ClientCertAuth: checking ldap user: %s\n", err.Error())
+			log.Warnf("Client Cert Auth: checking ldap user: %s\n", err.Error())
 		}
 	}
 
