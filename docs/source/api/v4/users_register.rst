@@ -47,7 +47,7 @@ Request Structure
 
 	{
 		"email": "test@example.com",
-		"role": 3,
+		"role": "admin",
 		"tenantId": 1
 	}
 
