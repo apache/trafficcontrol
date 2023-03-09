@@ -240,11 +240,11 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				// log but do not error out since this is optional in the JWT for CDNi integration
 				log.Errorf("getting ucdn for user %s: %v", form.Username, err)
 			}
-			jwtBuilder.Claim("iss", ucdn)
-			jwtBuilder.Claim("aud", cfg.Cdni.DCdnId)
+			jwtBuilder.Claim(jwt.IssuerKey, ucdn)
+			jwtBuilder.Claim(jwt.AudienceKey, cfg.Cdni.DCdnId)
 		}
 
-		jwtBuilder.Claim("exp", httpCookie.Expires.Unix())
+		jwtBuilder.Claim(jwt.ExpirationKey, httpCookie.Expires.Unix())
 		jwtBuilder.Claim(api.MojoCookie, httpCookie.Value)
 		jwtToken, err := jwtBuilder.Build()
 		if err != nil {
