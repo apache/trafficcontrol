@@ -108,6 +108,53 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 </html>
 `))
 
+func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.DB, cfg config.Config, dbCtx context.Context, cancelTx context.CancelFunc, form auth.PasswordForm, authenticated bool) bool {
+	// No certs provided by the client. Skip to form authentication
+	if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
+		return false
+	}
+
+	// If no configuration is set, skip to form auth
+	if cfg.ClientCertAuth == nil || len(cfg.ClientCertAuth.RootCertsDir) == 0 {
+		return false
+	}
+
+	// Perform certificate verification to ensure it is valid against Root CAs
+	err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir)
+	if err != nil {
+		log.Warnf("ClientCertAuth: error attempting to verify client provided TLS certificate. err: %s\n", err)
+		return false
+	}
+
+	// Client provided a verified certificate. Extract UID value.
+	form.Username = auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0])
+	if len(form.Username) == 0 {
+		log.Infoln("ClientCertAuth: client provided certificate did not contain a UID object identifier or value")
+		return false
+	}
+
+	// Check if user exists locally (TODB) and has a role.
+	var blockingErr error
+	authenticated, err, blockingErr = auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
+	if blockingErr != nil {
+		api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user has role: %s", blockingErr.Error()))
+		return false
+	}
+	if err != nil {
+		log.Warnf("ClientCertAuth: checking local user: %s\n", err.Error())
+	}
+
+	// Check LDAP if enabled
+	if !authenticated && cfg.LDAPEnabled {
+		_, authenticated, err = auth.LookupUserDN(form.Username, cfg.ConfigLDAP)
+		if err != nil {
+			log.Warnf("ClientCertAuth: checking ldap user: %s\n", err.Error())
+		}
+	}
+
+	return authenticated
+}
+
 // LoginHandler first attempts to verify and parse user information from an optionally
 // provided client TLS certificate. If it fails at any point, it will fall back and
 // continue with the standard submitted form authentication.
@@ -123,52 +170,8 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		// Attempt to perform client certificate authentication. If fails, goto standard form auth. If the
 		// certificate was verified, has a UID, and the UID matches an existing user we consider this to
 		// be a successful login.
-		{
-			// No certs provided by the client. Skip to form authentication
-			if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
-				goto FormAuth
-			}
+		authenticated = clientCertAuthentication(w, r, db, cfg, dbCtx, cancelTx, form, authenticated)
 
-			// If no configuration is set, skip to form auth
-			if cfg.ClientCertAuth == nil || len(cfg.ClientCertAuth.RootCertsDir) == 0 {
-				goto FormAuth
-			}
-
-			// Perform certificate verification to ensure it is valid against Root CAs
-			err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir)
-			if err != nil {
-				log.Warnf("ClientCertAuth: error attempting to verify client provided TLS certificate. err: %s\n", err)
-				goto FormAuth
-			}
-
-			// Client provided a verified certificate. Extract UID value.
-			form.Username = auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0])
-			if len(form.Username) == 0 {
-				log.Infoln("ClientCertAuth: client provided certificate did not contain a UID object identifier or value")
-				goto FormAuth
-			}
-
-			// Check if user exists locally (TODB) and has a role.
-			var blockingErr error
-			authenticated, err, blockingErr = auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
-			if blockingErr != nil {
-				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user has role: %s", blockingErr.Error()))
-				return
-			}
-			if err != nil {
-				log.Warnf("ClientCertAuth: checking local user: %s\n", err.Error())
-			}
-
-			// Check LDAP if enabled
-			if !authenticated && cfg.LDAPEnabled {
-				_, authenticated, err = auth.LookupUserDN(form.Username, cfg.ConfigLDAP)
-				if err != nil {
-					log.Warnf("ClientCertAuth: checking ldap user: %s\n", err.Error())
-				}
-			}
-		}
-
-	FormAuth:
 		// Failed certificate-based auth, perform standard form auth
 		if !authenticated {
 			// Perform form authentication
