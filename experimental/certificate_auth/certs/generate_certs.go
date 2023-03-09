@@ -61,7 +61,6 @@ var (
 
 func main() {
 	flag.StringVar(&uid, "uid", uid, "[Optional] The User ID value to be added to the client certificate")
-	// flag.BoolVar(&useEcdsa, "useEcdsa", useEcdsa, "[Optional] Use ECDSA 256 when generating the keys. Default is RSA 4096")
 
 	flag.Parse()
 

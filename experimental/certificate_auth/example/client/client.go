@@ -44,20 +44,10 @@ func main() {
 		Transport: transport,
 	}
 
-	// Send standard username/password form combo
-	// reqBody, err := json.Marshal(map[string]string{
-	// 	"u": "userid",
-	// 	"p": "exampleuseridpassword",
-	// })
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-
 	req, err := http.NewRequest(
 		http.MethodPost,
 		"https://server.local:8443/api/4.0/user/login",
 		bytes.NewBufferString(""),
-		// bytes.NewBuffer(reqBody), // username/password
 	)
 	if err != nil {
 		log.Fatalln(err)
