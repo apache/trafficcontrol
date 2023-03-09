@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 import sys 
 import json
 from random import randint
+import logging
 
 
 """ 
@@ -73,17 +74,21 @@ PyTest Fixture to create POST data for cdns endpoint
 @pytest.fixture()
 def cdn_post_data(to_login):
 
-    #Get data from post_data to hit POST method
+    #Return new post data and post response from cdns POST request
     f = open('post_data.json')
     data = json.load(f)
 
     data["cdns"]["name"] =data["cdns"]["name"][:4]+str(randint(0,1000))
     data["cdns"]["domainName"] = data["cdns"]["domainName"][:5] + str(randint(0,1000))
-    print(data)
+    logging.info("New post data to hit POST method {}".format(data))
     with open('post_data.json', 'w') as f:
          json.dump(data, f)
     f.close()
+    #Hitting cdns POST methed
     response = to_login.create_cdn(data=data["cdns"])
-    cdn_response = response[0]
-    post_data = [data, cdn_response]
-    return post_data
+    try:
+        cdn_response = response[0]
+        post_data = [data, cdn_response]
+        return post_data
+    except IndexError:
+        logging.error("No CDN response data from cdns POST request")
