@@ -19,6 +19,7 @@ package tc
  * under the License.
  */
 
+// SSLKeyExpirationGetResponse is the format of a response to a GET request for API /sslkey_expirations endpoint.
 type SSLKeyExpirationGetResponse struct {
 	Response []SSLKeyExpirationInformation `json:"response"`
 	Alerts

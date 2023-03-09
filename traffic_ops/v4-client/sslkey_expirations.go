@@ -21,6 +21,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
+// GetExpiringCerts gets the exiring certs within the days if 'days' param is passed
+// or the full list of all Delivery services and there expirations
 func (to *Session) GetExpiringCerts(opts RequestOptions) (tc.SSLKeyExpirationGetResponse, toclientlib.ReqInf, error) {
 	const sslKeyExpirations = "/sslkey_expirations"
 
