@@ -27,11 +27,13 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const MaxLogObjects = 10
+const (
+	LoggingFileName             = "logging.config"
+	ContentTypeLoggingDotConfig = ContentTypeTextASCII
+	LineCommentLoggingDotConfig = LineCommentHash
+)
 
-const LoggingFileName = "logging.config"
-const ContentTypeLoggingDotConfig = ContentTypeTextASCII
-const LineCommentLoggingDotConfig = LineCommentHash
+const MaxLogObjects = 10
 
 // LoggingDotConfigOpts contains settings to configure generation options.
 type LoggingDotConfigOpts struct {

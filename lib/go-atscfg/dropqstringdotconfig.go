@@ -23,10 +23,12 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const DropQStringDotConfigFileName = "drop_qstring.config"
-const DropQStringDotConfigParamName = "content"
-const ContentTypeDropQStringDotConfig = ContentTypeTextASCII
-const LineCommentDropQStringDotConfig = LineCommentHash
+const (
+	DropQStringDotConfigFileName    = "drop_qstring.config"
+	DropQStringDotConfigParamName   = "content"
+	ContentTypeDropQStringDotConfig = ContentTypeTextASCII
+	LineCommentDropQStringDotConfig = LineCommentHash
+)
 
 // DropQStringDotConfigOpts contains settings to configure generation options.
 type DropQStringDotConfigOpts struct {

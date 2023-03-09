@@ -729,13 +729,15 @@ func JobsToInvalidationJobs(oldJobs []tc.Job) ([]InvalidationJob, error) {
 	return jobs, nil
 }
 
-const JobV4TimeFormat = time.RFC3339Nano
-const JobLegacyTimeFormat = "2006-01-02 15:04:05-07"
-const JobLegacyRefetchSuffix = `##REFETCH##`
-const JobLegacyRefreshSuffix = `##REFRESH##`
-const JobLegacyParamPrefix = "TTL:"
-const JobLegacyParamSuffix = "h"
-const JobLegacyKeyword = "PURGE"
+const (
+	JobV4TimeFormat        = time.RFC3339Nano
+	JobLegacyTimeFormat    = "2006-01-02 15:04:05-07"
+	JobLegacyRefetchSuffix = `##REFETCH##`
+	JobLegacyRefreshSuffix = `##REFRESH##`
+	JobLegacyParamPrefix   = "TTL:"
+	JobLegacyParamSuffix   = "h"
+	JobLegacyKeyword       = "PURGE"
+)
 
 func JobToInvalidationJob(jb tc.Job) (InvalidationJob, error) {
 	startTime := tc.Time{}

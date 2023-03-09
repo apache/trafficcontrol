@@ -29,20 +29,26 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const IPAllowConfigFileName = `ip_allow.config`
-const ContentTypeIPAllowDotConfig = ContentTypeTextASCII
-const LineCommentIPAllowDotConfig = LineCommentHash
+const (
+	IPAllowConfigFileName       = `ip_allow.config`
+	ContentTypeIPAllowDotConfig = ContentTypeTextASCII
+	LineCommentIPAllowDotConfig = LineCommentHash
+)
 
-const ParamPurgeAllowIP = "purge_allow_ip"
-const ParamCoalesceMaskLenV4 = "coalesce_masklen_v4"
-const ParamCoalesceNumberV4 = "coalesce_number_v4"
-const ParamCoalesceMaskLenV6 = "coalesce_masklen_v6"
-const ParamCoalesceNumberV6 = "coalesce_number_v6"
+const (
+	ParamPurgeAllowIP      = "purge_allow_ip"
+	ParamCoalesceMaskLenV4 = "coalesce_masklen_v4"
+	ParamCoalesceNumberV4  = "coalesce_number_v4"
+	ParamCoalesceMaskLenV6 = "coalesce_masklen_v6"
+	ParamCoalesceNumberV6  = "coalesce_number_v6"
+)
 
-const DefaultCoalesceMaskLenV4 = 24
-const DefaultCoalesceNumberV4 = 5
-const DefaultCoalesceMaskLenV6 = 48
-const DefaultCoalesceNumberV6 = 5
+const (
+	DefaultCoalesceMaskLenV4 = 24
+	DefaultCoalesceNumberV4  = 5
+	DefaultCoalesceMaskLenV6 = 48
+	DefaultCoalesceNumberV6  = 5
+)
 
 // IPAllowDotConfigOpts contains settings to configure generation options.
 type IPAllowDotConfigOpts struct {
@@ -298,13 +304,15 @@ func (ss serversSortByName) Less(i, j int) bool {
 	return *ss[i].HostName < *ss[j].HostName
 }
 
-const ActionAllow = "ip_allow"
-const ActionDeny = "ip_deny"
-const MethodAll = "ALL"
-const MethodPush = "PUSH"
-const MethodPurge = "PURGE"
-const MethodDelete = "DELETE"
-const MethodSeparator = `|`
+const (
+	ActionAllow     = "ip_allow"
+	ActionDeny      = "ip_deny"
+	MethodAll       = "ALL"
+	MethodPush      = "PUSH"
+	MethodPurge     = "PURGE"
+	MethodDelete    = "DELETE"
+	MethodSeparator = `|`
+)
 
 // allowAllButPushPurge is a helper func to build a ipAllowData for the given range string immediately allowing all Methods except Push and Purge.
 func allowAllButPushPurge(rangeStr string) ipAllowData {

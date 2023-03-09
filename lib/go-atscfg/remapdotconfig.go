@@ -34,21 +34,29 @@ import (
 	"github.com/cbroglie/mustache"
 )
 
-const RemapConfigDropQstringConfigFile = `drop_qstring.config`
-const ContentTypeRemapDotConfig = ContentTypeTextASCII
-const LineCommentRemapDotConfig = LineCommentHash
+const (
+	RemapConfigDropQstringConfigFile = `drop_qstring.config`
+	ContentTypeRemapDotConfig        = ContentTypeTextASCII
+	LineCommentRemapDotConfig        = LineCommentHash
+)
 
-const RemapConfigCachekeyDirective = `__CACHEKEY_DIRECTIVE__`
-const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
-const RemapConfigRegexRemapDirective = `__REGEX_REMAP_DIRECTIVE__`
+const (
+	RemapConfigCachekeyDirective   = `__CACHEKEY_DIRECTIVE__`
+	RemapConfigRangeDirective      = `__RANGE_DIRECTIVE__`
+	RemapConfigRegexRemapDirective = `__REGEX_REMAP_DIRECTIVE__`
+)
 
-const RemapConfigTemplateFirst = `template.first`
-const RemapConfigTemplateInner = `template.inner`
-const RemapConfigTemplateLast = `template.last`
+const (
+	RemapConfigTemplateFirst = `template.first`
+	RemapConfigTemplateInner = `template.inner`
+	RemapConfigTemplateLast  = `template.last`
+)
 
-const DefaultFirstRemapConfigTemplateString = `map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{Dscp}}} {{{HeaderRewrite}}} {{{DropQstring}}} {{{Signing}}} {{{RegexRemap}}} {{{Cachekey}}} {{{RangeRequests}}} {{{Pacing}}} {{{RawText}}}`
-const DefaultLastRemapConfigTemplateString = `map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{HeaderRewrite}}} {{{Cachekey}}} {{{RangeRequests}}} {{{RawText}}}`
-const DefaultInnerRemapConfigTemplateString = DefaultLastRemapConfigTemplateString
+const (
+	DefaultFirstRemapConfigTemplateString = `map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{Dscp}}} {{{HeaderRewrite}}} {{{DropQstring}}} {{{Signing}}} {{{RegexRemap}}} {{{Cachekey}}} {{{RangeRequests}}} {{{Pacing}}} {{{RawText}}}`
+	DefaultLastRemapConfigTemplateString  = `map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{HeaderRewrite}}} {{{Cachekey}}} {{{RangeRequests}}} {{{RawText}}}`
+	DefaultInnerRemapConfigTemplateString = DefaultLastRemapConfigTemplateString
+)
 
 type LineTemplates map[string]*mustache.Template
 

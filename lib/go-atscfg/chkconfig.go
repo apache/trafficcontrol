@@ -26,10 +26,12 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ChkconfigFileName = `chkconfig`
-const ChkconfigParamConfigFile = `chkconfig`
-const ContentTypeChkconfig = ContentTypeTextASCII
-const LineCommentChkconfig = LineCommentHash
+const (
+	ChkconfigFileName        = `chkconfig`
+	ChkconfigParamConfigFile = `chkconfig`
+	ContentTypeChkconfig     = ContentTypeTextASCII
+	LineCommentChkconfig     = LineCommentHash
+)
 
 // ChkconfigOpts contains settings to configure generation options.
 type ChkconfigOpts struct {

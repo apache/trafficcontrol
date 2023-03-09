@@ -25,9 +25,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const VolumeFileName = StorageFileName
-const ContentTypeVolumeDotConfig = ContentTypeTextASCII
-const LineCommentVolumeDotConfig = LineCommentHash
+const (
+	VolumeFileName             = StorageFileName
+	ContentTypeVolumeDotConfig = ContentTypeTextASCII
+	LineCommentVolumeDotConfig = LineCommentHash
+)
 
 // VolumeDotConfigOpts contains settings to configure generation options.
 type VolumeDotConfigOpts struct {

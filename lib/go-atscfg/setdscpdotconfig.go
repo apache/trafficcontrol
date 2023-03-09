@@ -24,8 +24,10 @@ import (
 	"strings"
 )
 
-const ContentTypeSetDSCPDotConfig = ContentTypeTextASCII
-const LineCommentSetDSCPDotConfig = LineCommentHash
+const (
+	ContentTypeSetDSCPDotConfig = ContentTypeTextASCII
+	LineCommentSetDSCPDotConfig = LineCommentHash
+)
 
 // SetDSCPDotConfigOpts contains settings to configure generation options.
 type SetDSCPDotConfigOpts struct {

@@ -25,10 +25,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const SNIDotYAMLFileName = "sni.yaml"
-
-const ContentTypeSNIDotYAML = ContentTypeYAML
-const LineCommentSNIDotYAML = LineCommentYAML
+const (
+	SNIDotYAMLFileName    = "sni.yaml"
+	ContentTypeSNIDotYAML = ContentTypeYAML
+	LineCommentSNIDotYAML = LineCommentYAML
+)
 
 // SNIDotYAMLOpts contains settings to configure sni.yaml generation options.
 type SNIDotYAMLOpts struct {

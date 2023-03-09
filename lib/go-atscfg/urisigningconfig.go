@@ -25,8 +25,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ContentTypeURISigningDotConfig = `application/json; charset=us-ascii`
-const LineCommentURISigningDotConfig = ""
+const (
+	ContentTypeURISigningDotConfig = `application/json; charset=us-ascii`
+	LineCommentURISigningDotConfig = ""
+)
 
 // URISigningConfigOpts contains settings to configure generation options.
 type URISigningConfigOpts struct {

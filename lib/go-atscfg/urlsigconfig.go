@@ -26,8 +26,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ContentTypeURLSig = ContentTypeTextASCII
-const LineCommentURLSig = LineCommentHash
+const (
+	ContentTypeURLSig = ContentTypeTextASCII
+	LineCommentURLSig = LineCommentHash
+)
 
 // URLSigConfigOpts contains settings to configure generation options.
 type URLSigConfigOpts struct {

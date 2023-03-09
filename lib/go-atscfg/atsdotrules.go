@@ -25,9 +25,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ATSDotRulesFileName = StorageFileName
-const ContentTypeATSDotRules = ContentTypeTextASCII
-const LineCommentATSDotRules = LineCommentHash
+const (
+	ATSDotRulesFileName    = StorageFileName
+	ContentTypeATSDotRules = ContentTypeTextASCII
+	LineCommentATSDotRules = LineCommentHash
+)
 
 // ATSDotRulesOpts contains settings to configure generation options.
 type ATSDotRulesOpts struct {

@@ -28,27 +28,35 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const RegexRemapPrefix = "regex_remap_"
-const CacheUrlPrefix = "cacheurl_"
-const RefetchSuffix = "##REFETCH##"
-const RefreshSuffix = "##REFRESH##"
+const (
+	RegexRevalidateFileName             = "regex_revalidate.config"
+	ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
+	LineCommentRegexRevalidateDotConfig = LineCommentHash
+)
 
 const RemapFile = "remap.config"
 
-const RegexRevalidateFileName = "regex_revalidate.config"
-const RegexRevalidateMaxRevalDurationDaysParamName = "maxRevalDurationDays"
-const DefaultMaxRevalDurationDays = 90
-const JobKeywordPurge = "PURGE"
-const RegexRevalidateMinTTL = time.Hour
+const (
+	RegexRemapPrefix = "regex_remap_"
+	CacheUrlPrefix   = "cacheurl_"
+	RefetchSuffix    = "##REFETCH##"
+	RefreshSuffix    = "##REFRESH##"
+)
+
+const (
+	RegexRevalidateMaxRevalDurationDaysParamName = "maxRevalDurationDays"
+	DefaultMaxRevalDurationDays                  = 90
+	JobKeywordPurge                              = "PURGE"
+	RegexRevalidateMinTTL                        = time.Hour
+)
 
 type RevalType string
 
-const RevalTypeMiss = RevalType("MISS")
-const RevalTypeStale = RevalType("STALE")
-const RevalTypeDefault = RevalTypeStale
-
-const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
-const LineCommentRegexRevalidateDotConfig = LineCommentHash
+const (
+	RevalTypeMiss    = RevalType("MISS")
+	RevalTypeStale   = RevalType("STALE")
+	RevalTypeDefault = RevalTypeStale
+)
 
 // RegexRevalidateDotConfigOpts contains settings to configure generation options.
 type RegexRevalidateDotConfigOpts struct {

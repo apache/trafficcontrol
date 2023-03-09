@@ -25,8 +25,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ContentTypeRegexRemapDotConfig = ContentTypeTextASCII
-const LineCommentRegexRemapDotConfig = LineCommentHash
+const (
+	ContentTypeRegexRemapDotConfig = ContentTypeTextASCII
+	LineCommentRegexRemapDotConfig = LineCommentHash
+)
 
 // RegexRemapDotConfigOpts contains settings to configure generation options.
 type RegexRemapDotConfigOpts struct {

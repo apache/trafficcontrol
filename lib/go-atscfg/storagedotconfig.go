@@ -27,9 +27,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const StorageFileName = "storage.config"
-const ContentTypeStorageDotConfig = ContentTypeTextASCII
-const LineCommentStorageDotConfig = LineCommentHash
+const (
+	StorageFileName             = "storage.config"
+	ContentTypeStorageDotConfig = ContentTypeTextASCII
+	LineCommentStorageDotConfig = LineCommentHash
+)
 
 // StorageDotConfigOpts contains settings to configure generation options.
 type StorageDotConfigOpts struct {

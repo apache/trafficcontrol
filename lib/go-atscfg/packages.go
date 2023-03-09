@@ -26,11 +26,12 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const PackagesFileName = `packages`
-const PackagesParamConfigFile = `package`
-
-const ContentTypePackages = ContentTypeTextASCII
-const LineCommentPackages = ""
+const (
+	PackagesFileName        = `packages`
+	PackagesParamConfigFile = `package`
+	ContentTypePackages     = ContentTypeTextASCII
+	LineCommentPackages     = ""
+)
 
 // PackagesOpts contains settings to configure generation options.
 type PackagesOpts struct {

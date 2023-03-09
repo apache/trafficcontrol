@@ -19,8 +19,10 @@ package atscfg
  * under the License.
  */
 
-const ContentTypeBGFetchDotConfig = ContentTypeTextASCII
-const LineCommentBGFetchDotConfig = LineCommentHash
+const (
+	ContentTypeBGFetchDotConfig = ContentTypeTextASCII
+	LineCommentBGFetchDotConfig = LineCommentHash
+)
 
 // BGFetchDotConfigOpts contains settings to configure generation options.
 type BGFetchDotConfigOpts struct {

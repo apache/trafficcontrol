@@ -23,11 +23,15 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const AstatsSeparator = "="
-const AstatsFileName = "astats.config"
+const (
+	AstatsSeparator = "="
+	AstatsFileName  = "astats.config"
+)
 
-const ContentTypeAstatsDotConfig = ContentTypeTextASCII
-const LineCommentAstatsDotConfig = LineCommentHash
+const (
+	ContentTypeAstatsDotConfig = ContentTypeTextASCII
+	LineCommentAstatsDotConfig = LineCommentHash
+)
 
 // AStatsDotConfigOpts contains settings to configure generation options.
 type AStatsDotConfigOpts struct {

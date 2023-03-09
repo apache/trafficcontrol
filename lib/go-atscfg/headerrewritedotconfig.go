@@ -30,10 +30,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const HeaderRewritePrefix = "hdr_rw_"
-const HeaderRewriteMidPrefix = "hdr_rw_mid_"
-const ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
-const LineCommentHeaderRewriteDotConfig = LineCommentHash
+const (
+	ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
+	LineCommentHeaderRewriteDotConfig = LineCommentHash
+)
 
 // ServiceCategoryHeader is the internal service category header for logging the service category.
 // Note this is internal, and will never be set in an HTTP Request or Response by ATS.
@@ -41,9 +41,13 @@ const ServiceCategoryHeader = "@CDN-SVC"
 
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 
-const HeaderRewriteFirstPrefix = HeaderRewritePrefix + "first_"
-const HeaderRewriteInnerPrefix = HeaderRewritePrefix + "inner_"
-const HeaderRewriteLastPrefix = HeaderRewritePrefix + "last_"
+const (
+	HeaderRewritePrefix      = "hdr_rw_"
+	HeaderRewriteMidPrefix   = "hdr_rw_mid_"
+	HeaderRewriteFirstPrefix = HeaderRewritePrefix + "first_"
+	HeaderRewriteInnerPrefix = HeaderRewritePrefix + "inner_"
+	HeaderRewriteLastPrefix  = HeaderRewritePrefix + "last_"
+)
 
 func FirstHeaderRewriteConfigFileName(dsName string) string {
 	return HeaderRewriteFirstPrefix + dsName + ConfigSuffix

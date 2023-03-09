@@ -21,8 +21,10 @@ package atscfg
 
 import "strings"
 
-const ContentType12MFacts = ContentTypeTextASCII
-const LineComment12MFacts = LineCommentHash
+const (
+	ContentType12MFacts = ContentTypeTextASCII
+	LineComment12MFacts = LineCommentHash
+)
 
 // Config12MFactsOpts contains settings to configure generation options.
 type Config12MFactsOpts struct {

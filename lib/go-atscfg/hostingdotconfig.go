@@ -27,16 +27,22 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const HostingConfigFileName = `hosting.config`
-const HostingConfigParamConfigFile = `storage.config`
-const ContentTypeHostingDotConfig = ContentTypeTextASCII
-const LineCommentHostingDotConfig = LineCommentHash
+const (
+	HostingConfigFileName        = `hosting.config`
+	HostingConfigParamConfigFile = `storage.config`
+	ContentTypeHostingDotConfig  = ContentTypeTextASCII
+	LineCommentHostingDotConfig  = LineCommentHash
+)
 
-const ParamDrivePrefix = "Drive_Prefix"
-const ParamRAMDrivePrefix = "RAM_Drive_Prefix"
+const (
+	ParamDrivePrefix    = "Drive_Prefix"
+	ParamRAMDrivePrefix = "RAM_Drive_Prefix"
+)
 
-const ServerHostingDotConfigMidIncludeInactive = false
-const ServerHostingDotConfigEdgeIncludeInactive = true
+const (
+	ServerHostingDotConfigMidIncludeInactive  = false
+	ServerHostingDotConfigEdgeIncludeInactive = true
+)
 
 // HostingDotConfigOpts contains settings to configure generation options.
 type HostingDotConfigOpts struct {

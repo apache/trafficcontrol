@@ -27,8 +27,10 @@ import (
 	//	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const ContentTypeStrategiesDotYAML = ContentTypeYAML
-const LineCommentStrategiesDotYAML = LineCommentHash
+const (
+	ContentTypeStrategiesDotYAML = ContentTypeYAML
+	LineCommentStrategiesDotYAML = LineCommentHash
+)
 
 // StrategiesYAMLOpts contains settings to configure strategies.config generation options.
 type StrategiesYAMLOpts struct {
@@ -116,8 +118,10 @@ func MakeStrategiesDotYAML(
 }
 
 // YAMLDocumentStart is the YAML document start directive
-const YAMLDocumentStart = "---"
-const YAMLDocumentEnd = "..."
+const (
+	YAMLDocumentStart = "---"
+	YAMLDocumentEnd   = "..."
+)
 
 func parentAbstractionToStrategiesDotYaml(pa *ParentAbstraction, opt *StrategiesYAMLOpts, atsMajorVersion uint) (string, []string, error) {
 	warnings := []string{}

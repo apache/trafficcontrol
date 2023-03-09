@@ -27,9 +27,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
-const LineCommentSSLMultiCertDotConfig = LineCommentHash
-const SSLMultiCertConfigFileName = `ssl_multicert.config`
+const (
+	SSLMultiCertConfigFileName       = `ssl_multicert.config`
+	ContentTypeSSLMultiCertDotConfig = ContentTypeTextASCII
+	LineCommentSSLMultiCertDotConfig = LineCommentHash
+)
 
 // SSLMultiCertDotConfigOpts contains settings to configure generation options.
 type SSLMultiCertDotConfigOpts struct {

@@ -27,9 +27,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const LoggingYAMLFileName = "logging.yaml"
-const ContentTypeLoggingDotYAML = ContentTypeYAML
-const LineCommentLoggingDotYAML = LineCommentHash
+const (
+	LoggingYAMLFileName       = "logging.yaml"
+	ContentTypeLoggingDotYAML = ContentTypeYAML
+	LineCommentLoggingDotYAML = LineCommentHash
+)
 
 // LoggingDotYAMLOpts contains settings to configure generation options.
 type LoggingDotYAMLOpts struct {

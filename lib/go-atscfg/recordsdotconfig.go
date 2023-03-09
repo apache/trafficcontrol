@@ -26,10 +26,13 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const (
+	RecordsFileName             = "records.config"
+	ContentTypeRecordsDotConfig = ContentTypeTextASCII
+	LineCommentRecordsDotConfig = LineCommentHash
+)
+
 const RecordsSeparator = " "
-const RecordsFileName = "records.config"
-const ContentTypeRecordsDotConfig = ContentTypeTextASCII
-const LineCommentRecordsDotConfig = LineCommentHash
 
 type RecordsConfigOpts struct {
 	// ReleaseViaStr is whether or not we replace the via and server strings in ATS
@@ -188,8 +191,10 @@ func addRecordsDotConfigViaStr(txt string) (string, []string) {
 func addRecordsDotConfigDNSLocal(txt string, server *Server) (string, []string) {
 	warnings := []string{}
 
-	const dnsLocalV4 = `proxy.config.dns.local_ipv4`
-	const dnsLocalV6 = `proxy.config.dns.local_ipv6`
+	const (
+		dnsLocalV4 = `proxy.config.dns.local_ipv4`
+		dnsLocalV6 = `proxy.config.dns.local_ipv6`
+	)
 
 	v4, v6 := getServiceAddresses(server)
 

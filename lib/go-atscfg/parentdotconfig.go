@@ -32,26 +32,33 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const ContentTypeParentDotConfig = ContentTypeTextASCII
-const LineCommentParentDotConfig = LineCommentHash
+const (
+	ParentConfigFileName       = "parent.config"
+	ContentTypeParentDotConfig = ContentTypeTextASCII
+	LineCommentParentDotConfig = LineCommentHash
+)
 
-const ParentConfigFileName = "parent.config"
+const (
+	ParentConfigParamQStringHandling = "psel.qstring_handling"
+	ParentConfigParamMergeGroups     = "merge_parent_groups"
+)
 
-const ParentConfigParamQStringHandling = "psel.qstring_handling"
-const ParentConfigParamMergeGroups = "merge_parent_groups"
+const (
+	ParentConfigDSParamDefaultMSOAlgorithm                       = ParentAbstractionServiceRetryPolicyConsistentHash
+	ParentConfigDSParamDefaultMSOParentRetry                     = "both"
+	ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses = ""
+	ParentConfigDSParamDefaultMaxSimpleRetries                   = 1
+	ParentConfigDSParamDefaultMaxUnavailableServerRetries        = 1
+)
 
-const ParentConfigDSParamDefaultMSOAlgorithm = ParentAbstractionServiceRetryPolicyConsistentHash
-const ParentConfigDSParamDefaultMSOParentRetry = "both"
-const ParentConfigDSParamDefaultMSOUnavailableServerRetryResponses = ""
-const ParentConfigDSParamDefaultMaxSimpleRetries = 1
-const ParentConfigDSParamDefaultMaxUnavailableServerRetries = 1
-
-const ParentConfigCacheParamWeight = "weight"
-const ParentConfigCacheParamPort = "port"
-const ParentConfigCacheParamUseIP = "use_ip_address"
-const ParentConfigCacheParamRank = "rank"
-const ParentConfigCacheParamNotAParent = "not_a_parent"
-const StrategyConfigUsePeering = "use_peering"
+const (
+	ParentConfigCacheParamWeight     = "weight"
+	ParentConfigCacheParamPort       = "port"
+	ParentConfigCacheParamUseIP      = "use_ip_address"
+	ParentConfigCacheParamRank       = "rank"
+	ParentConfigCacheParamNotAParent = "not_a_parent"
+	StrategyConfigUsePeering         = "use_peering"
+)
 
 // same across DS
 const ParentConfigParamQString = "qstring"
@@ -78,12 +85,16 @@ func MakeParentConfigRetryKeysWithPrefix(prefix string) ParentConfigRetryKeys {
 	}
 }
 
-var ParentConfigRetryKeysFirst = MakeParentConfigRetryKeysWithPrefix("first.")
-var ParentConfigRetryKeysInner = MakeParentConfigRetryKeysWithPrefix("inner.")
-var ParentConfigRetryKeysLast = MakeParentConfigRetryKeysWithPrefix("last.")
+var (
+	ParentConfigRetryKeysFirst = MakeParentConfigRetryKeysWithPrefix("first.")
+	ParentConfigRetryKeysInner = MakeParentConfigRetryKeysWithPrefix("inner.")
+	ParentConfigRetryKeysLast  = MakeParentConfigRetryKeysWithPrefix("last.")
+)
 
-var ParentConfigRetryKeysMSO = MakeParentConfigRetryKeysWithPrefix("mso.")
-var ParentConfigRetryKeysDefault = MakeParentConfigRetryKeysWithPrefix("")
+var (
+	ParentConfigRetryKeysMSO     = MakeParentConfigRetryKeysWithPrefix("mso.")
+	ParentConfigRetryKeysDefault = MakeParentConfigRetryKeysWithPrefix("")
+)
 
 type OriginHost string
 type OriginFQDN string

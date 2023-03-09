@@ -26,8 +26,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ContentTypeCacheDotConfig = ContentTypeTextASCII
-const LineCommentCacheDotConfig = LineCommentHash
+const (
+	ContentTypeCacheDotConfig = ContentTypeTextASCII
+	LineCommentCacheDotConfig = LineCommentHash
+)
 
 // CacheDotConfigOpts contains settings to configure generation options.
 type CacheDotConfigOpts struct {

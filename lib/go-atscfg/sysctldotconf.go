@@ -23,10 +23,13 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const (
+	SysctlFileName           = "sysctl.conf"
+	ContentTypeSysctlDotConf = ContentTypeTextASCII
+	LineCommentSysctlDotConf = LineCommentHash
+)
+
 const SysctlSeparator = " = "
-const SysctlFileName = "sysctl.conf"
-const ContentTypeSysctlDotConf = ContentTypeTextASCII
-const LineCommentSysctlDotConf = LineCommentHash
 
 // SysCtlDotConfOpts contains settings to configure generation options.
 type SysCtlDotConfOpts struct {

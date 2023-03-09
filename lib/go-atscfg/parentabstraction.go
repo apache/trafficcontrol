@@ -139,10 +139,12 @@ func (ps ParentAbstractionServices) Less(i, j int) bool {
 
 type ParentAbstractionServiceParentSecondaryMode string
 
-const ParentAbstractionServiceParentSecondaryModeExhaust = ParentAbstractionServiceParentSecondaryMode("exhaust")
-const ParentAbstractionServiceParentSecondaryModeAlternate = ParentAbstractionServiceParentSecondaryMode("alternate")
-const ParentAbstractionServiceParentSecondaryModePeering = ParentAbstractionServiceParentSecondaryMode("peering")
-const ParentAbstractionServiceParentSecondaryModeInvalid = ParentAbstractionServiceParentSecondaryMode("")
+const (
+	ParentAbstractionServiceParentSecondaryModeExhaust   = ParentAbstractionServiceParentSecondaryMode("exhaust")
+	ParentAbstractionServiceParentSecondaryModeAlternate = ParentAbstractionServiceParentSecondaryMode("alternate")
+	ParentAbstractionServiceParentSecondaryModePeering   = ParentAbstractionServiceParentSecondaryMode("peering")
+	ParentAbstractionServiceParentSecondaryModeInvalid   = ParentAbstractionServiceParentSecondaryMode("")
+)
 
 const ParentAbstractionServiceParentSecondaryModeDefault = ParentAbstractionServiceParentSecondaryModeAlternate
 
@@ -161,12 +163,14 @@ func (mo ParentAbstractionServiceParentSecondaryMode) ToParentDotConfigVal() str
 
 type ParentAbstractionServiceRetryPolicy string
 
-const ParentAbstractionServiceRetryPolicyRoundRobinIP = ParentAbstractionServiceRetryPolicy("round_robin_ip")
-const ParentAbstractionServiceRetryPolicyRoundRobinStrict = ParentAbstractionServiceRetryPolicy("round_robin_strict")
-const ParentAbstractionServiceRetryPolicyFirst = ParentAbstractionServiceRetryPolicy("first")
-const ParentAbstractionServiceRetryPolicyLatched = ParentAbstractionServiceRetryPolicy("latched")
-const ParentAbstractionServiceRetryPolicyConsistentHash = ParentAbstractionServiceRetryPolicy("consistent_hash")
-const ParentAbstractionServiceRetryPolicyInvalid = ParentAbstractionServiceRetryPolicy("")
+const (
+	ParentAbstractionServiceRetryPolicyRoundRobinIP     = ParentAbstractionServiceRetryPolicy("round_robin_ip")
+	ParentAbstractionServiceRetryPolicyRoundRobinStrict = ParentAbstractionServiceRetryPolicy("round_robin_strict")
+	ParentAbstractionServiceRetryPolicyFirst            = ParentAbstractionServiceRetryPolicy("first")
+	ParentAbstractionServiceRetryPolicyLatched          = ParentAbstractionServiceRetryPolicy("latched")
+	ParentAbstractionServiceRetryPolicyConsistentHash   = ParentAbstractionServiceRetryPolicy("consistent_hash")
+	ParentAbstractionServiceRetryPolicyInvalid          = ParentAbstractionServiceRetryPolicy("")
+)
 
 const DefaultParentAbstractionServiceRetryPolicy = ParentAbstractionServiceRetryPolicyConsistentHash
 
@@ -274,8 +278,10 @@ func ParseRetryResponses(resp string) ([]int, error) {
 	return codes, nil
 }
 
-var DefaultSimpleRetryCodes = []int{404}
-var DefaultUnavailableServerRetryCodes = []int{503}
+var (
+	DefaultSimpleRetryCodes            = []int{404}
+	DefaultUnavailableServerRetryCodes = []int{503}
+)
 
 const DefaultIgnoreQueryStringInParentSelection = false
 

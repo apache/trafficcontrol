@@ -23,10 +23,13 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const (
+	PluginFileName             = "plugin.config"
+	ContentTypePluginDotConfig = ContentTypeTextASCII
+	LineCommentPluginDotConfig = LineCommentHash
+)
+
 const PluginSeparator = " "
-const PluginFileName = "plugin.config"
-const ContentTypePluginDotConfig = ContentTypeTextASCII
-const LineCommentPluginDotConfig = LineCommentHash
 
 // PluginDotConfigOpts contains settings to configure generation options.
 type PluginDotConfigOpts struct {

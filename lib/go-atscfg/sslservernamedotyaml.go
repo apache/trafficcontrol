@@ -28,13 +28,16 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const ContentTypeYAML = "application/yaml; charset=us-ascii" // Note YAML has no IANA standard mime type. This is one of several common usages, and is likely to be the standardized value. If you're reading this, please check IANA to see if YAML has been added, and change this to the IANA definition if so. Also note we include 'charset=us-ascii' because YAML is commonly UTF-8, but ATS is likely to be unable to handle UTF.
-const LineCommentYAML = LineCommentHash
+const (
+	ContentTypeYAML = "application/yaml; charset=us-ascii" // Note YAML has no IANA standard mime type. This is one of several common usages, and is likely to be the standardized value. If you're reading this, please check IANA to see if YAML has been added, and change this to the IANA definition if so. Also note we include 'charset=us-ascii' because YAML is commonly UTF-8, but ATS is likely to be unable to handle UTF.
+	LineCommentYAML = LineCommentHash
+)
 
-const SSLServerNameYAMLFileName = "ssl_server_name.yaml"
-
-const ContentTypeSSLServerNameYAML = ContentTypeYAML
-const LineCommentSSLServerNameYAML = LineCommentYAML
+const (
+	SSLServerNameYAMLFileName    = "ssl_server_name.yaml"
+	ContentTypeSSLServerNameYAML = ContentTypeYAML
+	LineCommentSSLServerNameYAML = LineCommentYAML
+)
 
 // DefaultDefaultEnableH2 is whether Delivery Services will have HTTP/2 enabled by default if they don't have an explicit Parameter, and no Opt is passed to the Make func.
 // We disable by default, to prevent potentially enabling broken clients.
@@ -42,11 +45,13 @@ const DefaultDefaultEnableH2 = false
 
 type TLSVersion string
 
-const TLSVersion1p0 = TLSVersion("1.0")
-const TLSVersion1p1 = TLSVersion("1.1")
-const TLSVersion1p2 = TLSVersion("1.2")
-const TLSVersion1p3 = TLSVersion("1.3")
-const TLSVersionInvalid = TLSVersion("")
+const (
+	TLSVersion1p0     = TLSVersion("1.0")
+	TLSVersion1p1     = TLSVersion("1.1")
+	TLSVersion1p2     = TLSVersion("1.2")
+	TLSVersion1p3     = TLSVersion("1.3")
+	TLSVersionInvalid = TLSVersion("")
+)
 
 // StringToTLSVersion returns the TLSVersion or TLSVersionInvalid if the string is not a TLS Version enum.
 func StringToTLSVersion(st string) TLSVersion {
@@ -71,8 +76,10 @@ var tlsVersionsToATS = map[TLSVersion]string{
 	TLSVersion1p3: "TLSv1_3",
 }
 
-const SSLServerNameYAMLParamEnableH2 = "enable_h2"
-const SSLServerNameYAMLParamTLSVersions = "tls_versions"
+const (
+	SSLServerNameYAMLParamEnableH2    = "enable_h2"
+	SSLServerNameYAMLParamTLSVersions = "tls_versions"
+)
 
 // DefaultDefaultTLSVersions is the list of TLS versions to enable by default, if no Parameter exists and no Opt is passed to the Make func.
 // By default, we enable all, even insecure versions.

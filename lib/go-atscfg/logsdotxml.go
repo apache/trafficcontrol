@@ -26,10 +26,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
-const LogsXMLFileName = "logs_xml.config"
-const ContentTypeLogsDotXML = `text/xml`
-
-const LineCommentLogsDotXML = `<!--`
+const (
+	LogsXMLFileName       = "logs_xml.config"
+	ContentTypeLogsDotXML = `text/xml`
+	LineCommentLogsDotXML = `<!--`
+)
 
 // LogsXMLDotConfigOpts contains settings to configure generation options.
 type LogsXMLDotConfigOpts struct {

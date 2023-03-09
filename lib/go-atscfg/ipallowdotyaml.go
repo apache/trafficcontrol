@@ -29,9 +29,11 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
-const IPAllowYamlFileName = `ip_allow.yaml`
-const ContentTypeIPAllowDotYAML = ContentTypeYAML
-const LineCommentIPAllowDotYAML = LineCommentHash
+const (
+	IPAllowYamlFileName       = `ip_allow.yaml`
+	ContentTypeIPAllowDotYAML = ContentTypeYAML
+	LineCommentIPAllowDotYAML = LineCommentHash
+)
 
 // const ParamPurgeAllowIP = "purge_allow_ip"
 // const ParamCoalesceMaskLenV4 = "coalesce_masklen_v4"
