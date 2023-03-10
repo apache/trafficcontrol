@@ -45,7 +45,7 @@ jobs:
       - name: Run chromedriver-updater
         uses: ./.github/actions/chromedriver-updater
         env:
-          GIT_AUTHOR_NAME: asf-ci
+          GIT_AUTHOR_NAME: asf-ci-trafficcontrol
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
           PROJECTS: "traffic_portal/test/integration/,experimental/traffic-portal/"
