@@ -14,8 +14,10 @@
 
 describe("ASNs Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.cacheGroups.asnsTable().navigate()
-			.waitForElementPresent("input[name=fuzzControl]");
+		await browser.page.common()
+			.section.sidebar
+			.navigateToNode("asns", ["serversContainer", "cacheGroupsContainer"]);
+		browser.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);
 			browser.assert.ok((rows.value as []).length >= 1);

@@ -14,9 +14,11 @@
 
 describe("Change Logs Spec", () => {
 	it("Filter by text", async () => {
+		await browser.page.common()
+			.section.sidebar
+			.navigateToNode("changeLogs", ["otherContainer"]);
 		const page = browser.page.users.changeLogs();
-		page.navigate()
-			.waitForElementPresent("input[name=fuzzControl]");
+		browser.waitForElementPresent("input[name=fuzzControl]");
 
 		page.section.changeLogsTable.searchText("test");
 		page.assert.urlContains("search=test");

@@ -14,9 +14,11 @@
 
 describe("Servers Spec", () => {
 	it("Filter by hostname", async () => {
+		await browser.page.common()
+			.section.sidebar
+			.navigateToNode("servers", ["serversContainer"]);
+		browser.waitForElementPresent("input[name=fuzzControl]");
 		const page = browser.page.servers.servers();
-		page.navigate()
-			.waitForElementPresent("input[name=fuzzControl]");
 		page.section.serversTable.searchText("edge");
 		page.assert.urlContains("search=edge");
 	});

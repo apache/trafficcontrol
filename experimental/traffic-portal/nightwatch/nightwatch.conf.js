@@ -29,7 +29,7 @@ module.exports = {
 	page_objects_path: "./dist/nightwatch/page_objects",
 	// An array of folders (excluding subfolders) where your tests are located;
 	// if this is not specified, the test source must be passed as the second argument to the test runner.
-	src_folders: ["./dist/nightwatch/tests"],
+	src_folders: ["./dist/nightwatch/tests/"],
 
 	test_settings: {
 		chrome: {
@@ -37,9 +37,9 @@ module.exports = {
 				browserName: "chrome",
 				"goog:chromeOptions": {
 					args: [
+						"--ignore-certificate-errors",
+						"--allow-insecure-localhost"
 						//'--no-sandbox',
-						//'--ignore-certificate-errors',
-						//'--allow-insecure-localhost',
 						//'--headless'
 					],
 					// More info on Chromedriver: https://sites.google.com/a/chromium.org/chromedriver/
@@ -63,7 +63,9 @@ module.exports = {
 				"goog:chromeOptions": {
 					args: [
 						"--headless",
-						"--window-size=1920,1080"
+						"--window-size=1920,1080",
+						"--ignore-certificate-errors",
+						"--allow-insecure-localhost"
 					]
 				}
 			},
@@ -74,7 +76,13 @@ module.exports = {
 
 		default: {
 			desiredCapabilities: {
-				browserName: "chrome"
+				browserName: "chrome",
+				"goog:chromeOptions": {
+					args: [
+						"--ignore-certificate-errors",
+						"--allow-insecure-localhost"
+					]
+				}
 			},
 			disable_error_log: false,
 			enable_fail_fast: true,

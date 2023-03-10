@@ -14,8 +14,10 @@
 
 describe("Types Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.types.typesTable().navigate()
-			.waitForElementPresent("input[name=fuzzControl]");
+		await browser.page.common()
+			.section.sidebar
+			.navigateToNode("types", ["configurationContainer"]);
+		browser.waitForElementPresent("input[name=fuzzControl]");
 		browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);
 			browser.assert.ok((rows.value as []).length >= 2);

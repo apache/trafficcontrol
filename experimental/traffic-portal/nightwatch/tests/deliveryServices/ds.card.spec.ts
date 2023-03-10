@@ -14,15 +14,19 @@
 
 describe("DS Card Spec", () => {
 	it("Verify expand test", async (): Promise<void> => {
+		await browser.page.common()
+			.section.sidebar
+			.click("@dashboard");
 		await browser.page.deliveryServices.deliveryServiceCard()
-			.navigate()
 			.section.cards
 			.expandDS(`testDS${browser.globals.uniqueString}`);
 	});
 
 	it("Verify detail test", async (): Promise<void> => {
+		await browser.page.common()
+			.section.sidebar
+			.click("@dashboard");
 		await browser.page.deliveryServices.deliveryServiceCard()
-			.navigate()
 			.section.cards
 			.viewDetails(`testDS${browser.globals.uniqueString}`);
 	});
