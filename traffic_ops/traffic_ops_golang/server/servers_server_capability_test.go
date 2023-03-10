@@ -20,15 +20,20 @@ package server
  */
 
 import (
+	"net/http"
+	//"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"strings"
-	"testing"
-	"time"
 )
 
 func getTestSSCs() []tc.ServerServerCapability {
@@ -136,9 +141,112 @@ func TestValidate(t *testing.T) {
 }
 
 func TestAssignMultipleServersCapabilities(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
 
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	//assign multiple server capabilities to a server
+	testSCCs := getTestSSCs()
+	var scs []string
+	for i, _ := range testSCCs {
+		scs = append(scs, *testSCCs[i].ServerCapability)
+	}
+	var sids []int
+	for i, _ := range testSCCs {
+		sids = append(sids, *testSCCs[i].ServerID)
+	}
+	mock.ExpectBegin()
+	mock.ExpectExec("INSERT INTO").WithArgs(scs, sids).WillReturnResult(sqlmock.NewResult(2, 2))
+	mock.ExpectCommit()
 }
 
 func TestDeleteMultipleServersCapabilities(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
 
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	//delete multiple server capabilities to a server
+	testSCCs := getTestSSCs()
+	mock.ExpectBegin()
+	mock.ExpectExec("DELETE FROM").WithArgs(*testSCCs[0].ServerID).WillReturnResult(sqlmock.NewResult(1, 2))
+	mock.ExpectCommit()
+}
+
+func TestCheckExistingServer(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	mock.ExpectBegin()
+	rows := sqlmock.NewRows([]string{"host_name"})
+	rows.AddRow("test")
+	mock.ExpectQuery("SELECT host_name").WithArgs(1).WillReturnRows(rows)
+
+	rows1 := sqlmock.NewRows([]string{"name"})
+	rows1.AddRow("ALL")
+	mock.ExpectQuery("SELECT name").WithArgs(1).WillReturnRows(rows1)
+
+	rows2 := sqlmock.NewRows([]string{"username", "soft", "shared_usernames"})
+	rows2.AddRow("user1", false, []byte("{}"))
+	mock.ExpectQuery("SELECT c.username, c.soft").WithArgs("ALL").WillReturnRows(rows2)
+	mock.ExpectCommit()
+
+	testSCCs := getTestSSCs()
+	var sids []int64
+	sids = append(sids, int64(*testSCCs[0].ServerID))
+	code, usrErr, sysErr := checkExistingServer(db.MustBegin().Tx, sids, "user1")
+	if usrErr != nil || sysErr != nil {
+		t.Errorf("unable to check if server exists")
+	}
+	if code != http.StatusOK {
+		t.Errorf("Failed")
+	}
+}
+
+func TestCheckServerType(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	testSCCs := getTestSSCs()
+	testSCCs[1].ServerID = util.Ptr(2)
+	testSCCs[1].Server = util.Ptr("foo")
+
+	mock.ExpectBegin()
+	rows := sqlmock.NewRows([]string{"array_agg"})
+	var sids []int64
+	for i, _ := range testSCCs {
+		sids = append(sids, int64(*testSCCs[i].ServerID))
+	}
+	rows.AddRow([]byte("{1,2}"))
+	mock.ExpectQuery("SELECT array_agg").WithArgs(pq.Array(sids)).WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	code, usrErr, sysErr := checkServerType(db.MustBegin().Tx, sids)
+	if usrErr != nil || sysErr != nil {
+		t.Errorf("unable to check if server type exists")
+	}
+	if code != http.StatusOK {
+		t.Errorf("Failed")
+	}
 }
