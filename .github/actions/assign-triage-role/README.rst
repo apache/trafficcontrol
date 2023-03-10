@@ -53,7 +53,7 @@ Example usage
 	- name: Assign Triage Role
 	  run: python3 -m assign_triage_role
 	  env:
-	    GIT_AUTHOR_NAME: asf-ci
+	    GIT_AUTHOR_NAME: asf-ci-trafficcontrol
 	    GITHUB_TOKEN: ${{ github.token }}
 	    MINIMUM_COMMITS: 5
 	    SINCE_DAYS_AGO: 45
