@@ -239,12 +239,7 @@ to-enroll() {
 			export MY_PROFILE="TRAFFIC_ROUTER"
 			export MY_STATUS="ONLINE"
 			;;
-		"tp" )
-			export MY_TYPE="TRAFFIC_PORTAL"
-			export MY_PROFILE="TRAFFIC_PORTAL"
-			export MY_STATUS="ONLINE"
-			;;
-		"tpv2" )
+		"tp" | "tpv2" )
 			export MY_TYPE="TRAFFIC_PORTAL"
 			export MY_PROFILE="TRAFFIC_PORTAL"
 			export MY_STATUS="ONLINE"

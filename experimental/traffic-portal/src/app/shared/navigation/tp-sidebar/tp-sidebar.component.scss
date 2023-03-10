@@ -42,10 +42,6 @@ mat-sidenav-container {
 		div[role=group] > .mat-tree-node > a {
 			padding-left: calc(.5em + 29px);
 		}
-
-		&.hidden {
-			display: none;
-		}
 	}
 }
 

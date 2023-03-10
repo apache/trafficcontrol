@@ -15,6 +15,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+set -e
 
 INIT_DIR="/etc/init.d"
 
@@ -56,12 +57,8 @@ echo "$(jq "$(<<JQ_FILTERS cat
 JQ_FILTERS
 )" /etc/traffic-portal/config.json )" > /etc/traffic-portal/config.json
 
-echo "TO_HOST: $TO_HOST"
-echo "TO_HOST: $TO_PORT"
-echo "TO_FQDN: $TO_FQDN"
-
 # Enroll the Traffic Portal
-to-enroll "tpv2" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
+to-enroll "tpv2" ALL
 
 # Add node to the path for situations in which the environment is passed.
 ./$INIT_DIR/traffic-portal start
