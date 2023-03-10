@@ -19,10 +19,14 @@ package test
  * under the License.
  */
 
-import "testing"
+import (
+	"github.com/apache/trafficcontrol/lib/go-util"
+	"testing"
+)
 
 type thingy struct {
 	Cat string `json:"cat" db:"cat"`
+	Mat bool   `json:"mat"`
 	Hat int    `json:"hat" db:"hat"`
 }
 
@@ -38,5 +42,57 @@ func TestColsFromStructByTag(t *testing.T) {
 		if c != res[i] {
 			t.Errorf("Expected %s, got %s", c, res[i])
 		}
+	}
+}
+
+func TestColsFromStructByTagExclude(t *testing.T) {
+	res := ColsFromStructByTagExclude("db", thingy{}, util.Ptr([]string{"cat"}))
+	cols := []string{"hat"}
+
+	if len(res) != len(cols) {
+		t.Errorf("Expected %d columns, got %d", len(cols), len(res))
+	}
+	for i, c := range cols {
+		if c != res[i] {
+			t.Errorf("Expected %s, got %s", c, res[i])
+		}
+	}
+}
+
+func TestInsertAtStr(t *testing.T) {
+	cols := []string{"zero", "two", "four"}
+	expectedCols := []string{"zero", "one", "two", "three", "four", "five", "six"}
+	colMap := map[string][]string{
+		"zero": {"one"},
+		"two":  {"three"},
+		"four": {"five", "six"},
+	}
+
+	newCols := InsertAtStr(&cols, &colMap)
+	if newCols == nil {
+		t.Fatal("expected new columns to be not nil")
+	}
+
+	if len(*newCols) != len(expectedCols) {
+		t.Fatalf("expected same amount of columns got %v and %v", len(*newCols), len(expectedCols))
+	}
+
+	for i, _ := range expectedCols {
+		if (*newCols)[i] != expectedCols[i] {
+			t.Fatalf("expected col %v to be the same, got %v and %v", i, (*newCols)[i], expectedCols[i])
+		}
+	}
+
+	newCols = InsertAtStr(nil, &colMap)
+	if newCols != nil {
+		t.Fatal("expected no new columns when an argument is nil")
+	}
+	newCols = InsertAtStr(&cols, nil)
+	if newCols != nil {
+		t.Fatal("expected no new columns when an argument is nil")
+	}
+	newCols = InsertAtStr(nil, nil)
+	if newCols != nil {
+		t.Fatal("expected no new columns when an argument is nil")
 	}
 }

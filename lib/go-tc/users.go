@@ -127,9 +127,9 @@ type UserToken struct {
 	Token string `json:"t"`
 }
 
-// commonUserFields is unexported, but its contents are still visible when it is embedded
+// CommonUserFields is unexported, but its contents are still visible when it is embedded
 // LastUpdated is a new field for some structs.
-type commonUserFields struct {
+type CommonUserFields struct {
 	AddressLine1    *string    `json:"addressLine1" db:"address_line1"`
 	AddressLine2    *string    `json:"addressLine2" db:"address_line2"`
 	City            *string    `json:"city" db:"city"`
@@ -162,7 +162,7 @@ type User struct {
 	// https://github.com/apache/trafficcontrol/blob/3b5dd406bf1a0bb456c062b0f6a465ec0617d8ef/traffic_ops/traffic_ops_golang/user/user.go#L197
 	// It's done that way in order to maintain "rolename" vs "roleName" JSON field capitalization for the different users APIs.
 	RoleName *string `json:"roleName,omitempty" db:"role_name"`
-	commonUserFields
+	CommonUserFields
 }
 
 // UserCurrent represents the profile for the authenticated user.
@@ -170,7 +170,7 @@ type UserCurrent struct {
 	UserName  *string `json:"username"`
 	LocalUser *bool   `json:"localUser"`
 	RoleName  *string `json:"roleName"`
-	commonUserFields
+	CommonUserFields
 }
 
 // ToLegacyCurrentUser will convert an APIv4 user to an APIv3 "current user"
@@ -253,14 +253,14 @@ type UserV40 struct {
 	Username string `json:"username" db:"username"`
 }
 
-// UsersResponseV4 is the type of a response from Traffic Ops to requests made
+// UsersResponseV4 is the type of response from Traffic Ops to requests made
 // to /users which return more than one user for the latest 4.x api version variant.
 type UsersResponseV4 struct {
 	Response []UserV4 `json:"response"`
 	Alerts
 }
 
-// UserResponseV4 is the type of a response from Traffic Ops to requests made
+// UserResponseV4 is the type of response from Traffic Ops to requests made
 // to /users which return one user for the latest 4.x api version variant.
 type UserResponseV4 struct {
 	Response UserV4 `json:"response"`
@@ -275,7 +275,7 @@ type CurrentUserUpdateRequest struct {
 	User *CurrentUserUpdateRequestUser `json:"user"`
 }
 
-// CurrentUserUpdateRequestUser holds all of the actual data in a request to update the current user.
+// CurrentUserUpdateRequestUser holds all the actual data in a request to update the current user.
 type CurrentUserUpdateRequestUser struct {
 	AddressLine1       json.RawMessage `json:"addressLine1"`
 	AddressLine2       json.RawMessage `json:"addressLine2"`
@@ -470,11 +470,6 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 
 	return util.JoinErrs(errs)
 }
-
-// ------------------- Response structs -------------------- //
-//  Response structs should only be used in the client       //
-//  The client's use of these will eventually be deprecated  //
-// --------------------------------------------------------- //
 
 // UsersResponse can hold a Traffic Ops API response to a request to get a list of users.
 type UsersResponse struct {
