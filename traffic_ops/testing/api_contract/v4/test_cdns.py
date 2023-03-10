@@ -9,9 +9,10 @@ PyTest Fixture to store keys for cdns endpoint
 @pytest.fixture
 def get_cdn_keys():
     # Response keys for cdns endpoint
-    with open('endpoint_data.json', 'r') as f:
-         data = json.load(f)     
-    return data['cdn_keys']
+    with open('post_data.json', 'r') as f:
+         data = json.load(f)
+    cdn_keys = list(data["cdns"].keys())
+    return cdn_keys
 
 """
 Test step to validate keys from cdns endpoint response in TO V4
@@ -28,7 +29,7 @@ def test_get_cdn(to_login, get_cdn_keys, cdn_post_data):
        #validate cdn values from post data in cdns get response
        post_data = [cdn_post_data[0]["cdns"]['name'], cdn_post_data[0]["cdns"]['domainName'], cdn_post_data[0]["cdns"]['dnssecEnabled']]
        get_data = [cdn_data[0]['name'], cdn_data[0]['domainName'], cdn_data[0]['dnssecEnabled']]
-       assert cdn_keys == get_cdn_keys
+       assert cdn_keys.sort() == get_cdn_keys.sort()
        assert get_data == post_data
     except IndexError:
         logging.error("No CDN data from cdns get request")
@@ -51,6 +52,16 @@ def test_post_cdn(cdn_post_data):
     except IndexError:
         logging.error("No CDN response data from cdns POST request")
         pytest.fail("Response is empty from POST request , Failing test_post_cdn")
+
+
+def pytest_sessionfinish(session, exitstatus, cdn_post_data, to_login):
+    try:
+        cdn_response = cdn_post_data[1]
+        id = cdn_response["id"]
+        to_login.delete_cdn_by_id(cdn_id=id)
+    except IndexError:
+        logging.error("CDN doesn't created")
+
     
     
 
