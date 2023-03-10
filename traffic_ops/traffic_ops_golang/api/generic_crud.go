@@ -123,21 +123,19 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	lastUpdated := tc.TimeNoMod{}
 	rowsAffected := 0
 
-	// Only when the type is of serviceCategory, &name is scanned and returned from the DB.
-	// Else return only &lastUpdated.
-	if val.GetType() == "serviceCategory" {
-		for resultRows.Next() {
-			rowsAffected++
+	for resultRows.Next() {
+		rowsAffected++
+		// Only when the type is of serviceCategory, &name is scanned and returned from the DB.
+		// Else return only &lastUpdated.
+		if val.GetType() == "serviceCategory" {
 			if err := resultRows.Scan(&name, &lastUpdated); err != nil {
 				return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
 			}
-		}
-	} else {
-		for resultRows.Next() {
-			rowsAffected++
+		} else {
 			if err := resultRows.Scan(&lastUpdated); err != nil {
 				return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
 			}
+
 		}
 	}
 
