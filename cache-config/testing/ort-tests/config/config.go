@@ -77,9 +77,6 @@ type Users struct {
 
 	// Operations is the username of a Traffic Ops user with "operations"-level
 	// Permissions.
-	//
-	// Deprecated: This is unused in t3c tests, and may be removed in the
-	// future.
 	Operations string `json:"operations" envconfig:"TO_USER_OPERATIONS"`
 
 	// Admin is the username of a Traffic Ops user with the special "admin"

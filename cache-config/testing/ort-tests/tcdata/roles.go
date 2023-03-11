@@ -44,7 +44,7 @@ func (r *TCData) DeleteTestRoles(t *testing.T) {
 
 	role := r.TestData.Roles[roleGood]
 	// Retrieve the Role by name so we can get the id
-	resp, _, status, err := TOSession.GetRoleByName(*role.Name)
+	resp, _, status, err := TOSession.GetRoleByNameWithHdr(*role.Name, nil)
 	t.Log("Status Code: ", status)
 	if err != nil {
 		t.Errorf("cannot GET Role by name: %s - %v", *role.Name, err)
@@ -59,7 +59,7 @@ func (r *TCData) DeleteTestRoles(t *testing.T) {
 	}
 
 	// Retrieve the Role to see if it got deleted
-	roleResp, _, status, err := TOSession.GetRoleByName(*role.Name)
+	roleResp, _, status, err := TOSession.GetRoleByNameWithHdr(*role.Name, nil)
 	t.Log("Status Code: ", status)
 
 	if err != nil {
