@@ -17,8 +17,8 @@ describe("Regions Spec", () => {
 		await browser.page.common()
 			.section.sidebar
 			.navigateToNode("regions", ["serversContainer", "cacheGroupsContainer"]);
-		browser.waitForElementPresent("input[name=fuzzControl]");
-		browser.elements("css selector", "div.ag-row", rows => {
+		await browser.waitForElementPresent("input[name=fuzzControl]");
+		await browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);
 			browser.assert.ok((rows.value as []).length >= 3);
 		});

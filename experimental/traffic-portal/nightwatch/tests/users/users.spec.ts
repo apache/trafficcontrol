@@ -21,16 +21,16 @@ describe("Users Spec", () => {
 			.section.sidebar
 			.navigateToNode("users", ["usersContainer"]);
 		const page: UsersPageObject = browser.page.users.users();
-		browser.waitForElementPresent(".ag-row");
+		await browser.waitForElementPresent(".ag-row");
 		let tbl = page.section.usersTable;
 		if (! await tbl.getColumnState("Username")) {
 			tbl = tbl.toggleColumn("Username");
 		}
 
 		tbl = tbl.searchText(username);
-		page.assert.urlContains(`search=${username}`);
+		await page.assert.urlContains(`search=${username}`);
 
-		tbl.api.elements("css selector", ".ag-row:not(.ag-hidden .ag-row)",
+		await tbl.api.elements("css selector", ".ag-row:not(.ag-hidden .ag-row)",
 			result => {
 				if (result.status === 1) {
 					browser.assert.equal(true, false, `failed to select ag-grid rows: ${result.value.message}`);

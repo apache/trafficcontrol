@@ -17,9 +17,9 @@ describe("Servers Spec", () => {
 		await browser.page.common()
 			.section.sidebar
 			.navigateToNode("servers", ["serversContainer"]);
-		browser.waitForElementPresent("input[name=fuzzControl]");
+		await browser.waitForElementPresent("input[name=fuzzControl]");
 		const page = browser.page.servers.servers();
 		page.section.serversTable.searchText("edge");
-		page.assert.urlContains("search=edge");
+		await page.assert.urlContains("search=edge");
 	});
 });

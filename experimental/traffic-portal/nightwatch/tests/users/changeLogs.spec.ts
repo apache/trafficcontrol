@@ -18,9 +18,9 @@ describe("Change Logs Spec", () => {
 			.section.sidebar
 			.navigateToNode("changeLogs", ["otherContainer"]);
 		const page = browser.page.users.changeLogs();
-		browser.waitForElementPresent("input[name=fuzzControl]");
+		await browser.waitForElementPresent("input[name=fuzzControl]");
 
 		page.section.changeLogsTable.searchText("test");
-		page.assert.urlContains("search=test");
+		await page.assert.urlContains("search=test");
 	});
 });
