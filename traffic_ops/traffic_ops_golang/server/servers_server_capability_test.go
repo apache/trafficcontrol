@@ -21,7 +21,6 @@ package server
 
 import (
 	"net/http"
-	//"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -138,48 +137,6 @@ func TestValidate(t *testing.T) {
 	if len(errs) > 0 {
 		t.Errorf(`expected no errors,  got %v`, errs)
 	}
-}
-
-func TestAssignMultipleServersCapabilities(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer mockDB.Close()
-
-	db := sqlx.NewDb(mockDB, "sqlmock")
-	defer db.Close()
-
-	//assign multiple server capabilities to a server
-	testSCCs := getTestSSCs()
-	var scs []string
-	for i, _ := range testSCCs {
-		scs = append(scs, *testSCCs[i].ServerCapability)
-	}
-	var sids []int
-	for i, _ := range testSCCs {
-		sids = append(sids, *testSCCs[i].ServerID)
-	}
-	mock.ExpectBegin()
-	mock.ExpectExec("INSERT INTO").WithArgs(scs, sids).WillReturnResult(sqlmock.NewResult(2, 2))
-	mock.ExpectCommit()
-}
-
-func TestDeleteMultipleServersCapabilities(t *testing.T) {
-	mockDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-	}
-	defer mockDB.Close()
-
-	db := sqlx.NewDb(mockDB, "sqlmock")
-	defer db.Close()
-
-	//delete multiple server capabilities to a server
-	testSCCs := getTestSSCs()
-	mock.ExpectBegin()
-	mock.ExpectExec("DELETE FROM").WithArgs(*testSCCs[0].ServerID).WillReturnResult(sqlmock.NewResult(1, 2))
-	mock.ExpectCommit()
 }
 
 func TestCheckExistingServer(t *testing.T) {

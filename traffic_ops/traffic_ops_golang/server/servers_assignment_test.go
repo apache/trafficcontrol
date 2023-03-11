@@ -25,6 +25,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/lib/pq"
@@ -101,5 +103,31 @@ func TestAssignDsesToServer(t *testing.T) {
 	}
 	if !reflect.DeepEqual(result, newDses) {
 		t.Errorf("delivery services assigned: Expected %v.   Got  %v", newDses, result)
+	}
+}
+
+func TestCheckForLastServerInActiveDeliveryServices(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	dsIDs := []int{1, 2, 3}
+	mock.ExpectBegin()
+	rows := sqlmock.NewRows([]string{"id", "multi_site_origin", "topology"})
+	rows.AddRow(1, false, util.Ptr("blah"))
+	mock.ExpectQuery("SELECT").WithArgs(1, tc.DSActiveStateActive, pq.Array(dsIDs), tc.CacheStatusOnline, tc.CacheStatusReported, "EDGE%").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	_, err = checkForLastServerInActiveDeliveryServices(1, "EDGE%", dsIDs, db.MustBegin().Tx)
+	//if vi[0] != 1 {
+	//	t.Errorf("mismatch violations, expected:%v, got: %v", violations, vi)
+	//}
+	if err != nil {
+		t.Errorf("unable to check server in active DS, got error:%s", err)
 	}
 }
