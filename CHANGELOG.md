@@ -89,7 +89,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7277](https://github.com/apache/trafficcontrol/pull/7277) *Traffic Control Cache Config (t3c)* remapdotconfig: remove skip check at mids for nocache/live
 - [#7282](https://github.com/apache/trafficcontrol/pull/7282) *Traffic Ops* Fixed issue with user getting correctly logged when using an access or bearer token authentication.
 - [#7346](https://github.com/apache/trafficcontrol/pull/7346) *Traffic Control Cache Config (t3c)* Fixed issue with stale lock file when using git to track changes.
-- [#7352](https://github.com/apache/trafficcontrol/pull/7352) *Traffic Control Cache Config (t3c)* Fixed issue with application locking which would allow multiple instances of *t3c apply* to run concurrently.
+- [#7352](https://github.com/apache/trafficcontrol/pull/7352) *Traffic Control Cache Config (t3c)* Fixed issue with application locking which would allow multiple instances of `t3c apply` to run concurrently.
+- [#6775](https://github.com/apache/trafficcontrol/issues/6775) *Traffic Ops* Invalid "orgServerFqdn" in Delivery Service creation/update causes Internal Server Error
 
 ## [7.0.0] - 2022-07-19
 ### Added
