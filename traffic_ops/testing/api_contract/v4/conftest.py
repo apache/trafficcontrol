@@ -72,7 +72,7 @@ def to_login(to_data):
 PyTest Fixture to create POST data for cdns endpoint
 """
 @pytest.fixture()
-def cdn_post_data(to_login):
+def cdn_prereq(to_login):
 
     #Return new post data and post response from cdns POST request
     f = open('prerequisite_data.json')
