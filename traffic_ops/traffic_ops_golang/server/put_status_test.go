@@ -20,6 +20,7 @@ package server
  */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"testing"
 	"time"
 
@@ -30,7 +31,7 @@ import (
 func TestCheckExistingStatusInfo(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
 
@@ -56,7 +57,7 @@ func TestCheckExistingStatusInfo(t *testing.T) {
 func TestUpdateServerStatusAndOfflineReason(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
 
@@ -68,8 +69,8 @@ func TestUpdateServerStatusAndOfflineReason(t *testing.T) {
 	mock.ExpectExec("UPDATE").WithArgs(2, "no longer needed", lastUpdated, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	reason := "no longer needed"
-	err = updateServerStatusAndOfflineReason(2, 2, 1, lastUpdated, &reason, db.MustBegin().Tx)
+	reason := util.Ptr("no longer needed")
+	err = updateServerStatusAndOfflineReason(2, 2, 1, lastUpdated, reason, db.MustBegin().Tx)
 	if err != nil {
 		t.Errorf("unable to change the status of the server, error: %s", err)
 	}

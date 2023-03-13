@@ -21,12 +21,14 @@ package server
 
 import (
 	"context"
+	"net/http"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/lib/pq"
@@ -124,10 +126,60 @@ func TestCheckForLastServerInActiveDeliveryServices(t *testing.T) {
 	mock.ExpectCommit()
 
 	_, err = checkForLastServerInActiveDeliveryServices(1, "EDGE%", dsIDs, db.MustBegin().Tx)
-	//if vi[0] != 1 {
-	//	t.Errorf("mismatch violations, expected:%v, got: %v", violations, vi)
-	//}
 	if err != nil {
-		t.Errorf("unable to check server in active DS, got error:%s", err)
+		t.Errorf("unable to check server in active DS, got error:%v", err)
+	}
+}
+
+func TestCheckTenancyAndCDN(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	dsIDs := []int{1}
+	serverInfo := tc.ServerInfo{
+		Cachegroup:   "testCG",
+		CachegroupID: 0,
+		CDNID:        1,
+		DomainName:   "",
+		HostName:     "",
+		ID:           1,
+		Status:       "",
+		Type:         "EDGE",
+	}
+	user := auth.CurrentUser{
+		UserName:     "user",
+		ID:           0,
+		PrivLevel:    0,
+		TenantID:     1,
+		Role:         0,
+		RoleName:     "admin",
+		Capabilities: nil,
+		UCDN:         "",
+	}
+	mock.ExpectBegin()
+	rows := sqlmock.NewRows([]string{"id", "cdn_id", "tenant_id", "xml_id", "name"})
+	rows.AddRow(1, 1, 1, "test", "ALL")
+	mock.ExpectQuery("SELECT deliveryservice.id").WithArgs(pq.Array(dsIDs)).WillReturnRows(rows)
+
+	rows1 := sqlmock.NewRows([]string{"id", "active"})
+	rows1.AddRow(1, true)
+	mock.ExpectQuery("WITH RECURSIVE").WithArgs(user.TenantID, 1).WillReturnRows(rows1)
+	mock.ExpectCommit()
+
+	code, usrErr, sysErr := checkTenancyAndCDN(db.MustBegin().Tx, "ALL", 1, serverInfo, dsIDs, &user)
+	if usrErr != nil {
+		t.Errorf("unable to check tenancy, either DS doesn't exist or DS-CDN not the same as server-CDN, incorrect user input: %v", usrErr)
+	}
+	if sysErr != nil {
+		t.Errorf("unable to check tenancy, system error: %v", sysErr)
+	}
+	if code != http.StatusOK {
+		t.Errorf("tenancy and cdn check for a given user failed with status code:%d", code)
 	}
 }

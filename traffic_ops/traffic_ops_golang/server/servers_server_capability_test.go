@@ -55,7 +55,7 @@ func getTestSSCs() []tc.ServerServerCapability {
 func TestReadSCs(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
 
@@ -167,11 +167,14 @@ func TestCheckExistingServer(t *testing.T) {
 	var sids []int64
 	sids = append(sids, int64(*testSCCs[0].ServerID))
 	code, usrErr, sysErr := checkExistingServer(db.MustBegin().Tx, sids, "user1")
-	if usrErr != nil || sysErr != nil {
-		t.Errorf("unable to check if server exists")
+	if usrErr != nil {
+		t.Errorf("server not found, error:%v", usrErr)
+	}
+	if sysErr != nil {
+		t.Errorf("unable to check if server exists, error:%v", sysErr)
 	}
 	if code != http.StatusOK {
-		t.Errorf("Failed")
+		t.Errorf("existing server check failed, expected:%d, got:%d", http.StatusOK, code)
 	}
 }
 
@@ -200,10 +203,13 @@ func TestCheckServerType(t *testing.T) {
 	mock.ExpectCommit()
 
 	code, usrErr, sysErr := checkServerType(db.MustBegin().Tx, sids)
-	if usrErr != nil || sysErr != nil {
-		t.Errorf("unable to check if server type exists")
+	if usrErr != nil {
+		t.Errorf("mismatch in server type, error:%v", usrErr)
+	}
+	if sysErr != nil {
+		t.Errorf("unable to check if server type exists, error:%v", sysErr)
 	}
 	if code != http.StatusOK {
-		t.Errorf("Failed")
+		t.Errorf("server type check failed, expected:%d, got:%d", http.StatusOK, code)
 	}
 }
