@@ -7,7 +7,7 @@ setup(
     long_description_content_type='text/markdown',
     py_modules= [],
     install_requires=[
-        'Apache-TrafficControl==3.1.0,
+        'Apache-TrafficControl==3.1.0',
         'attrs==22.2.0',
         'autopep8==2.0.2',
         'bcrypt==4.0.1',
