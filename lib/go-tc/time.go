@@ -37,7 +37,7 @@ type Time struct {
 //
 // Deprecated: New code should use RFC3339 (with optional nanosecond
 // precision).
-const TimeLayout = "2006-01-02 15:04:05-07"
+const TimeLayout = "2006-01-02 15:04:05-07:00"
 
 // Do not ever use this. It only exists for compatibility with Perl.
 const legacyLayout = "2006-01-02 15:04:05"
