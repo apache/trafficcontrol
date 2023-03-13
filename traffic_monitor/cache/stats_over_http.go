@@ -54,7 +54,6 @@ import (
 const LOADAVG_SHIFT = 65536
 
 func init() {
-	// AddStatsType("stats_over_http", statsParse, statsPrecompute)
 	registerDecoder("stats_over_http", statsOverHTTPParse, statsOverHTTPPrecompute)
 	hostnameRegex = regexp.MustCompile(`(?:http|https)/\d+\.\d+ ([A-Za-z0-9\-]{0,61})`)
 }

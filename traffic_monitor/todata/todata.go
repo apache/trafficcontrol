@@ -187,7 +187,7 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 		return fmt.Errorf("getting server types from monitoring config: %v", err)
 	}
 
-	if val, ok := mc.Config["tm.sameipservers.control"]; ok && fmt.Sprint(val) == "true" {
+	if val, ok := mc.Config["tm.sameipservers.control"]; ok && val.(string) == "true" {
 		newTOData.SameIpServers = getSameIPServers(mc)
 	}
 

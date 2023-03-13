@@ -46,24 +46,16 @@ const AvailableStr = "available"
 // available to serve traffic.
 const UnavailableStr = "unavailable"
 
-type Threshold int
+type Threshold string
 
 const (
-	NotEqual Threshold = iota
-	TooLow
-	TooHigh
+	NotEqual Threshold = "not equal"
+	TooLow   Threshold = "too low"
+	TooHigh  Threshold = "too high"
 )
 
 func (t Threshold) String() string {
-	switch t {
-	case NotEqual:
-		return "not equal"
-	case TooLow:
-		return "too low"
-	case TooHigh:
-		return "too high"
-	}
-	return "unknown"
+	return string(t)
 }
 
 // GetVitals Gets the vitals to decide health on in the right format

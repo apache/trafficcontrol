@@ -21,13 +21,13 @@ package datareq
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/traffic_monitor/health"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/health"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
@@ -114,7 +114,7 @@ func updateStatusSameIpServers(localStates peer.CRStatesThreadsafe, toData todat
 					// this host also needs to be marked down to divert all traffic for their
 					// common ip
 					if strings.Contains(partnerState.Status, string(tc.CacheStatusReported)) &&
-						strings.Contains(partnerState.Status, fmt.Sprint(health.TooHigh)) {
+						strings.Contains(partnerState.Status, health.TooHigh.String()) {
 						if !partnerState.Ipv4Available {
 							allAvailableV4 = false
 						}
