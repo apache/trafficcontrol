@@ -75,20 +75,20 @@ PyTest Fixture to create POST data for cdns endpoint
 def cdn_post_data(to_login):
 
     #Return new post data and post response from cdns POST request
-    f = open('post_data.json')
+    f = open('prerequisite_data.json')
     data = json.load(f)
 
     data["cdns"]["name"] =data["cdns"]["name"][:4]+str(randint(0,1000))
     data["cdns"]["domainName"] = data["cdns"]["domainName"][:5] + str(randint(0,1000))
     logging.info("New post data to hit POST method {}".format(data))
-    with open('post_data.json', 'w') as f:
+    with open('prerequisite_data.json', 'w') as f:
          json.dump(data, f)
     f.close()
     #Hitting cdns POST methed
     response = to_login.create_cdn(data=data["cdns"])
     try:
         cdn_response = response[0]
-        post_data = [data, cdn_response]
-        return post_data
+        prerequisite_data = [data, cdn_response]
+        return prerequisite_data
     except IndexError:
         logging.error("No CDN response data from cdns POST request")
