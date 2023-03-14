@@ -18,7 +18,7 @@ def pytest_addoption(parser):
         '--to_user', action='store', default='admin', help='User name for Traffic Ops Session'
     )
     parser.addoption(
-        '--to_password', action='store', default='twelve',  help='Password for Traffic Ops Session'
+        '--to_password', action='store', default='twelve12', help='Password for Traffic Ops Session'
     )
     parser.addoption(
         '--to_url', action='store', default='https://localhost/api', help='Traffic Ops URL'
@@ -77,16 +77,16 @@ def cdn_prereq(to_session, get_cdn_data):
     """PyTest Fixture to create POST data for cdns endpoint"""
 
     # Return new post data and post response from cdns POST request
-    data = get_cdn_data
-    data["name"] = data["name"][:4]+str(randint(0, 1000))
-    data["domainName"] = data["domainName"][:5] + str(randint(0, 1000))
-    logger.info("New cdn data to hit POST method %s", data)
+    get_cdn_data["name"] = get_cdn_data["name"][:4]+str(randint(0, 1000))
+    get_cdn_data["domainName"] = get_cdn_data["domainName"][:5] + \
+        str(randint(0, 1000))
+    logger.info("New cdn data to hit POST method %s", get_cdn_data)
     # Hitting cdns POST methed
-    response = to_session.create_cdn(data=data)
+    response = to_session.create_cdn(data=get_cdn_data)
+    prerequisite_data = None
     try:
         cdn_response = response[0]
-        prerequisite_data = [data, cdn_response]
-        return prerequisite_data
+        prerequisite_data = [get_cdn_data, cdn_response]
     except IndexError:
         logger.error("No CDN response data from cdns POST request")
-        return None
+    return prerequisite_data

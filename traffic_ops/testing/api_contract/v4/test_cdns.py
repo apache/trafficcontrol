@@ -8,7 +8,7 @@ logger = logging.getLogger()
 
 
 @pytest.fixture(name="get_cdn_data")
-def cdn_get_data():
+def get_cdn_prereq_data():
     """PyTest Fixture to store prereq data for cdns endpoint"""
     # Response keys for cdns endpoint
     with open('prerequisite_data.json', encoding="utf-8", mode='r') as prereq_file:
