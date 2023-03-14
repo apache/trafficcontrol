@@ -41,8 +41,10 @@ def test_get_cdn(to_session, get_cdn_data, cdn_prereq):
         pytest.fail("Response from get request is empty, Failing test_get_cdn")
 
 
+@pytest.fixture(autouse=True)
 def pytest_sessionfinish(cdn_prereq, to_session):
     """Delete CDN after test execution to avoid redundancy"""
+    yield
     try:
         cdn_response = cdn_prereq[1]
         cdn_id = cdn_response["id"]
