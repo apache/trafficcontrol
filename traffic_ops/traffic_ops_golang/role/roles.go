@@ -20,6 +20,7 @@ package role
  */
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -394,24 +395,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
 		return
 	}
-	rows, err := tx.Query(updateRoleQuery(), roleV4.Name, roleV4.Description, currentRoleName)
+	err = tx.QueryRow(updateRoleQuery(), roleV4.Name, roleV4.Description, currentRoleName).Scan(&roleV4.LastUpdated)
 	if err != nil {
-		usrErr, sysErr, code := api.ParseDBError(err)
-		api.HandleErr(w, r, tx, code, usrErr, fmt.Errorf("updating role: %w", sysErr))
-		return
-	}
-	defer rows.Close()
-	if !rows.Next() {
-		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
-		return
-	}
-	var lastUpdated time.Time
-	for rows.Next() {
-		if err := rows.Scan(&lastUpdated); err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning lastUpdated from role update: %w", err))
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
 			return
 		}
-		roleV4.LastUpdated = &lastUpdated
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, fmt.Errorf("updating role and scanning lastUpdated : %w", sysErr))
+		return
 	}
 
 	userErr, sysErr, errCode = deleteRoleCapabilityAssociations(inf.Tx, roleV4.Name)
@@ -430,6 +422,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		Name:        roleV4.Name,
 		Permissions: roleV4.Permissions,
 		Description: roleV4.Description,
+		LastUpdated: roleV4.LastUpdated,
 	}
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, roleResponse)
 	changeLogMsg := fmt.Sprintf("ROLE: %s, ID: %d, ACTION: Updated Role", roleV4.Name, roleID)
