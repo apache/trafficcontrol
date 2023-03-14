@@ -29,8 +29,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/jmoiron/sqlx"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -38,7 +38,7 @@ import (
 func TestAssignDsesToServer(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
 
@@ -111,7 +111,7 @@ func TestAssignDsesToServer(t *testing.T) {
 func TestCheckForLastServerInActiveDeliveryServices(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
 
@@ -121,11 +121,11 @@ func TestCheckForLastServerInActiveDeliveryServices(t *testing.T) {
 	dsIDs := []int{1, 2, 3}
 	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{"id", "multi_site_origin", "topology"})
-	rows.AddRow(1, false, util.Ptr("blah"))
+	rows.AddRow(1, false, util.Ptr(""))
 	mock.ExpectQuery("SELECT").WithArgs(1, tc.DSActiveStateActive, pq.Array(dsIDs), tc.CacheStatusOnline, tc.CacheStatusReported, "EDGE%").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	_, err = checkForLastServerInActiveDeliveryServices(1, "EDGE%", dsIDs, db.MustBegin().Tx)
+	_, err = checkForLastServerInActiveDeliveryServices(1, "EDGE", dsIDs, db.MustBegin().Tx)
 	if err != nil {
 		t.Errorf("unable to check server in active DS, got error:%v", err)
 	}
@@ -134,7 +134,7 @@ func TestCheckForLastServerInActiveDeliveryServices(t *testing.T) {
 func TestCheckTenancyAndCDN(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
 

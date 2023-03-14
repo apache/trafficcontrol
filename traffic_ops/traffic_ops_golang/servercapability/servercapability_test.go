@@ -27,6 +27,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -139,7 +140,7 @@ func TestValidate(t *testing.T) {
 		err, _ := testTOSC.Validate()
 		errs = test.SortErrors(test.SplitErrors(err))
 	}
-	if len(errs) < 0 {
+	if len(errs) > 0 {
 		t.Errorf(`expected no errors,  got errors: %v`, errs)
 	}
 }

@@ -20,9 +20,10 @@ package server
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"testing"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
