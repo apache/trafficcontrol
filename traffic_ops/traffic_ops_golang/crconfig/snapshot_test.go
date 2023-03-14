@@ -25,6 +25,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -37,56 +38,161 @@ func ExpectedGetSnapshot(crc *tc.CRConfig) ([]byte, error) {
 	return json.Marshal(crc)
 }
 
-func ExpectedGetMontioringSnapshot(crc *tc.CRConfig, tx *sql.Tx) ([]byte, error) {
+func ExpectedGetMonitoringSnapshot(crc *tc.CRConfig, tx *sql.Tx) ([]byte, error) {
 	tm, _ := monitoring.GetMonitoringJSON(tx, *crc.Stats.CDNName)
 	return json.Marshal(tm)
 }
 
-func MockGetSnapshot(mock sqlmock.Sqlmock, expected []byte, cdn string) {
-	rows := sqlmock.NewRows([]string{"snapshot"})
-	rows = rows.AddRow(expected)
-	rows = rows.AddRow(expected)
-	mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
+func MockGetSnapshotTestCases(mock sqlmock.Sqlmock, expected []byte, cdn string) {
+	if expected != nil {
+		rows := sqlmock.NewRows([]string{"snapshot"})
+		rows = rows.AddRow(expected)
+		mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
+	} else if expected == nil {
+		rows := sqlmock.NewRows([]string{"snapshot"})
+		mock.ExpectQuery("SELECT").WithArgs(cdn).WillReturnRows(rows)
+	}
 }
 
 func TestGetSnapshot(t *testing.T) {
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	testCases := []string{"success", "emptyRows", "badCdnName"}
+
+	for _, v := range testCases {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
+
+		cdn := "mycdn"
+
+		crc := &tc.CRConfig{}
+		crc.Stats.CDNName = &cdn
+
+		mock.ExpectBegin()
+
+		expected, err := ExpectedGetSnapshot(crc)
+
+		if err != nil {
+			t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
+		}
+		if v == "success" {
+			MockGetSnapshotTestCases(mock, expected, cdn)
+		} else if v == "emptyRows" {
+			MockGetSnapshotTestCases(mock, nil, cdn)
+		} else if v == "badCdnName" {
+			MockGetSnapshotTestCases(mock, expected, "bad")
+		} else {
+			t.Fatalf("GetSnapshot testCase %v not found", v)
+		}
+		mock.ExpectCommit()
+
+		dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+		defer cancelTx()
+		tx, err := db.BeginTx(dbCtx, nil)
+
+		actual, exists, err := GetSnapshot(tx, cdn)
+
+		if v == "success" {
+			if err != nil {
+				t.Fatalf("GetSnapshot err expected: nil, actual: %v", err)
+			}
+			if !exists {
+				t.Fatalf("GetSnapshot exists expected: true, actual: false")
+			}
+			if !reflect.DeepEqual(string(expected), actual) {
+				t.Errorf("GetSnapshot expected: %+v, actual: %+v", string(expected), actual)
+			}
+		} else if v == "emptyRows" {
+			if err != nil {
+				t.Fatalf("GetSnapshot err expected: nil, actual: %v", err)
+			}
+			if !reflect.DeepEqual("", actual) {
+				t.Errorf("GetSnapshot expected an empty string, actual: %+v", actual)
+			}
+		} else if v == "badCdnName" {
+			if err == nil && strings.Contains("does not match actual [string - mycdn]", err.Error()) {
+				t.Errorf("Expected a mismatched error when supplying a bad CDN name in GetSnapshot")
+			}
+			if !reflect.DeepEqual("", actual) {
+				t.Errorf("GetSnapshot expected an empty string, actual: %+v", actual)
+			}
+		} else {
+			t.Fatalf("Test case %v not correctly accounted for", v)
+		}
+
+		defer tx.Commit()
 	}
-	defer db.Close()
+}
 
-	cdn := "mycdn"
+func TestGetSnapshotMonitoring(t *testing.T) {
+	testCases := []string{"success", "emptyRows", "badCdnName"}
 
-	crc := &tc.CRConfig{}
-	crc.Stats.CDNName = &cdn
+	for _, v := range testCases {
+		db, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
+		}
+		defer db.Close()
 
-	mock.ExpectBegin()
-	expected, err := ExpectedGetSnapshot(crc)
-	if err != nil {
-		t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
-	}
-	MockGetSnapshot(mock, expected, cdn)
-	mock.ExpectCommit()
+		cdn := "mycdn"
 
-	dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
-	defer cancelTx()
-	tx, err := db.BeginTx(dbCtx, nil)
-	if err != nil {
-		t.Fatalf("creating transaction: %v", err)
-	}
-	defer tx.Commit()
+		crc := &tc.CRConfig{}
+		crc.Stats.CDNName = &cdn
 
-	actual, exists, err := GetSnapshot(tx, cdn)
-	if err != nil {
-		t.Fatalf("GetSnapshot err expected: nil, actual: %v", err)
-	}
-	if !exists {
-		t.Fatalf("GetSnapshot exists expected: true, actual: false")
-	}
+		mock.ExpectBegin()
 
-	if !reflect.DeepEqual(string(expected), actual) {
-		t.Errorf("GetSnapshot expected: %+v, actual: %+v", string(expected), actual)
+		expected, err := ExpectedGetSnapshot(crc)
+
+		if err != nil {
+			t.Fatalf("GetSnapshotMonitoring creating expected err expected: nil, actual: %v", err)
+		}
+		if v == "success" {
+			MockGetSnapshotTestCases(mock, expected, cdn)
+		} else if v == "emptyRows" {
+			MockGetSnapshotTestCases(mock, nil, cdn)
+		} else if v == "badCdnName" {
+			MockGetSnapshotTestCases(mock, expected, "bad")
+		} else {
+			t.Fatalf("GetSnapshotMonitoring testCase %v not found", v)
+		}
+		mock.ExpectCommit()
+
+		dbCtx, cancelTx := context.WithTimeout(context.TODO(), 10*time.Second)
+		defer cancelTx()
+		tx, err := db.BeginTx(dbCtx, nil)
+
+		actual, exists, err := GetSnapshotMonitoring(tx, cdn)
+
+		if v == "success" {
+			if err != nil {
+				t.Fatalf("GetSnapshotMonitoring err expected: nil, actual: %v", err)
+			}
+			if !exists {
+				t.Fatalf("GetSnapshotMonitoring exists expected: true, actual: false")
+			}
+			if !reflect.DeepEqual(string(expected), actual) {
+				t.Errorf("GetSnapshotMonitoring expected: %+v, actual: %+v", string(expected), actual)
+			}
+		} else if v == "emptyRows" {
+			if err != nil {
+				t.Fatalf("GetSnapshotMonitoring err expected: nil, actual: %v", err)
+			}
+			if !reflect.DeepEqual("", actual) {
+				t.Errorf("GetSnapshotMonitoring expected an empty string, actual: %+v", actual)
+			}
+		} else if v == "badCdnName" {
+			if err == nil && strings.Contains("does not match actual [string - mycdn]", err.Error()) {
+				t.Errorf("Expected a mismatched error when supplying a bad CDN name in GetSnapshotMonitoring")
+			}
+			if !reflect.DeepEqual("", actual) {
+				t.Errorf("GetSnapshotMonitoring expected an empty string, actual: %+v", actual)
+			}
+		} else {
+			t.Fatalf("Test case %v not correctly accounted for", v)
+		}
+
+		defer tx.Commit()
 	}
 }
 
@@ -112,7 +218,7 @@ func MockSnapshot(mock sqlmock.Sqlmock, expected []byte, expectedtm []byte, cdn 
 func TestSnapshot(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
 
@@ -134,7 +240,7 @@ func TestSnapshot(t *testing.T) {
 		t.Fatalf("GetSnapshot creating expected err expected: nil, actual: %v", err)
 	}
 
-	expectedtm, err := ExpectedGetMontioringSnapshot(crc, tx)
+	expectedtm, err := ExpectedGetMonitoringSnapshot(crc, tx)
 	if err != nil {
 		t.Fatalf("GetSnapshotMonitor creating expected err expected: nil, actual: %v", err)
 	}
