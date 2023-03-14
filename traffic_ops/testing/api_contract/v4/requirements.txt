@@ -1,0 +1,8 @@
+Apache-TrafficControl==3.1.0
+attrs==22.2.0
+munch==2.5.0
+packaging==23.0
+pytest==7.2.1
+requests==2.28.2
+trafficcontrol==1.0.0
+urllib3==1.26.14
