@@ -31,7 +31,7 @@ Register a user and send registration email.
 Request Structure
 -----------------
 :email:    Email address of the new user The given email is validated (circuitously) by `GitHub user asaskevich's regular expression <https://github.com/asaskevich/govalidator/blob/9a090521c4893a35ca9a228628abf8ba93f63108/patterns.go#L7>`_ . Note that it can't actually distinguish a valid, deliverable, email address but merely ensure the email is in a commonly-found format.
-:role:     The name of the :term:`Role` which will be afforded to the new user. It restricts the allowed values to identifiers for :term:`Roles` with at most the same permissions level as the requesting user.
+:role:     The name of the :term:`Role` which will be afforded to the new user. It restricts the allowed values to identifiers for :term:`Roles` with only Permissions the requesting user has.
 :tenantId: A field containing the integral, unique identifier of the :term:`Tenant` to which the new user will belong. It restricts the allowed values to identifiers for :term:`Tenants` within the requesting user's :term:`Tenant`'s permissions.
 
 .. code-block:: http
