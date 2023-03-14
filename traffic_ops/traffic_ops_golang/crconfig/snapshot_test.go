@@ -60,7 +60,7 @@ func TestGetSnapshot(t *testing.T) {
 	for _, v := range testCases {
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 		}
 		defer db.Close()
 
@@ -131,7 +131,7 @@ func TestGetSnapshotMonitoring(t *testing.T) {
 	for _, v := range testCases {
 		db, mock, err := sqlmock.New()
 		if err != nil {
-			t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 		}
 		defer db.Close()
 
@@ -218,7 +218,7 @@ func MockSnapshot(mock sqlmock.Sqlmock, expected []byte, expectedtm []byte, cdn 
 func TestSnapshot(t *testing.T) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
 	}
 	defer db.Close()
 
