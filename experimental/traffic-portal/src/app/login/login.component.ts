@@ -15,7 +15,7 @@ import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { Router, ActivatedRoute, DefaultUrlSerializer } from "@angular/router";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { AutocompleteValue } from "../utils";

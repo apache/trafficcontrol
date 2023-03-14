@@ -41,8 +41,7 @@ PKG_COMMAND := $(TC_DIR)/pkg
 PKG_FLAGS := -v -$(RHEL_VERSION)
 BUILD_SUFFIX := _build
 BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l | tr -d '[[:space:]]').$(shell git rev-parse --short=8 HEAD)
-# no --rm on the docker command to speed up reuse for shell completion
-BUILD_ARCH   := $(shell docker run --name=ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch $(BASE_IMAGE):$(RHEL_VERSION) rpm --eval %_arch)
+BUILD_ARCH   := $(shell docker run --name=ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch --rm $(BASE_IMAGE):$(RHEL_VERSION) rpm --eval %_arch )
 TC_VERSION := $(shell cat "$(TC_DIR)/VERSION")
 TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
 TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
@@ -64,6 +63,7 @@ ORT_SOURCE:= $(wildcard $(TC_DIR)/cache-config/**)
 ORT_SOURCE+= $(wildcard $(TC_DIR)/lib/**.go)
 TM_SOURCE := $(wildcard $(TC_DIR)/traffic_monitor/**)
 TP_SOURCE := $(wildcard $(TC_DIR)/traffic_portal/**)
+TP2_SOURCE := $(wildcard $(TC_DIR)/experimental/traffic-portal/**)
 TR_SOURCE := $(wildcard $(TC_DIR)/traffic_router/**)
 TS_SOURCE := $(wildcard $(TC_DIR)/traffic_stats/**)
 
@@ -71,6 +71,7 @@ ATS_RPM := cache/trafficserver.rpm
 TM_RPM := traffic_monitor/traffic_monitor.rpm
 TO_RPM := traffic_ops/traffic_ops.rpm
 TP_RPM := traffic_portal/traffic_portal.rpm
+TP2_RPM := traffic_portal_v2/traffic_portal_v2.rpm
 TR_RPM := traffic_router/traffic_router.rpm
 TOMCAT_RPM := traffic_router/tomcat.rpm
 TS_RPM := traffic_stats/traffic_stats.rpm
@@ -80,6 +81,7 @@ ATS_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(ATS_RPM)
 TM_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TM_RPM)
 TO_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TO_RPM)
 TP_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TP_RPM)
+TP2_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TP2_RPM)
 TR_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TR_RPM)
 TOMCAT_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TOMCAT_RPM)
 TS_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TS_RPM)
@@ -89,6 +91,7 @@ ATS_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(ATS_RPM)
 TM_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TM_RPM)
 TO_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TO_RPM)
 TP_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TP_RPM)
+TP2_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TP2_RPM)
 TR_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TR_RPM)
 TOMCAT_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TOMCAT_RPM)
 TS_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TS_RPM)
@@ -98,6 +101,7 @@ ATS_DIST_RPM := $(TC_DIR)/dist/trafficserver-$(SPECIAL_SYRUP)
 TM_DIST_RPM := $(TC_DIR)/dist/traffic_monitor-$(SPECIAL_SAUCE)
 TO_DIST_RPM := $(TC_DIR)/dist/traffic_ops-$(SPECIAL_SAUCE)
 TP_DIST_RPM := $(TC_DIR)/dist/traffic_portal-$(SPECIAL_SAUCE)
+TP2_DIST_RPM := $(TC_DIR)/dist/traffic_portal_v2-$(SPECIAL_SAUCE)
 TR_DIST_RPM := $(TC_DIR)/dist/traffic_router-$(SPECIAL_SAUCE_NOARCH)
 TOMCAT_DIST_RPM := $(TC_DIR)/dist/tomcat-$(SPECIAL_SEASONING)
 TS_DIST_RPM := $(TC_DIR)/dist/traffic_stats-$(SPECIAL_SAUCE)
@@ -106,7 +110,7 @@ ORT_DIST_RPM := $(TC_DIR)/dist/trafficcontrol-cache-config-$(SPECIAL_SAUCE)
 .PHONY: all build-builders clean debug native nearly-all pull-builders very-clean
 
 # Default target; builds all pre-requisite rpms from source trees
-all: $(ATS_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TM_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(TS_RPM_RELATIVE)
+all: $(ATS_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TM_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TP2_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(TS_RPM_RELATIVE)
 
 ifneq ($(filter build-builders,$(MAKECMDGOALS)),)
 PKG_FLAGS += -b
@@ -160,6 +164,8 @@ $(TO_RPM_RELATIVE): $(TO_DIST_RPM)
 	cp -f "$?" "$@"
 $(TP_RPM_RELATIVE): $(TP_DIST_RPM)
 	cp -f "$?" "$@"
+$(TP2_RPM_RELATIVE): $(TP2_DIST_RPM)
+	cp -f "$?" "$@"
 $(TR_RPM_RELATIVE): $(TR_DIST_RPM)
 	cp -f "$?" "$@"
 $(TOMCAT_RPM_RELATIVE): $(TOMCAT_DIST_RPM)
@@ -177,6 +183,8 @@ $(TM_RPM_ABSOLUTE): $(TM_DIST_RPM)
 $(TO_RPM_ABSOLUTE): $(TO_DIST_RPM)
 	cp -f "$?" "$@"
 $(TP_RPM_ABSOLUTE): $(TP_DIST_RPM)
+	cp -f "$?" "$@"
+$(TP2_RPM_ABSOLUTE): $(TP2_DIST_RPM)
 	cp -f "$?" "$@"
 $(TR_RPM_ABSOLUTE): $(TR_DIST_RPM)
 	cp -f "$?" "$@"
@@ -200,6 +208,9 @@ $(TO_DIST_RPM): $(TO_SOURCE)
 $(TP_DIST_RPM): $(TP_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_portal$(BUILD_SUFFIX)
 
+$(TP2_DIST_RPM): $(TP2_SOURCE)
+	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_portal_v2$(BUILD_SUFFIX)
+
 $(TR_DIST_RPM) $(TOMCAT_DIST_RPM): $(TR_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_router$(BUILD_SUFFIX)
 
@@ -211,7 +222,7 @@ $(ORT_DIST_RPM): $(ORT_SOURCE)
 
 clean:
 	cd "$(CIAB_DIR_RELATIVE)"
-	$(RM) $(TM_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TS_RPM_RELATIVE)
+	$(RM) $(TM_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TP2_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TS_RPM_RELATIVE)
 
 very-clean: clean
 	$(warning This will destroy ALL OUTPUT RPMS IN 'dist'. Please be sure this is what you want)

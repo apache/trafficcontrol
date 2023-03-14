@@ -91,9 +91,9 @@ export class ThemeManagerService {
 	 * @param theme Theme to be stored
 	 */
 	private storeTheme(theme: Theme): void {
-		if(typeof(window) !== "undefined") {
+		if(this.document.defaultView) {
 			try {
-				window.localStorage.setItem(this.storageKey, JSON.stringify(theme));
+				this.document.defaultView.localStorage.setItem(this.storageKey, JSON.stringify(theme));
 			} catch (e) {
 				console.error(`Unable to store theme into local storage: ${e}`);
 			}
@@ -106,9 +106,9 @@ export class ThemeManagerService {
 	 * @returns The stored theme name or null
 	 */
 	private loadStoredTheme(): Theme | null {
-		if(typeof(window) !== "undefined") {
+		if(this.document.defaultView) {
 			try {
-				return JSON.parse(window.localStorage.getItem(this.storageKey) ?? "null");
+				return JSON.parse(this.document.defaultView.localStorage.getItem(this.storageKey) ?? "null");
 			} catch (e) {
 				console.error(`Unable to load theme from local storage: ${e}`);
 			}
@@ -120,8 +120,8 @@ export class ThemeManagerService {
 	 * Clears theme saved in local storage
 	 */
 	private clearStoredTheme(): void {
-		if(typeof(window) !== "undefined") {
-			window.localStorage.removeItem(this.storageKey);
+		if(this.document.defaultView) {
+			this.document.defaultView.localStorage.removeItem(this.storageKey);
 		}
 	}
 

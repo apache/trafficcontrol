@@ -66,7 +66,7 @@ export const ROUTES: Routes = [
 	{ component: UsersComponent, path: "users" },
 	{ component: UserDetailsComponent, path: "users/:id"},
 	{ component: ServersTableComponent, path: "servers" },
-	{ component: ServerDetailsComponent, path: "server/:id" },
+	{ component: ServerDetailsComponent, path: "servers/:id" },
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id" },
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
 	{ component: CurrentuserComponent, path: "me" },

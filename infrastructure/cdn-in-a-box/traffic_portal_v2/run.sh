@@ -15,6 +15,7 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+set -e
 
 INIT_DIR="/etc/init.d"
 
@@ -47,25 +48,19 @@ key=$X509_INFRA_KEY_FILE
 cert=$X509_INFRA_CERT_FILE
 ca=/etc/pki/tls/certs/ca-bundle.crt
 
-# set configs to point to TO_FQDN
-sed -i -e "/^\s*base_url:/ s@'.*'@'https://$TO_FQDN:$TO_PORT/api/'@" /etc/traffic_portal/conf/config.js
-sed -i -e "/^\s*cert:/ s@'.*'@'$cert'@" /etc/traffic_portal/conf/config.js
-sed -i -e "/^\s*key:/ s@'.*'@'$key'@" /etc/traffic_portal/conf/config.js
-
-props=/opt/traffic_portal/public/traffic_portal_properties.json
-tmp=$(mktemp)
-
-echo "TO_HOST: $TO_HOST"
-echo "TO_HOST: $TO_PORT"
-echo "TO_FQDN: $TO_FQDN"
-
-jq --arg TO_FQDN "$TO_FQDN:$TO_PORT" '.properties.api.baseUrl = "https://"+$TO_FQDN' <$props >$tmp
-mv $tmp $props
+echo "$(jq "$(<<JQ_FILTERS cat
+  .trafficOps = "https://$TO_FQDN:$TO_PORT/api" |
+  .certPath = "$cert" |
+  .keyPath = "$key" |
+  .port = 443 |
+  .insecure = true
+JQ_FILTERS
+)" /etc/traffic-portal/config.json )" > /etc/traffic-portal/config.json
 
 # Enroll the Traffic Portal
-to-enroll "tp" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
+to-enroll "tpv2" ALL
 
 # Add node to the path for situations in which the environment is passed.
-./$INIT_DIR/traffic_portal start
+./$INIT_DIR/traffic-portal start
 
-tail -f /var/log/traffic_portal/traffic_portal.log
+tail -f /var/log/traffic-portal/traffic-portal.log
