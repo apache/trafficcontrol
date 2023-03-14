@@ -397,7 +397,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	err = tx.QueryRow(updateRoleQuery(), roleV4.Name, roleV4.Description, currentRoleName).Scan(&roleV4.LastUpdated)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
 			return
 		}
