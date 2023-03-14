@@ -13,13 +13,19 @@ def get_cdn_prereq_data():
     # Response keys for cdns endpoint
     with open('prerequisite_data.json', encoding="utf-8", mode='r') as prereq_file:
         data = json.load(prereq_file)
-        prereq_file.close()
     cdn_data = data["cdns"]
     return cdn_data
 
 
 def test_get_cdn(to_session, get_cdn_data, cdn_prereq):
-    """Test step to validate keys from cdns endpoint response and POST method"""
+    """Test step to validate keys from cdns endpoint response and POST method
+    :param to_session: Fixture to get Traffic ops session 
+    :type to_session: TOsession
+    :param get_cdn_data: Fixture to get cdn data from a prereq file
+    :type get_cdn_data: dict
+    :param cdn_prereq: Fixture to get sample cdn data and actual cdn response
+    :type cdn_prereq: list
+    """
     # validate CDN keys from cdns get response
     logger.info("Accessing Cdn endpoint through Traffic ops session")
     cdn_name = cdn_prereq[0]["name"]
@@ -43,7 +49,12 @@ def test_get_cdn(to_session, get_cdn_data, cdn_prereq):
 
 @pytest.fixture(autouse=True)
 def pytest_sessionfinish(cdn_prereq, to_session):
-    """Delete CDN after test execution to avoid redundancy"""
+    """Delete CDN after test execution to avoid redundancy
+    :param to_session: Fixture to get Traffic ops session 
+    :type to_session: TOsession
+    :param cdn_prereq: Fixture to get sample cdn data and actual cdn response
+    :type cdn_prereq: list
+    """
     yield
     try:
         cdn_response = cdn_prereq[1]

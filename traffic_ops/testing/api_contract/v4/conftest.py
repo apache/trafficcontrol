@@ -7,6 +7,8 @@ from random import randint
 from urllib.parse import urlparse
 import pytest
 from trafficops.tosession import TOSession
+from trafficops.restapi import OperationError
+
 
 # Create and configure logger
 logger = logging.getLogger()
@@ -42,11 +44,13 @@ def to_data(pytestconfig):
 @pytest.fixture(name="to_session")
 def to_login(to_args):
     """PyTest Fixture to create a Traffic Ops session from Traffic Ops Arguments 
-    passed as command line arguments in to_args fixture in conftest"""
+    passed as command line arguments in to_args fixture in conftest
+    :param to_args: Fixture to get Traffic ops session arguments
+    :type to_args: dict
+    """
     # Create a Traffic Ops V4 session and login
     with open('to_data.json', encoding="utf-8", mode='r') as session_file:
         data = json.load(session_file)
-        session_file.close()
     session_data = data["test"]
     api_version = session_data["api_version"]
     port = session_data["port"]
@@ -58,23 +62,27 @@ def to_login(to_args):
         session_data = to_args
     to_url = urlparse(session_data["url"])
     to_host = to_url.hostname
-    to_session = TOSession(host_ip=to_host, host_port=port,
-                           api_version=api_version, ssl=True, verify_cert=False)
-    logger.info("Established Traffic Ops Session")
+    try:
+        to_session = TOSession(host_ip=to_host, host_port=port,
+                               api_version=api_version, ssl=True, verify_cert=False)
+        logger.info("Established Traffic Ops Session")
+    except OperationError:
+        sys.exit(-1)
+
     # Login To TO_API
     to_session.login(session_data["user"], session_data["password"])
-
-    if not to_session.logged_in:
-        logger.error("Failure Logging into Traffic Ops")
-        sys.exit(-1)
-    else:
-        logger.info("Successfully logged into Traffic Ops")
+    logger.info("Successfully logged into Traffic Ops")
     return to_session
 
 
 @pytest.fixture()
 def cdn_prereq(to_session, get_cdn_data):
-    """PyTest Fixture to create POST data for cdns endpoint"""
+    """PyTest Fixture to create POST data for cdns endpoint
+    :param to_session: Fixture to get Traffic ops session 
+    :type to_session: TOsession
+    :param get_cdn_data: Fixture to get cdn data from a prereq file
+    :type get_cdn_data: dict
+    """
 
     # Return new post data and post response from cdns POST request
     get_cdn_data["name"] = get_cdn_data["name"][:4]+str(randint(0, 1000))
