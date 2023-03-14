@@ -46,8 +46,7 @@ type TOServerCapability struct {
 func (v *TOServerCapability) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
 func (v *TOServerCapability) NewReadObj() interface{}       { return &tc.ServerCapability{} }
 func (v *TOServerCapability) InsertQuery() string {
-	return `
-INSERT INTO server_capability (
+	return `INSERT INTO server_capability (
   name
 )
 VALUES (
@@ -58,8 +57,7 @@ RETURNING last_updated
 }
 
 func (v *TOServerCapability) SelectQuery() string {
-	return `
-SELECT
+	return `SELECT
   name,
   last_updated
 FROM
@@ -68,8 +66,7 @@ FROM
 }
 
 func (v *TOServerCapability) updateQuery() string {
-	return `
-UPDATE server_capability sc SET
+	return `UPDATE server_capability sc SET
 	name = $1
 WHERE sc.name = $2
 RETURNING sc.name, sc.last_updated
@@ -77,8 +74,8 @@ RETURNING sc.name, sc.last_updated
 }
 
 func (v *TOServerCapability) DeleteQuery() string {
-	return `
-DELETE FROM server_capability WHERE name=:name
+	return `DELETE FROM server_capability 
+WHERE name=:name
 `
 }
 
