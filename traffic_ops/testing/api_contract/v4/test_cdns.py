@@ -18,7 +18,7 @@ def get_cdn_prereq_data():
 
 
 def test_get_cdn(to_session, get_cdn_data, cdn_prereq):
-    """Test step to validate keys from cdns endpoint response and POST method
+    """Test step to validate keys, values and data types from cdns endpoint response
     :param to_session: Fixture to get Traffic ops session 
     :type to_session: TOsession
     :param get_cdn_data: Fixture to get cdn data from a prereq file
@@ -29,19 +29,23 @@ def test_get_cdn(to_session, get_cdn_data, cdn_prereq):
     # validate CDN keys from cdns get response
     logger.info("Accessing Cdn endpoint through Traffic ops session")
     cdn_name = cdn_prereq[0]["name"]
-    cdn_get_response = to_session.get_cdns(query_params={"name": str(cdn_name)})
+    cdn_get_response = to_session.get_cdns(
+        query_params={"name": str(cdn_name)})
     try:
         cdn_data = cdn_get_response[0]
         cdn_keys = list(cdn_data[0].keys())
         logger.info(
             "CDN Keys from cdns endpoint response %s", cdn_keys)
         # validate cdn values from prereq data in cdns get response
-        prereq_data = [cdn_prereq[0]['name'], cdn_prereq[0]
-                       ['domainName'], cdn_prereq[0]['dnssecEnabled']]
-        get_data = [cdn_data[0]['name'], cdn_data[0]
-                    ['domainName'], cdn_data[0]['dnssecEnabled']]
+        prereq_values = [cdn_prereq[0]['name'], cdn_prereq[0]
+                         ['domainName'], cdn_prereq[0]['dnssecEnabled']]
+        get_values = [cdn_data[0]['name'], cdn_data[0]
+                      ['domainName'], cdn_data[0]['dnssecEnabled']]
+        # validate data types for values from cdn get json response
+        for (prereq_value, get_value) in zip(prereq_values, get_values):
+            assert isinstance(prereq_value, type(get_value))
         assert cdn_keys.sort() == list(get_cdn_data.keys()).sort()
-        assert get_data == prereq_data
+        assert get_values == prereq_values
     except IndexError:
         logger.error("No CDN data from cdns get request")
         pytest.fail("Response from get request is empty, Failing test_get_cdn")
