@@ -68,4 +68,4 @@ to-enroll "tp" ALL || (while true; do echo "enroll failed."; sleep 3 ; done)
 # Add node to the path for situations in which the environment is passed.
 ./$INIT_DIR/traffic_portal start
 
-tail -f /dev/null
+tail -f /var/log/traffic_portal/traffic_portal.log

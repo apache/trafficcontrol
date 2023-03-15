@@ -479,9 +479,9 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = updateLegacyUser(&user, tx, changePasswd, changeConfirmPasswd); err != nil {
-		errCode = http.StatusInternalServerError
+		userErr, sysErr, statusCode := api.ParseDBError(err)
 		sysErr = fmt.Errorf("updating legacy user: %w", err)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 
@@ -600,9 +600,9 @@ func ReplaceCurrentV4(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := updateUser(&user, tx, changePasswd); err != nil {
-		errCode = http.StatusInternalServerError
+		userErr, sysErr, statusCode := api.ParseDBError(err)
 		sysErr = fmt.Errorf("updating user: %w", err)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 

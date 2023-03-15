@@ -28,7 +28,7 @@ jobs:
   pr-to-update-go:
     runs-on: ubuntu-latest
     env:
-      GIT_AUTHOR_NAME: asf-ci
+      GIT_AUTHOR_NAME: asf-ci-trafficcontrol
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
       GO_VERSION_FILE: GO_VERSION

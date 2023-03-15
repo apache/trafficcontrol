@@ -67,6 +67,7 @@ Response Structure
 :permissions:  An array of the names of the Permissions given to this :term:`Role`
 :description:  A description of the :term:`Role`
 :name:         The name of the :term:`Role`
+:lastUpdated: The date and time at which this :term:`Role` was last updated, in :rfc:`3339` format
 
 .. code-block:: http
 	:caption: Response Example
@@ -171,6 +172,7 @@ Response Structure
 
 :description: A description of the :term:`Role`
 :name:        The name of the :term:`Role`
+:lastUpdated: The date and time at which this :term:`Role` was last updated, in :rfc:`3339` format
 
 .. code-block:: http
 	:caption: Response Example
@@ -194,7 +196,8 @@ Response Structure
 	"response": {
 		"name": "test",
 		"description": "quest",
-		"permissions": null
+		"permissions": null,
+		"lastUpdated": "2021-05-03T14:50:18.93513-06:00"
 	}}
 
 ``PUT``
@@ -249,6 +252,7 @@ Response Structure
 
 :description: A description of the :term:`Role`
 :name:        The name of the :term:`Role`
+:lastUpdated: The date and time at which this :term:`Role` was last updated, in :rfc:`3339` format
 
 .. code-block:: http
 	:caption: Response Example
@@ -275,7 +279,8 @@ Response Structure
 		"response": {
 			"name": "test",
 			"description": "quest_updated",
-			"permissions": null
+			"permissions": null,
+			"lastUpdated": "2021-05-03T14:50:18.93513-06:00"
 		}
 	}
 

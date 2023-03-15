@@ -15,7 +15,7 @@
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import {ActivatedRoute, type Params } from "@angular/router";
 import type { ColDef } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 import {
@@ -28,7 +28,7 @@ import {
 
 import { CacheGroupService, CDNService } from "src/app/api";
 import { AlertService } from "src/app/shared/alert/alert.service";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import {
 	CollectionChoiceDialogComponent,
 	type CollectionChoiceDialogData
@@ -164,9 +164,9 @@ export class CacheGroupTableComponent implements OnInit {
 			name: "Clear Queued Updates"
 		},
 		{
-			action: "asns",
-			disabled: (): true => true,
-			name: "Manage ASNs"
+			href: "/core/asns",
+			name: "Manage ASNs",
+			queryParams: (selectedRow):  Params => ({cachegroup: selectedRow.name})
 		},
 		{
 			action: "parameters",

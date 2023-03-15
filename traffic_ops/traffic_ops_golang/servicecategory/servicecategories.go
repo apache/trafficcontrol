@@ -100,7 +100,7 @@ func (serviceCategory TOServiceCategory) Validate() (error, error) {
 }
 
 func (serviceCategory *TOServiceCategory) Create() (error, error, int) {
-	return api.GenericCreate(serviceCategory)
+	return api.GenericCreateNameBasedID(serviceCategory)
 }
 
 func (serviceCategory *TOServiceCategory) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {

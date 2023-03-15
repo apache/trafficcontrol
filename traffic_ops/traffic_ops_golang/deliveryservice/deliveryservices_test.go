@@ -364,3 +364,25 @@ func TestReadGetDeliveryServices(t *testing.T) {
 		t.Errorf("Unexpected system error reading Delivery Services: %v", sysErr)
 	}
 }
+
+func TestRequiredIfTypeMatchesName(t *testing.T) {
+	ds := &tc.DeliveryServiceV50{
+		OrgServerFQDN:         new(string),
+		Protocol:              new(int),
+		InitialDispersion:     new(int),
+		MissLat:               new(float64),
+		MissLong:              new(float64),
+		RangeRequestHandling:  new(int),
+		QStringIgnore:         new(int),
+		MaxRequestHeaderBytes: new(int),
+		IPV6RoutingEnabled:    new(bool),
+	}
+	*ds.InitialDispersion = 1
+	fn := requiredIfMatchesTypeName([]string{httpTypeRegexp, dnsTypeRegexp}, "HTTP")
+	err := fn(ds.OrgServerFQDN)
+	if err == nil {
+		t.Error("Failed to raise an error when the orgserver fqdn is empty")
+	} else {
+		t.Logf("Got expected error: %v", err)
+	}
+}

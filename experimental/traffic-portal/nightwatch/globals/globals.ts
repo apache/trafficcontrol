@@ -16,6 +16,7 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
+import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
 import type { CoordinateDetailPageObject } from "nightwatch/page_objects/cacheGroups/coordinateDetail";
@@ -49,6 +50,8 @@ import {
 	ResponseTenant,
 	TypeFromResponse,
 	RequestSteeringTarget,
+	ResponseASN,
+	RequestASN,
 	ResponseDivision,
 	RequestDivision,
 	ResponseRegion,
@@ -58,8 +61,12 @@ import {
 	ResponsePhysicalLocation,
 	RequestPhysicalLocation,
 	ResponseCoordinate,
-	RequestCoordinate
+	RequestCoordinate,
+	RequestType,
 } from "trafficops-types";
+
+import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
+import {TypesPageObject} from "../page_objects/types/typesTable";
 
 declare module "nightwatch" {
 	/**
@@ -76,6 +83,7 @@ declare module "nightwatch" {
 			divisionsTable: () => DivisionsPageObject;
 			regionDetail: () => RegionDetailPageObject;
 			regionsTable: () => RegionsPageObject;
+			asnsTable: () => AsnsPageObject;
 		};
 		deliveryServices: {
 			deliveryServiceCard: () => DeliveryServiceCardPageObject;
@@ -93,6 +101,10 @@ declare module "nightwatch" {
 			tenants: () => TenantsPageObject;
 			tenantDetail: () => TenantDetailPageObject;
 			users: () => UsersPageObject;
+		};
+		types: {
+			typesTable: () => TypesPageObject;
+			typeDetail: () => TypeDetailPageObject;
 		};
 	}
 
@@ -121,8 +133,10 @@ export interface CreatedData {
 	ds2: ResponseDeliveryService;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
+	asn: ResponseASN;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
+	type: TypeFromResponse;
 }
 
 const testData = {};
@@ -309,6 +323,16 @@ const globals = {
 			console.log("Successfully created Cache Group:", responseCG);
 			data.cacheGroup = responseCG;
 
+			const asn: RequestASN = {
+				asn: 0,
+				cachegroupId: 1
+			};
+			url = `${apiUrl}/asns`;
+			resp = await client.post(url, JSON.stringify(asn));
+			const respAsn: ResponseASN = resp.data.response;
+			console.log(`Successfully created ASN ${respAsn.asn}`);
+			data.asn = respAsn;
+
 			const physLoc: RequestPhysicalLocation = {
 				address: "street",
 				city: "city",
@@ -339,6 +363,18 @@ const globals = {
 			const respCoordinate: ResponseCoordinate = resp.data.response;
 			console.log(`Successfully created Coordinate ${respCoordinate.name}`);
 			data.coordinate = respCoordinate;
+
+			const type: RequestType = {
+				description: "blah",
+				name: `type${globals.uniqueString}`,
+				useInTable: "server"
+			};
+			url = `${apiUrl}/types`;
+			resp = await client.post(url, JSON.stringify(type));
+			const respType: TypeFromResponse = resp.data.response;
+			console.log(`Successfully created Type ${respType.name}`);
+			data.type = respType;
+
 		} catch(e) {
 			console.error("Request for", url, "failed:", (e as AxiosError).message);
 			throw e;

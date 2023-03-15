@@ -36,11 +36,11 @@ describe("DS Invalidation Jobs Spec", () => {
 		const startDate = new Date();
 		startDate.setDate(startDate.getDate() + 1);
 		browser.waitForElementVisible("tp-new-invalidation-job-dialog")
-			.assert.value("input[name='startDate']", startDate.toLocaleDateString())
+			.assert.valueEquals("input[name='startDate']", startDate.toLocaleDateString())
 			.setValue("input[name='regexp']", "/invalidateMe")
 			.click("button#submit");
 		common
-			.assert.containsText("@snackbarEle", "created")
+			.assert.textContains("@snackbarEle", "created")
 			.click("simple-snack-bar button");
 		page.assert.visible({index: 0, selector: "div.invalidation-job"})
 			.assert.enabled({index: 0, selector: "div.invalidation-job button"})
@@ -48,16 +48,16 @@ describe("DS Invalidation Jobs Spec", () => {
 		page
 			.click({index: 0, selector: "div.invalidation-job button"});
 		browser.waitForElementVisible("tp-new-invalidation-job-dialog")
-			.assert.value("input[name='startDate']", startDate.toLocaleDateString())
-			.assert.value("input[name='regexp']", "invalidateMe")
+			.assert.valueEquals("input[name='startDate']", startDate.toLocaleDateString())
+			.assert.valueEquals("input[name='regexp']", "invalidateMe")
 			.setValue("input[name='regexp']", "/invalidateMe2")
 			.click("button#submit");
 		common
-			.assert.containsText("@snackbarEle", "created")
+			.assert.textContains("@snackbarEle", "created")
 			.click("simple-snack-bar button");
 		page
 			.click({index: 1, selector: "div.invalidation-job button"});
 		common
-			.assert.containsText("@snackbarEle", "was deleted");
+			.assert.textContains("@snackbarEle", "was deleted");
 	});
 });

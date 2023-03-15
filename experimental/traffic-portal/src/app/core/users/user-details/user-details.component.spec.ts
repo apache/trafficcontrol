@@ -18,8 +18,8 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
-import { CurrentUserTestingService } from "src/app/shared/currentUser/current-user.testing-service.spec";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { CurrentUserTestingService } from "src/app/shared/current-user/current-user.testing-service.spec";
 
 import { UserDetailsComponent } from "./user-details.component";
 

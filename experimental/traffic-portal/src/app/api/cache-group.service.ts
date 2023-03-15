@@ -14,6 +14,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
+	ResponseASN,
 	RequestDivision,
 	ResponseDivision,
 	RequestRegion,
@@ -404,6 +405,37 @@ export class CacheGroupService extends APIService {
 	public async deleteCoordinate(coordinateOrId: number | ResponseCoordinate): Promise<void> {
 		const id = typeof(coordinateOrId) === "number" ? coordinateOrId : coordinateOrId.id;
 		await this.delete("coordinates/", undefined, { id : String(id) }).toPromise();
+  }
+
+public async getASNs(): Promise<Array<ResponseASN>>;
+	public async getASNs(id: number): Promise<ResponseASN>;
+
+	/**
+	 * Gets an array of ASNs from Traffic Ops.
+	 *
+	 * @param id If given, returns only the asn with the given id (number).
+	 * @returns An Array of ASNs objects - or a single ASN object if 'id'
+	 * was given.
+	 */
+	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
+		const path = "/asns";
+		if(id) {
+			const r = await this.get<[ResponseASN]>(path, undefined, { id: String(id) }).toPromise();
+			return r[0];
+
+		}
+		return this.get<Array<ResponseASN>>(path).toPromise();
+	}
+
+	/**
+	 * Deletes an existing asn.
+	 *
+	 * @param asnOrId Id of the asn to delete.
+	 * @returns The deleted asn.
+	 */
+	public async deleteASN(asnOrId: number | ResponseASN): Promise<void> {
+		const id = typeof(asnOrId) === "number" ? asnOrId : asnOrId.id;
+		await this.delete("asns/", undefined, { id : String(id) }).toPromise();
 	}
 
 	constructor(http: HttpClient) {

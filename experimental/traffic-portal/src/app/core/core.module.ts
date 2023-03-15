@@ -24,6 +24,7 @@ import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
+import { AsnsTableComponent } from "./cache-groups/asns/table/asns-table.component";
 import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/cache-group-details.component";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
 import { CoordinateDetailComponent } from "./cache-groups/coordinates/detail/coordinate-detail.component";
@@ -49,6 +50,8 @@ import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.c
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
+import {TypeDetailComponent} from "./types/detail/type-detail.component";
+import {TypesTableComponent} from "./types/table/types-table.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
@@ -57,6 +60,7 @@ import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
+	{ component: AsnsTableComponent, path: "asns" },
 	{ component: DivisionsTableComponent, path: "divisions" },
 	{ component: DivisionDetailComponent, path: "divisions/:id" },
 	{ component: RegionsTableComponent, path: "regions" },
@@ -64,7 +68,7 @@ export const ROUTES: Routes = [
 	{ component: UsersComponent, path: "users" },
 	{ component: UserDetailsComponent, path: "users/:id"},
 	{ component: ServersTableComponent, path: "servers" },
-	{ component: ServerDetailsComponent, path: "server/:id" },
+	{ component: ServerDetailsComponent, path: "servers/:id" },
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id" },
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
 	{ component: CurrentuserComponent, path: "me" },
@@ -78,6 +82,8 @@ export const ROUTES: Routes = [
 	{ component: PhysLocTableComponent, path: "phys-locs" },
 	{ component: CoordinateDetailComponent, path: "coordinates/:id" },
 	{ component: CoordinatesTableComponent, path: "coordinates" },
+	{ component: TypesTableComponent, path: "types" },
+	{ component: TypeDetailComponent, path: "types/:id"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -107,13 +113,16 @@ export const ROUTES: Routes = [
 		UserRegistrationDialogComponent,
 		PhysLocTableComponent,
 		PhysLocDetailComponent,
+		AsnsTableComponent,
 		DivisionsTableComponent,
 		DivisionDetailComponent,
 		RegionsTableComponent,
 		RegionDetailComponent,
 		CacheGroupDetailsComponent,
 		CoordinatesTableComponent,
-		CoordinateDetailComponent
+		CoordinateDetailComponent,
+		TypesTableComponent,
+		TypeDetailComponent,
 	],
 	exports: [],
 	imports: [
