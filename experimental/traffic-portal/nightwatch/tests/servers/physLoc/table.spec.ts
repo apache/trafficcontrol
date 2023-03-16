@@ -16,7 +16,7 @@ describe("PhysLocs Spec", () => {
 	it("Loads elements", async () => {
 		await browser.page.common()
 			.section.sidebar
-			.navigateToNode("servers", ["serversContainer"]);
+			.navigateToNode("physicalLocations", ["serversContainer"]);
 		await browser.waitForElementPresent("input[name=fuzzControl]");
 		await browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);
