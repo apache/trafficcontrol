@@ -33,7 +33,7 @@ func ColsFromStructByTag(tagName string, thing interface{}) []string {
 
 // InsertAtStr inserts insertMap (string to insert at -> []insert names) into cols non-destructively.
 func InsertAtStr(cols *[]string, insertMap map[string][]string) *[]string {
-	if cols == nil {
+	if cols == nil || insertMap == nil {
 		return nil
 	}
 
