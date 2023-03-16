@@ -21,6 +21,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/lib/pq"
 	"net/http"
 	"strings"
 	"testing"
@@ -835,19 +836,21 @@ func TestInsertServerProfile(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
+	profileName := []string{"traffic_ops", "global"}
+	priority := []int{0, 1}
 	mock.ExpectBegin()
-	mock.ExpectExec("DELETE FROM ip_address").WithArgs(1).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec("INSERT INTO").WithArgs(1, pq.Array(profileName), pq.Array(priority)).WillReturnResult(sqlmock.NewResult(2, 2))
 	mock.ExpectCommit()
 
-	usrErr, sysErr, code := deleteInterfaces(1, db.MustBegin().Tx)
+	usrErr, sysErr, code := insertServerProfile(1, profileName, db.MustBegin().Tx)
 	if usrErr != nil {
-		t.Errorf("unable to delete interface, user error: %v", usrErr)
+		t.Errorf("unable to insert profile, user error: %v", usrErr)
 	}
 	if sysErr != nil {
-		t.Errorf("unable to delete interface, system error: %v", sysErr)
+		t.Errorf("unable to insert profile, system error: %v", sysErr)
 	}
 	if code != http.StatusOK {
-		t.Errorf("unable to delete interface, failed with status code:%d", code)
+		t.Errorf("unable to insert profile, failed with status code:%d", code)
 	}
 }
 
