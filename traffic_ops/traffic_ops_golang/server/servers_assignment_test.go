@@ -183,3 +183,36 @@ func TestCheckTenancyAndCDN(t *testing.T) {
 		t.Errorf("tenancy and cdn check for a given user failed with status code:%d", code)
 	}
 }
+
+func TestValidateDSCapabilities(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	mock.ExpectBegin()
+	rows := sqlmock.NewRows([]string{"server_capability"})
+	rows.AddRow([]byte("{eas}"))
+	mock.ExpectQuery("SELECT").WithArgs("eas").WillReturnRows(rows)
+
+	dsIDs := []int64{1}
+	rows1 := sqlmock.NewRows([]string{"id", "required_capabilities"})
+	rows1.AddRow(1, []byte("{eas}"))
+	mock.ExpectQuery("SELECT ").WithArgs(pq.Array(dsIDs)).WillReturnRows(rows1)
+	mock.ExpectCommit()
+
+	usrErr, sysErr, code := ValidateDSCapabilities([]int{1}, "eas", db.MustBegin().Tx)
+	if usrErr != nil {
+		t.Errorf("unable to validate DS capability, most likely cache doesn't have the DS capability, error: %v", usrErr)
+	}
+	if sysErr != nil {
+		t.Errorf("unable to validate DS Capability, system error: %v", sysErr)
+	}
+	if code != http.StatusOK {
+		t.Errorf("DS validation failed with status code:%d", code)
+	}
+}
