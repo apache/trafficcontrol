@@ -759,7 +759,7 @@ func TestCreateInterfaces(t *testing.T) {
 
 	iface := []tc.ServerInterfaceInfoV40{
 		{
-			tc.ServerInterfaceInfo{
+			ServerInterfaceInfo: tc.ServerInterfaceInfo{
 				IPAddresses: []tc.ServerIPAddress{{
 					Address:        "1.2.3.4",
 					Gateway:        util.Ptr("1.2.3.0"),
@@ -770,8 +770,8 @@ func TestCreateInterfaces(t *testing.T) {
 				MTU:          util.UInt64Ptr(1500),
 				Name:         "int0",
 			},
-			"test",
-			"bond0",
+			RouterHostName: "test",
+			RouterPortName: "bond0",
 		},
 	}
 
@@ -783,7 +783,6 @@ func TestCreateInterfaces(t *testing.T) {
 	mock.ExpectExec("INSERT INTO ip_address").
 		WithArgs(iface[0].IPAddresses[0].Address, iface[0].IPAddresses[0].Gateway, iface[0].Name, 1, iface[0].IPAddresses[0].ServiceAddress).
 		WillReturnResult(sqlmock.NewResult(1, 1))
-
 	mock.ExpectCommit()
 
 	usrErr, sysErr, code := createInterfaces(1, iface, db.MustBegin().Tx)
