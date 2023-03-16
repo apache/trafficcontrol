@@ -89,11 +89,11 @@ func TestInsertAtStr(t *testing.T) {
 		t.Fatal("expected no new columns when an argument is nil")
 	}
 	newCols = InsertAtStr(&cols, nil)
-	if newCols != nil {
-		t.Fatal("expected no new columns when an argument is nil")
+	if len(*newCols) != len(cols) {
+		t.Fatal("expected no new columns when insertMap is nil")
 	}
 	newCols = InsertAtStr(nil, nil)
 	if newCols != nil {
-		t.Fatal("expected no new columns when an argument is nil")
+		t.Fatal("expected no new columns when both arguments are nil")
 	}
 }
