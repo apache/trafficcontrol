@@ -17,16 +17,13 @@ logger = logging.getLogger()
 def pytest_addoption(parser):
     """Passing in Traffic Ops Arguments [Username, Password, Url and Hostname] from Command Line"""
     parser.addoption(
-        '--to_user', action='store', default='admin', help='User name for Traffic Ops Session'
+        '--to_user', action='store', help='User name for Traffic Ops Session'
     )
     parser.addoption(
-        '--to_password', action='store', default='twelve12', help='Password for Traffic Ops Session'
+        '--to_password', action='store', help='Password for Traffic Ops Session'
     )
     parser.addoption(
-        '--to_url', action='store', default='https://localhost/api', help='Traffic Ops URL'
-    )
-    parser.addoption(
-        '--hostname', action='store', default='localhost', help='Traffic Ops hostname'
+        '--to_url', action='store', help='Traffic Ops URL'
     )
 
 
@@ -34,10 +31,27 @@ def pytest_addoption(parser):
 def to_data(pytestconfig):
     """PyTest fixture to store Traffic ops Arguments passed from command line"""
     args = {}
-    args['user'] = pytestconfig.getoption('--to_user')
-    args['password'] = pytestconfig.getoption('--to_password')
-    args['url'] = pytestconfig.getoption('--to_url')
-    args['hostname'] = pytestconfig.getoption('--hostname')
+    with open('to_data.json', encoding="utf-8", mode='r') as session_file:
+        data = json.load(session_file)
+    session_data = data["test"]
+    args['api_version'] = session_data.get("api_version")
+    args['port'] = session_data.get("port")
+
+    to_user = pytestconfig.getoption('--to_user')
+    to_password = pytestconfig.getoption('--to_password')
+    to_url = pytestconfig.getoption('--to_url')
+
+    if not all([to_user, to_password, to_url]):
+        logger.info(
+            "Traffic Ops session data were not passed from Command line Args")
+        args['user'] = session_data.get('user')
+        args['password'] = session_data.get('password')
+        args['url'] = session_data.get('url')
+    else:
+        args['user'] = to_user
+        args['password'] = to_password
+        args['url'] = to_url
+        logger.info("Parsed Traffic ops session data from args %s", args)
     return args
 
 
@@ -49,28 +63,17 @@ def to_login(to_args):
     :type to_args: dict
     """
     # Create a Traffic Ops V4 session and login
-    with open('to_data.json', encoding="utf-8", mode='r') as session_file:
-        data = json.load(session_file)
-    session_data = data["test"]
-    api_version = session_data["api_version"]
-    port = session_data["port"]
-    if to_args["user"] is None:
-        logger.info(
-            "Traffic Ops session data were not passed from Command line Args")
-    else:
-        logger.info("Parsed Traffic ops session data from args %s", to_args)
-        session_data = to_args
-    to_url = urlparse(session_data["url"])
+    to_url = urlparse(to_args["url"])
     to_host = to_url.hostname
     try:
-        to_session = TOSession(host_ip=to_host, host_port=port,
-                               api_version=api_version, ssl=True, verify_cert=False)
+        to_session = TOSession(host_ip=to_host, host_port=to_args["port"],
+                               api_version=to_args["api_version"], ssl=True, verify_cert=False)
         logger.info("Established Traffic Ops Session")
     except OperationError:
         sys.exit(-1)
 
     # Login To TO_API
-    to_session.login(session_data["user"], session_data["password"])
+    to_session.login(to_args["user"], to_args["password"])
     logger.info("Successfully logged into Traffic Ops")
     return to_session
 
