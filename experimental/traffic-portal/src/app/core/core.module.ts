@@ -85,7 +85,7 @@ export const ROUTES: Routes = [
 	{ component: CoordinatesTableComponent, path: "coordinates" },
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
-	{ component: ISOGenerationFormComponent, path: "gen-iso"},
+	{ component: ISOGenerationFormComponent, path: "iso-gen"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
