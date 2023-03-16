@@ -20,7 +20,7 @@ import type {
 	RequestCoordinate,
 	RequestDivision,
 	RequestRegion,
-  ResponseASN,
+	ResponseASN,
 	ResponseCacheGroup,
 	ResponseCoordinate,
 	ResponseDivision,
@@ -675,7 +675,7 @@ export class CacheGroupService {
 			throw new Error(`no such Coordinate: ${id}`);
 		}
 		return this.coordinates.splice(index, 1)[0];
-  }
+	}
 
 	public async getASNs(): Promise<Array<ResponseASN>>;
 	public async getASNs(id: number): Promise<ResponseASN>;

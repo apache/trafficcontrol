@@ -405,9 +405,9 @@ export class CacheGroupService extends APIService {
 	public async deleteCoordinate(coordinateOrId: number | ResponseCoordinate): Promise<void> {
 		const id = typeof(coordinateOrId) === "number" ? coordinateOrId : coordinateOrId.id;
 		await this.delete("coordinates/", undefined, { id : String(id) }).toPromise();
-  }
+	}
 
-public async getASNs(): Promise<Array<ResponseASN>>;
+	public async getASNs(): Promise<Array<ResponseASN>>;
 	public async getASNs(id: number): Promise<ResponseASN>;
 
 	/**
