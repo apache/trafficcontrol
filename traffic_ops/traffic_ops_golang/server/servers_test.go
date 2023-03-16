@@ -120,7 +120,7 @@ func getTestServers() []ServerAndInterfaces {
 }
 
 // Test to make sure that updating the "cdn" of a server already assigned to a DS fails
-func TestUpdateServer(t *testing.T) {
+func TestCheckTypeChangeSafety(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
@@ -758,23 +758,9 @@ func TestCreateInterfaces(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	iface := []tc.ServerInterfaceInfoV40{
-		{
-			ServerInterfaceInfo: tc.ServerInterfaceInfo{
-				IPAddresses: []tc.ServerIPAddress{{
-					Address:        "1.2.3.4",
-					Gateway:        util.Ptr("1.2.3.0"),
-					ServiceAddress: false,
-				}},
-				MaxBandwidth: nil,
-				Monitor:      false,
-				MTU:          util.UInt64Ptr(1500),
-				Name:         "int0",
-			},
-			RouterHostName: "test",
-			RouterPortName: "bond0",
-		},
-	}
+	testInterface := getTestServers()[0].Interface
+	var iface []tc.ServerInterfaceInfoV40
+	iface = append(iface, testInterface)
 
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO interface").
@@ -864,49 +850,7 @@ func TestCreateServerV4(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	s4 := tc.ServerV40{
-		Cachegroup:        util.Ptr("mb"),
-		CachegroupID:      util.Ptr(1),
-		CDNID:             util.Ptr(1),
-		CDNName:           util.Ptr("ALL"),
-		DeliveryServices:  nil,
-		DomainName:        util.Ptr(""),
-		FQDN:              nil,
-		FqdnTime:          time.Time{},
-		GUID:              util.Ptr(""),
-		HostName:          util.Ptr("test"),
-		HTTPSPort:         util.Ptr(8443),
-		ID:                util.Ptr(1),
-		ILOIPAddress:      util.Ptr(""),
-		ILOIPGateway:      util.Ptr(""),
-		ILOIPNetmask:      util.Ptr(""),
-		ILOPassword:       util.Ptr(""),
-		ILOUsername:       util.Ptr(""),
-		LastUpdated:       util.Ptr(tc.TimeNoMod{}),
-		MgmtIPAddress:     util.Ptr(""),
-		MgmtIPGateway:     util.Ptr(""),
-		MgmtIPNetmask:     util.Ptr(""),
-		OfflineReason:     util.Ptr(""),
-		PhysLocation:      util.Ptr("boulder"),
-		PhysLocationID:    util.Ptr(1),
-		ProfileNames:      []string{"GLOBAL"},
-		Rack:              util.Ptr(""),
-		RevalPending:      util.Ptr(false),
-		Status:            util.Ptr("ACTIVE"),
-		StatusID:          util.Ptr(1),
-		TCPPort:           util.Ptr(8080),
-		Type:              "EDGE",
-		TypeID:            util.Ptr(2),
-		UpdPending:        util.Ptr(false),
-		XMPPID:            util.Ptr(""),
-		XMPPPasswd:        util.Ptr(""),
-		Interfaces:        []tc.ServerInterfaceInfoV40{},
-		StatusLastUpdated: util.Ptr(time.Time{}),
-		ConfigUpdateTime:  util.Ptr(time.Time{}),
-		ConfigApplyTime:   util.Ptr(time.Time{}),
-		RevalUpdateTime:   util.Ptr(time.Time{}),
-		RevalApplyTime:    util.Ptr(time.Time{}),
-	}
+	s4 := getTestServers()[0].Server
 
 	mock.ExpectBegin()
 	rows0 := sqlmock.NewRows([]string{"id"})
@@ -973,12 +917,11 @@ func TestCreateServerV4(t *testing.T) {
 		s4.Type,
 		*s4.TypeID,
 	)
-
 	mock.ExpectQuery("INSERT INTO server").
-		WithArgs(s4.CachegroupID, s4.CDNID, s4.DomainName, s4.HostName, s4.HTTPSPort, s4.ILOIPAddress,
-			s4.ILOIPNetmask, s4.ILOIPGateway, s4.ILOUsername, s4.ILOPassword, s4.MgmtIPAddress,
-			s4.MgmtIPNetmask, s4.MgmtIPGateway, s4.OfflineReason, s4.PhysLocationID, 1, s4.Rack,
-			s4.StatusID, s4.TCPPort, s4.TypeID, s4.XMPPID, s4.XMPPPasswd).
+		WithArgs(*s4.CachegroupID, *s4.CDNID, *s4.DomainName, *s4.HostName, *s4.HTTPSPort, *s4.ILOIPAddress,
+			*s4.ILOIPNetmask, *s4.ILOIPGateway, *s4.ILOUsername, *s4.ILOPassword, *s4.MgmtIPAddress,
+			*s4.MgmtIPNetmask, *s4.MgmtIPGateway, *s4.OfflineReason, *s4.PhysLocationID, 1, *s4.Rack,
+			*s4.StatusID, *s4.TCPPort, *s4.TypeID, *s4.XMPPID, *s4.XMPPPasswd).
 		WillReturnRows(rows)
 	mock.ExpectCommit()
 
@@ -1051,10 +994,10 @@ func TestCreateServerV3(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id"})
 	rows.AddRow(1)
 	mock.ExpectQuery("INSERT INTO server").
-		WithArgs(s3.CachegroupID, s3.CDNID, s3.DomainName, s3.HostName, s3.HTTPSPort, s3.ILOIPAddress,
-			s3.ILOIPNetmask, s3.ILOIPGateway, s3.ILOUsername, s3.ILOPassword, s3.MgmtIPAddress,
-			s3.MgmtIPNetmask, s3.MgmtIPGateway, s3.OfflineReason, s3.PhysLocationID, s3.ProfileID,
-			s3.Rack, s3.StatusID, s3.TCPPort, s3.TypeID, s3.XMPPID, s3.XMPPPasswd, s3.StatusLastUpdated).
+		WithArgs(*s3.CachegroupID, *s3.CDNID, *s3.DomainName, *s3.HostName, *s3.HTTPSPort, *s3.ILOIPAddress,
+			*s3.ILOIPNetmask, *s3.ILOIPGateway, *s3.ILOUsername, *s3.ILOPassword, *s3.MgmtIPAddress,
+			*s3.MgmtIPNetmask, *s3.MgmtIPGateway, *s3.OfflineReason, *s3.PhysLocationID, *s3.ProfileID,
+			*s3.Rack, *s3.StatusID, *s3.TCPPort, *s3.TypeID, *s3.XMPPID, *s3.XMPPPasswd, *s3.StatusLastUpdated).
 		WillReturnRows(rows)
 	mock.ExpectCommit()
 
@@ -1064,5 +1007,103 @@ func TestCreateServerV3(t *testing.T) {
 	}
 	if sid != int64(*s3.ID) {
 		t.Errorf("mismatched server ID, expected: %d, got: %d", *s3.ID, sid)
+	}
+}
+
+func TestUpdateServer(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	s4 := getTestServers()[0].Server
+
+	mock.ExpectBegin()
+	rows := sqlmock.NewRows([]string{
+		"cachegroup",
+		"cachegroup_id",
+		"cdn_id",
+		"cdn_name",
+		"domain_name",
+		"guid",
+		"host_name",
+		"https_port",
+		"id",
+		"ilo_ip_address",
+		"ilo_ip_gateway",
+		"ilo_ip_netmask",
+		"ilo_password",
+		"ilo_username",
+		"last_updated",
+		"mgmt_ip_address",
+		"mgmt_ip_gateway",
+		"mgmt_ip_netmask",
+		"offline_reason",
+		"phys_location",
+		"phys_location_id",
+		"profile_name",
+		"rack",
+		"status",
+		"status_id",
+		"tcp_port",
+		"server_type",
+		"server_type_id",
+		"status_last_updated",
+	})
+	rows.AddRow(
+		*s4.Cachegroup,
+		*s4.CachegroupID,
+		*s4.CDNID,
+		*s4.CDNName,
+		*s4.DomainName,
+		*s4.GUID,
+		*s4.HostName,
+		*s4.HTTPSPort,
+		*s4.ID,
+		*s4.ILOIPAddress,
+		*s4.ILOIPGateway,
+		*s4.ILOIPNetmask,
+		*s4.ILOPassword,
+		*s4.ILOUsername,
+		*s4.LastUpdated,
+		*s4.MgmtIPAddress,
+		*s4.MgmtIPGateway,
+		*s4.MgmtIPNetmask,
+		*s4.OfflineReason,
+		*s4.PhysLocation,
+		*s4.PhysLocationID,
+		fmt.Sprintf("{%s}", strings.Join(s4.ProfileNames, ",")),
+		*s4.Rack,
+		*s4.Status,
+		*s4.StatusID,
+		*s4.TCPPort,
+		s4.Type,
+		*s4.TypeID,
+		*s4.StatusLastUpdated,
+	)
+	mock.ExpectQuery("UPDATE server SET").
+		WithArgs(*s4.CachegroupID, *s4.CDNID, *s4.DomainName, *s4.HostName, *s4.HTTPSPort, *s4.ILOIPAddress,
+			*s4.ILOIPNetmask, *s4.ILOIPGateway, *s4.ILOUsername, *s4.ILOPassword, *s4.MgmtIPAddress,
+			*s4.MgmtIPNetmask, *s4.MgmtIPGateway, *s4.OfflineReason, *s4.PhysLocationID, 1, *s4.Rack,
+			*s4.StatusID, *s4.TCPPort, *s4.TypeID, *s4.XMPPPasswd, *s4.StatusLastUpdated, *s4.ID).
+		WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	sid, code, usrErr, sysErr := updateServer(db.MustBegin(), s4)
+	if usrErr != nil {
+		t.Errorf("unable to update v4 server, user error: %v", usrErr)
+	}
+	if sysErr != nil {
+		t.Errorf("unable to update v4 server, system error: %v", sysErr)
+	}
+	if sid != int64(*s4.ID) {
+		t.Errorf("updated incorrect server, expected:%d, got:%d", *s4.ID, sid)
+	}
+	if code != http.StatusOK {
+		t.Errorf("failed to update server with id:%d, expected: %d, got: %d", *s4.ID, http.StatusOK, code)
 	}
 }
