@@ -27,6 +27,8 @@ import { SharedModule } from "../shared/shared.module";
 import { AsnsTableComponent } from "./cache-groups/asns/table/asns-table.component";
 import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/cache-group-details.component";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { CoordinateDetailComponent } from "./cache-groups/coordinates/detail/coordinate-detail.component";
+import { CoordinatesTableComponent } from "./cache-groups/coordinates/table/coordinates-table.component";
 import { DivisionDetailComponent } from "./cache-groups/divisions/detail/division-detail.component";
 import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
 import { RegionDetailComponent } from "./cache-groups/regions/detail/region-detail.component";
@@ -78,6 +80,8 @@ export const ROUTES: Routes = [
 	{ component: TenantDetailsComponent, path: "tenants/:id"},
 	{ component: PhysLocDetailComponent, path: "phys-locs/:id" },
 	{ component: PhysLocTableComponent, path: "phys-locs" },
+	{ component: CoordinateDetailComponent, path: "coordinates/:id" },
+	{ component: CoordinatesTableComponent, path: "coordinates" },
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
@@ -115,8 +119,10 @@ export const ROUTES: Routes = [
 		RegionsTableComponent,
 		RegionDetailComponent,
 		CacheGroupDetailsComponent,
+		CoordinatesTableComponent,
+		CoordinateDetailComponent,
 		TypesTableComponent,
-		TypeDetailComponent
+		TypeDetailComponent,
 	],
 	exports: [],
 	imports: [

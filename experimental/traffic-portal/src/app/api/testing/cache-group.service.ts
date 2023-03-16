@@ -17,12 +17,14 @@ import type {
 	CacheGroupQueueResponse,
 	CDN,
 	RequestCacheGroup,
+	RequestCoordinate,
 	RequestDivision,
 	RequestRegion,
-	ResponseCacheGroup,
 	ResponseASN,
+	ResponseCacheGroup,
+	ResponseCoordinate,
 	ResponseDivision,
-	ResponseRegion
+	ResponseRegion,
 } from "trafficops-types";
 
 import { ServerService } from "./server.service";
@@ -179,6 +181,14 @@ export class CacheGroupService {
 			typeId: 4,
 			typeName: "TC_LOC"
 		}
+	];
+	private readonly coordinates: Array<ResponseCoordinate> = [{
+		id: 1,
+		lastUpdated: new Date(),
+		latitude: 0,
+		longitude: 0,
+		name: "Coord1"
+	}
 	];
 
 	constructor(private readonly servers: ServerService) {}
@@ -592,6 +602,79 @@ export class CacheGroupService {
 			throw new Error(`no such Region: ${id}`);
 		}
 		return this.regions.splice(index, 1)[0];
+	}
+	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
+	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
+
+	/**
+	 * Gets an array of coordinates from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the ResponseCoordinate with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of ResponseCoordinate objects - or a single ResponseCoordinate object if 'nameOrID'
+	 * was given.
+	 */
+	public async getCoordinates(nameOrID?: string | number): Promise<Array<ResponseCoordinate> | ResponseCoordinate> {
+		if(nameOrID) {
+			let coordinate;
+			switch (typeof nameOrID) {
+				case "string":
+					coordinate = this.coordinates.find(c=>c.name === nameOrID);
+					break;
+				case "number":
+					coordinate = this.coordinates.find(c=>c.id === nameOrID);
+			}
+			if (!coordinate) {
+				throw new Error(`no such Coordinate: ${nameOrID}`);
+			}
+			return coordinate;
+		}
+		return this.coordinates;
+	}
+
+	/**
+	 * Replaces the current definition of a coordinate with the one given.
+	 *
+	 * @param coordinate The new coordinate.
+	 * @returns The updated coordinate.
+	 */
+	public async updateCoordinate(coordinate: ResponseCoordinate): Promise<ResponseCoordinate> {
+		const id = this.coordinates.findIndex(c => c.id === coordinate.id);
+		if (id === -1) {
+			throw new Error(`no such Coordinate: ${coordinate.id}`);
+		}
+		this.coordinates[id] = coordinate;
+		return coordinate;
+	}
+
+	/**
+	 * Creates a new coordinate.
+	 *
+	 * @param coordinate The coordinate to create.
+	 * @returns The created coordinate.
+	 */
+	public async createCoordinate(coordinate: RequestCoordinate): Promise<ResponseCoordinate> {
+		const crd = {
+			...coordinate,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+		this.coordinates.push(crd);
+		return crd;
+	}
+
+	/**
+	 * Deletes an existing coordinate.
+	 *
+	 * @param id Id of the coordinate to delete.
+	 * @returns The deleted coordinate.
+	 */
+	public async deleteCoordinate(id: number): Promise<ResponseCoordinate> {
+		const index = this.coordinates.findIndex(c => c.id === id);
+		if (index === -1) {
+			throw new Error(`no such Coordinate: ${id}`);
+		}
+		return this.coordinates.splice(index, 1)[0];
 	}
 
 	public async getASNs(): Promise<Array<ResponseASN>>;

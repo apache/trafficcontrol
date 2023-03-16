@@ -19,6 +19,8 @@ import { NightwatchBrowser } from "nightwatch";
 import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
+import type { CoordinateDetailPageObject } from "nightwatch/page_objects/cacheGroups/coordinateDetail";
+import type { CoordinatesPageObject } from "nightwatch/page_objects/cacheGroups/coordinatesTable";
 import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGroups/divisionDetail";
 import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
 import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
@@ -58,7 +60,9 @@ import {
 	ResponseCacheGroup,
 	ResponsePhysicalLocation,
 	RequestPhysicalLocation,
-	RequestType
+	ResponseCoordinate,
+	RequestCoordinate,
+	RequestType,
 } from "trafficops-types";
 
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
@@ -73,6 +77,8 @@ declare module "nightwatch" {
 		cacheGroups: {
 			cacheGroupDetails: () => CacheGroupDetailPageObject;
 			cacheGroupsTable: () => CacheGroupsPageObject;
+			coordinateDetail: () => CoordinateDetailPageObject;
+			coordinatesTable: () => CoordinatesPageObject;
 			divisionDetail: () => DivisionDetailPageObject;
 			divisionsTable: () => DivisionsPageObject;
 			regionDetail: () => RegionDetailPageObject;
@@ -121,6 +127,7 @@ declare module "nightwatch" {
 export interface CreatedData {
 	cacheGroup: ResponseCacheGroup;
 	cdn: ResponseCDN;
+	coordinate: ResponseCoordinate;
 	division: ResponseDivision;
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
@@ -345,6 +352,17 @@ const globals = {
 			respPhysLoc.region = respRegion.name;
 			console.log(`Successfully created Phys Loc ${respPhysLoc.name}`);
 			data.physLoc = respPhysLoc;
+
+			const coordinate: RequestCoordinate = {
+				latitude: 0,
+				longitude: 0,
+				name: `coord${globals.uniqueString}`
+			};
+			url = `${apiUrl}/coordinates`;
+			resp = await client.post(url, JSON.stringify(coordinate));
+			const respCoordinate: ResponseCoordinate = resp.data.response;
+			console.log(`Successfully created Coordinate ${respCoordinate.name}`);
+			data.coordinate = respCoordinate;
 
 			const type: RequestType = {
 				description: "blah",
