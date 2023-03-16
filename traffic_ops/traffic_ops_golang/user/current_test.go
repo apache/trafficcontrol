@@ -17,13 +17,15 @@ package user
 import (
 	"context"
 	"errors"
+	"testing"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"testing"
-	"time"
 )
 
 var (
@@ -138,7 +140,7 @@ func TestUser(t *testing.T) {
 	defer db.Close()
 
 	cols := test.ColsFromStructByTagExclude("db", tc.UserV4{}, util.Ptr([]string{"local_passwd", "token"}))
-	cols = *test.InsertAtStr(&cols, util.Ptr(map[string][]string{
+	cols = *test.InsertAtStr(&cols, map[string][]string{
 		"full_name": {
 			"gid",
 		},
@@ -149,7 +151,7 @@ func TestUser(t *testing.T) {
 			"ucdn",
 			"uid",
 		},
-	}))
+	})
 	getUserRows := sqlmock.NewRows(cols)
 	addUserRow(getUserRows, user)
 	mock.ExpectBegin()
@@ -201,7 +203,7 @@ func TestLegacyUser(t *testing.T) {
 	defer db.Close()
 
 	cols := test.ColsFromStructByTagExclude("db", tc.CommonUserFields{}, util.Ptr([]string{"token"}))
-	cols = *test.InsertAtStr(&cols, util.Ptr(map[string][]string{
+	cols = *test.InsertAtStr(&cols, map[string][]string{
 		"full_name": {
 			"gid",
 		},
@@ -218,7 +220,7 @@ func TestLegacyUser(t *testing.T) {
 			"uid",
 			"username",
 		},
-	}))
+	})
 	getUserRows := sqlmock.NewRows(cols)
 	addLegacyUserRow(getUserRows, legacyUser)
 	mock.ExpectBegin()

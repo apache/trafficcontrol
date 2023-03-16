@@ -20,8 +20,9 @@ package test
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 type thingy struct {
@@ -68,7 +69,7 @@ func TestInsertAtStr(t *testing.T) {
 		"four": {"five", "six"},
 	}
 
-	newCols := InsertAtStr(&cols, &colMap)
+	newCols := InsertAtStr(&cols, colMap)
 	if newCols == nil {
 		t.Fatal("expected new columns to be not nil")
 	}
@@ -83,7 +84,7 @@ func TestInsertAtStr(t *testing.T) {
 		}
 	}
 
-	newCols = InsertAtStr(nil, &colMap)
+	newCols = InsertAtStr(nil, colMap)
 	if newCols != nil {
 		t.Fatal("expected no new columns when an argument is nil")
 	}

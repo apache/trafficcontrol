@@ -127,7 +127,7 @@ type UserToken struct {
 	Token string `json:"t"`
 }
 
-// CommonUserFields is unexported, but its contents are still visible when it is embedded
+// CommonUserFields contents are still visible when it is embedded
 // LastUpdated is a new field for some structs.
 type CommonUserFields struct {
 	AddressLine1    *string    `json:"addressLine1" db:"address_line1"`
@@ -253,7 +253,7 @@ type UserV40 struct {
 	Username string `json:"username" db:"username"`
 }
 
-// UsersResponseV4 is the type of response from Traffic Ops to requests made
+// UsersResponseV4 is the type of a response from Traffic Ops to requests made
 // to /users which return more than one user for the latest 4.x api version variant.
 type UsersResponseV4 struct {
 	Response []UserV4 `json:"response"`
@@ -275,7 +275,7 @@ type CurrentUserUpdateRequest struct {
 	User *CurrentUserUpdateRequestUser `json:"user"`
 }
 
-// CurrentUserUpdateRequestUser holds all the actual data in a request to update the current user.
+// CurrentUserUpdateRequestUser holds all of the actual data in a request to update the current user.
 type CurrentUserUpdateRequestUser struct {
 	AddressLine1       json.RawMessage `json:"addressLine1"`
 	AddressLine2       json.RawMessage `json:"addressLine2"`
