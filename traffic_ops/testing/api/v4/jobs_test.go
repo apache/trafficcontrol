@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -66,7 +67,7 @@ func TestJobs(t *testing.T) {
 				},
 				"OK when VALID DSID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(GetDeliveryServiceId(t, "ds2")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(totest.GetDeliveryServiceId(t, TOSession, "ds2")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
 						validateInvalidationJobsFields(map[string]interface{}{"DeliveryService": "ds2"})),
 				},
@@ -90,7 +91,7 @@ func TestJobs(t *testing.T) {
 				},
 				"OK when VALID USERID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"userId": {strconv.Itoa(GetUserID(t, "admin")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"userId": {strconv.Itoa(totest.GetUserID(t, TOSession, "admin")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateInvalidationJobsFields(map[string]interface{}{"CreatedBy": "admin"})),
 				},
@@ -611,30 +612,6 @@ func GetJobID(t *testing.T, assetUrl string) func() int {
 		assert.RequireNoError(t, err, "Get Jobs Request failed with error:", err)
 		assert.RequireGreaterOrEqual(t, len(jobs.Response), 1, "Expected at least 1 response object, but got %d", len(jobs.Response))
 		return int(jobs.Response[0].ID)
-	}
-}
-
-func CreateTestJobs(t *testing.T) {
-	for _, job := range testData.InvalidationJobs {
-		job.StartTime = time.Now().Add(time.Minute).UTC()
-		resp, _, err := TOSession.CreateInvalidationJob(job, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create job: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func DeleteTestJobs(t *testing.T) {
-	jobs, _, err := TOSession.GetInvalidationJobs(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Jobs: %v - alerts: %+v", err, jobs.Alerts)
-
-	for _, job := range jobs.Response {
-		alerts, _, err := TOSession.DeleteInvalidationJob(job.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Job with ID: (#%d): %v - alerts: %+v", job.ID, err, alerts.Alerts)
-		// Retrieve the Job to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(int(job.ID)))
-		getJobs, _, err := TOSession.GetInvalidationJobs(opts)
-		assert.NoError(t, err, "Error getting Job with ID: '%d' after deletion: %v - alerts: %+v", job.ID, err, getJobs.Alerts)
-		assert.Equal(t, 0, len(getJobs.Response), "Expected Job to be deleted, but it was found in Traffic Ops")
 	}
 }
 

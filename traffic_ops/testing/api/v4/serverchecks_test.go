@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
@@ -48,7 +49,7 @@ func TestServerChecks(t *testing.T) {
 				},
 				"OK when VALID ID parameter": {
 					ClientSession: extensionSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetServerID(t, "atlanta-edge-01")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(totest.GetServerID(t, TOSession, "atlanta-edge-01")())}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1)),
 				},
 			},
@@ -95,7 +96,7 @@ func TestServerChecks(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.ServercheckRequestNullable{
 						HostName: util.Ptr("atlanta-edge-01"),
-						ID:       util.Ptr(GetServerID(t, "atlanta-edge-01")()),
+						ID:       util.Ptr(totest.GetServerID(t, TOSession, "atlanta-edge-01")()),
 						Name:     util.Ptr("TEST"),
 						Value:    util.Ptr(1),
 					},
@@ -160,19 +161,4 @@ func validateServerCheckCreateFields(hostName string, expectedResp map[string]in
 		assert.RequireEqual(t, 1, len(serverChecks.Response), "Expected one Server Check returned Got: %d", len(serverChecks.Response))
 		validateServerCheckFields(expectedResp)(t, toclientlib.ReqInf{}, serverChecks.Response, tc.Alerts{}, nil)
 	}
-}
-
-func CreateTestServerChecks(t *testing.T) {
-	extensionSession := utils.CreateV4Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
-
-	for _, servercheck := range testData.Serverchecks {
-		resp, _, err := extensionSession.InsertServerCheckStatus(servercheck, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not insert Servercheck: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-// Need to define no-op function as TCObj interface expects a delete function
-// There is no delete path for serverchecks
-func DeleteTestServerChecks(*testing.T) {
-	return
 }

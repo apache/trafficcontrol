@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -29,7 +30,7 @@ func TestDeliveryServicesEligible(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointID:    GetDeliveryServiceId(t, "ds1"),
+					EndpointID:    totest.GetDeliveryServiceId(t, TOSession, "ds1"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
