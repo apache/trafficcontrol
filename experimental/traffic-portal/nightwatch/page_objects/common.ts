@@ -53,6 +53,7 @@ const commonPageObject = {
 				cacheGroupsContainer: "[aria-label='Toggle Cache Groups']",
 				changeLogs: "[aria-label='Navigate to Change Logs']",
 				configurationContainer: "[aria-label='Toggle Configuration']",
+				coordinates: "[aria-label='Navigate to Coordinates']",
 				dashboard: "[aria-label='Navigate to Dashboard']",
 				divisions: "[aria-label='Navigate to Divisions']",
 				otherContainer: "[aria-label='Toggle Other']",
