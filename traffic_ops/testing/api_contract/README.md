@@ -64,7 +64,7 @@ Only Test a specific endpoint with Arguments
 > Note: For staging and nightly environments (Steps 1-4 Not mandatory)
 
 ```console
-pytest --to_user Username--to_password Password --to_url URL --hostname Hostname test_cdns.py
+pytest --to_user Username--to_password Password --to_url URL test_cdns.py
 ```
 
 Only Test a specific endpoint with Local Traffic Ops Instance
