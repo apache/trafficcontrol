@@ -14,6 +14,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
+	RequestASN,
 	ResponseASN,
 	RequestDivision,
 	ResponseDivision,
@@ -428,10 +429,31 @@ export class CacheGroupService extends APIService {
 	}
 
 	/**
-	 * Deletes an existing asn.
+	 * Replaces the current definition of a ASN with the one given.
 	 *
-	 * @param asnOrId Id of the asn to delete.
-	 * @returns The deleted asn.
+	 * @param asn The new ASN.
+	 * @returns The updated ASN.
+	 */
+	public async updateASN(asn: ResponseASN): Promise<ResponseASN> {
+		const path = `asns/${asn.id}`;
+		return this.put<ResponseASN>(path, asn).toPromise();
+	}
+
+	/**
+	 * Creates a new ASN.
+	 *
+	 * @param asn The ASN to create.
+	 * @returns The created ASN.
+	 */
+	public async createASN(asn: RequestASN): Promise<ResponseASN> {
+		return this.post<ResponseASN>("asns", asn).toPromise();
+	}
+
+	/**
+	 * Deletes an existing ASN.
+	 *
+	 * @param asnOrId Id of the ASN to delete.
+	 * @returns The deleted ASN.
 	 */
 	public async deleteASN(asnOrId: number | ResponseASN): Promise<void> {
 		const id = typeof(asnOrId) === "number" ? asnOrId : asnOrId.id;

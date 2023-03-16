@@ -15,97 +15,96 @@ import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
-import { ResponseDivision, ResponseRegion } from "trafficops-types";
+import { ResponseASN, ResponseCacheGroup } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
- * RegionDetailsComponent is the controller for the region add/edit form.
+ * AsnDetailComponent is the controller for the ASN add/edit form.
  */
 @Component({
 	selector: "tp-asn-detail",
 	styleUrls: ["./asn-detail.component.scss"],
 	templateUrl: "./asn-detail.component.html"
 })
-export class RegionDetailComponent implements OnInit {
+export class AsnDetailComponent implements OnInit {
 	public new = false;
-	public region!: ResponseRegion;
-	public divisions!: Array<ResponseDivision>;
-
-	// constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
-	// 			private readonly location: Location, private readonly dialog: MatDialog,
-	// 			private readonly header: NavigationService) {
-	// }
+	public asn!: ResponseASN;
+	public cachegroups!: Array<ResponseCacheGroup>;
+	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
+				private readonly location: Location, private readonly dialog: MatDialog,
+				private readonly header: NavigationService) {
+	}
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
 	 */
-	// public async ngOnInit(): Promise<void> {
-	// 	this.divisions = await this.cacheGroupService.getDivisions();
-	// 	const ID = this.route.snapshot.paramMap.get("id");
-	// 	if (ID === null) {
-	// 		console.error("missing required route parameter 'id'");
-	// 		return;
-	// 	}
-	//
-	// 	if (ID === "new") {
-	// 		this.header.headerTitle.next("New Region");
-	// 		this.new = true;
-	// 		this.region = {
-	// 			division: -1,
-	// 			divisionName: "",
-	// 			id: -1,
-	// 			lastUpdated: new Date(),
-	// 			name: ""
-	// 		};
-	// 		return;
-	// 	}
-	// 	const numID = parseInt(ID, 10);
-	// 	if (Number.isNaN(numID)) {
-	// 		console.error("route parameter 'id' was non-number:", ID);
-	// 		return;
-	// 	}
-	//
-	// 	this.region = await this.cacheGroupService.getRegions(numID);
-	// 	this.header.headerTitle.next(`Region: ${this.region.name}`);
-	// }
+	public async ngOnInit(): Promise<void> {
+		this.cachegroups = await this.cacheGroupService.getCacheGroups();
+		const ID = this.route.snapshot.paramMap.get("id");
+		if (ID === null) {
+			console.error("missing required route parameter 'id'");
+			return;
+		}
+
+		if (ID === "new") {
+			this.header.headerTitle.next("New ASN");
+			this.new = true;
+			this.asn = {
+				asn: 1,
+				cachegroup: "test",
+				cachegroupId: 1,
+				id: 1,
+				lastUpdated: new Date()
+			};
+			return;
+		}
+		const numID = parseInt(ID, 10);
+		if (Number.isNaN(numID)) {
+			console.error("route parameter 'id' was non-number:", ID);
+			return;
+		}
+
+		this.asn = await this.cacheGroupService.getASNs(numID);
+		this.header.headerTitle.next(`ASN: ${this.asn.asn}`);
+	}
 
 	/**
-	 * Deletes the current region.
+	 * Deletes the current ASN.
 	 */
-	// public async deleteRegion(): Promise<void> {
-	// 	if (this.new) {
-	// 		console.error("Unable to delete new region");
-	// 		return;
-	// 	}
-	// 	const ref = this.dialog.open(DecisionDialogComponent, {
-	// 		data: {message: `Are you sure you want to delete region ${this.region.name} with id ${this.region.id}`,
-	// 			title: "Confirm Delete"}
-	// 	});
-	// 	ref.afterClosed().subscribe(result => {
-	// 		if(result) {
-	// 			this.cacheGroupService.deleteRegion(this.region.id);
-	// 			this.location.back();
-	// 		}
-	// 	});
-	// }
+	public async deleteAsn(): Promise<void> {
+		if (this.new) {
+			console.error("Unable to delete new ASN");
+			return;
+		}
+		const ref = this.dialog.open(DecisionDialogComponent, {
+			data: {message: `Are you sure you want to delete ASN ${this.asn.asn} with id ${this.asn.id}`,
+				title: "Confirm Delete"}
+		});
+		ref.afterClosed().subscribe(result => {
+			if(result) {
+				this.cacheGroupService.deleteASN(this.asn.id);
+				this.location.back();
+			}
+		});
+	}
 
 	/**
-	 * Submits new/updated region.
+	 * Submits new/updated ASN.
 	 *
 	 * @param e HTML form submission event.
 	 */
-	// public async submit(e: Event): Promise<void> {
-	// 	e.preventDefault();
-	// 	e.stopPropagation();
-	// 	if(this.new) {
-	// 		this.region = await this.cacheGroupService.createRegion(this.region);
-	// 		this.new = false;
-	// 	} else {
-	// 		this.region = await this.cacheGroupService.updateRegion(this.region);
-	// 	}
-	// }
+	public async submit(e: Event): Promise<void> {
+		e.preventDefault();
+		e.stopPropagation();
+		if(this.new) {
+			this.asn = await this.cacheGroupService.createASN(this.asn);
+			this.new = false;
+		} else {
+			this.asn = await this.cacheGroupService.updateASN(this.asn);
+		}
+	}
 
 }

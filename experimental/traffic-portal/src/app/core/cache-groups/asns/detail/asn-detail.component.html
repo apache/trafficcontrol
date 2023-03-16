@@ -16,19 +16,19 @@ limitations under the License.
 	<tp-loading *ngIf="!asn"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="asn">
 		<mat-card-content>
+			<mat-form-field *ngIf="!new">
+				<mat-label>ID</mat-label>
+				<input matInput type="text" name="id" disabled readonly [defaultValue]="asn.id" />
+			</mat-form-field>
 			<mat-form-field>
 				<mat-label>ASN</mat-label>
 				<input matInput type="number" name="asn" required [(ngModel)]="asn.asn" />
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Cache Group</mat-label>
-				<mat-select name="cachegroup"[(ngModel)]="asn.cachegroup" required>
+				<mat-select name="cachegroup"[(ngModel)]="asn.cachegroupId" required>
 					<mat-option *ngFor="let cachegroup of cachegroups" [value]="cachegroup.id">{{cachegroup.name}}</mat-option>
 				</mat-select>
-			</mat-form-field>
-			<mat-form-field *ngIf="!new">
-				<mat-label>ID</mat-label>
-				<input matInput type="text" name="id" disabled readonly [defaultValue]="asn.id" />
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>
