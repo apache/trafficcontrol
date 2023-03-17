@@ -28,15 +28,16 @@ import (
 const apiServiceCategories = "/service_categories"
 
 // CreateServiceCategory creates the given Service Category.
-func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategory, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+// tc.ServiceCategoryV5 used RFC3339 Time Format
+func (to *Session) CreateServiceCategory(serviceCategory tc.ServiceCategoryV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiServiceCategories, opts, serviceCategory, &alerts)
 	return alerts, reqInf, err
 }
 
-// UpdateServiceCategory replaces the Service Category with the given Name with
-// the one provided.
-func (to *Session) UpdateServiceCategory(name string, serviceCategory tc.ServiceCategory, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+// UpdateServiceCategory replaces the Service Category with the given Name with the one provided.
+// tc.ServiceCategoryV5 used RFC3339 Time Format
+func (to *Session) UpdateServiceCategory(name string, serviceCategory tc.ServiceCategoryV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%s", apiServiceCategories, url.PathEscape(name))
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, serviceCategory, &alerts)
@@ -44,8 +45,9 @@ func (to *Session) UpdateServiceCategory(name string, serviceCategory tc.Service
 }
 
 // GetServiceCategories retrieves Service Categories from Traffic Ops.
-func (to *Session) GetServiceCategories(opts RequestOptions) (tc.ServiceCategoriesResponse, toclientlib.ReqInf, error) {
-	var data tc.ServiceCategoriesResponse
+// tc.ServiceCategoryV5 used RFC3339 Time Format
+func (to *Session) GetServiceCategories(opts RequestOptions) (tc.ServiceCategoriesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.ServiceCategoriesResponseV5
 	reqInf, err := to.get(apiServiceCategories, opts, &data)
 	return data, reqInf, err
 }

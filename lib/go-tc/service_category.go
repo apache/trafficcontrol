@@ -37,3 +37,25 @@ type ServiceCategory struct {
 	LastUpdated TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        string    `json:"name" db:"name"`
 }
+
+// ServiceCategoriesResponseV5 is a list of Service Categories as a response.
+// Uses ServiceCategoryV5 struct for RFC3339 Format
+type ServiceCategoriesResponseV5 struct {
+	Response []ServiceCategoryV5 `json:"response"`
+	Alerts
+}
+
+// ServiceCategoryResponseV5 is a single Service Category response for Update and Create to
+// depict what changed.
+// Uses ServiceCategoryV5 struct for RFC3339 Format
+type ServiceCategoryResponseV5 struct {
+	Response ServiceCategoryV5 `json:"response"`
+	Alerts
+}
+
+// ServiceCategoryV5 holds the name, id and associated tenant that comprise a service category.
+// Previous versions hold Depreciated TimeNodMod Format. This version is updated to RFC3339 Time Format.
+type ServiceCategoryV5 struct {
+	LastUpdated TimeRFC3339 `json:"lastUpdated" db:"last_updated"`
+	Name        string      `json:"name" db:"name"`
+}
