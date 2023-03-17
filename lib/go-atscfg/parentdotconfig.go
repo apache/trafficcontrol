@@ -165,8 +165,13 @@ func MakeParentDotConfig(
 	}, nil
 }
 
-// CreateTopology creates an on the fly topology for this server and non topology delivery service.
-func CreateTopology(server *Server, ds DeliveryService, nameTopologies map[TopologyName]tc.Topology, ocgmap map[OriginHost][]string) (string, tc.Topology, []string) {
+type PrimarySecondary struct {
+	Primary   string
+	Secondary string
+}
+
+// createTopology creates an on the fly topology for this server and non topology delivery service.
+func createTopology(server *Server, ds DeliveryService, nameTopologies map[TopologyName]tc.Topology, ocgmap map[OriginHost]PrimarySecondary) (string, tc.Topology, []string) {
 
 	topoName := ""
 	topo := tc.Topology{}
@@ -181,9 +186,9 @@ func CreateTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 	}
 
 	// use the topology name for the fqdn
-	cgnames, ok := ocgmap[OriginHost(orgURI.Hostname())]
+	cgprimsec, ok := ocgmap[OriginHost(orgURI.Hostname())]
 	if !ok {
-		cgnames, ok = ocgmap[OriginHost(deliveryServicesAllParentsKey)]
+		cgprimsec, ok = ocgmap[OriginHost(deliveryServicesAllParentsKey)]
 		if !ok {
 			warns = append(warns, "DS '"+*ds.XMLID+"' has no parent cache groups! Skipping!")
 			return topoName, topo, warns
@@ -221,19 +226,27 @@ func CreateTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 		}
 
 		parents := []int{}
-		for ind := 0; ind < len(cgnames); ind++ {
+		if cgprimsec.Primary != "" {
+			parents = append(parents, pind)
+			pind++
+		}
+		if cgprimsec.Secondary != "" {
 			parents = append(parents, pind)
 			pind++
 		}
 
+		// create the cache group this server belongs to
 		node := tc.TopologyNode{
 			Cachegroup: *server.Cachegroup,
 			Parents:    parents,
 		}
 		topo.Nodes = append(topo.Nodes, node)
 
-		for _, cg := range cgnames {
-			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cg})
+		if cgprimsec.Primary != "" {
+			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cgprimsec.Primary})
+		}
+		if cgprimsec.Secondary != "" {
+			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cgprimsec.Secondary})
 		}
 	}
 	return topoName, topo, warns
@@ -425,13 +438,14 @@ func makeParentDotConfigData(
 		return nil, warnings, errors.New("getting origin servers and profile caches: " + err.Error())
 	}
 
-	parentInfos, piWarns := makeParentInfo(serverParentCGData, serverCDNDomain, originServers, serverCapabilities)
+	parentInfos, piWarns := makeParentInfos(serverParentCGData, serverCDNDomain, originServers, serverCapabilities)
 	warnings = append(warnings, piWarns...)
 
 	dsOrigins, dsOriginWarns := makeDSOrigins(dss, dses, servers)
 	warnings = append(warnings, dsOriginWarns...)
 
-	ocgmap := map[OriginHost][]string{}
+	// Note map cache group lists are ordered, prim first, sec second
+	ocgmap := map[OriginHost]PrimarySecondary{}
 
 	for _, ds := range dses {
 
@@ -468,11 +482,16 @@ func makeParentDotConfigData(
 			if len(ocgmap) == 0 {
 				ocgmap = makeOCGMap(parentInfos)
 				if len(ocgmap) == 0 {
-					ocgmap[""] = []string{}
+					ocgmap[""] = PrimarySecondary{}
 				}
 			}
 
-			topoName, topo, warns := CreateTopology(server, ds, nameTopologies, ocgmap)
+			topoName, topo, warns := createTopology(
+				server,
+				ds,
+				nameTopologies,
+				ocgmap,
+			)
 
 			warnings = append(warnings, warns...)
 			if topoName == "" {
@@ -610,18 +629,24 @@ func (p parentInfo) ToAbstract() *ParentAbstractionServiceParent {
 type parentInfos map[OriginHost]parentInfo
 
 // Returns a map of parent cache groups names per origin host.
-func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost][]string {
-	ocgnames := map[OriginHost][]string{}
+func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost]PrimarySecondary {
+	ocgnames := map[OriginHost]PrimarySecondary{}
 
 	for host, pis := range opis {
-		cgnames := make(map[string]struct{})
+		cgnames := make(map[string]bool)
 		for _, pi := range pis {
-			cgnames[string(pi.Cachegroup)] = struct{}{}
+			cgnames[string(pi.Cachegroup)] = pi.PrimaryParent
 		}
 
-		for cg, _ := range cgnames {
-			ocgnames[host] = append(ocgnames[host], cg)
+		ps := PrimarySecondary{}
+		for cg, isPrim := range cgnames {
+			if isPrim {
+				ps.Primary = cg
+			} else {
+				ps.Secondary = cg
+			}
 		}
+		ocgnames[host] = ps
 	}
 
 	return ocgnames
@@ -1546,7 +1571,11 @@ func getMSOParentStrs(
 	// if atsMajorVersion >= 6 && msoAlgorithm == "consistent_hash" && len(secondaryParentStr) > 0 {
 	// parents = `parent="` + strings.Join(parentInfoTxt, "") + `"`
 	// secondaryParents = ` secondary_parent="` + secondaryParentStr + `"`
-	secondaryMode, secondaryModeWarnings := getSecondaryModeStr(tryAllPrimariesBeforeSecondary, atsMajorVersion, dsName)
+	secondaryMode, secondaryModeWarnings := getSecondaryModeStr(
+		tryAllPrimariesBeforeSecondary,
+		atsMajorVersion,
+		dsName,
+	)
 	warnings = append(warnings, secondaryModeWarnings...)
 	// 	secondaryParents += secondaryModeStr
 	// } else {
@@ -1555,8 +1584,8 @@ func getMSOParentStrs(
 	return parentInfoTxt, secondaryParentInfo, secondaryMode, warnings
 }
 
-// makeParentInfo returns the parent info and any warnings
-func makeParentInfo(
+// makeParentInfos returns the parent info and any warnings
+func makeParentInfos(
 	serverParentCGData serverParentCacheGroupData,
 	serverDomain string, // getCDNDomainByProfileID(tx, server.ProfileID)
 	originServers map[OriginHost][]serverWithParams,

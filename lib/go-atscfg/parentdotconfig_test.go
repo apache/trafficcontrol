@@ -3754,13 +3754,13 @@ func TestMakeParentDotConfigTopologiesServerMultipleProfileParams(t *testing.T) 
 		tc.Parameter{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
-			Value:      "100",
+			Value:      "200",
 			Profiles:   []byte(`["serverprofile0"]`),
 		},
 		tc.Parameter{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
-			Value:      "200",
+			Value:      "100",
 			Profiles:   []byte(`["serverprofile1"]`),
 		},
 	}
@@ -3899,6 +3899,18 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
+		tc.Parameter{
+			Name:       ParentConfigCacheParamRank,
+			ConfigFile: "parent.config",
+			Value:      "2",
+			Profiles:   []byte(`["serverprofile0"]`),
+		},
+		tc.Parameter{
+			Name:       ParentConfigCacheParamRank,
+			ConfigFile: "parent.config",
+			Value:      "1",
+			Profiles:   []byte(`["serverprofile1"]`),
+		},
 	}
 
 	// Create set of DS params
@@ -3957,7 +3969,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 	}
 
 	serverParams := []tc.Parameter{
-		{
+		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
@@ -3991,6 +4003,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 	setIP(org0, "192.168.2.4")
 	org0.Type = tc.OriginTypeName
 	org0.TypeID = util.IntPtr(991)
+	org0.ProfileNames = []string{"serverprofile0"}
 
 	org1 := makeTestParentServer()
 	org1.Cachegroup = util.StrPtr("orgCG1")
@@ -4000,6 +4013,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 	setIP(org1, "192.168.2.5")
 	org1.Type = tc.OriginTypeName
 	org1.TypeID = util.IntPtr(991)
+	org1.ProfileNames = []string{"serverprofile1"}
 
 	servers := []Server{*edge, *mid0, *mid1, *org0, *org1}
 
@@ -4094,11 +4108,6 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	dsstrs := []string{
-		`dest_domain=ds0.example.net `,
-		`dest_domain=ds1.example.net `,
-	}
-
 	{ // test edge config
 		cfg, err := MakeParentDotConfig(dses, edge, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
 		if err != nil {
@@ -4118,6 +4127,11 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 			` max_unavailable_server_retries=22`,
 			` simple_server_retry_responses="401,402"`,
 			` unavailable_server_retry_responses="501,502"`,
+		}
+
+		dsstrs := []string{
+			`dest_domain=ds0.example.net `,
+			`dest_domain=ds1.example.net `,
 		}
 
 		for _, dsstr := range dsstrs {
@@ -4168,6 +4182,22 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 					t.Errorf("Missing required string(s) from line: %v\n%v (warnings: %v)", missing, dsline, cfg.Warnings)
 				}
 			}
+		}
+
+		if !strings.Contains(txt, `parent="myorg0`) {
+			t.Errorf("Incorrect parent ordering, got %v", txt)
+		}
+	}
+
+	{
+		cfg, err := MakeParentDotConfig(dses, mid1, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		if !strings.Contains(txt, `parent="myorg1`) {
+			t.Errorf("Incorrect parent ordering, got %v", txt)
 		}
 	}
 }

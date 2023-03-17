@@ -94,6 +94,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7352](https://github.com/apache/trafficcontrol/pull/7352) *Traffic Control Cache Config (t3c)* Fixed issue with application locking which would allow multiple instances of `t3c apply` to run concurrently.
 - [#6775](https://github.com/apache/trafficcontrol/issues/6775) *Traffic Ops* Invalid "orgServerFqdn" in Delivery Service creation/update causes Internal Server Error
 - [#6695](https://github.com/apache/trafficcontrol/issues/6695) *Traffic Control Cache Config (t3c)* Directory creation was erroneously reporting an error when actually succeeding.
+- [#7411](https://github.com/apache/trafficcontrol/pull/7411) *Traffic Control Cache Config (t3c)* Fixed issue with wrong parent ordering with MSO non-topology delivery services.
 
 ## [7.0.0] - 2022-07-19
 ### Added
