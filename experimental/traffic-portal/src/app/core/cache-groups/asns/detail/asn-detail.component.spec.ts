@@ -18,8 +18,8 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
+import { AsnDetailComponent } from "src/app/core/cache-groups/asns/detail/asn-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import { AsnDetailComponent } from "./asn-detail.component";
 
 describe("AsnDetailComponent", () => {
 	let component: AsnDetailComponent;

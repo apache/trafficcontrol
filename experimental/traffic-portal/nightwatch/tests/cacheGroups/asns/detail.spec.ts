@@ -15,7 +15,6 @@
 describe("Asn Detail Spec", () => {
 	it("Test Asn", () => {
 		const page = browser.page.cacheGroups.asnDetail();
-		console.log(browser.globals.testData.asn.id)
 		browser.url(`${page.api.launchUrl}/core/asns/${browser.globals.testData.asn.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")

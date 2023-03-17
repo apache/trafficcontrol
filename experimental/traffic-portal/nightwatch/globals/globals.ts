@@ -16,8 +16,8 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
-import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { AsnDetailPageObject } from "nightwatch/page_objects/cacheGroups/asnDetail";
+import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
 import type { CoordinateDetailPageObject } from "nightwatch/page_objects/cacheGroups/coordinateDetail";

@@ -34,8 +34,8 @@ export class AsnDetailComponent implements OnInit {
 	public asn!: ResponseASN;
 	public cachegroups!: Array<ResponseCacheGroup>;
 	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
-				private readonly location: Location, private readonly dialog: MatDialog,
-				private readonly header: NavigationService) {
+		private readonly location: Location, private readonly dialog: MatDialog,
+		private readonly header: NavigationService) {
 	}
 
 	/**

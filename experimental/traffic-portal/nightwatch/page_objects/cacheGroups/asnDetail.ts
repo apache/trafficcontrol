@@ -21,6 +21,9 @@ export type AsnDetailPageObject = EnhancedPageObject<{}, typeof asnDetailPageObj
 
 const asnDetailPageObject = {
 	elements: {
+		asn: {
+			selector: "input[name='asn']"
+		},
 		cachegroup: {
 			selector: "input[name='cachegroup']"
 		},
@@ -29,9 +32,6 @@ const asnDetailPageObject = {
 		},
 		lastUpdated: {
 			selector: "input[name='lastUpdated']"
-		},
-		asn: {
-			selector: "input[name='asn']"
 		},
 
 		saveBtn: {
