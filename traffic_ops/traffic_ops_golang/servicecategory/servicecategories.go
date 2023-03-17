@@ -187,3 +187,136 @@ WHERE name=$2 RETURNING last_updated`
 func deleteQuery() string {
 	return `DELETE FROM service_category WHERE name=:name`
 }
+
+// TOServiceCategoryV5 uses tc.ServiceCategoryV5 which has the updated Time Format TimeRFC3339.
+type TOServiceCategoryV5 struct {
+	api.APIInfoImpl `json:"-"`
+	tc.ServiceCategoryV5
+}
+
+func (v *TOServiceCategoryV5) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdatedByName(v.APIInfo().Tx, v.Name, "service_category")
+}
+
+func (v *TOServiceCategoryV5) SetLastUpdated(t tc.TimeRFC3339) { v.LastUpdated = t }
+func (v *TOServiceCategoryV5) InsertQuery() string             { return insertQuery() }
+func (v *TOServiceCategoryV5) NewReadObj() interface{}         { return &tc.ServiceCategoryV5{} }
+func (v *TOServiceCategoryV5) SelectQuery() string             { return selectQuery() }
+func (v *TOServiceCategoryV5) UpdateQuery() string             { return updateQuery() }
+func (v *TOServiceCategoryV5) DeleteQuery() string             { return deleteQuery() }
+
+func (serviceCategory TOServiceCategoryV5) GetAuditName() string {
+	if serviceCategory.Name != "" {
+		return serviceCategory.Name
+	}
+	return "unknown"
+}
+
+func (serviceCategory TOServiceCategoryV5) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{Field: "name", Func: api.GetStringKey}}
+}
+
+// Implementation of the Identifier, Validator interface functions
+func (serviceCategory TOServiceCategoryV5) GetKeys() (map[string]interface{}, bool) {
+	if serviceCategory.Name == "" {
+		return map[string]interface{}{"name": ""}, false
+	}
+	return map[string]interface{}{"name": serviceCategory.Name}, true
+}
+
+func (serviceCategory *TOServiceCategoryV5) SetKeys(keys map[string]interface{}) {
+	n, _ := keys["name"].(string)
+	serviceCategory.Name = n
+}
+
+func (serviceCategory TOServiceCategoryV5) GetType() string {
+	return "serviceCategoryV5"
+}
+
+func (serviceCategory *TOServiceCategoryV5) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"name": dbhelpers.WhereColumnInfo{Column: "sc.name"},
+	}
+}
+
+func (serviceCategory *TOServiceCategoryV5) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from service_category sc ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='service_category') as res`
+}
+
+func (serviceCategory TOServiceCategoryV5) Validate() (error, error) {
+	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericDash, "must consist of only alphanumeric or dash characters.")
+	errs := validation.Errors{
+		"name": validation.Validate(serviceCategory.Name, validation.Required, nameRule),
+	}
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
+}
+
+func (serviceCategory *TOServiceCategoryV5) Create() (error, error, int) {
+	return api.GenericCreateNameBasedIDV5(serviceCategory)
+}
+
+func (serviceCategory *TOServiceCategoryV5) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(serviceCategory.APIInfo(), "name")
+	serviceCategories, userErr, sysErr, errCode, maxTime := api.GenericRead(h, serviceCategory, useIMS)
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode, nil
+	}
+
+	return serviceCategories, nil, nil, errCode, maxTime
+}
+
+func UpdateV5(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	name := inf.Params["name"]
+
+	var newSC TOServiceCategoryV5
+	if err := json.NewDecoder(r.Body).Decode(&newSC); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if userErr, sysErr := newSC.Validate(); userErr != nil || sysErr != nil {
+		code := http.StatusBadRequest
+		if sysErr != nil {
+			code = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+		return
+	}
+
+	var origSC TOServiceCategoryV5
+	if err := inf.Tx.QueryRow(`SELECT name, last_updated FROM service_category WHERE name = $1`, name).Scan(&origSC.Name, &origSC.LastUpdated); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no service category found with name "+name), nil)
+			return
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !api.IsUnmodified(r.Header, origSC.LastUpdated.Time) {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusPreconditionFailed, errors.New("service category could not be modified because the precondition failed"), nil)
+		return
+	}
+
+	resp, err := inf.Tx.Tx.Exec(updateQuery(), newSC.Name, name)
+	if err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" Service Category from "+name+" to "+newSC.Name, inf.User, inf.Tx.Tx)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Service Category update from "+name+" to "+newSC.Name+" was successful.", resp)
+}
+
+func (serviceCategory *TOServiceCategoryV5) Delete() (error, error, int) {
+	return api.GenericDelete(serviceCategory)
+}

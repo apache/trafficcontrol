@@ -43,6 +43,15 @@ type GenericCreator interface {
 	InsertQuery() string
 }
 
+// GenericCreatorV5 uses tc.TimeRFC3339 as Time format type for SetLastUpdated
+type GenericCreatorV5 interface {
+	GetType() string
+	APIInfo() *APIInfo
+	SetKeys(map[string]interface{})
+	SetLastUpdated(tc.TimeRFC3339)
+	InsertQuery() string
+}
+
 type GenericReader interface {
 	GetType() string
 	APIInfo() *APIInfo
@@ -146,6 +155,48 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 
 	// Only when the type is of serviceCategory, setKeys to return name parameter.
 	if val.GetType() == "serviceCategory" {
+		val.SetKeys(map[string]interface{}{"name": name})
+	}
+
+	val.SetLastUpdated(lastUpdated)
+	return nil, nil, http.StatusOK
+}
+
+// GenericCreateNameBasedIDV5 does a Create (POST) for the given GenericCreatorV5 object and type. This exists as a generic function, for the use case of a single "name" key (not a numerical "id" key) and a lastUpdated field.
+func GenericCreateNameBasedIDV5(val GenericCreatorV5) (error, error, int) {
+	resultRows, err := val.APIInfo().Tx.NamedQuery(val.InsertQuery(), val)
+	if err != nil {
+		return ParseDBError(err)
+	}
+	defer resultRows.Close()
+
+	var name string
+	lastUpdated := tc.TimeRFC3339{}
+	rowsAffected := 0
+
+	for resultRows.Next() {
+		rowsAffected++
+		// Only when the type is of serviceCategory, &name is scanned and returned from the DB.
+		// Else return only &lastUpdated.
+		var err error
+		if val.GetType() == "serviceCategoryV5" {
+			err = resultRows.Scan(&name, &lastUpdated)
+		} else {
+			err = resultRows.Scan(&lastUpdated)
+		}
+		if err != nil {
+			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
+		}
+	}
+
+	if rowsAffected == 0 {
+		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no row was returned"), http.StatusInternalServerError
+	} else if rowsAffected > 1 {
+		return nil, errors.New("too many rows returned from " + val.GetType() + " insert"), http.StatusInternalServerError
+	}
+
+	// Only when the type is of serviceCategory, setKeys to return name parameter.
+	if val.GetType() == "serviceCategoryV5" {
 		val.SetKeys(map[string]interface{}{"name": name})
 	}
 
