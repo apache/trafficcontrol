@@ -3754,13 +3754,13 @@ func TestMakeParentDotConfigTopologiesServerMultipleProfileParams(t *testing.T) 
 		tc.Parameter{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
-			Value:      "200",
+			Value:      "100",
 			Profiles:   []byte(`["serverprofile0"]`),
 		},
 		tc.Parameter{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
-			Value:      "100",
+			Value:      "200",
 			Profiles:   []byte(`["serverprofile1"]`),
 		},
 	}
@@ -3899,18 +3899,6 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
-			Name:       ParentConfigCacheParamRank,
-			ConfigFile: "parent.config",
-			Value:      "2",
-			Profiles:   []byte(`["serverprofile0"]`),
-		},
-		tc.Parameter{
-			Name:       ParentConfigCacheParamRank,
-			ConfigFile: "parent.config",
-			Value:      "1",
-			Profiles:   []byte(`["serverprofile1"]`),
-		},
 	}
 
 	// Create set of DS params
@@ -4003,7 +3991,6 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 	setIP(org0, "192.168.2.4")
 	org0.Type = tc.OriginTypeName
 	org0.TypeID = util.IntPtr(991)
-	org0.ProfileNames = []string{"serverprofile0"}
 
 	org1 := makeTestParentServer()
 	org1.Cachegroup = util.StrPtr("orgCG1")
@@ -4013,7 +4000,6 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 	setIP(org1, "192.168.2.5")
 	org1.Type = tc.OriginTypeName
 	org1.TypeID = util.IntPtr(991)
-	org1.ProfileNames = []string{"serverprofile1"}
 
 	servers := []Server{*edge, *mid0, *mid1, *org0, *org1}
 
@@ -4184,6 +4170,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 			}
 		}
 
+		// Check parent ordering (based on cache group prim/sec parents)
 		if !strings.Contains(txt, `parent="myorg0`) {
 			t.Errorf("Incorrect parent ordering, got %v", txt)
 		}
@@ -4196,6 +4183,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 		}
 		txt := cfg.Text
 
+		// Check parent ordering (based on cache group prim/sec parents)
 		if !strings.Contains(txt, `parent="myorg1`) {
 			t.Errorf("Incorrect parent ordering, got %v", txt)
 		}
