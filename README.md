@@ -83,10 +83,10 @@ __Test Status__ [^1]
 * [Traffic Stats](https://traffic-control-cdn.readthedocs.io/en/latest/overview/traffic_stats.html) acquires and stores real-time metrics and statistics into an InfluxDB for charting and alerting.
 
 ## Releases
-* [https://github.com/apache/trafficcontrol/releases](https://github.com/apache/trafficcontrol/releases)
+* [Releases](https://github.com/apache/trafficcontrol/releases)
 
 ## Downloads
-* [https://www.apache.org/dyn/closer.cgi/trafficcontrol](https://www.apache.org/dyn/closer.cgi/trafficcontrol)
+* [Downloads](https://www.apache.org/dyn/closer.cgi/trafficcontrol)
 
 ## Questions, Comments, Bugs and More
 * [Frequently Asked Questions](https://traffic-control-cdn.readthedocs.io/en/latest/faq.html)
