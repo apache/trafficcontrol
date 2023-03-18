@@ -43,12 +43,12 @@ type GenericCreator interface {
 	InsertQuery() string
 }
 
-// GenericCreatorV5 uses tc.TimeRFC3339 as Time format type for SetLastUpdated
+// GenericCreatorV5 uses time.Time as Time format type for SetLastUpdated
 type GenericCreatorV5 interface {
 	GetType() string
 	APIInfo() *APIInfo
 	SetKeys(map[string]interface{})
-	SetLastUpdated(tc.TimeRFC3339)
+	SetLastUpdated(time.Time)
 	InsertQuery() string
 }
 
@@ -171,7 +171,7 @@ func GenericCreateNameBasedIDV5(val GenericCreatorV5) (error, error, int) {
 	defer resultRows.Close()
 
 	var name string
-	lastUpdated := tc.TimeRFC3339{}
+	lastUpdated := time.Time{}
 	rowsAffected := 0
 
 	for resultRows.Next() {

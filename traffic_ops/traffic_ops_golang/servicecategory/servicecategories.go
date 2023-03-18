@@ -188,7 +188,7 @@ func deleteQuery() string {
 	return `DELETE FROM service_category WHERE name=:name`
 }
 
-// TOServiceCategoryV5 uses tc.ServiceCategoryV5 which has the updated Time Format TimeRFC3339.
+// TOServiceCategoryV5 uses tc.ServiceCategoryV5 which has the updated Time Format time.Time for format RFC3339.
 type TOServiceCategoryV5 struct {
 	api.APIInfoImpl `json:"-"`
 	tc.ServiceCategoryV5
@@ -198,12 +198,12 @@ func (v *TOServiceCategoryV5) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdatedByName(v.APIInfo().Tx, v.Name, "service_category")
 }
 
-func (v *TOServiceCategoryV5) SetLastUpdated(t tc.TimeRFC3339) { v.LastUpdated = t }
-func (v *TOServiceCategoryV5) InsertQuery() string             { return insertQuery() }
-func (v *TOServiceCategoryV5) NewReadObj() interface{}         { return &tc.ServiceCategoryV5{} }
-func (v *TOServiceCategoryV5) SelectQuery() string             { return selectQuery() }
-func (v *TOServiceCategoryV5) UpdateQuery() string             { return updateQuery() }
-func (v *TOServiceCategoryV5) DeleteQuery() string             { return deleteQuery() }
+func (v *TOServiceCategoryV5) SetLastUpdated(t time.Time) { v.LastUpdated = t }
+func (v *TOServiceCategoryV5) InsertQuery() string        { return insertQuery() }
+func (v *TOServiceCategoryV5) NewReadObj() interface{}    { return &tc.ServiceCategoryV5{} }
+func (v *TOServiceCategoryV5) SelectQuery() string        { return selectQuery() }
+func (v *TOServiceCategoryV5) UpdateQuery() string        { return updateQuery() }
+func (v *TOServiceCategoryV5) DeleteQuery() string        { return deleteQuery() }
 
 func (serviceCategory TOServiceCategoryV5) GetAuditName() string {
 	if serviceCategory.Name != "" {
@@ -302,7 +302,7 @@ func UpdateV5(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	if !api.IsUnmodified(r.Header, origSC.LastUpdated.Time) {
+	if !api.IsUnmodified(r.Header, origSC.LastUpdated) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusPreconditionFailed, errors.New("service category could not be modified because the precondition failed"), nil)
 		return
 	}

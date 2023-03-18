@@ -1,5 +1,7 @@
 package tc
 
+import "time"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -56,6 +58,6 @@ type ServiceCategoryResponseV5 struct {
 // ServiceCategoryV5 holds the name, id and associated tenant that comprise a service category.
 // Previous versions hold Depreciated TimeNodMod Format. This version is updated to RFC3339 Time Format.
 type ServiceCategoryV5 struct {
-	LastUpdated TimeRFC3339 `json:"lastUpdated" db:"last_updated"`
-	Name        string      `json:"name" db:"name"`
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
+	Name        string    `json:"name" db:"name"`
 }
