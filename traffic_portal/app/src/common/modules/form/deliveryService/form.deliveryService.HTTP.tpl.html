@@ -365,7 +365,7 @@ under the License.
                                     <a ng-href="/#!/server-capabilities/edit?name={{capability.name}}" target="_blank">{{capability.name}}</a>
                                 </div>
                             </div>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.requiredCapabilities !== dsCurrent.requiredCapabilities">
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="{{arrayCompare(deliveryService.requiredCapabilities, dsCurrent.requiredCapabilities)}}">
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.requiredCapabilities}}</pre>
