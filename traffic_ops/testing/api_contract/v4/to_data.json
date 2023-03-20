@@ -3,7 +3,6 @@
         "user": "admin",
         "password": "twelve12",
         "url": "https://localhost/api/4.0",
-        "api_version": "4.0",
-        "port": "443"
+        "port": 443
     }
 }
