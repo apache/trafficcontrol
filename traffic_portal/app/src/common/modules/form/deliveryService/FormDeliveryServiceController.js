@@ -113,6 +113,21 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		deliveryService.tlsVersions?.splice(index+1, 0, "");
 	};
 
+	/** Compare Arrays
+	 * @param {array} a
+	 * @param {array} b
+	 */
+	$scope.arrayCompare = function(a, b) {
+		if (a === b) return false;
+		if (a == null || b == null) return true;
+		if (a.length !== b.length) return true;
+
+		for (let i = 0; i < a.length; i++) {
+			if (a[i] !== b[i]) return true;
+		}
+		return false;
+	};
+
 	/**
 	 * This function is called on 'change' events for any and all TLS Version
 	 * inputs, and sets validity states of duplicates.
