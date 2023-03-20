@@ -15,7 +15,7 @@
 import { EnhancedPageObject } from "nightwatch";
 
 /**
- * Defines the PageObject for Region Details.
+ * Defines the PageObject for ASN Details.
  */
 export type AsnDetailPageObject = EnhancedPageObject<{}, typeof asnDetailPageObject.elements>;
 
@@ -25,7 +25,7 @@ const asnDetailPageObject = {
 			selector: "input[name='asn']"
 		},
 		cachegroup: {
-			selector: "input[name='cachegroup']"
+			selector: "mat-select[name='cachegroup']"
 		},
 		id: {
 			selector: "input[name='id']"
@@ -40,4 +40,4 @@ const asnDetailPageObject = {
 	},
 };
 
-export default AsnDetailPageObject;
+export default asnDetailPageObject;

@@ -38,7 +38,7 @@ describe("Asn Detail Spec", () => {
 				.assert.enabled("@saveBtn")
 				.assert.not.elementPresent("@id")
 				.assert.not.elementPresent("@lastUpdated")
-				.assert.valueEquals("@asn", "");
+				.assert.valueEquals("@asn", "1");
 		});
 	});
 });
