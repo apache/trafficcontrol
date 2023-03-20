@@ -114,12 +114,15 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	};
 
 	/** Compare Arrays
-	 * @param {array} a
-	 * @param {array} b
+	 *
+	 * @template T extends number[] | boolean[] | bigint[] | string[]
+	 *
+	 * @param {T} a
+	 * @param {T} b
+	 * @returns `false` if the arrays are equal, `true` otherwise.
 	 */
-	$scope.arrayCompare = function(a, b) {
+	function arrayCompare (a, b) {
 		if (a === b) return false;
-		if (a == null || b == null) return true;
 		if (a.length !== b.length) return true;
 
 		for (let i = 0; i < a.length; i++) {
@@ -127,6 +130,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		}
 		return false;
 	};
+	$scope.arrayCompare = arrayCompare;
 
 	/**
 	 * This function is called on 'change' events for any and all TLS Version
