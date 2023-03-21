@@ -18,7 +18,7 @@ import json
 import logging
 import sys
 from random import randint
-from typing import NamedTuple
+from typing import NamedTuple, Optional
 from urllib.parse import urlparse
 import pytest
 import requests
@@ -119,7 +119,7 @@ def to_login(to_args: ArgsType) -> TOSession:
 
 @pytest.fixture()
 def cdn_post_data(to_session: TOSession, cdn_prereq_data:
-                  object) -> list[dict[str, str] | requests.Response]:
+                  object) -> Optional[list[dict[str, str] | requests.Response]]:
     """PyTest Fixture to create POST data for cdns endpoint.
     :param to_session: Fixture to get Traffic ops session 
     :param get_cdn_data: Fixture to get cdn data from a prereq file
