@@ -53,7 +53,8 @@ def to_data(pytestconfig: pytest.Config) -> dict:
     with open("to_data.json", encoding="utf-8", mode="r") as session_file:
         data = json.load(session_file)
     session_data = data["test"]
-    args["api_version"] = urlparse(session_data.get("url")).path.strip('/').split('/')[1]
+    args["api_version"] = urlparse(
+        session_data.get("url")).path.strip("/").split("/")[1]
     args["port"] = session_data.get("port")
 
     to_user = pytestconfig.getoption("--to-user")
