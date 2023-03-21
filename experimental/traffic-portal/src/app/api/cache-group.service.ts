@@ -452,12 +452,12 @@ export class CacheGroupService extends APIService {
 	/**
 	 * Deletes an existing ASN.
 	 *
-	 * @param asnOrId Id of the ASN to delete.
+	 * @param asn The ASN to be deleted or ID of the ASN to delete.
 	 * @returns The deleted ASN.
 	 */
-	public async deleteASN(asnOrId: number | ResponseASN): Promise<void> {
-		const id = typeof(asnOrId) === "number" ? asnOrId : asnOrId.id;
-		await this.delete("asns/", undefined, { id : String(id) }).toPromise();
+	public async deleteASN(asn: ResponseASN | number): Promise<void> {
+		const id = typeof(asn) === "number" ? asn : asn.id;
+		return this.delete(`asns/${id}`).toPromise();
 	}
 
 	constructor(http: HttpClient) {
