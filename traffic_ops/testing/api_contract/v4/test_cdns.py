@@ -16,13 +16,15 @@
 import json
 import logging
 import pytest
+import requests
+from trafficops.tosession import TOSession
 
 # Create and configure logger
 logger = logging.getLogger()
 
 
-@pytest.fixture(name="get_cdn_data")
-def get_cdn_prereq_data() -> dict:
+@pytest.fixture(name="cdn_prereq_data")
+def get_cdn_prereq_data() -> object:
     """PyTest Fixture to store prereq data for cdns endpoint.
     :returns cdn_data: Returns prerequisite data for cdns endpoint
     """
@@ -33,7 +35,8 @@ def get_cdn_prereq_data() -> dict:
     return cdn_data
 
 
-def test_get_cdn(to_session: object, get_cdn_data: dict, cdn_prereq: list) -> None:
+def test_cdn_contract(to_session: TOSession, cdn_prereq_data: object,
+                      cdn_post_data: list[dict[str, str] | requests.Response]) -> None:
     """Test step to validate keys, values and data types from cdns endpoint response.
     :param to_session: Fixture to get Traffic ops session 
     :param get_cdn_data: Fixture to get cdn data from a prereq file
@@ -41,7 +44,7 @@ def test_get_cdn(to_session: object, get_cdn_data: dict, cdn_prereq: list) -> No
     """
     # validate CDN keys from cdns get response
     logger.info("Accessing Cdn endpoint through Traffic ops session.")
-    cdn_name = cdn_prereq[0]["name"]
+    cdn_name = cdn_post_data[0]["name"]
     cdn_get_response = to_session.get_cdns(
         query_params={"name": cdn_name})
     try:
@@ -50,14 +53,14 @@ def test_get_cdn(to_session: object, get_cdn_data: dict, cdn_prereq: list) -> No
         logger.info(
             "CDN Keys from cdns endpoint response %s", cdn_keys)
         # validate cdn values from prereq data in cdns get response.
-        prereq_values = [cdn_prereq[0]["name"], cdn_prereq[0]
-                         ["domainName"], cdn_prereq[0]["dnssecEnabled"]]
+        prereq_values = [cdn_post_data[0]["name"], cdn_post_data[0]
+                         ["domainName"], cdn_post_data[0]["dnssecEnabled"]]
         get_values = [cdn_data[0]["name"], cdn_data[0]
                       ["domainName"], cdn_data[0]["dnssecEnabled"]]
         # validate data types for values from cdn get json response.
         for (prereq_value, get_value) in zip(prereq_values, get_values):
             assert isinstance(prereq_value, type(get_value))
-        assert cdn_keys.sort() == list(get_cdn_data.keys()).sort()
+        assert cdn_keys.sort() == list(cdn_prereq_data.keys()).sort()
         assert get_values == prereq_values
     except IndexError:
         logger.error("No CDN data from cdns get request")
@@ -65,8 +68,10 @@ def test_get_cdn(to_session: object, get_cdn_data: dict, cdn_prereq: list) -> No
     finally:
         # Delete CDN after test execution to avoid redundancy.
         try:
-            cdn_response = cdn_prereq[1]
+            cdn_response = cdn_post_data[1]
             cdn_id = cdn_response["id"]
             to_session.delete_cdn_by_id(cdn_id=cdn_id)
         except IndexError:
             logger.error("CDN wasn't created")
+            pytest.fail(
+                "Response from delete request is empty, Failing test_get_cdn")

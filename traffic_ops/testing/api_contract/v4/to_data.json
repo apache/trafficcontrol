@@ -1,8 +1,6 @@
 {
-    "test": {
-        "user": "admin",
-        "password": "twelve12",
-        "url": "https://localhost/api/4.0",
-        "port": 443
-    }
+    "user": "admin",
+    "password": "twelve12",
+    "url": "https://localhost/api/4.0",
+    "port": 443
 }
