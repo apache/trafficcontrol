@@ -735,10 +735,10 @@ export class CacheGroupService {
 	/**
 	 * Deletes an existing asn.
 	 *
-	 * @param asn Id of the asn to delete.
+	 * @param asn The ASN to be deleted or ID of the ASN to delete..
 	 * @returns The deleted asn.
 	 */
-	public async deleteASN(asn: number | ResponseASN): Promise<ResponseASN> {
+	public async deleteASN(asn: ResponseASN | number): Promise<ResponseASN> {
 		const index = this.asns.findIndex(a => a.asn === asn);
 		if (index === -1) {
 			throw new Error(`no such asn: ${asn}`);
