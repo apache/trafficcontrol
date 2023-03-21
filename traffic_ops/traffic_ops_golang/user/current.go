@@ -567,6 +567,19 @@ func ReplaceCurrentV4(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	roleID, ok, err := dbhelpers.GetRoleIDFromName(tx, user.Role)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	} else if !ok {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
+		return
+	}
+	if inf.User.Role != roleID {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("users cannot update their own role"), nil)
+		return
+	}
+
 	changePasswd := false
 
 	// obfuscate password
