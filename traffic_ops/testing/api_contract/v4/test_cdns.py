@@ -22,10 +22,9 @@ logger = logging.getLogger()
 
 
 @pytest.fixture(name="get_cdn_data")
-def get_cdn_prereq_data():
+def get_cdn_prereq_data() -> dict:
     """PyTest Fixture to store prereq data for cdns endpoint.
     :returns cdn_data: Returns prerequisite data for cdns endpoint
-    :rtype: dict
     """
     # Response keys for cdns endpoint
     with open("prerequisite_data.json", encoding="utf-8", mode="r") as prereq_file:
@@ -34,14 +33,11 @@ def get_cdn_prereq_data():
     return cdn_data
 
 
-def test_get_cdn(to_session, get_cdn_data, cdn_prereq):
+def test_get_cdn(to_session: object, get_cdn_data: dict, cdn_prereq: list) -> None:
     """Test step to validate keys, values and data types from cdns endpoint response.
     :param to_session: Fixture to get Traffic ops session 
-    :type to_session: TOsession
     :param get_cdn_data: Fixture to get cdn data from a prereq file
-    :type get_cdn_data: dict
     :param cdn_prereq: Fixture to get sample cdn data and actual cdn response
-    :type cdn_prereq: list
     """
     # validate CDN keys from cdns get response
     logger.info("Accessing Cdn endpoint through Traffic ops session.")

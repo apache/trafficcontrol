@@ -28,10 +28,9 @@ from trafficops.restapi import OperationError
 logger = logging.getLogger()
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: object) -> None:
     """Passing in Traffic Ops arguments [Username, Password, Url and Hostname] from command line.
     :param parser: Parser to parse command line arguments
-    :type parser: object
     """
     parser.addoption(
         "--to-user", action="store", help="User name for Traffic Ops Session."
@@ -45,12 +44,10 @@ def pytest_addoption(parser):
 
 
 @pytest.fixture(name="to_args")
-def to_data(pytestconfig):
+def to_data(pytestconfig: pytest.Config) -> dict:
     """PyTest fixture to store Traffic ops arguments passed from command line.
     :param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object
-    :type pytestconfig: pytest.Config object
     :returns args: Return Traffic Ops arguments
-    :rtype: dict
     """
     args = {}
     with open("to_data.json", encoding="utf-8", mode="r") as session_file:
@@ -78,13 +75,11 @@ def to_data(pytestconfig):
 
 
 @pytest.fixture(name="to_session")
-def to_login(to_args):
+def to_login(to_args: dict) -> TOSession:
     """PyTest Fixture to create a Traffic Ops session from Traffic Ops Arguments
     passed as command line arguments in to_args fixture in conftest.
     :param to_args: Fixture to get Traffic ops session arguments
-    :type to_args: dict
     :returns to_session: Return Traffic ops session
-    :rtype: TOSession object
     """
     # Create a Traffic Ops V4 session and login
     to_url = urlparse(to_args["url"])
@@ -103,14 +98,11 @@ def to_login(to_args):
 
 
 @pytest.fixture()
-def cdn_prereq(to_session, get_cdn_data):
+def cdn_prereq(to_session: TOSession, get_cdn_data: dict) -> list:
     """PyTest Fixture to create POST data for cdns endpoint.
     :param to_session: Fixture to get Traffic ops session 
-    :type to_session: TOsession
     :param get_cdn_data: Fixture to get cdn data from a prereq file
-    :type get_cdn_data: dict
     :returns prerequisite_data: Returns sample Post data and actual api response
-    :rtype: list
     """
 
     # Return new post data and post response from cdns POST request

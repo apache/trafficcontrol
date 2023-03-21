@@ -40,13 +40,13 @@ The API contract tests are run using `pytest` from the ``traffic_ops/testing/api
 Example commands to run the tests:
 
 Only test a specific endpoint with arguments.
-> Note: For staging and nightly environments (Step 1 is not mandatory)
+> Note: For particular environments (Step 1 is not mandatory)
 ```console
 pytest --to-user Username --to-password Password --to-url URL test_cdns.py
 ```
 
 Only test a specific endpoint with local Traffic Ops instance.
-> Note: For local testing environment (Step 1 is mandatory)
+> Note: For local environment (Step 1 is mandatory)
 ```console
 pytest -rA test_cdns.py
 ```
