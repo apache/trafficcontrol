@@ -14,4 +14,3 @@
 
 Apache-TrafficControl==3.1.0
 pytest==7.2.1
-urllib3==1.26.14
