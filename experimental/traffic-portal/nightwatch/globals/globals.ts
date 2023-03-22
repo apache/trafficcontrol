@@ -16,6 +16,7 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
+import type { AsnDetailPageObject } from "nightwatch/page_objects/cacheGroups/asnDetail";
 import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
@@ -84,6 +85,7 @@ declare module "nightwatch" {
 			regionDetail: () => RegionDetailPageObject;
 			regionsTable: () => RegionsPageObject;
 			asnsTable: () => AsnsPageObject;
+			asnDetail: () => AsnDetailPageObject;
 		};
 		deliveryServices: {
 			deliveryServiceCard: () => DeliveryServiceCardPageObject;

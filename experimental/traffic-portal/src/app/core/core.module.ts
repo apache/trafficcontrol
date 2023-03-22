@@ -24,6 +24,7 @@ import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
+import { AsnDetailComponent } from "./cache-groups/asns/detail/asn-detail.component";
 import { AsnsTableComponent } from "./cache-groups/asns/table/asns-table.component";
 import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/cache-group-details.component";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
@@ -60,6 +61,7 @@ import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
+	{ component: AsnDetailComponent, path: "asns/:id"},
 	{ component: AsnsTableComponent, path: "asns" },
 	{ component: DivisionsTableComponent, path: "divisions" },
 	{ component: DivisionDetailComponent, path: "divisions/:id" },
@@ -114,6 +116,7 @@ export const ROUTES: Routes = [
 		PhysLocTableComponent,
 		PhysLocDetailComponent,
 		AsnsTableComponent,
+		AsnDetailComponent,
 		DivisionsTableComponent,
 		DivisionDetailComponent,
 		RegionsTableComponent,
