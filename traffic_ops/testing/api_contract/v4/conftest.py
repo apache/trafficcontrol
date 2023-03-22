@@ -12,8 +12,11 @@
 # limitations under the License.
 #
 
-"""This module is used to create a Traffic Ops session
-and to store prerequisite data for endpoints."""
+"""
+This module is used to create a Traffic Ops session and to store prerequisite
+data for endpoints.
+"""
+
 import json
 import logging
 import sys
@@ -21,8 +24,10 @@ import os
 from random import randint
 from typing import NamedTuple, Optional
 from urllib.parse import urlparse
+
 import pytest
 import requests
+
 from trafficops.tosession import TOSession
 from trafficops.restapi import OperationError
 
@@ -30,27 +35,24 @@ from trafficops.restapi import OperationError
 # Create and configure logger
 logger = logging.getLogger()
 
-
 class ArgsType(NamedTuple):
-	"""Represents the arguments needed to create Traffic Ops session.
-
-	Attributes:
-		user (str): The username used for authentication.
-		password (str): The password used for authentication.
-		url (str): The URL of the environment.
-		port (int): The port number to use for session.
-		api_version (float): The version number of the API to use.
-	"""
+	"""Represents the arguments needed to create Traffic Ops session."""
 	user: str
 	password: str
 	url: str
 	port: int
 	api_version: float
 
+ArgsType.user.__doc__ = """The username used for authentication."""
+ArgsType.password.__doc__ = """The password used for authentication."""
+ArgsType.url.__doc__ = """The URL of the environment."""
+ArgsType.port.__doc__ = """The port number to use for session."""
+ArgsType.api_version.__doc__ = """The version number of the API to use."""
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-	"""Passing in Traffic Ops arguments [Username, Password, Url and Hostname] from command line.
-	:param parser: Parser to parse command line arguments
+	"""
+	Parses the Traffic Ops arguments from command line.
+	:param parser: Parser to parse command line arguments.
 	"""
 	parser.addoption(
 		"--to-user", action="store", help="User name for Traffic Ops Session."
@@ -65,9 +67,11 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 @pytest.fixture(name="to_args")
 def to_data(pytestconfig: pytest.Config) -> ArgsType:
-	"""PyTest fixture to store Traffic ops arguments passed from command line.
-	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object
-	:returns args: Return Traffic Ops arguments
+	"""
+	PyTest fixture to store Traffic ops arguments passed from command line.
+	:param pytestconfig: Session-scoped fixture that returns the session's
+		pytest.Config object.
+	:returns: Configuration for connecting to Traffic Ops.
 	"""
 	with open(os.path.join(os.path.dirname(__file__), "to_data.json"),
 			encoding="utf-8", mode="r") as session_file:
@@ -75,19 +79,25 @@ def to_data(pytestconfig: pytest.Config) -> ArgsType:
 	to_user = pytestconfig.getoption("--to-user")
 	to_password = pytestconfig.getoption("--to-password")
 	to_url = pytestconfig.getoption("--to-url")
-	api_version = urlparse(
-		session_data.get("url")).path.strip("/").split("/")[1]
+	api_version = urlparse(session_data.get("url")).path.strip("/").split("/")[1]
 
 	if not all([to_user, to_password, to_url]):
-		logger.info(
-			"Traffic Ops session data were not passed from Command line Args.")
-		args = ArgsType(user=session_data.get("user"), password=session_data.get(
-			"password"), url=session_data.get("url"), port=session_data.get("port"),
-			api_version=api_version)
-
+		logger.info("Traffic Ops session data were not passed from Command line Args.")
+		args = ArgsType(
+			user = session_data.get("user"),
+			password = session_data.get("password"),
+			url = session_data.get("url"),
+			port = session_data.get("port"),
+			api_version = api_version
+		)
 	else:
-		args = ArgsType(user=to_user, password=to_password, url=to_url,
-						port=session_data.get("port"), api_version=api_version)
+		args = ArgsType(
+			user=to_user,
+			password=to_password,
+			url=to_url,
+			port=session_data.get("port"),
+			api_version=api_version
+		)
 		logger.info("Parsed Traffic ops session data from args %s", args)
 	return args
 
@@ -103,13 +113,17 @@ def to_login(to_args: ArgsType) -> TOSession:
 	to_url = urlparse(to_args.url)
 	to_host = to_url.hostname
 	try:
-		to_session = TOSession(host_ip=to_host, host_port=to_args.port,
-							   api_version=to_args.api_version, ssl=True, verify_cert=False)
+		to_session = TOSession(
+			host_ip=to_host,
+			host_port=to_args.port,
+			api_version=to_args.api_version,
+			ssl=True,
+			verify_cert=False
+		)
 		logger.info("Established Traffic Ops Session.")
 	except OperationError as error:
 		logger.debug("%s", error, exc_info=True, stack_info=True)
-		logger.error(
-			"Failure in Traffic Ops session creation. Reason: %s", error)
+		logger.error("Failure in Traffic Ops session creation. Reason: %s", error)
 		sys.exit(-1)
 
 	# Login To TO_API
@@ -119,12 +133,12 @@ def to_login(to_args: ArgsType) -> TOSession:
 
 
 @pytest.fixture()
-def cdn_post_data(to_session: TOSession, cdn_prereq_data:
-				  object) -> Optional[list[dict[str, str] | requests.Response]]:
-	"""PyTest Fixture to create POST data for cdns endpoint.
-	:param to_session: Fixture to get Traffic ops session
-	:param get_cdn_data: Fixture to get cdn data from a prereq file
-	:returns prerequisite_data: Returns sample Post data and actual api response
+def cdn_post_data(to_session: TOSession, cdn_prereq_data: object) -> Optional[list[dict[str, str] | requests.Response]]:
+	"""
+	PyTest Fixture to create POST data for cdns endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param get_cdn_data: Fixture to get CDN data from a prerequisites file.
+	:returns: Returns sample Post data and actual api response.
 	"""
 
 	# Return new post data and post response from cdns POST request

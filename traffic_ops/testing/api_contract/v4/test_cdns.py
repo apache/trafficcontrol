@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 
-"""Api Contract Test Case for cdns endpoint."""
+"""API Contract Test Case for cdns endpoint."""
 import json
 import logging
 import os
@@ -26,23 +26,24 @@ logger = logging.getLogger()
 
 @pytest.fixture(name="cdn_prereq_data")
 def get_cdn_prereq_data() -> object:
-	"""PyTest Fixture to store prereq data for cdns endpoint.
-	:returns cdn_data: Returns prerequisite data for cdns endpoint
+	"""
+	PyTest Fixture to store prerequisite data for cdns endpoint.
+	:returns: Prerequisite data for cdns endpoint.
 	"""
 	# Response keys for cdns endpoint
-	with open(os.path.join(os.path.dirname(__file__), "prerequisite_data.json"),
-			  encoding="utf-8", mode="r") as prereq_file:
+	with open(os.path.join(os.path.dirname(__file__), "prerequisite_data.json"), encoding="utf-8", mode="r") as prereq_file:
 		data = json.load(prereq_file)
 	cdn_data = data["cdns"]
 	return cdn_data
 
 
-def test_cdn_contract(to_session: TOSession, cdn_prereq_data: object,
-					  cdn_post_data: list[dict[str, str] | requests.Response]) -> None:
-	"""Test step to validate keys, values and data types from cdns endpoint response.
-	:param to_session: Fixture to get Traffic ops session
-	:param get_cdn_data: Fixture to get cdn data from a prereq file
-	:param cdn_prereq: Fixture to get sample cdn data and actual cdn response
+def test_cdn_contract(to_session: TOSession, cdn_prereq_data: object, cdn_post_data: list[dict[str, str] | requests.Response]) -> None:
+	"""
+	Test step to validate keys, values and data types from cdns endpoint
+	response.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param get_cdn_data: Fixture to get CDN data from a prerequisites file.
+	:param cdn_prereq: Fixture to get sample CDN data and actual CDN response.
 	"""
 	# validate CDN keys from cdns get response
 	logger.info("Accessing Cdn endpoint through Traffic ops session.")
@@ -52,13 +53,10 @@ def test_cdn_contract(to_session: TOSession, cdn_prereq_data: object,
 	try:
 		cdn_data = cdn_get_response[0]
 		cdn_keys = list(cdn_data[0].keys())
-		logger.info(
-			"CDN Keys from cdns endpoint response %s", cdn_keys)
+		logger.info("CDN Keys from cdns endpoint response %s", cdn_keys)
 		# validate cdn values from prereq data in cdns get response.
-		prereq_values = [cdn_post_data[0]["name"], cdn_post_data[0]
-						 ["domainName"], cdn_post_data[0]["dnssecEnabled"]]
-		get_values = [cdn_data[0]["name"], cdn_data[0]
-					  ["domainName"], cdn_data[0]["dnssecEnabled"]]
+		prereq_values = [cdn_post_data[0]["name"], cdn_post_data[0]["domainName"], cdn_post_data[0]["dnssecEnabled"]]
+		get_values = [cdn_data[0]["name"], cdn_data[0]["domainName"], cdn_data[0]["dnssecEnabled"]]
 		# validate data types for values from cdn get json response.
 		for (prereq_value, get_value) in zip(prereq_values, get_values):
 			assert isinstance(prereq_value, type(get_value))
@@ -75,5 +73,4 @@ def test_cdn_contract(to_session: TOSession, cdn_prereq_data: object,
 			to_session.delete_cdn_by_id(cdn_id=cdn_id)
 		except IndexError:
 			logger.error("CDN wasn't created")
-			pytest.fail(
-				"Response from delete request is empty, Failing test_get_cdn")
+			pytest.fail("Response from delete request is empty, Failing test_get_cdn")
