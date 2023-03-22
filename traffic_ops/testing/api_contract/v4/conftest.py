@@ -17,6 +17,7 @@ and to store prerequisite data for endpoints."""
 import json
 import logging
 import sys
+import os
 from random import randint
 from typing import NamedTuple, Optional
 from urllib.parse import urlparse
@@ -68,9 +69,9 @@ def to_data(pytestconfig: pytest.Config) -> ArgsType:
     :param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object
     :returns args: Return Traffic Ops arguments
     """
-    with open("to_data.json", encoding="utf-8", mode="r") as session_file:
+    with open(os.path.join(os.path.dirname(__file__), "to_data.json"),
+            encoding="utf-8", mode="r") as session_file:
         session_data = json.load(session_file)
-
     to_user = pytestconfig.getoption("--to-user")
     to_password = pytestconfig.getoption("--to-password")
     to_url = pytestconfig.getoption("--to-url")

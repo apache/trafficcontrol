@@ -15,6 +15,7 @@
 """Api Contract Test Case for cdns endpoint."""
 import json
 import logging
+import os
 import pytest
 import requests
 from trafficops.tosession import TOSession
@@ -29,7 +30,8 @@ def get_cdn_prereq_data() -> object:
     :returns cdn_data: Returns prerequisite data for cdns endpoint
     """
     # Response keys for cdns endpoint
-    with open("prerequisite_data.json", encoding="utf-8", mode="r") as prereq_file:
+    with open(os.path.join(os.path.dirname(__file__), "prerequisite_data.json"),
+              encoding="utf-8", mode="r") as prereq_file:
         data = json.load(prereq_file)
     cdn_data = data["cdns"]
     return cdn_data
