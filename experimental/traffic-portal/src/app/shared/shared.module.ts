@@ -87,7 +87,6 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: DateReviverInterceptor },
-		{ provide: "Window", useValue: window },
 		FileUtilsService,
 	]
 })

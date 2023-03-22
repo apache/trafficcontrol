@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { DOCUMENT } from "@angular/common";
 import { Inject, Injectable } from "@angular/core";
 
 import { isArrayBufferView } from "../utils";
@@ -38,7 +39,15 @@ export class FileUtilsService {
 	/** A pre-compiled expression that matches a '.' at the start of a string */
 	private static readonly EXT_PATTERN = /^\./;
 
-	constructor(@Inject("Window") private readonly window: Window) { }
+	private readonly window: Window;
+
+	constructor(@Inject(DOCUMENT) document: Document) {
+		const {defaultView} = document;
+		if (!defaultView) {
+			throw new Error("global root document has no default view; cannot access required functionality");
+		}
+		this.window = defaultView;
+	}
 
 	/**
 	 * Builds a file name for {@link FileUtilsService.download}.

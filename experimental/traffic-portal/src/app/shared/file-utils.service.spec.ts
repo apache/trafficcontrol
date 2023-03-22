@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { DOCUMENT } from "@angular/common";
 import { TestBed } from "@angular/core/testing";
 
 import { FileUtilsService } from "./file-utils.service";
@@ -30,7 +31,7 @@ describe("FileUtilsService", () => {
 		TestBed.configureTestingModule({
 			providers: [
 				FileUtilsService,
-				{provide: "Window", useValue: window}
+				{provide: DOCUMENT, useValue: {defaultView: window}}
 			]
 		});
 		expect(spy).not.toHaveBeenCalled();
