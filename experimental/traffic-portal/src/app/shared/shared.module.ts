@@ -26,6 +26,7 @@ import { LinechartDirective } from "./charts/linechart.directive";
 import { CollectionChoiceDialogComponent } from "./dialogs/collection-choice-dialog/collection-choice-dialog.component";
 import { DecisionDialogComponent } from "./dialogs/decision-dialog/decision-dialog.component";
 import { TextDialogComponent } from "./dialogs/text-dialog/text-dialog.component";
+import { FileUtilsService } from "./file-utils.service";
 import { GenericTableComponent } from "./generic-table/generic-table.component";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { DateReviverInterceptor } from "./interceptor/date-reviver.interceptor";
@@ -85,7 +86,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 	providers: [
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
-		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: DateReviverInterceptor}
+		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: DateReviverInterceptor },
+		FileUtilsService,
 	]
 })
 export class SharedModule { }

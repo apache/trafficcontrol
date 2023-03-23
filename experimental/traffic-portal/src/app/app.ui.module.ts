@@ -32,6 +32,7 @@ import { MatMenuModule } from "@angular/material/menu";
 import { MatRadioModule } from "@angular/material/radio";
 import { MatSelectModule } from "@angular/material/select";
 import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatStepperModule } from "@angular/material/stepper";
 import { MatToolbarModule } from "@angular/material/toolbar";
@@ -76,7 +77,8 @@ import { AgGridModule } from "ag-grid-angular";
 		MatStepperModule,
 		MatToolbarModule,
 		MatTooltipModule,
-		MatTreeModule
+		MatTreeModule,
+		MatSlideToggleModule,
 	]
 })
 export class AppUIModule {}
