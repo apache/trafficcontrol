@@ -213,7 +213,10 @@ def to_data(pytestconfig: pytest.Config) -> ArgsType:
 	if not to_url:
 		raise ValueError("Traffic Ops URL is not configured - use '--to-url', the config file, or an environment variable to do so")
 
-	api_version, port = parse_to_url(to_url)
+	try:
+		api_version, port = parse_to_url(to_url)
+	except ValueError as e:
+		raise ValueError("invalid Traffic Ops URL") from e
 
 	return ArgsType(
 		to_user,
