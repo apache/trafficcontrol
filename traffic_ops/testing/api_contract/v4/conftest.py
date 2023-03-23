@@ -180,7 +180,7 @@ def parse_to_url(raw: str) -> tuple[APIVersion, int]:
 			raise ValueError(f"invalid API path: {parsed.path} (should be e.g. '/api/4.0')")
 		api_version = APIVersion.from_string(ver_str)
 	else:
-		logging.warn("using default API version: %s", api_version)
+		logging.warning("using default API version: %s", api_version)
 
 	return (api_version, port)
 
