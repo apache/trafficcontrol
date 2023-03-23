@@ -21,7 +21,6 @@ package server
 
 import (
 	"fmt"
-	"github.com/lib/pq"
 	"net/http"
 	"strings"
 	"testing"
@@ -33,6 +32,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -739,7 +739,7 @@ func TestUpdateStatusLastUpdatedTime(t *testing.T) {
 	mock.ExpectExec("UPDATE").WithArgs(lastUpdated, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	_, sysErr, code := updateStatusLastUpdatedTime(1, &lastUpdated, db.MustBegin().Tx)
+	sysErr, _, code := updateStatusLastUpdatedTime(1, &lastUpdated, db.MustBegin().Tx)
 	if sysErr != nil {
 		t.Errorf("unable to update time, system error: %v", sysErr)
 	}
