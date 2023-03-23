@@ -536,6 +536,11 @@ under the License.
                                     ng-model="deliveryService.regional"
                                     style="max-width: max-content; min-width: 1em;"
                             />
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.regional != dsCurrent.regional">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
+                                <pre>{{::dsCurrent.regional}}</pre>
+                            </aside>
                         </div>
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.maxRequestHeaderBytes), 'has-feedback': hasError(cacheConfig.maxRequestHeaderBytes)}">
