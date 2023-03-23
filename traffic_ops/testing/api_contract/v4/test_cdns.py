@@ -23,16 +23,26 @@ from trafficops.tosession import TOSession
 # Create and configure logger
 logger = logging.getLogger()
 
+primitive = bool | int | float | str | None
 
 @pytest.fixture(name="cdn_prereq_data")
-def get_cdn_prereq_data() -> object:
+def get_cdn_prereq_data(pytestconfig: pytest.Config) -> list[dict[str, object] | list[object] | primitive]:
 	"""
-	PyTest Fixture to store prerequisite data for cdns endpoint.
+	PyTest Fixture to store POST request body data for cdns endpoint.
+
 	:returns: Prerequisite data for cdns endpoint.
 	"""
+	prereq_path = pytestconfig.getoption("prerequisites")
+	if not isinstance(prereq_path, str):
+		# unlike the configuration file, this must be present
+		raise ValueError("prereqisites path not configured")
+
 	# Response keys for cdns endpoint
-	with open(os.path.join(os.path.dirname(__file__), "prerequisite_data.json"), encoding="utf-8", mode="r") as prereq_file:
+	data: dict[str, list[dict[str, object] | list[object] | primitive] | dict[str, object] | primitive] | list[object] | primitive = None
+	with open(prereq_path, encoding="utf-8", mode="r") as prereq_file:
 		data = json.load(prereq_file)
+	if not isinstance(data, dict):
+		raise TypeError(f"prerequisite data must be an object, not '{type(data)}'")
 	cdn_data = data["cdns"]
 	return cdn_data
 

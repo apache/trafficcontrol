@@ -122,6 +122,9 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 	parser.addoption(
 		"--config", help="Path to configuration file.", default=os.path.join(os.path.dirname(__file__), "to_data.json")
 	)
+	parser.addoption(
+		"--prerequisites", help="Path to prerequisites file.", default=os.path.join(os.path.dirname(__file__), "prerequisite_data.json")
+	)
 
 def coalesce_config(arg: object | None, file_key: str, file_contents: dict[str, object | None] | None, env_key: str) -> Optional[str]:
 	"""
