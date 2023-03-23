@@ -262,7 +262,7 @@ def to_login(to_args: ArgsType) -> TOSession:
 
 
 @pytest.fixture()
-def cdn_post_data(to_session: TOSession, cdn_prereq_data: object) -> Optional[list[dict[str, str] | requests.Response]]:
+def cdn_post_data(to_session: TOSession, cdn_prereq_data: list[JSONData]) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for cdns endpoint.
 
@@ -271,20 +271,36 @@ def cdn_post_data(to_session: TOSession, cdn_prereq_data: object) -> Optional[li
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	if not isinstance(cdn_prereq_data, dict):
-		raise TypeError(f"prerequisite data must be 'dict', not '{type(cdn_prereq_data)}'")
+	try:
+		cdn = cdn_prereq_data[0]
+	except IndexError as e:
+		raise TypeError("malformed prerequisite data; no CDNs present in 'cdns' array property") from e
+
+	if not isinstance(cdn, dict):
+		raise TypeError(f"malformed prerequisite data; CDNs must be objects, not '{type(cdn)}'")
 
 	# Return new post data and post response from cdns POST request
-	cdn_prereq_data["name"] = cdn_prereq_data["name"][:4]+str(randint(0, 1000))
-	cdn_prereq_data["domainName"] = cdn_prereq_data["domainName"][:5] + \
-		str(randint(0, 1000))
+	randstr = str(randint(0, 1000))
+	try:
+		name = cdn["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		cdn["name"] = name[:4] + randstr
+		domain_name = cdn["domainName"]
+		if not isinstance(domain_name, str):
+			raise TypeError(f"domainName must be str, not '{type(domain_name)}")
+		cdn["domainName"] = domain_name[:5] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing CDN property '{e.args[0]}'") from e
+
 	logger.info("New cdn data to hit POST method %s", cdn_prereq_data)
 	# Hitting cdns POST methed
-	response: tuple[requests.Response, object] = to_session.create_cdn(data=cdn_prereq_data)
-	prerequisite_data: Optional[list[dict[str, str] | requests.Response]] = None
+	response: tuple[JSONData, requests.Response] = to_session.create_cdn(data=cdn)
 	try:
-		cdn_response = response[0]
-		prerequisite_data = [cdn_prereq_data, cdn_response]
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; cdn is not an object")
+		return resp_obj
 	except IndexError:
 		logger.error("No CDN response data from cdns POST request.")
-	return prerequisite_data
+		sys.exit(1)
