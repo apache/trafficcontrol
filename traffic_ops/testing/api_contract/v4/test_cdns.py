@@ -15,9 +15,10 @@
 """API Contract Test Case for cdns endpoint."""
 import json
 import logging
-import os
+
 import pytest
 import requests
+
 from trafficops.tosession import TOSession
 
 # Create and configure logger
@@ -43,7 +44,11 @@ def get_cdn_prereq_data(pytestconfig: pytest.Config) -> list[dict[str, object] |
 		data = json.load(prereq_file)
 	if not isinstance(data, dict):
 		raise TypeError(f"prerequisite data must be an object, not '{type(data)}'")
+
 	cdn_data = data["cdns"]
+	if not isinstance(cdn_data, list):
+		raise TypeError(f"cdns data must be a list, not '{type(cdn_data)}'")
+
 	return cdn_data
 
 
