@@ -120,13 +120,22 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 		"--to-url", action="store", help="Traffic Ops URL."
 	)
 	parser.addoption(
-		"--config", help="Path to configuration file.", default=os.path.join(os.path.dirname(__file__), "to_data.json")
+		"--config",
+		help="Path to configuration file.",
+		default=os.path.join(os.path.dirname(__file__), "to_data.json")
 	)
 	parser.addoption(
-		"--prerequisites", help="Path to prerequisites file.", default=os.path.join(os.path.dirname(__file__), "prerequisite_data.json")
+		"--prerequisites",
+		help="Path to prerequisites file.",
+		default=os.path.join(os.path.dirname(__file__), "prerequisite_data.json")
 	)
 
-def coalesce_config(arg: object | None, file_key: str, file_contents: dict[str, object | None] | None, env_key: str) -> Optional[str]:
+def coalesce_config(
+	arg: object | None,
+	file_key: str,
+	file_contents: dict[str, object | None] | None,
+	env_key: str
+) -> Optional[str]:
 	"""
 	Coalesces configuration retrieved from different sources into a single
 	string.
@@ -134,11 +143,15 @@ def coalesce_config(arg: object | None, file_key: str, file_contents: dict[str, 
 	This will raise a ValueError if the type of the configuration value in the
 	parsed configuration file is not a string.
 
+	In order of descending precedence this checks the command-line argument
+	value, the configuration file value, and then the environment variable
+	value.
+
 	:param arg: The command-line argument value.
 	:param file_key: The key under which to look in the parsed JSON configuration file data.
 	:param file_contents: The parsed JSON configuration file (if one was used).
 	:param env_key: The environment variable name to look for a value if one wasn't provided elsewhere.
-	:returns: In order of descending precedence: the command-line argument value, the configuration file value, or the environment variable value. Or, None if a value wasn't found anywhere.
+	:returns: The coalesced configuration value, or 'None' if no value could be determined.
 	"""
 	if isinstance(arg, str):
 		return arg
@@ -204,17 +217,36 @@ def to_data(pytestconfig: pytest.Config) -> ArgsType:
 			raise ValueError(f"could not read configuration file at '{cfg_path}'") from read_err
 
 	if session_data is not None and not isinstance(session_data, dict):
-		raise ValueError(f"invalid configuration file; expected top-level object, got: {type(session_data)}")
+		raise ValueError(
+			f"invalid configuration file; expected top-level object, got: {type(session_data)}"
+		)
 
 	to_user = coalesce_config(pytestconfig.getoption("--to-user"), "user", session_data, "TO_USER")
 	if not to_user:
-		raise ValueError("Traffic Ops password is not configured - use '--to-password', the config file, or an environment variable to do so")
-	to_password = coalesce_config(pytestconfig.getoption("--to-password"), "password", session_data, "TO_PASSWORD")
+		raise ValueError(
+			"Traffic Ops password is not configured - use '--to-password', the config file, or an "
+			"environment variable to do so"
+		)
+
+	to_password = coalesce_config(
+		pytestconfig.getoption("--to-password"),
+		"password",
+		session_data,
+		"TO_PASSWORD"
+	)
+
 	if not to_password:
-		raise ValueError("Traffic Ops password is not configured - use '--to-password', the config file, or an environment variable to do so")
+		raise ValueError(
+			"Traffic Ops password is not configured - use '--to-password', the config file, or an "
+			"environment variable to do so"
+		)
+
 	to_url = coalesce_config(pytestconfig.getoption("--to-url"), "url", session_data, "TO_USER")
 	if not to_url:
-		raise ValueError("Traffic Ops URL is not configured - use '--to-url', the config file, or an environment variable to do so")
+		raise ValueError(
+			"Traffic Ops URL is not configured - use '--to-url', the config file, or an "
+			"environment variable to do so"
+		)
 
 	try:
 		api_version, port = parse_to_url(to_url)

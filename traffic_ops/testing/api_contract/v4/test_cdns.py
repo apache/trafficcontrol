@@ -27,7 +27,9 @@ logger = logging.getLogger()
 primitive = bool | int | float | str | None
 
 @pytest.fixture(name="cdn_prereq_data")
-def get_cdn_prereq_data(pytestconfig: pytest.Config) -> list[dict[str, object] | list[object] | primitive]:
+def get_cdn_prereq_data(
+	pytestconfig: pytest.Config
+) -> list[dict[str, object] | list[object] | primitive]:
 	"""
 	PyTest Fixture to store POST request body data for cdns endpoint.
 
@@ -39,7 +41,13 @@ def get_cdn_prereq_data(pytestconfig: pytest.Config) -> list[dict[str, object] |
 		raise ValueError("prereqisites path not configured")
 
 	# Response keys for cdns endpoint
-	data: dict[str, list[dict[str, object] | list[object] | primitive] | dict[str, object] | primitive] | list[object] | primitive = None
+	data: dict[
+		str,
+		list[dict[str, object] | list[object] | primitive] |\
+			dict[object, object] |\
+			primitive
+		] |\
+	primitive = None
 	with open(prereq_path, encoding="utf-8", mode="r") as prereq_file:
 		data = json.load(prereq_file)
 	if not isinstance(data, dict):
@@ -52,7 +60,11 @@ def get_cdn_prereq_data(pytestconfig: pytest.Config) -> list[dict[str, object] |
 	return cdn_data
 
 
-def test_cdn_contract(to_session: TOSession, cdn_prereq_data: list[dict[str, object] | list[object] | primitive], cdn_post_data: dict[str, object]) -> None:
+def test_cdn_contract(
+	to_session: TOSession,
+	cdn_prereq_data: list[dict[str, object] | list[object] | primitive],
+	cdn_post_data: dict[str, object]
+) -> None:
 	"""
 	Test step to validate keys, values and data types from cdns endpoint
 	response.
@@ -71,7 +83,10 @@ def test_cdn_contract(to_session: TOSession, cdn_prereq_data: list[dict[str, obj
 	if not isinstance(cdn_name, str):
 		raise TypeError("malformed cdn in prerequisite data; 'name' not a string")
 
-	cdn_get_response: tuple[dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive, requests.Response] = to_session.get_cdns(query_params={"name": cdn_name})
+	cdn_get_response: tuple[
+		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		requests.Response
+	] = to_session.get_cdns(query_params={"name": cdn_name})
 	try:
 		cdn_data = cdn_get_response[0]
 		if not isinstance(cdn_data, list):
@@ -84,12 +99,16 @@ def test_cdn_contract(to_session: TOSession, cdn_prereq_data: list[dict[str, obj
 
 		logger.info("CDN Keys from cdns endpoint response %s", cdn_keys)
 		# validate cdn values from prereq data in cdns get response.
-		prereq_values = [cdn_post_data["name"], cdn_post_data["domainName"], cdn_post_data["dnssecEnabled"]]
+		prereq_values = [
+			cdn_post_data["name"],
+			cdn_post_data["domainName"],
+			cdn_post_data["dnssecEnabled"]
+		]
 		get_values = [first_cdn["name"], first_cdn["domainName"], first_cdn["dnssecEnabled"]]
 		# validate data types for values from cdn get json response.
 		for (prereq_value, get_value) in zip(prereq_values, get_values):
 			assert isinstance(prereq_value, type(get_value))
-		assert cdn_keys == {k for k in cdn_post_data.keys()}
+		assert cdn_keys == set(cdn_post_data.keys())
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
