@@ -133,6 +133,20 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	$scope.arrayCompare = arrayCompare;
 
 	/**
+	 * This function is called when capability is updated on a DSR
+	 */
+	function capabilityChange() {
+		cap = []
+		for (const [key, value] of Object.entries($scope.selectedCapabilities)) {
+			if (value) {
+				cap.push(key)
+			}
+		}
+		deliveryService.requiredCapabilities = cap
+	}
+	$scope.capabilityChange = capabilityChange;
+
+	/**
 	 * This function is called on 'change' events for any and all TLS Version
 	 * inputs, and sets validity states of duplicates.
 	 *
