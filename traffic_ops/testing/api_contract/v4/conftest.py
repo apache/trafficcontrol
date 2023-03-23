@@ -165,9 +165,9 @@ def parse_to_url(raw: str) -> tuple[APIVersion, int]:
 	if parsed.scheme and parsed.scheme.lower() != "https":
 		raise ValueError("invalid scheme; must use HTTPS")
 
-	port_str = parsed.netloc.split(":")[-1]
 	port = 443
-	if port_str:
+	if ":" in parsed.netloc:
+		port_str = parsed.netloc.split(":")[-1]
 		try:
 			port = int(port_str)
 		except ValueError as e:
