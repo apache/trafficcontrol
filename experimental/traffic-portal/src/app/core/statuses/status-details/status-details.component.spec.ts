@@ -12,15 +12,17 @@
  * limitations under the License.
  */
 
+import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
+import { RouterTestingModule } from "@angular/router/testing";
+import { Observable, ReplaySubject, of } from "rxjs";
+
+import { ServerService } from "src/app/api";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { StatusDetailsComponent } from "./status-details.component";
-import { HttpClientModule } from "@angular/common/http";
-import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { RouterTestingModule } from "@angular/router/testing";
-import { APITestingModule } from "src/app/api/testing";
-import { MatDialog } from "@angular/material/dialog";
-import { Observable, of } from "rxjs";
 
 /**
  * Define the MockDialog
@@ -44,21 +46,22 @@ describe("StatusDetailsComponent", () => {
 	let fixture: ComponentFixture<StatusDetailsComponent>;
 
 	beforeEach(async () => {
+
+		const navSvc = jasmine.createSpyObj([], { headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>() });
+
 		await TestBed.configureTestingModule({
 			declarations: [StatusDetailsComponent],
-      imports:[
+			imports: [
 				HttpClientModule,
-        RouterTestingModule.withRoutes([
-					{component: StatusDetailsComponent, path: "statuses/:id"},
-					{component: StatusDetailsComponent, path: "statuses/new"}
-				]),
-        FormsModule,
-				ReactiveFormsModule,
-        APITestingModule
+				RouterTestingModule,
+				FormsModule,
+				ReactiveFormsModule
 			],
-      providers:[
-        { provide: MatDialog, useClass: MockDialog },
-      ]
+			providers: [
+				{ provide: MatDialog, useClass: MockDialog },
+				{ provide: NavigationService, useValue: navSvc },
+				ServerService
+			]
 		})
 			.compileComponents();
 		fixture = TestBed.createComponent(StatusDetailsComponent);

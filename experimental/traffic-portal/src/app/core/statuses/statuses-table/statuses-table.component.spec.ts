@@ -12,11 +12,13 @@
  * limitations under the License.
  */
 
-import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { StatusesTableComponent } from "./statuses-table.component";
 import { HttpClientModule } from "@angular/common/http";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
+
 import { APITestingModule } from "src/app/api/testing";
+
+import { StatusesTableComponent } from "./statuses-table.component";
 
 describe("StatusesTableComponent", () => {
 	let component: StatusesTableComponent;
@@ -24,11 +26,11 @@ describe("StatusesTableComponent", () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ StatusesTableComponent ],
-			imports:[
+			declarations: [StatusesTableComponent],
+			imports: [
 				HttpClientModule,
 				RouterTestingModule.withRoutes([
-					{component: StatusesTableComponent, path: ""},
+					{ component: StatusesTableComponent, path: "" },
 				]),
 				APITestingModule
 			]
