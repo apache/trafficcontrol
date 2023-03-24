@@ -2187,3 +2187,18 @@ func GetSCInfo(tx *sql.Tx, name string) (bool, error) {
 	}
 	return true, nil
 }
+
+// GetServiceCategoryInfo confirms whether the service category exists, and an error (if one occurs).
+func GetServiceCategoryInfo(tx *sql.Tx, name string) (bool, error) {
+	var count int
+	if err := tx.QueryRow("SELECT count(name) FROM service_category AS sc WHERE sc.name=$1", name).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting service category info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting service category info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
+}

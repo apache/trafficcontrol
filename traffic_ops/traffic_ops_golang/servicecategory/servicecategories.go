@@ -23,6 +23,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"time"
 
@@ -188,135 +190,208 @@ func deleteQuery() string {
 	return `DELETE FROM service_category WHERE name=:name`
 }
 
-// TOServiceCategoryV5 uses tc.ServiceCategoryV5 which has the updated Time Format time.Time for format RFC3339.
-type TOServiceCategoryV5 struct {
-	api.APIInfoImpl `json:"-"`
-	tc.ServiceCategoryV5
-}
-
-func (v *TOServiceCategoryV5) GetLastUpdated() (*time.Time, bool, error) {
-	return api.GetLastUpdatedByName(v.APIInfo().Tx, v.Name, "service_category")
-}
-
-func (v *TOServiceCategoryV5) SetLastUpdated(t time.Time) { v.LastUpdated = t }
-func (v *TOServiceCategoryV5) InsertQuery() string        { return insertQuery() }
-func (v *TOServiceCategoryV5) NewReadObj() interface{}    { return &tc.ServiceCategoryV5{} }
-func (v *TOServiceCategoryV5) SelectQuery() string        { return selectQuery() }
-func (v *TOServiceCategoryV5) UpdateQuery() string        { return updateQuery() }
-func (v *TOServiceCategoryV5) DeleteQuery() string        { return deleteQuery() }
-
-func (serviceCategory TOServiceCategoryV5) GetAuditName() string {
-	if serviceCategory.Name != "" {
-		return serviceCategory.Name
-	}
-	return "unknown"
-}
-
-func (serviceCategory TOServiceCategoryV5) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{Field: "name", Func: api.GetStringKey}}
-}
-
-// Implementation of the Identifier, Validator interface functions
-func (serviceCategory TOServiceCategoryV5) GetKeys() (map[string]interface{}, bool) {
-	if serviceCategory.Name == "" {
-		return map[string]interface{}{"name": ""}, false
-	}
-	return map[string]interface{}{"name": serviceCategory.Name}, true
-}
-
-func (serviceCategory *TOServiceCategoryV5) SetKeys(keys map[string]interface{}) {
-	n, _ := keys["name"].(string)
-	serviceCategory.Name = n
-}
-
-func (serviceCategory TOServiceCategoryV5) GetType() string {
-	return "serviceCategoryV5"
-}
-
-func (serviceCategory *TOServiceCategoryV5) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	return map[string]dbhelpers.WhereColumnInfo{
-		"name": dbhelpers.WhereColumnInfo{Column: "sc.name"},
-	}
-}
-
-func (serviceCategory *TOServiceCategoryV5) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
-	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from service_category sc ` + where + orderBy + pagination +
-		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='service_category') as res`
-}
-
-func (serviceCategory TOServiceCategoryV5) Validate() (error, error) {
-	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericDash, "must consist of only alphanumeric or dash characters.")
-	errs := validation.Errors{
-		"name": validation.Validate(serviceCategory.Name, validation.Required, nameRule),
-	}
-	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
-}
-
-func (serviceCategory *TOServiceCategoryV5) Create() (error, error, int) {
-	return api.GenericCreateNameBasedIDV5(serviceCategory)
-}
-
-func (serviceCategory *TOServiceCategoryV5) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.DefaultSort(serviceCategory.APIInfo(), "name")
-	serviceCategories, userErr, sysErr, errCode, maxTime := api.GenericRead(h, serviceCategory, useIMS)
+func GetServiceCategory(w http.ResponseWriter, r *http.Request) {
+	var sc tc.ServiceCategoryV5
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
 	if userErr != nil || sysErr != nil {
-		return nil, userErr, sysErr, errCode, nil
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"name": {Column: "sc.name", Checker: nil},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
 	}
 
-	return serviceCategories, nil, nil, errCode, maxTime
+	selectQuery := "SELECT name, last_updated FROM service_category as sc"
+	query := selectQuery + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %w", err))
+		return
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	scList := []tc.ServiceCategoryV5{}
+	for rows.Next() {
+		if err = rows.Scan(&sc.Name, &sc.LastUpdated); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting service categories(ies): %w", err))
+			return
+		}
+		scList = append(scList, sc)
+	}
+
+	api.WriteResp(w, r, scList)
+	return
 }
 
-func UpdateV5(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"name"}, nil)
+func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	sc, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if service category already exists
+	var count int
+	err := tx.QueryRow("SELECT count(*) from service_category where name = $1 ", sc.Name).Scan(&count)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if service category with name %s exists", err, sc.Name))
+		return
+	}
+	if count == 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("service category name '%s' already exists.", sc.Name), nil)
+		return
+	}
+
+	// create server capability
+	query := `INSERT INTO service_category (name) VALUES ($1) RETURNING name, last_updated`
+	err = tx.QueryRow(query, sc.Name).Scan(&sc.Name, &sc.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating service category with name: %s", err, sc.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "service category was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/service_category?name=%s", inf.Version.Major, inf.Version.Minor, sc.Name))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
+	return
+}
+
+func UpdateServiceCategory(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	name := inf.Params["name"]
-
-	var newSC TOServiceCategoryV5
-	if err := json.NewDecoder(r.Body).Decode(&newSC); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+	tx := inf.Tx.Tx
+	sc, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
 		return
 	}
 
-	if userErr, sysErr := newSC.Validate(); userErr != nil || sysErr != nil {
-		code := http.StatusBadRequest
-		if sysErr != nil {
-			code = http.StatusInternalServerError
-		}
-		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+	requestedName := inf.Params["name"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedName, "service_category")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
-	var origSC TOServiceCategoryV5
-	if err := inf.Tx.QueryRow(`SELECT name, last_updated FROM service_category WHERE name = $1`, name).Scan(&origSC.Name, &origSC.LastUpdated); err != nil {
-		if err == sql.ErrNoRows {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("no service category found with name "+name), nil)
+	//update name of a service category
+	query := `UPDATE service_category sc SET
+		name = $1
+	WHERE sc.name = $2
+	RETURNING sc.name, sc.last_updated`
+
+	err := tx.QueryRow(query, sc.Name, requestedName).Scan(&sc.Name, &sc.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("service category with name: %s not found", requestedName), nil)
 			return
 		}
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
 	}
-	if !api.IsUnmodified(r.Header, origSC.LastUpdated) {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusPreconditionFailed, errors.New("service category could not be modified because the precondition failed"), nil)
-		return
-	}
-
-	resp, err := inf.Tx.Tx.Exec(updateQuery(), newSC.Name, name)
-	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	api.CreateChangeLogRawTx(api.ApiChange, api.Updated+" Service Category from "+name+" to "+newSC.Name, inf.User, inf.Tx.Tx)
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Service Category update from "+name+" to "+newSC.Name+" was successful.", resp)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "service category was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
+	return
 }
 
-func (serviceCategory *TOServiceCategoryV5) Delete() (error, error, int) {
-	return api.GenericDelete(serviceCategory)
+func DeleteServiceCategory(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	name := inf.Params["name"]
+	exists, err := dbhelpers.GetServiceCategoryInfo(tx, name)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		if name != "" {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no service category exists by name: %s", name), nil)
+			return
+		} else {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no service category exists for empty name: %s", name), nil)
+			return
+		}
+	}
+
+	assignedDeliveryService := 0
+	if err := inf.Tx.Get(&assignedDeliveryService, "SELECT count(service_category) FROM deliveryservice d WHERE d.service_category=$1", name); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("service category delete, counting assigned servers: %w", err))
+		return
+	} else if assignedDeliveryService != 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a service category with %d assigned delivery service", assignedDeliveryService), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM service_category AS sc WHERE sc.name=$1", name)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete service_category: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for service_category"), nil)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "service_category was deleted.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, name)
+	return
+}
+
+func readAndValidateJsonStruct(r *http.Request) (tc.ServiceCategoryV5, error) {
+	var sc tc.ServiceCategoryV5
+	if err := json.NewDecoder(r.Body).Decode(&sc); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into ServiceCategoryV5 struct %w", err)
+		return sc, userErr
+	}
+
+	// validate JSON body
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name": validation.Validate(sc.Name, validation.Required, rule),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return sc, userErr
+	}
+	return sc, nil
 }
