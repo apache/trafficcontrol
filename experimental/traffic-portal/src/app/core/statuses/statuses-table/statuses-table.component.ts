@@ -24,7 +24,6 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  * principally contains a table.
  */
 @Component({
-	providers:[ ServerService ],
 	selector: "tp-statuses-table",
 	styleUrls: ["./statuses-table.component.scss"],
 	templateUrl: "./statuses-table.component.html",

@@ -25,7 +25,6 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  * StatusDetailsComponent is the controller for a status "details" page.
  */
 @Component({
-	providers: [ServerService],
 	selector: "tp-status-details",
 	styleUrls: ["./status-details.component.scss"],
 	templateUrl: "./status-details.component.html",

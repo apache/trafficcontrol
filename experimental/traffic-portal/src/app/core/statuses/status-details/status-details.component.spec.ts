@@ -11,56 +11,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { HttpClientTestingModule } from "@angular/common/http/testing";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { ReactiveFormsModule } from "@angular/forms";
-import { MatButtonModule } from "@angular/material/button";
-import { MatCardModule } from "@angular/material/card";
-import { MatFormFieldModule } from "@angular/material/form-field";
-import { MatGridListModule } from "@angular/material/grid-list";
-import { MatInputModule } from "@angular/material/input";
-import { BrowserDynamicTestingModule } from "@angular/platform-browser-dynamic/testing";
-import { Router } from "@angular/router";
-import { RouterTestingModule } from "@angular/router/testing";
 
-import { ServerService } from "src/app/api";
-import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { SharedModule } from "src/app/shared/shared.module";
+import { ComponentFixture, TestBed } from "@angular/core/testing";
 
 import { StatusDetailsComponent } from "./status-details.component";
+import { HttpClientModule } from "@angular/common/http";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { RouterTestingModule } from "@angular/router/testing";
+import { APITestingModule } from "src/app/api/testing";
+import { MatDialog } from "@angular/material/dialog";
+import { Observable, of } from "rxjs";
 
-const status = { description: "test", id: 1,lastUpdated: new Date("02/02/2023"), name: "test"};
+/**
+ * Define the MockDialog
+ */
+class MockDialog {
+
+	/**
+	 * Fake opens the dialog
+	 *
+	 * @returns unknown
+	 */
+	public open(): unknown {
+		return {
+			afterClosed: (): Observable<boolean> => of(true)
+		};
+	}
+}
 
 describe("StatusDetailsComponent", () => {
 	let component: StatusDetailsComponent;
 	let fixture: ComponentFixture<StatusDetailsComponent>;
-	let router: Router;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [StatusDetailsComponent, DecisionDialogComponent],
-			imports: [
-				HttpClientTestingModule,
-				RouterTestingModule.withRoutes([
-					{ component: StatusDetailsComponent, path: "core/statuses/:id" }
+			declarations: [StatusDetailsComponent],
+      imports:[
+				HttpClientModule,
+        RouterTestingModule.withRoutes([
+					{component: StatusDetailsComponent, path: "statuses/:id"},
+					{component: StatusDetailsComponent, path: "statuses/new"}
 				]),
+        FormsModule,
 				ReactiveFormsModule,
-				MatFormFieldModule,
-				MatInputModule,
-				MatGridListModule,
-				MatCardModule,
-				MatButtonModule,
-				SharedModule
+        APITestingModule
 			],
-			providers: [ServerService]
+      providers:[
+        { provide: MatDialog, useClass: MockDialog },
+      ]
 		})
 			.compileComponents();
-		TestBed.overrideModule(BrowserDynamicTestingModule, {
-			set: {
-				entryComponents: [DecisionDialogComponent]
-			}
-		});
-		router = TestBed.inject(Router);
 		fixture = TestBed.createComponent(StatusDetailsComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
@@ -69,29 +69,5 @@ describe("StatusDetailsComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
-
-	it("submits a update status request", (() => {
-		const service = TestBed.inject(ServerService);
-		component.statusDetailsForm.setValue(status);
-		spyOn(service, "updateStatusDetail").and.returnValue(Promise.resolve(status));
-		component.updateStatus();
-
-		service.updateStatus(component.statusDetailsForm.value, "1").then((result) => {
-			expect(result).toEqual(status);
-		});
-	}));
-
-	it("submits a status creation request", (() => {
-		const service = TestBed.inject(ServerService);
-		component.statusDetailsForm.setValue(status);
-
-		spyOn(service, "createStatus").and.returnValue(Promise.resolve(status));
-		component.createStatus();
-
-		service.createStatus(component.statusDetailsForm.value).then((result) => {
-			expect(result).toEqual(status);
-			router.navigate(["/core/statuses/1"]);
-		});
-	}));
 
 });

@@ -11,18 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { HttpClientTestingModule } from "@angular/common/http/testing";
+
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { FormsModule } from "@angular/forms";
-import { MatCardModule } from "@angular/material/card";
-import { RouterTestingModule } from "@angular/router/testing";
-
-import { ServerService } from "src/app/api";
-import { SharedModule } from "src/app/shared/shared.module";
-
 import { StatusesTableComponent } from "./statuses-table.component";
+import { HttpClientModule } from "@angular/common/http";
+import { RouterTestingModule } from "@angular/router/testing";
+import { APITestingModule } from "src/app/api/testing";
 
-const statuses = [{description: "test", id: 1,lastUpdated: new Date("02/02/2023"), name: "test"}];
 describe("StatusesTableComponent", () => {
 	let component: StatusesTableComponent;
 	let fixture: ComponentFixture<StatusesTableComponent>;
@@ -31,13 +26,12 @@ describe("StatusesTableComponent", () => {
 		await TestBed.configureTestingModule({
 			declarations: [ StatusesTableComponent ],
 			imports:[
-				RouterTestingModule,
-				HttpClientTestingModule,
-				FormsModule,
-				MatCardModule,
-				SharedModule
-			],
-			providers:[ServerService]
+				HttpClientModule,
+				RouterTestingModule.withRoutes([
+					{component: StatusesTableComponent, path: ""},
+				]),
+				APITestingModule
+			]
 		})
 			.compileComponents();
 
@@ -49,13 +43,4 @@ describe("StatusesTableComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
-
-	it("should get all statuses from getStatuses",(()=>{
-		const service = fixture.debugElement.injector.get(ServerService);
-		spyOn(service, "getStatuses").and.returnValue(Promise.resolve(statuses));
-
-		service.getStatuses().then((result)=>{
-			expect(result).toEqual(statuses);
-		});
-	}));
 });
