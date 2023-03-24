@@ -165,13 +165,14 @@ func MakeParentDotConfig(
 	}, nil
 }
 
-type PrimarySecondary struct {
+// primarySecondary contains the names of the primary and secondary parent cache groups.
+type primarySecondary struct {
 	Primary   string
 	Secondary string
 }
 
 // createTopology creates an on the fly topology for this server and non topology delivery service.
-func createTopology(server *Server, ds DeliveryService, nameTopologies map[TopologyName]tc.Topology, ocgmap map[OriginHost]PrimarySecondary) (string, tc.Topology, []string) {
+func createTopology(server *Server, ds DeliveryService, nameTopologies map[TopologyName]tc.Topology, ocgmap map[OriginHost]primarySecondary) (string, tc.Topology, []string) {
 
 	topoName := ""
 	topo := tc.Topology{}
@@ -445,7 +446,7 @@ func makeParentDotConfigData(
 	warnings = append(warnings, dsOriginWarns...)
 
 	// Note map cache group lists are ordered, prim first, sec second
-	ocgmap := map[OriginHost]PrimarySecondary{}
+	ocgmap := map[OriginHost]primarySecondary{}
 
 	for _, ds := range dses {
 
@@ -482,7 +483,7 @@ func makeParentDotConfigData(
 			if len(ocgmap) == 0 {
 				ocgmap = makeOCGMap(parentInfos)
 				if len(ocgmap) == 0 {
-					ocgmap[""] = PrimarySecondary{}
+					ocgmap[""] = primarySecondary{}
 				}
 			}
 
@@ -629,8 +630,8 @@ func (p parentInfo) ToAbstract() *ParentAbstractionServiceParent {
 type parentInfos map[OriginHost]parentInfo
 
 // Returns a map of parent cache groups names per origin host.
-func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost]PrimarySecondary {
-	ocgnames := map[OriginHost]PrimarySecondary{}
+func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost]primarySecondary {
+	ocgnames := map[OriginHost]primarySecondary{}
 
 	for host, pis := range opis {
 		cgnames := make(map[string]bool)
@@ -638,7 +639,7 @@ func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost]PrimarySecondar
 			cgnames[string(pi.Cachegroup)] = pi.PrimaryParent
 		}
 
-		ps := PrimarySecondary{}
+		ps := primarySecondary{}
 		for cg, isPrim := range cgnames {
 			if isPrim {
 				ps.Primary = cg
