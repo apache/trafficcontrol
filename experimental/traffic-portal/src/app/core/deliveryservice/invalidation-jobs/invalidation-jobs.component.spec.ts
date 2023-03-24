@@ -23,7 +23,7 @@ import { GeoLimit, GeoProvider, JobType, ResponseInvalidationJob } from "traffic
 import { CDNService, DeliveryServiceService, InvalidationJobService, TypeService, UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { InvalidationJobsComponent } from "src/app/core/deliveryservice/invalidation-jobs/invalidation-jobs.component";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 import { CustomvalidityDirective } from "src/app/shared/validation/customvalidity.directive";

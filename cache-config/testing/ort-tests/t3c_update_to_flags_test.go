@@ -28,7 +28,7 @@ func TestT3cTOUpdates(t *testing.T) {
 		tcdata.Profiles, tcdata.ProfileParameters,
 		tcdata.Divisions, tcdata.Regions, tcdata.PhysLocations,
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
-		tcdata.DeliveryServices, tcdata.InvalidationJobs}, func() {
+		tcdata.DeliveryServices, tcdata.Jobs}, func() {
 
 		// retrieve the current server status
 		output, err := runRequest(DefaultCacheHostName, CMDUpdateStatus)

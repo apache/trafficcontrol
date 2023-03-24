@@ -52,5 +52,5 @@ Example usage
     - name: Update Chromedriver Versions
       run: python3 -m chromedriver_updater
       env:
-        GIT_AUTHOR_NAME: asf-ci
+        GIT_AUTHOR_NAME: asf-ci-trafficcontrol
         GITHUB_TOKEN: ${{ github.token }}

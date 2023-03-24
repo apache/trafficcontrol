@@ -23,7 +23,7 @@ import { CDNService, DeliveryServiceService, TypeService, UserService } from "sr
 import { APITestingModule } from "src/app/api/testing";
 import { AlertService } from "src/app/shared/alert/alert.service";
 import { LinechartDirective } from "src/app/shared/charts/linechart.directive";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { LoadingComponent } from "src/app/shared/loading/loading.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";

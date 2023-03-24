@@ -16,12 +16,16 @@ import type {
 	CacheGroupQueueRequest,
 	CacheGroupQueueResponse,
 	CDN,
+	RequestASN,
+	ResponseASN,
 	RequestCacheGroup,
+	ResponseCacheGroup,
+	RequestCoordinate,
+	ResponseCoordinate,
 	RequestDivision,
 	RequestRegion,
-	ResponseCacheGroup,
 	ResponseDivision,
-	ResponseRegion
+	ResponseRegion,
 } from "trafficops-types";
 
 import { ServerService } from "./server.service";
@@ -87,6 +91,14 @@ function isRequest(x: CacheGroupQueueRequest | CDN | string | number): x is Cach
 export class CacheGroupService {
 	private lastID = 10;
 
+	private readonly asns: Array<ResponseASN> = [{
+		asn: 0,
+		cachegroup: "Mid",
+		cachegroupId: 1,
+		id: 1,
+		lastUpdated: new Date()
+	}
+	];
 	private readonly divisions: Array<ResponseDivision> = [{
 		id: 1,
 		lastUpdated: new Date(),
@@ -170,6 +182,14 @@ export class CacheGroupService {
 			typeId: 4,
 			typeName: "TC_LOC"
 		}
+	];
+	private readonly coordinates: Array<ResponseCoordinate> = [{
+		id: 1,
+		lastUpdated: new Date(),
+		latitude: 0,
+		longitude: 0,
+		name: "Coord1"
+	}
 	];
 
 	constructor(private readonly servers: ServerService) {}
@@ -577,11 +597,152 @@ export class CacheGroupService {
 	 * @param id Id of the region to delete.
 	 * @returns The deleted region.
 	 */
-	public async deleteRegion(id: number): Promise<ResponseRegion> {
+	public async deleteRegion(id: number | ResponseRegion): Promise<ResponseRegion> {
 		const index = this.regions.findIndex(d => d.id === id);
 		if (index === -1) {
 			throw new Error(`no such Region: ${id}`);
 		}
 		return this.regions.splice(index, 1)[0];
+	}
+	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
+	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
+
+	/**
+	 * Gets an array of coordinates from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the ResponseCoordinate with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of ResponseCoordinate objects - or a single ResponseCoordinate object if 'nameOrID'
+	 * was given.
+	 */
+	public async getCoordinates(nameOrID?: string | number): Promise<Array<ResponseCoordinate> | ResponseCoordinate> {
+		if(nameOrID) {
+			let coordinate;
+			switch (typeof nameOrID) {
+				case "string":
+					coordinate = this.coordinates.find(c=>c.name === nameOrID);
+					break;
+				case "number":
+					coordinate = this.coordinates.find(c=>c.id === nameOrID);
+			}
+			if (!coordinate) {
+				throw new Error(`no such Coordinate: ${nameOrID}`);
+			}
+			return coordinate;
+		}
+		return this.coordinates;
+	}
+
+	/**
+	 * Replaces the current definition of a coordinate with the one given.
+	 *
+	 * @param coordinate The new coordinate.
+	 * @returns The updated coordinate.
+	 */
+	public async updateCoordinate(coordinate: ResponseCoordinate): Promise<ResponseCoordinate> {
+		const id = this.coordinates.findIndex(c => c.id === coordinate.id);
+		if (id === -1) {
+			throw new Error(`no such Coordinate: ${coordinate.id}`);
+		}
+		this.coordinates[id] = coordinate;
+		return coordinate;
+	}
+
+	/**
+	 * Creates a new coordinate.
+	 *
+	 * @param coordinate The coordinate to create.
+	 * @returns The created coordinate.
+	 */
+	public async createCoordinate(coordinate: RequestCoordinate): Promise<ResponseCoordinate> {
+		const crd = {
+			...coordinate,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+		this.coordinates.push(crd);
+		return crd;
+	}
+
+	/**
+	 * Deletes an existing coordinate.
+	 *
+	 * @param id Id of the coordinate to delete.
+	 * @returns The deleted coordinate.
+	 */
+	public async deleteCoordinate(id: number): Promise<ResponseCoordinate> {
+		const index = this.coordinates.findIndex(c => c.id === id);
+		if (index === -1) {
+			throw new Error(`no such Coordinate: ${id}`);
+		}
+		return this.coordinates.splice(index, 1)[0];
+	}
+
+	public async getASNs(): Promise<Array<ResponseASN>>;
+	public async getASNs(id: number): Promise<ResponseASN>;
+
+	/**
+	 * Gets an array of ASNs from Traffic Ops.
+	 *
+	 * @param id If given, returns only the asn with the given id (number).
+	 * @returns An Array of ASNs objects - or a single ASN object if 'id'
+	 * was given.
+	 */
+	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
+		if(id) {
+			const asn = this.asns.find(a=>a.id === id);
+			if (!asn) {
+				throw new Error(`no such asn with id: ${id}`);
+			}
+			return asn;
+		}
+		return this.asns;
+	}
+
+	/**
+	 * Replaces the current definition of a ASN with the one given.
+	 *
+	 * @param asn The new ASN.
+	 * @returns The updated ASN.
+	 */
+	public async updateASN(asn: ResponseASN): Promise<ResponseASN> {
+		const id = this.asns.findIndex(a => a.id === asn.id);
+		if (id === -1) {
+			throw new Error(`no such ASN: ${asn.id}`);
+		}
+		this.asns[id] = asn;
+		return asn;
+	}
+
+	/**
+	 * Creates a new ASN.
+	 *
+	 * @param asn The ASN to create.
+	 * @returns The created ASN.
+	 */
+	public async createASN(asn: RequestASN): Promise<ResponseASN> {
+		const sn = {
+			...asn,
+			cachegroup: this.cacheGroups.find(cg => cg.id === asn.cachegroupId)?.name ?? "",
+			cachegroupId: asn.cachegroupId,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+		this.asns.push(sn);
+		return sn;
+	}
+
+	/**
+	 * Deletes an existing asn.
+	 *
+	 * @param asn The ASN to be deleted or ID of the ASN to delete..
+	 * @returns The deleted asn.
+	 */
+	public async deleteASN(asn: ResponseASN | number): Promise<ResponseASN> {
+		const index = this.asns.findIndex(a => a.asn === asn);
+		if (index === -1) {
+			throw new Error(`no such asn: ${asn}`);
+		}
+		return this.asns.splice(index, 1)[0];
 	}
 }

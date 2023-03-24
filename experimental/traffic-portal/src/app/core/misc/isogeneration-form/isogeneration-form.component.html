@@ -1,0 +1,121 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<mat-card>
+	<form [formGroup]="form" (ngSubmit)="submit($event)">
+		<mat-card-header>
+			<mat-slide-toggle name="useDHCP" formControlName="useDHCP">Use DHCP?</mat-slide-toggle>
+		</mat-card-header>
+		<mat-card-content>
+			<mat-form-field>
+				<mat-label>Operating System</mat-label>
+				<mat-select name="osVersion" formControlName="osVersion" required>
+					<mat-option *ngFor="let version of osVersions" [value]="version[1]">{{version[0]}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Disk for OS Installation</mat-label>
+				<input matInput type="text" name="disk" formControlName="disk" required placeholder="sda"/>
+				<mat-hint>This should be the name of the storage device relative to <code>/dev/</code>.</mat-hint>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Fully Qualified Domain Name</mat-label>
+				<input matInput type="text" name="fqdn" required formControlName="fqdn"/>
+				<mat-error >Invalid <abbr title="Fully Qualified Domain Name">FQDN</abbr></mat-error>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Network Interface Device Name</mat-label>
+				<input matInput type="text" name="interfaceName" placeholder="eth0" formControlName="interfaceName"/>
+				<mat-hint>This should be the name of the network device relative to <code>/dev/</code>.</mat-hint>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Network Interface <abbr title="Maximum Transmission Unit">MTU</abbr></mat-label>
+				<input matInput type="number" name="interfaceMTU" min="1" max="9000" formControlName="mtu"/>
+				<mat-hint class="input-warning" [hidden]="hideMTUWarning()"><mat-icon color="warn">warning</mat-icon> Network interface <abbr title="Maximum Transmission Unit">MTU</abbr> values should almost always be either 1500 or 9000 - this value may not work correctly!</mat-hint>
+			</mat-form-field>
+			<mat-card *ngIf="!useDHCP">
+				<fieldset>
+					<legend mat-card-title>IPv4 Network Details</legend>
+					<mat-form-field>
+						<mat-label>IPv4 Address</mat-label>
+						<input matInput type="text" name="ipv4Address" required formControlName="ipv4Address"/>
+						<mat-error>Invalid IPv4 Address</mat-error>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>IPv4 Gateway Address</mat-label>
+						<input matInput type="text" name="ipv4Gateway" required formControlName="ipv4Gateway"/>
+						<mat-error>Invalid IPv4 Address</mat-error>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>IPv4 Netmask</mat-label>
+						<input matInput type="text" name="ipv4Netmask" required formControlName="ipv4Netmask"/>
+						<mat-hint>This can be deduced from a "CIDR" if your intended address has one; if you don't know how, ask a network administrator to help you fill this in.</mat-hint>
+						<mat-error>Invalid IPv4 Netmask</mat-error>
+					</mat-form-field>
+				</fieldset>
+			</mat-card>
+			<mat-card>
+				<fieldset>
+					<legend mat-card-title>IPv6 Network Details</legend>
+					<mat-form-field>
+						<mat-label>IPv6 Address</mat-label>
+						<input matInput type="text" name="ipv6Address" formControlName="ipv6Address"/>
+						<mat-error>Invalid IPv6 address</mat-error>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>IPv6 Gateway Address</mat-label>
+						<input matInput type="text" name="ipv6Gateway" [required]="!!form.controls.ipv6Address.value" formControlName="ipv6Gateway"/>
+						<mat-error>Invalid IPv6 address</mat-error>
+					</mat-form-field>
+				</fieldset>
+			</mat-card>
+			<mat-card>
+				<fieldset>
+					<legend mat-card-title>Management Network Interface Details</legend>
+					<mat-form-field>
+						<mat-label>Management Interface Device Name</mat-label>
+						<input matInput type="text" formControlName="mgmtInterface" placeholder="eth0"/>
+						<mat-hint>This should be the name of the network device relative to <code>/dev/</code>.</mat-hint>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>Management IPv4 Address</mat-label>
+						<input matInput type="text" formControlName="mgmtIpAddress"/>
+						<mat-error>Invalid IPv4 address</mat-error>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>Management Gateway IPv4 Address</mat-label>
+						<input matInput type="text" formControlName="mgmtIpGateway"/>
+						<mat-error>Invalid IPv4 address</mat-error>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>Management IPv4 Netmask</mat-label>
+						<input matInput type="text" formControlName="mgmtIpNetmask"/>
+						<mat-error>Invalid IPv4 Netmask</mat-error>
+					</mat-form-field>
+				</fieldset>
+			</mat-card>
+			<mat-form-field>
+				<mat-label>Password for Root User</mat-label>
+				<input type="password" matInput formControlName="rootPass" required />
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Confirm Root User Password</mat-label>
+				<input matInput type="password" formControlName="rootPassConfirm" required />
+				<mat-error>Does not match Root Password</mat-error>
+			</mat-form-field>
+		</mat-card-content>
+		<mat-card-actions align="end">
+			<button [disabled]="form.invalid" mat-raised-button type="submit" color="primary">Save</button>
+		</mat-card-actions>
+	</form>
+</mat-card>

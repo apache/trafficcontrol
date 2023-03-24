@@ -184,24 +184,34 @@ describe("CacheGroupTableComponent", () => {
 		expect(menuItem.newTab).toBeFalsy();
 		expect(menuItem.href({...sampleCG, id: 5})).toBe("core/cache-groups/5");
 	});
-	it("doesn't allow selection of unimplemented context menu items", () => {
-		let menuItem = component.contextMenuItems.find(i => i.name === "Manage ASNs");
-		if (!menuItem) {
-			return fail("'Manage ASNs' context menu item not found");
-		}
-		if (!isAction(menuItem)) {
-			return fail(`Invalid 'Manage ASNs' context menu item; not an action: ${menuItem}`);
-		}
-		if (typeof(menuItem.disabled) !== "function") {
-			return fail("'Manage ASNs' context menu item should be disabled, but no disabled function is defined");
-		}
-		if (menuItem.multiRow) {
-			expect(menuItem.disabled([sampleCG])).toBeTrue();
-		} else {
-			expect(menuItem.disabled(sampleCG)).toBeTrue();
-		}
 
-		menuItem = component.contextMenuItems.find(i => i.name === "Manage Servers");
+	it("generates 'Manage ASNs' context menu item href", () => {
+		const item = component.contextMenuItems.find(i => i.name === "Manage ASNs");
+		if (!item) {
+			return fail("missing 'Manage ASNs' context menu item");
+		}
+		if (isAction(item)) {
+			return fail("expected an action, not a link");
+		}
+		if (!item.href) {
+			return fail("missing 'href' property");
+		}
+		if (typeof(item.href) !== "string") {
+			return fail("'Manage ASNs' context menu item should use a static string to determine href, instead uses a function");
+		}
+		expect(item.href).toBe("/core/asns");
+		if (typeof(item.queryParams) !== "function") {
+			return fail(
+				`'Mange ASNs' context menu item should use a function to determine query params, instead uses: ${item.queryParams}`
+			);
+		}
+		expect(item.queryParams(sampleCG)).toEqual({cachegroup: sampleCG.name});
+		expect(item.fragment).toBeUndefined();
+		expect(item.newTab).toBeFalsy();
+	});
+
+	it("doesn't allow selection of unimplemented context menu items", () => {
+		let menuItem = component.contextMenuItems.find(i => i.name === "Manage Servers");
 		if (!menuItem) {
 			return fail("'Manage Servers' context menu item not found");
 		}

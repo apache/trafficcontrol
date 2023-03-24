@@ -27,10 +27,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture
 - [#7113](https://github.com/apache/trafficcontrol/pull/7113) *Traffic Portal* Minimize the Server Server Capability part of the *Traffic Servers* section of the Snapshot Diff
 - [#7273](https://github.com/apache/trafficcontrol/pull/7273) *Traffic Ops* Adds SSL-KEY-EXPIRATION:READ permission to operations, portal, read-only, federation and steering roles
+- [#7343](https://github.com/apache/trafficcontrol/pull/7343) *Traffic Ops* Adds ACME:READ, CDNI-ADMIN:READ and CDNI-CAPACITY:READ permissions to operations, portal, read-only, federation and steering roles
 - [#7296](https://github.com/apache/trafficcontrol/pull/7296) *Traffic Portal* New configuration option in `traffic_portal_properties.json` at `deliveryServices.exposeInactive` controls exposing APIv5 DS Active State options in the TP UI.
 - [#7332](https://github.com/apache/trafficcontrol/pull/7332) *Traffic Ops* Creates new role needed for TR to watch TO resources.
 - [#7322](https://github.com/apache/trafficcontrol/issues/7322) *t3c Adds support for anycast on http routed edges.
 - [#7367](https://github.com/apache/trafficcontrol/pull/7367) *Traffic Ops* Adds ACME:CREATE, ACME:DELETE, ACME:DELETE, and ACME:READ permissions to operations role.
+- [#7380](https://github.com/apache/trafficcontrol/pull/7380) *Traffic Portal* Adds strikethrough (expired), red (7 days until expiration) and yellow (30 days until expiration) visuals to delivery service cert expiration grid rows.
+- [#7388](https://github.com/apache/trafficcontrol/pull/7388) *TC go Client* Adds sslkey_expiration methodology in v4 and v5 clients
 
 ### Changed
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Adds better labels to routing methods widget on the TP dashboard.
@@ -45,8 +48,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7120](https://github.com/apache/trafficcontrol/pull/7120) *Docs* Update t3c documentation regarding parent.config parent_retry.
 - [#7044](https://github.com/apache/trafficcontrol/issues/7044) *CDN in a Box* [CDN in a Box, the t3c integration tests, and the tc health client integration tests now use Apache Traffic Server 9.1.
 - [#7366](https://github.com/apache/trafficcontrol/pull/7366) *t3c* Removed timestamp from metadata file since it's changing every minute and causing excessive commits to git repo.
+- [#7386](https://github.com/apache/trafficcontrol/pull/7386) *Traffic Portal* Increased the number of events that are logged to the TP access log.
 
 ### Fixed
+- [#7414](https://github.com/apache/trafficcontrol/pull/7414) * Traffic Portal* Fixed DSR difference for DS required capability.
+- [#7130](https://github.com/apache/trafficcontrol/issues/7130) *Traffic Ops* Fixes service_categories response to POST API.
 - [#7340](https://github.com/apache/trafficcontrol/pull/7340) *Traffic Router* Fixed TR logging for the `cqhv` field when absent.
 - [#5557](https://github.com/apache/trafficcontrol/issues/5557) *Traffic Portal* Moved `Fair Queueing Pacing Rate Bps` DS field to `Cache Configuration Settings` section.
 - [#7252](https://github.com/apache/trafficcontrol/issues/7252) *Traffic Router* Fixed integer overflow for `czCount`, by resetting the count to max value when it overflows.
@@ -85,7 +91,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7277](https://github.com/apache/trafficcontrol/pull/7277) *Traffic Control Cache Config (t3c)* remapdotconfig: remove skip check at mids for nocache/live
 - [#7282](https://github.com/apache/trafficcontrol/pull/7282) *Traffic Ops* Fixed issue with user getting correctly logged when using an access or bearer token authentication.
 - [#7346](https://github.com/apache/trafficcontrol/pull/7346) *Traffic Control Cache Config (t3c)* Fixed issue with stale lock file when using git to track changes.
-- [#7352](https://github.com/apache/trafficcontrol/pull/7352) *Traffic Control Cache Config (t3c)* Fixed issue with application locking which would allow multiple instances of *t3c apply* to run concurrently.
+- [#7352](https://github.com/apache/trafficcontrol/pull/7352) *Traffic Control Cache Config (t3c)* Fixed issue with application locking which would allow multiple instances of `t3c apply` to run concurrently.
+- [#6775](https://github.com/apache/trafficcontrol/issues/6775) *Traffic Ops* Invalid "orgServerFqdn" in Delivery Service creation/update causes Internal Server Error
+- [#6695](https://github.com/apache/trafficcontrol/issues/6695) *Traffic Control Cache Config (t3c)* Directory creation was erroneously reporting an error when actually succeeding.
 
 ## [7.0.0] - 2022-07-19
 ### Added

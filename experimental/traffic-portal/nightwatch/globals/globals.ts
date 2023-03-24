@@ -16,8 +16,12 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
+import type { AsnDetailPageObject } from "nightwatch/page_objects/cacheGroups/asnDetail";
+import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
+import type { CoordinateDetailPageObject } from "nightwatch/page_objects/cacheGroups/coordinateDetail";
+import type { CoordinatesPageObject } from "nightwatch/page_objects/cacheGroups/coordinatesTable";
 import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGroups/divisionDetail";
 import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
 import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
@@ -47,6 +51,8 @@ import {
 	ResponseTenant,
 	TypeFromResponse,
 	RequestSteeringTarget,
+	ResponseASN,
+	RequestASN,
 	ResponseDivision,
 	RequestDivision,
 	ResponseRegion,
@@ -55,7 +61,9 @@ import {
 	ResponseCacheGroup,
 	ResponsePhysicalLocation,
 	RequestPhysicalLocation,
-	RequestType
+	ResponseCoordinate,
+	RequestCoordinate,
+	RequestType,
 } from "trafficops-types";
 
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
@@ -70,10 +78,14 @@ declare module "nightwatch" {
 		cacheGroups: {
 			cacheGroupDetails: () => CacheGroupDetailPageObject;
 			cacheGroupsTable: () => CacheGroupsPageObject;
+			coordinateDetail: () => CoordinateDetailPageObject;
+			coordinatesTable: () => CoordinatesPageObject;
 			divisionDetail: () => DivisionDetailPageObject;
 			divisionsTable: () => DivisionsPageObject;
 			regionDetail: () => RegionDetailPageObject;
 			regionsTable: () => RegionsPageObject;
+			asnsTable: () => AsnsPageObject;
+			asnDetail: () => AsnDetailPageObject;
 		};
 		deliveryServices: {
 			deliveryServiceCard: () => DeliveryServiceCardPageObject;
@@ -117,11 +129,13 @@ declare module "nightwatch" {
 export interface CreatedData {
 	cacheGroup: ResponseCacheGroup;
 	cdn: ResponseCDN;
+	coordinate: ResponseCoordinate;
 	division: ResponseDivision;
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
+	asn: ResponseASN;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;
@@ -311,6 +325,16 @@ const globals = {
 			console.log("Successfully created Cache Group:", responseCG);
 			data.cacheGroup = responseCG;
 
+			const asn: RequestASN = {
+				asn: 0,
+				cachegroupId: 1
+			};
+			url = `${apiUrl}/asns`;
+			resp = await client.post(url, JSON.stringify(asn));
+			const respAsn: ResponseASN = resp.data.response;
+			console.log(`Successfully created ASN ${respAsn.asn}`);
+			data.asn = respAsn;
+
 			const physLoc: RequestPhysicalLocation = {
 				address: "street",
 				city: "city",
@@ -330,6 +354,17 @@ const globals = {
 			respPhysLoc.region = respRegion.name;
 			console.log(`Successfully created Phys Loc ${respPhysLoc.name}`);
 			data.physLoc = respPhysLoc;
+
+			const coordinate: RequestCoordinate = {
+				latitude: 0,
+				longitude: 0,
+				name: `coord${globals.uniqueString}`
+			};
+			url = `${apiUrl}/coordinates`;
+			resp = await client.post(url, JSON.stringify(coordinate));
+			const respCoordinate: ResponseCoordinate = resp.data.response;
+			console.log(`Successfully created Coordinate ${respCoordinate.name}`);
+			data.coordinate = respCoordinate;
 
 			const type: RequestType = {
 				description: "blah",

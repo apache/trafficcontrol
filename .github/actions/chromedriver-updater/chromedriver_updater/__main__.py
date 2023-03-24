@@ -25,10 +25,10 @@ from github.InputGitTreeElement import InputGitTreeElement
 
 try:
 	from chromedriver_updater.constants import PR_GITHUB_TOKEN, GITHUB_REPO, GITHUB_REF_NAME, \
-		BRANCH_NAME, GIT_AUTHOR_NAME, TRAFFIC_PORTAL, TRAFFIC_PORTAL_V2
+		BRANCH_NAME, GIT_AUTHOR_NAME, TRAFFIC_PORTAL, TRAFFIC_PORTAL_V2, GITHUB_REPOSITORY_OWNER
 except ModuleNotFoundError:
 	from constants import PR_GITHUB_TOKEN, GITHUB_REPO, GITHUB_REF_NAME, BRANCH_NAME, \
-		GIT_AUTHOR_NAME, TRAFFIC_PORTAL, TRAFFIC_PORTAL_V2
+		GIT_AUTHOR_NAME, TRAFFIC_PORTAL, TRAFFIC_PORTAL_V2, GITHUB_REPOSITORY_OWNER
 
 
 class UpdateEntry(NamedTuple):
@@ -162,7 +162,7 @@ class PRCreator(Github):
 
 		pull = self.repo.create_pull(title="Update Chromedriver Versions", maintainer_can_modify=True,
 									 body=pr_template.format(UPDATES=updated, PROJECTS=projects),
-									 head=f"{GIT_AUTHOR_NAME}:{BRANCH_NAME}", base=GITHUB_REF_NAME)
+									 head=f"{GITHUB_REPOSITORY_OWNER}:{BRANCH_NAME}", base=GITHUB_REF_NAME)
 
 		try:
 			labels = [self.repo.get_label("tests"), self.repo.get_label("dependencies")]

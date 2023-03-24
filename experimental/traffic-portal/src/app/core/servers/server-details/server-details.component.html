@@ -120,7 +120,7 @@ limitations under the License.
 						<mat-form-field>
 							<mat-label>Maximum Bandwidth</mat-label>
 							<input matInput id="{{inf.name}}-max-bandwidth" [(ngModel)]="inf.maxBandwidth" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
-							<mat-error class="input-warning" *ngIf="inf.maxBandwidth !== 0">Setting Max Bandwidth to zero will cause cache servers to always be unavailable</mat-error>
+							<mat-hint class="input-warning" *ngIf="inf.maxBandwidth !== 0">Setting Max Bandwidth to zero will cause cache servers to always be unavailable</mat-hint>
 						</mat-form-field>
 						<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small> -->
 					</div>

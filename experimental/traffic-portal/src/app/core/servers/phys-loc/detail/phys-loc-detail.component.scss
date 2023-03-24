@@ -11,20 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-mat-card {
-	margin: 1em auto;
-	width: 80%;
-	min-width: 350px;
+mat-card mat-card-content {
+	grid-template-columns: 1fr 1fr;
+	column-gap: 2em;
 
-	mat-card-content {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		grid-column-gap: 2em;
-		grid-row-gap: 2em;
-		margin: 1em auto 50px;
-
-		.doubleColSpan {
-			grid-column: span 2;
-		}
+	.doubleColSpan {
+		grid-column: span 2;
 	}
 }

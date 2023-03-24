@@ -20,7 +20,7 @@ import { BehaviorSubject } from "rxjs";
 import { ResponseUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { orderBy } from "src/app/utils";

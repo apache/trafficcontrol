@@ -14,6 +14,8 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
+	RequestASN,
+	ResponseASN,
 	RequestDivision,
 	ResponseDivision,
 	RequestRegion,
@@ -23,6 +25,8 @@ import type {
 	CDN,
 	CacheGroupQueueResponse,
 	CacheGroupQueueRequest,
+	RequestCoordinate,
+	ResponseCoordinate,
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
@@ -308,7 +312,6 @@ export class CacheGroupService extends APIService {
 			}
 			const r = await this.get<[ResponseRegion]>(path, undefined, params).toPromise();
 			return r[0];
-
 		}
 		return this.get<Array<ResponseRegion>>(path).toPromise();
 	}
@@ -343,6 +346,118 @@ export class CacheGroupService extends APIService {
 	public async deleteRegion(regionOrId: number | ResponseRegion): Promise<void> {
 		const id = typeof(regionOrId) === "number" ? regionOrId : regionOrId.id;
 		await this.delete("regions/", undefined, { id : String(id) }).toPromise();
+	}
+
+	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
+	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
+
+	/**
+	 * Gets an array of coordinates from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the Coordinate with the given name
+	 * (string) or ID (number).
+	 * @returns An Array of Coordinate objects - or a single Coordinate object if 'nameOrID'
+	 * was given.
+	 */
+	public async getCoordinates(nameOrID?: string | number): Promise<Array<ResponseCoordinate> | ResponseCoordinate> {
+		const path = "coordinates";
+		if(nameOrID) {
+			let params;
+			switch (typeof nameOrID) {
+				case "string":
+					params = {name: nameOrID};
+					break;
+				case "number":
+					params = {id: String(nameOrID)};
+			}
+			const r = await this.get<[ResponseCoordinate]>(path, undefined, params).toPromise();
+			return r[0];
+		}
+		return this.get<Array<ResponseCoordinate>>(path).toPromise();
+	}
+
+	/**
+	 * Replaces the current definition of a coordinate with the one given.
+	 *
+	 * @param coordinate The new coordinate.
+	 * @returns The updated coordinate.
+	 */
+	public async updateCoordinate(coordinate: ResponseCoordinate): Promise<ResponseCoordinate> {
+		const id = coordinate.id;
+		return this.put<ResponseCoordinate>("coordinates", coordinate, { id : String(id) }).toPromise();
+	}
+
+	/**
+	 * Creates a new coordinate.
+	 *
+	 * @param coordinate The coordinate to create.
+	 * @returns The created coordinate.
+	 */
+	public async createCoordinate(coordinate: RequestCoordinate): Promise<ResponseCoordinate> {
+		return this.post<ResponseCoordinate>("coordinates", coordinate).toPromise();
+	}
+
+	/**
+	 * Deletes an existing coordinate.
+	 *
+	 * @param coordinateOrId Id of the coordinate to delete.
+	 * @returns The deleted coordinate.
+	 */
+	public async deleteCoordinate(coordinateOrId: number | ResponseCoordinate): Promise<void> {
+		const id = typeof(coordinateOrId) === "number" ? coordinateOrId : coordinateOrId.id;
+		await this.delete("coordinates/", undefined, { id : String(id) }).toPromise();
+	}
+
+	public async getASNs(): Promise<Array<ResponseASN>>;
+	public async getASNs(id: number): Promise<ResponseASN>;
+
+	/**
+	 * Gets an array of ASNs from Traffic Ops.
+	 *
+	 * @param id If given, returns only the asn with the given id (number).
+	 * @returns An Array of ASNs objects - or a single ASN object if 'id'
+	 * was given.
+	 */
+	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
+		const path = "/asns";
+		if(id) {
+			const r = await this.get<[ResponseASN]>(path, undefined, { id: String(id) }).toPromise();
+			return r[0];
+
+		}
+		return this.get<Array<ResponseASN>>(path).toPromise();
+	}
+
+	/**
+	 * Replaces the current definition of a ASN with the one given.
+	 *
+	 * @param asn The new ASN.
+	 * @returns The updated ASN.
+	 */
+	public async updateASN(asn: ResponseASN): Promise<ResponseASN> {
+		const path = `asns/${asn.id}`;
+		return this.put<ResponseASN>(path, asn).toPromise();
+	}
+
+	/**
+	 * Creates a new ASN.
+	 *
+	 * @param asn The ASN to create.
+	 * @returns The created ASN.
+	 */
+	public async createASN(asn: RequestASN): Promise<ResponseASN> {
+		return this.post<ResponseASN>("asns", asn).toPromise();
+	}
+
+	/**
+	 * Deletes an existing ASN.
+	 *
+	 * @param asn The ASN to be deleted or ID of the ASN to delete.
+	 * @returns The deleted ASN.
+	 */
+	public async deleteASN(asn: ResponseASN | number): Promise<void> {
+		const id = typeof(asn) === "number" ? asn : asn.id;
+		return this.delete(`asns/${id}`).toPromise();
 	}
 
 	constructor(http: HttpClient) {

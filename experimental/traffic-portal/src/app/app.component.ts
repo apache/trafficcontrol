@@ -16,7 +16,7 @@ import {Component, OnInit} from "@angular/core";
 import { Router } from "@angular/router";
 import { ResponseCurrentUser } from "trafficops-types";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * The most basic component that contains everything else. This should be kept pretty simple.

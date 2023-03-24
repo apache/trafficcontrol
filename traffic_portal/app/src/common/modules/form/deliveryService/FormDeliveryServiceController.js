@@ -113,6 +113,25 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 		deliveryService.tlsVersions?.splice(index+1, 0, "");
 	};
 
+	/** Compare Arrays
+	 *
+	 * @template T extends number[] | boolean[] | bigint[] | string[]
+	 *
+	 * @param {T} a
+	 * @param {T} b
+	 * @returns `false` if the arrays are equal, `true` otherwise.
+	 */
+	function arrayCompare (a, b) {
+		if (a === b) return false;
+		if (a.length !== b.length) return true;
+
+		for (let i = 0; i < a.length; i++) {
+			if (a[i] !== b[i]) return true;
+		}
+		return false;
+	};
+	$scope.arrayCompare = arrayCompare;
+
 	/**
 	 * This function is called on 'change' events for any and all TLS Version
 	 * inputs, and sets validity states of duplicates.
