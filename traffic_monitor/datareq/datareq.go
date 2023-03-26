@@ -99,7 +99,7 @@ func MakeDispatchMap(
 			return srvTRConfig(opsConfig, toSession)
 		}, rfc.ApplicationJSON)),
 		"/publish/CrStates": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {
-			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates, distributedPollingEnabled, toData)
+			bytes, statusCode, err := srvTRState(params, localStates, combinedStates, peerStates, distributedPollingEnabled, toData, monitorConfig)
 			return WrapErrStatusCode(errorCount, path, bytes, statusCode, err)
 		}, rfc.ApplicationJSON)),
 		"/publish/CacheStatsNew": wrap(WrapParams(func(params url.Values, path string) ([]byte, int) {

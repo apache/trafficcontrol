@@ -189,6 +189,8 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 
 	if val, ok := mc.Config["tm.sameipservers.control"]; ok && val.(string) == "true" {
 		newTOData.SameIpServers = getSameIPServers(mc)
+	} else {
+		newTOData.SameIpServers = make(map[tc.CacheName]map[tc.CacheName]bool)
 	}
 
 	d.set(newTOData)
