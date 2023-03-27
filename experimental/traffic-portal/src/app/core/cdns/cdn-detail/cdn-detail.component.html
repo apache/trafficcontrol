@@ -17,7 +17,7 @@ limitations under the License.
 		<mat-card-content>
 			<mat-form-field>
 				<mat-label>Name</mat-label>
-				<input matInput type="text" name="name" required [(ngModel)]="cdn.name" pattern="[\w.-]+">
+				<input matInput type="text" name="name" required [(ngModel)]="cdn.name" pattern="[A-Za-z0-9.\-^_]+">
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
