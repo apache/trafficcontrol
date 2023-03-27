@@ -3957,7 +3957,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 	}
 
 	serverParams := []tc.Parameter{
-		{
+		tc.Parameter{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
@@ -4094,11 +4094,6 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	dsstrs := []string{
-		`dest_domain=ds0.example.net `,
-		`dest_domain=ds1.example.net `,
-	}
-
 	{ // test edge config
 		cfg, err := MakeParentDotConfig(dses, edge, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
 		if err != nil {
@@ -4118,6 +4113,11 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 			` max_unavailable_server_retries=22`,
 			` simple_server_retry_responses="401,402"`,
 			` unavailable_server_retry_responses="501,502"`,
+		}
+
+		dsstrs := []string{
+			`dest_domain=ds0.example.net `,
+			`dest_domain=ds1.example.net `,
 		}
 
 		for _, dsstr := range dsstrs {
@@ -4168,6 +4168,24 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 					t.Errorf("Missing required string(s) from line: %v\n%v (warnings: %v)", missing, dsline, cfg.Warnings)
 				}
 			}
+		}
+
+		// Check parent ordering (based on cache group prim/sec parents)
+		if !strings.Contains(txt, `parent="myorg0`) {
+			t.Errorf("Incorrect parent ordering, got %v", txt)
+		}
+	}
+
+	{
+		cfg, err := MakeParentDotConfig(dses, mid1, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+		if err != nil {
+			t.Fatal(err)
+		}
+		txt := cfg.Text
+
+		// Check parent ordering (based on cache group prim/sec parents)
+		if !strings.Contains(txt, `parent="myorg1`) {
+			t.Errorf("Incorrect parent ordering, got %v", txt)
 		}
 	}
 }
