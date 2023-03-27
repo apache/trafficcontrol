@@ -143,8 +143,8 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          directory: ${{ github.workspace }}/experimental/traffic-portal/coverage
-          flags: traffic_portal_v2
+          files: ${{ github.workspace }}/experimental/traffic-portal/coverage/traffic-portal/cobertura-coverage.xml
+          flags: traffic_portal_v2,unit_tests
   end-to-end-tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
