@@ -28,6 +28,9 @@ import type {
 	ResponseRegion,
 } from "trafficops-types";
 
+import { CacheGroupService as ConcreteCacheGroupService } from "../cache-group.service";
+
+import { APITestingService } from "./base-api.service";
 import { ServerService } from "./server.service";
 
 /**
@@ -88,7 +91,7 @@ function isRequest(x: CacheGroupQueueRequest | CDN | string | number): x is Cach
  * CDNService expose API functionality relating to CDNs.
  */
 @Injectable()
-export class CacheGroupService {
+export class CacheGroupService extends APITestingService implements ConcreteCacheGroupService {
 	private lastID = 10;
 
 	private readonly asns: Array<ResponseASN> = [{
@@ -192,7 +195,9 @@ export class CacheGroupService {
 	}
 	];
 
-	constructor(private readonly servers: ServerService) {}
+	constructor(private readonly servers: ServerService) {
+		super();
+	}
 
 	public async getCacheGroups(idOrName: number | string): Promise<ResponseCacheGroup>;
 	public async getCacheGroups(): Promise<Array<ResponseCacheGroup>>;
@@ -597,12 +602,12 @@ export class CacheGroupService {
 	 * @param id Id of the region to delete.
 	 * @returns The deleted region.
 	 */
-	public async deleteRegion(id: number | ResponseRegion): Promise<ResponseRegion> {
+	public async deleteRegion(id: number | ResponseRegion): Promise<void> {
 		const index = this.regions.findIndex(d => d.id === id);
 		if (index === -1) {
 			throw new Error(`no such Region: ${id}`);
 		}
-		return this.regions.splice(index, 1)[0];
+		this.regions.splice(index, 1);
 	}
 	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
 	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
@@ -667,15 +672,16 @@ export class CacheGroupService {
 	/**
 	 * Deletes an existing coordinate.
 	 *
-	 * @param id Id of the coordinate to delete.
+	 * @param coordinate The coordinate to delete, or just its ID.
 	 * @returns The deleted coordinate.
 	 */
-	public async deleteCoordinate(id: number): Promise<ResponseCoordinate> {
+	public async deleteCoordinate(coordinate: number | ResponseCoordinate): Promise<void> {
+		const id = typeof(coordinate) === "number" ? coordinate : coordinate.id;
 		const index = this.coordinates.findIndex(c => c.id === id);
 		if (index === -1) {
-			throw new Error(`no such Coordinate: ${id}`);
+			throw new Error(`no such Coordinate: #${id}`);
 		}
-		return this.coordinates.splice(index, 1)[0];
+		this.coordinates.splice(index, 1);
 	}
 
 	public async getASNs(): Promise<Array<ResponseASN>>;
@@ -738,11 +744,11 @@ export class CacheGroupService {
 	 * @param asn The ASN to be deleted or ID of the ASN to delete..
 	 * @returns The deleted asn.
 	 */
-	public async deleteASN(asn: ResponseASN | number): Promise<ResponseASN> {
+	public async deleteASN(asn: number | ResponseASN): Promise<void> {
 		const index = this.asns.findIndex(a => a.asn === asn);
 		if (index === -1) {
 			throw new Error(`no such asn: ${asn}`);
 		}
-		return this.asns.splice(index, 1)[0];
+		this.asns.splice(index, 1);
 	}
 }
