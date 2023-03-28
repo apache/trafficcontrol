@@ -17,7 +17,7 @@ limitations under the License.
 		<mat-card-content>
 			<mat-form-field>
 				<mat-label>Name</mat-label>
-				<input matInput type="text" name="name" required [(ngModel)]="cdn.name" pattern="[A-Za-z0-9.\-^_]+">
+				<input matInput type="text" name="name" required [(ngModel)]="cdn.name" pattern="(?!-)[A-Za-z0-9.\-]+(?<!-)">
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
@@ -29,7 +29,7 @@ limitations under the License.
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Domain</mat-label>
-				<input matInput type="text" name="domainName" required [(ngModel)]="cdn.domainName" pattern="(((?!-))(xn--)?[a-z0-9\-_]{0,61}[a-z0-9]{1,1}\.)*(xn--)?([a-z0-9\-]{1,61}|[a-z0-9\-]{1,30})(\.[a-z]{2,})?">
+				<input matInput type="text" name="domainName" required [(ngModel)]="cdn.domainName" pattern="((?!-)(xn--)?[a-z0-9\-_]{0,61}[a-z0-9]{1,1}(?<!-)\.)*(xn--)?(?!-)[a-z0-9\-]{1,61}(?<!-)(\.[a-z]{2,})?">
 			</mat-form-field>
 			<mat-checkbox [labelPosition]="'before'" name="dnssecEnabled" [(ngModel)]="cdn.dnssecEnabled">DNSSEC Enabled</mat-checkbox>
 		</mat-card-content>

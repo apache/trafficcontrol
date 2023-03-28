@@ -49,6 +49,37 @@ describe("CDNDetailComponent", () => {
 		fixture.detectChanges();
 	});
 
+	it("rejects invalid CDN names", async () => {
+		paramMap.and.returnValue("new");
+		fixture = TestBed.createComponent(CDNDetailComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+		await fixture.whenStable();
+		const form = fixture.nativeElement as HTMLFormElement;
+		expect(form instanceof HTMLFormElement);
+		const nameElement = form.querySelector('[name="name"]') as HTMLInputElement;
+		expect(nameElement instanceof HTMLInputElement);
+		const invalidCDNNames = ["-", "_", "^"];
+		for (const cdnName of invalidCDNNames) {
+			nameElement.value = cdnName;
+			expect(nameElement.checkValidity()).toBeFalse();
+		}
+	});
+
+	it("rejects invalid CDN domain names", async () => {
+		paramMap.and.returnValue("new");
+		fixture = TestBed.createComponent(CDNDetailComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+		await fixture.whenStable();
+		const form = fixture.nativeElement as HTMLFormElement;
+		expect(form instanceof HTMLFormElement);
+		const domainNameElement = form.querySelector('[name="domainName"]') as HTMLInputElement;
+		expect(domainNameElement instanceof HTMLInputElement);
+		domainNameElement.value = "-";
+		expect(domainNameElement.checkValidity()).toBeFalse();
+	});
+
 	it("should create", () => {
 		expect(component).toBeTruthy();
 		expect(paramMap).toHaveBeenCalled();
