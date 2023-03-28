@@ -1,9 +1,9 @@
 {
-    "cdns": {
-        "name": "test",
-        "domainName": "quest",
-        "dnssecEnabled": false,
-        "id": null,
-        "lastUpdated": null
-    }
+	"cdns": [{
+		"name": "test",
+		"domainName": "quest",
+		"dnssecEnabled": false,
+		"id": null,
+		"lastUpdated": null
+	}]
 }
