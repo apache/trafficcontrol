@@ -1,0 +1,128 @@
+{
+    "type": "object",
+    "cdns": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "str"
+            },
+            "domainName": {
+                "type": "str"
+            },
+            "dnssecEnabled": {
+                "type": "bool"
+            },
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            }
+        }
+    },
+    "cachegroup": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "int"
+            },
+            "name": {
+                "type": "str"
+            },
+            "shortName": {
+                "type": "str"
+            },
+            "latitude": {
+                "type": "float"
+            },
+            "longitude": {
+                "type": "float"
+            },
+            "parentCachegroupName": {
+                "type": "str"
+            },
+            "parentCachegroupId": {
+                "type": "int"
+            },
+            "secondaryParentCachegroupName": {
+                "type": "str"
+            },
+            "secondaryParentCachegroupId": {
+                "type": "int"
+            },
+            "fallbackToClosest": {
+                "type": "bool"
+            },
+            "localizationMethods": {
+                "type": "list"
+            },
+            "typeName": {
+                "type": "str"
+            },
+            "typeId": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "fallbacks": {
+                "type": "list"
+            }
+        }
+    },
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "configFile": {
+                "type": "str"
+            },
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            },
+            "profiles": {
+                "type": "list"
+            },
+            "secure": {
+                "type": "bool"
+            },
+            "value": {
+                "type": "str"
+            }
+        }
+    },
+    "profiles": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            },
+            "description": {
+                "type": "str"
+            },
+            "cdnName": {
+                "type": "str"
+            },
+            "cdn": {
+                "type": "int"
+            },
+            "routingDisabled": {
+                "type": "bool"
+            },
+            "type": {
+                "type": "str"
+            }
+        }
+    }
+}
