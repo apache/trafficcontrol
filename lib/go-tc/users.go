@@ -127,9 +127,9 @@ type UserToken struct {
 	Token string `json:"t"`
 }
 
-// CommonUserFields contents are still visible when it is embedded
+// commonUserFields contents are still visible when it is embedded
 // LastUpdated is a new field for some structs.
-type CommonUserFields struct {
+type commonUserFields struct {
 	AddressLine1    *string    `json:"addressLine1" db:"address_line1"`
 	AddressLine2    *string    `json:"addressLine2" db:"address_line2"`
 	City            *string    `json:"city" db:"city"`
@@ -162,7 +162,7 @@ type User struct {
 	// https://github.com/apache/trafficcontrol/blob/3b5dd406bf1a0bb456c062b0f6a465ec0617d8ef/traffic_ops/traffic_ops_golang/user/user.go#L197
 	// It's done that way in order to maintain "rolename" vs "roleName" JSON field capitalization for the different users APIs.
 	RoleName *string `json:"roleName,omitempty" db:"role_name"`
-	CommonUserFields
+	commonUserFields
 }
 
 // UserCurrent represents the profile for the authenticated user.
@@ -170,7 +170,7 @@ type UserCurrent struct {
 	UserName  *string `json:"username"`
 	LocalUser *bool   `json:"localUser"`
 	RoleName  *string `json:"roleName"`
-	CommonUserFields
+	commonUserFields
 }
 
 // ToLegacyCurrentUser will convert an APIv4 user to an APIv3 "current user"

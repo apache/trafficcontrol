@@ -29,34 +29,37 @@ import (
 )
 
 var (
-	legacyUser = &tc.UserCurrent{
-		CommonUserFields: tc.CommonUserFields{
-			AddressLine1:    util.Ptr("line1"),
-			AddressLine2:    util.Ptr("line2"),
-			City:            util.Ptr("city"),
-			Company:         util.Ptr("company"),
-			Country:         util.Ptr("country"),
-			Email:           util.Ptr("test@email.com"),
-			FullName:        util.Ptr("Testy Mctestface"),
-			GID:             nil,
-			ID:              util.Ptr(1),
-			LastUpdated:     nil,
-			PhoneNumber:     util.Ptr("999-999-9999"),
-			PostalCode:      util.Ptr("11111-1111"),
-			PublicSSHKey:    nil,
-			Role:            util.Ptr(1),
-			StateOrProvince: util.Ptr("state"),
-			Tenant:          nil,
-			TenantID:        util.Ptr(0),
-			Token:           nil,
-			UID:             nil,
-		},
+	legacyUser = defineUserCurrent()
+)
+
+func defineUserCurrent() *tc.UserCurrent {
+	u := tc.UserCurrent{
 		UserName:  util.Ptr("testy"),
 		LocalUser: util.Ptr(true),
 		RoleName:  util.Ptr("role"),
 	}
-)
+	u.AddressLine1 = util.Ptr("line1")
+	u.AddressLine2 = util.Ptr("line2")
+	u.City = util.Ptr("city")
+	u.Company = util.Ptr("company")
+	u.Country = util.Ptr("country")
+	u.Email = util.Ptr("test@email.com")
+	u.FullName = util.Ptr("Testy Mctestface")
+	u.GID = nil
+	u.ID = util.Ptr(1)
+	u.LastUpdated = nil
+	u.PhoneNumber = util.Ptr("999-999-9999")
+	u.PostalCode = util.Ptr("11111-1111")
+	u.PublicSSHKey = nil
+	u.Role = util.Ptr(1)
+	u.StateOrProvince = util.Ptr("state")
+	u.Tenant = nil
+	u.TenantID = util.Ptr(0)
+	u.Token = nil
+	u.UID = nil
 
+	return &u
+}
 func addUserRow(rows *sqlmock.Rows, users ...*tc.UserV4) {
 	if rows == nil {
 		return
@@ -202,25 +205,30 @@ func TestLegacyUser(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	cols := test.ColsFromStructByTagExclude("db", tc.CommonUserFields{}, util.Ptr([]string{"token"}))
-	cols = *test.InsertAtStr(&cols, map[string][]string{
-		"full_name": {
-			"gid",
-		},
-		"last_updated": {
-			"local_passwd",
-		},
-		"role": {
-			"role_name",
-		},
-		"state_or_province": {
-			"tenant",
-		},
-		"tenant_id": {
-			"uid",
-			"username",
-		},
-	})
+	cols := []string{
+		"address_line1",
+		"address_line2",
+		"city",
+		"company",
+		"country",
+		"email",
+		"full_name",
+		"gid",
+		"id",
+		"new_user",
+		"phone_number",
+		"postal_code",
+		"public_ssh_key",
+		"role",
+		"role_name",
+		"state_or_province",
+		"tenant",
+		"tenant_id",
+		"uid",
+		"username",
+		"last_updated",
+		"local_passwd",
+	}
 	getUserRows := sqlmock.NewRows(cols)
 	addLegacyUserRow(getUserRows, legacyUser)
 	mock.ExpectBegin()

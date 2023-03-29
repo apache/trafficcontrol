@@ -33,7 +33,10 @@ func ColsFromStructByTag(tagName string, thing interface{}) []string {
 
 // InsertAtStr inserts insertMap (string to insert at -> []insert names) into cols non-destructively.
 func InsertAtStr(cols *[]string, insertMap map[string][]string) *[]string {
-	if cols == nil || insertMap == nil {
+	if insertMap == nil {
+		return cols
+	}
+	if cols == nil {
 		return nil
 	}
 
@@ -70,7 +73,7 @@ func ColsFromStructByTagExclude(tagName string, thing interface{}, excludeColumn
 	t := reflect.TypeOf(thing)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		if (strings.Compare(tagName, "db") == 0) && (tagName != "") {
+		if tagName != "" {
 			// Get the field tag value
 			tag := field.Tag.Get(tagName)
 			if _, ok := excludeMap[tag]; !ok && tag != "" {

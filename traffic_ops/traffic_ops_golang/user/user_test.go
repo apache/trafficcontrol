@@ -51,36 +51,39 @@ var (
 		UID:               nil,
 		Username:          "testy",
 	}
-	oldUser = &tc.User{
+	oldUser = defineUser()
+)
+
+func defineUser() tc.User {
+	u := tc.User{
 		Username:             util.Ptr(user.Username),
 		RegistrationSent:     nil,
 		LocalPassword:        user.LocalPassword,
 		ConfirmLocalPassword: user.LocalPassword,
 		RoleName:             util.Ptr(user.Role),
-		CommonUserFields: tc.CommonUserFields{
-			AddressLine1:    user.AddressLine1,
-			AddressLine2:    user.AddressLine2,
-			City:            user.City,
-			Company:         user.Company,
-			Country:         user.Country,
-			Email:           user.Email,
-			FullName:        user.FullName,
-			GID:             user.GID,
-			ID:              user.ID,
-			LastUpdated:     tc.TimeNoModFromTime(user.LastUpdated),
-			NewUser:         util.Ptr(user.NewUser),
-			PhoneNumber:     user.PhoneNumber,
-			PostalCode:      user.PostalCode,
-			PublicSSHKey:    user.PublicSSHKey,
-			Role:            nil,
-			StateOrProvince: user.StateOrProvince,
-			Tenant:          user.Tenant,
-			TenantID:        util.Ptr(user.TenantID),
-			Token:           user.Token,
-			UID:             user.UID,
-		},
 	}
-)
+	u.AddressLine1 = user.AddressLine1
+	u.AddressLine2 = user.AddressLine2
+	u.City = user.City
+	u.Company = user.Company
+	u.Country = user.Country
+	u.Email = user.Email
+	u.FullName = user.FullName
+	u.GID = user.GID
+	u.ID = user.ID
+	u.LastUpdated = tc.TimeNoModFromTime(user.LastUpdated)
+	u.NewUser = util.Ptr(user.NewUser)
+	u.PhoneNumber = user.PhoneNumber
+	u.PostalCode = user.PostalCode
+	u.PublicSSHKey = user.PublicSSHKey
+	u.Role = nil
+	u.StateOrProvince = user.StateOrProvince
+	u.Tenant = user.Tenant
+	u.TenantID = util.Ptr(user.TenantID)
+	u.Token = user.Token
+	u.UID = user.UID
+	return u
+}
 
 func TestDowngrade(t *testing.T) {
 	old := user.Downgrade()
