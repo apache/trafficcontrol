@@ -13,7 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { ResponseCDN } from "trafficops-types";
+import type { RequestCDN, ResponseCDN } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -47,5 +47,66 @@ export class CDNService extends APIService {
 			return cdn;
 		}
 		return this.get<Array<ResponseCDN>>(path).toPromise();
+	}
+
+	/**
+	 * Deletes a CDN.
+	 *
+	 * @param cdn The CDN to be deleted, or just its ID.
+	 */
+	public async deleteCDN(cdn: ResponseCDN | number): Promise<void> {
+		const id = typeof cdn === "number" ? cdn : cdn.id;
+		return this.delete(`cdns/${id}`).toPromise();
+	}
+
+	/**
+	 * Creates a new CDN.
+	 *
+	 * @param cdn The CDN to create.
+	 */
+	public async createCDN(cdn: RequestCDN): Promise<ResponseCDN> {
+		return this.post<ResponseCDN>("cdns", cdn).toPromise();
+	}
+
+	/**
+	 * Replaces an existing CDN with the provided new definition of a
+	 * CDN.
+	 *
+	 * @param id The if of the CDN being updated.
+	 * @param cdn The new definition of the CDN.
+	 */
+	public async updateCDN(id: number, cdn: RequestCDN): Promise<ResponseCDN>;
+	/**
+	 * Replaces an existing CDN with the provided new definition of a
+	 * CDN.
+	 *
+	 * @param cdn The full new definition of the CDN being
+	 * updated.
+	 */
+	public async updateCDN(cdn: ResponseCDN): Promise<ResponseCDN>;
+	/**
+	 * Replaces an existing CDN with the provided new definition of a
+	 * CDN.
+	 *
+	 * @param cdnOrID The full new definition of the CDN being
+	 * updated, or just its ID.
+	 * @param payload The new definition of the CDN. This is required if
+	 * `cdnOrID` is an ID, and ignored otherwise.
+	 */
+	public async updateCDN(cdnOrID: ResponseCDN | number, payload?: RequestCDN): Promise<ResponseCDN> {
+		let id;
+		let body;
+		if (typeof(cdnOrID) === "number") {
+			if (!payload) {
+				throw new TypeError("invalid call signature - missing request payload");
+			}
+			body = payload;
+			id = cdnOrID;
+		} else {
+			body = cdnOrID;
+			({id} = cdnOrID);
+		}
+
+		return this.put<ResponseCDN>(`cdns/${id}`, body).toPromise();
 	}
 }

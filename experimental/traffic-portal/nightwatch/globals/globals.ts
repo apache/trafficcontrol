@@ -26,6 +26,7 @@ import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGrou
 import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
 import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
 import type { RegionsPageObject } from "nightwatch/page_objects/cacheGroups/regionsTable";
+import type { CDNDetailPageObject } from "nightwatch/page_objects/cdns/cdnDetail";
 import type { CommonPageObject } from "nightwatch/page_objects/common";
 import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceCard";
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
@@ -86,6 +87,9 @@ declare module "nightwatch" {
 			regionsTable: () => RegionsPageObject;
 			asnsTable: () => AsnsPageObject;
 			asnDetail: () => AsnDetailPageObject;
+		};
+		cdns: {
+			cdnDetail: () => CDNDetailPageObject;
 		};
 		deliveryServices: {
 			deliveryServiceCard: () => DeliveryServiceCardPageObject;
