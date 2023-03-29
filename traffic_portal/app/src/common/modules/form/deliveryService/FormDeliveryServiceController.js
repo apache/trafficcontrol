@@ -136,13 +136,13 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	 * This function is called when capability is updated on a DSR
 	 */
 	function capabilityChange() {
-		cap = []
+		const cap = [];
 		for (const [key, value] of Object.entries($scope.selectedCapabilities)) {
 			if (value) {
-				cap.push(key)
+				cap.push(key);
 			}
 		}
-		deliveryService.requiredCapabilities = cap
+		deliveryService.requiredCapabilities = cap;
 	}
 	$scope.capabilityChange = capabilityChange;
 
