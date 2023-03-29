@@ -26,10 +26,11 @@ logger = logging.getLogger()
 
 primitive = bool | int | float | str | None
 
-@pytest.mark.parametrize('api_prerequisite_data', ["cdns"], indirect=True)
+@pytest.mark.parametrize('request_template_data', ["cdns"], indirect=True)
 def test_cdn_contract(
 	to_session: TOSession,
-	api_prerequisite_data: list[dict[str, object] | list[object] | primitive],
+	request_template_data: list[dict[str, object] | list[object] | primitive],
+	response_template_data: list[dict[str, object] | list[object] | primitive],
 	cdn_post_data: dict[str, object]
 ) -> None:
 	"""
@@ -42,7 +43,7 @@ def test_cdn_contract(
 	# validate CDN keys from cdns get response
 	logger.info("Accessing /cdns endpoint through Traffic ops session.")
 
-	cdn = api_prerequisite_data[0]
+	cdn = request_template_data[0]
 	if not isinstance(cdn, dict):
 		raise TypeError("malformed cdn in prerequisite data; not an object")
 
@@ -54,11 +55,6 @@ def test_cdn_contract(
 		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
 		requests.Response
 	] = to_session.get_cdns(query_params={"name": cdn_name})
-	response_template_path = os.path.join(os.path.dirname(__file__), "response_template.json")
-	with open(response_template_path, encoding="utf-8", mode="r") as response_template_file:
-		response_template = json.load(response_template_file)
-	if not isinstance(response_template, dict):
-		raise TypeError(f"response template data must be an object, not '{type(response_template)}'")
 	try:
 		cdn_data = cdn_get_response[0]
 		if not isinstance(cdn_data, list):
@@ -70,7 +66,7 @@ def test_cdn_contract(
 		cdn_keys = set(first_cdn.keys())
 
 		logger.info("CDN Keys from cdns endpoint response %s", cdn_keys)
-		response_template_data = response_template.get("cdns").get("properties")
+		response_template = response_template_data.get("cdns").get("properties")
 		# validate cdn values from prereq data in cdns get response.
 		prereq_values = [
 			cdn_post_data["name"],
@@ -83,11 +79,11 @@ def test_cdn_contract(
 			get_types[key] = first_cdn[key].__class__.__name__
 		logger.info("types from cdn get response %s", get_types)
 		response_template_types= {}
-		for key in response_template_data:
-			response_template_types[key] = response_template_data.get(key).get("type")
+		for key in response_template:
+			response_template_types[key] = response_template.get(key).get("type")
 		logger.info("types from cdn response template %s", response_template_types)
 
-		assert cdn_keys == set(response_template_data.keys())
+		assert cdn_keys == set(response_template.keys())
 		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
 		assert get_values == prereq_values
 	except IndexError:

@@ -26,10 +26,11 @@ logger = logging.getLogger()
 
 primitive = bool | int | float | str | None
 
-@pytest.mark.parametrize('api_prerequisite_data', ["cachegroup"], indirect=True)
+@pytest.mark.parametrize('request_template_data', ["cachegroup"], indirect=True)
 def test_cachegroup_contract(
 	to_session: TOSession,
-	api_prerequisite_data: list[dict[str, object] | list[object] | primitive],
+	request_template_data: list[dict[str, object] | list[object] | primitive],
+	response_template_data: list[dict[str, object] | list[object] | primitive],
 	cachegroup_post_data: dict[str, object]
 ) -> None:
 	"""
@@ -42,7 +43,7 @@ def test_cachegroup_contract(
 	# validate CDN keys from cdns get response
 	logger.info("Accessing /cachegroup endpoint through Traffic ops session.")
 
-	cachegroup = api_prerequisite_data[0]
+	cachegroup = request_template_data[0]
 	if not isinstance(cachegroup, dict):
 		raise TypeError("malformed cachegroup in prerequisite data; not an object")
 
@@ -54,11 +55,6 @@ def test_cachegroup_contract(
 		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
 		requests.Response
 	] = to_session.get_cachegroups(query_params={"name": str(cachegroup_name)})
-	response_template_path = os.path.join(os.path.dirname(__file__), "response_template.json")
-	with open(response_template_path, encoding="utf-8", mode="r") as response_template_file:
-		response_template = json.load(response_template_file)
-	if not isinstance(response_template, dict):
-		raise TypeError(f"response template data must be an object, not '{type(response_template)}'")
 	try:
 		cachegroup_data = cachegroup_get_response[0]
 		if not isinstance(cachegroup_data, list):
@@ -70,7 +66,7 @@ def test_cachegroup_contract(
 		cachegroup_keys = set(first_cachegroup.keys())
 
 		logger.info("Cache group Keys from cachegroup endpoint response %s", cachegroup_keys)
-		response_template_data = response_template.get("cachegroup").get("properties")
+		response_template = response_template_data.get("cachegroup").get("properties")
 		# validate cachegroup values from prereq data in cachegroup get response.
 		prereq_values = [
 			cachegroup_post_data["name"],
@@ -89,11 +85,11 @@ def test_cachegroup_contract(
 			get_types[key] = first_cachegroup[key].__class__.__name__
 		logger.info("types from cachegroup get response %s", get_types)
 		response_template_types= {}
-		for key in response_template_data:
-			response_template_types[key] = response_template_data.get(key).get("type")
+		for key in response_template:
+			response_template_types[key] = response_template.get(key).get("type")
 		logger.info("types from cachegroup response template %s", response_template_types)
 		# validate data types for values from cdn get json response.
-		assert cachegroup_keys == set(response_template_data.keys())
+		assert cachegroup_keys == set(response_template.keys())
 		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
 		assert get_values == prereq_values
 	except IndexError:
