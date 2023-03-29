@@ -217,7 +217,7 @@ func GetServiceCategory(w http.ResponseWriter, r *http.Request) {
 	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("server capability read: error getting server capability(ies): %w", err))
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("service category read: error getting service category(ies): %w", err))
 		return
 	}
 	defer log.Close(rows, "unable to close DB connection")
@@ -225,7 +225,7 @@ func GetServiceCategory(w http.ResponseWriter, r *http.Request) {
 	scList := []tc.ServiceCategoryV5{}
 	for rows.Next() {
 		if err = rows.Scan(&sc.Name, &sc.LastUpdated); err != nil {
-			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting service categories(ies): %w", err))
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting service category(ies): %w", err))
 			return
 		}
 		scList = append(scList, sc)
@@ -262,7 +262,7 @@ func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create server capability
+	// create service category
 	query := `INSERT INTO service_category (name) VALUES ($1) RETURNING name, last_updated`
 	err = tx.QueryRow(query, sc.Name).Scan(&sc.Name, &sc.LastUpdated)
 	if err != nil {
