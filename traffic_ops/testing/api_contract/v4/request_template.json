@@ -41,5 +41,11 @@
 			"type": "UNK_PROFILE",
 			"routingDisabled": true
 		}
+	],
+	"roles": [
+		{
+			"name": "test",
+			"description": "quest"
+		}
 	]
 }

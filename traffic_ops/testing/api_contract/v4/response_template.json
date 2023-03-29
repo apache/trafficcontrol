@@ -124,5 +124,22 @@
                 "type": "str"
             }
         }
+    },
+    "roles": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "str"
+            },
+            "description": {
+                "type": "str"
+            },
+            "permissions": {
+                "type": "list"
+            },
+            "lastUpdated": {
+                "type": "str"
+            }
+        }
     }
 }
