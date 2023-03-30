@@ -13,9 +13,7 @@
 #
 
 """API Contract Test Case for cachegroup endpoint."""
-import json
 import logging
-import os
 import pytest
 import requests
 
@@ -86,7 +84,14 @@ def test_cachegroup_contract(
 		logger.info("types from cachegroup get response %s", get_types)
 		response_template_types= {}
 		for key in response_template:
-			response_template_types[key] = response_template.get(key).get("type")
+			optional = response_template.get(key).get("optional")
+			if optional:
+				if key in cachegroup:
+					response_template_types[key] = response_template.get(key).get("typeA")
+				else:
+					response_template_types[key] = response_template.get(key).get("typeB")
+			else:
+				response_template_types[key] = response_template.get(key).get("type")
 		logger.info("types from cachegroup response template %s", response_template_types)
 		# validate data types for values from cdn get json response.
 		assert cachegroup_keys == set(response_template.keys())

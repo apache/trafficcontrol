@@ -13,9 +13,7 @@
 #
 
 """API Contract Test Case for cdns endpoint."""
-import json
 import logging
-import os
 import pytest
 import requests
 

@@ -20,32 +20,5 @@
 			],
 			"typeId": 23
 		}
-	],
-	"parameters": [
-		{
-			"configFile": "records.config",
-			"name": "test",
-			"profiles": [
-				"EDGE_TIER_ATS_CACHE",
-				"MID_TIER_ATS_CACHE"
-			],
-			"secure": false,
-			"value": "quest"
-		}
-	],
-	"profiles": [
-		{
-			"name": "test",
-			"description": "A test profile for API examples",
-			"cdn": 2,
-			"type": "UNK_PROFILE",
-			"routingDisabled": true
-		}
-	],
-	"roles": [
-		{
-			"name": "test",
-			"description": "quest"
-		}
 	]
 }

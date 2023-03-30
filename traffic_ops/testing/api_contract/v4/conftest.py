@@ -301,7 +301,7 @@ def to_login(to_args: ArgsType) -> TOSession:
 
 
 @pytest.fixture(name="request_template_data", scope="session")
-def request_prerequiste_data(pytestconfig: pytest.Config, request
+def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.FixtureRequest
 			  ) -> list[dict[str, object] | list[object] | primitive]:
 	"""
 	PyTest Fixture to store POST request template data for api endpoint.
@@ -332,7 +332,7 @@ def request_prerequiste_data(pytestconfig: pytest.Config, request
 	return request_template
 
 @pytest.fixture()
-def response_template_data(pytestconfig: pytest.Config, request
+def response_template_data(pytestconfig: pytest.Config,
 			  ) -> list[dict[str, object] | list[object] | primitive]:
 	"""
 	PyTest Fixture to store response template data for api endpoint.

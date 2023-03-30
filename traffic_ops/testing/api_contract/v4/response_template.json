@@ -39,16 +39,24 @@
                 "type": "float"
             },
             "parentCachegroupName": {
-                "type": "str"
+                "optional": "True",
+                "typeA": "str",
+                "typeB": "NoneType"
             },
             "parentCachegroupId": {
-                "type": "int"
+                "optional": "True",
+                "typeA": "int",
+                "typeB": "NoneType"
             },
             "secondaryParentCachegroupName": {
-                "type": "str"
+                "optional": "True",
+                "typeA": "str",
+                "typeB": "NoneType"
             },
             "secondaryParentCachegroupId": {
-                "type": "int"
+                "optional": "True",
+                "typeA": "int",
+                "typeB": "NoneType"
             },
             "fallbackToClosest": {
                 "type": "bool"
@@ -67,78 +75,6 @@
             },
             "fallbacks": {
                 "type": "list"
-            }
-        }
-    },
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "configFile": {
-                "type": "str"
-            },
-            "id": {
-                "type": "int"
-            },
-            "lastUpdated": {
-                "type": "str"
-            },
-            "name": {
-                "type": "str"
-            },
-            "profiles": {
-                "type": "list"
-            },
-            "secure": {
-                "type": "bool"
-            },
-            "value": {
-                "type": "str"
-            }
-        }
-    },
-    "profiles": {
-        "type": "object",
-        "properties": {
-            "id": {
-                "type": "int"
-            },
-            "lastUpdated": {
-                "type": "str"
-            },
-            "name": {
-                "type": "str"
-            },
-            "description": {
-                "type": "str"
-            },
-            "cdnName": {
-                "type": "str"
-            },
-            "cdn": {
-                "type": "int"
-            },
-            "routingDisabled": {
-                "type": "bool"
-            },
-            "type": {
-                "type": "str"
-            }
-        }
-    },
-    "roles": {
-        "type": "object",
-        "properties": {
-            "name": {
-                "type": "str"
-            },
-            "description": {
-                "type": "str"
-            },
-            "permissions": {
-                "type": "list"
-            },
-            "lastUpdated": {
-                "type": "str"
             }
         }
     }
