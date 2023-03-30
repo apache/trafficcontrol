@@ -187,7 +187,7 @@ func TestLayerProfiles(t *testing.T) {
 	// per the params, on the layered profiles "FOO,BAR,BAZ" (in that order):
 	// we iterate through params in reverse order because FOO will have the highest priority
 	// then BAR then BAZ, any duplicate params that exist with the same ConfigFile+Name
-	// in subsequent profiles can be overwritten by the next higher profile 
+	// in subsequent profiles can be overwritten by the next higher profile
 	// (1) alpha in FOO, should override beta in BAR
 	//    because they share the ConfigFile+Name key and FOO is later in the layering
 	// (2) gamma should be added, but not overridden

@@ -849,7 +849,7 @@ func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesM
 
 	layeredParamMap := map[ParamKey]tc.Parameter{}
 	// profileNames is ordered, we need to iterate through this backwards
-	// because we need subsequent params on other profiles to override previous ones, 
+	// because we need subsequent params on other profiles to override previous ones,
 	// this will provide the proper "layering" that we want.
 	for i := len(profileNames) - 1; i >= 0; i-- {
 		profileParams := allProfileParams[profileNames[i]]
