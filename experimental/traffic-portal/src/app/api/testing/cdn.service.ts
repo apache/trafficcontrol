@@ -15,11 +15,15 @@
 import { Injectable } from "@angular/core";
 import { CDNQueueResponse, RequestCDN, ResponseCDN } from "trafficops-types";
 
+import { CDNService as ConcreteCDNService } from "../cdn.service";
+
+import { APITestingService } from "./base-api.service";
+
 /**
  * CDNService expose API functionality relating to CDNs.
  */
 @Injectable()
-export class CDNService {
+export class CDNService extends APITestingService implements ConcreteCDNService{
 	private lastID = 10;
 
 	private readonly cdns = [
