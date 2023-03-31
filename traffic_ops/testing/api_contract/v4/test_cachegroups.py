@@ -97,7 +97,7 @@ def test_cachegroup_contract(to_session: TOSession, request_template_data:
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
-		pytest.fail("API contract test failed for cachegroup endpoint failed: API response was malformed")
+		pytest.fail("API contract test failed for cachegroup endpoint: API response was malformed")
 	finally:
 		# Delete Cache group after test execution to avoid redundancy.
 		try:

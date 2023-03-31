@@ -86,7 +86,7 @@ def test_cdn_contract(
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
-		pytest.fail("API contract test failed for cdn endpoint failed: API response was malformed")
+		pytest.fail("API contract test failed for cdn endpoint: API response was malformed")
 	finally:
 		# Delete CDN after test execution to avoid redundancy.
 		try:
