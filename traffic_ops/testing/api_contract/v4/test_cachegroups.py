@@ -78,7 +78,7 @@ def test_cachegroup_contract(to_session: TOSession, request_template_data:
 	    ]
 		get_types = {}
 		for key in first_cachegroup:
-			get_types[key] = first_cachegroup[key].__class__.__name__
+			get_types[key] = type(first_cachegroup[key]).__name__
 		logger.info("types from cachegroup get response %s", get_types)
 		response_template_types= {}
 		for key in response_template:

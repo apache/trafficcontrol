@@ -74,7 +74,7 @@ def test_cdn_contract(
 		get_values = [first_cdn["name"], first_cdn["domainName"], first_cdn["dnssecEnabled"]]
 		get_types = {}
 		for key in first_cdn:
-			get_types[key] = first_cdn[key].__class__.__name__
+			get_types[key] = type(first_cdn[key]).__name__
 		logger.info("types from cdn get response %s", get_types)
 		response_template_types= {}
 		for key in response_template:
