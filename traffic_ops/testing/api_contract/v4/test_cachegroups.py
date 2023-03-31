@@ -33,8 +33,9 @@ def test_cachegroup_contract(to_session: TOSession, request_template_data:
 	Test step to validate keys, values and data types from cachegroup endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param cachegroup_prereq_data: Fixture to get CDN data from a prerequisites file.
-	:param cachegroup_post_data: Fixture to get sample CDN data and actual CDN response.
+	:param request_template_data: Fixture to get request template data from a prerequisites file.
+	:param response_template_data: Fixture to get response template data from a prerequisites file.
+	:param cachegroup_post_data: Fixture to get sample cachegroup data and actual cachegroup response.
 	"""
 	# validate CDN keys from cdns get response
 	logger.info("Accessing /cachegroup endpoint through Traffic ops session.")

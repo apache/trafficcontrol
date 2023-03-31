@@ -35,8 +35,9 @@ def test_cdn_contract(
 	Test step to validate keys, values and data types from cdns endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param get_cdn_data: Fixture to get CDN data from a prerequisites file.
-	:param cdn_prereq: Fixture to get sample CDN data and actual CDN response.
+	:param request_template_data: Fixture to get CDN request template data from a prerequisites file.
+	:param response_template_data: Fixture to get CDN request template data from a prerequisites file.
+	:param cdn_post_data: Fixture to get sample CDN data and actual CDN response.
 	"""
 	# validate CDN keys from cdns get response
 	logger.info("Accessing /cdns endpoint through Traffic ops session.")
