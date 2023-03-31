@@ -3734,13 +3734,13 @@ func TestMakeParentDotConfigTopologiesServerMultipleProfileParams(t *testing.T) 
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
 			Value:      "100",
-			Profiles:   []byte(`["serverprofile0"]`),
+			Profiles:   []byte(`["serverprofile1"]`),
 		},
 		tc.Parameter{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
 			Value:      "200",
-			Profiles:   []byte(`["serverprofile1"]`),
+			Profiles:   []byte(`["serverprofile0"]`),
 		},
 	}
 
