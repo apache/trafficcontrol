@@ -25,12 +25,10 @@ logger = logging.getLogger()
 primitive = bool | int | float | str | None
 
 @pytest.mark.parametrize('request_template_data', ["cachegroup"], indirect=True)
-def test_cachegroup_contract(
-	to_session: TOSession,
-	request_template_data: list[dict[str, object] | list[object] | primitive],
+def test_cachegroup_contract(to_session: TOSession, request_template_data:
+	list[dict[str, object] | list[object] | primitive],
 	response_template_data: list[dict[str, object] | list[object] | primitive],
-	cachegroup_post_data: dict[str, object]
-) -> None:
+	cachegroup_post_data: dict[str, object]) -> None:
 	"""
 	Test step to validate keys, values and data types from cachegroup endpoint
 	response.
