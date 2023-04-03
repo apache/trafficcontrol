@@ -470,4 +470,3 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 	except IndexError:
 		logger.error("No Cache group response data from cdns POST request.")
 		sys.exit(1)
-		
