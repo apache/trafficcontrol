@@ -25,6 +25,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"time"
 
@@ -190,49 +192,153 @@ func deleteQuery() string {
 	return `DELETE FROM service_category WHERE name=:name`
 }
 
-func GetServiceCategory(w http.ResponseWriter, r *http.Request) {
-	var sc tc.ServiceCategoryV5
+func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
+
+	code := http.StatusOK
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+
+	var maxTime *time.Time
+	var err error
+	var scList []tc.ServiceCategoryV5
+
+	tx := inf.Tx
+
+	scList, err, code, maxTime = GetServiceCategory(tx, inf.Params, useIMS, r.Header)
+	if code == http.StatusNotModified {
+		w.WriteHeader(code)
+		api.WriteResp(w, r, []tc.ServiceCategoryV5{})
+		return
+	}
+
+	if code == http.StatusBadRequest {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(err.Error()), nil)
+		return
+	}
+
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Service category errors: "+err.Error()))
+		return
+	}
+
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+		api.AddLastModifiedHdr(w, *maxTime)
+	}
+
+	api.WriteResp(w, r, scList)
+}
+
+func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.ServiceCategoryV5, error, int, *time.Time) {
+	var runSecond bool
+	var maxTime time.Time
+	scList := []tc.ServiceCategoryV5{}
+
+	selectQuery := `SELECT name, last_updated FROM service_category as sc`
 
 	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"name": {Column: "sc.name", Checker: nil},
 	}
-	if _, ok := inf.Params["orderby"]; !ok {
-		inf.Params["orderby"] = "name"
+	if _, ok := params["orderby"]; !ok {
+		params["orderby"] = "name"
 	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
-		return
+		return nil, util.JoinErrs(errs), http.StatusBadRequest, nil
 	}
 
-	selectQuery := "SELECT name, last_updated FROM service_category as sc"
+	if useIMS {
+		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, where, queryValues)
+		newTemp := maxTime
+		fmt.Println(newTemp)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return scList, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
 	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("service category read: error getting service category(ies): %w", err))
-		return
+		return nil, errors.New("service category read: error getting service category(ies): " + err.Error()), http.StatusInternalServerError, nil
 	}
-	defer log.Close(rows, "unable to close DB connection")
+	defer rows.Close()
 
-	scList := []tc.ServiceCategoryV5{}
 	for rows.Next() {
+		sc := tc.ServiceCategoryV5{}
 		if err = rows.Scan(&sc.Name, &sc.LastUpdated); err != nil {
-			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting service category(ies): %w", err))
-			return
+			return nil, errors.New("error getting service category(ies): " + err.Error()), http.StatusInternalServerError, nil
 		}
 		scList = append(scList, sc)
 	}
 
-	api.WriteResp(w, r, scList)
-	return
+	return scList, nil, http.StatusOK, &maxTime
+}
+
+func tryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
+	var max time.Time
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
+	runSecond := true
+	dontRunSecond := false
+
+	if header == nil {
+		return runSecond, max
+	}
+
+	imsDateHeader = header[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
+		return runSecond, max
+	}
+
+	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
+		return runSecond, max
+	}
+
+	imsQuery := `SELECT max(last_updated) as t from service_category sc`
+	query := imsQuery + where
+	rows, err := tx.NamedQuery(query, queryValues)
+
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+
+	if err == sql.ErrNoRows {
+		return dontRunSecond, max
+	}
+
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := time.Time{}
+		if err = rows.Scan(&v); err != nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+			return runSecond, max
+		}
+
+		max = v
+		// The request IMS time is later than the max of (lastUpdated, deleted_time)
+		if imsDate.After(v) {
+			return dontRunSecond, max
+		}
+	}
+	return runSecond, max
 }
 
 func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
