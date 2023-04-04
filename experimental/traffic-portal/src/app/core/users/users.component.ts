@@ -14,14 +14,15 @@
 import { animate, style, transition, trigger } from "@angular/animations";
 import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import type { ValueGetterParams } from "ag-grid-community";
+import { Params } from "@angular/router";
+import type { ValueFormatterParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
-import { GetResponseUser } from "trafficops-types";
+import { ResponseUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import {TpHeaderService} from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { orderBy } from "src/app/utils";
 
 import { UserRegistrationDialogComponent } from "./user-registration-dialog/user-registration-dialog.component";
@@ -92,7 +93,7 @@ const ANIMATION_DURATION = "150ms";
 export class UsersComponent implements OnInit {
 
 	/** All (visible) users. */
-	public users = new Array<GetResponseUser>();
+	public users = new Array<ResponseUser>();
 
 	/** Emits changes to the fuzzy search text. */
 	public fuzzySubject = new BehaviorSubject("");
@@ -107,7 +108,7 @@ export class UsersComponent implements OnInit {
 	 * A map of Role IDs to their names, since the API doesn't provide Role
 	 * names on user objects in responses.
 	 */
-	public roles = new Map<number, string>();
+	public roles = new Array<string>();
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
@@ -192,7 +193,6 @@ export class UsersComponent implements OnInit {
 			field: "role",
 			headerName: "Role",
 			hide: false,
-			valueGetter: (params: ValueGetterParams): string => this.roleDisplayString(params.data.role)
 		},
 		{
 			field: "stateOrProvince",
@@ -203,7 +203,7 @@ export class UsersComponent implements OnInit {
 			field: "tenant",
 			headerName: "Tenant",
 			hide: false,
-			valueGetter: (params: ValueGetterParams): string => `${params.data.tenant} (#${params.data.tenantId})`
+			valueFormatter: (params: ValueFormatterParams): string => `${params.data.tenant} (#${params.data.tenantId})`
 		},
 		{
 			field: "uid",
@@ -219,19 +219,24 @@ export class UsersComponent implements OnInit {
 	];
 
 	/** Definitions for the context menu items (which act on user data). */
-	public contextMenuItems: Array<ContextMenuItem<GetResponseUser>> = [
+	public contextMenuItems: Array<ContextMenuItem<ResponseUser>> = [
 		{
-			href: (u: GetResponseUser): string => `/core/users/${u.id}`,
+			href: (u: ResponseUser): string => `${u.id}`,
 			name: "View User Details"
 		},
 		{
-			href: (u: GetResponseUser): string => `/core/users/${u.id}`,
+			href: (u: ResponseUser): string => `${u.id}`,
 			name: "Open in New Tab",
 			newTab: true
 		},
 		{
-			href: (u: GetResponseUser): string => `/core/change-logs?search=${u.username}`,
-			name: "View User Changelogs"
+			href: (u: ResponseUser): string => `/core/tenants/${u.tenantId}`,
+			name: "View Tenant"
+		},
+		{
+			href: "/core/change-logs",
+			name: "View User Changelogs",
+			queryParams: (u: ResponseUser): Params => ({user: u.username})
 		}
 	];
 
@@ -239,7 +244,7 @@ export class UsersComponent implements OnInit {
 
 	constructor(
 		private readonly api: UserService,
-		private readonly headerSvc: TpHeaderService,
+		private readonly navSvc: NavigationService,
 		private readonly currentUserService: CurrentUserService,
 		private readonly dialog: MatDialog
 	) {
@@ -249,24 +254,10 @@ export class UsersComponent implements OnInit {
 	 * Initializes data like a map of role ids to their names.
 	 */
 	public async ngOnInit(): Promise<void> {
-		this.roles = new Map((await this.api.getRoles()).map(r => [r.id, r.name]));
+		this.roles = (await this.api.getRoles()).map(r => r.name);
 		this.users = orderBy(await this.api.getUsers(), "fullName");
 		this.loading = false;
-		this.headerSvc.headerTitle.next("Users");
-	}
-
-	/**
-	 * Gets a string suitable for displaying to the user for a given Role ID.
-	 *
-	 * @param role The ID of the Role being displayed.
-	 * @returns A human-readable identifier for the Role, in the form `{{name}} (#{{$ID}})`.
-	 */
-	public roleDisplayString(role: number): string {
-		const roleName = this.roles.get(role);
-		if (!roleName) {
-			throw new Error(`unknown Role: #${role}`);
-		}
-		return `${roleName} (#${role})`;
+		this.navSvc.headerTitle.next("Users");
 	}
 
 	/**

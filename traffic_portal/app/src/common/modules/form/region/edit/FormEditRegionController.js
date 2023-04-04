@@ -17,6 +17,15 @@
  * under the License.
  */
 
+/**
+ * @param {*} region
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/RegionService")} regionService
+ */
 var FormEditRegionController = function(region, $scope, $controller, $uibModal, $anchorScroll, locationUtils, regionService) {
 
     // extends the FormRegionController to inherit common methods

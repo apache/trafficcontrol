@@ -20,7 +20,7 @@ name: TP Tests
 env:
   # alpine:3.13
   ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
-  NODE_VERSION: 18
+  NODE_VERSION: 16
 
 on:
   push:
@@ -31,6 +31,8 @@ on:
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
       - infrastructure/cdn-in-a-box/optional/traffic_vault/**
+      - lib/go-tc/**
+      - traffic_ops/app/db/**
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_portal/**
   create:
@@ -42,6 +44,8 @@ on:
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
       - infrastructure/cdn-in-a-box/optional/traffic_vault/**
+      - lib/go-tc/**
+      - traffic_ops/app/db/**
       - traffic_ops/traffic_ops_golang/**.go
       - traffic_portal/**
     types: [ opened, reopened, ready_for_review, synchronize ]

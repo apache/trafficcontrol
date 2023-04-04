@@ -26,12 +26,18 @@ on:
       - experimental/traffic-portal/**
       - .github/workflows/tpv2.yml
       - .github/actions/tpv2-integration-tests
+      - lib/go-tc/**
+      - traffic_ops/app/db/**
+      - traffic_ops/traffic_ops_golang/**.go
   create:
   pull_request:
     paths:
       - experimental/traffic-portal/**
       - .github/workflows/tpv2.yml
       - .github/actions/tpv2-integration-tests
+      - lib/go-tc/**
+      - traffic_ops/app/db/**
+      - traffic_ops/traffic_ops_golang/**.go
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
@@ -55,7 +61,7 @@ jobs:
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
 
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -87,7 +93,7 @@ jobs:
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
 
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -119,7 +125,7 @@ jobs:
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 16.x
 
       - name: Install latest Chrome
         run: sudo apt-get update && sudo apt-get install google-chrome-stable
@@ -206,12 +212,34 @@ jobs:
       # Setup
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install postgresql-client gettext-base
+      - name: Hash TO user password
+        env:
+          PYTHONPATH: traffic_ops/install/bin
+        run: |2
+          password_hash="$(<<PYTHON_COMMANDS python
+          from _postinstall import hash_pass
+          print(hash_pass('${{ env.PGPASSWORD }}12'))
+          PYTHON_COMMANDS
+          )" &&
+          echo "TO_USER_PASSWORD_HASH=${password_hash}" >> '${{ github.env }}'
       - name: Create admin user
-        run: |
-          psql -c "INSERT INTO tm_user (username, role, tenant_id, local_passwd) VALUES ('admin', 1, 1, 'SCRYPT:16384:8:1:p0Bppp/6IBeYxSwdLuYddsdMLBU/BNSlLY6fSIF7H1XW4eTbNVeMPVm7TuTEG4FM8PbqLlVwi8sPy8ZJznAlaQ==:sRcHWGe43mm/uEmXTIw37GcLEQZTlWAdf4vJqK8f0MDh8P+8gXoNx+nxWyb3r/0Bh+yyg0g/dUvti/ePZJL+Jw==');"
+        run: |2
+          <<QUERY psql
+          INSERT INTO tm_user (username, role, tenant_id, local_passwd)
+          VALUES ('admin', (
+            SELECT id
+            FROM "role"
+            WHERE "name" = 'admin'
+          ), (
+            SELECT id
+            FROM tenant
+            WHERE "name" = 'root'
+          ), '${{ env.TO_USER_PASSWORD_HASH }}');
+          QUERY
       - name: Create SSL Certificates and AES key
         run: |
-          openssl rand 32 | base64 | tee "${GITHUB_WORKSPACE}/aes.key"
+          set -o pipefail
+          openssl rand 32 | base64 | tee "${GITHUB_WORKSPACE}/aes.key" &&
           openssl req -new -x509 -nodes -newkey rsa:4096 -out traffic_ops/traffic_ops_golang/localhost.crt -keyout traffic_ops/traffic_ops_golang/localhost.key -subj "/CN=tptests"
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -236,6 +264,7 @@ jobs:
             experimental/traffic-portal/nightwatch/junit
             experimental/traffic-portal/nightwatch/screens
             experimental/traffic-portal/tests_output
+            tp.log
 
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

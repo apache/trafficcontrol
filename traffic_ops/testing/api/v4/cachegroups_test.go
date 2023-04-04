@@ -24,8 +24,9 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -89,7 +90,7 @@ func TestCacheGroups(t *testing.T) {
 				},
 				"OK when VALID TYPE parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"type": {strconv.Itoa(GetTypeId(t, "ORG_LOC"))}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"type": {strconv.Itoa(totest.GetTypeId(t, TOSession, "ORG_LOC"))}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						ValidateExpectedField("TypeName", "ORG_LOC")),
 				},
@@ -151,7 +152,7 @@ func TestCacheGroups(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					EndpointID: totest.GetCacheGroupId(t, TOSession, "cachegroup1"), ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullable{
 						Latitude:            util.Ptr(17.5),
 						Longitude:           util.Ptr(17.5),
@@ -160,57 +161,57 @@ func TestCacheGroups(t *testing.T) {
 						LocalizationMethods: util.Ptr([]tc.LocalizationMethod{tc.LocalizationMethodCZ}),
 						Fallbacks:           util.Ptr([]string{"fallback1"}),
 						Type:                util.Ptr("EDGE_LOC"),
-						TypeID:              util.Ptr(GetTypeId(t, "EDGE_LOC")),
+						TypeID:              util.Ptr(totest.GetTypeId(t, TOSession, "EDGE_LOC")),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when updating CG with null Lat/Long": {
-					EndpointID: GetCacheGroupId(t, "nullLatLongCG"), ClientSession: TOSession,
+					EndpointID: totest.GetCacheGroupId(t, TOSession, "nullLatLongCG"), ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullable{
 						Name:      util.Ptr("nullLatLongCG"),
 						ShortName: util.Ptr("null-ll"),
 						Type:      util.Ptr("EDGE_LOC"),
 						Fallbacks: util.Ptr([]string{"fallback1"}),
-						TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
+						TypeID:    util.Ptr(totest.GetTypeId(t, TOSession, "EDGE_LOC")),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"BAD REQUEST when updating TYPE of CG in TOPOLOGY": {
-					EndpointID: GetCacheGroupId(t, "topology-edge-cg-01"), ClientSession: TOSession,
+					EndpointID: totest.GetCacheGroupId(t, TOSession, "topology-edge-cg-01"), ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullable{
 						Latitude:  util.Ptr(0.0),
 						Longitude: util.Ptr(0.0),
 						Name:      util.Ptr("topology-edge-cg-01"),
 						ShortName: util.Ptr("te1"),
 						Type:      util.Ptr("MID_LOC"),
-						TypeID:    util.Ptr(GetTypeId(t, "MID_LOC")),
+						TypeID:    util.Ptr(totest.GetTypeId(t, TOSession, "MID_LOC")),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					EndpointID: totest.GetCacheGroupId(t, TOSession, "cachegroup1"), ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.CacheGroupNullable{
 						Name:      util.Ptr("cachegroup1"),
 						ShortName: util.Ptr("changeName"),
 						Type:      util.Ptr("EDGE_LOC"),
-						TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
+						TypeID:    util.Ptr(totest.GetTypeId(t, TOSession, "EDGE_LOC")),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					EndpointID: totest.GetCacheGroupId(t, TOSession, "cachegroup1"), ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					RequestBody: tc.CacheGroupNullable{
 						Name:      util.Ptr("cachegroup1"),
 						ShortName: util.Ptr("changeName"),
 						Type:      util.Ptr("EDGE_LOC"),
-						TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
+						TypeID:    util.Ptr(totest.GetTypeId(t, TOSession, "EDGE_LOC")),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
+					EndpointID:    totest.GetCacheGroupId(t, TOSession, "cachegroup1"),
 					ClientSession: NoAuthTOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
@@ -222,7 +223,7 @@ func TestCacheGroups(t *testing.T) {
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"UNAUTHORIZED when NOT LOGGED IN": {
-					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
+					EndpointID:    totest.GetCacheGroupId(t, TOSession, "cachegroup1"),
 					ClientSession: NoAuthTOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
 				},
@@ -316,129 +317,5 @@ func ValidatePagination(paginationParam string) utils.CkReqFunc {
 		case "page":
 			assert.Exactly(t, cachegroup[1:2], paginationResp, "expected GET cachegroup with limit = 1, page = 2 to return second result")
 		}
-	}
-}
-
-func GetTypeId(t *testing.T, typeName string) int {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("name", typeName)
-	resp, _, err := TOSession.GetTypes(opts)
-
-	assert.RequireNoError(t, err, "Get Types Request failed with error: %v", err)
-	assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
-	assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
-
-	return resp.Response[0].ID
-}
-
-func GetCacheGroupId(t *testing.T, cacheGroupName string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", cacheGroupName)
-
-		resp, _, err := TOSession.GetCacheGroups(opts)
-		assert.RequireNoError(t, err, "Get Cache Groups Request failed with error: %v", err)
-		assert.RequireEqual(t, len(resp.Response), 1, "Expected response object length 1, but got %d", len(resp.Response))
-		assert.RequireNotNil(t, resp.Response[0].ID, "Expected id to not be nil")
-
-		return *resp.Response[0].ID
-	}
-}
-
-func CreateTestCacheGroups(t *testing.T) {
-	for _, cg := range testData.CacheGroups {
-
-		resp, _, err := TOSession.CreateCacheGroup(cg, client.RequestOptions{})
-		if err != nil {
-			t.Errorf("could not create Cache Group: %v - alerts: %+v", err, resp.Alerts)
-			continue
-		}
-
-		// Testing 'join' fields during create
-		if cg.ParentName != nil && resp.Response.ParentName == nil {
-			t.Error("Parent cachegroup is null in response when it should have a value")
-		}
-		if cg.SecondaryParentName != nil && resp.Response.SecondaryParentName == nil {
-			t.Error("Secondary parent cachegroup is null in response when it should have a value")
-		}
-		if cg.Type != nil && resp.Response.Type == nil {
-			t.Error("Type is null in response when it should have a value")
-		}
-		assert.NotNil(t, resp.Response.LocalizationMethods, "Localization methods are null")
-		assert.NotNil(t, resp.Response.Fallbacks, "Fallbacks are null")
-	}
-}
-
-func DeleteTestCacheGroups(t *testing.T) {
-	var parentlessCacheGroups []tc.CacheGroupNullable
-	opts := client.NewRequestOptions()
-
-	// delete the edge caches.
-	for _, cg := range testData.CacheGroups {
-		if cg.Name == nil {
-			t.Error("Found a Cache Group with null or undefined name")
-			continue
-		}
-
-		// Retrieve the CacheGroup by name so we can get the id for Deletion
-		opts.QueryParameters.Set("name", *cg.Name)
-		resp, _, err := TOSession.GetCacheGroups(opts)
-		assert.NoError(t, err, "Cannot GET CacheGroup by name '%s': %v - alerts: %+v", *cg.Name, err, resp.Alerts)
-
-		if len(resp.Response) < 1 {
-			t.Errorf("Could not find test data Cache Group '%s' in Traffic Ops", *cg.Name)
-			continue
-		}
-		cg = resp.Response[0]
-
-		// Cachegroups that are parents (usually mids but sometimes edges)
-		// need to be deleted only after the children cachegroups are deleted.
-		if cg.ParentCachegroupID == nil && cg.SecondaryParentCachegroupID == nil {
-			parentlessCacheGroups = append(parentlessCacheGroups, cg)
-			continue
-		}
-
-		if cg.ID == nil {
-			t.Error("Traffic Ops returned a Cache Group with null or undefined ID")
-			continue
-		}
-
-		alerts, _, err := TOSession.DeleteCacheGroup(*cg.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Cannot delete Cache Group: %v - alerts: %+v", err, alerts)
-
-		// Retrieve the CacheGroup to see if it got deleted
-		opts.QueryParameters.Set("name", *cg.Name)
-		cgs, _, err := TOSession.GetCacheGroups(opts)
-		assert.NoError(t, err, "Error deleting Cache Group by name: %v - alerts: %+v", err, cgs.Alerts)
-		assert.Equal(t, 0, len(cgs.Response), "Expected CacheGroup name: %s to be deleted", *cg.Name)
-	}
-
-	opts = client.NewRequestOptions()
-	// now delete the parentless cachegroups
-	for _, cg := range parentlessCacheGroups {
-		// nil check for cg.Name occurs prior to insertion into parentlessCacheGroups
-		opts.QueryParameters.Set("name", *cg.Name)
-		// Retrieve the CacheGroup by name so we can get the id for Deletion
-		resp, _, err := TOSession.GetCacheGroups(opts)
-		assert.NoError(t, err, "Cannot get Cache Group by name '%s': %v - alerts: %+v", *cg.Name, err, resp.Alerts)
-
-		if len(resp.Response) < 1 {
-			t.Errorf("Cache Group '%s' somehow stopped existing since the last time we ask Traffic Ops about it", *cg.Name)
-			continue
-		}
-
-		respCG := resp.Response[0]
-		if respCG.ID == nil {
-			t.Errorf("Traffic Ops returned Cache Group '%s' with null or undefined ID", *cg.Name)
-			continue
-		}
-		delResp, _, err := TOSession.DeleteCacheGroup(*respCG.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Cannot delete Cache Group '%s': %v - alerts: %+v", *respCG.Name, err, delResp.Alerts)
-
-		// Retrieve the CacheGroup to see if it got deleted
-		opts.QueryParameters.Set("name", *cg.Name)
-		cgs, _, err := TOSession.GetCacheGroups(opts)
-		assert.NoError(t, err, "Error attempting to fetch Cache Group '%s' after deletion: %v - alerts: %+v", *cg.Name, err, cgs.Alerts)
-		assert.Equal(t, 0, len(cgs.Response), "Expected Cache Group '%s' to be deleted", *cg.Name)
 	}
 }

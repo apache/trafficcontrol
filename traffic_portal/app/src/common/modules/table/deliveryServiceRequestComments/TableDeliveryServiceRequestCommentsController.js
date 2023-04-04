@@ -17,13 +17,13 @@
  * under the License.
  */
 
+/** @typedef {import("angular")} angular */
+
 /**
- * The controller for the table that lists the comments of a DSR.
- *
  * @param {import("../../../api/DeliveryServiceRequestService").DeliveryServiceRequest} request
  * @param {*} $scope
  * @param {*} $stateParams
- * @param {{open: ({}) => {result: Promise<*>}}} $uibModal
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("angular").IAnchorScrollService} $anchorScroll
  * @param {import("../../../service/utils/DateUtils")} dateUtils
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
@@ -154,7 +154,7 @@ var TableDeliveryServicesRequestsController = function (request, $scope, $stateP
 
 	$scope.getRelativeTime = dateUtils.getRelativeTime;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.getComments();
 };

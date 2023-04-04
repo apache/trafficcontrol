@@ -15,8 +15,7 @@ import type { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from "@angu
 import { Injectable } from "@angular/core";
 import type { Observable } from "rxjs";
 import { tap } from "rxjs/operators";
-
-import type { Alert } from "src/app/models/alert.model";
+import type { Alert } from "trafficops-types";
 
 import { AlertService } from "../alert/alert.service";
 
@@ -44,7 +43,7 @@ export class AlertInterceptor implements HttpInterceptor {
 				if (Object.prototype.hasOwnProperty.call(r, "body") &&
 				    Object.prototype.hasOwnProperty.call((r as {body: unknown}).body, "alerts")) {
 					for (const a of (r as {body: {alerts: Array<unknown>}}).body.alerts) {
-						this.alertService.alertsSubject.next(a as Alert);
+						this.alertService.newAlert(a as Alert);
 					}
 				}
 			}

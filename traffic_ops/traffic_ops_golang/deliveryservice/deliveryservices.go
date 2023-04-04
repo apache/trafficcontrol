@@ -1513,7 +1513,9 @@ func requiredIfMatchesTypeName(patterns []string, typeName string) func(interfac
 			return nil
 		case *string:
 			if v != nil {
-				return nil
+				if *v != "" {
+					return nil
+				}
 			}
 		case *float64:
 			if v != nil {
@@ -1690,15 +1692,19 @@ func validateOrgServerFQDN(orgServerFQDN string) bool {
 	return true
 }
 
-func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
-	// Validate the TypeName related fields below
-	err := error(nil)
-	DNSRegexType := "^DNS.*$"
-	HTTPRegexType := "^HTTP.*$"
-	SteeringRegexType := "^STEERING.*$"
-	latitudeErr := "Must be a floating point number within the range +-90"
-	longitudeErr := "Must be a floating point number within the range +-180"
+const (
+	dnsTypeRegexp      = "^DNS.*$"
+	httpTypeRegexp     = "^HTTP.*$"
+	steeringTypeRegexp = "^STEERING.*$"
+)
 
+const (
+	latitudeErr  = "Must be a floating point number within the range +-90"
+	longitudeErr = "Must be a floating point number within the range +-180"
+)
+
+// validateTypeFields validates the TypeName-related field.
+func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 	typeName, err := tc.ValidateTypeID(tx, &ds.TypeID, "deliveryservice")
 	if err != nil {
 		return err
@@ -1714,22 +1720,22 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
 			})),
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
-			validation.By(requiredIfMatchesTypeName([]string{HTTPRegexType}, typeName)),
+			validation.By(requiredIfMatchesTypeName([]string{httpTypeRegexp}, typeName)),
 			validation.By(tovalidate.IsGreaterThanZero)),
 		"ipv6RoutingEnabled": validation.Validate(ds.IPV6RoutingEnabled,
-			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{steeringTypeRegexp, dnsTypeRegexp, httpTypeRegexp}, typeName))),
 		"missLat": validation.Validate(ds.MissLat,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.By(requiredIfMatchesTypeName([]string{dnsTypeRegexp, httpTypeRegexp}, typeName)),
 			validation.Min(-90.0).Error(latitudeErr),
 			validation.Max(90.0).Error(latitudeErr)),
 		"missLong": validation.Validate(ds.MissLong,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.By(requiredIfMatchesTypeName([]string{dnsTypeRegexp, httpTypeRegexp}, typeName)),
 			validation.Min(-180.0).Error(longitudeErr),
 			validation.Max(180.0).Error(longitudeErr)),
 		"multiSiteOrigin": validation.Validate(ds.MultiSiteOrigin,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{dnsTypeRegexp, httpTypeRegexp}, typeName))),
 		"orgServerFqdn": validation.Validate(ds.OrgServerFQDN,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName)),
+			validation.By(requiredIfMatchesTypeName([]string{dnsTypeRegexp, httpTypeRegexp}, typeName)),
 			validation.NewStringRule(validateOrgServerFQDN, "must start with http:// or https:// and be followed by a valid hostname with an optional port (no trailing slash)")),
 		"rangeSliceBlockSize": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
@@ -1749,11 +1755,11 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 				return nil
 			})),
 		"protocol": validation.Validate(ds.Protocol,
-			validation.By(requiredIfMatchesTypeName([]string{SteeringRegexType, DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{steeringTypeRegexp, dnsTypeRegexp, httpTypeRegexp}, typeName))),
 		"qstringIgnore": validation.Validate(ds.QStringIgnore,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{dnsTypeRegexp, httpTypeRegexp}, typeName))),
 		"rangeRequestHandling": validation.Validate(ds.RangeRequestHandling,
-			validation.By(requiredIfMatchesTypeName([]string{DNSRegexType, HTTPRegexType}, typeName))),
+			validation.By(requiredIfMatchesTypeName([]string{dnsTypeRegexp, httpTypeRegexp}, typeName))),
 		"tlsVersions": validation.Validate(
 			&ds.TLSVersions,
 			validation.By(

@@ -17,6 +17,12 @@
  * under the License.
  */
 
+/**
+ * @param {import("angular").IHttpService} $http
+ * @param {{api: Record<PropertyKey, string>}} ENV
+ * @param {import("../service/utils/LocationUtils")} locationUtils
+ * @param {import("../models/MessageModel")} messageModel
+ */
 var StatusService = function($http, ENV, locationUtils, messageModel) {
 
     this.getStatuses = function(queryParams) {

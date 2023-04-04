@@ -17,13 +17,11 @@ package v4
 
 import (
 	"net/http"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -35,6 +33,7 @@ var (
 func TestServerCheckExtensions(t *testing.T) {
 	WithObjs(t, []TCObj{ServerCheckExtensions}, func() {
 
+		t.Logf("TestServerCheckExtensions user '%v' pass '%v'\n", Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword)
 		extensionUser := utils.CreateV4Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
 
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerCheckExtensionNullable]{
@@ -96,29 +95,4 @@ func TestServerCheckExtensions(t *testing.T) {
 			})
 		}
 	})
-}
-
-func CreateTestServerCheckExtensions(t *testing.T) {
-	extensionUser := utils.CreateV4Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
-	for _, ext := range testData.ServerCheckExtensions {
-		resp, _, err := extensionUser.CreateServerCheckExtension(ext, client.RequestOptions{})
-		assert.NoError(t, err, "Could not create Servercheck Extension: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func DeleteTestServerCheckExtensions(t *testing.T) {
-	extensionUser := utils.CreateV4Session(t, Config.TrafficOps.URL, Config.TrafficOps.Users.Extension, Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
-	extensions, _, err := TOSession.GetServerCheckExtensions(client.RequestOptions{})
-	assert.RequireNoError(t, err, "Could not get Servercheck Extensions: %v - alerts: %+v", err, extensions.Alerts)
-
-	for _, extension := range extensions.Response {
-		alerts, _, err := extensionUser.DeleteServerCheckExtension(*extension.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Servercheck Extension '%s' (#%d): %v - alerts: %+v", *extension.Name, *extension.ID, err, alerts.Alerts)
-		// Retrieve the Server Extension to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(*extension.ID))
-		getExtension, _, err := TOSession.GetServerCheckExtensions(opts)
-		assert.NoError(t, err, "Error getting Servercheck Extension '%s' after deletion: %v - alerts: %+v", *extension.Name, err, getExtension.Alerts)
-		assert.Equal(t, 0, len(getExtension.Response), "Expected Servercheck Extension '%s' to be deleted, but it was found in Traffic Ops", *extension.Name)
-	}
 }

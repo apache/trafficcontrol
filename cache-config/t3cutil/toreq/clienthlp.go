@@ -20,6 +20,7 @@ package toreq
  */
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -122,4 +123,41 @@ func ReqOpts(hdr http.Header) *toclient.RequestOptions {
 	opts := toclient.NewRequestOptions()
 	opts.Header = hdr
 	return &opts
+}
+
+func GetCacheGroupByName(toClient *toclient.Session, cgName string) (tc.CacheGroupsNullableResponse, toclientlib.ReqInf, error) {
+	opt := toclient.NewRequestOptions()
+	opt.QueryParameters.Set("name", cgName)
+	return toClient.GetCacheGroups(opt)
+}
+
+// GetParameterByNameAndConfigFile returns the parameters with the given name from Traffic Ops.
+// It is a helper function equivalent to calling GetParameters with RequestOptions with the Values (query string) with the key name set to the name.
+// If opts.Values[name] exists, it is overwritten with name.
+func GetParameterByNameAndConfigFile(toClient *toclient.Session, name string, configFile string, opts *toclient.RequestOptions) ([]tc.Parameter, toclientlib.ReqInf, error) {
+	if opts == nil {
+		opts = &toclient.RequestOptions{}
+	}
+	if opts.QueryParameters == nil {
+		opts.QueryParameters = url.Values{}
+	}
+	opts.QueryParameters.Set("name", name)
+	opts.QueryParameters.Set("configFile", name)
+	params, reqInf, err := toClient.GetParameters(*opts)
+	return params.Response, reqInf, err
+}
+
+// GetServerByHostName requests the server with the given hostname from Traffic Ops and returns it.
+// If the server does not exist, an error is returned
+func GetServerByHostName(toClient *toclient.Session, hostName string) (*tc.ServerV40, toclientlib.ReqInf, error) {
+	opts := toclient.NewRequestOptions()
+	opts.QueryParameters.Set("hostName", hostName)
+	resp, reqInf, err := toClient.GetServers(opts)
+	if err != nil {
+		return nil, reqInf, err
+	}
+	if len(resp.Response) == 0 {
+		return nil, reqInf, errors.New("not found")
+	}
+	return &resp.Response[0], reqInf, nil
 }

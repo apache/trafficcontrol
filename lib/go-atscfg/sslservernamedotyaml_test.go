@@ -68,6 +68,7 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 	}
 
 	server := makeTestParentServer()
+	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
 	mid0.Cachegroup = util.StrPtr("midCG")
@@ -129,7 +130,7 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 		},
 	}
 
-	cfg, err := MakeSSLServerNameYAML(server, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
+	cfg, err := MakeSSLServerNameYAML(server, servers, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -200,6 +201,7 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 	}
 
 	server := makeTestParentServer()
+	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
 	mid0.Cachegroup = util.StrPtr("midCG")
@@ -261,7 +263,7 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 		},
 	}
 
-	cfg, err := MakeSSLServerNameYAML(server, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
+	cfg, err := MakeSSLServerNameYAML(server, servers, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -332,6 +334,7 @@ func TestMakeSSLServerNameYAMLParamInvalid(t *testing.T) {
 	}
 
 	server := makeTestParentServer()
+	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
 	mid0.Cachegroup = util.StrPtr("midCG")
@@ -393,7 +396,7 @@ func TestMakeSSLServerNameYAMLParamInvalid(t *testing.T) {
 		},
 	}
 
-	cfg, err := MakeSSLServerNameYAML(server, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
+	cfg, err := MakeSSLServerNameYAML(server, servers, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -462,6 +465,7 @@ func TestMakeSSLServerNameYAMLDSTLSVersions(t *testing.T) {
 	}
 
 	server := makeTestParentServer()
+	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
 	mid0.Cachegroup = util.StrPtr("midCG")
@@ -523,7 +527,7 @@ func TestMakeSSLServerNameYAMLDSTLSVersions(t *testing.T) {
 		},
 	}
 
-	cfg, err := MakeSSLServerNameYAML(server, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
+	cfg, err := MakeSSLServerNameYAML(server, servers, dses, dss, dsr, parentConfigParams, cdn, topologies, cgs, serverCapabilities, dsRequiredCapabilities, opts)
 	if err != nil {
 		t.Fatal(err)
 	}

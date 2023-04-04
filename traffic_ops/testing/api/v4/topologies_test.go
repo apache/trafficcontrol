@@ -27,7 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -538,28 +538,5 @@ func validateTopologiesUpdateCreateFields(expectedResp map[string]interface{}) u
 		topology := resp.(tc.Topology)
 		topologyResp := []tc.Topology{topology}
 		validateTopologiesFields(expectedResp)(t, toclientlib.ReqInf{}, topologyResp, tc.Alerts{}, nil)
-	}
-}
-
-func CreateTestTopologies(t *testing.T) {
-	for _, topology := range testData.Topologies {
-		resp, _, err := TOSession.CreateTopology(topology, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create Topology: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func DeleteTestTopologies(t *testing.T) {
-	topologies, _, err := TOSession.GetTopologies(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Topologies: %v - alerts: %+v", err, topologies.Alerts)
-
-	for _, topology := range topologies.Response {
-		alerts, _, err := TOSession.DeleteTopology(topology.Name, client.RequestOptions{})
-		assert.NoError(t, err, "Cannot delete Topology: %v - alerts: %+v", err, alerts.Alerts)
-		// Retrieve the Topology to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", topology.Name)
-		resp, _, err := TOSession.GetTopologies(opts)
-		assert.NoError(t, err, "Unexpected error trying to fetch Topologies after deletion: %v - alerts: %+v", err, resp.Alerts)
-		assert.Equal(t, 0, len(resp.Response), "Expected Topology '%s' to be deleted, but it was found in Traffic Ops", topology.Name)
 	}
 }

@@ -43,7 +43,7 @@ public class HTTPAccessEventBuilder {
     }
 
     private static String formatObject(final Object o) {
-        return (o == null) ? "-" : o.toString();
+        return (o == null || o.toString().equals("")) ? "-" : o.toString();
     }
 
     private static String formatRequestHeaders(final Map<String, String> requestHeaders) {

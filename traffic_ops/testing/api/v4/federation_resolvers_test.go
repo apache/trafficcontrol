@@ -25,8 +25,9 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -118,7 +119,7 @@ func TestFederationResolvers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.FederationResolver{
 						IPAddress: util.Ptr("not a valid IP address"),
-						TypeID:    util.Ptr((uint)(GetTypeId(t, "RESOLVE4"))),
+						TypeID:    util.Ptr((uint)(totest.GetTypeId(t, TOSession, "RESOLVE4"))),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -257,28 +258,5 @@ func GetFederationResolverID(t *testing.T, ipAddress string) func() int {
 		assert.RequireEqual(t, 1, len(federationResolvers.Response), "Expected response object length 1, but got %d", len(federationResolvers.Response))
 		assert.RequireNotNil(t, federationResolvers.Response[0].ID, "Expected Federation Resolver ID to not be nil")
 		return int(*federationResolvers.Response[0].ID)
-	}
-}
-
-func CreateTestFederationResolvers(t *testing.T) {
-	for _, fr := range testData.FederationResolvers {
-		fr.TypeID = util.UIntPtr(uint(GetTypeId(t, *fr.Type)))
-		resp, _, err := TOSession.CreateFederationResolver(fr, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Failed to create Federation Resolver %+v: %v - alerts: %+v", fr, err, resp.Alerts)
-	}
-}
-
-func DeleteTestFederationResolvers(t *testing.T) {
-	frs, _, err := TOSession.GetFederationResolvers(client.RequestOptions{})
-	assert.RequireNoError(t, err, "Unexpected error getting Federation Resolvers: %v - alerts: %+v", err, frs.Alerts)
-	for _, fr := range frs.Response {
-		alerts, _, err := TOSession.DeleteFederationResolver(*fr.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Failed to delete Federation Resolver %+v: %v - alerts: %+v", fr, err, alerts.Alerts)
-		// Retrieve the Federation Resolver to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(int(*fr.ID)))
-		getFR, _, err := TOSession.GetFederationResolvers(opts)
-		assert.NoError(t, err, "Error getting Federation Resolver '%d' after deletion: %v - alerts: %+v", *fr.ID, err, getFR.Alerts)
-		assert.Equal(t, 0, len(getFR.Response), "Expected Federation Resolver '%d' to be deleted, but it was found in Traffic Ops", *fr.ID)
 	}
 }

@@ -26,7 +26,15 @@ pkg_command=(./pkg -v)
 if [[ "$GITHUB_REF" == refs/pull/*/merge ]]; then
 	sudo apt-get install jq
 	pr_number="$(<<<"$GITHUB_REF" grep -o '[0-9]\+')"
-	files_changed="$(curl "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/files" | jq -r .[].filename)"
+	for ((i = 0; i < 10; i++)); do
+		response="$(curl "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/pulls/${pr_number}/files")"
+		if files_changed="$(<<<"$response" jq -r .[].filename)"; then
+			break
+		else
+			echo "unexpected response body: ${response}"
+		fi
+		sleep 2
+	done
 else
 	files_changed="$(git diff --name-only HEAD~4 HEAD --)" # Files changed by the last 4 commits
 fi

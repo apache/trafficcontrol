@@ -20,7 +20,8 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -31,19 +32,19 @@ func TestFederationFederationResolvers(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.AssignFederationResolversRequest]{
 			"GET": {
 				"OK when VALID request AND RESOLVERS ASSIGNED": {
-					EndpointID:    GetFederationID(t, "booya.com."),
+					EndpointID:    totest.GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"OK when VALID request AND NO RESOLVERS ASSIGNED": {
-					EndpointID:    GetFederationID(t, "google.com."),
+					EndpointID:    totest.GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(0)),
 				},
 			},
 			"POST": {
 				"OK when ASSIGNING ONE FEDERATION RESOLVER": {
-					EndpointID:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.AssignFederationResolversRequest{
 						FedResolverIDs: []int{GetFederationResolverID(t, "1.2.3.4")()},
@@ -52,7 +53,7 @@ func TestFederationFederationResolvers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when ASSIGNING MULTIPLE FEDERATION RESOLVERS": {
-					EndpointID:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.AssignFederationResolversRequest{
 						FedResolverIDs: []int{
@@ -65,7 +66,7 @@ func TestFederationFederationResolvers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"OK when REPLACING ALL FEDERATION RESOLVERS": {
-					EndpointID:    GetFederationID(t, "the.cname.com."),
+					EndpointID:    totest.GetFederationID(t, "the.cname.com."),
 					ClientSession: TOSession,
 					RequestBody: tc.AssignFederationResolversRequest{
 						FedResolverIDs: []int{GetFederationResolverID(t, "dead::babe")()},
@@ -126,7 +127,7 @@ func CreateTestFederationFederationResolvers(t *testing.T) {
 	}
 
 	for cname, federationFederationResolver := range federationFederationResolvers {
-		fedID := GetFederationID(t, cname)()
+		fedID := totest.GetFederationID(t, cname)()
 		resp, _, err := TOSession.AssignFederationFederationResolver(fedID, federationFederationResolver.FedResolverIDs, federationFederationResolver.Replace, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Assigning resolvers %v to federation %d: %v - alerts: %+v", federationFederationResolver.FedResolverIDs, fedID, err, resp.Alerts)
 	}
@@ -142,7 +143,7 @@ func DeleteTestFederationFederationResolvers(t *testing.T) {
 	}
 
 	for cname, federationFederationResolver := range federationFederationResolvers {
-		fedID := GetFederationID(t, cname)()
+		fedID := totest.GetFederationID(t, cname)()
 		resp, _, err := TOSession.AssignFederationFederationResolver(fedID, federationFederationResolver.FedResolverIDs, federationFederationResolver.Replace, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Assigning resolvers %v to federation %d: %v - alerts: %+v", federationFederationResolver.FedResolverIDs, fedID, err, resp.Alerts)
 	}

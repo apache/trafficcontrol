@@ -41,6 +41,7 @@ Request Structure
 :dnssecEnabled: If ``true``, this CDN will use DNSSEC, if ``false`` it will not
 :domainName:    The top-level domain (TLD) belonging to the CDN
 :name:          Name of the new CDN
+:ttlOverride:	Optional an nullable. A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
 
 .. code-block:: http
 	:caption: Request Example
@@ -53,7 +54,7 @@ Request Structure
 	Content-Length: 63
 	Content-Type: application/json
 
-	{"name": "quest", "domainName": "test", "dnssecEnabled": false}
+	{"name": "quest", "domainName": "test", "dnssecEnabled": false, "ttlOverride": 60}
 
 Response Structure
 ------------------
@@ -61,6 +62,7 @@ Response Structure
 :domainName:    The top-level domain (TLD) assigned to the newly created CDN
 :id:            An integral, unique identifier for the newly created CDN
 :name:          The newly created CDN's name
+:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
 
 
 .. code-block:: http
@@ -89,7 +91,8 @@ Response Structure
 		"domainName": "test",
 		"id": 4,
 		"lastUpdated": "2018-11-14 20:54:33+00",
-		"name": "quest"
+		"name": "quest",
+		"ttlOverride": 60
 	}}
 
 ``DELETE``

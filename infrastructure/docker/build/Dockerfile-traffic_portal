@@ -14,7 +14,6 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-    # Change BASE_IMAGE to centos when RHEL_VERSION=7
 ARG BASE_IMAGE=rockylinux \
     RHEL_VERSION=8
 FROM ${BASE_IMAGE}:${RHEL_VERSION} as common-dependencies
@@ -37,15 +36,10 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 		epel-release && \
 	yum -y clean all
 
-### traffic_portal specific
-FROM common-dependencies AS traffic-portal
+RUN	curl -sL https://rpm.nodesource.com/setup_16.x | bash - && \
+	yum -y install nodejs
 
-RUN	curl -sL https://rpm.nodesource.com/setup_18.x | bash - && \
-	yum -y install make nodejs && \
-	npm -g install grunt-cli sass
-
-###
-
+RUN npm -g install make grunt-cli sass
 CMD /trafficcontrol/build/clean_build.sh traffic_portal
 
 # vi:syntax=Dockerfile

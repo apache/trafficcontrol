@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} tenant
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/TenantService")} tenantService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
 var FormEditTenantController = function(tenant, $scope, $controller, $uibModal, $anchorScroll, locationUtils, tenantService, messageModel) {
 
     // extends the FormTenantController to inherit common methods

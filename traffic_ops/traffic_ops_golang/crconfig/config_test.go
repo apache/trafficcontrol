@@ -21,12 +21,14 @@ package crconfig
 
 import (
 	"context"
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -144,5 +146,36 @@ func TestMakeCRConfigConfig(t *testing.T) {
 
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("makeCRConfigConfig expected: %+v, actual: %+v", expected, actual)
+	}
+}
+
+func TestCreateMaxmindDefaultOverrideObj(t *testing.T) {
+	errs := ""
+	separator := ", "
+	testCases := []string{
+		"US;12.345,-12.345",
+		"US",
+		"US;12.345",
+		"US;abc,-12.345",
+		"US;1,abc",
+	}
+
+	for _, v := range testCases {
+		_, err := createMaxmindDefaultOverrideObj(v)
+		if err != nil {
+			errs += util.JoinErrsStr([]error{err}) + separator
+		}
+	}
+	errs = errs[:len(errs)-len(separator)]
+
+	expectedErrs := util.JoinErrsStr([]error{
+		errors.New(`malformed maxmind.default.override parameter: 'US'`),
+		errors.New(`malformed maxmind.default.override parameter coordinates 'US;12.345'`),
+		errors.New(`malformed maxmind.default.override parameter coordinates, latitude not a number: 'US;abc,-12.345'`),
+		errors.New(`malformed maxmind.default.override parameter coordinates, longitude not an number: 'US;1,abc'`),
+	})
+
+	if !reflect.DeepEqual(expectedErrs, errs) {
+		t.Errorf("expected %s, got %s", expectedErrs, errs)
 	}
 }

@@ -17,6 +17,24 @@
  * under the License.
  */
 
+/**
+ * @param {*} server
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {*} $state
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/ServerUtils")} serverUtils
+ * @param {import("../../../api/ServerService")} serverService
+ * @param {import("../../../api/CacheGroupService")} cacheGroupService
+ * @param {import("../../../api/CDNService")} cdnService
+ * @param {import("../../../api/PhysLocationService")} physLocationService
+ * @param {import("../../../api/ProfileService")} profileService
+ * @param {import("../../../api/TypeService")} typeService
+ * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ */
 var FormServerController = function(server, $scope, $location, $state, $uibModal, formUtils, locationUtils, serverUtils, serverService, cacheGroupService, cdnService, physLocationService, profileService, typeService, messageModel, propertiesModel) {
 
     $scope.IPPattern = serverUtils.IPPattern;
@@ -120,7 +138,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.isOrigin = serverUtils.isOrigin;
 
-    $scope.openCharts = serverUtils.openCharts;
+    $scope.openCharts = (s, $event) => serverUtils.openCharts(s, $event);
 
     $scope.showChartsButton = propertiesModel.properties.servers.charts.show;
 
@@ -235,7 +253,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         $location.path($location.path() + '/delivery-services');
     };
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.hasError = formUtils.hasError;
 

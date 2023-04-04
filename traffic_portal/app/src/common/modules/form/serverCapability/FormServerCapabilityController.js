@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} serverCapability
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var FormServerCapabilityController = function(serverCapability, $scope, $location, formUtils, locationUtils) {
 
 	$scope.serverCapability = serverCapability;
@@ -29,7 +36,7 @@ var FormServerCapabilityController = function(serverCapability, $scope, $locatio
 		$location.path('/server-capabilities/delivery-services');
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.hasError = formUtils.hasError;
 

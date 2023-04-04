@@ -36,10 +36,10 @@ public class StatTracker {
 
 	public static class Tallies {
 
-		public int getCzCount() {
+		public long getCzCount() {
 			return czCount;
 		}
-		public void setCzCount(final int czCount) {
+		public void setCzCount(final long czCount) {
 			this.czCount = czCount;
 		}
 		public int getGeoCount() {
@@ -97,7 +97,7 @@ public class StatTracker {
 			this.regionalAlternateCount = regionalAlternateCount;
 		}
 
-		public int czCount;
+		public long czCount;
 		public int geoCount;
 		public int deepCzCount;
 		public int missCount;
@@ -373,7 +373,7 @@ public class StatTracker {
 					totalDnsCount++;
 					totalDnsTime += t.time;
 				}
-				map = dnsMap;
+				map = getDnsMap();
 
 				if (t.resultDetails == Track.ResultDetails.LOCALIZED_DNS) {
 					return;
@@ -387,7 +387,7 @@ public class StatTracker {
 					totalHttpCount++;
 					totalHttpTime += t.time;
 				}
-				map = httpMap;
+				map = getHttpMap();
 			}
 			map.putIfAbsent(fqdn, new Tallies());
 			incTally(t, map.get(fqdn));
@@ -402,6 +402,9 @@ public class StatTracker {
 			break;
 		case CZ:
 			tallies.czCount++;
+			if (tallies.czCount < 0) {
+				tallies.czCount = Long.MAX_VALUE;
+			}
 			break;
 		case GEO:
 			tallies.geoCount++;

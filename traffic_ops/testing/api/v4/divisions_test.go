@@ -19,13 +19,12 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -281,27 +280,5 @@ func GetDivisionID(t *testing.T, divisionName string) func() int {
 		assert.RequireNoError(t, err, "Get Divisions Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(divisionsResp.Response), "Expected response object length 1, but got %d", len(divisionsResp.Response))
 		return divisionsResp.Response[0].ID
-	}
-}
-
-func CreateTestDivisions(t *testing.T) {
-	for _, division := range testData.Divisions {
-		resp, _, err := TOSession.CreateDivision(division, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create Division '%s': %v - alerts: %+v", division.Name, err, resp.Alerts)
-	}
-}
-
-func DeleteTestDivisions(t *testing.T) {
-	divisions, _, err := TOSession.GetDivisions(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Divisions: %v - alerts: %+v", err, divisions.Alerts)
-	for _, division := range divisions.Response {
-		alerts, _, err := TOSession.DeleteDivision(division.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Division '%s' (#%d): %v - alerts: %+v", division.Name, division.ID, err, alerts.Alerts)
-		// Retrieve the Division to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(division.ID))
-		getDivision, _, err := TOSession.GetDivisions(opts)
-		assert.NoError(t, err, "Error getting Division '%s' after deletion: %v - alerts: %+v", division.Name, err, getDivision.Alerts)
-		assert.Equal(t, 0, len(getDivision.Response), "Expected Division '%s' to be deleted, but it was found in Traffic Ops", division.Name)
 	}
 }

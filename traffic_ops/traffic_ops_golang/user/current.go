@@ -479,9 +479,9 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = updateLegacyUser(&user, tx, changePasswd, changeConfirmPasswd); err != nil {
-		errCode = http.StatusInternalServerError
+		userErr, sysErr, statusCode := api.ParseDBError(err)
 		sysErr = fmt.Errorf("updating legacy user: %w", err)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 
@@ -567,6 +567,19 @@ func ReplaceCurrentV4(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	roleID, ok, err := dbhelpers.GetRoleIDFromName(tx, user.Role)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	} else if !ok {
+		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such role"), nil)
+		return
+	}
+	if inf.User.Role != roleID {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("users cannot update their own role"), nil)
+		return
+	}
+
 	changePasswd := false
 
 	// obfuscate password
@@ -600,9 +613,9 @@ func ReplaceCurrentV4(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := updateUser(&user, tx, changePasswd); err != nil {
-		errCode = http.StatusInternalServerError
+		userErr, sysErr, statusCode := api.ParseDBError(err)
 		sysErr = fmt.Errorf("updating user: %w", err)
-		api.HandleErr(w, r, tx, errCode, nil, sysErr)
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 

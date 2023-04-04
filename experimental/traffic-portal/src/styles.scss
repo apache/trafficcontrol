@@ -17,7 +17,6 @@
 @import './theme.scss';
 // Custom Theming for Angular Material
 // For more information: https://material.angular.io/guide/theming
-@import '~@angular/material/theming';
 // Plus imports for other components in your app.
 
 // Include the common styles for Angular Material. We include this here so that you only
@@ -152,4 +151,14 @@ button {
 	position: fixed;
 	bottom: 16px;
 	right: 16px;
+}
+
+abbr[title] {
+	cursor: help;
+}
+
+form mat-hint.mat-hint.input-warning {
+	color: #ff9800;
+	font-weight: bold;
+	font-size: x-small;
 }

@@ -67,6 +67,9 @@ func validateLegacy(dsr tc.DeliveryServiceRequestNullable, tx *sql.Tx) (error, e
 		"status":          validation.Validate(dsr.Status, validation.Required, validation.By(validTransition)),
 	}
 	errs := tovalidate.ToErrors(errMap)
+	if len(errs) > 0 {
+		return util.JoinErrs(errs), nil
+	}
 	// ensure the deliveryservice requested is valid
 	upgraded := dsr.DeliveryService.UpgradeToV4().Upgrade()
 	userErr, sysErr := deliveryservice.Validate(tx, &upgraded)

@@ -50,7 +50,7 @@
 - name: "Take pre-install snapshot of CRConfig.json ({{ to_api_target_cdn }})"
   delegate_to: localhost
   uri:
-    url: "{{ to_api_base_url }}/api/4.0/cdns/{{ to_api_target_cdn }}/snapshot"
+    url: "{{ to_api_base_url }}/api/{{ to_api_version }}/cdns/{{ to_api_target_cdn }}/snapshot"
     method: GET
     follow_redirects: all
     return_content: yes
@@ -76,7 +76,7 @@
   become: False
 
 - name: Fix/scrub json output format of the pre-commit snapshot output
-  shell: "jq -r '. | del(.stats|(.tm_user,.tm_version,.date,.tm_path))' {{ raw_precommit_snapshot_file.path }} > {{ precommit_snapshot_file.path }}"
+  shell: "jq -r '.response | del(.stats|(.tm_user,.tm_version,.date,.tm_path))' {{ raw_precommit_snapshot_file.path }} > {{ precommit_snapshot_file.path }}"
   delegate_to: localhost
 
 - name: Fix/scrub json output format of the pending snapshot output
@@ -85,7 +85,7 @@
 
 - name: "Perform diff of {{ to_api_target_cdn }} crconfig"
   delegate_to: localhost
-  shell: "json_diff -u {{ precommit_snapshot_file.path }} {{ pending_snapshot_file.path }}"
+  shell: "jd {{ precommit_snapshot_file.path }} {{ pending_snapshot_file.path }}"
   register: diff_output
   ignore_errors: True
 
@@ -110,14 +110,14 @@
   delegate_to: localhost
   assert:
     that:
-      - "{{ diff_output.stdout_lines | count }} == 3"
+      - "{{ diff_output.stdout_lines | count }} == 0"
     msg: "There are pending changes to the {{to_api_target_cdn}} crconfig when we expect there to be none.  Please rerun with -v or manually review the diff.  Aborting."
   when: to_api_assert_clean_snapshot
 
 - name: "Writing snapshot ({{ to_api_target_cdn }})"
   delegate_to: localhost
   uri:
-    url: "{{ to_api_base_url }}/snapshot/{{ to_api_target_cdn }}"
+    url: "{{ to_api_base_url }}/api/{{ to_api_version }}/snapshot?cdn={{ to_api_target_cdn }}"
     method: PUT
     follow_redirects: all
     return_content: yes

@@ -17,6 +17,16 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} staticDnsEntry
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/StaticDnsEntryService")} staticDnsEntryService
+ */
 var FormEditDeliveryServiceStaticDnsEntryController = function(deliveryService, staticDnsEntry, $scope, $controller, $uibModal, $anchorScroll, locationUtils, staticDnsEntryService) {
 
     // extends the FormDeliveryServiceController to inherit common methods

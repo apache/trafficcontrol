@@ -17,6 +17,17 @@
  * under the License.
  */
 
+/**
+ *
+ * @param {*} cdn
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/CDNService")} cdnService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
 var FormEditCDNController = function(cdn, $scope, $controller, $uibModal, $anchorScroll, locationUtils, cdnService, messageModel) {
 
     // extends the FormCDNController to inherit common methods

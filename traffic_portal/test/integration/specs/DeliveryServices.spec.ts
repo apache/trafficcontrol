@@ -74,13 +74,6 @@ describe("Delivery Services", () => {
 				});
 			}
 
-			for (const {rcName, validationMessage, xmlID} of data.assignRequiredCapabilities) {
-				it("assign required capabilities to delivery service", async () => {
-					await deliveryservicesPage.SearchDeliveryService(xmlID);
-					expect(await deliveryservicesPage.AssignRequiredCapabilitiesToDS(rcName)).toBe(validationMessage);
-				});
-			}
-
 			for (const {name, validationMessage} of data.remove) {
 				it("deletes a Delivery Service", async () => {
 					await deliveryservicesPage.SearchDeliveryService(name);

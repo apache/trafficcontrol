@@ -57,6 +57,13 @@
  * @property {Alert[] | undefined} alerts
  */
 
+/**
+ * @param {import("angular").IHttpService} $http
+ * @param {import("../service/utils/LocationUtils")} locationUtils
+ * @param {import("../models/UserModel")} userModel
+ * @param {import("../models/MessageModel")} messageModel
+ * @param {{api: Record<PropertyKey, string>}} ENV
+ */
 var UserService = function($http, locationUtils, userModel, messageModel, ENV) {
 
     this.getCurrentUser = function() {

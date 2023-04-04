@@ -19,14 +19,14 @@ import { ResponseDivision } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * DivisionDetailsComponent is the controller for the division add/edit form.
  */
 @Component({
 	selector: "tp-divisions-detail",
-	styleUrls: ["./division-detail.component.scss"],
+	styleUrls: ["../../../styles/form.page.scss"],
 	templateUrl: "./division-detail.component.html"
 })
 export class DivisionDetailComponent implements OnInit {
@@ -34,7 +34,7 @@ export class DivisionDetailComponent implements OnInit {
 	public division!: ResponseDivision;
 
 	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location, private readonly dialog: MatDialog, private readonly header: TpHeaderService) { }
+		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService) { }
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
@@ -47,7 +47,7 @@ export class DivisionDetailComponent implements OnInit {
 		}
 
 		if (ID === "new") {
-			this.header.headerTitle.next("New Division");
+			this.navSvc.headerTitle.next("New Division");
 			this.new = true;
 			this.division = {
 				id: -1,
@@ -63,7 +63,7 @@ export class DivisionDetailComponent implements OnInit {
 		}
 
 		this.division = await this.cacheGroupService.getDivisions(numID);
-		this.header.headerTitle.next(`Division: ${this.division.name}`);
+		this.navSvc.headerTitle.next(`Division: ${this.division.name}`);
 	}
 
 	/**

@@ -12,18 +12,18 @@
 * limitations under the License.
 */
 
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute, Router } from "@angular/router";
+import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { Region, ResponseRegion } from "trafficops-types";
+import type { Region, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
-import { TpHeaderService } from "src/app/shared/tp-header/tp-header.service";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * RegionsTableComponent is the controller for the "Regions" table.
@@ -37,10 +37,11 @@ export class RegionsTableComponent implements OnInit {
 	/** List of regions */
 	public regions: Promise<Array<ResponseRegion>>;
 
-	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: TpHeaderService, private readonly router: Router,
+	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: NavigationService,
 		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.regions = this.api.getRegions();
+		this.headerSvc.headerTitle.next("Regions");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -57,7 +58,6 @@ export class RegionsTableComponent implements OnInit {
 				console.error("Failed to get query parameters:", e);
 			}
 		);
-		this.headerSvc.headerTitle.next("Regions");
 	}
 
 	/** Definitions of the table's columns according to the ag-grid API */
@@ -68,7 +68,8 @@ export class RegionsTableComponent implements OnInit {
 		},
 		{
 			field: "divisionName",
-			headerName: "Division"
+			headerName: "Division",
+			valueGetter: ({data}: {data: ResponseRegion}): string => `${data.divisionName} (#${data.division})`
 		},
 		{
 			field: "id",
@@ -82,11 +83,15 @@ export class RegionsTableComponent implements OnInit {
 	];
 
 	/** Definitions for the context menu items (which act on augmented region data). */
-	public contextMenuItems: Array<ContextMenuItem<Region>> = [
+	public contextMenuItems: Array<ContextMenuItem<ResponseRegion>> = [
 		{
-			action: "edit",
-			multiRow: false,
+			href: (selectedRow: ResponseRegion): string => `${selectedRow.id}`,
 			name: "Edit"
+		},
+		{
+			href: (selectedRow: ResponseRegion): string => `${selectedRow.id}`,
+			name: "Open in New Tab",
+			newTab: true
 		},
 		{
 			action: "delete",
@@ -94,13 +99,13 @@ export class RegionsTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			href: (selectedRow: Region): string => `/core/division/${selectedRow.division}`,
+			href: (selectedRow: Region): string => `/core/divisions/${selectedRow.division}`,
 			name: "View Division"
 		},
 		{
-			action: "viewPhysLocs",
-			multiRow: false,
-			name: "View Physical Locations"
+			href: "/core/phys-locs",
+			name: "View Physical Locations",
+			queryParams: (selectedRow: ResponseRegion): Params => ({region: selectedRow.name})
 		}
 	];
 
@@ -133,11 +138,6 @@ export class RegionsTableComponent implements OnInit {
 					}
 				});
 				break;
-			case "edit":
-				await this.router.navigate(["/core/region", data.id]);
-				break;
-			case "viewPhysLocs":
-				console.log("Physical Locations not implemented");
 		}
 	}
 }

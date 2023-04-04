@@ -25,6 +25,8 @@ services:
     build:
       context: ../../../..
       dockerfile: traffic_ops/app/bin/tests/Dockerfile-golangtest
+      args:
+        - GO_VERSION=${GO_VERSION}
     volumes:
       - traffic_ops_golang:/traffic_ops_golang
 

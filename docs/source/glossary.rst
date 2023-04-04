@@ -41,6 +41,11 @@ Glossary
 		- :term:`forward proxy`: Used by Traffic Control for Mid-tier :dfn:`cache servers`.
 		- transparent proxy: These are not used by Traffic Control. If you are interested you can learn more about transparent proxies on `wikipedia <http://en.wikipedia.org/wiki/Proxy_server#Transparent_proxy>`_.
 
+	anycast group
+	Anycast group
+	Anycast Group
+        A group of caching HTTP proxy servers that have the same service address that is equal cost multi path routed at the last hop
+
 	Cache Group
 	Cache Groups
 		A group of caching HTTP proxy servers that together create a combined larger cache using consistent hashing. Traffic Router treats all servers in a :dfn:`Cache Group` as though they are in the  same geographic location, though they are in fact only in the same general area. A :dfn:`Cache Group` has one single set of geographical coordinates even if the :term:`cache servers` that make up the :dfn:`Cache Group` are actually in :term:`Physical Locations`. The :term:`cache servers` in a :dfn:`Cache Group` are not aware of the other :term:`cache servers` in the group - there is no clustering software or communications between :term:`cache servers` in a :dfn:`Cache Group`.
@@ -152,8 +157,6 @@ Glossary
 		:dfn:`Federations` allow for other ("federated") CDNs (e.g. at a different :abbr:`ISP (Internet Service Provider)`) to add a list of DNS resolvers and an :abbr:`FQDN (Fully Qualified Domain Name)` to be used in a DNS CNAME record for a :term:`Delivery Service`. When a request is made from one of the federated CDN's clients, Traffic Router will return the CNAME record configured from the federation mapping. This allows the federated CDN to serve the content without the content provider changing the URL, or having to manage multiple URLs. For example, if the external CDN was actually another :abbr:`ATC (Apache Traffic Control)`-managed CDN, then a federation mapping to direct clients toward it should use the :abbr:`FQDN (Fully Qualified Domain Name)` of a :term:`Delivery Service` on the external CDN.
 
 		Federations only have meaning to DNS-routed :term:`Delivery Services` - HTTP-routed Delivery services should instead treat the external :abbr:`FQDN (Fully Qualified Domain Name)` as an :term:`Origin` to achieve the same effect.
-
-		.. seealso:: Federations are currently only manageable by directly using the :ref:`to-api`. The endpoints related to federations are :ref:`to-api-federations`, :ref:`to-api-federation_resolvers`, :ref:`to-api-federations-id-deliveryservices`, :ref:`to-api-federations-id-deliveryservices-id`, :ref:`to-api-federations-id-federation_resolvers`, :ref:`to-api-federations-id-users`, and :ref:`to-api-federations-id-users-id`.
 
 	First-tier
 	First-tier cache

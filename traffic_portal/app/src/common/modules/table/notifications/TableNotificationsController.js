@@ -18,7 +18,7 @@
  */
 /** @typedef { import('../agGrid/CommonGridController').CGC } CGC */
 
-var TableNotificationsController = function(tableName, notifications, filter, $scope, $state, $uibModal, $document, dateUtils, cdnService) {
+var TableNotificationsController = function(notifications, $scope, $state, $uibModal, cdnService) {
     /** @type CGC.ColumnDefinition */
 	$scope.columns = [
 		{
@@ -154,5 +154,5 @@ var TableNotificationsController = function(tableName, notifications, filter, $s
 	};
 };
 
-TableNotificationsController.$inject = ['tableName', 'notifications', 'filter', '$scope', '$state', '$uibModal', '$document', 'dateUtils', 'cdnService'];
+TableNotificationsController.$inject = ['notifications', '$scope', '$state', '$uibModal', 'cdnService'];
 module.exports = TableNotificationsController;

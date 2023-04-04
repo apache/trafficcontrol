@@ -17,6 +17,13 @@
  * under the License.
  */
 
+/**
+ * @param {*} capability
+ * @param {*} capEndpoints
+ * @param {*} $scope
+ * @param {*} $state
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
 var TableCapabilityEndpointsController = function(capability, capEndpoints, $scope, $state, locationUtils) {
 
 	$scope.capability = capability[0];
@@ -27,7 +34,7 @@ var TableCapabilityEndpointsController = function(capability, capEndpoints, $sco
 		$state.reload(); // reloads all the resolves for the view
 	};
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	angular.element(document).ready(function () {
 		$('#capEndpointsTable').dataTable({

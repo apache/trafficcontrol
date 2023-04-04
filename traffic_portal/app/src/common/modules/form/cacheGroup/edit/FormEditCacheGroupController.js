@@ -17,6 +17,18 @@
  * under the License.
  */
 
+/**
+ * @param {*} cacheGroup
+ * @param {*} types
+ * @param {*} cacheGroups
+ * @param {*} $scope
+ * @param {import("angular").IControllerService} $controller
+ * @param {import("../../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../../api/CacheGroupService")} cacheGroupService
+ * @param {import("../../../../models/MessageModel")} messageModel
+ */
 var FormEditCacheGroupController = function(cacheGroup, types, cacheGroups, $scope, $controller, $uibModal, $anchorScroll, locationUtils, cacheGroupService, messageModel) {
 
     // extends the FormCacheGroupController to inherit common methods

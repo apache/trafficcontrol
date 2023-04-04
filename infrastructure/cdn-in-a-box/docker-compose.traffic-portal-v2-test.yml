@@ -1,0 +1,42 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+---
+version: '3.8'
+
+services:
+  tpv2-e2e-test:
+    build:
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/traffic_portal_v2_e2e_test/Dockerfile
+      args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+    env_file:
+      - variables.env
+    environment:
+      SKIP_DIG_IP: 'true'
+    hostname: tpv2-e2e
+    domainname: infra.ciab.test
+    volumes:
+      - shared:/shared
+      - ../../junit:/junit
+
+volumes:
+  shared:
+    external: false
+  junit:

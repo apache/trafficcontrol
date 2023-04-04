@@ -620,7 +620,7 @@ func createLegacy(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (res
 		return
 	}
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", upgraded.Downgrade().Downgrade())
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", upgraded.Downgrade().Downgrade().Downgrade())
 
 	result.Successful = true
 	result.Assignee = dsr.Assignee
@@ -749,9 +749,13 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	case 5:
 		resp = dsr
 	case 4:
-		resp = dsr.Downgrade()
+		if inf.Version.Minor >= 1 {
+			resp = dsr.Downgrade()
+		} else {
+			resp = dsr.Downgrade().Downgrade()
+		}
 	case 3:
-		resp = dsr.Downgrade().Downgrade()
+		resp = dsr.Downgrade().Downgrade().Downgrade()
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Delivery Service Request #%d deleted", inf.IntParams["id"]), resp)

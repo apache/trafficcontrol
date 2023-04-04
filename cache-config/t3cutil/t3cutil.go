@@ -34,7 +34,6 @@ import (
 	"sort"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 )
@@ -281,12 +280,6 @@ type ApplyMetaData struct {
 	// metadata files from different servers.
 	ServerHostName string `json:"server-hostname"`
 
-	// Time is an RFC3339Nano timestamp of the time t3c-apply ran for this metadata.
-	// This should be treated as approximate, as it could be the start time, end time, or
-	// any inexact time in-between.
-	// However, times of different metadata files should always be monotonically increasing.
-	Time string `json:"time"`
-
 	// ReloadedATS is whether this run restarted ATS.
 	// Note this is whether ATS was actually restarted, not whether it would have been,
 	// e.g. because of --report-only or --service-action.
@@ -369,13 +362,6 @@ func (md *ApplyMetaData) Format() ([]byte, error) {
 	bts = append(bts, '\n') // newline at the end of the file, so it's a valid POSIX text file
 
 	return bts, nil
-}
-
-// SetTime sets the Time field in the prescribed format, based on the given time.
-// To set to the current time, call SetTime(time.Now()).
-// The format is UTC RFC3339Nano. See ApplyMetaData.
-func (md *ApplyMetaData) SetTime(tm time.Time) {
-	md.Time = tm.UTC().Format(time.RFC3339Nano)
 }
 
 // CombineOwnedFilePaths combines the owned file paths of two metadata objects.

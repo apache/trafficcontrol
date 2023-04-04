@@ -14,7 +14,7 @@
 import { Injectable } from "@angular/core";
 import type { CanActivate, CanLoad } from "@angular/router";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * AuthenticationGuard ensures that the user is logged in.

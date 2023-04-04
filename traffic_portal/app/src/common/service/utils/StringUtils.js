@@ -17,13 +17,20 @@
  * under the License.
  */
 
-var FormUtils = function() {
+/**
+ * StringUtils provides miscellaneous string manipulation methods.
+ */
+class StringUtils {
 
-    this.labelize = function(string) {
-        return string.replace(/([A-Z])/g, ' $1').replace(/^./, function(str){ return str.toUpperCase(); });
-    };
+	/**
+	 * Converts a string to a capitalized string. Or something. Hard to say.
+	 *
+	 * @param {string} string
+	 */
+	labelize(string) {
+		return string.replace(/([A-Z])/g, " $1").replace(/^./, str => str.toUpperCase());
+	};
+}
 
-};
-
-FormUtils.$inject = [];
-module.exports = FormUtils;
+StringUtils.$inject = [];
+module.exports = StringUtils;

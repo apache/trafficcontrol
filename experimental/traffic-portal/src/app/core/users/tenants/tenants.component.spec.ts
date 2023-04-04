@@ -15,7 +15,7 @@ import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testin
 import { BehaviorSubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 import { TenantsComponent } from "./tenants.component";
 

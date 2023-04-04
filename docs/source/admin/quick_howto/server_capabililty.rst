@@ -42,18 +42,18 @@ Users with the Operations or Admin :term:`Role` can associate one or more server
 
 .. _delivery_service_required_server_capabilities:
 
-Manage delivery service required server capabilities
-====================================================
-Users with the Operations or Admin :term:`Role` can associate one or more required server capabilities with a :term:`Delivery Service` by navigating to a :term:`Delivery Service` via :menuselection:`Services --> Delivery Services` and using the context menu for the :term:`Delivery Services` table and selecting :menuselection:`Manage Required Server Capabilities` or by navigating to :menuselection:`Services --> Delivery Services --> Delivery Service --> More --> Manage Required Server Capabilities`.
+Configure delivery service required server capabilities
+=======================================================
+Users with the DELIVERY-SERVICE:CREATE or DELIVERY-SERVICE:UPDATE permission can associate one or more required server capabilities with a :term:`Delivery Service` by navigating to a :term:`Delivery Service` via :menuselection:`Services --> Delivery Services` and clicking on Required Capabilities checkbox present on Delivery Services form (HTTPS and DNS)`.
 
 Adding a required server capability to a :term:`Delivery Service` will ensure two things:
 
 1. Only :term:`Edge-tier caches` with the required capability can be assigned to the :term:`Delivery Service`
 2. Only :term:`Mid-tier caches` with the required capability will handle requests of the :term:`Delivery Service` (if applicable)
 
-.. figure:: server_capability/ds_server_caps_table.png
+.. figure:: server_capability/ds_required_capability.png
 	:align: center
-	:alt: A screenshot of the Traffic Portal UI depicting an example list of Required Server Capabilities for a Delivery Service
+	:alt: A screenshot of the Traffic Portal UI depicting an example of Required Server Capabilities for a Delivery Service
 
 	Example Required Server Capabilities for a Delivery Service Listing
 

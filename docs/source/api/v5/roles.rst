@@ -66,8 +66,8 @@ Response Structure
 ------------------
 :permissions:  An array of the names of the Permissions given to this :term:`Role`
 :description:  A description of the :term:`Role`
-:id:           The integral, unique identifier for this :term:`Role`
 :name:         The name of the :term:`Role`
+:lastUpdated: The date and time at which this :term:`Role` was last updated, in :rfc:`3339` format
 
 .. code-block:: http
 	:caption: Response Example
@@ -171,8 +171,8 @@ Response Structure
 	.. tip:: This can be ``null`` *or* empty, depending on whether it was present in the request body, or merely empty. Obviously, it can also be a populated array.
 
 :description: A description of the :term:`Role`
-:id:          The integral, unique identifier for this :term:`Role`
 :name:        The name of the :term:`Role`
+:lastUpdated: The date and time at which this :term:`Role` was last updated, in :rfc:`3339` format
 
 .. code-block:: http
 	:caption: Response Example
@@ -196,7 +196,8 @@ Response Structure
 	"response": {
 		"name": "test",
 		"description": "quest",
-		"permissions": null
+		"permissions": null,
+		"lastUpdated": "2021-05-03T14:50:18.93513-06:00"
 	}}
 
 ``PUT``
@@ -224,6 +225,7 @@ Request Structure
 
 :description: A helpful description of the :term:`Role`'s purpose.
 :name:        The new name of the :term:`Role`
+:lastUpdated: The date and time at which this :term:`Role` was last updated, in :rfc:`3339` format
 
 .. code-block:: http
 	:caption: Request Example
@@ -277,7 +279,8 @@ Response Structure
 		"response": {
 			"name": "test",
 			"description": "quest_updated",
-			"permissions": null
+			"permissions": null,
+			"lastUpdated": "2021-05-03T14:50:18.93513-06:00"
 		}
 	}
 

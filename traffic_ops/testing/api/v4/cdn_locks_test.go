@@ -24,8 +24,9 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -110,11 +111,11 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SERVERS QUEUE UPDATES": {
 				"OK when USER OWNS LOCK": {
-					EndpointID: GetServerID(t, "cdn2-test-edge"), ClientSession: opsUserWithLockSession,
+					EndpointID: totest.GetServerID(t, TOSession, "cdn2-test-edge"), ClientSession: opsUserWithLockSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID: GetServerID(t, "cdn2-test-edge"), ClientSession: TOSession,
+					EndpointID: totest.GetServerID(t, TOSession, "cdn2-test-edge"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
@@ -144,7 +145,7 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "queue",
-						"cdnId":  GetCDNID(t, "cdn2")(),
+						"cdnId":  totest.GetCDNID(t, TOSession, "cdn2")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -153,7 +154,7 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "queue",
-						"cdnId":  GetCDNID(t, "cdn2")(),
+						"cdnId":  totest.GetCDNID(t, TOSession, "cdn2")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -162,14 +163,14 @@ func TestCDNLocks(t *testing.T) {
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"topology": {"top-for-ds-req"}}},
 					RequestBody: map[string]interface{}{
 						"action": "dequeue",
-						"cdnId":  GetCDNID(t, "cdn2")(),
+						"cdnId":  totest.GetCDNID(t, TOSession, "cdn2")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 			},
 			"CDN UPDATE": {
 				"OK when USER OWNS LOCK": {
-					EndpointID: GetCDNID(t, "cdn2"), ClientSession: opsUserWithLockSession,
+					EndpointID: totest.GetCDNID(t, TOSession, "cdn2"), ClientSession: opsUserWithLockSession,
 					RequestBody: map[string]interface{}{
 						"dnssecEnabled": false,
 						"domainName":    "newdomain",
@@ -178,7 +179,7 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID: GetCDNID(t, "cdn2"), ClientSession: TOSession,
+					EndpointID: totest.GetCDNID(t, TOSession, "cdn2"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"dnssecEnabled": false,
 						"domainName":    "newdomaintest",
@@ -189,32 +190,32 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"CDN DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointID: GetCDNID(t, "cdndelete"), ClientSession: opsUserWithLockSession,
+					EndpointID: totest.GetCDNID(t, TOSession, "cdndelete"), ClientSession: opsUserWithLockSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID: GetCDNID(t, "cdn2"), ClientSession: TOSession,
+					EndpointID: totest.GetCDNID(t, TOSession, "cdn2"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"CACHE GROUP UPDATE": {
 				"OK when USER OWNS LOCK": {
-					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: opsUserWithLockSession,
+					EndpointID: totest.GetCacheGroupId(t, TOSession, "cachegroup1"), ClientSession: opsUserWithLockSession,
 					RequestBody: map[string]interface{}{
 						"name":      "cachegroup1",
 						"shortName": "newShortName",
 						"typeName":  "EDGE_LOC",
-						"typeId":    GetTypeId(t, "EDGE_LOC"),
+						"typeId":    totest.GetTypeId(t, TOSession, "EDGE_LOC"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					EndpointID: totest.GetCacheGroupId(t, TOSession, "cachegroup1"), ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"name":      "cachegroup1",
 						"shortName": "newShortName",
 						"typeName":  "EDGE_LOC",
-						"typeId":    GetTypeId(t, "EDGE_LOC"),
+						"typeId":    totest.GetTypeId(t, TOSession, "EDGE_LOC"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -226,30 +227,30 @@ func TestCDNLocks(t *testing.T) {
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession, RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"xmlId": "testDSLock2", "cdnId": GetCDNID(t, "cdn2")()}),
+						"xmlId": "testDSLock2", "cdnId": totest.GetCDNID(t, TOSession, "cdn2")()}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"DELIVERY SERVICE PUT": {
 				"OK when USER OWNS LOCK": {
-					EndpointID: GetDeliveryServiceId(t, "basic-ds-in-cdn2"), ClientSession: opsUserWithLockSession,
+					EndpointID: totest.GetDeliveryServiceId(t, TOSession, "basic-ds-in-cdn2"), ClientSession: opsUserWithLockSession,
 					RequestBody: generateDeliveryService(t, map[string]interface{}{
-						"xmlId": "basic-ds-in-cdn2", "cdnId": GetCDNID(t, "cdn2")(), "cdnName": "cdn2", "routingName": "cdn"}),
+						"xmlId": "basic-ds-in-cdn2", "cdnId": totest.GetCDNID(t, TOSession, "cdn2")(), "cdnName": "cdn2", "routingName": "cdn"}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID: GetDeliveryServiceId(t, "basic-ds-in-cdn2"), ClientSession: TOSession,
+					EndpointID: totest.GetDeliveryServiceId(t, TOSession, "basic-ds-in-cdn2"), ClientSession: TOSession,
 					RequestBody:  generateDeliveryService(t, map[string]interface{}{}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
 			"DELIVERY SERVICE DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointID: GetDeliveryServiceId(t, "ds-forked-topology"), ClientSession: opsUserWithLockSession,
+					EndpointID: totest.GetDeliveryServiceId(t, TOSession, "ds-forked-topology"), ClientSession: opsUserWithLockSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID: GetDeliveryServiceId(t, "top-ds-in-cdn2"), ClientSession: TOSession,
+					EndpointID: totest.GetDeliveryServiceId(t, TOSession, "top-ds-in-cdn2"), ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 			},
@@ -257,7 +258,7 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: map[string]interface{}{
-						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdn":              totest.GetCDNID(t, TOSession, "cdn2")(),
 						"cdnName":          "cdn2",
 						"description":      "test cdn locks description",
 						"name":             "TestLocks",
@@ -269,7 +270,7 @@ func TestCDNLocks(t *testing.T) {
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdn":              totest.GetCDNID(t, TOSession, "cdn2")(),
 						"cdnName":          "cdn2",
 						"description":      "test cdn locks description",
 						"name":             "TestLocksForbidden",
@@ -281,10 +282,10 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"PROFILE PUT": {
 				"OK when USER OWNS LOCK": {
-					EndpointID:    GetProfileID(t, "CDN2_EDGE"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "CDN2_EDGE"),
 					ClientSession: opsUserWithLockSession,
 					RequestBody: map[string]interface{}{
-						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdn":              totest.GetCDNID(t, TOSession, "cdn2")(),
 						"cdnName":          "cdn2",
 						"description":      "cdn2 edge description updated when user owns lock",
 						"name":             "CDN2_EDGE",
@@ -294,10 +295,10 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID:    GetProfileID(t, "EDGEInCDN2"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "EDGEInCDN2"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"cdn":              GetCDNID(t, "cdn2")(),
+						"cdn":              totest.GetCDNID(t, TOSession, "cdn2")(),
 						"cdnName":          "cdn2",
 						"description":      "should fail",
 						"name":             "EDGEInCDN2",
@@ -309,12 +310,12 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"PROFILE DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointID:    GetProfileID(t, "CCR2"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "CCR2"),
 					ClientSession: opsUserWithLockSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID:    GetProfileID(t, "MID2"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "MID2"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -323,7 +324,7 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: map[string]interface{}{
-						"profileId":   GetProfileID(t, "EDGEInCDN2")(),
+						"profileId":   totest.GetProfileID(t, TOSession, "EDGEInCDN2")(),
 						"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -331,7 +332,7 @@ func TestCDNLocks(t *testing.T) {
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"profileId":   GetProfileID(t, "EDGEInCDN2")(),
+						"profileId":   totest.GetProfileID(t, TOSession, "EDGEInCDN2")(),
 						"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
@@ -339,7 +340,7 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"PROFILE PARAMETER DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointID:    GetProfileID(t, "OKwhenUserOwnLocks"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "OKwhenUserOwnLocks"),
 					ClientSession: opsUserWithLockSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
 						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.delete", "rascal.properties", "25.0")())},
@@ -347,7 +348,7 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID:    GetProfileID(t, "FORBIDDENwhenDoesntOwnLock"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "FORBIDDENwhenDoesntOwnLock"),
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
 						"parameterId": {strconv.Itoa(GetParameterID(t, "test.cdnlock.forbidden.delete", "rascal.properties", "25.0")())},
@@ -359,7 +360,7 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNID(t, "cdn2")(),
+						"cdnId":        totest.GetCDNID(t, TOSession, "cdn2")(),
 						"profileNames": []string{"EDGEInCDN2"},
 					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
@@ -367,7 +368,7 @@ func TestCDNLocks(t *testing.T) {
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNID(t, "cdn2")(),
+						"cdnId":        totest.GetCDNID(t, TOSession, "cdn2")(),
 						"profileNames": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
@@ -382,11 +383,11 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SERVER PUT": {
 				"OK when USER OWNS LOCK": {
-					EndpointID:    GetServerID(t, "edge1-cdn2"),
+					EndpointID:    totest.GetServerID(t, TOSession, "edge1-cdn2"),
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerID(t, "edge1-cdn2")(),
-						"cdnId":        GetCDNID(t, "cdn2")(),
+						"id":           totest.GetServerID(t, TOSession, "edge1-cdn2")(),
+						"cdnId":        totest.GetCDNID(t, TOSession, "cdn2")(),
 						"profileNames": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
@@ -399,12 +400,12 @@ func TestCDNLocks(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID:    GetServerID(t, "dtrc-edge-07"),
+					EndpointID:    totest.GetServerID(t, TOSession, "dtrc-edge-07"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerID(t, "dtrc-edge-07")(),
-						"cdnId":        GetCDNID(t, "cdn2")(),
-						"cachegroupId": GetCacheGroupId(t, "dtrc2")(),
+						"id":           totest.GetServerID(t, TOSession, "dtrc-edge-07")(),
+						"cdnId":        totest.GetCDNID(t, TOSession, "cdn2")(),
+						"cachegroupId": totest.GetCacheGroupId(t, TOSession, "dtrc2")(),
 						"profileNames": []string{"CDN2_EDGE"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
@@ -419,12 +420,12 @@ func TestCDNLocks(t *testing.T) {
 			},
 			"SERVER DELETE": {
 				"OK when USER OWNS LOCK": {
-					EndpointID:    GetServerID(t, "atlanta-mid-17"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-mid-17"),
 					ClientSession: opsUserWithLockSession,
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
-					EndpointID:    GetServerID(t, "denver-mso-org-02"),
+					EndpointID:    totest.GetServerID(t, TOSession, "denver-mso-org-02"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},

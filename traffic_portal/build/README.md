@@ -28,7 +28,7 @@
 * Install the Node.js JavaScript runtime
 
     ```
-    $ curl --silent --location https://rpm.nodesource.com/setup_18.x | sudo bash -
+    $ curl --silent --location https://rpm.nodesource.com/setup_16.x | sudo bash -
     $ sudo yum install -y nodejs
     ```
 

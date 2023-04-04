@@ -82,6 +82,7 @@ Allows user to acquire a lock on a CDN.
 Request Structure
 -----------------
 The request body must be a single ``CDN Lock`` object with the following keys:
+
 :cdn:             The name of the CDN for which the user wants to acquire a lock.
 :message:         The message or reason for the user to acquire the lock. This is an optional field.
 :sharedUserNames: An array of the usernames that the creator of the lock wants to share their lock with. This is an optional field.

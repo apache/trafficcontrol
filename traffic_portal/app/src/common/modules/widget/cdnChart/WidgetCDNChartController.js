@@ -17,6 +17,22 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} $ */
+
+/**
+ * @param {*} cdn
+ * @param {*} $scope
+ * @param {import("angular").ITimeoutService} $timeout
+ * @param {import("angular").IFilterService} $filter
+ * @param {import("angular").IQService} $q
+ * @param {import("angular").IIntervalService} $interval
+ * @param {import("../../../api/CDNService")} cdnService
+ * @param {import("../../../api/CacheStatsService")} cacheStatsService
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../service/utils/NumberUtils")} numberUtils
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
+ */
 var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $interval, cdnService, cacheStatsService, dateUtils, locationUtils, numberUtils, propertiesModel) {
 
 	var chartSeries,
@@ -41,9 +57,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 	var getCurrentStats = function(cdnName) {
 		cdnService.getCurrentStats()
 			.then(function(result) {
-				$scope.currentStats = _.find(result.currentStats, function(item) {
-					return item.cdn == cdnName;
-				});
+				$scope.currentStats = result.currentStats.find(item => item.cdn === cdnName);
 			});
 	};
 
@@ -77,7 +91,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 		var normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
-			_.each(series.values, function(seriesItem) {
+			series.values.forEach(seriesItem => {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
 					normalizedChartData.push([ moment(seriesItem[0]).valueOf(), numberUtils.convertTo(seriesItem[1], $scope.unitSize) ]); // converts data to appropriate unit
 				}
@@ -93,7 +107,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 		if (angular.isDefined(series)) {
 			series.values.forEach(function(seriesItem) {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
-					if (_.isNumber(seriesItem[1])) {
+					if (typeof(seriesItem[1]) === "number" || seriesItem[1] instanceof Number) {
 						normalizedChartData.push([ moment(seriesItem[0]).valueOf(), seriesItem[1] ]);
 					}
 				}
@@ -178,6 +192,8 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 
 	var plotChart = function() {
 		if (chartOptions && chartSeries) {
+			// jQuery "datatables" typings not included.
+			// @ts-ignore
 			$.plot($("#cdn-chart-" + $scope.cdn.id), chartSeries, chartOptions);
 		}
 	};
@@ -188,7 +204,7 @@ var WidgetCDNChartController = function(cdn, $scope, $timeout, $filter, $q, $int
 
 	$scope.randomId = '_' + Math.random().toString(36).substr(2, 9);
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.$on("$destroy", function() {
 		killIntervals();

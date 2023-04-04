@@ -12,7 +12,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <mat-card>
-	<mat-card-content>
+	<tp-loading *ngIf="!server"></tp-loading>
+	<mat-card-content *ngIf="server">
 		<div class="actions-container" *ngIf="!isNew">
 			<button [disabled]="!isCache()" mat-button type="button">Manage Capabilities</button>
 			<button [disabled]="!isCache()" mat-button type="button">Manage Delivery Services</button>
@@ -119,7 +120,7 @@ limitations under the License.
 						<mat-form-field>
 							<mat-label>Maximum Bandwidth</mat-label>
 							<input matInput id="{{inf.name}}-max-bandwidth" [(ngModel)]="inf.maxBandwidth" min="0" type="number" name="{{inf.name}}-max-bandwidth"/>
-							<mat-error class="input-warning" *ngIf="inf.maxBandwidth !== 0">Setting Max Bandwidth to zero will cause cache servers to always be unavailable</mat-error>
+							<mat-hint class="input-warning" *ngIf="inf.maxBandwidth !== 0">Setting Max Bandwidth to zero will cause cache servers to always be unavailable</mat-hint>
 						</mat-form-field>
 						<!-- <small class="input-error" ng-show="hasPropertyError(serverForm[inf.name+'-max-bandwidth'], 'min')">Cannot be negative</small> -->
 					</div>

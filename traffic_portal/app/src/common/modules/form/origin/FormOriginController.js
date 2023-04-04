@@ -70,7 +70,7 @@ var FormOriginController = function(origin, $scope, $window, formUtils, location
     var getDeliveryServices = function() {
         deliveryServiceService.getDeliveryServices()
             .then(function(result) {
-                $scope.deliveryServices =  _.sortBy(result, 'xmlId');
+                $scope.deliveryServices = _.sortBy(result, 'xmlId');
             });
     };
 
@@ -86,7 +86,7 @@ var FormOriginController = function(origin, $scope, $window, formUtils, location
         origin.ip6Address = origin.ip6Address == '' ? null : origin.ip6Address;
     }
 
-    $scope.navigateToPath = locationUtils.navigateToPath;
+    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
     $scope.editDeliveryService = function(deliveryServiceId) {
         const ds = $scope.deliveryServices.find(d => d.id === deliveryServiceId);

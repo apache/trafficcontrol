@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 const childCacheHostName = DefaultCacheHostName
@@ -253,13 +254,13 @@ func TestWaitForParentsFalse(t *testing.T) {
 		// delete use_reval_pending parameter, because for a syncds run, wait-for-parents 'false' behaves like 'reval' if it exists,
 		// so we want to make sure it doesn't, to make sure wait-for-parents isn't actually executing 'reval'.
 
-		params, _, err := tcdata.TOSession.GetParametersWithHdr(nil)
+		params, _, err := tcdata.TOSession.GetParameters(toclient.RequestOptions{})
 		if err != nil {
 			t.Fatalf("getting parameters: %v", err)
 		}
 
 		useRevalPendingParamID := -1
-		for _, param := range params {
+		for _, param := range params.Response {
 			if tc.ConfigFileName(param.ConfigFile) != tc.GlobalConfigFileName || tc.ParameterName(param.Name) != tc.UseRevalPendingParameterName {
 				continue
 			}
@@ -267,7 +268,7 @@ func TestWaitForParentsFalse(t *testing.T) {
 			break
 		}
 		if useRevalPendingParamID != -1 {
-			if _, _, err := tcdata.TOSession.DeleteParameterByID(useRevalPendingParamID); err != nil {
+			if _, _, err := tcdata.TOSession.DeleteParameter(useRevalPendingParamID, toclient.RequestOptions{}); err != nil {
 				t.Fatalf("deleting useReval param: queue status: %v", err)
 			}
 		} else {

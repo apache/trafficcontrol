@@ -17,7 +17,16 @@
  * under the License.
  */
 
-var FormCdnDnssecKeysController = function(cdn, dnssecKeys, $scope, $location, $uibModal, dateUtils, formUtils, stringUtils, locationUtils, messageModel) {
+/**
+ * @param {*} cdn
+ * @param {*} dnssecKeys
+ * @param {*} $scope
+ * @param {import("angular").ILocationService} $location
+ * @param {import("../../../service/utils/DateUtils")} dateUtils
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ */
+var FormCdnDnssecKeysController = function(cdn, dnssecKeys, $scope, $location, dateUtils, formUtils, locationUtils) {
 
 	$scope.generate = function() {
 		$location.path($location.path() + '/generate');
@@ -45,20 +54,20 @@ var FormCdnDnssecKeysController = function(cdn, dnssecKeys, $scope, $location, $
 
 	$scope.dateFormat = dateUtils.dateFormat;
 
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
-	$scope.hasError = formUtils.hasError;
+	$scope.hasError = (input) => formUtils.hasError(input);
 
-	$scope.hasPropertyError = formUtils.hasPropertyError;
+	$scope.hasPropertyError = (input, property) => formUtils.hasPropertyError(input, property);
 
 	var init = function() {
 		if (dnssecKeys && dnssecKeys[cdn.name]) {
-			$scope.ksk_new = _.find(dnssecKeys[cdn.name].ksk, function(ksk) { return ksk.status == 'new' });
+			$scope.ksk_new = dnssecKeys[cdn.name].ksk.find(ksk => ksk.status === 'new' );
 		}
 	};
 	init();
 
 };
 
-FormCdnDnssecKeysController.$inject = ['cdn', 'dnssecKeys', '$scope', '$location', '$uibModal', 'dateUtils', 'formUtils', 'stringUtils', 'locationUtils', 'messageModel'];
+FormCdnDnssecKeysController.$inject = ['cdn', 'dnssecKeys', '$scope', '$location', 'dateUtils', 'formUtils', 'locationUtils'];
 module.exports = FormCdnDnssecKeysController;

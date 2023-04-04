@@ -17,6 +17,17 @@
  * under the License.
  */
 
+/**
+ * @param {*} deliveryService
+ * @param {*} sslKeys
+ * @param {*} $scope
+ * @param {import("../../../service/utils/LocationUtils")} locationUtils
+ * @param {import("../../../api/DeliveryServiceSslKeysService")} deliveryServiceSslKeysService
+ * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
+ * @param {import("angular").IAnchorScrollService} $anchorScroll
+ * @param {import("../../../service/utils/FormUtils")} formUtils
+ * @param {import("angular").IFilterService} $filter
+ */
 var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $scope, locationUtils, deliveryServiceSslKeysService, $uibModal, $anchorScroll, formUtils, $filter) {
 
 	var setSSLKeys = function(sslKeys) {
@@ -62,7 +73,7 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 
 	$scope.hasError = formUtils.hasError;
 	$scope.hasPropertyError = formUtils.hasPropertyError;
-	$scope.navigateToPath = locationUtils.navigateToPath;
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.formattedExpiration = $scope.sslKeys.expiration !== undefined ? $filter('date')($scope.sslKeys.expiration, 'MM/dd/yyyy') : undefined;
 	$scope.sans = $scope.sslKeys.sans !== undefined ? sslKeys.sans.join(', ') : ""
