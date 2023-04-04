@@ -28,7 +28,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-cache-group-details",
-	styleUrls: ["./cache-group-details.component.scss"],
+	styleUrls: ["../../styles/form.page.scss", "./cache-group-details.component.scss"],
 	templateUrl: "./cache-group-details.component.html",
 })
 export class CacheGroupDetailsComponent implements OnInit {

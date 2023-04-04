@@ -17,11 +17,11 @@ import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import {ReplaySubject, Subject} from "rxjs";
+import { ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import type { CurrentUser } from "src/app/models";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
@@ -33,7 +33,7 @@ describe("CurrentuserComponent", () => {
 	let dialogClose: Subject<void>;
 	let updateSpy: jasmine.Spy;
 	let updateSucceeded: boolean;
-	let currentUser: null | CurrentUser = null;
+	let currentUser: null | ResponseCurrentUser = null;
 	let api: UserService;
 
 	beforeEach(fakeAsync(() => {
@@ -63,7 +63,7 @@ describe("CurrentuserComponent", () => {
 				{
 					provide: CurrentUserService,
 					useValue: {
-						get currentUser(): CurrentUser | null {
+						get currentUser(): ResponseCurrentUser | null {
 							return currentUser;
 						},
 						hasPermission: (): boolean => true,
@@ -146,17 +146,11 @@ describe("CurrentuserComponent", () => {
 
 		component.editUser = {
 			...component.currentUser,
-			confirmLocalPasswd: "not undefined",
-			localPasswd: "not undefined",
 		};
 		component.submitEdit(new Event("submit"));
 		tick();
 
 		expect(updateSpy).toHaveBeenCalledTimes(1);
-		expect(component.currentUser.localPasswd).toBeUndefined();
-		expect(component.currentUser.confirmLocalPasswd).toBeUndefined();
-		expect(component.editUser.confirmLocalPasswd).toBeUndefined();
-		expect(component.editUser.localPasswd).toBeUndefined();
 
 		updateSucceeded = true;
 		component.submitEdit(new Event("submit"));
@@ -164,7 +158,10 @@ describe("CurrentuserComponent", () => {
 
 		expect(updateSpy).toHaveBeenCalledTimes(2);
 
-		component.editUser.id = -1;
+		component.editUser = {
+			...component.editUser,
+			id: -1
+		};
 		component.submitEdit(new Event("submit"));
 		tick();
 

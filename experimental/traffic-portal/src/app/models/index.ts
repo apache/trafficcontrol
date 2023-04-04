@@ -11,12 +11,5 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-export * from "./alert.model";
 export * from "./data";
-export * from "./deliveryservice";
-export * from "./invalidation";
-export * from "./physical.location";
-export * from "./profile";
-export * from "./server";
-export * from "./type";
-export * from "./user";
+export * from "./tree-select.model";

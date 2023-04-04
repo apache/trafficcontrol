@@ -11,17 +11,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { ResponsePhysicalLocation } from "trafficops-types";
+import type { ResponsePhysicalLocation } from "trafficops-types";
 
-import { CacheGroupService, PhysicalLocationService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { PhysicalLocationService } from "src/app/api";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -58,7 +58,8 @@ export class PhysLocTableComponent implements OnInit {
 		headerName: "State"
 	}, {
 		field: "region",
-		headerName: "Region"
+		headerName: "Region",
+		valueFormatter: ({data}: {data: ResponsePhysicalLocation}): string => `${data.region} (#${data.regionId})`
 	}, {
 		field: "lastUpdated",
 		headerName: "Last Updated"
@@ -67,8 +68,13 @@ export class PhysLocTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponsePhysicalLocation>> = [
 		{
-			href: (physLoc: ResponsePhysicalLocation): string => `/core/phys-locs/${physLoc.id}`,
+			href: (physLoc: ResponsePhysicalLocation): string => `${physLoc.id}`,
 			name: "Edit"
+		},
+		{
+			href: (physLoc: ResponsePhysicalLocation): string => `${physLoc.id}`,
+			name: "Open in New Tab",
+			newTab: true
 		},
 		{
 			action: "delete",
@@ -78,6 +84,11 @@ export class PhysLocTableComponent implements OnInit {
 		{
 			href: (physLoc: ResponsePhysicalLocation): string => `/core/regions/${physLoc.regionId}`,
 			name: "View Region"
+		},
+		{
+			href: "/core/servers",
+			name: "View Servers",
+			queryParams: (physLoc: ResponsePhysicalLocation): Params => ({physLocation: physLoc.name})
 		}
 	];
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
@@ -86,11 +97,15 @@ export class PhysLocTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl<string>("");
 
-	constructor(private readonly api: CacheGroupService, private readonly route: ActivatedRoute,
-		private readonly navSvc: NavigationService,  public readonly auth: CurrentUserService, private readonly dialog: MatDialog,
-		private readonly physLocService: PhysicalLocationService) {
+	constructor(
+		private readonly api: PhysicalLocationService,
+		private readonly route: ActivatedRoute,
+		private readonly navSvc: NavigationService,
+		public readonly auth: CurrentUserService,
+		private readonly dialog: MatDialog,
+	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
-		this.physLocations = this.physLocService.getPhysicalLocations();
+		this.physLocations = this.api.getPhysicalLocations();
 		this.navSvc.headerTitle.next("Physical Locations");
 	}
 
@@ -103,9 +118,6 @@ export class PhysLocTableComponent implements OnInit {
 					this.fuzzControl.setValue(decodeURIComponent(search));
 					this.updateURL();
 				}
-			},
-			e => {
-				console.error("Failed to get query parameters:", e);
 			}
 		);
 	}
@@ -125,12 +137,16 @@ export class PhysLocTableComponent implements OnInit {
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
-					data: {message: `Are you sure you want to delete physical location ${data.name} with id ${data.id}`,
-						title: "Confirm Delete"}
+					data: {
+						message: `Are you sure you want to delete Physical Location ${data.name} with id ${data.id}?`,
+						title: "Confirm Delete"
+					}
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {
-						this.api.deleteDivision(data.id).then(async () => this.physLocations = this.physLocService.getPhysicalLocations());
+						this.api.deletePhysicalLocation(data.id).then(
+							async () => this.physLocations = this.api.getPhysicalLocations()
+						);
 					}
 				});
 				break;

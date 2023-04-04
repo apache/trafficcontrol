@@ -21,7 +21,8 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -33,7 +34,7 @@ func TestProfilesExport(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, struct{}]{
 			"GET": {
 				"OK when VALID request": {
-					EndpointID:    GetProfileID(t, "EDGE1"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "EDGE1"),
 					ClientSession: TOSession,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateProfilesExportFields(map[string]interface{}{"CDNName": "cdn1", "Name": "EDGE1",

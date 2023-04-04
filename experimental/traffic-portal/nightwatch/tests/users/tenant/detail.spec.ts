@@ -22,8 +22,8 @@ describe("Tenant Detail Spec", () => {
 				.assert.not.enabled("@name")
 				.assert.not.enabled("@parent")
 				.assert.not.enabled("@saveBtn")
-				.assert.value("@name", "root")
-				.assert.value("@active", "on");
+				.assert.valueEquals("@name", "root")
+				.assert.valueEquals("@active", "on");
 		});
 	});
 
@@ -48,9 +48,9 @@ describe("Tenant Detail Spec", () => {
 				.assert.enabled("@name")
 				.assert.enabled("@parent")
 				.assert.enabled("@saveBtn")
-				.assert.containsText("@name", "")
-				.assert.value("@active", "on")
-				.assert.value("@parent", "");
+				.assert.textContains("@name", "")
+				.assert.valueEquals("@active", "on")
+				.assert.valueEquals("@parent", "");
 		});
 	});
 });

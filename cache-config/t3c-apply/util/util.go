@@ -387,56 +387,47 @@ func CleanTmpDir(cfg config.Cfg) bool {
 	return true
 }
 
-func MkDir(name string, cfg config.Cfg) bool {
-	return doMkDirWithOwner(name, cfg, nil, nil, false)
+func MkDir(name string, reportOnly bool) bool {
+	return doMkDirWithOwner(name, reportOnly, nil, nil)
 }
 
-func MkDirAll(name string, cfg config.Cfg) bool {
-	return doMkDirWithOwner(name, cfg, nil, nil, true)
+func MkDirWithOwner(name string, reportOnly bool, uid *int, gid *int) bool {
+	return doMkDirWithOwner(name, reportOnly, uid, gid)
 }
 
-func MkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int) bool {
-	return doMkDirWithOwner(name, cfg, uid, gid, false)
-}
-
-func doMkDirWithOwner(name string, cfg config.Cfg, uid *int, gid *int, all bool) bool {
+func doMkDirWithOwner(name string, reportOnly bool, uid *int, gid *int) bool {
+	// Check if already exists
 	fileInfo, err := os.Stat(name)
-	if err == nil && fileInfo.Mode().IsDir() {
-		log.Debugf("the directory '%s' already exists", name)
-		return true
-	}
-	if err != nil {
-		if cfg.ReportOnly {
-			log.Infof("Reporting only: the directory %s does not exist and was not created", name)
+	if err == nil {
+		if fileInfo.IsDir() {
+			log.Debugf("the directory '%s' already exists", name)
 			return true
-		}
-
-		if err != nil { // the path does not exist.
-			if all {
-				err = os.MkdirAll(name, 0755)
-			} else {
-				err = os.Mkdir(name, 0755)
-			}
-			if err != nil {
-				log.Errorf("unable to create the directory '%s': %v", name, err)
-				return false
-			}
-
-			if uid != nil && gid != nil {
-				err = os.Chown(name, *uid, *gid)
-				if err != nil {
-					log.Errorf("unable to chown directory uid/gid, '%s': %v", name, err)
-					return false
-				}
-			}
-		} else if fileInfo.Mode().IsDir() {
-			log.Debugf("the directory: %s, already exists\n", name)
 		} else {
-			log.Errorf("there is a file named, '%s' that is not a directory: %v", name, err)
+			log.Errorf("there is a file named, '%s' that is not a directory", name)
 			return false
 		}
 	}
-	return false
+
+	if reportOnly {
+		log.Infof("Reporting only: the directory %s does not exist and was not created", name)
+		return true
+	}
+
+	err = os.Mkdir(name, 0755)
+	if err != nil {
+		log.Errorf("unable to create the directory '%s': %v", name, err)
+		return false
+	}
+
+	if uid != nil && gid != nil {
+		err = os.Chown(name, *uid, *gid)
+		if err != nil {
+			log.Errorf("unable to chown directory uid/gid, '%s': %v", name, err)
+			return false
+		}
+	}
+
+	return true
 }
 
 func Touch(fn string) error {

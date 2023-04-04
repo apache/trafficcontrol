@@ -39,4 +39,9 @@ RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 COPY .pgpass /root/.pgpass
 RUN chmod 0600 /root/.pgpass
 
+# These versions don't actually do anything - because the dev env can't make ISO
+# system images - but having them defined anyway helps when testing related
+# functionality, to a point.
+RUN mkdir -p /var/www/files/ && echo '{"CentOS 7": "centos7", "Rocky Linux 8": "rocky8"}' > /var/www/files/osversions.json
+
 CMD $TC/dev/traffic_ops/run.sh

@@ -24,8 +24,9 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -51,7 +52,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				},
 				"OK when VALID DELIVERYSERVICEID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"deliveryServiceId": {strconv.Itoa(GetDeliveryServiceId(t, "ds1")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"deliveryServiceId": {strconv.Itoa(totest.GetDeliveryServiceId(t, TOSession, "ds1")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateDSRCExpectedFields(map[string]interface{}{"DeliveryServiceId": "ds1"})),
 				},
@@ -107,7 +108,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				"BAD REQUEST when REASSIGNING REQUIRED CAPABILITY to DELIVERY SERVICE": {
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
-						DeliveryServiceID:  util.IntPtr(GetDeliveryServiceId(t, "ds1")()),
+						DeliveryServiceID:  util.IntPtr(totest.GetDeliveryServiceId(t, TOSession, "ds1")()),
 						RequiredCapability: util.StrPtr("foo"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -115,7 +116,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				"BAD REQUEST when SERVERS DONT have CAPABILITY": {
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
-						DeliveryServiceID:  util.IntPtr(GetDeliveryServiceId(t, "test-ds-server-assignments")()),
+						DeliveryServiceID:  util.IntPtr(totest.GetDeliveryServiceId(t, TOSession, "test-ds-server-assignments")()),
 						RequiredCapability: util.StrPtr("disk"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -123,7 +124,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				"BAD REQUEST when DELIVERY SERVICE HAS TOPOLOGY where SERVERS DONT have CAPABILITY": {
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
-						DeliveryServiceID:  util.IntPtr(GetDeliveryServiceId(t, "ds-top-req-cap")()),
+						DeliveryServiceID:  util.IntPtr(totest.GetDeliveryServiceId(t, TOSession, "ds-top-req-cap")()),
 						RequiredCapability: util.StrPtr("bar"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -138,14 +139,14 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				"BAD REQUEST when REQUIRED CAPABILITY EMPTY": {
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
-						DeliveryServiceID: util.IntPtr(GetDeliveryServiceId(t, "ds1")()),
+						DeliveryServiceID: util.IntPtr(totest.GetDeliveryServiceId(t, TOSession, "ds1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when NON-EXISTENT REQUIRED CAPABILITY": {
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
-						DeliveryServiceID:  util.IntPtr(GetDeliveryServiceId(t, "ds1")()),
+						DeliveryServiceID:  util.IntPtr(totest.GetDeliveryServiceId(t, TOSession, "ds1")()),
 						RequiredCapability: util.StrPtr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
@@ -161,7 +162,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				"BAD REQUEST when INVALID DELIVERY SERVICE TYPE": {
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
-						DeliveryServiceID:  util.IntPtr(GetDeliveryServiceId(t, "anymap-ds")()),
+						DeliveryServiceID:  util.IntPtr(totest.GetDeliveryServiceId(t, TOSession, "anymap-ds")()),
 						RequiredCapability: util.StrPtr("foo"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -171,7 +172,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
-						DeliveryServiceID:  util.IntPtr(GetDeliveryServiceId(t, "ds-top-req-cap")()),
+						DeliveryServiceID:  util.IntPtr(totest.GetDeliveryServiceId(t, TOSession, "ds-top-req-cap")()),
 						RequiredCapability: util.StrPtr("ram"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
@@ -187,7 +188,7 @@ func TestDeliveryServicesRequiredCapabilities(t *testing.T) {
 				"NOT FOUND when NON-EXISTENT REQUIREDCAPABILITY parameter": {
 					ClientSession: TOSession,
 					RequestBody: tc.DeliveryServicesRequiredCapability{
-						DeliveryServiceID:  util.IntPtr(GetDeliveryServiceId(t, "ds1")()),
+						DeliveryServiceID:  util.IntPtr(totest.GetDeliveryServiceId(t, TOSession, "ds1")()),
 						RequiredCapability: util.StrPtr("bogus"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
@@ -265,29 +266,5 @@ func validateDSRCPagination(paginationParam string) utils.CkReqFunc {
 		case "page":
 			assert.Exactly(t, dsrc[1:2], paginationResp, "Expected GET deliveryservices_required_capabilities with limit = 1, page = 2 to return second result")
 		}
-	}
-}
-
-func CreateTestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	// Assign all required capability to delivery services listed in `tc-fixtures.json`.
-	for _, dsrc := range testData.DeliveryServicesRequiredCapabilities {
-		dsId := GetDeliveryServiceId(t, *dsrc.XMLID)()
-		dsrc = tc.DeliveryServicesRequiredCapability{
-			DeliveryServiceID:  &dsId,
-			RequiredCapability: dsrc.RequiredCapability,
-		}
-		resp, _, err := TOSession.CreateDeliveryServicesRequiredCapability(dsrc, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error creating a Delivery Service/Required Capability relationship: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func DeleteTestDeliveryServicesRequiredCapabilities(t *testing.T) {
-	// Get Required Capabilities to delete them
-	dsrcs, _, err := TOSession.GetDeliveryServicesRequiredCapabilities(client.RequestOptions{})
-	assert.NoError(t, err, "Error getting Delivery Service/Required Capability relationships: %v - alerts: %+v", err, dsrcs.Alerts)
-
-	for _, dsrc := range dsrcs.Response {
-		alerts, _, err := TOSession.DeleteDeliveryServicesRequiredCapability(*dsrc.DeliveryServiceID, *dsrc.RequiredCapability, client.RequestOptions{})
-		assert.NoError(t, err, "Error deleting a relationship between a Delivery Service and a Capability: %v - alerts: %+v", err, alerts.Alerts)
 	}
 }

@@ -246,6 +246,7 @@ buildRpm() {
 			--define "go_version $GO_VERSION" \
 			--define "commit $(getCommit)" \
 			--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
+			--define "rhel_vers $RHEL_VERSION" \
 			--define "_target_os $RPM_TARGET_OS" \
 			"$build_flags" SPECS/$package.spec \
 			"$@";

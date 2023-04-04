@@ -310,7 +310,7 @@ func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, 
 		}
 	}
 
-	return nil, nil, 0
+	return nil, nil, http.StatusOK
 }
 
 func assignDeliveryServicesToServer(server int, dses []int, replace bool, tx *sql.Tx) ([]int, error) {

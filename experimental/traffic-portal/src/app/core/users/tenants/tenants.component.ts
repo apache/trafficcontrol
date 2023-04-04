@@ -13,12 +13,13 @@
 */
 
 import { Component, type OnDestroy, type OnInit } from "@angular/core";
-import type { ValueGetterParams } from "ag-grid-community";
+import type { Params } from "@angular/router";
+import type { ValueFormatterParams } from "ag-grid-community";
 import { BehaviorSubject, type Subscription } from "rxjs";
+import { ResponseTenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import type { Tenant } from "src/app/models";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -32,12 +33,12 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 })
 export class TenantsComponent implements OnInit, OnDestroy {
 
-	private tenantMap: Record<number, Tenant> = {};
+	private tenantMap: Record<number, ResponseTenant> = {};
 
 	public searchText = "";
 	public searchSubject = new BehaviorSubject("");
 
-	public tenants: Array<Tenant> = [{
+	public tenants: Array<ResponseTenant> = [{
 		active: true,
 		id: 1,
 		lastUpdated: new Date(),
@@ -74,11 +75,11 @@ export class TenantsComponent implements OnInit, OnDestroy {
 			field: "parentId",
 			headerName: "Parent",
 			hide: false,
-			valueGetter: (params: ValueGetterParams): string => this.getParentString(params.data)
+			valueFormatter: (params: ValueFormatterParams): string => this.getParentString(params.data)
 		}
 	];
 
-	public contextMenuItems: ContextMenuItem<Readonly<Tenant>>[] = [
+	public contextMenuItems: ContextMenuItem<Readonly<ResponseTenant>>[] = [
 	];
 
 	public loading = true;
@@ -104,28 +105,34 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 */
 	private loadContextMenuItems(): void {
 		this.contextMenuItems = [];
-		if (this.auth.hasPermission("USER:READ")) {
-			this.contextMenuItems.push({
-				action: "viewUsers",
-				multiRow: true,
-				name: "View Users"
-			});
-		}
 		if (this.auth.hasPermission("TENANT:UPDATE")) {
+			this.contextMenuItems.push({
+				href: (t: ResponseTenant): string => `${t.id}`,
+				name: "View Details"
+			});
+			this.contextMenuItems.push({
+				href: (t: ResponseTenant): string => `${t.id}`,
+				name: "Open in New Tab",
+				newTab: true
+			});
 			this.contextMenuItems.push({
 				action: "disable",
 				disabled: (ts): boolean => ts.some(t=>t.name === "root" || t.id === this.auth.currentUser?.tenantId),
 				multiRow: true,
 				name: "Disable"
 			});
+		}
+		this.contextMenuItems.push({
+			disabled: (t: ResponseTenant | ResponseTenant[]): boolean =>
+				Array.isArray(t) || t.id === this.auth.currentUser?.tenantId || t.parentId === null,
+			href: (t: ResponseTenant): string => `${t.parentId}`,
+			name: "View Parent Details"
+		});
+		if (this.auth.hasPermission("USER:READ")) {
 			this.contextMenuItems.push({
-				href: (t: Tenant): string => `core/tenants/${t.id}`,
-				name: "View Details"
-			});
-			this.contextMenuItems.push({
-				href: (t: Tenant): string => `core/tenants/${t.id}`,
-				name: "Open in New Tab",
-				newTab: true
+				href: "/core/users",
+				name: "View Users",
+				queryParams: (t: ResponseTenant): Params => ({tenant: t.name})
 			});
 		}
 	}
@@ -147,7 +154,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 * @returns An empty string for the root Tenant, otherwise the parent
 	 * Tenant's name and ID as a string.
 	 */
-	public getParentString(t: Tenant): string {
+	public getParentString(t: ResponseTenant): string {
 		if (t.parentId === null) {
 			return "";
 		}
@@ -166,7 +173,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 *
 	 * @param a The action selected from the context menu.
 	 */
-	 public handleContextMenu(a: ContextMenuActionEvent<Readonly<Tenant>>): void {
+	 public handleContextMenu(a: ContextMenuActionEvent<Readonly<ResponseTenant>>): void {
 		console.log("action:", a);
 	}
 

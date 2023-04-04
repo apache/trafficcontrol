@@ -19,13 +19,12 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -297,32 +296,5 @@ func GetTenantID(t *testing.T, name string) func() int {
 		assert.RequireNoError(t, err, "Get Tenants Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(tenants.Response), "Expected response object length 1, but got %d", len(tenants.Response))
 		return tenants.Response[0].ID
-	}
-}
-
-func CreateTestTenants(t *testing.T) {
-	for _, tenant := range testData.Tenants {
-		resp, _, err := TOSession.CreateTenant(tenant, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create Tenant '%s': %v - alerts: %+v", tenant.Name, err, resp.Alerts)
-	}
-}
-
-func DeleteTestTenants(t *testing.T) {
-	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("sortOrder", "desc")
-	tenants, _, err := TOSession.GetTenants(opts)
-	assert.NoError(t, err, "Cannot get Tenants: %v - alerts: %+v", err, tenants.Alerts)
-
-	for _, tenant := range tenants.Response {
-		if tenant.Name == "root" {
-			continue
-		}
-		alerts, _, err := TOSession.DeleteTenant(tenant.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Tenant '%s' (#%d): %v - alerts: %+v", tenant.Name, tenant.ID, err, alerts.Alerts)
-		// Retrieve the Tenant to see if it got deleted
-		opts.QueryParameters.Set("id", strconv.Itoa(tenant.ID))
-		getTenants, _, err := TOSession.GetTenants(opts)
-		assert.NoError(t, err, "Error getting Tenant '%s' after deletion: %v - alerts: %+v", tenant.Name, err, getTenants.Alerts)
-		assert.Equal(t, 0, len(getTenants.Response), "Expected Tenant '%s' to be deleted, but it was found in Traffic Ops", tenant.Name)
 	}
 }

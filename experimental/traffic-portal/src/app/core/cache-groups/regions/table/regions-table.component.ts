@@ -12,17 +12,17 @@
 * limitations under the License.
 */
 
-import { Component, OnInit } from "@angular/core";
+import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { Region, ResponseRegion } from "trafficops-types";
+import type { Region, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -68,7 +68,8 @@ export class RegionsTableComponent implements OnInit {
 		},
 		{
 			field: "divisionName",
-			headerName: "Division"
+			headerName: "Division",
+			valueGetter: ({data}: {data: ResponseRegion}): string => `${data.divisionName} (#${data.division})`
 		},
 		{
 			field: "id",
@@ -84,8 +85,13 @@ export class RegionsTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented region data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseRegion>> = [
 		{
-			href: (selectedRow: ResponseRegion): string => `/core/regions/${selectedRow.id}`,
+			href: (selectedRow: ResponseRegion): string => `${selectedRow.id}`,
 			name: "Edit"
+		},
+		{
+			href: (selectedRow: ResponseRegion): string => `${selectedRow.id}`,
+			name: "Open in New Tab",
+			newTab: true
 		},
 		{
 			action: "delete",
@@ -97,8 +103,9 @@ export class RegionsTableComponent implements OnInit {
 			name: "View Division"
 		},
 		{
-			href: (selectedRow: Region): string => `/core/phys-locs?search=${selectedRow.name}`,
-			name: "View Physical Locations"
+			href: "/core/phys-locs",
+			name: "View Physical Locations",
+			queryParams: (selectedRow: ResponseRegion): Params => ({region: selectedRow.name})
 		}
 	];
 

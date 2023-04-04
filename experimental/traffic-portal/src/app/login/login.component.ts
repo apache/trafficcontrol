@@ -13,9 +13,9 @@
 */
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import { Router, ActivatedRoute } from "@angular/router";
+import { Router, ActivatedRoute, DefaultUrlSerializer } from "@angular/router";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { AutocompleteValue } from "../utils";
@@ -61,23 +61,21 @@ export class LoginComponent implements OnInit {
 	 * Runs initialization, setting up the post-login redirection from the query
 	 * string parameters.
 	 */
-	public ngOnInit(): void {
+	public async ngOnInit(): Promise<void> {
 		const params = this.route.snapshot.queryParamMap;
 		this.returnURL = params.get("returnUrl") ?? "core";
 		const token = params.get("token");
 		if (token) {
-			this.auth.login(token).then(
-				response => {
-					if (response) {
-						this.navSvc.headerHidden.next(false);
-						this.navSvc.sidebarHidden.next(false);
-						this.router.navigate(["/core/me"], {queryParams: {edit: true, updatePassword: true}});
-					}
-				},
-				err => {
-					console.error("login with token failed:", err);
+			try {
+				const response = await this.auth.login(token);
+				if (response) {
+					this.navSvc.headerHidden.next(false);
+					this.navSvc.sidebarHidden.next(false);
+					this.router.navigate(["/core/me"], {queryParams: {edit: true, updatePassword: true}});
 				}
-			);
+			} catch (e) {
+				console.error("token login failed:", e);
+			}
 		}
 	}
 
@@ -97,7 +95,8 @@ export class LoginComponent implements OnInit {
 			if (response) {
 				this.navSvc.headerHidden.next(false);
 				this.navSvc.sidebarHidden.next(false);
-				this.router.navigate([this.returnURL]);
+				const tree = new DefaultUrlSerializer().parse(this.returnURL);
+				this.router.navigate(tree.root.children.primary.segments.map(s=>s.path), {queryParams: tree.queryParams});
 			}
 		} catch (err) {
 			console.error("login failed:", err);

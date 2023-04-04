@@ -56,7 +56,7 @@ jobs:
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m assign_triage_role
         env:
-          GIT_AUTHOR_NAME: asf-ci
+          GIT_AUTHOR_NAME: asf-ci-trafficcontrol
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
           MINIMUM_COMMITS: '${{ github.event.inputs.minimum-commits || env.DEFAULT_MINIMUM_COMMITS }}'

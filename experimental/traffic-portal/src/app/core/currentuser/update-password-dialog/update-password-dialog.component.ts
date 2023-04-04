@@ -15,7 +15,7 @@ import { Component } from "@angular/core";
 import { MatDialogRef } from "@angular/material/dialog";
 import { Subject } from "rxjs";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * This is the controller for the "Update Password" dialog box/form.
@@ -62,11 +62,16 @@ export class UpdatePasswordDialogComponent {
 			return;
 		}
 
-		const user = this.auth.currentUser;
-		if (!user) {
+		if (!this.auth.currentUser) {
 			console.error("Cannot update null user");
 			return;
 		}
+
+		const user = {
+			...this.auth.currentUser,
+			confirmLocalPasswd: this.confirm,
+			localPasswd: this.password,
+		};
 
 		user.localPasswd = this.password;
 		user.confirmLocalPasswd = this.confirm;

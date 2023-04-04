@@ -15,10 +15,10 @@ import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
+import { ResponseCurrentUser } from "trafficops-types";
 
 import { APITestingModule } from "src/app/api/testing";
-import { User } from "src/app/models";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 import { UpdatePasswordDialogComponent } from "./update-password-dialog.component";
 
@@ -30,7 +30,11 @@ describe("UpdatePasswordDialogComponent", () => {
 
 	const mockAPIService = jasmine.createSpyObj(["updateCurrentUser", "getCurrentUser", "saveCurrentUser"], );
 	mockAPIService.updateCurrentUser.and.returnValue(new Promise(resolve => resolve(true)));
-	mockAPIService.getCurrentUser.and.returnValue(new Promise<User>(resolve => resolve({id: -1, newUser: false, username: ""})));
+	mockAPIService.getCurrentUser.and.returnValue(
+		new Promise<ResponseCurrentUser>(
+			resolve => resolve({id: -1, newUser: false, username: ""} as ResponseCurrentUser)
+		)
+	);
 	mockAPIService.currentUser = {id: 1, newUser: false, username: "hello"};
 
 	beforeEach(async () => {

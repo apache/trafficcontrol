@@ -15,12 +15,15 @@ import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { faPlus, faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+import { ResponseDeliveryService, ResponseInvalidationJob } from "trafficops-types";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
-import { defaultDeliveryService, type DeliveryService, type InvalidationJob } from "src/app/models";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
-import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
+import {
+	NewInvalidationJobDialogComponent,
+	type NewInvalidationJobDialogData
+} from "./new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 
 /**
  * InvalidationJobsComponent is the controller for the page that displays the
@@ -34,10 +37,10 @@ import { NewInvalidationJobDialogComponent } from "./new-invalidation-job-dialog
 export class InvalidationJobsComponent implements OnInit {
 
 	/** The Delivery Service for which jobs are being described. */
-	public deliveryservice: DeliveryService;
+	public deliveryservice!: ResponseDeliveryService;
 
 	/** All of the jobs for the described Delivery Service. */
-	public jobs: Array<InvalidationJob>;
+	public jobs: Array<ResponseInvalidationJob>;
 
 	/** The current date/time when the page loads */
 	public now: Date = new Date();
@@ -61,15 +64,14 @@ export class InvalidationJobsComponent implements OnInit {
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService
 	) {
-		this.deliveryservice = {...defaultDeliveryService};
-		this.jobs = new Array<InvalidationJob>();
+		this.jobs = new Array<ResponseInvalidationJob>();
 	}
 
 	/**
 	 * Runs initialization, fetching the jobs and Delivery Service data from
 	 * Traffic Ops and setting the pageload date/time.
 	 */
-	public ngOnInit(): void {
+	public async ngOnInit(): Promise<void> {
 		this.navSvc.headerTitle.next("Loading - Content Invalidation Jobs");
 		this.now = new Date();
 		const idParam = this.route.snapshot.paramMap.get("id");
@@ -78,17 +80,9 @@ export class InvalidationJobsComponent implements OnInit {
 			return;
 		}
 		this.dsID = parseInt(idParam, 10);
-		this.jobAPI.getInvalidationJobs({dsID: this.dsID}).then(
-			r => {
-				this.jobs = r;
-			}
-		);
-		this.dsAPI.getDeliveryServices(this.dsID).then(
-			r => {
-				this.deliveryservice = r;
-				this.navSvc.headerTitle.next(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
-			}
-		);
+		this.jobs = await this.jobAPI.getInvalidationJobs({dsID: this.dsID});
+		this.deliveryservice = await this.dsAPI.getDeliveryServices(this.dsID);
+		this.navSvc.headerTitle.next(`${this.deliveryservice.displayName} - Content Invalidation Jobs`);
 	}
 
 	/**
@@ -97,7 +91,7 @@ export class InvalidationJobsComponent implements OnInit {
 	 * @param j The Job to check.
 	 * @returns Whether or not `j` is currently in-progress.
 	 */
-	public isInProgress(j: InvalidationJob): boolean {
+	public isInProgress(j: ResponseInvalidationJob): boolean {
 		return j.startTime <= this.now && this.endDate(j) >= this.now;
 	}
 
@@ -117,23 +111,9 @@ export class InvalidationJobsComponent implements OnInit {
 	 * @param j The job from which to extract an end date.
 	 * @returns The date at which the Job will stop being in effect.
 	 */
-	public endDate(j: InvalidationJob): Date {
-		if (!j.parameters) {
-			throw new Error("cannot get end date for job with no parameters");
-		}
-		const tmp = j.parameters.replace(/h$/, "").split(":");
-		if (tmp.length !== 2) {
-			throw new Error(`Malformed job parameters: "${j.parameters}" (id: ${j.id})`);
-		}
-		const ttl = parseInt(tmp[1], 10);
-		if (isNaN(ttl)) {
-			throw new Error(`Invalid TTL: "${tmp[1]}" (job id: ${j.id})`);
-		}
-		// I don't know why this is necessary, because Date.getTime *says* it
-		// returns a number, but if you take away the type of `start` here, it
-		// fails to compile.
-		const start: number = j.startTime.getTime();
-		return new Date(start + ttl * 60 * 60 * 1000);
+	public endDate(j: ResponseInvalidationJob): Date {
+		const start = j.startTime.getTime();
+		return new Date(start + j.ttlHours * 60 * 60 * 1000);
 	}
 
 	/**
@@ -142,7 +122,10 @@ export class InvalidationJobsComponent implements OnInit {
 	 * @param e The DOM event that triggered the creation.
 	 */
 	public newJob(): void {
-		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data: {dsID: this.dsID}});
+		const data: NewInvalidationJobDialogData = {
+			dsID: this.deliveryservice.xmlId
+		};
+		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data});
 		dialogRef.afterClosed().subscribe(
 			(created) => {
 				if (created) {
@@ -162,7 +145,7 @@ export class InvalidationJobsComponent implements OnInit {
 	 *
 	 * @param job The Job to be edited.
 	 */
-	public editJob(job: InvalidationJob): void {
+	public editJob(job: ResponseInvalidationJob): void {
 		const dialogRef = this.dialog.open(NewInvalidationJobDialogComponent, {data: {dsID: this.dsID, job}});
 		dialogRef.afterClosed().subscribe(
 			created => {

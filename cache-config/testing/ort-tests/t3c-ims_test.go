@@ -15,20 +15,17 @@ package orttest
 */
 
 import (
-	"errors"
 	"io/ioutil"
-	"net/url"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	testutil "github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestIMS(t *testing.T) {
@@ -102,37 +99,24 @@ func doTestIMSChangedCDN(t *testing.T) {
 	}
 
 	cdn2Name := "cdn2"
-	cdns, _, err := tcdata.TOSession.GetCDNByNameWithHdr(cdn2Name, nil)
+	cdn, _, err := toreq.GetCDNByName(tcdata.TOSession, tc.CDNName(cdn2Name), nil)
 	if err != nil {
 		t.Fatalf("getting cdn: %v", err)
 	}
-	if len(cdns) != 1 {
-		t.Fatalf("getting cdn: expected 1 cdn actual num %d cdns: %+v", len(cdns), cdns)
-	}
 
 	// have to change the profile at the same time, or TO will reject the change.
-	profiles, _, err := tcdata.TOSession.GetProfileByNameWithHdr(cdn2ProfileName, nil)
-	if err != nil {
-		t.Fatalf("getting profile: %v", err)
-	}
-	if len(cdns) != 1 {
-		t.Fatalf("getting profile: expected 1 cdn actual num %d objects: %+v", len(profiles), profiles)
-	}
 
-	cdn2ID := cdns[0].ID
-	cdn2ProfileID := profiles[0].ID
-
-	sv, _, err := GetServer(tcdata.TOSession, DefaultCacheHostName)
+	cdn2ID := cdn.ID
+	sv, _, err := toreq.GetServerByHostName(tcdata.TOSession, DefaultCacheHostName)
 	if err != nil {
 		t.Fatalf("getting server: %v", err)
 	}
 
 	sv.CDNID = &cdn2ID
 	sv.CDNName = &cdn2Name
-	sv.ProfileID = &cdn2ProfileID
-	sv.Profile = util.StrPtr(cdn2ProfileName)
+	sv.ProfileNames = []string{cdn2ProfileName}
 
-	_, _, err = tcdata.TOSession.UpdateServerByIDWithHdr(*sv.ID, *sv, nil)
+	_, _, err = tcdata.TOSession.UpdateServer(*sv.ID, *sv, toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("updating server: %v", err)
 	}
@@ -179,17 +163,4 @@ func t3cApplyCache(host string, noCache bool) (string, int) {
 	}
 	_, stdErr, exitCode := t3cutil.Do("t3c", args...) // should be no stdout, we told it to log to stderr
 	return string(stdErr), exitCode
-}
-
-func GetServer(toClient *toclient.Session, hostName string) (*tc.ServerV30, toclientlib.ReqInf, error) {
-	params := url.Values{}
-	params.Add("hostName", hostName)
-	resp, reqInf, err := toClient.GetServersWithHdr(&params, nil)
-	if err != nil {
-		return nil, reqInf, err
-	}
-	if len(resp.Response) == 0 {
-		return nil, reqInf, errors.New("not found")
-	}
-	return &resp.Response[0], reqInf, nil
 }

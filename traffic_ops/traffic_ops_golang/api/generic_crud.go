@@ -119,19 +119,36 @@ func GenericCreateNameBasedID(val GenericCreator) (error, error, int) {
 	}
 	defer resultRows.Close()
 
+	var name string
 	lastUpdated := tc.TimeNoMod{}
 	rowsAffected := 0
+
 	for resultRows.Next() {
 		rowsAffected++
-		if err := resultRows.Scan(&lastUpdated); err != nil {
+		// Only when the type is of serviceCategory, &name is scanned and returned from the DB.
+		// Else return only &lastUpdated.
+		var err error
+		if val.GetType() == "serviceCategory" {
+			err = resultRows.Scan(&name, &lastUpdated)
+		} else {
+			err = resultRows.Scan(&lastUpdated)
+		}
+		if err != nil {
 			return nil, errors.New(val.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
 		}
 	}
+
 	if rowsAffected == 0 {
 		return nil, errors.New(val.GetType() + " create: no " + val.GetType() + " was inserted, no row was returned"), http.StatusInternalServerError
 	} else if rowsAffected > 1 {
 		return nil, errors.New("too many rows returned from " + val.GetType() + " insert"), http.StatusInternalServerError
 	}
+
+	// Only when the type is of serviceCategory, setKeys to return name parameter.
+	if val.GetType() == "serviceCategory" {
+		val.SetKeys(map[string]interface{}{"name": name})
+	}
+
 	val.SetLastUpdated(lastUpdated)
 	return nil, nil, http.StatusOK
 }

@@ -134,6 +134,7 @@ func MakeLoggingDotYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentT
 func MakeSSLServerNameYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeSSLServerNameYAML(
 		toData.Server,
+		toData.Servers,
 		toData.DeliveryServices,
 		toData.DeliveryServiceServers,
 		toData.DeliveryServiceRegexes,
@@ -155,6 +156,7 @@ func MakeSSLServerNameYAML(toData *t3cutil.ConfigData, fileName string, hdrComme
 func MakeSNIDotYAML(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
 	return atscfg.MakeSNIDotYAML(
 		toData.Server,
+		toData.Servers,
 		toData.DeliveryServices,
 		toData.DeliveryServiceServers,
 		toData.DeliveryServiceRegexes,
@@ -232,6 +234,7 @@ func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentT
 	remapAndCacheKeyParams = append(remapAndCacheKeyParams, toData.CacheKeyConfigParams...)
 	return atscfg.MakeRemapDotConfig(
 		toData.Server,
+		toData.Servers,
 		toData.DeliveryServices,
 		toData.DeliveryServiceServers,
 		toData.DeliveryServiceRegexes,

@@ -106,6 +106,7 @@ type SSLServerNameYAMLOpts struct {
 
 func MakeSSLServerNameYAML(
 	server *Server,
+	servers []Server,
 	dses []DeliveryService,
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
@@ -126,6 +127,7 @@ func MakeSSLServerNameYAML(
 
 	sslDatas, warnings, err := GetServerSSLData(
 		server,
+		servers,
 		dses,
 		dss,
 		dsRegexArr,
@@ -196,6 +198,7 @@ type SSLData struct {
 // GetServerSSLData gets the SSLData for all Delivery Services assigned to the given Server, any warnings, and any error.
 func GetServerSSLData(
 	server *Server,
+	servers []Server,
 	dses []DeliveryService,
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
@@ -238,6 +241,7 @@ func GetServerSSLData(
 	}
 
 	nameTopologies := makeTopologyNameMap(topologies)
+	anyCastPartners := getAnyCastPartners(server, servers)
 
 	sort.Sort(dsesSortByName(dses))
 
@@ -258,7 +262,7 @@ func GetServerSSLData(
 			dsParentConfigParams = profileParentConfigParams[*ds.ProfileName]
 		}
 
-		requestFQDNs, err := getDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, cdn.DomainName)
+		requestFQDNs, err := getDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, anyCastPartners, cdn.DomainName)
 		if err != nil {
 			warnings = append(warnings, "error getting ds '"+*ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
 			continue

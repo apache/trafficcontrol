@@ -17,6 +17,8 @@
  * under the License.
  */
 
+/** @typedef {import("jquery")} $ */
+
 /**
  * @param {*} users
  * @param {*} $scope
@@ -30,7 +32,7 @@ var TableUsersController = function(users, $scope, $state, dateUtils, locationUt
 
     $scope.users = users;
 
-    $scope.relativeLoginTime = dateUtils.relativeLoginTime;
+    $scope.relativeLoginTime = arg => dateUtils.relativeLoginTime(arg);
 
     $scope.columns = [
         { "name": "Full Name", "visible": true, "searchable": true },
@@ -66,6 +68,8 @@ var TableUsersController = function(users, $scope, $state, dateUtils, locationUt
     };
 
     angular.element(document).ready(function () {
+		// DataTable plugin typings not included.
+		// @ts-ignore
         usersTable = $('#usersTable').DataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
             "iDisplayLength": 25,
@@ -74,7 +78,7 @@ var TableUsersController = function(users, $scope, $state, dateUtils, locationUt
             "initComplete": function() {
                 try {
                     // need to create the show/hide column checkboxes and bind to the current visibility
-                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_usersTable_/')).columns;
+                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_usersTable_/') ?? "").columns;
                 } catch (e) {
                     console.error("Failure to retrieve required column info from localStorage (key=DataTables_usersTable_/):", e);
                 }

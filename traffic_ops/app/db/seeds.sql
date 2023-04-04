@@ -102,12 +102,15 @@ INSERT INTO public.role_capability
 SELECT id, perm
 FROM public.role
 CROSS JOIN ( VALUES
+	('ACME:READ'),
 	('ASN:READ'),
 	('ASYNC-STATUS:READ'),
 	('CACHE-GROUP:READ'),
 	('CAPABILITY:READ'),
 	('CDN-SNAPSHOT:READ'),
 	('CDN:READ'),
+	('CDNI-ADMIN:READ'),
+	('CDNI-CAPACITY:READ'),
 	('COORDINATE:READ'),
 	('DELIVERY-SERVICE:READ'),
 	('DIVISION:READ'),
@@ -183,6 +186,10 @@ INSERT INTO public.role_capability
 SELECT id, perm
 FROM public.role
 CROSS JOIN ( VALUES
+        ('ACME:CREATE'),
+        ('ACME:DELETE'),
+        ('ACME:READ'),
+        ('ACME:UPDATE'),
 	('ASN:CREATE'),
 	('ASN:DELETE'),
 	('ASN:UPDATE'),

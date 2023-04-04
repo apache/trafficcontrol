@@ -24,12 +24,17 @@ import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
+import { AsnDetailComponent } from "./cache-groups/asns/detail/asn-detail.component";
+import { AsnsTableComponent } from "./cache-groups/asns/table/asns-table.component";
 import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/cache-group-details.component";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
+import { CoordinateDetailComponent } from "./cache-groups/coordinates/detail/coordinate-detail.component";
+import { CoordinatesTableComponent } from "./cache-groups/coordinates/table/coordinates-table.component";
 import { DivisionDetailComponent } from "./cache-groups/divisions/detail/division-detail.component";
 import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
 import { RegionDetailComponent } from "./cache-groups/regions/detail/region-detail.component";
 import { RegionsTableComponent } from "./cache-groups/regions/table/regions-table.component";
+import { CDNDetailComponent } from "./cdns/cdn-detail/cdn-detail.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
 import { LastDaysComponent } from "./change-logs/last-days/last-days.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
@@ -42,11 +47,14 @@ import {
 	NewInvalidationJobDialogComponent
 } from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
+import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
 import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
 import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
+import {TypeDetailComponent} from "./types/detail/type-detail.component";
+import {TypesTableComponent} from "./types/table/types-table.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
@@ -55,14 +63,17 @@ import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
+	{ component: AsnDetailComponent, path: "asns/:id"},
+	{ component: AsnsTableComponent, path: "asns" },
 	{ component: DivisionsTableComponent, path: "divisions" },
 	{ component: DivisionDetailComponent, path: "divisions/:id" },
 	{ component: RegionsTableComponent, path: "regions" },
 	{ component: RegionDetailComponent, path: "regions/:id" },
 	{ component: UsersComponent, path: "users" },
 	{ component: UserDetailsComponent, path: "users/:id"},
+	{ component: CDNDetailComponent, path: "cdns/:id" },
 	{ component: ServersTableComponent, path: "servers" },
-	{ component: ServerDetailsComponent, path: "server/:id" },
+	{ component: ServerDetailsComponent, path: "servers/:id" },
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id" },
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
 	{ component: CurrentuserComponent, path: "me" },
@@ -74,6 +85,11 @@ export const ROUTES: Routes = [
 	{ component: TenantDetailsComponent, path: "tenants/:id"},
 	{ component: PhysLocDetailComponent, path: "phys-locs/:id" },
 	{ component: PhysLocTableComponent, path: "phys-locs" },
+	{ component: CoordinateDetailComponent, path: "coordinates/:id" },
+	{ component: CoordinatesTableComponent, path: "coordinates" },
+	{ component: TypesTableComponent, path: "types" },
+	{ component: TypeDetailComponent, path: "types/:id"},
+	{ component: ISOGenerationFormComponent, path: "iso-gen"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -103,11 +119,19 @@ export const ROUTES: Routes = [
 		UserRegistrationDialogComponent,
 		PhysLocTableComponent,
 		PhysLocDetailComponent,
+		AsnsTableComponent,
+		AsnDetailComponent,
 		DivisionsTableComponent,
 		DivisionDetailComponent,
 		RegionsTableComponent,
 		RegionDetailComponent,
-		CacheGroupDetailsComponent
+		CacheGroupDetailsComponent,
+		CoordinatesTableComponent,
+		CoordinateDetailComponent,
+		TypesTableComponent,
+		TypeDetailComponent,
+		ISOGenerationFormComponent,
+		CDNDetailComponent,
 	],
 	exports: [],
 	imports: [

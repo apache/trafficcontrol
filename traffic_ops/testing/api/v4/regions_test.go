@@ -25,7 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -315,28 +315,5 @@ func validateRegionsPagination(paginationParam string) utils.CkReqFunc {
 		case "page":
 			assert.Exactly(t, region[1:2], paginationResp, "expected GET Regions with limit = 1, page = 2 to return second result")
 		}
-	}
-}
-
-func CreateTestRegions(t *testing.T) {
-	for _, region := range testData.Regions {
-		resp, _, err := TOSession.CreateRegion(region, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create Region '%s': %v - alerts: %+v", region.Name, err, resp.Alerts)
-	}
-}
-
-func DeleteTestRegions(t *testing.T) {
-	regions, _, err := TOSession.GetRegions(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Regions: %v - alerts: %+v", err, regions.Alerts)
-
-	for _, region := range regions.Response {
-		alerts, _, err := TOSession.DeleteRegion(region.Name, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Region '%s' (#%d): %v - alerts: %+v", region.Name, region.ID, err, alerts.Alerts)
-		// Retrieve the Region to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(region.ID))
-		getRegion, _, err := TOSession.GetRegions(opts)
-		assert.NoError(t, err, "Error getting Region '%s' after deletion: %v - alerts: %+v", region.Name, err, getRegion.Alerts)
-		assert.Equal(t, 0, len(getRegion.Response), "Expected Region '%s' to be deleted, but it was found in Traffic Ops", region.Name)
 	}
 }

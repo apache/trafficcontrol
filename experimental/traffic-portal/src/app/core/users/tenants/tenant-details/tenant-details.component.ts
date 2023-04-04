@@ -17,14 +17,14 @@ import { ActivatedRoute } from "@angular/router";
 import { RequestTenant, ResponseTenant, Tenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
-import { TreeData } from "src/app/models/tree-select.model";
+import { TreeData } from "src/app/models";
 
 /**
  * TenantsDetailsComponent is the controller for the tenant add/edit form.
  */
 @Component({
 	selector: "tp-tenant-details",
-	styleUrls: ["./tenant-details.component.scss"],
+	styleUrls: ["../../../styles/form.page.scss"],
 	templateUrl: "./tenant-details.component.html"
 })
 export class TenantDetailsComponent implements OnInit {

@@ -22,7 +22,8 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -49,7 +50,7 @@ func TestSnapshot(t *testing.T) {
 				},
 				"OK when VALID CDNID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdnID": {strconv.Itoa(GetCDNID(t, "cdn1")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdnID": {strconv.Itoa(totest.GetCDNID(t, TOSession, "cdn1")())}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
 				"NOT FOUND when NON-EXISTENT CDN": {

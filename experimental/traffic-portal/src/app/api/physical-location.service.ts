@@ -13,7 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
+import type { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -45,13 +45,10 @@ export class PhysicalLocationService extends APIService {
 					params = {id: String(nameOrID)};
 			}
 			const r = await this.get<[ResponsePhysicalLocation]>(path, undefined, params).toPromise();
-			return {...r[0], lastUpdated: new Date((r[0].lastUpdated as unknown as string).replace("+00", "Z"))};
+			return r[0];
 
 		}
-		const physicalLocations = await this.get<Array<ResponsePhysicalLocation>>(path).toPromise();
-		return physicalLocations.map(
-			d => ({...d, lastUpdated: new Date((d.lastUpdated as unknown as string).replace("+00", "Z"))})
-		);
+		return this.get<Array<ResponsePhysicalLocation>>(path).toPromise();
 	}
 
 	/**
@@ -62,11 +59,7 @@ export class PhysicalLocationService extends APIService {
 	 */
 	public async updatePhysicalLocation(physicalLocation: ResponsePhysicalLocation): Promise<ResponsePhysicalLocation> {
 		const path = `phys_locations/${physicalLocation.id}`;
-		const response = await this.put<ResponsePhysicalLocation>(path, physicalLocation).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
+		return this.put<ResponsePhysicalLocation>(path, physicalLocation).toPromise();
 	}
 
 	/**
@@ -76,11 +69,7 @@ export class PhysicalLocationService extends APIService {
 	 * @returns The created Physical Location.
 	 */
 	public async createPhysicalLocation(physicalLocation: RequestPhysicalLocation): Promise<ResponsePhysicalLocation> {
-		const response = await this.post<ResponsePhysicalLocation>("physicalLocations", physicalLocation).toPromise();
-		return {
-			...response,
-			lastUpdated: new Date((response.lastUpdated as unknown as string).replace(" ", "T").replace("+00", "Z"))
-		};
+		return this.post<ResponsePhysicalLocation>("physicalLocations", physicalLocation).toPromise();
 	}
 
 	/**

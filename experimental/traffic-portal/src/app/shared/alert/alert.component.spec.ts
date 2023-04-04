@@ -17,8 +17,7 @@ import { TestBed, type ComponentFixture } from "@angular/core/testing";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatSnackBarHarness}  from "@angular/material/snack-bar/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
-
-import type { AlertLevel } from "src/app/models";
+import { AlertLevel } from "trafficops-types";
 
 import { AlertComponent } from "./alert.component";
 import { AlertService } from "./alert.service";
@@ -49,7 +48,7 @@ describe("AlertComponent", () => {
 	});
 
 	it("should load simple alerts", async () => {
-		const levels: Array<AlertLevel> = ["error", "warning", "info", "success"];
+		const levels = [AlertLevel.ERROR, AlertLevel.WARNING, AlertLevel.INFO, AlertLevel.SUCCESS];
 		let snackBars;
 		let snackBar;
 		for (const errLevel of levels) {
@@ -66,7 +65,7 @@ describe("AlertComponent", () => {
 			snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
 			expect(snackBars.length).toBe(0);
 		}
-		service.newAlert({level: "info", text: ""});
+		service.newAlert({level: AlertLevel.INFO, text: ""});
 
 		snackBars = await loader.getAllHarnesses(MatSnackBarHarness);
 		expect(snackBars.length).toBe(1);

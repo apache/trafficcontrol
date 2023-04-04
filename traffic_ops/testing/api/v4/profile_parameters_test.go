@@ -25,7 +25,8 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
@@ -48,7 +49,7 @@ func TestProfileParameters(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
-						"profileId":   {strconv.Itoa(GetProfileID(t, "RASCAL1")())},
+						"profileId":   {strconv.Itoa(totest.GetProfileID(t, TOSession, "RASCAL1")())},
 						"parameterId": {strconv.Itoa(GetParameterID(t, "peers.polling.interval", "rascal-config.txt", "60")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -59,11 +60,11 @@ func TestProfileParameters(t *testing.T) {
 					RequestBody: map[string]interface{}{
 						"profileParameters": []map[string]interface{}{
 							{
-								"profileId":   GetProfileID(t, "MID1")(),
+								"profileId":   totest.GetProfileID(t, TOSession, "MID1")(),
 								"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
 							},
 							{
-								"profileId":   GetProfileID(t, "MID2")(),
+								"profileId":   totest.GetProfileID(t, TOSession, "MID2")(),
 								"parameterId": GetParameterID(t, "CONFIG proxy.config.admin.user_id", "records.config", "STRING ats")(),
 							},
 						},
@@ -88,7 +89,7 @@ func TestProfileParameters(t *testing.T) {
 				"BAD REQUEST when MISSING PARAMETERID field": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"profileId": GetProfileID(t, "EDGE2")(),
+						"profileId": totest.GetProfileID(t, TOSession, "EDGE2")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -100,7 +101,7 @@ func TestProfileParameters(t *testing.T) {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"profileId":   GetProfileID(t, "EDGE1")(),
+						"profileId":   totest.GetProfileID(t, TOSession, "EDGE1")(),
 						"parameterId": GetParameterID(t, "health.threshold.availableBandwidthInKbps", "rascal.properties", ">1750000")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
@@ -108,7 +109,7 @@ func TestProfileParameters(t *testing.T) {
 			},
 			"DELETE": {
 				"OK when VALID request": {
-					EndpointID:    GetProfileID(t, "ATS_EDGE_TIER_CACHE"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "ATS_EDGE_TIER_CACHE"),
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
 						"parameterId": {strconv.Itoa(GetParameterID(t, "location", "set_dscp_37.config", "/etc/trafficserver/dscp")())},
@@ -192,7 +193,7 @@ func TestProfileParameter(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"profileId": GetProfileID(t, "ATS_EDGE_TIER_CACHE")(),
+						"profileId": totest.GetProfileID(t, TOSession, "ATS_EDGE_TIER_CACHE")(),
 						"paramIds": []int64{
 							int64(GetParameterID(t, "CONFIG proxy.config.allocator.enable_reclaim", "records.config", "INT 0")()),
 							int64(GetParameterID(t, "CONFIG proxy.config.allocator.max_overage", "records.config", "INT 3")()),
@@ -228,46 +229,4 @@ func TestProfileParameter(t *testing.T) {
 			})
 		}
 	})
-}
-func CreateTestProfileParameters(t *testing.T) {
-	for _, profile := range testData.Profiles {
-		profileID := GetProfileID(t, profile.Name)()
-
-		for _, parameter := range profile.Parameters {
-			assert.RequireNotNil(t, parameter.Name, "Expected parameter name to not be nil.")
-			assert.RequireNotNil(t, parameter.Value, "Expected parameter value to not be nil.")
-			assert.RequireNotNil(t, parameter.ConfigFile, "Expected parameter configFile to not be nil.")
-
-			parameterOpts := client.NewRequestOptions()
-			parameterOpts.QueryParameters.Set("name", *parameter.Name)
-			parameterOpts.QueryParameters.Set("configFile", *parameter.ConfigFile)
-			parameterOpts.QueryParameters.Set("value", *parameter.Value)
-			getParameter, _, err := TOSession.GetParameters(parameterOpts)
-			assert.RequireNoError(t, err, "Could not get Parameter %s: %v - alerts: %+v", *parameter.Name, err, getParameter.Alerts)
-			if len(getParameter.Response) == 0 {
-				alerts, _, err := TOSession.CreateParameter(tc.Parameter{Name: *parameter.Name, Value: *parameter.Value, ConfigFile: *parameter.ConfigFile}, client.RequestOptions{})
-				assert.RequireNoError(t, err, "Could not create Parameter %s: %v - alerts: %+v", parameter.Name, err, alerts.Alerts)
-				getParameter, _, err = TOSession.GetParameters(parameterOpts)
-				assert.RequireNoError(t, err, "Could not get Parameter %s: %v - alerts: %+v", *parameter.Name, err, getParameter.Alerts)
-				assert.RequireNotEqual(t, 0, len(getParameter.Response), "Could not get parameter %s: not found", *parameter.Name)
-			}
-			profileParameter := tc.ProfileParameterCreationRequest{ProfileID: profileID, ParameterID: getParameter.Response[0].ID}
-			alerts, _, err := TOSession.CreateProfileParameter(profileParameter, client.RequestOptions{})
-			assert.NoError(t, err, "Could not associate Parameter %s with Profile %s: %v - alerts: %+v", parameter.Name, profile.Name, err, alerts.Alerts)
-		}
-	}
-}
-
-func DeleteTestProfileParameters(t *testing.T) {
-	profileParameters, _, err := TOSession.GetProfileParameters(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Profile Parameters: %v - alerts: %+v", err, profileParameters.Alerts)
-
-	for _, profileParameter := range profileParameters.Response {
-		alerts, _, err := TOSession.DeleteProfileParameter(GetProfileID(t, profileParameter.Profile)(), profileParameter.Parameter, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Profile Parameter: Profile: '%s' Parameter ID: (#%d): %v - alerts: %+v", profileParameter.Profile, profileParameter.Parameter, err, alerts.Alerts)
-	}
-	// Retrieve the Profile Parameters to see if it got deleted
-	getProfileParameter, _, err := TOSession.GetProfileParameters(client.RequestOptions{})
-	assert.NoError(t, err, "Error getting Profile Parameters after deletion: %v - alerts: %+v", err, getProfileParameter.Alerts)
-	assert.Equal(t, 0, len(getProfileParameter.Response), "Expected Profile Parameters to be deleted, but %d were found in Traffic Ops", len(getProfileParameter.Response))
 }

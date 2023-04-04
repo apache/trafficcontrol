@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
+import type { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
 
 /**
  * PhysicalLocationService exposes API functionality relating to PhysicalLocations.

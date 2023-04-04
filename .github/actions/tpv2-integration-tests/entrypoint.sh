@@ -17,6 +17,7 @@
 # under the License.
 
 set -ex
+export BROWSER_FOLDER="/experimental/traffic-portal/dist/traffic-portal/browser"
 
 cd "${GITHUB_WORKSPACE}/traffic_ops/traffic_ops_golang"
 
@@ -25,14 +26,17 @@ envsubst <../../.github/actions/tpv2-integration-tests/cdn.json >./cdn.conf
 
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ../../.github/actions/tpv2-integration-tests/database.json > out.log 2>&1 &
 
-cd "${GITHUB_WORKSPACE}/experimental/traffic-portal"
-node ./dist/traffic-portal/server/main.js --port 4200 -k -t 'https://localhost:6443/' &
+cd "${GITHUB_WORKSPACE}/experimental/traffic-portal/dist/traffic-portal"
+envsubst <${GITHUB_WORKSPACE}/.github/actions/tpv2-integration-tests/config.json >./config.json
+node ./server/main.js -C config.json > "${GITHUB_WORKSPACE}/tp.log" 2>&1 &
 
-timeout 15m bash <<TMOUT
+timeout 3m bash <<TMOUT
 	while ! curl -k "http://localhost:4200/api/4.0/ping" >/dev/null 2>&1; do
 		echo "waiting for TP dev server to proxy TO API"
 		sleep 5
 	done
 TMOUT
+
+cd "${GITHUB_WORKSPACE}/experimental/traffic-portal"
 timeout 15m npm run e2e:ci
 kill %%

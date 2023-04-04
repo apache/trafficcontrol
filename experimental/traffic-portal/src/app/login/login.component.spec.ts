@@ -18,9 +18,9 @@ import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import {ReplaySubject} from "rxjs";
+import { ReplaySubject } from "rxjs";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { LoginComponent } from "./login.component";

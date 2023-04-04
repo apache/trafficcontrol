@@ -20,8 +20,9 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/assert"
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
@@ -33,7 +34,7 @@ func TestServersIDStatus(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerPutStatus]{
 			"PUT": {
 				"OK when VALID request": {
-					EndpointID:    GetServerID(t, "atlanta-mid-01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-mid-01"),
 					ClientSession: TOSession,
 					RequestBody: tc.ServerPutStatus{
 						Status:        util.JSONNameOrIDStr{ID: util.Ptr(GetStatusID(t, "OFFLINE")())},
@@ -42,7 +43,7 @@ func TestServersIDStatus(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateUpdPending("atlanta-mid-01")),
 				},
 				"OK when using STATUS ID FIELD": {
-					EndpointID:    GetServerID(t, "atlanta-mid-16"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-mid-16"),
 					ClientSession: TOSession,
 					RequestBody: tc.ServerPutStatus{
 						Status:        util.JSONNameOrIDStr{ID: util.Ptr(GetStatusID(t, "OFFLINE")())},
@@ -51,7 +52,7 @@ func TestServersIDStatus(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateUpdPending("atlanta-mid-16")),
 				},
 				"VALIDATE TOPOLOGY DESCENDANTS receive STATUS UPDATES": {
-					EndpointID:    GetServerID(t, "topology-mid-04"),
+					EndpointID:    totest.GetServerID(t, TOSession, "topology-mid-04"),
 					ClientSession: TOSession,
 					RequestBody: tc.ServerPutStatus{
 						Status:        util.JSONNameOrIDStr{ID: util.Ptr(GetStatusID(t, "OFFLINE")())},
@@ -72,7 +73,7 @@ func TestServersIDStatus(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"BAD REQUEST when STATUS DOESNT EXIST": {
-					EndpointID:    GetServerID(t, "atlanta-mid-16"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-mid-16"),
 					ClientSession: TOSession,
 					RequestBody: tc.ServerPutStatus{
 						Status:        util.JSONNameOrIDStr{Name: util.Ptr("NOT_A_REAL_STATUS")},
@@ -81,7 +82,7 @@ func TestServersIDStatus(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING OFFLINE REASON when OFFLINE STATUS": {
-					EndpointID:    GetServerID(t, "atlanta-mid-16"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-mid-16"),
 					ClientSession: TOSession,
 					RequestBody: tc.ServerPutStatus{
 						Status: util.JSONNameOrIDStr{Name: util.Ptr("OFFLINE")},
@@ -89,7 +90,7 @@ func TestServersIDStatus(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING OFFLINE REASON when ADMIN_DOWN STATUS": {
-					EndpointID:    GetServerID(t, "atlanta-mid-16"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-mid-16"),
 					ClientSession: TOSession,
 					RequestBody: tc.ServerPutStatus{
 						Status: util.JSONNameOrIDStr{Name: util.Ptr("ADMIN_DOWN")},
@@ -97,7 +98,7 @@ func TestServersIDStatus(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when SERVER STATUS OFFLINE when ONLY EDGE SERVER ASSIGNED": {
-					EndpointID:    GetServerID(t, "test-ds-server-assignments"),
+					EndpointID:    totest.GetServerID(t, TOSession, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					RequestBody: tc.ServerPutStatus{
 						Status:        util.JSONNameOrIDStr{Name: util.Ptr("OFFLINE")},
@@ -106,7 +107,7 @@ func TestServersIDStatus(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when SERVER STATUS OFFLINE when ONLY ORIGIN SERVER ASSIGNED": {
-					EndpointID:    GetServerID(t, "test-mso-org-01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "test-mso-org-01"),
 					ClientSession: TOSession,
 					RequestBody: tc.ServerPutStatus{
 						Status:        util.JSONNameOrIDStr{Name: util.Ptr("OFFLINE")},
