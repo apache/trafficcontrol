@@ -22,9 +22,13 @@ import { HttpClientModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { MatomoRouteDataInterceptor, NgxMatomoRouterModule } from "@ngx-matomo/router";
+import { NgxMatomoTrackerModule } from "@ngx-matomo/tracker";
 import * as Chart from "chart.js";
 
 // Routing, Components, Directives and Interceptors
+import { environment } from "src/environments/environment";
+
 import { APIModule } from "./api";
 import { AppRoutingModule } from "./app-routing.module";
 import { AppComponent } from "./app.component";
@@ -71,7 +75,16 @@ Chart.plugins.register({
 		HttpClientModule,
 		AppUIModule,
 		SharedModule,
-		APIModule
+		APIModule,
+		NgxMatomoTrackerModule.forRoot({
+			acceptDoNotTrack: false,
+			disabled: !environment.production,
+			enableJSErrorTracking: true,
+			siteId: "1",
+			trackerUrl: "https://localhost:4243" }),
+		NgxMatomoRouterModule.forRoot({
+			interceptors: [MatomoRouteDataInterceptor]
+		})
 	],
 	providers: [
 		AuthenticatedGuard

@@ -28,7 +28,7 @@ limitations under the License.
 			</mat-form-field>
 			<div>
 				<button name="login" mat-raised-button color="primary">Login</button>
-				<button name="clear" mat-raised-button color="warn" type="reset">Clear</button>
+				<button name="clear" mat-raised-button color="warn" type="reset" [matomoClickCategory]="'clear'" [matomoClickAction]="'clear2'">Clear</button>
 				<button name="reset" mat-button color="accent" type="button" (click)="resetPassword()">Forgot Password</button>
 			</div>
 		</form>
