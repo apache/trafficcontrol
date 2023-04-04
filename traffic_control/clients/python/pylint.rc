@@ -432,9 +432,6 @@ max-statements=80
 # Maximum number of locals for function / method body
 max-locals=25
 
-# Maximum number of arguments for function / method
-max-args=10
-
 [CLASSES]
 
 # List of method names used to declare (i.e. assign) instance attributes.

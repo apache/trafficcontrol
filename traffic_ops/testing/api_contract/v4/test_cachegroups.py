@@ -27,8 +27,7 @@ primitive = bool | int | float | str | None
 @pytest.mark.parametrize('request_template_data', ["cachegroup"], indirect=True)
 def test_cachegroup_contract(to_session: TOSession, request_template_data:
 	list[dict[str, object] | list[object] | primitive],
-	response_template_data: list[dict[str, object] | list[object] | primitive],
-	cachegroup_post_data: dict[str, object]) -> None:
+	response_template_data: dict[str, object],cachegroup_post_data: dict[str, object]) -> None:
 	"""
 	Test step to validate keys, values and data types from cachegroup endpoint
 	response.
@@ -65,18 +64,10 @@ def test_cachegroup_contract(to_session: TOSession, request_template_data:
 		logger.info("Cache group Keys from cachegroup endpoint response %s", cachegroup_keys)
 		response_template = response_template_data.get("cachegroup").get("properties")
 		# validate cachegroup values from prereq data in cachegroup get response.
-		prereq_values = [
-			cachegroup_post_data["name"],
-			cachegroup_post_data["shortName"],
-			cachegroup_post_data["fallbackToClosest"],
-			cachegroup_post_data["typeId"]
-		]
-		get_values = [
-			first_cachegroup["name"],
-	        first_cachegroup["shortName"],
-	        first_cachegroup["fallbackToClosest"],
-		    first_cachegroup["typeId"]
-	    ]
+		prereq_values = [cachegroup_post_data["name"],cachegroup_post_data["shortName"],
+		   cachegroup_post_data["fallbackToClosest"],cachegroup_post_data["typeId"]]
+		get_values = [first_cachegroup["name"],first_cachegroup["shortName"],
+		first_cachegroup["fallbackToClosest"],first_cachegroup["typeId"]]
 		get_types = {}
 		for key in first_cachegroup:
 			get_types[key] = type(first_cachegroup[key]).__name__

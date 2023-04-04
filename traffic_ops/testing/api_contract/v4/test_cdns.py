@@ -28,7 +28,7 @@ primitive = bool | int | float | str | None
 def test_cdn_contract(
 	to_session: TOSession,
 	request_template_data: list[dict[str, object] | list[object] | primitive],
-	response_template_data: list[dict[str, object] | list[object] | primitive],
+	response_template_data: dict[str, object],
 	cdn_post_data: dict[str, object]
 ) -> None:
 	"""

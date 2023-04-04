@@ -335,7 +335,7 @@ def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.Fixtur
 
 @pytest.fixture()
 def response_template_data(pytestconfig: pytest.Config,
-			  ) -> list[dict[str, object] | list[object] | primitive]:
+			  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to store response template data for api endpoint.
 	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object.
