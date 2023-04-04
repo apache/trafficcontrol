@@ -25,6 +25,7 @@ galaxy_info:
   galaxy_tags:
   - trafficportal
   - tp
+  - tpv2
   - cdn
   - trafficcontrol
   - apache

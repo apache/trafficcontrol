@@ -14,7 +14,7 @@
 #
 - name: Install Traffic Portal V2
   yum:
-    name: "{{ tp_pkg_name }}"
+    name: "{{ tpv2_pkg_name }}"
     state: installed
     lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
@@ -25,7 +25,7 @@
 - name: Copy config.js file
   template:
     src: "config_v2.js.j2"
-    dest: "{{ tp_conf_dir }}/config_v2.js"
+    dest: "{{ tpv2_conf_dir }}/config_v2.js"
     owner: root
     group: root
     mode: 0600
@@ -34,7 +34,7 @@
 - name: Copy properties.json
   template:
     src: "traffic_portal_v2_properties.json.j2"
-    dest: "{{ tp_properties_dir }}/traffic_portal_v2_properties.json"
+    dest: "{{ tpv2_properties_dir }}/traffic_portal_v2_properties.json"
     owner: root
     group: root
     mode: 0600

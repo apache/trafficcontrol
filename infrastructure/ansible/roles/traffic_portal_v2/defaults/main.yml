@@ -13,46 +13,46 @@
 # limitations under the License.
 #
 install_traffic_portal_v2: False
-tp_pkg_name: "{% if tp_version is defined and tp_version != omit %}{{ 'traffic_portal_v2-'+tp_version }}{% else %}traffic_portal_v2{% endif %}"
+tpv2_pkg_name: "{% if tp_version is defined and tp_version != omit %}{{ 'traffic_portal_v2-'+tp_version }}{% else %}traffic_portal_v2{% endif %}"
 
 # TP installation information
-tp_base_install_dir: /opt/traffic_portal_v2
-tp_properties_dir: "{{ tp_base_install_dir }}/public"
-tp_conf_dir: /etc/traffic_portal_v2/conf
+tpv2_base_install_dir: /opt/traffic_portal_v2
+tpv2_properties_dir: "{{ tp_base_install_dir }}/public"
+tpv2_conf_dir: /etc/traffic_portal_v2/conf
 
 # config.js
-tp_timeout: "120s"
-tp_useSSL: False
-tp_http_port: 8080
-tp_sslPort: 8443
-tp_ssl_key_file: "/etc/pki/tls/localhost.key"
-tp_ssl_cert_file: "/etc/pki/tls/localhost.crt"
-tp_ssl_ca_files:
+tpv2_timeout: "120s"
+tpv2_useSSL: False
+tpv2_http_port: 8080
+tpv2_sslPort: 8443
+tpv2_ssl_key_file: "/etc/pki/tls/localhost.key"
+tpv2_ssl_cert_file: "/etc/pki/tls/localhost.crt"
+tpv2_ssl_ca_files:
   - /etc/pki/tls/ca-localhost.crt
-tp_files_static_location: "{{ tp_properties_dir }}"
-tp_log_stream_location: "/var/log/traffic_portal_v2/access.log"
-tp_reject_unauthorized: 0
-tp_ts_base_url: "https://localhost"
-tp_to_base_url: "https://localhost"
+tpv2_files_static_location: "{{ tpv2_properties_dir }}"
+tpv2_log_stream_location: "/var/log/traffic_portal_v2/access.log"
+tpv2_reject_unauthorized: 0
+tpv2_ts_base_url: "https://localhost"
+tpv2_to_base_url: "https://localhost"
 
 # Traffic_portal_v2_properties.json
 # This makes me feel bad, but the structure itself isn't strongly defined
 # Addition is supported, but not removal
-tp_default_properties_template:
-  _comment: These are the default properties for Traffic Portal. Customize these values
+tpv2_default_properties_template:
+  _comment: These are the default properties for Traffic Portal v2. Customize these values
     to fit your needs.
   properties:
     _comments:
-      name: Customize the name of Traffic Portal if desired.
+      name: Customize the name of Traffic Portal v2 if desired.
       enforceCapabilities: Not currently supported. Must be false.
-    name: Traffic Portal
+    name: Traffic Portal v2
     environment:
       _comments: Optionally set the environment name (production, staging, development, etc) and an indicator if the environment is production or not.
       name: Kabletown2.0
       isProd: false
     api:
       _comment: This should have the same value found in /etc/traffic_portal_v2/conf/config.js
-      baseUrl: "{{ tp_to_base_url }}/api/"
+      baseUrl: "{{ tpv2_to_base_url }}/api/"
     # enforceCapabilities is not currently supported and must be false
     enforceCapabilities: false
     dashboard:
@@ -203,7 +203,7 @@ tp_default_properties_template:
         customLink:
           _comment: Do you want to show a custom link to your own ds dashboards?
           show: false
-          baseUrl: "{{ tp_ts_base_url }}/dashboard/script/traffic_ops_deliveryservice.js?which="
+          baseUrl: "{{ tpv2_ts_base_url }}/dashboard/script/traffic_ops_deliveryservice.js?which="
     dsRequests:
       _comments: Should all delivery service changes go through the delivery service
         review process? You can also provide a role that will skip the process.
@@ -215,7 +215,7 @@ tp_default_properties_template:
         _comment: Do you want to show a charts button for each server? If so, where
           can the charts be found? xml id will be appended to the provided url.
         show: false
-        baseUrl: "{{ tp_ts_base_url }}/dashboard/script/traffic_ops_server.js?which="
+        baseUrl: "{{ tpv2_ts_base_url }}/dashboard/script/traffic_ops_server.js?which="
     changeLogs:
       _comment: Change log settings
       days: 7
