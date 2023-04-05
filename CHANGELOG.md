@@ -98,6 +98,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7411](https://github.com/apache/trafficcontrol/pull/7411) *Traffic Control Cache Config (t3c)* Fixed issue with wrong parent ordering with MSO non-topology delivery services.
 - [#7425](https://github.com/apache/trafficcontrol/pull/7425) *Traffic Control Cache Config (t3c)* Fixed issue with layered profile iteration being done in the wrong order.
 
+### Removed
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove`misc/jira_github_issue_import.py`, the project does not use JIRA.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use.
+
 ## [7.0.0] - 2022-07-19
 ### Added
 - [Traffic Portal] Added Layered Profile feature to /servers/
