@@ -1722,7 +1722,7 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 				}
 
 				for _, param := range ds.ConsistentHashQueryParams {
-					if param == tc.ReservedConsistentHashingQueryParameterFormat || param == tc.ReservedConsistentHashingQueryParameterTRRED {
+					if param == tc.ReservedConsistentHashingQueryParameterFormat || param == tc.ReservedConsistentHashingQueryParameterTRRED || param == tc.ReservedConsistentHashingQueryParameterFakeClientIPAddress {
 						return fmt.Errorf("'%s' cannot be used in consistent hashing, because it is reserved for use by Traffic Router", param)
 					}
 				}

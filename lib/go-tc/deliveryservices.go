@@ -53,8 +53,9 @@ type DeliveryServiceActiveState string
 // Delivery Service's "ConsistentHashQueryParams" set, because they collide with
 // query string parameters reserved for use by Traffic Router.
 const (
-	ReservedConsistentHashingQueryParameterFormat = "format"
-	ReservedConsistentHashingQueryParameterTRRED  = "trred"
+	ReservedConsistentHashingQueryParameterFormat              = "format"
+	ReservedConsistentHashingQueryParameterTRRED               = "trred"
+	ReservedConsistentHashingQueryParameterFakeClientIPAddress = "fakeClientIpAddress"
 )
 
 // A DeliveryServiceActiveState describes the availability of Delivery Service
