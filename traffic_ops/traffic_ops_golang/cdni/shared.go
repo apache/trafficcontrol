@@ -222,13 +222,13 @@ func DeleteConfiguration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = inf.Tx.Tx.Query(DeleteCapabilityUpdateQueryByUcdn, ucdn)
+	_, err = inf.Tx.Tx.Exec(DeleteCapabilityUpdateQueryByUcdn, ucdn)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting capability update request: %w", err))
 		return
 	}
 
-	msg := "CDNi configuration update delete request received."
+	msg := "CDNi configuration delete request received."
 
 	var alerts tc.Alerts
 	alerts.AddAlert(tc.Alert{
