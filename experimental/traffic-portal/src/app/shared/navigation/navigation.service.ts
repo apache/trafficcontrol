@@ -148,16 +148,6 @@ export class NavigationService {
 			name: "Servers"
 		}, {
 			children: [{
-				href: "/core/types",
-				name: "Types"
-			},
-			{
-				href: "/core/profiles",
-				name: "Profiles"
-			}],
-			name: "Configuration"
-		}, {
-			children: [{
 				href: "/core/users",
 				name: "Users"
 			}, {
@@ -183,6 +173,18 @@ export class NavigationService {
 				}
 			],
 			name: "Other"
+		}, {
+			children: [
+				{
+					href: "/core/types",
+					name: "Types"
+				},
+				{
+					href: "/core/parameters",
+					name: "Parameters"
+				}
+				],
+			name: "Configuration"
 		}]);
 	}
 

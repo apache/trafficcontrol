@@ -67,6 +67,8 @@ import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
+import {ParametersTableComponent} from "./parameters/table/parameters-table.component";
+import {ParameterDetailComponent} from "./parameters/details/parameter-details.component"
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
@@ -100,11 +102,14 @@ export const ROUTES: Routes = [
 	{ component: CoordinatesTableComponent, path: "coordinates" },
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
+	{ component: ParametersTableComponent, path: "parameters" },
+	{ component: ParameterDetailComponent, path: "parameters/:id" },
 	{ component: StatusesTableComponent, path: "statuses" },
 	{ component: StatusDetailsComponent, path: "statuses/:id" },
 	{ component: ISOGenerationFormComponent, path: "iso-gen"},
 	{ component: ProfileDetailComponent, path: "profiles/:id"},
 	{ component: ProfileTableComponent, path: "profiles"},
+	{ component: ProfileTableComponent, path: "profiles/param/:id"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -154,6 +159,7 @@ export const ROUTES: Routes = [
   		ProfileDetailComponent,
 		CapabilitiesComponent,
 		CapabilityDetailsComponent,
+		ParametersTableComponent,
 	],
 	exports: [],
 	imports: [
