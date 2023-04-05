@@ -49,6 +49,15 @@ const MaxRangeSliceBlockSize = 33554432
 // values of a Delivery Service's 'Active' property (v3.0+).
 type DeliveryServiceActiveState string
 
+// These names of URL query string parameters are not allowed to be in a
+// Delivery Service's "ConsistentHashQueryParams" set, because they collide with
+// query string parameters reserved for use by Traffic Router.
+const (
+	ReservedConsistentHashingQueryParameterFormat              = "format"
+	ReservedConsistentHashingQueryParameterTRRED               = "trred"
+	ReservedConsistentHashingQueryParameterFakeClientIPAddress = "fakeClientIpAddress"
+)
+
 // A DeliveryServiceActiveState describes the availability of Delivery Service
 // content from the perspective of caching servers and Traffic Routers.
 const (

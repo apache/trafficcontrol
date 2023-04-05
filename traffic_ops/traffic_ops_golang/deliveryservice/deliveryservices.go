@@ -1714,10 +1714,20 @@ func validateTypeFields(tx *sql.Tx, ds *tc.DeliveryServiceV5) error {
 		"consistentHashQueryParams": validation.Validate(ds,
 			validation.By(func(dsi interface{}) error {
 				ds := dsi.(*tc.DeliveryServiceV5)
-				if len(ds.ConsistentHashQueryParams) == 0 || tc.DSType(typeName).IsHTTP() {
+				if len(ds.ConsistentHashQueryParams) == 0 {
 					return nil
 				}
-				return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
+				if !tc.DSType(typeName).IsHTTP() {
+					return fmt.Errorf("consistentHashQueryParams not allowed for '%s' deliveryservice type", typeName)
+				}
+
+				for _, param := range ds.ConsistentHashQueryParams {
+					if param == tc.ReservedConsistentHashingQueryParameterFormat || param == tc.ReservedConsistentHashingQueryParameterTRRED || param == tc.ReservedConsistentHashingQueryParameterFakeClientIPAddress {
+						return fmt.Errorf("'%s' cannot be used in consistent hashing, because it is reserved for use by Traffic Router", param)
+					}
+				}
+
+				return nil
 			})),
 		"initialDispersion": validation.Validate(ds.InitialDispersion,
 			validation.By(requiredIfMatchesTypeName([]string{httpTypeRegexp}, typeName)),
