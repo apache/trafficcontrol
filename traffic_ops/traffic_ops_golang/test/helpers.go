@@ -32,7 +32,7 @@ func ColsFromStructByTag(tagName string, thing interface{}) []string {
 }
 
 // InsertAtStr inserts insertMap (string to insert at -> []insert names) into cols non-destructively.
-func InsertAtStr(cols *[]string, insertMap map[string][]string) *[]string {
+func InsertAtStr(cols []string, insertMap map[string][]string) []string {
 	if insertMap == nil {
 		return cols
 	}
@@ -40,7 +40,7 @@ func InsertAtStr(cols *[]string, insertMap map[string][]string) *[]string {
 		return nil
 	}
 
-	colLen := len(*cols)
+	colLen := len(cols)
 	insertLen := 0
 	for _, val := range insertMap {
 		insertLen += len(val)
@@ -48,7 +48,7 @@ func InsertAtStr(cols *[]string, insertMap map[string][]string) *[]string {
 	newColumns := make([]string, colLen+insertLen)
 	oldIndex := 0
 	for newIndex := 0; newIndex < len(newColumns); newIndex++ {
-		newColumns[newIndex] = (*cols)[oldIndex]
+		newColumns[newIndex] = (cols)[oldIndex]
 		if inserts, ok := insertMap[newColumns[newIndex]]; ok {
 			for j, insert := range inserts {
 				newColumns[newIndex+j+1] = insert
@@ -57,16 +57,16 @@ func InsertAtStr(cols *[]string, insertMap map[string][]string) *[]string {
 		}
 		oldIndex++
 	}
-	return &newColumns
+	return newColumns
 }
 
 // ColsFromStructByTagExclude extracts the tag annotations from a struct into a string array except for excludedColumns.
-func ColsFromStructByTagExclude(tagName string, thing interface{}, excludeColumns *[]string) []string {
+func ColsFromStructByTagExclude(tagName string, thing interface{}, excludeColumns []string) []string {
 	var cols []string
 	var excludeMap map[string]bool
 	if excludeColumns != nil {
-		excludeMap = make(map[string]bool, len(*excludeColumns))
-		for _, col := range *excludeColumns {
+		excludeMap = make(map[string]bool, len(excludeColumns))
+		for _, col := range excludeColumns {
 			excludeMap[col] = true
 		}
 	}

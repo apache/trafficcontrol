@@ -142,8 +142,8 @@ func TestUser(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	cols := test.ColsFromStructByTagExclude("db", tc.UserV4{}, util.Ptr([]string{"local_passwd", "token"}))
-	cols = *test.InsertAtStr(&cols, map[string][]string{
+	cols := test.ColsFromStructByTagExclude("db", tc.UserV4{}, []string{"local_passwd", "token"})
+	cols = test.InsertAtStr(cols, map[string][]string{
 		"full_name": {
 			"gid",
 		},

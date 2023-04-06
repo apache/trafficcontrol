@@ -260,7 +260,7 @@ type UsersResponseV4 struct {
 	Alerts
 }
 
-// UserResponseV4 is the type of response from Traffic Ops to requests made
+// UserResponseV4 is the type of a response from Traffic Ops to requests made
 // to /users which return one user for the latest 4.x api version variant.
 type UserResponseV4 struct {
 	Response UserV4 `json:"response"`
