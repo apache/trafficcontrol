@@ -165,6 +165,10 @@ export class NavigationService {
 			children: [{
 				href: "/core/types",
 				name: "Types"
+			},
+			{
+				href: "/core/profiles",
+				name: "Profiles"
 			}],
 			name: "Configuration"
 		}]);
