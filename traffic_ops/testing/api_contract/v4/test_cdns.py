@@ -84,7 +84,11 @@ def test_cdn_contract(
 		logger.info("types from cdn get response %s", get_types)
 		response_template_types= {}
 		for key, value in response_template.items():
-			response_template_types[key] = value.get("type")
+			actual_type = value.get("type")
+			if not isinstance(actual_type, str):
+				raise TypeError(
+					f"Type data must be a string, not '{type(actual_type)}'")
+			response_template_types[key] = actual_type
 		logger.info("types from cdn response template %s", response_template_types)
 
 		assert cdn_keys == set(response_template.keys())

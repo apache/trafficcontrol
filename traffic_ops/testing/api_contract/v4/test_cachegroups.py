@@ -89,12 +89,16 @@ def test_cachegroup_contract(to_session: TOSession,
 		for key, value in response_template.items():
 			optional = value.get("optional")
 			if optional:
-				if key in cachegroup:
-					response_template_types[key] = value.get("typeA")
-				else:
-					response_template_types[key] = value.get("typeB")
+				optional_type = value.get("typeA") if key in cachegroup else value.get("typeB")
+				if not isinstance(optional_type, str):
+					raise TypeError(f"Type data must be a string, not '{type(optional_type)}'")
+				response_template_types[key] = optional_type
 			else:
-				response_template_types[key] = value.get("type")
+				actual_type = value.get("type")
+				if not isinstance(actual_type, str):
+					raise TypeError(f"Type data must be a string, not '{type(actual_type)}'")
+				response_template_types[key] = actual_type
+
 		logger.info("types from cachegroup response template %s", response_template_types)
 
 		# validate keys,data types for values and actual values for cachegroup endpoint.
