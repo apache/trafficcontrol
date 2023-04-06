@@ -226,13 +226,13 @@ func TestUpgradeCurrent(t *testing.T) {
 		t.Fatalf("expected FullName to be equal, got %s and %s", *user.FullName, *newUser.FullName)
 	}
 	if user.NewUser != newUser.NewUser {
-		t.Fatalf("expected NewUser to be equal, got %s and %s", user.NewUser, newUser.NewUser)
+		t.Fatalf("expected NewUser to be equal, got %t and %t", user.NewUser, newUser.NewUser)
 	}
 	if user.Role != newUser.Role {
 		t.Fatalf("expected Role to be equal, got %s and %s", user.Role, newUser.Role)
 	}
 	if user.TenantID != newUser.TenantID {
-		t.Fatalf("expected TenantID to be equal, got %s and %s", user.TenantID, newUser.TenantID)
+		t.Fatalf("expected TenantID to be equal, got %d and %d", user.TenantID, newUser.TenantID)
 	}
 	if user.Username != newUser.Username {
 		t.Fatalf("expected Username to be equal, got %s and %s", user.Username, newUser.Username)
@@ -256,13 +256,13 @@ func TestUpgradeCurrent(t *testing.T) {
 		t.Fatalf("expected Email to be equal, got %s and %s", *user.Email, *newUser.Email)
 	}
 	if user.GID != nil {
-		t.Fatalf("expected GID to be null, got %s", *user.GID)
+		t.Fatalf("expected GID to be null, got %d", *user.GID)
 	}
 	if *user.ID != *newUser.ID {
-		t.Fatalf("expected ID to be equal, got %s and %s", *user.ID, *newUser.ID)
+		t.Fatalf("expected ID to be equal, got %d and %d", *user.ID, *newUser.ID)
 	}
 	if newUser.LocalPassword != nil {
-		t.Fatalf("expected LocalPassword to be nil, got %s", newUser.LocalPassword)
+		t.Fatalf("expected LocalPassword to be nil, got %s", *newUser.LocalPassword)
 	}
 	if *user.PhoneNumber != *newUser.PhoneNumber {
 		t.Fatalf("expected PhoneNumber to be equal, got %s and %s", *user.PhoneNumber, *newUser.PhoneNumber)
@@ -280,7 +280,7 @@ func TestUpgradeCurrent(t *testing.T) {
 		t.Fatalf("expected Token to be null, got %s", *user.Token)
 	}
 	if user.UID != nil {
-		t.Fatalf("expected UID to be null, got %s", *user.UID)
+		t.Fatalf("expected UID to be null, got %d", *user.UID)
 	}
 }
 
