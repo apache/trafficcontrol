@@ -25,9 +25,12 @@ logger = logging.getLogger()
 primitive = bool | int | float | str | None
 
 @pytest.mark.parametrize('request_template_data', ["cachegroup"], indirect=True)
-def test_cachegroup_contract(to_session: TOSession, request_template_data:
-	list[dict[str, object] | list[object] | primitive],
-	response_template_data: dict[str, object],cachegroup_post_data: dict[str, object]) -> None:
+def test_cachegroup_contract(to_session: TOSession,
+	request_template_data: list[dict[str, object] | list[object] | primitive],
+	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
+						    | list[object]] | dict[object, object]],
+	cachegroup_post_data: dict[str, object]
+	) -> None:
 	"""
 	Test step to validate keys, values and data types from cachegroup endpoint
 	response.
@@ -51,6 +54,7 @@ def test_cachegroup_contract(to_session: TOSession, request_template_data:
 		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
 		requests.Response
 	] = to_session.get_cachegroups(query_params={"name": str(cachegroup_name)})
+
 	try:
 		cachegroup_data = cachegroup_get_response[0]
 		if not isinstance(cachegroup_data, list):
@@ -60,30 +64,40 @@ def test_cachegroup_contract(to_session: TOSession, request_template_data:
 		if not isinstance(first_cachegroup, dict):
 			raise TypeError("malformed API response; first Cache group in response is not an object")
 		cachegroup_keys = set(first_cachegroup.keys())
-
 		logger.info("Cache group Keys from cachegroup endpoint response %s", cachegroup_keys)
-		response_template = response_template_data.get("cachegroup").get("properties")
+
+		cachegroup_response_template = response_template_data.get("cachegroup")
+		response_template = cachegroup_response_template.get("properties") if isinstance(
+			cachegroup_response_template, dict) else None
+		if response_template is None or not isinstance(response_template, dict):
+			raise TypeError(
+				f"response template data must be a dict, not '{type(response_template)}'")
+
 		# validate cachegroup values from prereq data in cachegroup get response.
 		prereq_values = [cachegroup_post_data["name"],cachegroup_post_data["shortName"],
 		   cachegroup_post_data["fallbackToClosest"],cachegroup_post_data["typeId"]]
+
 		get_values = [first_cachegroup["name"],first_cachegroup["shortName"],
 		first_cachegroup["fallbackToClosest"],first_cachegroup["typeId"]]
+
 		get_types = {}
-		for key in first_cachegroup:
-			get_types[key] = type(first_cachegroup[key]).__name__
+		for key, value in first_cachegroup.items():
+			get_types[key] = type(value).__name__
 		logger.info("types from cachegroup get response %s", get_types)
+
 		response_template_types= {}
-		for key in response_template:
-			optional = response_template.get(key).get("optional")
+		for key, value in response_template.items():
+			optional = value.get("optional")
 			if optional:
 				if key in cachegroup:
-					response_template_types[key] = response_template.get(key).get("typeA")
+					response_template_types[key] = value.get("typeA")
 				else:
-					response_template_types[key] = response_template.get(key).get("typeB")
+					response_template_types[key] = value.get("typeB")
 			else:
-				response_template_types[key] = response_template.get(key).get("type")
+				response_template_types[key] = value.get("type")
 		logger.info("types from cachegroup response template %s", response_template_types)
-		# validate data types for values from cdn get json response.
+
+		# validate keys,data types for values and actual values for cachegroup endpoint.
 		assert cachegroup_keys == set(response_template.keys())
 		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
 		assert get_values == prereq_values

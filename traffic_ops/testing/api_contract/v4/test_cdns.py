@@ -28,9 +28,10 @@ primitive = bool | int | float | str | None
 def test_cdn_contract(
 	to_session: TOSession,
 	request_template_data: list[dict[str, object] | list[object] | primitive],
-	response_template_data: dict[str, object],
+	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
+						    | list[object]] | dict[object, object]],
 	cdn_post_data: dict[str, object]
-) -> None:
+	) -> None:
 	"""
 	Test step to validate keys, values and data types from cdns endpoint
 	response.
@@ -63,23 +64,27 @@ def test_cdn_contract(
 		if not isinstance(first_cdn, dict):
 			raise TypeError("malformed API response; first CDN in response is not an object")
 		cdn_keys = set(first_cdn.keys())
-
 		logger.info("CDN Keys from cdns endpoint response %s", cdn_keys)
-		response_template = response_template_data.get("cdns").get("properties")
+
+		cdn_response_template = response_template_data.get("cdns")
+		if not isinstance(cdn_response_template, dict):
+			raise TypeError(
+				f"Cdn response template data must be a dict, not '{type(cdn_response_template)}'")
+		response_template = cdn_response_template.get("properties")
+		if not isinstance(response_template, dict):
+			raise TypeError(
+				f"response template data must be a dict, not '{type(response_template)}'")
 		# validate cdn values from prereq data in cdns get response.
-		prereq_values = [
-			cdn_post_data["name"],
-			cdn_post_data["domainName"],
-			cdn_post_data["dnssecEnabled"]
-		]
+		prereq_values = [cdn_post_data["name"], cdn_post_data["domainName"],
+		   cdn_post_data["dnssecEnabled"]]
 		get_values = [first_cdn["name"], first_cdn["domainName"], first_cdn["dnssecEnabled"]]
 		get_types = {}
-		for key in first_cdn:
-			get_types[key] = type(first_cdn[key]).__name__
+		for key, value in first_cdn.items():
+			get_types[key] = type(value).__name__
 		logger.info("types from cdn get response %s", get_types)
 		response_template_types= {}
-		for key in response_template:
-			response_template_types[key] = response_template.get(key).get("type")
+		for key, value in response_template.items():
+			response_template_types[key] = value.get("type")
 		logger.info("types from cdn response template %s", response_template_types)
 
 		assert cdn_keys == set(response_template.keys())
