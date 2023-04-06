@@ -31,9 +31,9 @@ Role Variables
 
 Refer to the defaults/main.yml for most information.
 
-tp_v2_version: This is an optional string that can be provided to specify a particular version of Traffic Portal to install.  It should be something like `3.0.0-10063.5db80eca.el7`.  The absense of this variable entails automatically using the latest version available to yum at the time of initial installation.
+tpv2_version: This is an optional string that can be provided to specify a particular version of Traffic Portal to install.  It should be something like `3.0.0-10063.5db80eca.el7`.  The absense of this variable entails automatically using the latest version available to yum at the time of initial installation.
 
-tp_v2_properties_template: An optional dictionary to merge into/atop the default traffic_portal_properties.json file
+tpv2_properties_template: An optional dictionary to merge into/atop the default traffic_portal_properties.json file
 
 additional_yum_repos: An optional list of additional yum repositories to enable specifically when installing this component.  This could be used to enable non-production ready rpms in a separate repository and not supplying the specific RPM version to automatically use the latest available.
 
@@ -50,9 +50,9 @@ Example Playbook
         name: traffic_portal_v2
       vars:
         install_traffic_portal: true
-        tp_useSSL: true
-        tp_http_port: 80
-        tp_sslPort: 443
+        tpv2_useSSL: true
+        tpv2_http_port: 80
+        tpv2_sslPort: 443
 ```
 
 License
