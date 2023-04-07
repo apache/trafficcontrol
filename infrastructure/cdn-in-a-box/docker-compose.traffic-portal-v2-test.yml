@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -15,16 +14,29 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+---
+version: '3.8'
 
-############################################################
-# Script for creating the database user account for traffic
-# ops. 
-# Used while the Docker Image is initializing itself
-############################################################
+services:
+  tpv2-e2e-test:
+    build:
+      context: ../..
+      dockerfile: infrastructure/cdn-in-a-box/traffic_portal_v2_e2e_test/Dockerfile
+      args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+    env_file:
+      - variables.env
+    environment:
+      SKIP_DIG_IP: 'true'
+    hostname: tpv2-e2e
+    domainname: infra.ciab.test
+    volumes:
+      - shared:/shared
+      - ../../junit:/junit
 
-while ! nc $DB_SERVER $DB_PORT </dev/null; do # &>/dev/null; do
-        echo "waiting for $DB_SERVER:$DB_PORT"
-        sleep 3
-done
-psql -h $DB_SERVER -U postgres -c "CREATE USER $DB_USERNAME WITH ENCRYPTED PASSWORD '$DB_USER_PASS'"
-createdb $DB_NAME -h $DB_SERVER -U postgres --owner $DB_USERNAME
+volumes:
+  shared:
+    external: false
+  junit:
