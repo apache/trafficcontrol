@@ -259,9 +259,7 @@ func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, head
 	}
 
 	if useIMS {
-		runSecond, maxTime = tryIfModifiedSinceQuery(header, tx, where, queryValues)
-		newTemp := maxTime
-		fmt.Println(newTemp)
+		runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return scList, nil, http.StatusNotModified, &maxTime
@@ -288,7 +286,7 @@ func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, head
 	return scList, nil, http.StatusOK, &maxTime
 }
 
-func tryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
+func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
 	var max time.Time
 	var imsDate time.Time
 	var ok bool
