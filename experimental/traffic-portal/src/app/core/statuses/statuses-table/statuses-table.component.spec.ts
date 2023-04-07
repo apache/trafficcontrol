@@ -92,9 +92,9 @@ describe("StatusesTableComponent", () => {
 			afterClosed: () => of(true)
 		} as MatDialogRef<unknown>);
 
-		const type = await api.createStatus({description: "blah", name: "test"});
+		const status = await api.createStatus({description: "blah", name: "test"});
 		expect(openSpy).not.toHaveBeenCalled();
-		const asyncExpectation = expectAsync(component.handleContextMenu({action: "delete", data: type})).toBeResolvedTo(undefined);
+		const asyncExpectation = expectAsync(component.handleContextMenu({action: "delete", data: status})).toBeResolvedTo(undefined);
 		tick();
 
 		expect(openSpy).toHaveBeenCalled();

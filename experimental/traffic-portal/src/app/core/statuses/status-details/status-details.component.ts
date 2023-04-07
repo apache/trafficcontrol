@@ -49,7 +49,7 @@ export class StatusDetailsComponent implements OnInit {
 	/**
 	 * Constructor.
 	 *
-	 * @param serverService The Servers API which is used to provide row data.
+	 * @param api The Servers API which is used to provide row data.
 	 * @param route A reference to the route of this view which is used to get the 'id' query parameter of status.
 	 * @param router Angular router
 	 * @param dialog Dialog manager
@@ -57,7 +57,7 @@ export class StatusDetailsComponent implements OnInit {
 	 * @param navSvc Manages the header
 	 */
 	constructor(
-		private readonly serverService: ServerService,
+		private readonly api: ServerService,
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
 		private readonly dialog: MatDialog,
@@ -97,7 +97,7 @@ export class StatusDetailsComponent implements OnInit {
 	 */
 	public async getStatusDetails(): Promise<void> {
 		const id = Number(this.id); // id Type 'null' is not assignable to type 'string'
-		this.statusDetails = await this.serverService.getStatuses(id);
+		this.statusDetails = await this.api.getStatuses(id);
 
 		// Set page title with status Name
 		this.navSvc.headerTitle.next(`Status #${this.statusDetails.name}`);
@@ -130,7 +130,7 @@ export class StatusDetailsComponent implements OnInit {
 	 * For Creating a new status
 	 */
 	public createStatus(): void {
-		this.serverService.createStatus(this.statusDetailsForm.value).then((res: ResponseStatus) => {
+		this.api.createStatus(this.statusDetailsForm.value).then((res: ResponseStatus) => {
 			if (res) {
 				this.statusDetails = res;
 				this.router.navigate(["/core/statuses"]);
@@ -142,7 +142,7 @@ export class StatusDetailsComponent implements OnInit {
 	 * For updating the Status
 	 */
 	public updateStatus(): void {
-		this.serverService.updateStatusDetail(this.statusDetailsForm.value, Number(this.id));
+		this.api.updateStatusDetail(this.statusDetailsForm.value, Number(this.id));
 	}
 
 	/**
@@ -159,7 +159,7 @@ export class StatusDetailsComponent implements OnInit {
 		ref.afterClosed().subscribe(result => {
 			if (result) {
 				const id = Number(this.id);
-				this.serverService.deleteStatus(id).then(() => {
+				this.api.deleteStatus(id).then(() => {
 					this.router.navigate(["/core/statuses"]);
 				});
 			}
