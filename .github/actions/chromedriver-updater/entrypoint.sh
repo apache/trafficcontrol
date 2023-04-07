@@ -35,16 +35,18 @@ do
 
   pushd "./$proj" > /dev/null
 
+  npm ci
+
   outdated=$(npm outdated | grep "chromedriver" || echo "" )
 
-  if [ "$outdated" = "" ]; then
+  if [[ -z $outdated ]]; then
     echo "$proj is up to date"
     popd > /dev/null
     continue
   fi
 
-  latest=$(echo $outdated | cut -d ' ' -f4)
-  wanted=$(echo $outdated | cut -d ' ' -f3)
+  latest=$(echo $outdated | awk '{print $3}' )
+  wanted=$(echo $outdated | awk '{print $4}' )
 
   npm i --save-dev "chromedriver@$latest" --ignore-scripts > /dev/null
 
