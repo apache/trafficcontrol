@@ -237,12 +237,6 @@
 						"enableFixer": false
 					}
 				],
-				"@typescript-eslint/unbound-method": [
-					"error",
-					{
-						"ignoreStatic": true
-					}
-				],
 				"@typescript-eslint/restrict-plus-operands": "error",
 				"@typescript-eslint/triple-slash-reference": "error",
 				"arrow-parens": [

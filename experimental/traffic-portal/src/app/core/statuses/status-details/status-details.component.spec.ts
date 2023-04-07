@@ -23,6 +23,8 @@ import { ServerService } from "src/app/api";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { StatusDetailsComponent } from "./status-details.component";
+import { APITestingModule } from "src/app/api/testing";
+import { SharedModule } from "src/app/shared/shared.module";
 
 /**
  * Define the MockDialog
@@ -55,7 +57,9 @@ describe("StatusDetailsComponent", () => {
 				HttpClientModule,
 				RouterTestingModule,
 				FormsModule,
-				ReactiveFormsModule
+				ReactiveFormsModule,
+				APITestingModule,
+				SharedModule
 			],
 			providers: [
 				{ provide: MatDialog, useClass: MockDialog },

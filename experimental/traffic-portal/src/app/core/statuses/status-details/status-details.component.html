@@ -13,7 +13,7 @@ limitations under the License.
 -->
 <mat-card class="statuses-details">
     <tp-loading *ngIf="loading"></tp-loading>
-    <form [formGroup]="statusDetailsForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+    <form [formGroup]="statusDetailsForm" (ngSubmit)="onSubmit($event)" *ngIf="!loading">
         <mat-card-content>
             <mat-form-field>
                 <mat-label>Name</mat-label>
@@ -27,7 +27,7 @@ limitations under the License.
         <mat-card-actions align="end">
             <button mat-raised-button type="button" color="warn" (click)="deleteStatus()" *ngIf="id!=='new'">Delete</button>
             <button mat-raised-button type="button" routerLink="/core/statuses">Cancel</button>
-            <button mat-raised-button type="submit" color="primary" [disabled]="statusDetailsForm.invalid">
+            <button mat-raised-button type="submit" color="primary">
                 {{id==="new" ? 'Create' : 'Save'}}
             </button>
         </mat-card-actions>

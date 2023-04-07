@@ -16,8 +16,12 @@ import { BehaviorSubject } from "rxjs";
 import { ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
-import { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { ActivatedRoute } from "@angular/router";
+import { FormControl } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
+import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 
 /**
  * StatusesTableComponent is the controller for the statuses page - which
@@ -31,7 +35,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 export class StatusesTableComponent implements OnInit {
 
 	/** All of the statues which should appear in the table. */
-	public statuses: ResponseStatus[] = [];
+	public statuses: Promise<Array<ResponseStatus>>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
@@ -58,34 +62,48 @@ export class StatusesTableComponent implements OnInit {
 		{
 			href: (): string => "new",
 			name: "Create New Status"
+		},
+		{
+			action: "delete",
+			multiRow: false,
+			name: "Delete"
 		}
 	];
 
-	/** Emits changes to the fuzzy search text. */
-	public fuzzySubject = new BehaviorSubject("");
+	/** A subject that child components can subscribe to for access to the fuzzy search query text */
+	public fuzzySubject: BehaviorSubject<string>;
+
+	/** Form controller for the user search input. */
+	public fuzzControl = new FormControl<string>("", {nonNullable: true});
 
 	/**
 	 * Constructs the component with its required injections.
 	 *
-	 * @param serverService The Servers API which is used to provide row data.
+	 * @param api The Servers API which is used to provide row data.
 	 * @param navSvc Manages the header
 	 */
-	constructor(
-		private readonly serverService: ServerService,
+	constructor( 
+		private readonly dialog: MatDialog,
+		private readonly route: ActivatedRoute,
+		private readonly api: ServerService,
 		private readonly navSvc: NavigationService,
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
+		this.statuses = this.api.getStatuses();
 		this.navSvc.headerTitle.next("Statuses");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
 	public ngOnInit(): void {
-		this.getStatuses();
-	}
-
-	/** Reloads the servers table data. */
-	public async getStatuses(): Promise<void> {
-		this.statuses = await this.serverService.getStatuses();
+		this.route.queryParamMap.subscribe(
+			m => {
+				const search = m.get("search");
+				if (search) {
+					this.fuzzControl.setValue(decodeURIComponent(search));
+					this.updateURL();
+				}
+			}
+		);
 	}
 
 	/**
@@ -95,4 +113,25 @@ export class StatusesTableComponent implements OnInit {
 	public updateURL(): void {
 		this.fuzzySubject.next(this.searchText);
 	}
+
+	/**
+	 * Handles a context menu event.
+	 *
+	 * @param evt The action selected from the context menu.
+	 */
+		public async handleContextMenu(evt: ContextMenuActionEvent<ResponseStatus>): Promise<void> {
+			const data = evt.data as ResponseStatus;
+			switch(evt.action) {
+				case "delete":
+					const ref = this.dialog.open(DecisionDialogComponent, {
+						data: {message: `Are you sure you want to delete status ${data.name} with id ${data.id} ?`, title: "Confirm Delete"}
+					});
+					ref.afterClosed().subscribe(result => {
+						if(result) {
+							this.api.deleteStatus(data.id).then(async () => this.statuses = this.api.getStatuses());
+						}
+					});
+					break;
+			}
+		}
 }

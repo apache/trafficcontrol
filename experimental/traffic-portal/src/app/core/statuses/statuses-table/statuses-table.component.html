@@ -12,11 +12,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <mat-card class="table-page-content">
-    <div>
-        <input type="search" name="fuzzControl" aria-label="Fuzzy Search Users" autofocus inputmode="search"
-            role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()" />
-    </div>
-    <tp-generic-table [data]="statuses" [cols]="columnDefs" [fuzzySearch]="fuzzySubject" context="statuses"
-        [contextMenuItems]="contextMenuItems">
-    </tp-generic-table>
+    <div class="search-container">
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Types" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
+	</div>
+    <tp-generic-table
+		[data]="statuses | async"
+		[cols]="columnDefs"
+		[fuzzySearch]="fuzzySubject"
+		context="statuses"
+		[contextMenuItems]="contextMenuItems"
+		(contextMenuAction)="handleContextMenu($event)">
+	</tp-generic-table>
 </mat-card>

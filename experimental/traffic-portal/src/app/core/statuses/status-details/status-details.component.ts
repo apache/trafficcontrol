@@ -65,12 +65,17 @@ export class StatusDetailsComponent implements OnInit {
 	) {
 		// Getting id from the route
 		this.id = this.route.snapshot.paramMap.get("id");
-	}
 
-	/** Initializes table data, loading it from Traffic Ops. */
-	public ngOnInit(): void {
+		// Show error if route param is null 
+		if (this.id === null) {
+			console.error("missing required route parameter 'id'");
+			return;
+		}
 
-		// we check whether params is a number if not we shall assume user wants to add a new status.
+		/** 
+		 * Initializes table data, loading it from Traffic Ops.
+		 * we check whether params is a number if not we shall assume user wants to add a new status.
+		 */
 		if (this.id !== "new") {
 			this.loading = true;
 			this.statusDetailsForm.addControl("id", new FormControl(""));
@@ -79,6 +84,10 @@ export class StatusDetailsComponent implements OnInit {
 		} else {
 			this.navSvc.headerTitle.next("New Status");
 		}
+	}
+
+	
+	public ngOnInit(): void {
 	}
 
 	/**
@@ -100,8 +109,15 @@ export class StatusDetailsComponent implements OnInit {
 
 	/**
 	 * On submitting the form we check for whether we are performing Create or Edit
+	 * @param event The DOM form submission event.
 	 */
-	public onSubmit(): void {
+	public onSubmit(event: Event): void {
+		event.preventDefault();
+		event.stopPropagation();
+
+		if (this.statusDetailsForm.invalid) {
+			return;
+		}
 		if (this.id === "new") {
 			this.createStatus();
 

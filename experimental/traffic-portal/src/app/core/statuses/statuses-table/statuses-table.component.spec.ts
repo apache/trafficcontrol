@@ -13,12 +13,17 @@
  */
 
 import { HttpClientModule } from "@angular/common/http";
-import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
 
 import { StatusesTableComponent } from "./statuses-table.component";
+import { MatDialog, MatDialogModule, MatDialogRef } from "@angular/material/dialog";
+import { of } from "rxjs";
+
+import { isAction } from "src/app/shared/generic-table/generic-table.component";
+import { ServerService } from "src/app/api/server.service";
 
 describe("StatusesTableComponent", () => {
 	let component: StatusesTableComponent;
@@ -28,11 +33,12 @@ describe("StatusesTableComponent", () => {
 		await TestBed.configureTestingModule({
 			declarations: [StatusesTableComponent],
 			imports: [
+				APITestingModule,
 				HttpClientModule,
+				MatDialogModule,
 				RouterTestingModule.withRoutes([
 					{ component: StatusesTableComponent, path: "" },
 				]),
-				APITestingModule
 			]
 		})
 			.compileComponents();
@@ -45,4 +51,57 @@ describe("StatusesTableComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it("updates the fuzzy search output", fakeAsync(() => {
+		let called = false;
+		const text = "testquest";
+		const spy = jasmine.createSpy("subscriber", (txt: string): void =>{
+			if (!called) {
+				expect(txt).toBe("");
+				called = true;
+			} else {
+				expect(txt).toBe(text);
+			}
+		});
+		component.fuzzySubject.subscribe(spy);
+		tick();
+		expect(spy).toHaveBeenCalled();
+		component.fuzzControl.setValue(text);
+		component.updateURL();
+		tick();
+		expect(spy).toHaveBeenCalledTimes(2);
+	}));
+
+	it("handles the 'delete' context menu item", fakeAsync(async () => {
+		const item = component.contextMenuItems.find(c => c.name === "Delete");
+		if (!item) {
+			return fail("missing 'Delete' context menu item");
+		}
+		if (!isAction(item)) {
+			return fail("expected an action, not a link");
+		}
+		expect(item.multiRow).toBeFalsy();
+		expect(item.disabled).toBeUndefined();
+
+		const api = TestBed.inject(ServerService);
+		const spy = spyOn(api, "deleteStatus").and.callThrough();
+		expect(spy).not.toHaveBeenCalled();
+
+		const dialogService = TestBed.inject(MatDialog);
+		const openSpy = spyOn(dialogService, "open").and.returnValue({
+			afterClosed: () => of(true)
+		} as MatDialogRef<unknown>);
+
+		const type = await api.createStatus({description: "blah", name: "test"});
+		expect(openSpy).not.toHaveBeenCalled();
+		const asyncExpectation = expectAsync(component.handleContextMenu({action: "delete", data: type})).toBeResolvedTo(undefined);
+		tick();
+
+		expect(openSpy).toHaveBeenCalled();
+		tick();
+
+		expect(spy).toHaveBeenCalled();
+
+		await asyncExpectation;
+	}));
 });
