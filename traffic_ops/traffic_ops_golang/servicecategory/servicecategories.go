@@ -192,6 +192,7 @@ func deleteQuery() string {
 	return `DELETE FROM service_category WHERE name=:name`
 }
 
+// Get [Version : V5] function Process the *http.Request and writes the response. It uses GetServiceCategory function.
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -239,6 +240,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, scList)
 }
 
+// GetServiceCategory [Version : V5] receives transactions from Get function and returns service_categories list.
 func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.ServiceCategoryV5, error, int, *time.Time) {
 	var runSecond bool
 	var maxTime time.Time
@@ -286,6 +288,7 @@ func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, head
 	return scList, nil, http.StatusOK, &maxTime
 }
 
+// TryIfModifiedSinceQuery [Version : V5] function receives transactions and header from GetServiceCategory function and returns bool value if status is not modified.
 func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
 	var max time.Time
 	var imsDate time.Time
@@ -339,6 +342,7 @@ func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, quer
 	return runSecond, max
 }
 
+// CreateServiceCategory [Version : V5] function creates the service category with the passed name.
 func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -384,6 +388,7 @@ func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// UpdateServiceCategory [Version : V5] function updates the name of the service category passed.
 func UpdateServiceCategory(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -428,6 +433,7 @@ func UpdateServiceCategory(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// DeleteServiceCategory [Version : V5] function deletes the service category passed.
 func DeleteServiceCategory(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
