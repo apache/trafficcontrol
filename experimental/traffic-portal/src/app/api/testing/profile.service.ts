@@ -180,7 +180,7 @@ export class ProfileService {
 	 * @param profile The profile to create.
 	 * @returns The created profile.
 	 */
-	public async createType(profile: RequestProfile): Promise<ResponseProfile> {
+	public async createProfile(profile: RequestProfile): Promise<ResponseProfile> {
 		const t = {
 			...profile,
 			cdnName: "test",
@@ -197,7 +197,7 @@ export class ProfileService {
 	 * @param id Id of the profile to delete.
 	 * @returns The success message.
 	 */
-	public async deleteType(id: number): Promise<ResponseProfile> {
+	public async deleteProfile(id: number): Promise<ResponseProfile> {
 		const index = this.profiles.findIndex(t => t.id === id);
 		if (index === -1) {
 			throw new Error(`no such Type: ${id}`);

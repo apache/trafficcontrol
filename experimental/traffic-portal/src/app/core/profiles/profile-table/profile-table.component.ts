@@ -139,7 +139,6 @@ export class ProfileTableComponent implements OnInit {
 				});
 				ref.afterClosed().subscribe(result => {
 					if (result) {
-						console.log("Test Data");
 						this.api.deleteProfile(data.id).then(async () => this.profiles = this.api.getProfiles());
 					}
 				});
