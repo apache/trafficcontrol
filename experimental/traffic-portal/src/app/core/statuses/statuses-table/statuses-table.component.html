@@ -24,3 +24,5 @@ limitations under the License.
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </mat-card>
+
+<a class="page-fab" mat-fab title="Create a new Status" *ngIf="auth.hasPermission('STATUS:CREATE')" routerLink="new"><mat-icon>add</mat-icon></a>

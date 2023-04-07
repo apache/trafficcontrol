@@ -22,6 +22,7 @@ import { ActivatedRoute } from "@angular/router";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * StatusesTableComponent is the controller for the statuses page - which
@@ -60,8 +61,8 @@ export class StatusesTableComponent implements OnInit {
 			name: "View Status Details"
 		},
 		{
-			href: (): string => "new",
-			name: "Create New Status"
+			href: (u: ResponseStatus): string => `${u.id}`,
+			name: "Edit"
 		},
 		{
 			action: "delete",
@@ -86,7 +87,7 @@ export class StatusesTableComponent implements OnInit {
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,
 		private readonly api: ServerService,
-		private readonly navSvc: NavigationService,
+		private readonly navSvc: NavigationService, public readonly auth: CurrentUserService
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.statuses = this.api.getStatuses();
