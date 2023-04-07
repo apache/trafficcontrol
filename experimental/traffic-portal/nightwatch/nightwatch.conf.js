@@ -37,9 +37,8 @@ module.exports = {
 				browserName: "chrome",
 				"goog:chromeOptions": {
 					args: [
-						//'--no-sandbox',
-						//'--ignore-certificate-errors',
-						//'--allow-insecure-localhost',
+						"--no-sandbox",
+						"--ignore-certificate-errors",
 						//'--headless'
 					],
 					// More info on Chromedriver: https://sites.google.com/a/chromium.org/chromedriver/
@@ -62,6 +61,9 @@ module.exports = {
 			desiredCapabilities: {
 				"goog:chromeOptions": {
 					args: [
+						"--no-sandbox",
+						"--disable-dev-shm-usage",
+						"--ignore-certificate-errors",
 						"--headless",
 						"--window-size=1920,1080"
 					]
