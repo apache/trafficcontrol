@@ -20,8 +20,7 @@ if [[ -z ${PROJECTS} ]]; then
   exit 1
 fi
 
-#python3 -m chromedriver_updater
-PROJECTS="traffic_portal/test/integration,experimental/traffic-portal"
+python3 -m chromedriver_updater
 
 projects=($(echo $PROJECTS | tr ',' ' '))
 touch updates.txt
@@ -48,9 +47,6 @@ do
 
   latest=$(echo $outdated | awk '{print $4}' )
   wanted=$(echo $outdated | awk '{print $3}' )
-
-  echo $latest $wanted
-  exit 1
 
   npm i --save-dev "chromedriver@$latest" --ignore-scripts > /dev/null
 
