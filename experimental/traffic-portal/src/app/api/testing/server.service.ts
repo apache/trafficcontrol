@@ -51,6 +51,12 @@ export class ServerService {
 	private statuses = [
 		{
 			description: "Sever is administrative down and does not receive traffic.",
+			id: 0,
+			lastUpdated: new Date(),
+			name: "ADMIN_DOWNS"
+		},
+		{
+			description: "Sever is administrative down and does not receive traffic.",
 			id: 4,
 			lastUpdated: new Date(),
 			name: "ADMIN_DOWN"
@@ -216,7 +222,14 @@ export class ServerService {
 			}
 			return status;
 		}
-		return this.statuses;
+		return this.statuses.map(
+			p => ({
+				description: p.description,
+				id: p.id,
+				lastUpdated: p.lastUpdated,
+				name: p.name
+			})
+		);
 	}
 
 	/**

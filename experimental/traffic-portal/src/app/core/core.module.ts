@@ -136,8 +136,6 @@ export const ROUTES: Routes = [
 		TypeDetailComponent,
 		CoordinatesTableComponent,
 		CoordinateDetailComponent,
-		TypesTableComponent,
-		TypeDetailComponent,
 		ISOGenerationFormComponent,
 		CDNDetailComponent,
 	],

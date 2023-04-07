@@ -191,21 +191,21 @@ export class ServerService extends APIService {
 	/**
 	 * Creating new Status.
 	 *
-	 * @param payload containes name and description for the status.
-	 * @returns The 'response' property of the TO status response. See TO API docs.
+	 * @param status The status to create.
+	 * @returns The created status.
 	 */
-	public async createStatus(payload: RequestStatus): Promise<ResponseStatus> {
-		return this.post<ResponseStatus>("statuses", payload).toPromise();
+	public async createStatus(status: RequestStatus): Promise<ResponseStatus> {
+		return this.post<ResponseStatus>("statuses", status).toPromise();
 	}
 
 	/**
 	 * Updates status Details.
 	 *
-	 * @param payload containes name and description for the status., unique identifier thereof.
-	 * @param id The Status ID
+	 * @param status The status to update.
+	 * @returns The updated status.
 	 */
-	public async updateStatusDetail(payload: ResponseStatus, id: number): Promise<ResponseStatus> {
-		return this.put<ResponseStatus>(`statuses/${id}`, payload).toPromise();
+	public async updateStatusDetail(status: ResponseStatus): Promise<ResponseStatus> {
+		return this.put<ResponseStatus>(`statuses/${status.id}`, status).toPromise();
 	}
 
 	/**
@@ -213,7 +213,7 @@ export class ServerService extends APIService {
 	 *
 	 * @param id The Status ID
 	 */
-	public async deleteStatus(id: number): Promise<void> {
-		return this.delete(`statuses/${id}`).toPromise();
+	public async deleteStatus(id: number | ResponseStatus): Promise<ResponseStatus> {
+		return this.delete<ResponseStatus>(`statuses/${id}`).toPromise();
 	}
 }

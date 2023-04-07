@@ -11,10 +11,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit } from "@angular/core";
+
+import { Location } from "@angular/common";
+import { Component } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute, Router } from "@angular/router";
+import { ActivatedRoute } from "@angular/router";
 import { ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
@@ -29,10 +31,8 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 	styleUrls: ["./status-details.component.scss"],
 	templateUrl: "./status-details.component.html",
 })
-export class StatusDetailsComponent implements OnInit {
-
-	/** Status ID expected from the route param using which we identify whether we are creating new status or load existing status */
-	public id: string | number | null = null;
+export class StatusDetailsComponent {
+	public new = false;
 
 	/** Loader status for the actions */
 	public loading = false;
@@ -59,45 +59,33 @@ export class StatusDetailsComponent implements OnInit {
 	constructor(
 		private readonly api: ServerService,
 		private readonly route: ActivatedRoute,
-		private readonly router: Router,
 		private readonly dialog: MatDialog,
-		private readonly navSvc: NavigationService,
+		private readonly navSvc: NavigationService, private readonly location: Location,
 	) {
 		// Getting id from the route
-		this.id = this.route.snapshot.paramMap.get("id");
+		const id = this.route.snapshot.paramMap.get("id");
 
-		// Show error if route param is null 
-		if (this.id === null) {
-			console.error("missing required route parameter 'id'");
-			return;
-		}
-
-		/** 
+		/**
 		 * Initializes table data, loading it from Traffic Ops.
 		 * we check whether params is a number if not we shall assume user wants to add a new status.
 		 */
-		if (this.id !== "new") {
+		if (id !== "new") {
 			this.loading = true;
 			this.statusDetailsForm.addControl("id", new FormControl(""));
 			this.statusDetailsForm.addControl("lastUpdated", new FormControl(""));
 			this.getStatusDetails();
 		} else {
 			this.navSvc.headerTitle.next("New Status");
+			this.new = true;
 		}
 	}
 
-	
-	public ngOnInit(): void {
-	}
-
 	/**
-	 * Reloads the servers table data.
-	 *
-	 * @param id is the id passed in route for this page if this is a edit view.
+	 * Get status details for the id
+	 * patch the form with status details
 	 */
 	public async getStatusDetails(): Promise<void> {
-		const id = Number(this.id); // id Type 'null' is not assignable to type 'string'
-		this.statusDetails = await this.api.getStatuses(id);
+		this.statusDetails = await this.api.getStatuses(this.statusDetails.id);
 
 		// Set page title with status Name
 		this.navSvc.headerTitle.next(`Status #${this.statusDetails.name}`);
@@ -109,40 +97,21 @@ export class StatusDetailsComponent implements OnInit {
 
 	/**
 	 * On submitting the form we check for whether we are performing Create or Edit
-	 * @param event The DOM form submission event.
+	 *
+	 * @param event HTML form submission event.
 	 */
-	public onSubmit(event: Event): void {
+	public async onSubmit(event: Event): Promise<void>  {
 		event.preventDefault();
 		event.stopPropagation();
 
-		if (this.statusDetailsForm.invalid) {
-			return;
-		}
-		if (this.id === "new") {
-			this.createStatus();
-
-		} else {
-			this.updateStatus();
-		}
-	}
-
-	/**
-	 * For Creating a new status
-	 */
-	public createStatus(): void {
-		this.api.createStatus(this.statusDetailsForm.value).then((res: ResponseStatus) => {
-			if (res) {
-				this.statusDetails = res;
-				this.router.navigate(["/core/statuses"]);
+		if (this.statusDetailsForm.valid) {
+			if (this.new) {
+				this.statusDetails = await this.api.createStatus(this.statusDetailsForm.value);
+				this.location.back();
+			} else {
+				this.statusDetails = await this.api.updateStatusDetail(this.statusDetailsForm.value);
 			}
-		});
-	}
-
-	/**
-	 * For updating the Status
-	 */
-	public updateStatus(): void {
-		this.api.updateStatusDetail(this.statusDetailsForm.value, Number(this.id));
+		}
 	}
 
 	/**
@@ -151,17 +120,15 @@ export class StatusDetailsComponent implements OnInit {
 	public async deleteStatus(): Promise<void> {
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
 			data: {
-				message: `This action CANNOT be undone. This will permanently delete '${this.statusDetails?.name}'.`,
-				title: `Delete Status: ${this.statusDetails?.name}`
+				message: `This action CANNOT be undone. This will permanently delete '${this.statusDetails.name}'.`,
+				title: `Delete Status: ${this.statusDetails.name}`
 			}
 		});
 
 		ref.afterClosed().subscribe(result => {
 			if (result) {
-				const id = Number(this.id);
-				this.api.deleteStatus(id).then(() => {
-					this.router.navigate(["/core/statuses"]);
-				});
+				this.api.deleteStatus(this.statusDetails.id);
+				this.location.back();
 			}
 		});
 	}

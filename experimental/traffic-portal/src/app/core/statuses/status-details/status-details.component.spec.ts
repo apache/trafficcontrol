@@ -12,62 +12,41 @@
  * limitations under the License.
  */
 
-import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { FormsModule, ReactiveFormsModule } from "@angular/forms";
-import { MatDialog } from "@angular/material/dialog";
+import { MatDialogModule } from "@angular/material/dialog";
+import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import { Observable, ReplaySubject, of } from "rxjs";
+import { ReplaySubject } from "rxjs";
 
-import { ServerService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { StatusDetailsComponent } from "./status-details.component";
-import { APITestingModule } from "src/app/api/testing";
-import { SharedModule } from "src/app/shared/shared.module";
-
-/**
- * Define the MockDialog
- */
-class MockDialog {
-
-	/**
-	 * Fake opens the dialog
-	 *
-	 * @returns unknown
-	 */
-	public open(): unknown {
-		return {
-			afterClosed: (): Observable<boolean> => of(true)
-		};
-	}
-}
 
 describe("StatusDetailsComponent", () => {
 	let component: StatusDetailsComponent;
 	let fixture: ComponentFixture<StatusDetailsComponent>;
+	let route: ActivatedRoute;
+	let paramMap: jasmine.Spy;
 
+	const navSvc = jasmine.createSpyObj([], { headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>() });
 	beforeEach(async () => {
-
-		const navSvc = jasmine.createSpyObj([], { headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>() });
-
 		await TestBed.configureTestingModule({
 			declarations: [StatusDetailsComponent],
 			imports: [
-				HttpClientModule,
-				RouterTestingModule,
-				FormsModule,
-				ReactiveFormsModule,
 				APITestingModule,
-				SharedModule
+				RouterTestingModule,
+				MatDialogModule
 			],
 			providers: [
-				{ provide: MatDialog, useClass: MockDialog },
-				{ provide: NavigationService, useValue: navSvc },
-				ServerService
+				{ provide: NavigationService, useValue: navSvc }
 			]
 		})
 			.compileComponents();
+
+		route = TestBed.inject(ActivatedRoute);
+		paramMap = spyOn(route.snapshot.paramMap, "get");
+		paramMap.and.returnValue(null);
 		fixture = TestBed.createComponent(StatusDetailsComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
@@ -77,4 +56,28 @@ describe("StatusDetailsComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
+	it("new status", async () => {
+		paramMap.and.returnValue("new");
+
+		fixture = TestBed.createComponent(StatusDetailsComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+		await fixture.whenStable();
+		expect(paramMap).toHaveBeenCalled();
+		expect(component.statusDetails).not.toBeNull();
+		expect(component.new).toBeTrue();
+	});
+
+	it("existing status", async () => {
+		paramMap.and.returnValue("1");
+
+		fixture = TestBed.createComponent(StatusDetailsComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+		await fixture.whenStable();
+		expect(paramMap).toHaveBeenCalled();
+		expect(component.statusDetails).not.toBeNull();
+		expect(component.statusDetails.name).toBe("OFFLINE");
+		expect(component.new).toBeFalse();
+	});
 });

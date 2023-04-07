@@ -14,16 +14,15 @@
 
 import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
-import { RouterTestingModule } from "@angular/router/testing";
-
-import { APITestingModule } from "src/app/api/testing";
-
-import { StatusesTableComponent } from "./statuses-table.component";
 import { MatDialog, MatDialogModule, MatDialogRef } from "@angular/material/dialog";
+import { RouterTestingModule } from "@angular/router/testing";
 import { of } from "rxjs";
 
-import { isAction } from "src/app/shared/generic-table/generic-table.component";
 import { ServerService } from "src/app/api/server.service";
+import { APITestingModule } from "src/app/api/testing";
+import { isAction } from "src/app/shared/generic-table/generic-table.component";
+
+import { StatusesTableComponent } from "./statuses-table.component";
 
 describe("StatusesTableComponent", () => {
 	let component: StatusesTableComponent;

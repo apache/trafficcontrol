@@ -12,17 +12,17 @@
  * limitations under the License.
  */
 import { Component, OnInit } from "@angular/core";
+import { FormControl } from "@angular/forms";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import { ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import { ActivatedRoute } from "@angular/router";
-import { FormControl } from "@angular/forms";
-import { MatDialog } from "@angular/material/dialog";
-import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * StatusesTableComponent is the controller for the statuses page - which
@@ -83,7 +83,7 @@ export class StatusesTableComponent implements OnInit {
 	 * @param api The Servers API which is used to provide row data.
 	 * @param navSvc Manages the header
 	 */
-	constructor( 
+	constructor(
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,
 		private readonly api: ServerService,
@@ -120,19 +120,19 @@ export class StatusesTableComponent implements OnInit {
 	 *
 	 * @param evt The action selected from the context menu.
 	 */
-		public async handleContextMenu(evt: ContextMenuActionEvent<ResponseStatus>): Promise<void> {
-			const data = evt.data as ResponseStatus;
-			switch(evt.action) {
-				case "delete":
-					const ref = this.dialog.open(DecisionDialogComponent, {
-						data: {message: `Are you sure you want to delete status ${data.name} with id ${data.id} ?`, title: "Confirm Delete"}
-					});
-					ref.afterClosed().subscribe(result => {
-						if(result) {
-							this.api.deleteStatus(data.id).then(async () => this.statuses = this.api.getStatuses());
-						}
-					});
-					break;
-			}
+	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseStatus>): Promise<void> {
+		const data = evt.data as ResponseStatus;
+		switch(evt.action) {
+			case "delete":
+				const ref = this.dialog.open(DecisionDialogComponent, {
+					data: {message: `Are you sure you want to delete status ${data.name} with id ${data.id} ?`, title: "Confirm Delete"}
+				});
+				ref.afterClosed().subscribe(result => {
+					if(result) {
+						this.api.deleteStatus(data.id).then(async () => this.statuses = this.api.getStatuses());
+					}
+				});
+				break;
 		}
+	}
 }
