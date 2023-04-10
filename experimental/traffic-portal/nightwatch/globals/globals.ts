@@ -66,6 +66,7 @@ import {
 	RequestCoordinate,
 	RequestType,
 } from "trafficops-types";
+
 import * as config from "../config.json";
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
 import {TypesPageObject} from "../page_objects/types/typesTable";
