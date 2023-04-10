@@ -1,0 +1,108 @@
+/*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
+
+import { Location } from "@angular/common";
+import { Component, OnInit } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute } from "@angular/router";
+import { ResponseCoordinate } from "trafficops-types";
+
+import { CacheGroupService } from "src/app/api";
+import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+
+/**
+ * CoordinateDetailsComponent is the controller for the coordinate add/edit form.
+ */
+@Component({
+	selector: "tp-coordinates-detail",
+	styleUrls: ["./coordinate-detail.component.scss"],
+	templateUrl: "./coordinate-detail.component.html"
+})
+export class CoordinateDetailComponent implements OnInit {
+	public new = false;
+	public coordinate!: ResponseCoordinate;
+
+	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
+		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService) { }
+
+	/**
+	 * Angular lifecycle hook where data is initialized.
+	 */
+	public async ngOnInit(): Promise<void> {
+		const ID = this.route.snapshot.paramMap.get("id");
+		if (ID === null) {
+			console.error("missing required route parameter 'id'");
+			return;
+		}
+
+		if (ID === "new") {
+			this.navSvc.headerTitle.next("New Coordinate");
+			this.new = true;
+			this.coordinate = {
+				id: -1,
+				lastUpdated: new Date(),
+				latitude: 0,
+				longitude: 0,
+				name: ""
+			};
+			return;
+		}
+		const numID = parseInt(ID, 10);
+		if (Number.isNaN(numID)) {
+			console.error("route parameter 'id' was non-number:", ID);
+			return;
+		}
+
+		this.coordinate = await this.cacheGroupService.getCoordinates(numID);
+		this.navSvc.headerTitle.next(`Coordinate: ${this.coordinate.name}`);
+	}
+
+	/**
+	 * Deletes the current coordinate.
+	 */
+	public async deleteCoordinate(): Promise<void> {
+		if (this.new) {
+			console.error("Unable to delete new coordinate");
+			return;
+		}
+		const ref = this.dialog.open(DecisionDialogComponent, {
+			data: {message: `Are you sure you want to delete coordinate ${this.coordinate.name} with id ${this.coordinate.id}`,
+				title: "Confirm Delete"}
+		});
+		ref.afterClosed().subscribe(result => {
+			if(result) {
+				this.cacheGroupService.deleteCoordinate(this.coordinate.id);
+				this.location.back();
+			}
+		});
+	}
+
+	/**
+	 * Submits new/updated coordinate.
+	 *
+	 * @param e HTML form submission event.
+	 */
+	public async submit(e: Event): Promise<void> {
+		e.preventDefault();
+		e.stopPropagation();
+		if(this.new) {
+			this.coordinate = await this.cacheGroupService.createCoordinate(this.coordinate);
+			this.new = false;
+		} else {
+			this.coordinate = await this.cacheGroupService.updateCoordinate(this.coordinate);
+		}
+	}
+
+}

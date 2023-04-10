@@ -18,7 +18,7 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { ResponseCurrentUser } from "trafficops-types";
 
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 import { UpdatePasswordDialogComponent } from "./update-password-dialog.component";
 

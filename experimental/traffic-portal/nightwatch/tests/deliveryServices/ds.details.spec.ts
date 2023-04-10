@@ -43,10 +43,10 @@ describe("DS Detail Spec", () => {
 		time = `${(+time.split(":")[0] - now.getTimezoneOffset()/60).toString().padStart(2, "0")}:${time.split(":")[1]}`;
 
 		page.section.dateInputForm
-			.assert.value("@fromDate", date)
-			.assert.value("@fromTime", "00:00")
-			.assert.value("@toDate", date)
-			.assert.value("@toTime", time);
+			.assert.valueEquals("@fromDate", date)
+			.assert.valueEquals("@fromTime", "00:00")
+			.assert.valueEquals("@toDate", date)
+			.assert.valueEquals("@toTime", time);
 	});
 
 	it("Is steering target test", (): void => {

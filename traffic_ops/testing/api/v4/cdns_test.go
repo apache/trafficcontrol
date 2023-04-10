@@ -19,12 +19,12 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -150,7 +150,7 @@ func TestCDNs(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointID:    GetCDNID(t, "cdn1"),
+					EndpointID:    totest.GetCDNID(t, TOSession, "cdn1"),
 					ClientSession: TOSession,
 					RequestBody: tc.CDN{
 						DNSSECEnabled: false,
@@ -161,7 +161,7 @@ func TestCDNs(t *testing.T) {
 						validateCDNUpdateFields("cdn1", map[string]interface{}{"DomainName": "domain2"})),
 				},
 				"PRECONDITION FAILED when updating with IF-UNMODIFIED-SINCE Headers": {
-					EndpointID:    GetCDNID(t, "cdn1"),
+					EndpointID:    totest.GetCDNID(t, TOSession, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.CDN{
@@ -172,7 +172,7 @@ func TestCDNs(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointID:    GetCDNID(t, "cdn1"),
+					EndpointID:    totest.GetCDNID(t, TOSession, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					RequestBody: tc.CDN{
@@ -318,40 +318,5 @@ func validateCDNDescSort() utils.CkReqFunc {
 			ascSortedList = append(ascSortedList, cdn.Name)
 		}
 		assert.Exactly(t, ascSortedList, descSortedList, "CDN responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
-	}
-}
-
-func GetCDNID(t *testing.T, cdnName string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", cdnName)
-		cdnsResp, _, err := TOSession.GetCDNs(opts)
-		assert.RequireNoError(t, err, "Get CDNs Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(cdnsResp.Response), "Expected response object length 1, but got %d", len(cdnsResp.Response))
-		assert.RequireNotNil(t, cdnsResp.Response[0].ID, "Expected id to not be nil")
-		return cdnsResp.Response[0].ID
-	}
-}
-
-func CreateTestCDNs(t *testing.T) {
-	for _, cdn := range testData.CDNs {
-		resp, _, err := TOSession.CreateCDN(cdn, client.RequestOptions{})
-		assert.NoError(t, err, "Could not create CDN: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-func DeleteTestCDNs(t *testing.T) {
-	resp, _, err := TOSession.GetCDNs(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get CDNs: %v - alerts: %+v", err, resp.Alerts)
-	for _, cdn := range resp.Response {
-		delResp, _, err := TOSession.DeleteCDN(cdn.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Cannot delete CDN '%s' (#%d): %v - alerts: %+v", cdn.Name, cdn.ID, err, delResp.Alerts)
-
-		// Retrieve the CDN to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(cdn.ID))
-		cdns, _, err := TOSession.GetCDNs(opts)
-		assert.NoError(t, err, "Error deleting CDN '%s': %v - alerts: %+v", cdn.Name, err, cdns.Alerts)
-		assert.Equal(t, 0, len(cdns.Response), "Expected CDN '%s' to be deleted", cdn.Name)
 	}
 }

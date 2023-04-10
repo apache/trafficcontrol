@@ -182,7 +182,7 @@ func Main() int {
 	}
 
 	// create and clean the config.TmpBase (/tmp/ort)
-	if !util.MkDir(config.TmpBase, cfg) {
+	if !util.MkDir(config.TmpBase, cfg.ReportOnly) {
 		log.Errorln("mkdir TmpBase '" + config.TmpBase + "' failed, cannot continue")
 		log.Infoln(FailureExitMsg)
 		return ExitCodeGeneralFailure

@@ -215,7 +215,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 		return nil
 	}
 
-	if !util.MkDirWithOwner(cfg.Dir, r.Cfg, &cfg.Uid, &cfg.Gid) {
+	if !util.MkDirWithOwner(cfg.Dir, r.Cfg.ReportOnly, &cfg.Uid, &cfg.Gid) {
 		return errors.New("Unable to create the directory '" + cfg.Dir + " for " + "'" + cfg.Name + "'")
 	}
 
@@ -301,7 +301,7 @@ func (r *TrafficOpsReq) checkStatusFiles(svrStatus string) error {
 	}
 
 	if !r.Cfg.ReportOnly {
-		if !util.MkDir(config.StatusDir, r.Cfg) {
+		if !util.MkDir(config.StatusDir, r.Cfg.ReportOnly) {
 			return fmt.Errorf("unable to create '%s'\n", config.StatusDir)
 		}
 		fileExists, _ := util.FileExists(statusFile)

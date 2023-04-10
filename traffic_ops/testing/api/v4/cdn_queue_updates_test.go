@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -34,20 +35,20 @@ func TestCDNQueueUpdates(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, bool]{
 			"POST": {
 				"OK when VALID TYPE parameter": {
-					EndpointID:    GetCDNID(t, "cdn1"),
+					EndpointID:    totest.GetCDNID(t, TOSession, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"type": {"EDGE"}}},
 					RequestBody:   true,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServersUpdatePending(GetCDNID(t, "cdn1")(), map[string]string{"type": "EDGE"})),
+						validateServersUpdatePending(totest.GetCDNID(t, TOSession, "cdn1")(), map[string]string{"type": "EDGE"})),
 				},
 				"OK when VALID PROFILE parameter": {
-					EndpointID:    GetCDNID(t, "cdn1"),
+					EndpointID:    totest.GetCDNID(t, TOSession, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"profile": {"EDGE1"}}},
 					RequestBody:   true,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServersUpdatePending(GetCDNID(t, "cdn1")(), map[string]string{"profileName": "EDGE1"})),
+						validateServersUpdatePending(totest.GetCDNID(t, TOSession, "cdn1")(), map[string]string{"profileName": "EDGE1"})),
 				},
 			},
 		}

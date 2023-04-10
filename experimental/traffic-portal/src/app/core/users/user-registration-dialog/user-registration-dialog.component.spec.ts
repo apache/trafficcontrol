@@ -15,7 +15,7 @@ import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testin
 import { MatDialogRef } from "@angular/material/dialog";
 
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 import { UserRegistrationDialogComponent } from "./user-registration-dialog.component";
 

@@ -24,6 +24,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 func TestT3CJobs(t *testing.T) {
@@ -34,20 +35,23 @@ func TestT3CJobs(t *testing.T) {
 		tcdata.CacheGroups, tcdata.Servers, tcdata.Topologies,
 		tcdata.DeliveryServices}, func() {
 
-		now := tc.Time{Time: time.Now().Add(time.Minute)}
-		dsi := (interface{})("ds1")
-		ttli := (interface{})(72.0)
-		job := tc.InvalidationJobInput{
-			DeliveryService: &dsi,
-			Regex:           util.StrPtr(`/refetch-test\.png##REFETCH##`),
-			StartTime:       &now,
-			TTL:             &ttli,
+		now := time.Now().Add(time.Minute)
+		// dsi := (interface{})("ds1")
+		// ttli := (interface{})(72.0)
+		job := tc.InvalidationJobCreateV4{
+			DeliveryService:  "ds1",
+			Regex:            `/refetch-test\.png`,
+			StartTime:        now,
+			TTLHours:         72,
+			InvalidationType: tc.REFETCH,
 		}
-		if _, _, err := tcdata.TOSession.CreateInvalidationJob(job); err != nil {
+
+		if _, _, err := tcdata.TOSession.CreateInvalidationJob(job, toclient.RequestOptions{}); err != nil {
 			t.Fatalf("create refetch job failed: %v", err)
 		}
-		job.Regex = util.StrPtr(`/refresh-test\.png`)
-		if _, _, err := tcdata.TOSession.CreateInvalidationJob(job); err != nil {
+		job.Regex = `/refresh-test\.png`
+		job.InvalidationType = tc.REFRESH
+		if _, _, err := tcdata.TOSession.CreateInvalidationJob(job, toclient.RequestOptions{}); err != nil {
 			t.Fatalf("create refresh job failed: %v", err)
 		}
 

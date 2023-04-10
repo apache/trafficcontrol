@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
@@ -86,7 +87,7 @@ func TestUsers(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointID:    GetUserID(t, "steering"),
+					EndpointID:    totest.GetUserID(t, TOSession, "steering"),
 					ClientSession: TOSession,
 					RequestBody: tc.UserV4{
 						AddressLine1:  util.Ptr("updated line 1"),
@@ -109,7 +110,7 @@ func TestUsers(t *testing.T) {
 							"Country": "US", "Email": "steeringupdated@example.com", "FullName": "Steering User Updated"})),
 				},
 				"OK when UPDATING SELF": {
-					EndpointID:    GetUserID(t, "opsuser"),
+					EndpointID:    totest.GetUserID(t, TOSession, "opsuser"),
 					ClientSession: opsUserSession,
 					RequestBody: tc.UserV4{
 						AddressLine1:  util.Ptr("address of ops"),
@@ -129,7 +130,7 @@ func TestUsers(t *testing.T) {
 						validateUsersUpdateCreateFields(map[string]interface{}{"Email": "ops-updated@example.com", "FullName": "Operations User Updated"})),
 				},
 				"NOT FOUND when UPDATING SELF with ROLE that DOESNT EXIST": {
-					EndpointID:    GetUserID(t, "opsuser"),
+					EndpointID:    totest.GetUserID(t, TOSession, "opsuser"),
 					ClientSession: opsUserSession,
 					RequestBody: tc.UserV4{
 						AddressLine1:  util.Ptr("address of ops"),
@@ -148,7 +149,7 @@ func TestUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when OPERATIONS USER updates ADMIN USER": {
-					EndpointID:    GetUserID(t, "admin"),
+					EndpointID:    totest.GetUserID(t, TOSession, "admin"),
 					ClientSession: opsUserSession,
 					RequestBody: tc.UserV4{
 						Email:         util.Ptr("oops@ops.net"),
@@ -162,7 +163,7 @@ func TestUsers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"FORBIDDEN when CHILD TENANT USER updates PARENT TENANT USER": {
-					EndpointID:    GetUserID(t, "tenant3user"),
+					EndpointID:    totest.GetUserID(t, TOSession, "tenant3user"),
 					ClientSession: tenant4UserSession,
 					RequestBody: tc.UserV4{
 						Email:         util.Ptr("tenant3user@example.com"),
@@ -290,50 +291,6 @@ func validateUsersSort() utils.CkReqFunc {
 		}
 		assert.Equal(t, true, sort.StringsAreSorted(usernames), "List is not sorted by their usernames: %v", usernames)
 	}
-}
-
-func GetUserID(t *testing.T, username string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("username", username)
-		users, _, err := TOSession.GetUsers(opts)
-		assert.RequireNoError(t, err, "Get Users Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(users.Response), "Expected response object length 1, but got %d", len(users.Response))
-		assert.RequireNotNil(t, users.Response[0].ID, "Expected ID to not be nil.")
-		return *users.Response[0].ID
-	}
-}
-
-func CreateTestUsers(t *testing.T) {
-	for _, user := range testData.Users {
-		resp, _, err := TOSession.CreateUser(user, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create user: %v - alerts: %+v", err, resp.Alerts)
-	}
-}
-
-// ForceDeleteTestUsers forcibly deletes the users from the db.
-// NOTE: Special circumstances!  This should *NOT* be done without a really good reason!
-// Connects directly to the DB to remove users rather than going through the client.
-// This is required here because the DeleteUser action does not really delete users,  but disables them.
-func ForceDeleteTestUsers(t *testing.T) {
-
-	db, err := OpenConnection()
-	assert.RequireNoError(t, err, "Cannot open db")
-	defer db.Close()
-
-	var usernames []string
-	for _, user := range testData.Users {
-		usernames = append(usernames, `'`+user.Username+`'`)
-	}
-
-	// there is a constraint that prevents users from being deleted when they have a log
-	q := `DELETE FROM log WHERE NOT tm_user = (SELECT id FROM tm_user WHERE username = 'admin')`
-	err = execSQL(db, q)
-	assert.RequireNoError(t, err, "Cannot execute SQL: %v; SQL is %s", err, q)
-
-	q = `DELETE FROM tm_user WHERE username IN (` + strings.Join(usernames, ",") + `)`
-	err = execSQL(db, q)
-	assert.NoError(t, err, "Cannot execute SQL: %v; SQL is %s", err, q)
 }
 
 // ForceDeleteTestUsersByUsernames forcibly deletes the users passed in from a slice of usernames from the db.

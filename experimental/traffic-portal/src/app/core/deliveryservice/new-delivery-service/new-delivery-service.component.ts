@@ -30,8 +30,9 @@ import {
 } from "trafficops-types";
 
 import { CDNService, DeliveryServiceService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { IPV4, IPV6 } from "src/app/utils";
 
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s
@@ -43,17 +44,6 @@ const XML_ID_SANITIZE = /[^a-z0-9\-]+/g;
  */
 const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/;
 
-/* eslint-disable */
-/**
- * A regular expression that matches IPv4 addresses
- */
-const VALID_IPV4 = /^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d\d?)){3}$/;
-/**
- * A regular expression that matches IPv6 addresses
- * This is huge and ugly, but there's no JS built-in for address parsing afaik.
- */
-const VALID_IPV6 = /^(?:(?:[a-fA-F\d]{1,4}:){7}(?:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){6}(?:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|:[a-fA-F\d]{1,4}|:)|(?:[a-fA-F\d]{1,4}:){5}(?::(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,2}|:)|(?:[a-fA-F\d]{1,4}:){4}(?:(?::[a-fA-F\d]{1,4}){0,1}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,3}|:)|(?:[a-fA-F\d]{1,4}:){3}(?:(?::[a-fA-F\d]{1,4}){0,2}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,4}|:)|(?:[a-fA-F\d]{1,4}:){2}(?:(?::[a-fA-F\d]{1,4}){0,3}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,5}|:)|(?:[a-fA-F\d]{1,4}:){1}(?:(?::[a-fA-F\d]{1,4}){0,4}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,6}|:)|(?::(?:(?::[a-fA-F\d]{1,4}){0,5}:(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)(?:\\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)){3}|(?::[a-fA-F\d]{1,4}){1,7}|:)))(?:%[0-9a-zA-Z]{1,})?$/;
-/* eslint-enable */
 /**
  * A regular expression that matches a valid hostname
  */
@@ -394,9 +384,9 @@ export class NewDeliveryServiceComponent implements OnInit {
 	 * @throws {Error} if `v` is not a valid Bypass value
 	 */
 	public setDNSBypass(v: string): void {
-		if (VALID_IPV6.test(v)) {
+		if (IPV6.test(v)) {
 			this.deliveryService.dnsBypassIp6 = v;
-		} else if (VALID_IPV4.test(v)) {
+		} else if (IPV4.test(v)) {
 			this.deliveryService.dnsBypassIp = v;
 		} else if (VALID_HOSTNAME.test(v)) {
 			this.deliveryService.dnsBypassCname = v;

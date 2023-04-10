@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
 - [#7291](https://github.com/apache/trafficcontrol/pull/7291) *Traffic Ops* Extended Layered Profile feature to aggregate parameters for all server profiles.
 - [#7314](https://github.com/apache/trafficcontrol/pull/7314) *Traffic Portal* Added capability feature to Delivery Service Form (HTTP, DNS).
 - [#7295](https://github.com/apache/trafficcontrol/pull/7295) *Traffic Portal* Added description and priority order for Layered Profile on server form.
@@ -52,6 +53,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixes service_category apis to respond with RFC3339 date/time Format
+- [#7414](https://github.com/apache/trafficcontrol/pull/7414) * Traffic Portal* Fixed DSR difference for DS required capability.
 - [#7130](https://github.com/apache/trafficcontrol/issues/7130) *Traffic Ops* Fixes service_categories response to POST API.
 - [#7340](https://github.com/apache/trafficcontrol/pull/7340) *Traffic Router* Fixed TR logging for the `cqhv` field when absent.
 - [#5557](https://github.com/apache/trafficcontrol/issues/5557) *Traffic Portal* Moved `Fair Queueing Pacing Rate Bps` DS field to `Cache Configuration Settings` section.
@@ -93,6 +95,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7346](https://github.com/apache/trafficcontrol/pull/7346) *Traffic Control Cache Config (t3c)* Fixed issue with stale lock file when using git to track changes.
 - [#7352](https://github.com/apache/trafficcontrol/pull/7352) *Traffic Control Cache Config (t3c)* Fixed issue with application locking which would allow multiple instances of `t3c apply` to run concurrently.
 - [#6775](https://github.com/apache/trafficcontrol/issues/6775) *Traffic Ops* Invalid "orgServerFqdn" in Delivery Service creation/update causes Internal Server Error
+- [#6695](https://github.com/apache/trafficcontrol/issues/6695) *Traffic Control Cache Config (t3c)* Directory creation was erroneously reporting an error when actually succeeding.
+- [#7411](https://github.com/apache/trafficcontrol/pull/7411) *Traffic Control Cache Config (t3c)* Fixed issue with wrong parent ordering with MSO non-topology delivery services.
+- [#7425](https://github.com/apache/trafficcontrol/pull/7425) *Traffic Control Cache Config (t3c)* Fixed issue with layered profile iteration being done in the wrong order.
+- [#6385](https://github.com/apache/trafficcontrol/issues/6385) *Traffic Ops* Reserved consistentHashQueryParameters cause internal server error
+
+### Removed
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove`misc/jira_github_issue_import.py`, the project does not use JIRA.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use.
 
 ## [7.0.0] - 2022-07-19
 ### Added

@@ -1336,8 +1336,7 @@ no_database, # type: bool
 			logging.error("Missing database connection variable: %s", e)
 			logging.error(
 				"Can't connect to the database.  " \
-				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` " \
-				"on the db server to create it and run `postinstall` again."
+				"Make sure traffic_ops database and username exist in postgres."
 			)
 			return 1
 
@@ -1349,8 +1348,7 @@ no_database, # type: bool
 			logging.error("Failed to set up database: %s", e)
 			logging.error(
 				"Can't connect to the database.  "
-				"Use the script `/opt/traffic_ops/install/bin/todb_bootstrap.sh` "
-				"on the db server to create it and run `postinstall` again."
+				"Make sure traffic_ops database and username exist in postgres."
 			)
 
 		try:

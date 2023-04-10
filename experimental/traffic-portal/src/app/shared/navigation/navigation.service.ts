@@ -15,7 +15,7 @@ import { Injectable } from "@angular/core";
 import { ReplaySubject } from "rxjs";
 
 import { UserService } from "src/app/api";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
  * Defines the type of the header nav
@@ -122,6 +122,9 @@ export class NavigationService {
 					href: "/core/cache-groups",
 					name: "Cache Groups"
 				}, {
+					href: "/core/coordinates",
+					name: "Coordinates"
+				}, {
 					href: "/core/divisions",
 					name: "Divisions"
 				}, {
@@ -136,6 +139,12 @@ export class NavigationService {
 			name: "Servers"
 		}, {
 			children: [{
+				href: "/core/types",
+				name: "Types"
+			}],
+			name: "Configuration"
+		}, {
+			children: [{
 				href: "/core/users",
 				name: "Users"
 			}, {
@@ -147,17 +156,17 @@ export class NavigationService {
 			}],
 			name: "Users"
 		}, {
-			children: [{
-				href: "/core/change-logs",
-				name: "Change Logs"
-			}],
+			children: [
+				{
+					href: "/core/change-logs",
+					name: "Change Logs"
+				},
+				{
+					href: "/core/iso-gen",
+					name: "Generate System ISO"
+				}
+			],
 			name: "Other"
-		}, {
-			children: [{
-				href: "/core/types",
-				name: "Types"
-			}],
-			name: "Configuration"
 		}]);
 	}
 
