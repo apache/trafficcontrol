@@ -16,6 +16,7 @@ import * as https from "https";
 
 import axios, { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
+import type { AsnDetailPageObject } from "nightwatch/page_objects/cacheGroups/asnDetail";
 import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
 import type { CacheGroupDetailPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupDetails";
 import type { CacheGroupsPageObject } from "nightwatch/page_objects/cacheGroups/cacheGroupsTable";
@@ -25,6 +26,7 @@ import type { DivisionDetailPageObject } from "nightwatch/page_objects/cacheGrou
 import type { DivisionsPageObject } from "nightwatch/page_objects/cacheGroups/divisionsTable";
 import type { RegionDetailPageObject } from "nightwatch/page_objects/cacheGroups/regionDetail";
 import type { RegionsPageObject } from "nightwatch/page_objects/cacheGroups/regionsTable";
+import type { CDNDetailPageObject } from "nightwatch/page_objects/cdns/cdnDetail";
 import type { CommonPageObject } from "nightwatch/page_objects/common";
 import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceCard";
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
@@ -84,6 +86,10 @@ declare module "nightwatch" {
 			regionDetail: () => RegionDetailPageObject;
 			regionsTable: () => RegionsPageObject;
 			asnsTable: () => AsnsPageObject;
+			asnDetail: () => AsnDetailPageObject;
+		};
+		cdns: {
+			cdnDetail: () => CDNDetailPageObject;
 		};
 		deliveryServices: {
 			deliveryServiceCard: () => DeliveryServiceCardPageObject;

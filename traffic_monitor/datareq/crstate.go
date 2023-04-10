@@ -23,10 +23,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/traffic_monitor/health"
 	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
 func srvTRState(
@@ -35,11 +39,13 @@ func srvTRState(
 	combinedStates peer.CRStatesThreadsafe,
 	peerStates peer.CRStatesPeersThreadsafe,
 	distributedPollingEnabled bool,
+	toData todata.TODataThreadsafe,
+	monitorConfig threadsafe.TrafficMonitorConfigMap,
 ) ([]byte, int, error) {
 	_, raw := params["raw"]     // peer polling case
 	_, local := params["local"] // distributed peer polling case
 	if raw {
-		data, err := srvTRStateSelf(localStates, distributedPollingEnabled)
+		data, err := srvTRStateData(localStates, distributedPollingEnabled, toData, monitorConfig)
 		return data, http.StatusOK, err
 	}
 
@@ -58,17 +64,9 @@ func srvTRState(
 		}
 	}
 
-	data, err := srvTRStateDerived(combinedStates, local && distributedPollingEnabled)
+	data, err := srvTRStateData(combinedStates, local && distributedPollingEnabled, toData, monitorConfig)
 
 	return data, http.StatusOK, err
-}
-
-func srvTRStateDerived(combinedStates peer.CRStatesThreadsafe, directlyPolledOnly bool) ([]byte, error) {
-	if !directlyPolledOnly {
-		return tc.CRStatesMarshall(combinedStates.Get())
-	}
-	unfiltered := combinedStates.Get()
-	return tc.CRStatesMarshall(filterDirectlyPolledCaches(unfiltered))
 }
 
 func filterDirectlyPolledCaches(crstates tc.CRStates) tc.CRStates {
@@ -84,10 +82,63 @@ func filterDirectlyPolledCaches(crstates tc.CRStates) tc.CRStates {
 	return filtered
 }
 
-func srvTRStateSelf(localStates peer.CRStatesThreadsafe, directlyPolledOnly bool) ([]byte, error) {
+func srvTRStateData(localStates peer.CRStatesThreadsafe, directlyPolledOnly bool, toData todata.TODataThreadsafe, monitorConfig threadsafe.TrafficMonitorConfigMap) ([]byte, error) {
+	if val, ok := monitorConfig.Get().Config["tm.sameipservers.enabled"]; ok && val.(string) == "true" {
+		localStatesC := updateStatusSameIpServers(localStates, toData)
+		if !directlyPolledOnly {
+			return tc.CRStatesMarshall(localStatesC)
+		}
+		return tc.CRStatesMarshall(filterDirectlyPolledCaches(localStatesC))
+	}
 	if !directlyPolledOnly {
 		return tc.CRStatesMarshall(localStates.Get())
 	}
-	unfiltered := localStates.Get()
-	return tc.CRStatesMarshall(filterDirectlyPolledCaches(unfiltered))
+	return tc.CRStatesMarshall(filterDirectlyPolledCaches(localStates.Get()))
+}
+
+func updateStatusSameIpServers(localStates peer.CRStatesThreadsafe, toData todata.TODataThreadsafe) tc.CRStates {
+	localStatesC := localStates.Get()
+	toDataC := toData.Get()
+
+	for cache, _ := range localStatesC.Caches {
+		if _, ok := toDataC.SameIpServers[cache]; ok {
+			// all servers with same ip must be available if they are in reported state
+			allAvailableV4 := true
+			allAvailableV6 := true
+			allIsAvailable := true
+			for partner, _ := range toDataC.SameIpServers[cache] {
+				if partnerState, ok := localStatesC.Caches[partner]; ok {
+					// a partner host is reported but is marked down for exceeding a threshold
+					// this host also needs to be marked down to divert all traffic for their
+					// common ip
+					if strings.Contains(partnerState.Status, string(tc.CacheStatusReported)) &&
+						strings.Contains(partnerState.Status, health.TooHigh.String()) {
+						if !partnerState.Ipv4Available {
+							allAvailableV4 = false
+						}
+						if !partnerState.Ipv6Available {
+							allAvailableV6 = false
+						}
+						if !partnerState.IsAvailable {
+							allIsAvailable = false
+						}
+						if !allAvailableV4 && !allAvailableV6 && !allIsAvailable {
+							break
+						}
+					}
+				}
+			}
+			newIsAvailable := tc.IsAvailable{}
+			newIsAvailable.DirectlyPolled = localStatesC.Caches[cache].DirectlyPolled
+			newIsAvailable.Status = localStatesC.Caches[cache].Status
+			newIsAvailable.LastPoll = localStatesC.Caches[cache].LastPoll
+			newIsAvailable.LastPollV6 = localStatesC.Caches[cache].LastPollV6
+			newIsAvailable.IsAvailable = localStatesC.Caches[cache].IsAvailable && allIsAvailable
+			newIsAvailable.Ipv4Available = localStatesC.Caches[cache].Ipv4Available && allAvailableV4
+			newIsAvailable.Ipv6Available = localStatesC.Caches[cache].Ipv6Available && allAvailableV6
+
+			localStatesC.Caches[cache] = newIsAvailable
+		}
+	}
+	return localStatesC
 }

@@ -63,9 +63,6 @@ cp "${TC_DIR}/LICENSE" %{_builddir}
 # avoid detecting LICENSE as an unpackaged RPM file
 rm LICENSE
 
-# update the go version referenced in install_go.sh
-sed -i.bak 's/__GO_VERSION__/%{go_version}/g' install/bin/install_go.sh
-
 # copy traffic_ops_golang binary
 godir=src/github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang
 ( mkdir -p "$godir" && \

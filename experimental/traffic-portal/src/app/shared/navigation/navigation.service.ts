@@ -156,10 +156,16 @@ export class NavigationService {
 			}],
 			name: "Users"
 		}, {
-			children: [{
-				href: "/core/change-logs",
-				name: "Change Logs"
-			}],
+			children: [
+				{
+					href: "/core/change-logs",
+					name: "Change Logs"
+				},
+				{
+					href: "/core/iso-gen",
+					name: "Generate System ISO"
+				}
+			],
 			name: "Other"
 		}]);
 	}

@@ -46,6 +46,18 @@ const AvailableStr = "available"
 // available to serve traffic.
 const UnavailableStr = "unavailable"
 
+type Threshold string
+
+const (
+	NotEqual Threshold = "not equal"
+	TooLow   Threshold = "too low"
+	TooHigh  Threshold = "too high"
+)
+
+func (t Threshold) String() string {
+	return string(t)
+}
+
 // GetVitals Gets the vitals to decide health on in the right format
 func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.TrafficMonitorConfigMap) {
 	if newResult.Error != nil {
@@ -356,13 +368,21 @@ func CalcAvailability(
 			availStatus.UnavailableStat = aggUnavailableStat
 		}
 
+		if result.UsingIPv4 {
+			availStatus.LastPoll = result.Time
+			availStatus.LastPollV6 = lastStatus.LastPollV6
+		} else {
+			availStatus.LastPoll = lastStatus.LastPoll
+			availStatus.LastPollV6 = result.Time
+		}
 		localStates.SetCache(tc.CacheName(result.ID), tc.IsAvailable{
 			IsAvailable:    availStatus.ProcessedAvailable,
 			Ipv4Available:  availStatus.Available.IPv4,
 			Ipv6Available:  availStatus.Available.IPv6,
 			DirectlyPolled: true, // we know this cache was directly polled because otherwise we wouldn't have a cache.Result for it
 			Status:         availStatus.Why,
-			LastPoll:       result.Time,
+			LastPoll:       availStatus.LastPoll,
+			LastPollV6:     availStatus.LastPollV6,
 		})
 
 		if available, ok := localStates.GetCache(tc.CacheName(result.ID)); !ok || available.IsAvailable != lastStatus.ProcessedAvailable {
@@ -396,15 +416,15 @@ func CalcAvailability(
 func exceedsThresholdMsg(stat string, threshold tc.HealthThreshold, val float64) string {
 	switch threshold.Comparator {
 	case "=":
-		return fmt.Sprintf("%s not equal (%.2f != %.2f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s %s (%.2f == %.2f)", stat, NotEqual, val, threshold.Val)
 	case ">":
-		return fmt.Sprintf("%s too low (%.2f < %.2f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s %s (%.2f < %.2f)", stat, TooLow, val, threshold.Val)
 	case "<":
-		return fmt.Sprintf("%s too high (%.2f > %.2f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s %s (%.2f > %.2f)", stat, TooHigh, val, threshold.Val)
 	case ">=":
-		return fmt.Sprintf("%s too low (%.2f <= %.2f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s %s(%.2f <= %.2f)", stat, TooLow, val, threshold.Val)
 	case "<=":
-		return fmt.Sprintf("%s too high (%.2f >= %.2f)", stat, val, threshold.Val)
+		return fmt.Sprintf("%s %s (%.2f >= %.2f)", stat, TooHigh, val, threshold.Val)
 	default:
 		return fmt.Sprintf("ERROR: Invalid Threshold: %+v", threshold)
 	}

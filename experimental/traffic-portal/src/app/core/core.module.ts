@@ -24,6 +24,7 @@ import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
 import { SharedModule } from "../shared/shared.module";
 
+import { AsnDetailComponent } from "./cache-groups/asns/detail/asn-detail.component";
 import { AsnsTableComponent } from "./cache-groups/asns/table/asns-table.component";
 import { CacheGroupDetailsComponent } from "./cache-groups/cache-group-details/cache-group-details.component";
 import { CacheGroupTableComponent } from "./cache-groups/cache-group-table/cache-group-table.component";
@@ -33,6 +34,7 @@ import { DivisionDetailComponent } from "./cache-groups/divisions/detail/divisio
 import { DivisionsTableComponent } from "./cache-groups/divisions/table/divisions-table.component";
 import { RegionDetailComponent } from "./cache-groups/regions/detail/region-detail.component";
 import { RegionsTableComponent } from "./cache-groups/regions/table/regions-table.component";
+import { CDNDetailComponent } from "./cdns/cdn-detail/cdn-detail.component";
 import { ChangeLogsComponent } from "./change-logs/change-logs.component";
 import { LastDaysComponent } from "./change-logs/last-days/last-days.component";
 import { CurrentuserComponent } from "./currentuser/currentuser.component";
@@ -45,6 +47,7 @@ import {
 	NewInvalidationJobDialogComponent
 } from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
+import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
 import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
 import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
@@ -60,6 +63,7 @@ import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
+	{ component: AsnDetailComponent, path: "asns/:id"},
 	{ component: AsnsTableComponent, path: "asns" },
 	{ component: DivisionsTableComponent, path: "divisions" },
 	{ component: DivisionDetailComponent, path: "divisions/:id" },
@@ -67,6 +71,7 @@ export const ROUTES: Routes = [
 	{ component: RegionDetailComponent, path: "regions/:id" },
 	{ component: UsersComponent, path: "users" },
 	{ component: UserDetailsComponent, path: "users/:id"},
+	{ component: CDNDetailComponent, path: "cdns/:id" },
 	{ component: ServersTableComponent, path: "servers" },
 	{ component: ServerDetailsComponent, path: "servers/:id" },
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id" },
@@ -84,6 +89,7 @@ export const ROUTES: Routes = [
 	{ component: CoordinatesTableComponent, path: "coordinates" },
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
+	{ component: ISOGenerationFormComponent, path: "iso-gen"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -114,6 +120,7 @@ export const ROUTES: Routes = [
 		PhysLocTableComponent,
 		PhysLocDetailComponent,
 		AsnsTableComponent,
+		AsnDetailComponent,
 		DivisionsTableComponent,
 		DivisionDetailComponent,
 		RegionsTableComponent,
@@ -123,6 +130,8 @@ export const ROUTES: Routes = [
 		CoordinateDetailComponent,
 		TypesTableComponent,
 		TypeDetailComponent,
+		ISOGenerationFormComponent,
+		CDNDetailComponent,
 	],
 	exports: [],
 	imports: [

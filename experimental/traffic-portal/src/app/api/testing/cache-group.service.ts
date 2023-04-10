@@ -16,13 +16,14 @@ import type {
 	CacheGroupQueueRequest,
 	CacheGroupQueueResponse,
 	CDN,
+	RequestASN,
+	ResponseASN,
 	RequestCacheGroup,
+	ResponseCacheGroup,
 	RequestCoordinate,
+	ResponseCoordinate,
 	RequestDivision,
 	RequestRegion,
-	ResponseASN,
-	ResponseCacheGroup,
-	ResponseCoordinate,
 	ResponseDivision,
 	ResponseRegion,
 } from "trafficops-types";
@@ -699,12 +700,45 @@ export class CacheGroupService {
 	}
 
 	/**
+	 * Replaces the current definition of a ASN with the one given.
+	 *
+	 * @param asn The new ASN.
+	 * @returns The updated ASN.
+	 */
+	public async updateASN(asn: ResponseASN): Promise<ResponseASN> {
+		const id = this.asns.findIndex(a => a.id === asn.id);
+		if (id === -1) {
+			throw new Error(`no such ASN: ${asn.id}`);
+		}
+		this.asns[id] = asn;
+		return asn;
+	}
+
+	/**
+	 * Creates a new ASN.
+	 *
+	 * @param asn The ASN to create.
+	 * @returns The created ASN.
+	 */
+	public async createASN(asn: RequestASN): Promise<ResponseASN> {
+		const sn = {
+			...asn,
+			cachegroup: this.cacheGroups.find(cg => cg.id === asn.cachegroupId)?.name ?? "",
+			cachegroupId: asn.cachegroupId,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+		this.asns.push(sn);
+		return sn;
+	}
+
+	/**
 	 * Deletes an existing asn.
 	 *
-	 * @param asn Id of the asn to delete.
+	 * @param asn The ASN to be deleted or ID of the ASN to delete..
 	 * @returns The deleted asn.
 	 */
-	public async deleteASN(asn: number | ResponseASN): Promise<ResponseASN> {
+	public async deleteASN(asn: ResponseASN | number): Promise<ResponseASN> {
 		const index = this.asns.findIndex(a => a.asn === asn);
 		if (index === -1) {
 			throw new Error(`no such asn: ${asn}`);

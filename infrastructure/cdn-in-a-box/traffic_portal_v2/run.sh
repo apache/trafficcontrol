@@ -52,7 +52,7 @@ echo "$(jq "$(<<JQ_FILTERS cat
   .trafficOps = "https://$TO_FQDN:$TO_PORT/api" |
   .certPath = "$cert" |
   .keyPath = "$key" |
-  .port = 443 |
+  .port = $TP2_PORT |
   .insecure = true
 JQ_FILTERS
 )" /etc/traffic-portal/config.json )" > /etc/traffic-portal/config.json

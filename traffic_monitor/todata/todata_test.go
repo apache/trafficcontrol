@@ -142,3 +142,71 @@ func TestGetDeliveryServiceServersWithNonTopologyBasedDeliveryService(t *testing
 		t.Fatalf("getDeliveryServiceServers with non-topology-based delivery service expected: %+v actual: %+v", expectedNonTopologiesTOData, nonTopologiesTOData)
 	}
 }
+
+func TestGetSameIPServers(t *testing.T) {
+	mc := tc.TrafficMonitorConfigMap{TrafficServer: make(map[string]tc.TrafficServer)}
+	mc.TrafficServer["server1_ip1"] = tc.TrafficServer{
+		Interfaces: []tc.ServerInterfaceInfo{
+			{
+				IPAddresses: []tc.ServerIPAddress{
+					{Address: "10.0.0.1", ServiceAddress: true},
+				},
+			},
+		},
+	}
+	mc.TrafficServer["server2_ip1"] = tc.TrafficServer{
+		Interfaces: []tc.ServerInterfaceInfo{
+			{
+				IPAddresses: []tc.ServerIPAddress{
+					{Address: "10.0.0.1", ServiceAddress: true},
+				},
+			},
+		},
+	}
+	mc.TrafficServer["server4_ip1_no_service"] = tc.TrafficServer{
+		Interfaces: []tc.ServerInterfaceInfo{
+			{
+				IPAddresses: []tc.ServerIPAddress{
+					{Address: "10.0.0.1"},
+				},
+			},
+		},
+	}
+	mc.TrafficServer["server3_ip3"] = tc.TrafficServer{
+		Interfaces: []tc.ServerInterfaceInfo{
+			{
+				IPAddresses: []tc.ServerIPAddress{
+					{Address: "10.0.0.3", ServiceAddress: true},
+				},
+			},
+		},
+	}
+	sameIpServers := getSameIPServers(mc)
+	if _, ok := sameIpServers[("server1_ip1")]; !ok {
+		t.Fatal("getSameIPServers expected to find server1_ip1")
+	}
+	if _, ok := sameIpServers["server1_ip1"]["server2_ip1"]; !ok {
+		t.Fatal("getSameIPServers expected to find server1_ip1 to have same ip as server2_ip1")
+	}
+	if _, ok := sameIpServers["server2_ip1"]; !ok {
+		t.Fatal("getSameIPServers expected to find server2_ip1")
+	}
+	if _, ok := sameIpServers["server1_ip1"]["server2_ip1"]; !ok {
+		t.Fatal("getSameIPServers expected to find server2_ip1 to have same ip as server1_ip1")
+	}
+	if _, ok := sameIpServers["server1_ip1"]["server4_ip1_no_service"]; ok {
+		t.Fatal("getSameIPServers expected to find server1_ip1 not to have same ip as server4_ip1_no_service")
+	}
+	if _, ok := sameIpServers["server3_ip3"]; ok {
+		t.Fatal("getSameIPServers expected to not find server3_ip3")
+	}
+
+	expectedSameIpServers := map[string]map[string]bool{}
+	expectedSameIpServers["server1_ip1"] = map[string]bool{"server2_ip1": true}
+	expectedSameIpServers["server2_ip1"] = map[string]bool{"server1_ip1": true}
+
+	if !reflect.DeepEqual(expectedSameIpServers, sameIpServers) {
+
+	}
+
+}

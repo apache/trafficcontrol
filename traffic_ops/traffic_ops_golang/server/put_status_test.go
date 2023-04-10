@@ -29,6 +29,26 @@ import (
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
+func TestInvalidStatusForDeliveryServicesAlertText(t *testing.T) {
+	type testStruct struct {
+		dsId     []int
+		expected string
+	}
+
+	var testData = []testStruct{
+		{[]int{0}, " #0 with no 'ONLINE' or 'REPORTED' EDGE servers"},
+		{[]int{0, 1}, "s #0 and #1 with no 'ONLINE' or 'REPORTED' EDGE servers"},
+		{[]int{0, 1, 2}, "s #0, #1, and #2 with no 'ONLINE' or 'REPORTED' EDGE servers"},
+	}
+
+	for i, _ := range testData {
+		desc := InvalidStatusForDeliveryServicesAlertText("", "EDGE", testData[i].dsId)
+		if testData[i].expected != desc {
+			t.Errorf("strings don't't match, got:%s; expected:%s", desc, testData[i].expected)
+		}
+	}
+}
+
 func TestCheckExistingStatusInfo(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
