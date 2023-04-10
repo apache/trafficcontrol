@@ -12,17 +12,62 @@
  * limitations under the License.
  */
 
-import {EnhancedPageObject} from "nightwatch";
+import { EnhancedElementInstance, EnhancedPageObject, EnhancedSectionInstance } from "nightwatch";
+
+/**
+ * Defines the commands for the sidebar
+ */
+interface SidebarCommands  extends EnhancedSectionInstance, EnhancedElementInstance<EnhancedPageObject> {
+	navigateToNode(node: string, path: Array<string>): Promise<void>;
+}
+
+/**
+ * Defines the sidebar section
+ */
+type SidebarSection = EnhancedSectionInstance<SidebarCommands, typeof commonPageObject.sections.sidebar.elements>;
 
 /**
  * Defines the type for the common PO
  */
-export type CommonPageObject = EnhancedPageObject<{}, typeof commonPageObject.elements>;
+export type CommonPageObject = EnhancedPageObject<{}, typeof commonPageObject.elements, { sidebar: SidebarSection }>;
 
 const commonPageObject = {
 	elements: {
 		snackbarEle: {
 			selector: "simple-snack-bar"
+		}
+	},
+	sections: {
+		sidebar: {
+			commands: {
+				async navigateToNode(node: string, path: Array<string>): Promise<void> {
+					for (const pathNode of path) {
+						await this.click(`@${pathNode}`);
+					}
+					await this.click(`@${node}`);
+				}
+			} as SidebarCommands,
+			elements: {
+				asns: "[aria-label='Navigate to ASNs']",
+				cacheGroups: "[aria-label='Navigate to Cache Groups']",
+				cacheGroupsContainer: "[aria-label='Toggle Cache Groups']",
+				changeLogs: "[aria-label='Navigate to Change Logs']",
+				configurationContainer: "[aria-label='Toggle Configuration']",
+				coordinates: "[aria-label='Navigate to Coordinates']",
+				dashboard: "[aria-label='Navigate to Dashboard']",
+				divisions: "[aria-label='Navigate to Divisions']",
+				otherContainer: "[aria-label='Toggle Other']",
+				physicalLocations: "[aria-label='Navigate to Physical Locations']",
+				profile: "[aria-label='Navigate to My Profile']",
+				regions: "[aria-label='Navigate to Regions']",
+				servers: "[aria-label='Navigate to Servers']",
+				serversContainer: "[aria-label='Toggle Servers']",
+				tenants: "[aria-label='Navigate to Tenants']",
+				types: "[aria-label='Navigate to Types']",
+				users: "[aria-label='Navigate to Users']",
+				usersContainer: "[aria-label='Toggle Users']"
+			},
+			selector: "#sidebar-nav-tree"
 		}
 	}
 };

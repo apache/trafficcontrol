@@ -52,7 +52,7 @@ const loginPageObject = {
 				loginAndWait(username: string, password: string): LoginFormSectionCommands {
 					const ret = this.login(username, password);
 					browser.page.common()
-						.assert.containsText("@snackbarEle", "Success");
+						.assert.textContains("@snackbarEle", "Success");
 					return ret;
 				}
 			} as LoginFormSectionCommands,
