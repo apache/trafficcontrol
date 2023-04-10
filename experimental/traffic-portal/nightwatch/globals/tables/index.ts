@@ -48,7 +48,7 @@ export const searchboxSelector = "input[name='fuzzControl']";
  */
 export async function getColumnState(this: TableSectionCommands, column: string): Promise<boolean> {
 	return new Promise((resolve, reject) => {
-		this.click(columnMenuSelector).parent.getElementProperty(`mat-checkbox[ng-reflect-name='${column}']`, "classList",
+		this.click(columnMenuSelector).parent.getElementProperty(`mat-checkbox[name='${column}']`, "classList",
 			result => {
 				let checked = false;
 				if (typeof result.value === "string") {

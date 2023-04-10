@@ -66,7 +66,7 @@ import {
 	RequestCoordinate,
 	RequestType,
 } from "trafficops-types";
-
+import * as config from "../config.json";
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
 import {TypesPageObject} from "../page_objects/types/typesTable";
 
@@ -148,8 +148,8 @@ export interface CreatedData {
 const testData = {};
 
 const globals = {
-	adminPass: "twelve12",
-	adminUser: "admin",
+	adminPass: config.adminPass,
+	adminUser: config.adminUser,
 	afterEach: (browser: NightwatchBrowser, done: () => void): void => {
 		browser.end(() => {
 			done();
@@ -397,9 +397,11 @@ const globals = {
 			done();
 		});
 	},
+	retryAssertionTimeout: config.retryAssertionTimeoutMS,
 	testData,
-	trafficOpsURL: "https://localhost:6443",
-	uniqueString: new Date().getTime().toString()
+	trafficOpsURL: config.to_url,
+	uniqueString: new Date().getTime().toString(),
+	waitForConditionTimeout:config.waitForConditionTimeoutMS
 };
 
 module.exports = globals;

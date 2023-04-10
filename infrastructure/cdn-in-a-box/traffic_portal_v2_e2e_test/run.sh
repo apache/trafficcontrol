@@ -50,12 +50,12 @@ fi;
 
 cd /lang/traffic-portal
 
-sed -i 's@launch_url: .*,$@launch_url: "'"$TP_URL"'",@' nightwatch/nightwatch.conf.js
-sed -i 's@trafficOpsURL: .*,$@trafficOpsURL: "https://'"$TO_FQDN"':'"$TO_PORT"'",@' nightwatch/globals/globals.ts
+jq '.tp_url = "'"$TP_URL"'" | .to_url = "https://'"$TO_FQDN"':'"$TO_PORT"'"' \
+	nightwatch/config.json > config.tmp.json && mv config.tmp.json nightwatch/config.json
 
 npm run e2e:ci
 rc=$?
 
-cp /nightwatch/junit/* /junit/
+cp -r ./nightwatch/junit/* /junit/
 
 exit $rc
