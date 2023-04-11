@@ -83,7 +83,7 @@ func filterDirectlyPolledCaches(crstates tc.CRStates) tc.CRStates {
 }
 
 func srvTRStateData(localStates peer.CRStatesThreadsafe, directlyPolledOnly bool, toData todata.TODataThreadsafe, monitorConfig threadsafe.TrafficMonitorConfigMap) ([]byte, error) {
-	if val, ok := monitorConfig.Get().Config["tm.sameipservers.control"]; ok && val.(string) == "true" {
+	if val, ok := monitorConfig.Get().Config["tm.sameipservers.enabled"]; ok && val.(string) == "true" {
 		localStatesC := updateStatusSameIpServers(localStates, toData)
 		if !directlyPolledOnly {
 			return tc.CRStatesMarshall(localStatesC)

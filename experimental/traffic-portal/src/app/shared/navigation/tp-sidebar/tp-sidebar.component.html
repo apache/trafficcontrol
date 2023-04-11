@@ -14,9 +14,9 @@ limitations under the License.
 
 <mat-sidenav-container [autosize]="true">
 	<mat-sidenav #sidenav mode="side" opened [hidden]="hidden">
-		<mat-tree [dataSource]="dataSource" [treeControl]="treeCtrl">
+		<mat-tree [dataSource]="dataSource" [treeControl]="treeCtrl" id="sidebar-nav-tree">
 			<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
-				<a class="mat-tree-node" mat-menu-item [routerLink]="node.href" [routerLinkActive]="['boldNode']">
+				<a class="mat-tree-node" mat-menu-item [attr.aria-label]="'Navigate to ' + node.name" [routerLink]="node.href" [routerLinkActive]="['boldNode']">
 					{{node.name}}
 				</a>
 			</mat-tree-node>

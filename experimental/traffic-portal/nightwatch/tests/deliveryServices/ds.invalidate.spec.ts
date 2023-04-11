@@ -31,33 +31,33 @@ describe("DS Invalidation Jobs Spec", () => {
 	it("Manage Job", async () => {
 		const page = browser.page.deliveryServices.deliveryServiceInvalidationJobs();
 		const common = browser.page.common();
-		page
+		await page
 			.click("@addButton");
 		const startDate = new Date();
 		startDate.setDate(startDate.getDate() + 1);
-		browser.waitForElementVisible("tp-new-invalidation-job-dialog")
+		await browser.waitForElementVisible("tp-new-invalidation-job-dialog")
 			.assert.valueEquals("input[name='startDate']", startDate.toLocaleDateString())
 			.setValue("input[name='regexp']", "/invalidateMe")
 			.click("button#submit");
-		common
+		await common
 			.assert.textContains("@snackbarEle", "created")
 			.click("simple-snack-bar button");
-		page.assert.visible({index: 0, selector: "div.invalidation-job"})
+		await page.assert.visible({index: 0, selector: "div.invalidation-job"})
 			.assert.enabled({index: 0, selector: "div.invalidation-job button"})
 			.assert.enabled({index: 1, selector: "div.invalidation-job button"});
-		page
+		await page
 			.click({index: 0, selector: "div.invalidation-job button"});
-		browser.waitForElementVisible("tp-new-invalidation-job-dialog")
+		await browser.waitForElementVisible("tp-new-invalidation-job-dialog")
 			.assert.valueEquals("input[name='startDate']", startDate.toLocaleDateString())
 			.assert.valueEquals("input[name='regexp']", "invalidateMe")
 			.setValue("input[name='regexp']", "/invalidateMe2")
 			.click("button#submit");
-		common
+		await common
 			.assert.textContains("@snackbarEle", "created")
 			.click("simple-snack-bar button");
-		page
+		await page
 			.click({index: 1, selector: "div.invalidation-job button"});
-		common
+		await common
 			.assert.textContains("@snackbarEle", "was deleted");
 	});
 });
