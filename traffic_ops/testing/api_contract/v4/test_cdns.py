@@ -70,6 +70,10 @@ def test_cdn_contract(
 		if not isinstance(cdn_response_template, dict):
 			raise TypeError(
 				f"Cdn response template data must be a dict, not '{type(cdn_response_template)}'")
+		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
+			dict[object, object] |\
+			primitive
+		] |\
 		response_template = cdn_response_template.get("properties")
 		if not isinstance(response_template, dict):
 			raise TypeError(

@@ -67,6 +67,7 @@ def test_cachegroup_contract(to_session: TOSession,
 		logger.info("Cache group Keys from cachegroup endpoint response %s", cachegroup_keys)
 
 		cachegroup_response_template = response_template_data.get("cachegroup")
+		
 		response_template = cachegroup_response_template.get("properties") if isinstance(
 			cachegroup_response_template, dict) else None
 		if response_template is None or not isinstance(response_template, dict):
