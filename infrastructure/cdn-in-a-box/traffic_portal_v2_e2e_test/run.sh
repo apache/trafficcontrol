@@ -34,19 +34,13 @@ until [[ -e "${ENROLLER_DIR}/initial-load-done" ]]; do
 	sleep 3;
 done
 
-timeout_in_seconds=30
-start_time="$(date +%s)"
-date_in_seconds="$start_time"
 TP_URL="https://$TP2_FQDN:$TP2_PORT"
-until curl -sk "${TP_URL}/api/4.0/ping" || (( time - start_time >= timeout_in_seconds )); do
-	echo "waiting for Traffic Portal at '$TP_URL' fqdn '$TP_FQDN' host '$TP_HOST'"
-	time="$(date +%s)"
-	sleep 3;
-done
-
-if (( time - start_time >= timeout_in_seconds )); then
-	echo "Warning: Traffic Portal did not start after ${timeout_in_seconds} seconds.";
-fi;
+timeout 3m bash <<TMOUT
+	while ! curl -k "${TP_URL}/api/4.0/ping" >/dev/null 2>&1; do
+		echo "waiting for Traffic Portal at '$TP_URL' fqdn '$TP_FQDN' host '$TP_HOST'"
+		sleep 3;
+	done
+TMOUT
 
 cd /lang/traffic-portal
 
