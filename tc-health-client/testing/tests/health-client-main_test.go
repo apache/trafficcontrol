@@ -25,6 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/config"
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 )
 
 const cfgFmt = `Using Config values:
@@ -40,7 +41,7 @@ const cfgFmt = `Using Config values:
 
 var (
 	Config             config.Config
-	testData           tcdata.TrafficControl
+	testData           totest.TrafficControl
 	includeSystemTests bool
 	tcd                *tcdata.TCData
 	TCD                *tcdata.TCData

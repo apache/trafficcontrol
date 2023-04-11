@@ -139,7 +139,12 @@ jobs:
       - name: Test
         run: |
           cd experimental/traffic-portal/
-          npm run test:ci
+          npm run coverage:ci
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ${{ github.workspace }}/experimental/traffic-portal/coverage/traffic-portal/cobertura-coverage.xml
+          flags: traffic_portal_v2,unit_tests
   end-to-end-tests:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest

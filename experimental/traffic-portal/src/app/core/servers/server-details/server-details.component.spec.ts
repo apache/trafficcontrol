@@ -25,7 +25,7 @@ import { of } from "rxjs";
 
 import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { SharedModule } from "src/app/shared/shared.module";
 
 import { ServerDetailsComponent } from "./server-details.component";

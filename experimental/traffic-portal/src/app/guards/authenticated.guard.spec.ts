@@ -13,7 +13,7 @@
 */
 import { TestBed } from "@angular/core/testing";
 
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 import { AuthenticatedGuard } from "./authenticated-guard.service";
 

@@ -196,26 +196,3 @@ func validateServerCapabilitiesSort() utils.CkReqFunc {
 		assert.Equal(t, true, sort.StringsAreSorted(serverCapabilityNames), "List is not sorted by their names: %v", serverCapabilityNames)
 	}
 }
-
-func CreateTestServerCapabilities(t *testing.T) {
-	for _, sc := range testData.ServerCapabilities {
-		resp, _, err := TOSession.CreateServerCapabilityV41(sc, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
-	}
-}
-
-func DeleteTestServerCapabilities(t *testing.T) {
-	serverCapabilities, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Server Capabilities: %v - alerts: %+v", err, serverCapabilities.Alerts)
-
-	for _, serverCapability := range serverCapabilities.Response {
-		alerts, _, err := TOSession.DeleteServerCapability(serverCapability.Name, client.RequestOptions{})
-		assert.NoError(t, err, "Unexpected error deleting Server Capability '%s': %v - alerts: %+v", serverCapability.Name, err, alerts.Alerts)
-		// Retrieve the Server Capability to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", serverCapability.Name)
-		getServerCapability, _, err := TOSession.GetServerCapabilities(opts)
-		assert.NoError(t, err, "Error getting Server Capability '%s' after deletion: %v - alerts: %+v", serverCapability.Name, err, getServerCapability.Alerts)
-		assert.Equal(t, 0, len(getServerCapability.Response), "Expected Server Capability '%s' to be deleted, but it was found in Traffic Ops", serverCapability.Name)
-	}
-}

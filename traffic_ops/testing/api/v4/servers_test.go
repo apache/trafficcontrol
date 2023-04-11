@@ -26,6 +26,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -53,9 +54,9 @@ func TestServers(t *testing.T) {
 				},
 				"OK when VALID CACHEGROUP parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cachegroup": {strconv.Itoa(GetCacheGroupId(t, "cachegroup1")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cachegroup": {strconv.Itoa(totest.GetCacheGroupId(t, TOSession, "cachegroup1")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateServerFields(map[string]interface{}{"CachegroupID": GetCacheGroupId(t, "cachegroup1")()})),
+						validateServerFields(map[string]interface{}{"CachegroupID": totest.GetCacheGroupId(t, TOSession, "cachegroup1")()})),
 				},
 				"OK when VALID CACHEGROUPNAME parameter": {
 					ClientSession: TOSession,
@@ -65,19 +66,19 @@ func TestServers(t *testing.T) {
 				},
 				"OK when VALID CDN parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {strconv.Itoa(GetCDNID(t, "cdn2")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {strconv.Itoa(totest.GetCDNID(t, TOSession, "cdn2")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateServerFields(map[string]interface{}{"CDNID": GetCDNID(t, "cdn2")()})),
+						validateServerFields(map[string]interface{}{"CDNID": totest.GetCDNID(t, TOSession, "cdn2")()})),
 				},
 				"OK when VALID DSID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(GetDeliveryServiceId(t, "test-ds-server-assignments")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(totest.GetDeliveryServiceId(t, TOSession, "test-ds-server-assignments")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateExpectedServers([]string{"test-ds-server-assignments", "test-mso-org-01"})),
 				},
 				"OK when VALID PARENTCACHEGROUP parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"parentCacheGroup": {strconv.Itoa(GetCacheGroupId(t, "parentCachegroup")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"parentCacheGroup": {strconv.Itoa(totest.GetCacheGroupId(t, TOSession, "parentCachegroup")())}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1)),
 				},
 				"OK when VALID PROFILENAME parameter": {
@@ -107,13 +108,13 @@ func TestServers(t *testing.T) {
 				},
 				"VALID SERVER LIST when using TOPOLOGY BASED DSID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(GetDeliveryServiceId(t, "ds-top")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(totest.GetDeliveryServiceId(t, TOSession, "ds-top")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateExpectedServers([]string{"denver-mso-org-01"})),
 				},
 				"VALID SERVER TYPE when DS TOPOLOGY CONTAINS NO MIDS": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(GetDeliveryServiceId(t, "ds-based-top-with-no-mids")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(totest.GetDeliveryServiceId(t, TOSession, "ds-based-top-with-no-mids")())}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1), validateServerTypeIsNotMid()),
 				},
 				"EMPTY RESPONSE when INVALID DSID parameter": {
@@ -161,12 +162,12 @@ func TestServers(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID request": {
-					EndpointID:    GetServerID(t, "atlanta-edge-03"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-03"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"id":           GetServerID(t, "atlanta-edge-03")(),
-						"cdnId":        GetCDNID(t, "cdn1")(),
-						"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
+						"id":           totest.GetServerID(t, TOSession, "atlanta-edge-03")(),
+						"cdnId":        totest.GetCDNID(t, TOSession, "cdn1")(),
+						"cachegroupId": totest.GetCacheGroupId(t, TOSession, "cachegroup1")(),
 						"domainName":   "updateddomainname",
 						"hostName":     "atl-edge-01",
 						"httpsPort":    8080,
@@ -194,78 +195,78 @@ func TestServers(t *testing.T) {
 						"rack":           "RR 119.03",
 						"statusId":       GetStatusID(t, "REPORTED")(),
 						"tcpPort":        8080,
-						"typeId":         GetTypeId(t, "EDGE"),
+						"typeId":         totest.GetTypeId(t, TOSession, "EDGE"),
 						"updPending":     true,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServerFieldsForUpdate("atl-edge-01", map[string]interface{}{
 							"CDNName": "cdn1", "Cachegroup": "cachegroup1", "DomainName": "updateddomainname", "HostName": "atl-edge-01",
 							"HTTPSPort": 8080, "InterfaceName": "bond1", "MTU": uint64(1280), "PhysLocation": "Denver", "Rack": "RR 119.03",
-							"TCPPort": 8080, "TypeID": GetTypeId(t, "EDGE"),
+							"TCPPort": 8080, "TypeID": totest.GetTypeId(t, TOSession, "EDGE"),
 						})),
 				},
 				"BAD REQUEST when CHANGING XMPPID": {
-					EndpointID:    GetServerID(t, "atlanta-edge-16"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":     GetServerID(t, "atlanta-edge-16")(),
+						"id":     totest.GetServerID(t, TOSession, "atlanta-edge-16")(),
 						"xmppId": "CHANGINGTHIS",
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when UPDATING SERVER TYPE when ASSIGNED to DS": {
-					EndpointID:    GetServerID(t, "test-ds-server-assignments"),
+					EndpointID:    totest.GetServerID(t, TOSession, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerID(t, "test-ds-server-assignments")(),
-						"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
-						"typeId":       GetTypeId(t, "MID"),
+						"id":           totest.GetServerID(t, TOSession, "test-ds-server-assignments")(),
+						"cachegroupId": totest.GetCacheGroupId(t, TOSession, "cachegroup1")(),
+						"typeId":       totest.GetTypeId(t, TOSession, "MID"),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when UPDATING SERVER STATUS when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointID:    GetServerID(t, "test-ds-server-assignments"),
+					EndpointID:    totest.GetServerID(t, TOSession, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":       GetServerID(t, "test-ds-server-assignments")(),
+						"id":       totest.GetServerID(t, TOSession, "test-ds-server-assignments")(),
 						"statusId": GetStatusID(t, "ADMIN_DOWN")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"CONFLICT when UPDATING SERVER STATUS when its the ONLY ORG SERVER ASSIGNED": {
-					EndpointID:    GetServerID(t, "test-mso-org-01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "test-mso-org-01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":       GetServerID(t, "test-mso-org-01")(),
+						"id":       totest.GetServerID(t, TOSession, "test-mso-org-01")(),
 						"statusId": GetStatusID(t, "ADMIN_DOWN")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
 				"BAD REQUEST when UPDATING CDN when LAST SERVER IN CACHEGROUP IN TOPOLOGY": {
-					EndpointID:    GetServerID(t, "midInTopologyMidCg01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerID(t, "midInTopologyMidCg01")(),
-						"cdnId":        GetCDNID(t, "cdn1")(),
+						"id":           totest.GetServerID(t, TOSession, "midInTopologyMidCg01")(),
+						"cdnId":        totest.GetCDNID(t, TOSession, "cdn1")(),
 						"profileNames": []string{"MID1"},
-						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-01")(),
+						"cachegroupId": totest.GetCacheGroupId(t, TOSession, "topology-mid-cg-01")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when UPDATING CACHEGROUP when LAST SERVER IN CACHEGROUP IN TOPOLOGY": {
-					EndpointID:    GetServerID(t, "midInTopologyMidCg01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerID(t, "midInTopologyMidCg01")(),
+						"id":           totest.GetServerID(t, TOSession, "midInTopologyMidCg01")(),
 						"hostName":     "midInTopologyMidCg01",
-						"cdnId":        GetCDNID(t, "cdn2")(),
+						"cdnId":        totest.GetCDNID(t, TOSession, "cdn2")(),
 						"profileNames": []string{"CDN2_MID"},
-						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-02")(),
+						"cachegroupId": totest.GetCacheGroupId(t, TOSession, "topology-mid-cg-02")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when IPADDRESS EXISTS with SAME PROFILE": {
-					EndpointID:    GetServerID(t, "atlanta-edge-16"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"profileNames": []string{"EDGE1"},
@@ -281,31 +282,31 @@ func TestServers(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when BLANK HOSTNAME": {
-					EndpointID:    GetServerID(t, "atlanta-edge-16"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody:   generateServer(t, map[string]interface{}{"hostName": ""}),
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when BLANK DOMAINNAME": {
-					EndpointID:    GetServerID(t, "atlanta-edge-16"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody:   generateServer(t, map[string]interface{}{"domainName": ""}),
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointID:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id": GetServerID(t, "atlanta-edge-01")(),
+						"id": totest.GetServerID(t, TOSession, "atlanta-edge-01")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointID:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id": GetServerID(t, "atlanta-edge-01")(),
+						"id": totest.GetServerID(t, TOSession, "atlanta-edge-01")(),
 					}),
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -313,12 +314,12 @@ func TestServers(t *testing.T) {
 			},
 			"DELETE": {
 				"BAD REQUEST when LAST SERVER in CACHE GROUP": {
-					EndpointID:    GetServerID(t, "midInTopologyMidCg01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "midInTopologyMidCg01"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"CONFLICT when DELETING SERVER when its the ONLY EDGE SERVER ASSIGNED": {
-					EndpointID:    GetServerID(t, "test-ds-server-assignments"),
+					EndpointID:    totest.GetServerID(t, TOSession, "test-ds-server-assignments"),
 					ClientSession: TOSession,
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -511,8 +512,8 @@ func validateServerPagination(paginationParam string) utils.CkReqFunc {
 func generateServer(t *testing.T, requestServer map[string]interface{}) map[string]interface{} {
 	// map for the most basic Server a user can create
 	genericServer := map[string]interface{}{
-		"cdnId":        GetCDNID(t, "cdn1")(),
-		"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
+		"cdnId":        totest.GetCDNID(t, TOSession, "cdn1")(),
+		"cachegroupId": totest.GetCacheGroupId(t, TOSession, "cachegroup1")(),
 		"domainName":   "localhost",
 		"hostName":     "testserver",
 		"interfaces": []map[string]interface{}{{
@@ -525,25 +526,13 @@ func generateServer(t *testing.T, requestServer map[string]interface{}) map[stri
 		"physLocationId": GetPhysicalLocationID(t, "Denver")(),
 		"profileNames":   []string{"EDGE1"},
 		"statusId":       GetStatusID(t, "REPORTED")(),
-		"typeId":         GetTypeId(t, "EDGE"),
+		"typeId":         totest.GetTypeId(t, TOSession, "EDGE"),
 	}
 
 	for k, v := range requestServer {
 		genericServer[k] = v
 	}
 	return genericServer
-}
-
-func GetServerID(t *testing.T, hostName string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("hostName", hostName)
-		serversResp, _, err := TOSession.GetServers(opts)
-		assert.RequireNoError(t, err, "Get Servers Request failed with error:", err)
-		assert.RequireEqual(t, 1, len(serversResp.Response), "Expected response object length 1, but got %d", len(serversResp.Response))
-		assert.RequireNotNil(t, serversResp.Response[0].ID, "Expected id to not be nil")
-		return *serversResp.Response[0].ID
-	}
 }
 
 func UpdateTestServerStatusLastUpdated(t *testing.T) {
@@ -594,7 +583,7 @@ func UpdateDSGetServerDSID(t *testing.T) {
 	var lastHeaderRewrite = "last header rewrite"
 
 	opts := client.NewRequestOptions()
-	opts.QueryParameters.Set("dsId", strconv.Itoa(GetDeliveryServiceId(t, xmlId)()))
+	opts.QueryParameters.Set("dsId", strconv.Itoa(totest.GetDeliveryServiceId(t, TOSession, xmlId)()))
 	servers, _, err := TOSession.GetServers(opts)
 	assert.RequireNoError(t, err, "Failed to get Servers: %v - alerts: %+v", err, servers.Alerts)
 	assert.RequireGreaterOrEqual(t, len(servers.Response), 1, "Failed to get at least one Server")
@@ -622,29 +611,5 @@ func UpdateDSGetServerDSID(t *testing.T) {
 	assert.RequireGreaterOrEqual(t, len(servers.Response), 1, "Expected at least one server")
 	for _, server := range servers.Response {
 		assert.NotEqual(t, hostName, *server.HostName, "Server: %v was not expected to be returned.")
-	}
-}
-
-func CreateTestServers(t *testing.T) {
-	for _, server := range testData.Servers {
-		resp, _, err := TOSession.CreateServer(server, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create server '%s': %v - alerts: %+v", *server.HostName, err, resp.Alerts)
-	}
-}
-
-func DeleteTestServers(t *testing.T) {
-	servers, _, err := TOSession.GetServers(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Servers: %v - alerts: %+v", err, servers.Alerts)
-
-	for _, server := range servers.Response {
-		delResp, _, err := TOSession.DeleteServer(*server.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Could not delete Server: %v - alerts: %+v", err, delResp.Alerts)
-		// Retrieve Server to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(*server.ID))
-		getServer, _, err := TOSession.GetServers(opts)
-		assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
-		assert.NoError(t, err, "Error deleting Server for '%s' : %v - alerts: %+v", *server.HostName, err, getServer.Alerts)
-		assert.Equal(t, 0, len(getServer.Response), "Expected Server '%s' to be deleted", *server.HostName)
 	}
 }

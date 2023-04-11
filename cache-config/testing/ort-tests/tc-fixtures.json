@@ -385,7 +385,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "d s 1",
       "longDesc1": "ds1",
@@ -455,7 +454,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "d s 1",
       "longDesc1": "ds2",
@@ -523,7 +521,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "d s 3",
       "longDesc1": "ds3",
@@ -587,7 +584,6 @@
       "infoUrl": "",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "",
       "longDesc1": "",
@@ -712,7 +708,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "mso DS 1",
       "longDesc1": "msods1",
@@ -779,7 +774,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "d s 1",
       "longDesc1": "ds1nat",
@@ -842,7 +836,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "d s top",
       "longDesc1": "ds top",
@@ -909,7 +902,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "d s top",
       "longDesc1": "ds top",
@@ -973,7 +965,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "",
       "longDesc1": "",
@@ -1037,7 +1028,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "",
       "longDesc1": "",
@@ -1101,7 +1091,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "d s client-steering",
       "longDesc1": "ds client-steering",
@@ -1164,7 +1153,6 @@
       "infoUrl": "TBD",
       "initialDispersion": 1,
       "ipv6RoutingEnabled": true,
-      "lastUpdated": "2018-04-06 16:48:51+00",
       "logsEnabled": false,
       "longDesc": "d s top",
       "longDesc1": "ds top",
@@ -1367,112 +1355,102 @@
     },
     {
       "configFile": "records.config",
-      "lastUpdated": "2018-01-19T19:01:21.434425+00:00",
       "name": "CONFIG proxy.config.allocator.enable_reclaim",
       "secure": false,
       "value": "INT 0"
     },
     {
       "configFile": "records.config",
-      "lastUpdated": "2018-01-19T19:01:21.435957+00:00",
       "name": "CONFIG proxy.config.allocator.max_overage",
       "secure": false,
       "value": "INT 3"
     },
     {
       "configFile": "records.config",
-      "lastUpdated": "2018-01-19T19:01:21.437496+00:00",
       "name": "CONFIG proxy.config.diags.show_location",
       "secure": false,
       "value": "INT 0"
     },
     {
       "configFile": "records.config",
-      "lastUpdated": "2018-01-19T19:01:21.439033+00:00",
       "name": "CONFIG proxy.config.http.cache.allow_empty_doc",
       "secure": false,
       "value": "INT 0"
     },
     {
       "configFile": "records.config",
-      "lastUpdated": "2018-01-19T19:01:21.440502+00:00",
       "name": "LOCAL proxy.config.cache.interim.storage",
       "secure": false,
       "value": "STRING NULL"
     },
     {
       "configFile": "records.config",
-      "lastUpdated": "2018-01-19T19:01:21.441933+00:00",
       "name": "CONFIG proxy.config.http.parent_proxy.file",
       "secure": false,
       "value": "STRING parent.config"
     },
     {
       "configFile": "logs_xml.config",
-      "lastUpdated": "2018-01-19T19:01:21.461206+00:00",
       "name": "LogFormat.Name",
       "secure": false,
       "value": "custom_ats_2"
     },
     {
       "configFile": "logs_xml.config",
-      "lastUpdated": "2018-01-19T19:01:21.462772+00:00",
       "name": "LogObject.Format",
       "secure": false,
       "value": "custom_ats_2"
     },
     {
       "configFile": "logs_xml.config",
-      "lastUpdated": "2018-01-19T19:01:21.464259+00:00",
       "name": "LogObject.Filename",
       "secure": false,
       "value": "custom_ats_2"
     },
     {
       "configFile": "records.config",
-      "lastUpdated": "2018-01-19T19:01:21.467349+00:00",
       "name": "CONFIG proxy.config.cache.control.filename",
       "secure": false,
       "value": "STRING cache.config"
     },
     {
       "configFile": "plugin.config",
-      "lastUpdated": "2018-01-19T19:01:21.469075+00:00",
       "name": "regex_revalidate.so",
       "secure": false,
       "value": "--config regex_revalidate.config"
     },
     {
       "configFile": "records.config",
-      "lastUpdated": "2018-01-19T19:01:21.49285+00:00",
       "name": "CONFIG proxy.config.hostdb.storage_size",
       "secure": false,
       "value": "INT 33554432"
     },
     {
       "configFile": "regex_revalidate.config",
-      "lastUpdated": "2018-01-19T19:01:21.496195+00:00",
       "name": "maxRevalDurationDays",
       "secure": false,
       "value": "90"
     },
     {
       "configFile": "package",
-      "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
       "name": "trafficserver",
       "secure": false,
       "value": "5.3.2-765.f4354b9.el7.centos.x86_64"
     },
     {
       "configFile": "global",
-      "lastUpdated": "2020-04-21T05:19:43.853831+00:00",
       "name": "tm.instance_name",
       "secure": false,
       "value": "Traffic Ops ORT Tests"
     },
     {
       "configFile": "global",
-      "lastUpdated": "2020-04-21T05:19:43.853831+00:00",
+      "name": "refetch_enabled",
+      "secure": false,
+      "value": "true"
+    },
+    {
+      "configFile": "global",
       "name": "use_reval_pending",
       "secure": false,
       "value": "1"
@@ -1484,7 +1462,6 @@
       "city": "Denver",
       "comments": null,
       "email": null,
-      "lastUpdated": "2018-01-19T21:19:32.081465+00:00",
       "name": "Denver",
       "phone": "303-111-1111",
       "poc": null,
@@ -1498,7 +1475,6 @@
       "city": "Boulder",
       "comments": null,
       "email": null,
-      "lastUpdated": "2018-01-19T21:19:32.086195+00:00",
       "name": "Boulder",
       "phone": "303-222-2222",
       "poc": null,
@@ -1512,7 +1488,6 @@
       "city": "Atlanta",
       "comments": null,
       "email": null,
-      "lastUpdated": "2018-01-19T21:19:32.089538+00:00",
       "name": "HotAtlanta",
       "phone": "404-222-2222",
       "poc": null,
@@ -1889,7 +1864,6 @@
         },
         {
           "configFile": "package",
-          "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
           "name": "trafficserver",
           "secure": true,
           "value": "CHANGEME"
@@ -2286,7 +2260,6 @@
         },
         {
           "configFile": "package",
-          "lastUpdated": "2018-01-19T19:01:21.499423+00:00",
           "name": "trafficserver",
           "secure": true,
           "value": "CHANGEME"
@@ -2318,9 +2291,23 @@
       ]
     },
     {
+      "cdnName": "cdn2",
+      "description": "override server ports",
+      "name": "ATS_EDGE_TIER_CACHE_CDN2_OVERRIDE_PORTS",
+      "routingDisabled": false,
+      "type": "ATS_PROFILE",
+      "params": [
+        {
+          "configFile": "records.config",
+          "name": "CONFIG proxy.config.http.server_ports",
+          "secure": false,
+          "value": "STRING 8080 8080:ipv6"
+        }
+      ]
+    },
+    {
       "cdnName": "cdn1",
       "description": "edge1 description",
-      "lastUpdated": "2018-03-02T17:27:11.818418+00:00",
       "name": "EDGE1",
       "routing_disabled": false,
       "type": "ATS_PROFILE"
@@ -2328,7 +2315,6 @@
     {
       "cdnName": "cdn2",
       "description": "edge2 description",
-      "lastUpdated": "2018-03-02T17:27:11.818418+00:00",
       "name": "EDGEInCDN2",
       "routing_disabled": false,
       "type": "ATS_PROFILE"
@@ -2336,7 +2322,6 @@
     {
       "cdnName": "cdn4",
       "description": "edge2 description",
-      "lastUpdated": "2018-03-02T17:27:11.818418+00:00",
       "name": "EDGE2",
       "routing_disabled": false,
       "type": "ATS_PROFILE"
@@ -2351,7 +2336,6 @@
     {
       "cdnName": "cdn1",
       "description": "mid description",
-      "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
       "name": "MID1",
       "routing_disabled": false,
       "type": "ATS_PROFILE"
@@ -2359,7 +2343,6 @@
     {
       "cdnName": "cdn2",
       "description": "mid description",
-      "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
       "name": "MID2",
       "routing_disabled": false,
       "type": "ATS_PROFILE"
@@ -2367,7 +2350,6 @@
     {
       "cdnName": "cdn1",
       "description": "origin description",
-      "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
       "name": "ORIGIN1",
       "routing_disabled": false,
       "type": "ORG_PROFILE"
@@ -2375,7 +2357,6 @@
     {
       "cdnName": "cdn1",
       "description": "cdn1 description",
-      "lastUpdated": "2018-03-02T17:27:11.80452+00:00",
       "name": "CCR1",
       "routing_disabled": false,
       "type": "TR_PROFILE"
@@ -2383,7 +2364,6 @@
     {
       "cdnName": "cdn2",
       "description": "cdn2 description",
-      "lastUpdated": "2018-03-02T17:27:11.807948+00:00",
       "name": "CCR2",
       "routing_disabled": false,
       "type": "TR_PROFILE"
@@ -2427,7 +2407,6 @@
     {
       "cdnName": "cdn1",
       "description": "mso origin description",
-      "lastUpdated": "2018-03-02T17:27:11.80173+00:00",
       "name": "MSO",
       "routing_disabled": false,
       "type": "ORG_PROFILE"
@@ -2495,13 +2474,61 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
+      "rack": "RR 119.02",
+      "revalPending": false,
+      "routerHostName": "",
+      "routerPortName": "",
+      "status": "REPORTED",
+      "tcpPort": 80,
+      "type": "EDGE",
+      "updPending": false,
+      "xmppId": "atlanta-edge-01\\\\@ocdn.kabletown.net",
+      "xmppPasswd": "X"
+    },
+    {
+      "cachegroup": "cachegroup1",
+      "cdnName": "cdn1",
+      "domainName": "ga.atlanta.kabletown.net",
+      "guid": null,
+      "hostName": "atlanta-edge-01-multiprofile",
+      "httpsPort": 443,
+      "iloIpAddress": "",
+      "iloIpGateway": "",
+      "iloIpNetmask": "",
+      "iloPassword": "",
+      "iloUsername": "",
+      "interfaces": [
+        {
+          "ipAddresses": [
+            {
+              "address": "127.0.1.21/30",
+              "gateway": "127.0.1.21",
+              "serviceAddress": true
+            },
+            {
+              "address": "2345:1234:12:9::1/64",
+              "gateway": "2345:1234:12:9::1",
+              "serviceAddress": false
+            }
+          ],
+          "maxBandwidth": null,
+          "monitor": true,
+          "mtu": 9000,
+          "name": "bond0"
+        }
+      ],
+      "mgmtIpAddress": "",
+      "mgmtIpGateway": "",
+      "mgmtIpNetmask": "",
+      "offlineReason": null,
+      "physLocation": "Denver",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2529,8 +2556,8 @@
         {
           "ipAddresses": [
             {
-              "address": "0.0.0.0/0",
-              "gateway": "0.0.0.0",
+              "address": "127.0.2.21/30",
+              "gateway": "127.0.2.21",
               "serviceAddress": true
             }
           ],
@@ -2540,13 +2567,12 @@
           "name": "eth0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGEInCDN2",
+      "profileNames": ["EDGEInCDN2"],
       "rack": "",
       "revalPending": false,
       "routerHostName": "",
@@ -2590,13 +2616,12 @@
           "name": "eth1"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2640,13 +2665,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2690,13 +2714,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "ATS_EDGE_TIER_CACHE",
+      "profileNames": ["ATS_EDGE_TIER_CACHE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2740,13 +2763,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "ATS_EDGE_TIER_CACHE",
+      "profileNames": ["ATS_EDGE_TIER_CACHE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2790,13 +2812,13 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
+
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "ATS_EDGE_TIER_CACHE_CDN2",
+      "profileNames": ["ATS_EDGE_TIER_CACHE_CDN2"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2840,13 +2862,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2891,13 +2912,12 @@
         }
       ],
       "ipNetmask": "255.255.255.252",
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2941,13 +2961,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "MID1",
+      "profileNames": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2991,13 +3010,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "MID2",
+      "profileNames": ["MID2"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3041,13 +3059,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3091,13 +3108,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3141,13 +3157,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3191,13 +3206,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "RASCAL1",
+      "profileNames": ["RASCAL1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3246,7 +3260,7 @@
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "CDN2_EDGE",
+      "profileNames": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3290,13 +3304,12 @@
           "name": "eth1"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3324,8 +3337,8 @@
         {
           "ipAddresses": [
             {
-              "address": "127.0.0.1/30",
-              "gateway": "127.0.0.1",
+              "address": "127.0.3.1/30",
+              "gateway": "127.0.3.1",
               "serviceAddress": true
             },
             {
@@ -3340,13 +3353,12 @@
           "name": "bond0"
         }
       ],
-      "lastUpdated": "2018-03-28T17:30:00.220351+00:00",
       "mgmtIpAddress": "",
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "MSO",
+      "profileNames": ["MSO"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3395,7 +3407,7 @@
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3444,7 +3456,7 @@
       "mgmtIpNetmask": "",
       "offlineReason": null,
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3482,7 +3494,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3516,7 +3528,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3534,13 +3546,13 @@
         {
           "ipAddresses": [
             {
-              "address": "2345:1234:12:2::4/64",
-              "gateway": "2345:1234:12:2::4",
+              "address": "2345:1234:12:9::4/64",
+              "gateway": "2345:1234:12:9::4",
               "serviceAddress": false
             },
             {
-              "address": "127.0.0.13/30",
-              "gateway": "127.0.0.1",
+              "address": "127.0.4.13/30",
+              "gateway": "127.0.4.1",
               "serviceAddress": true
             }
           ],
@@ -3550,7 +3562,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "MID1",
+      "profileNames": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3584,7 +3596,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "MID1",
+      "profileNames": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3618,7 +3630,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "MID1",
+      "profileNames": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3652,7 +3664,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "MID1",
+      "profileNames": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3686,7 +3698,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3720,7 +3732,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3754,7 +3766,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3788,7 +3800,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3822,7 +3834,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3856,7 +3868,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3890,7 +3902,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_EDGE",
+      "profileNames": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3924,7 +3936,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_EDGE",
+      "profileNames": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3958,7 +3970,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3976,12 +3988,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::14/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.13/24",
+              "address": "192.0.2.14/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -3992,7 +4004,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "EDGE1",
+      "profileNames": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4010,12 +4022,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::15/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.14/24",
+              "address": "192.0.2.15/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4026,7 +4038,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4044,12 +4056,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::16/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.15/24",
+              "address": "192.0.2.16/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4060,7 +4072,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4078,12 +4090,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::17/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.16/24",
+              "address": "192.0.2.17/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4094,7 +4106,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_EDGE",
+      "profileNames": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4112,12 +4124,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::18/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.17/24",
+              "address": "192.0.2.18/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4128,7 +4140,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_EDGE",
+      "profileNames": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4146,12 +4158,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::19/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.18/24",
+              "address": "192.0.2.19/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4162,7 +4174,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4180,12 +4192,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::20/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.19/24",
+              "address": "192.0.2.20/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4196,7 +4208,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_EDGE",
+      "profileNames": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4214,12 +4226,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::21/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.20/24",
+              "address": "192.0.2.21/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4230,7 +4242,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_EDGE",
+      "profileNames": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4248,12 +4260,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::22/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.21/24",
+              "address": "192.0.2.22/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4264,7 +4276,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4282,12 +4294,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::23/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.22/24",
+              "address": "192.0.2.23/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4298,7 +4310,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4316,12 +4328,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::24/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.23/24",
+              "address": "192.0.2.24/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4332,7 +4344,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4350,12 +4362,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::25/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.24/24",
+              "address": "192.0.2.25/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4366,7 +4378,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4384,12 +4396,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::26/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.25/24",
+              "address": "192.0.2.26/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4400,7 +4412,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4418,12 +4430,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::27/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.26/24",
+              "address": "192.0.2.27/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4434,7 +4446,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4452,12 +4464,12 @@
         {
           "ipAddresses": [
             {
-              "address": "2001:db8:dead:beef::12/64",
+              "address": "2001:db8:dead:beef::28/64",
               "gateway": "2001:db8:dead:beef::1",
               "serviceAddress": false
             },
             {
-              "address": "192.0.2.27/24",
+              "address": "192.0.2.28/24",
               "gateway": "192.0.2.1",
               "serviceAddress": true
             }
@@ -4468,7 +4480,7 @@
         }
       ],
       "physLocation": "Denver",
-      "profile": "CDN2_MID",
+      "profileNames": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4861,187 +4873,156 @@
   "types": [
     {
       "description": "Host header regular expression",
-      "lastUpdated": "2018-03-02T19:13:46.788583+00:00",
       "name": "HOST_REGEXP",
       "useInTable": "regex"
     },
     {
       "description": "DNS Content routing, RAM cache, National",
-      "lastUpdated": "2018-03-02T19:13:46.792319+00:00",
       "name": "DNS_LIVE_NATNL",
       "useInTable": "deliveryservice"
     },
     {
       "description": "Other CDN (CDS-IS, Akamai, etc)",
-      "lastUpdated": "2018-03-02T19:13:46.793921+00:00",
       "name": "OTHER_CDN",
       "useInTable": "server"
     },
     {
       "description": "Client-Controlled Steering Delivery Service",
-      "lastUpdated": "2018-03-02T19:13:46.795291+00:00",
       "name": "CLIENT_STEERING",
       "useInTable": "deliveryservice"
     },
     {
       "description": "influxdb type",
-      "lastUpdated": "2018-03-02T19:13:46.796707+00:00",
       "name": "INFLUXDB",
       "useInTable": "server"
     },
     {
       "description": "riak type",
-      "lastUpdated": "2018-03-02T19:13:46.798008+00:00",
       "name": "RIAK",
       "useInTable": "server"
     },
     {
       "description": "Origin",
-      "lastUpdated": "2018-03-02T19:13:46.799404+00:00",
       "name": "ORG",
       "useInTable": "server"
     },
     {
       "description": "HTTP Content routing cache in RAM ",
-      "lastUpdated": "2018-03-02T19:13:46.800738+00:00",
       "name": "HTTP_LIVE",
       "useInTable": "deliveryservice"
     },
     {
       "description": "Active Directory User",
-      "lastUpdated": "2018-03-02T19:13:46.802044+00:00",
       "name": "ACTIVE_DIRECTORY",
       "useInTable": "tm_user"
     },
     {
       "description": "federation type resolve4",
-      "lastUpdated": "2018-03-02T19:13:46.803471+00:00",
       "name": "RESOLVE4",
       "useInTable": "federation"
     },
     {
       "description": "Static DNS A entry",
-      "lastUpdated": "2018-03-02T19:13:46.804776+00:00",
       "name": "A_RECORD",
       "useInTable": "staticdnsentry"
     },
     {
       "description": "Local User",
-      "lastUpdated": "2018-03-02T19:13:46.806035+00:00",
       "name": "LOCAL",
       "useInTable": "tm_user"
     },
     {
       "description": "Weighted steering target",
-      "lastUpdated": "2018-03-02T19:13:46.80748+00:00",
       "name": "STEERING_WEIGHT",
       "useInTable": "steering_target"
     },
     {
       "description": "HTTP Content routing, RAM cache, National",
-      "lastUpdated": "2018-03-02T19:13:46.808911+00:00",
       "name": "HTTP_LIVE_NATNL",
       "useInTable": "deliveryservice"
     },
     {
       "description": "Ops hosts for management",
-      "lastUpdated": "2018-03-02T19:13:46.810576+00:00",
       "name": "TOOLS_SERVER",
       "useInTable": "server"
     },
     {
       "description": "Path regular expression",
-      "lastUpdated": "2018-03-02T19:13:46.812049+00:00",
       "name": "PATH_REGEXP",
       "useInTable": "regex"
     },
     {
       "description": "Static DNS CNAME entry",
-      "lastUpdated": "2018-03-02T19:13:46.813461+00:00",
       "name": "CNAME_RECORD",
       "useInTable": "staticdnsentry"
     },
     {
       "description": "Kabletown Content Router",
-      "lastUpdated": "2018-03-02T19:13:46.814833+00:00",
       "name": "CCR",
       "useInTable": "server"
     },
     {
       "description": "Origin Cachegroup",
-      "lastUpdated": "2018-03-02T19:13:46.816199+00:00",
       "name": "ORG_LOC",
       "useInTable": "cachegroup"
     },
     {
       "description": "Mid Cachegroup",
-      "lastUpdated": "2018-03-02T19:13:46.816199+00:00",
       "name": "MID_LOC",
       "useInTable": "cachegroup"
     },
     {
       "description": "Edge Cache",
-      "lastUpdated": "2018-03-02T19:13:46.817689+00:00",
       "name": "EDGE",
       "useInTable": "server"
     },
     {
       "description": "Ordered steering target",
-      "lastUpdated": "2018-03-02T19:13:46.81913+00:00",
       "name": "STEERING_ORDER",
       "useInTable": "steering_target"
     },
     {
       "description": "DNS Content Routing",
-      "lastUpdated": "2018-03-02T19:13:46.820528+00:00",
       "name": "DNS",
       "useInTable": "deliveryservice"
     },
     {
       "description": "federation type resolve6",
-      "lastUpdated": "2018-03-02T19:13:46.822161+00:00",
       "name": "RESOLVE6",
       "useInTable": "federation"
     },
     {
       "description": "Static DNS AAAA entry",
-      "lastUpdated": "2018-03-02T19:13:46.823506+00:00",
       "name": "AAAA_RECORD",
       "useInTable": "staticdnsentry"
     },
     {
       "description": "HTTP Content Routing, no caching",
-      "lastUpdated": "2018-03-02T19:13:46.824798+00:00",
       "name": "HTTP_NO_CACHE",
       "useInTable": "deliveryservice"
     },
     {
       "description": "any_map type",
-      "lastUpdated": "2018-03-02T19:13:46.826411+00:00",
       "name": "ANY_MAP",
       "useInTable": "deliveryservice"
     },
     {
       "description": "Steering Delivery Service",
-      "lastUpdated": "2018-03-02T19:13:46.827779+00:00",
       "name": "STEERING",
       "useInTable": "deliveryservice"
     },
     {
       "description": "Edge Cachegroup",
-      "lastUpdated": "2018-03-02T19:13:46.829249+00:00",
       "name": "EDGE_LOC",
       "useInTable": "cachegroup"
     },
     {
       "description": "HTTP Content routing cache ",
-      "lastUpdated": "2018-03-02T19:13:46.830862+00:00",
       "name": "HTTP",
       "useInTable": "deliveryservice"
     },
     {
       "description": "Mid Tier Cache",
-      "lastUpdated": "2018-03-02T19:13:46.832327+00:00",
       "name": "MID",
       "useInTable": "server"
     },
@@ -5068,7 +5049,7 @@
       "phoneNumber": "810-555-9876",
       "postalCode": "55443",
       "publicSshKey": "",
-      "role": 4,
+      "role": "admin",
       "stateOrProvince": "LA",
       "tenant": "root",
       "token": "test",
@@ -5090,8 +5071,8 @@
       "phoneNumber": "",
       "postalCode": "",
       "publicSshKey": "",
-      "registrationSent": "",
-      "role": 1,
+      "registrationSent": null,
+      "role": "disallowed",
       "stateOrProvince": "",
       "tenant": "tenant1",
       "token": "quest",
@@ -5113,8 +5094,8 @@
       "phoneNumber": "",
       "postalCode": "",
       "publicSshKey": "",
-      "registrationSent": "",
-      "role": 2,
+      "registrationSent": null,
+      "role": "readonly",
       "stateOrProvince": "",
       "tenant": "tenant1",
       "uid": 0,
@@ -5135,7 +5116,7 @@
       "phoneNumber": "810-555-9876",
       "postalCode": "55443",
       "publicSshKey": "",
-      "role": 4,
+      "role": "admin",
       "stateOrProvince": "LA",
       "tenant": "tenant3",
       "uid": 0,
@@ -5156,7 +5137,7 @@
       "phoneNumber": "810-555-9876",
       "postalCode": "55443",
       "publicSshKey": "",
-      "role": 4,
+      "role": "admin",
       "stateOrProvince": "LA",
       "tenant": "tenant4",
       "uid": 0,
@@ -5177,8 +5158,8 @@
       "phoneNumber": "",
       "postalCode": "",
       "publicSshKey": "",
-      "registrationSent": "",
-      "role": 3,
+      "registrationSent": null,
+      "role": "ops",
       "stateOrProvince": "",
       "tenant": "root",
       "uid": 0,
@@ -5199,8 +5180,8 @@
       "phoneNumber": "",
       "postalCode": "",
       "publicSshKey": "",
-      "registrationSent": "",
-      "role": 6,
+      "registrationSent": null,
+      "role": "steering",
       "stateOrProvince": "",
       "tenant": "root",
       "uid": 0,
@@ -5251,22 +5232,25 @@
   ],
   "invalidationJobs": [
     {
+      "invalidationType": "REFRESH",
       "deliveryService": "ds1",
       "regex": "/.*",
-      "startTime": 4117118271000,
-      "ttl": "121m"
+      "startTime": "2100-06-19T13:57:51Z",
+      "ttlHours": 2
     },
     {
+      "invalidationType": "REFRESH",
       "deliveryService": "ds1",
       "regex": "/foo",
-      "startTime": 4117118271000,
-      "ttl": 2160
+      "startTime": "2100-06-19T13:57:51Z",
+      "ttlHours": 36
     },
     {
+      "invalidationType": "REFRESH",
       "deliveryService": "ds2",
       "regex": "\\/some-path?.+\\.jpg",
-      "startTime": "2100-06-19T13:57:51-06:00",
-      "ttl": 2.1
+      "startTime": "2100-06-19T13:57:51Z",
+      "ttlHours": 1
     }
   ],
   "statsSummaries": [

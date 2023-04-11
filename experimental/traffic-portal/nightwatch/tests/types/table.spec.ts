@@ -14,9 +14,11 @@
 
 describe("Types Spec", () => {
 	it("Loads elements", async () => {
-		browser.page.types.typesTable().navigate()
-			.waitForElementPresent("input[name=fuzzControl]");
-		browser.elements("css selector", "div.ag-row", rows => {
+		await browser.page.common()
+			.section.sidebar
+			.navigateToNode("types", ["configurationContainer"]);
+		await browser.waitForElementPresent("input[name=fuzzControl]");
+		await browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);
 			browser.assert.ok((rows.value as []).length >= 2);
 		});

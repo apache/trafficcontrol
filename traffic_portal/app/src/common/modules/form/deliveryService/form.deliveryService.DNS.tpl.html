@@ -361,11 +361,12 @@ under the License.
                                         name="capability-{{$index}}"
                                         ng-model="selectedCapabilities[capability.name]"
                                         ng-checked="selectedCapabilities[capability.name]"
+                                        ng-change="capabilityChange()"
                                     />
                                     <a ng-href="/#!/server-capabilities/edit?name={{capability.name}}" target="_blank"> {{capability.name}}</a>
                                 </div>
                             </div>
-                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.requiredCapabilities !== dsCurrent.requiredCapabilities">
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="arrayCompare(deliveryService.requiredCapabilities, dsCurrent.requiredCapabilities)">
                                 <h3 ng-if="open()">Current Value</h3>
                                 <h3 ng-if="!open()">Previous Value</h3>
                                 <pre>{{::dsCurrent.requiredCapabilities}}</pre>
@@ -536,6 +537,11 @@ under the License.
                                     ng-model="deliveryService.regional"
                                     style="max-width: max-content; min-width: 1em;"
                             />
+                            <aside class="current-value" ng-if="settings.isRequest" ng-show="deliveryService.regional != dsCurrent.regional">
+                                <h3 ng-if="open()">Current Value</h3>
+                                <h3 ng-if="!open()">Previous Value</h3>
+                                <pre>{{::dsCurrent.regional}}</pre>
+                            </aside>
                         </div>
                     </div>
                     <div class="form-group" ng-class="{'has-error': hasError(cacheConfig.maxRequestHeaderBytes), 'has-feedback': hasError(cacheConfig.maxRequestHeaderBytes)}">

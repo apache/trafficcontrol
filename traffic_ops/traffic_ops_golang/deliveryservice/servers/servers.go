@@ -78,7 +78,7 @@ func (dss TODeliveryServiceServer) GetKeys() (map[string]interface{}, bool) {
 }
 
 func (dss *TODeliveryServiceServer) GetAuditName() string {
-	if dss.DeliveryService != nil {
+	if dss.DeliveryService != nil && dss.Server != nil {
 		return strconv.Itoa(*dss.DeliveryService) + "-" + strconv.Itoa(*dss.Server)
 	}
 	return "unknown"

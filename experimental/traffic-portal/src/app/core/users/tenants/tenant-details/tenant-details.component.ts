@@ -24,7 +24,7 @@ import { TreeData } from "src/app/models";
  */
 @Component({
 	selector: "tp-tenant-details",
-	styleUrls: ["./tenant-details.component.scss"],
+	styleUrls: ["../../../styles/form.page.scss"],
 	templateUrl: "./tenant-details.component.html"
 })
 export class TenantDetailsComponent implements OnInit {

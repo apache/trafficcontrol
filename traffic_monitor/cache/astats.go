@@ -33,17 +33,21 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
 	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+
 	jsoniter "github.com/json-iterator/go"
 )
 
 func init() {
 	registerDecoder("astats", astatsParse, astatsPrecompute)
+	hostnameRegex = regexp.MustCompile(`(?:http|https)/\d+\.\d+ ([A-Za-z0-9\-]{0,61})`)
 }
 
 // AstatsSystem represents fixed system stats returned from the
@@ -116,8 +120,22 @@ func astatsParse(cacheName string, rdr io.Reader, pollCTX interface{}) (Statisti
 		astats.Ats["system.proc.loadavg"] = astats.System.ProcLoadavg
 		astats.Ats["system.proc.net.dev"] = astats.System.ProcNetDev
 
+		via := ctx.HTTPHeader.Get(rfc.Via)
+		if via != "" {
+			viaRegexSubmatch := hostnameRegex.FindStringSubmatch(via)
+			if len(viaRegexSubmatch) > 0 {
+				astats.Ats[rfc.Via] = viaRegexSubmatch[1]
+			}
+		}
 		return stats, astats.Ats, nil
 	} else if ctype == "text/csv" {
+		via := ctx.HTTPHeader.Get(rfc.Via)
+		if via != "" {
+			viaRegexSubmatch := hostnameRegex.FindStringSubmatch(via)
+			if len(viaRegexSubmatch) > 0 {
+				cacheName = viaRegexSubmatch[1]
+			}
+		}
 		return astatsCsvParseCsv(cacheName, rdr)
 	} else {
 		return stats, nil, fmt.Errorf("stats Content-Type (%s) can not be parsed by astats", ctype)

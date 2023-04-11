@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
@@ -32,19 +33,19 @@ func TestServersIDQueueUpdate(t *testing.T) {
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, bool]{
 			"POST": {
 				"OK when VALID QUEUE request": {
-					EndpointID:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody:   true,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerQueueUpdateFields(map[string]interface{}{"Action": "queue", "ServerID": GetServerID(t, "atlanta-edge-01")()}),
+						validateServerQueueUpdateFields(map[string]interface{}{"Action": "queue", "ServerID": totest.GetServerID(t, TOSession, "atlanta-edge-01")()}),
 						validateUpdPendingSpecificServers(map[string]bool{"atlanta-edge-01": true})),
 				},
 				"OK when VALID DEQUEUE request": {
-					EndpointID:    GetServerID(t, "atlanta-edge-01"),
+					EndpointID:    totest.GetServerID(t, TOSession, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody:   false,
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerQueueUpdateFields(map[string]interface{}{"Action": "dequeue", "ServerID": GetServerID(t, "atlanta-edge-01")()}),
+						validateServerQueueUpdateFields(map[string]interface{}{"Action": "dequeue", "ServerID": totest.GetServerID(t, TOSession, "atlanta-edge-01")()}),
 						validateUpdPendingSpecificServers(map[string]bool{"atlanta-edge-01": false})),
 				},
 				/* COMMENTED UNTIL ISSUE IS FIXED:

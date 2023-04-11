@@ -23,7 +23,8 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -58,7 +59,7 @@ func TestProfiles(t *testing.T) {
 				"OK when VALID PARAM parameter": {
 					ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{QueryParameters: url.Values{
-						"id":    {strconv.Itoa(GetProfileID(t, "EDGE1")())},
+						"id":    {strconv.Itoa(totest.GetProfileID(t, TOSession, "EDGE1")())},
 						"param": {strconv.Itoa(GetParameterID(t, "health.threshold.loadavg", "rascal.properties", "25.0")())},
 					}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
@@ -66,15 +67,15 @@ func TestProfiles(t *testing.T) {
 				},
 				"OK when VALID CDN parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {strconv.Itoa(GetCDNID(t, "cdn1")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cdn": {strconv.Itoa(totest.GetCDNID(t, TOSession, "cdn1")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
 						validateProfilesFields(map[string]interface{}{"CDNName": "cdn1"})),
 				},
 				"OK when VALID ID parameter": {
 					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(GetProfileID(t, "EDGEInCDN2")())}}},
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"id": {strconv.Itoa(totest.GetProfileID(t, TOSession, "EDGEInCDN2")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseHasLength(1),
-						validateProfilesFields(map[string]interface{}{"ID": GetProfileID(t, "EDGEInCDN2")()})),
+						validateProfilesFields(map[string]interface{}{"ID": totest.GetProfileID(t, TOSession, "EDGEInCDN2")()})),
 				},
 				"FIRST RESULT when LIMIT=1": {
 					ClientSession: TOSession,
@@ -111,7 +112,7 @@ func TestProfiles(t *testing.T) {
 				"BAD REQUEST when NAME has SPACES": {
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
-						CDNID:       GetCDNID(t, "cdn1")(),
+						CDNID:       totest.GetCDNID(t, TOSession, "cdn1")(),
 						Description: "name has spaces test",
 						Name:        "name has space",
 						Type:        tc.CacheServerProfileType,
@@ -136,7 +137,7 @@ func TestProfiles(t *testing.T) {
 				"BAD REQUEST when MISSING DESCRIPTION FIELD": {
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
-						CDNID: GetCDNID(t, "cdn1")(),
+						CDNID: totest.GetCDNID(t, TOSession, "cdn1")(),
 						Name:  "missing_description",
 						Type:  tc.CacheServerProfileType,
 					},
@@ -145,7 +146,7 @@ func TestProfiles(t *testing.T) {
 				"BAD REQUEST when MISSING NAME FIELD": {
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
-						CDNID:       GetCDNID(t, "cdn1")(),
+						CDNID:       totest.GetCDNID(t, TOSession, "cdn1")(),
 						Description: "missing name",
 						Type:        tc.CacheServerProfileType,
 					},
@@ -154,7 +155,7 @@ func TestProfiles(t *testing.T) {
 				"BAD REQUEST when MISSING TYPE FIELD": {
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
-						CDNID:       GetCDNID(t, "cdn1")(),
+						CDNID:       totest.GetCDNID(t, TOSession, "cdn1")(),
 						Description: "missing type",
 						Name:        "missing_type",
 					},
@@ -163,10 +164,10 @@ func TestProfiles(t *testing.T) {
 			},
 			"PUT": {
 				"OK when VALID REQUEST": {
-					EndpointID:    GetProfileID(t, "EDGE2"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "EDGE2"),
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
-						CDNID:           GetCDNID(t, "cdn2")(),
+						CDNID:           totest.GetCDNID(t, TOSession, "cdn2")(),
 						Description:     "edge2 description updated",
 						Name:            "EDGE2UPDATED",
 						RoutingDisabled: false,
@@ -178,11 +179,11 @@ func TestProfiles(t *testing.T) {
 								"Name": "EDGE2UPDATED", "RoutingDisabled": false, "Type": "TR_PROFILE"})),
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-					EndpointID:    GetProfileID(t, "CCR1"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "CCR1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.Profile{
-						CDNID:           GetCDNID(t, "cdn1")(),
+						CDNID:           totest.GetCDNID(t, TOSession, "cdn1")(),
 						Description:     "cdn1 description",
 						Name:            "CCR1",
 						RoutingDisabled: false,
@@ -191,10 +192,10 @@ func TestProfiles(t *testing.T) {
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-					EndpointID:    GetProfileID(t, "CCR1"),
+					EndpointID:    totest.GetProfileID(t, TOSession, "CCR1"),
 					ClientSession: TOSession,
 					RequestBody: tc.Profile{
-						CDNID:           GetCDNID(t, "cdn1")(),
+						CDNID:           totest.GetCDNID(t, TOSession, "cdn1")(),
 						Description:     "cdn1 description",
 						Name:            "CCR1",
 						RoutingDisabled: false,
@@ -319,37 +320,4 @@ func validateProfileContainsParameter(t *testing.T, expectedParameter string, ac
 		}
 	}
 	return false
-}
-
-func GetProfileID(t *testing.T, profileName string) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("name", profileName)
-		resp, _, err := TOSession.GetProfiles(opts)
-		assert.RequireNoError(t, err, "Get Profiles Request failed with error: %v", err)
-		assert.RequireEqual(t, 1, len(resp.Response), "Expected response object length 1, but got %d", len(resp.Response))
-		return resp.Response[0].ID
-	}
-}
-
-func CreateTestProfiles(t *testing.T) {
-	for _, profile := range testData.Profiles {
-		resp, _, err := TOSession.CreateProfile(profile, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create Profile '%s': %v - alerts: %+v", profile.Name, err, resp.Alerts)
-	}
-}
-
-func DeleteTestProfiles(t *testing.T) {
-	profiles, _, err := TOSession.GetProfiles(client.RequestOptions{})
-	assert.NoError(t, err, "Cannot get Profiles: %v - alerts: %+v", err, profiles.Alerts)
-	for _, profile := range profiles.Response {
-		alerts, _, err := TOSession.DeleteProfile(profile.ID, client.RequestOptions{})
-		assert.NoError(t, err, "Cannot delete Profile: %v - alerts: %+v", err, alerts.Alerts)
-		// Retrieve the Profile to see if it got deleted
-		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(profile.ID))
-		getProfiles, _, err := TOSession.GetProfiles(opts)
-		assert.NoError(t, err, "Error getting Profile '%s' after deletion: %v - alerts: %+v", profile.Name, err, getProfiles.Alerts)
-		assert.Equal(t, 0, len(getProfiles.Response), "Expected Profile '%s' to be deleted, but it was found in Traffic Ops", profile.Name)
-	}
 }

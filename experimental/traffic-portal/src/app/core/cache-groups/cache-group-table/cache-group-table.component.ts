@@ -15,7 +15,7 @@
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import {ActivatedRoute, type Params } from "@angular/router";
+import { ActivatedRoute, type Params } from "@angular/router";
 import type { ColDef } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 import {
@@ -28,7 +28,7 @@ import {
 
 import { CacheGroupService, CDNService } from "src/app/api";
 import { AlertService } from "src/app/shared/alert/alert.service";
-import { CurrentUserService } from "src/app/shared/currentUser/current-user.service";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import {
 	CollectionChoiceDialogComponent,
 	type CollectionChoiceDialogData

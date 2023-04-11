@@ -10,7 +10,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# CDN in a Box for Developers
+/aes.key
+/server.crt
+/server.csr
+/server.key
+
 # compiled output
+*.css
+*.css.map
 /dist
 /.angular
 /.npm
@@ -50,7 +58,7 @@ speed-measure-plugin*.json
 .history/*
 
 # misc
-/.sass-cache
+.sass-cache/
 /connect.lock
 /coverage
 /libpeerconnection.log

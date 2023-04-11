@@ -25,13 +25,14 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-tc/totest"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/config"
 	_ "github.com/lib/pq"
 )
 
 var (
 	Config             config.Config
-	testData           TrafficControl
+	testData           totest.TrafficControl
 	includeSystemTests bool
 )
 
