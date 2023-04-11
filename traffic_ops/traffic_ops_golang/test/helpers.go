@@ -26,16 +26,57 @@ import (
 	"strings"
 )
 
-// Extract the tag annotations from a struct into a string array
+// ColsFromStructByTag extracts the tag annotations from a struct into a string array.
 func ColsFromStructByTag(tagName string, thing interface{}) []string {
-	cols := []string{}
+	return ColsFromStructByTagExclude(tagName, thing, nil)
+}
+
+// InsertAtStr inserts insertMap (string to insert at -> []insert names) into cols non-destructively.
+func InsertAtStr(cols []string, insertMap map[string][]string) []string {
+	if insertMap == nil {
+		return cols
+	}
+	if cols == nil {
+		return nil
+	}
+
+	colLen := len(cols)
+	insertLen := 0
+	for _, val := range insertMap {
+		insertLen += len(val)
+	}
+	newColumns := make([]string, colLen+insertLen)
+	oldIndex := 0
+	for newIndex := 0; newIndex < len(newColumns); newIndex++ {
+		newColumns[newIndex] = (cols)[oldIndex]
+		if inserts, ok := insertMap[newColumns[newIndex]]; ok {
+			for j, insert := range inserts {
+				newColumns[newIndex+j+1] = insert
+			}
+			newIndex += len(inserts)
+		}
+		oldIndex++
+	}
+	return newColumns
+}
+
+// ColsFromStructByTagExclude extracts the tag annotations from a struct into a string array except for excludedColumns.
+func ColsFromStructByTagExclude(tagName string, thing interface{}, excludeColumns []string) []string {
+	var cols []string
+	var excludeMap map[string]bool
+	if excludeColumns != nil {
+		excludeMap = make(map[string]bool, len(excludeColumns))
+		for _, col := range excludeColumns {
+			excludeMap[col] = true
+		}
+	}
 	t := reflect.TypeOf(thing)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		if (strings.Compare(tagName, "db") == 0) && (tagName != "") {
+		if tagName != "" {
 			// Get the field tag value
 			tag := field.Tag.Get(tagName)
-			if tag != "" {
+			if _, ok := excludeMap[tag]; !ok && tag != "" {
 				cols = append(cols, tag)
 			}
 		}
