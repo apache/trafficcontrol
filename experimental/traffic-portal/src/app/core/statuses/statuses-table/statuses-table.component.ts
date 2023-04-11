@@ -49,6 +49,16 @@ export class StatusesTableComponent implements OnInit {
 			field: "description",
 			headerName: "Description",
 			hide: false
+		},
+		{
+			field: "id",
+			headerName: "ID",
+			hide: true
+		},
+		{
+			field: "lastUpdated",
+			headerName: "Last Updated",
+			hide: true
 		}];
 
 	/** The current search text. */
@@ -125,7 +135,7 @@ export class StatusesTableComponent implements OnInit {
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
-					data: {message: `Are you sure you want to delete status ${data.name} with id ${data.id} ?`, title: "Confirm Delete"}
+					data: {message: `Are you sure you want to delete Status ${data.name} with ID ${data.id} ?`, title: "Confirm Delete"}
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {

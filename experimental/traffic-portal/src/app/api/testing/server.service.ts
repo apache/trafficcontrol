@@ -222,14 +222,7 @@ export class ServerService {
 			}
 			return status;
 		}
-		return this.statuses.map(
-			p => ({
-				description: p.description,
-				id: p.id,
-				lastUpdated: p.lastUpdated,
-				name: p.name
-			})
-		);
+		return this.statuses
 	}
 
 	/**
@@ -358,14 +351,13 @@ export class ServerService {
 	 * Deletes a Status.
 	 *
 	 * @param id The ID of the Status to delete.
-	 * @returns The response.
+	 * @returns The deleted status.
 	 */
-	public async deleteStatus(id: number): Promise<HttpResponse<object> | null> {
+	public async deleteStatus(id: number): Promise<ResponseStatus> {
 		const idx = this.statuses.findIndex(j => j.id === id);
 		if (idx < 0) {
 			throw new Error(`no such status: #${id}`);
 		}
-		this.statuses.splice(idx, 1);
-		return new HttpResponse({ body: { alerts: [{ level: "success", text: "Successfully logged in." }] }, status: 200 });
+		return this.statuses.splice(idx, 1)[0];
 	}
 }
