@@ -50,7 +50,7 @@ fi;
 
 cd /lang/traffic-portal
 
-jq '.tp_url = "'"$TP_URL"'" | .to_url = "https://'"$TO_FQDN"':'"$TO_PORT"'"' \
+jq --arg TP_URL $TP_URL --arg TO_URL https://$TO_FQDN:$TO_PORT '.tp_url = $TP_URL | .to_url = $TO_URL' \
 	nightwatch/config.json > config.tmp.json && mv config.tmp.json nightwatch/config.json
 
 npm run e2e:ci

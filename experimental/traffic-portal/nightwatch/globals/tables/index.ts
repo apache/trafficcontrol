@@ -47,31 +47,10 @@ export const searchboxSelector = "input[name='fuzzControl']";
  * multiple columns exist with the same given name.
  */
 export async function getColumnState(this: TableSectionCommands, column: string): Promise<boolean> {
-	return new Promise((resolve, reject) => {
-		this.click(columnMenuSelector).parent.getElementProperty(`mat-checkbox[name='${column}']`, "classList",
-			result => {
-				let checked = false;
-				if (typeof result.value === "string") {
-					checked = result.value.indexOf("mat-checkbox-checked") > -1;
-				} else if (Array.isArray(result.value)) {
-					for(const cls of result.value) {
-						if (cls.indexOf("mat-checkbox-checked") > -1) {
-							checked = true;
-							break;
-						}
-					}
-					checked = result.value.indexOf("mat-checkbox-checked") > -1;
-				} else {
-					console.error("incorrect type for 'classList' DOM property:", result.value);
-					reject(new Error(`incorrect type for 'classList' DOM property: ${typeof result.value}`));
-					return;
-				}
-				this.parent.click("body", () => {
-					resolve(checked);
-				});
-			}
-		);
-	});
+	const selector = `.mat-checkbox-input[name='${column}']`;
+	return this.click(columnMenuSelector).parent
+		.getLocationInView(selector)
+		.isSelected(selector);
 }
 
 /**
