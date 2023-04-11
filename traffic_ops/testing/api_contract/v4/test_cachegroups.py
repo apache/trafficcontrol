@@ -70,7 +70,7 @@ def test_cachegroup_contract(to_session: TOSession,
 		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
 			dict[object, object] |\
 			primitive
-		] |\
+		]
 		response_template = cachegroup_response_template.get("properties") if isinstance(
 			cachegroup_response_template, dict) else None
 		if response_template is None or not isinstance(response_template, dict):
