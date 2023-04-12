@@ -14,7 +14,7 @@
 
 import { Location } from "@angular/common";
 import { Component } from "@angular/core";
-import { FormControl, FormGroup, Validators } from "@angular/forms";
+import { FormControl, FormGroup } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { RequestStatus, ResponseStatus } from "trafficops-types";
@@ -43,7 +43,7 @@ export class StatusDetailsComponent {
 	/** Reactive form intialized to creat / edit status details */
 	public statusDetailsForm = new FormGroup({
 		description: new FormControl("", {nonNullable: true}),
-		name: new FormControl("", {nonNullable: true, validators: Validators.required}),
+		name: new FormControl("", {nonNullable: true}),
 	});
 
 	/**
@@ -81,8 +81,10 @@ export class StatusDetailsComponent {
 	/**
 	 * Get status details for the id
 	 * patch the form with status details
+	 *
+	 * @param id ID of the status
 	 */
-	public async getStatusDetails(id:string | number): Promise<void> {
+	public async getStatusDetails(id: string | number): Promise<void> {
 		this.statusDetails = await this.api.getStatuses(Number(id));
 
 		// Set page title with status Name
