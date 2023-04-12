@@ -77,6 +77,31 @@
                 "type": "list"
             }
         }
+    },
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "configFile": {
+                "type": "str"
+            },
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            },
+            "profiles": {
+                "type": "list"
+            },
+            "secure": {
+                "type": "bool"
+            },
+            "value": {
+                "type": "str"
+            }
+        }
     }
 }
-
