@@ -93,7 +93,7 @@ def test_role_contract(
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
-		pytest.fail("Either prerequisite data or API response was malformed")
+		pytest.fail("API contract test failed for roles endpoint: API response was malformed")
 	finally:
 		# Delete Roel after test execution to avoid redundancy.
 		try:
