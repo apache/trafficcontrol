@@ -17,7 +17,7 @@ import { Component } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
-import { ResponseStatus } from "trafficops-types";
+import { RequestStatus, ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
 import { DecisionDialogComponent, DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
@@ -35,15 +35,15 @@ export class StatusDetailsComponent {
 	public new = false;
 
 	/** Loader status for the actions */
-	public loading = false;
+	public loading = true;
 
 	/** All details of status requested */
 	public statusDetails!: ResponseStatus;
 
 	/** Reactive form intialized to creat / edit status details */
-	public statusDetailsForm: FormGroup = new FormGroup({
-		description: new FormControl("", Validators.required),
-		name: new FormControl("", Validators.required),
+	public statusDetailsForm = new FormGroup({
+		description: new FormControl("", {nonNullable: true}),
+		name: new FormControl("", {nonNullable: true, validators: Validators.required}),
 	});
 
 	/**
@@ -69,14 +69,12 @@ export class StatusDetailsComponent {
 		 * Initializes table data, loading it from Traffic Ops.
 		 * we check whether params is a number if not we shall assume user wants to add a new status.
 		 */
-		if (id !== "new") {
-			this.loading = true;
-			this.statusDetailsForm.addControl("id", new FormControl(""));
-			this.statusDetailsForm.addControl("lastUpdated", new FormControl(""));
-			this.getStatusDetails();
+		if (id && id !== "new") {
+			this.getStatusDetails(id);
 		} else {
 			this.navSvc.headerTitle.next("New Status");
 			this.new = true;
+			this.loading = false;
 		}
 	}
 
@@ -84,14 +82,18 @@ export class StatusDetailsComponent {
 	 * Get status details for the id
 	 * patch the form with status details
 	 */
-	public async getStatusDetails(): Promise<void> {
-		this.statusDetails = await this.api.getStatuses(this.statusDetails.id);
+	public async getStatusDetails(id:string | number): Promise<void> {
+		this.statusDetails = await this.api.getStatuses(Number(id));
 
 		// Set page title with status Name
 		this.navSvc.headerTitle.next(`Status #${this.statusDetails.name}`);
 
 		// Patch the form with existing data we got from service requested above.
-		this.statusDetailsForm.patchValue(this.statusDetails);
+		this.statusDetailsForm.setValue({
+			description: this.statusDetails.description ? this.statusDetails.description : "",
+			name: this.statusDetails.name
+		  });
+
 		this.loading = false;
 	}
 
@@ -106,10 +108,20 @@ export class StatusDetailsComponent {
 
 		if (this.statusDetailsForm.valid) {
 			if (this.new) {
-				this.statusDetails = await this.api.createStatus(this.statusDetailsForm.value);
+				const newData: RequestStatus = {
+					description: this.statusDetailsForm.controls.description.value,
+					name: this.statusDetailsForm.controls.name.value
+				};
+				this.statusDetails = await this.api.createStatus(newData);
 				this.location.back();
 			} else {
-				this.statusDetails = await this.api.updateStatusDetail(this.statusDetailsForm.value);
+				const editData: ResponseStatus = {
+					description: this.statusDetailsForm.controls.description.value,
+					id: this.statusDetails.id,
+					lastUpdated:this.statusDetails.lastUpdated,
+					name:this.statusDetailsForm.controls.name.value
+				};
+				this.statusDetails = await this.api.updateStatusDetail(editData);
 			}
 		}
 	}
