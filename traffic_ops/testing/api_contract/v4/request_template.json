@@ -20,6 +20,15 @@
 			],
 			"typeId": 23
 		}
+	],
+	"profiles": [
+		{
+			"name": "test",
+			"description": "A test profile for API examples",
+			"cdn": 2,
+			"type": "UNK_PROFILE",
+			"routingDisabled": true
+		}
 	]
 }
 

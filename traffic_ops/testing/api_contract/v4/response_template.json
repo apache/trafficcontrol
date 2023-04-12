@@ -77,6 +77,35 @@
                 "type": "list"
             }
         }
+    },
+    "profiles": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            },
+            "description": {
+                "type": "str"
+            },
+            "cdnName": {
+                "type": "str"
+            },
+            "cdn": {
+                "type": "int"
+            },
+            "routingDisabled": {
+                "type": "bool"
+            },
+            "type": {
+                "type": "str"
+            }
+        }
     }
 }
 

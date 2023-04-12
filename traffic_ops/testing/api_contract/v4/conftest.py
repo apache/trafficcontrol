@@ -471,3 +471,63 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 	except IndexError:
 		logger.error("No Cache group response data from cdns POST request.")
 		sys.exit(1)
+
+
+@pytest.fixture()
+def profile_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		      ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for profile endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get profile data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	try:
+		profile = request_template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			"malformed prerequisite data; no Profile present in 'profile' array property") from e
+
+	if not isinstance(profile, dict):
+		raise TypeError(f"malformed prerequisite data; profile must be objects, not '{type(profile)}'")
+
+	# Return new post data and post response from cachegroups POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = profile["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		profile["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Profile property '{e.args[0]}'") from e
+	# Hitting types GET method to access typeID for profile POST data
+	cdn_get_response: tuple[
+		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		requests.Response
+	] = to_session.get_cdns()
+	try:
+		cdn_data = cdn_get_response[0]
+		if not isinstance(cdn_data, list):
+			raise TypeError("malformed API response; 'response' property not an array")
+		first_cdn = cdn_data[0]
+		if not isinstance(first_cdn, dict):
+			raise TypeError("malformed API response; first CDN in response is not an object")
+		profile["cdn"] = first_cdn["id"]
+		cdn_id = profile["cdn"]
+		logger.info("extracted %s from %s", cdn_id, cdn_get_response)
+	except KeyError as e:
+		raise TypeError(f"missing CDN property '{e.args[0]}'") from e
+
+	logger.info("New profile data to hit POST method %s", request_template_data)
+	# Hitting profile POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_profile(data=profile)
+	try:
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; profile is not an object")
+		return resp_obj
+	except IndexError:
+		logger.error("No Profile response data from cdns POST request.")
+		sys.exit(1)
