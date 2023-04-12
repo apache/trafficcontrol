@@ -20,6 +20,12 @@
 			],
 			"typeId": 23
 		}
+	],
+	"roles": [
+		{
+			"name": "test",
+			"description": "quest"
+		}
 	]
 }
 
