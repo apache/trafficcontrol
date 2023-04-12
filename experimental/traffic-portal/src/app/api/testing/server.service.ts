@@ -12,7 +12,6 @@
 * limitations under the License.
 */
 
-import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type { RequestServer, RequestStatus, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
 
@@ -222,7 +221,7 @@ export class ServerService {
 			}
 			return status;
 		}
-		return this.statuses
+		return this.statuses;
 	}
 
 	/**
