@@ -309,7 +309,7 @@ const globals = {
 			data.division = respDivision;
 
 			const region: RequestRegion = {
-				division: 1,
+				division: respDivision.id,
 				name: `testR${globals.uniqueString}`
 			};
 			url = `${apiUrl}/regions`;
@@ -326,12 +326,12 @@ const globals = {
 			url = `${apiUrl}/cachegroups`;
 			resp = await client.post(url, JSON.stringify(cacheGroup));
 			const responseCG: ResponseCacheGroup = resp.data.response;
-			console.log("Successfully created Cache Group:", responseCG);
+			console.log("Successfully created Cache Group:", responseCG.name);
 			data.cacheGroup = responseCG;
 
 			const asn: RequestASN = {
-				asn: 0,
-				cachegroupId: 1
+				asn: +globals.uniqueString,
+				cachegroupId: responseCG.id
 			};
 			url = `${apiUrl}/asns`;
 			resp = await client.post(url, JSON.stringify(asn));

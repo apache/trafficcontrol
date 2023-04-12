@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 )
 
 type astatsDataCsv struct {
@@ -127,6 +128,8 @@ func astatsCsvParseCsv(cacheName string, data io.Reader) (Statistics, map[string
 	if len(stats.Interfaces) < 1 {
 		return stats, nil, fmt.Errorf("cache '%s' had no interfaces", cacheName)
 	}
+
+	statMap[rfc.Via] = cacheName
 
 	return stats, statMap, nil
 }
