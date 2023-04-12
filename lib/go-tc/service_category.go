@@ -1,7 +1,5 @@
 package tc
 
-import "time"
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +18,8 @@ import "time"
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import "time"
 
 // ServiceCategoriesResponse is a list of Service Categories as a response.
 type ServiceCategoriesResponse struct {
@@ -40,24 +40,24 @@ type ServiceCategory struct {
 	Name        string    `json:"name" db:"name"`
 }
 
-// ServiceCategoriesResponseV5 is a list of Service Categories as a response.
-// Uses ServiceCategoryV5 struct for RFC3339 Format
-type ServiceCategoriesResponseV5 struct {
-	Response []ServiceCategoryV5 `json:"response"`
+// ServiceCategoriesResponseV50 is a list of Service Categories as a response.
+type ServiceCategoriesResponseV50 struct {
+	Response []ServiceCategoryV50 `json:"response"`
 	Alerts
 }
 
-// ServiceCategoryResponseV5 is a single Service Category response for Update and Create to
-// depict what changed.
-// Uses ServiceCategoryV5 struct for RFC3339 Format
-type ServiceCategoryResponseV5 struct {
-	Response ServiceCategoryV5 `json:"response"`
+// ServiceCategoryResponseV50 is a single Service Category response for Update and Create to
+type ServiceCategoryResponseV50 struct {
+	Response ServiceCategoryV50 `json:"response"`
 	Alerts
 }
 
-// ServiceCategoryV5 holds the name, id and associated tenant that comprise a service category.
-// Previous versions hold Depreciated TimeNodMod Format. This version is updated to RFC3339 Time Format.
-type ServiceCategoryV5 struct {
+// ServiceCategoryV50 holds the name and last updated time stamp.
+type ServiceCategoryV50 struct {
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 	Name        string    `json:"name" db:"name"`
 }
+
+type ServiceCategoriesResponseV5 = ServiceCategoriesResponseV50
+type ServiceCategoryResponseV5 = ServiceCategoryResponseV50
+type ServiceCategoryV5 = ServiceCategoryV50

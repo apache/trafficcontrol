@@ -24,18 +24,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/jmoiron/sqlx"
 )
 
 type TOServiceCategory struct {
@@ -210,13 +211,13 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 
-	var maxTime *time.Time
+	var maxTime time.Time
 	var err error
 	var scList []tc.ServiceCategoryV5
 
 	tx := inf.Tx
 
-	scList, err, code, maxTime = GetServiceCategory(tx, inf.Params, useIMS, r.Header)
+	scList, maxTime, code, err = GetServiceCategory(tx, inf.Params, useIMS, r.Header)
 	if code == http.StatusNotModified {
 		w.WriteHeader(code)
 		api.WriteResp(w, r, []tc.ServiceCategoryV5{})
@@ -224,24 +225,24 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if code == http.StatusBadRequest {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New(err.Error()), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return
 	}
 
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("Service category errors: "+err.Error()))
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(err.Error()))
 		return
 	}
 
-	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
-		api.AddLastModifiedHdr(w, *maxTime)
+	if maxTime != (time.Time{}) && api.SetLastModifiedHeader(r, useIMS) {
+		api.AddLastModifiedHdr(w, maxTime)
 	}
 
 	api.WriteResp(w, r, scList)
 }
 
 // GetServiceCategory [Version : V5] receives transactions from Get function and returns service_categories list.
-func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.ServiceCategoryV5, error, int, *time.Time) {
+func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.ServiceCategoryV5, time.Time, int, error) {
 	var runSecond bool
 	var maxTime time.Time
 	scList := []tc.ServiceCategoryV5{}
@@ -257,14 +258,14 @@ func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, head
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), http.StatusBadRequest, nil
+		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs)
 	}
 
 	if useIMS {
 		runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return scList, nil, http.StatusNotModified, &maxTime
+			return scList, maxTime, http.StatusNotModified, nil
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -273,19 +274,19 @@ func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, head
 	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, errors.New("service category read: error getting service category(ies): " + err.Error()), http.StatusInternalServerError, nil
+		return nil, time.Time{}, http.StatusInternalServerError, errors.New("service category read: error getting service category(ies): " + err.Error())
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		sc := tc.ServiceCategoryV5{}
 		if err = rows.Scan(&sc.Name, &sc.LastUpdated); err != nil {
-			return nil, errors.New("error getting service category(ies): " + err.Error()), http.StatusInternalServerError, nil
+			return nil, time.Time{}, http.StatusInternalServerError, errors.New("error getting service category(ies): " + err.Error())
 		}
 		scList = append(scList, sc)
 	}
 
-	return scList, nil, http.StatusOK, &maxTime
+	return scList, maxTime, http.StatusOK, nil
 }
 
 // TryIfModifiedSinceQuery [Version : V5] function receives transactions and header from GetServiceCategory function and returns bool value if status is not modified.
@@ -320,7 +321,7 @@ func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, quer
 		return runSecond, max
 	}
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return dontRunSecond, max
 	}
 
@@ -359,13 +360,13 @@ func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if service category already exists
-	var count int
-	err := tx.QueryRow("SELECT count(*) from service_category where name = $1 ", sc.Name).Scan(&count)
+	var exists bool
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * from service_category where name = $1)`, sc.Name).Scan(&exists)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if service category with name %s exists", err, sc.Name))
 		return
 	}
-	if count == 1 {
+	if exists {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("service category name '%s' already exists.", sc.Name), nil)
 		return
 	}
@@ -421,7 +422,7 @@ func UpdateServiceCategory(w http.ResponseWriter, r *http.Request) {
 	err := tx.QueryRow(query, sc.Name, requestedName).Scan(&sc.Name, &sc.LastUpdated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("service category with name: %s not found", requestedName), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("service category with name: %s not found", requestedName), nil)
 			return
 		}
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -444,27 +445,23 @@ func DeleteServiceCategory(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	name := inf.Params["name"]
-	exists, err := dbhelpers.GetServiceCategoryInfo(tx, name)
+	exists, err := dbhelpers.ServiceCategoryExists(tx, name)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	if !exists {
-		if name != "" {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no service category exists by name: %s", name), nil)
-			return
-		} else {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no service category exists for empty name: %s", name), nil)
-			return
-		}
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no service category exists for name: %s", name), nil)
+		return
+
 	}
 
 	assignedDeliveryService := 0
 	if err := inf.Tx.Get(&assignedDeliveryService, "SELECT count(service_category) FROM deliveryservice d WHERE d.service_category=$1", name); err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("service category delete, counting assigned servers: %w", err))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("service category delete, counting assigned Delivery Service(s): %w", err))
 		return
 	} else if assignedDeliveryService != 0 {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a service category with %d assigned delivery service", assignedDeliveryService), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a service category with %d assigned Delivery Service(s)", assignedDeliveryService), nil)
 		return
 	}
 
@@ -479,7 +476,7 @@ func DeleteServiceCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if rowsAffected == 0 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for service_category"), nil)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("no rows deleted for service_category"))
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "service_category was deleted.")

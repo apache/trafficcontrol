@@ -98,42 +98,6 @@ Traffic Ops will often return responses from its API that include dates. As of t
 
 	2021-06-07 08:01:02+00
 
-.. _rfc-3339-datetime:
-
-RFC 3339 Date/Time Format
--------------------------------------
-Detailed description of RFC 3339 date and time format can be found `here <https://www.rfc-editor.org/rfc/rfc3339>`_. The ``date-time`` is constructed as follows,
-
-.. code-block:: text
-	:caption: date-time construction in RFC3339
-
-    date-fullyear   = 4DIGIT
-    date-month      = 2DIGIT  ; 01-12
-    date-mday       = 2DIGIT  ; 01-28, 01-29, 01-30, 01-31 based on month/year
-
-    time-hour       = 2DIGIT  ; 00-23
-    time-minute     = 2DIGIT  ; 00-59
-    time-second     = 2DIGIT  ; 00-58, 00-59, 00-60 based on leap second rules
-
-    time-secfrac    = "." 1*DIGIT
-
-    time-numoffset  = ("+" / "-") time-hour ":" time-minute
-    time-offset     = "Z" / time-numoffset
-
-    partial-time    = time-hour ":" time-minute ":" time-second [time-secfrac]
-    full-time       = partial-time time-offset
-
-    full-date       = date-fullyear "-" date-month "-" date-mday
-
-    date-time       = full-date "T" full-time
-
-.. code-block:: text
-	:caption: Example RFC3339 date-time
-
-	2023-03-29T19:43:17.557642+05:30
-.. note:: Refactoring Traffic Ops API services to respond with RFC 3339 format is still work in progress.
-
-
 Using API Endpoints
 ===================
 #. Authenticate with valid Traffic Control user account credentials (the same used by Traffic Portal).

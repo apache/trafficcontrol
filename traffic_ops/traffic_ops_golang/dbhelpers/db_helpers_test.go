@@ -461,7 +461,7 @@ func TestGetSCInfo(t *testing.T) {
 	}
 }
 
-func TestGetServiceCategoryInfo(t *testing.T) {
+func TestServiceCategoryExists(t *testing.T) {
 	var testCases = []struct {
 		description   string
 		name          string
@@ -500,13 +500,13 @@ func TestGetServiceCategoryInfo(t *testing.T) {
 			mock.ExpectQuery("SELECT").WillReturnRows(rows)
 			mock.ExpectCommit()
 
-			scExists, err := GetServiceCategoryInfo(db.MustBegin().Tx, testCase.name)
+			scExists, err := ServiceCategoryExists(db.MustBegin().Tx, testCase.name)
 			if testCase.exists != scExists {
 				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, scExists)
 			}
 
 			if !errors.Is(err, testCase.expectedError) {
-				t.Errorf("GetServiceCategoryInfo expected: %s, actual: %s", testCase.expectedError, err)
+				t.Errorf("ServiceCategoryExists expected: %s, actual: %s", testCase.expectedError, err)
 			}
 		})
 	}

@@ -58,7 +58,7 @@ Request Structure
 Response Structure
 ------------------
 :name:        This :term:`Service Category`'s name
-:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in :ref:`rfc-3339-datetime`
+:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in :rfc:`3339`
 
 .. code-block:: http
 	:caption: Response Example
