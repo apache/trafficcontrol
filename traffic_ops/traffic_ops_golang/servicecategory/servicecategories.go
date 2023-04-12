@@ -274,14 +274,14 @@ func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, head
 	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, time.Time{}, http.StatusInternalServerError, errors.New("service category read: error getting service category(ies): " + err.Error())
+		return nil, time.Time{}, http.StatusInternalServerError, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		sc := tc.ServiceCategoryV5{}
 		if err = rows.Scan(&sc.Name, &sc.LastUpdated); err != nil {
-			return nil, time.Time{}, http.StatusInternalServerError, errors.New("error getting service category(ies): " + err.Error())
+			return nil, time.Time{}, http.StatusInternalServerError, err
 		}
 		scList = append(scList, sc)
 	}
