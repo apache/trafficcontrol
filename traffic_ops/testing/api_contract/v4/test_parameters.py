@@ -36,7 +36,8 @@ def test_parameter_contract(
 	Test step to validate keys, values and data types from parameters endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get parameter data from a prerequisites file.
+	:param request_template_data: Fixture to get request template data from a prerequisites file.
+	:param response_template_data: Fixture to get response template data from a prerequisites file.
 	:param parameter_post_data: Fixture to get sample parameter data and actual parameter response.
 	"""
 	# validate Parameter keys from parameters get response
