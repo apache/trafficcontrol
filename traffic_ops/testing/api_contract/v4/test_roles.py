@@ -36,7 +36,8 @@ def test_role_contract(
 	Test step to validate keys, values and data types from roles endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get role data from a prerequisites file.
+	:param request_template_data: Fixture to get request template data from a prerequisites file.
+	:param response_template_data: Fixture to get response template data from a prerequisites file.
 	:param role_post_data: Fixture to get sample role data and actual role response.
 	"""
 	# validate Role keys from roles get response
