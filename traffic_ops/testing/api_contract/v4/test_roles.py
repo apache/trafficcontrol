@@ -65,7 +65,15 @@ def test_role_contract(
 		role_keys = set(first_role.keys())
 
 		logger.info("Role Keys from roles endpoint response %s", role_keys)
-		response_template = response_template_data.get("roles").get("properties")
+		role_response_template = response_template_data.get("roles")
+		if not isinstance(role_response_template, dict):
+			raise TypeError(
+				f"Role response template data must be a dict, not '{type(role_response_template)}'")
+		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
+			dict[object, object] |\
+			primitive
+		]
+		response_template = role_response_template.get("properties")
 		# validate roles values from prereq data in roles get response.
 		prereq_values = [
 			role_post_data["name"],
