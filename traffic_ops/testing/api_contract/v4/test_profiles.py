@@ -65,7 +65,15 @@ def test_profile_contract(
 		profile_keys = set(first_profile.keys())
 
 		logger.info("Profile Keys from profiles endpoint response %s", profile_keys)
-		response_template = response_template_data.get("profiles").get("properties")
+		profile_response_template = response_template_data.get("profiles")
+		if not isinstance(profile_response_template, dict):
+			raise TypeError(
+				f"Profile response template data must be a dict, not '{type(profile_response_template)}'")
+		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
+			dict[object, object] |\
+			primitive
+		]
+		response_template = profile_response_template.get("properties")
 		# validate profile values from prereq data in profiles get response.
 		prereq_values = [
 			profile_post_data["name"],
