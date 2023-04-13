@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7386](https://github.com/apache/trafficcontrol/pull/7386) *Traffic Portal* Increased the number of events that are logged to the TP access log.
 
 ### Fixed
+- [#7441](https://github.com/apache/trafficcontrol/pull/7441) *Traffic Ops* Fixed the invalidation jobs endpoint to respect CDN locks.
 - [#7414](https://github.com/apache/trafficcontrol/pull/7414) * Traffic Portal* Fixed DSR difference for DS required capability.
 - [#7130](https://github.com/apache/trafficcontrol/issues/7130) *Traffic Ops* Fixes service_categories response to POST API.
 - [#7340](https://github.com/apache/trafficcontrol/pull/7340) *Traffic Router* Fixed TR logging for the `cqhv` field when absent.
