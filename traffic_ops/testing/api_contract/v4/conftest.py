@@ -480,7 +480,7 @@ def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	PyTest Fixture to create POST data for roles endpoint.
 
 	:param to_session: Fixture to get Traffic Ops session.
-	:param api_prerequisite_data: Fixture to get role data from a prerequisites file.
+	:param request_template_data: Fixture to get role data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
 
