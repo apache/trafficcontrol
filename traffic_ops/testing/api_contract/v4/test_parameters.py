@@ -76,18 +76,10 @@ def test_parameter_contract(
 		]
 		response_template = parameter_response_template.get("properties")
 		# validate parameter values from prereq data in parameters get response.
-		prereq_values = [
-			parameter_post_data["name"],
-			parameter_post_data["value"],
-			parameter_post_data["configFile"],
-			parameter_post_data["secure"]
-		]
-		get_values = [
-			first_parameter["name"],
-	        first_parameter["value"],
-	        first_parameter["configFile"],
-	        first_parameter["secure"]
-	    ]
+		prereq_values = [parameter_post_data["name"], parameter_post_data["value"],
+		parameter_post_data["configFile"], parameter_post_data["secure"]]
+		get_values = [first_parameter["name"], first_parameter["value"],
+		first_parameter["configFile"], first_parameter["secure"]]
 		get_types = {}
 		for key, value in first_parameter.items():
 			get_types[key] = type(value).__name__
