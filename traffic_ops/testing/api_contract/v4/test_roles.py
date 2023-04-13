@@ -76,14 +76,8 @@ def test_role_contract(
 		]
 		response_template = role_response_template.get("properties")
 		# validate roles values from prereq data in roles get response.
-		prereq_values = [
-			role_post_data["name"],
-			role_post_data["description"]
-		]
-		get_values = [
-			first_role["name"],
-	        first_role["description"]
-	    ]
+		prereq_values = [role_post_data["name"], role_post_data["description"]]
+		get_values = [first_role["name"], first_role["description"]]
 		get_types = {}
 		for key, value in first_role.items():
 			get_types[key] = type(value).__name__
