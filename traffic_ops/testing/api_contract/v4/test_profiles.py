@@ -36,7 +36,8 @@ def test_profile_contract(
 	Test step to validate keys, values and data types from profiles endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get profile data from a prerequisites file.
+	:param request_template_data: Fixture to get request template data from a prerequisites file.
+	:param response_template_data: Fixture to get response template data from a prerequisites file.
 	:param profile_post_data: Fixture to get sample Profile data and actual Profile response.
 	"""
 	# validate Profile keys from profiles get response
