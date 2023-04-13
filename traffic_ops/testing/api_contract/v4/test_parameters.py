@@ -65,7 +65,15 @@ def test_parameter_contract(
 		parameter_keys = set(first_parameter.keys())
 
 		logger.info("Parameter Keys from parameters endpoint response %s", parameter_keys)
-		response_template = response_template_data.get("parameters").get("properties")
+		parameter_response_template = response_template_data.get("parameters")
+		if not isinstance(parameter_response_template, dict):
+			raise TypeError(
+				f"Parameter response template data must be a dict, not '{type(parameter_response_template)}'")
+		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
+			dict[object, object] |\
+			primitive
+		]
+		response_template = parameter_response_template.get("properties")
 		# validate parameter values from prereq data in parameters get response.
 		prereq_values = [
 			parameter_post_data["name"],
