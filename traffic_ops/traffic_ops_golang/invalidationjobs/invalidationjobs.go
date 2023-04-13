@@ -595,6 +595,17 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, int(dsid))
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("getting delivery service and CDN name from ID: "+err.Error()))
+		return
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	row := inf.Tx.Tx.QueryRow(insertQueryV4,
 		job.TTLHours,
 		dsid, // Used in inner select for deliveryservice
