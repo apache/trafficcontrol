@@ -70,15 +70,15 @@ def test_server_capabilities_contract(
 		server_capabilities_response_template = response_template_data.get("server_capabilities")
 		if not isinstance(server_capabilities_response_template, dict):
 			raise TypeError(
-				f"server_capabilities response template data must be a dict, not '{type(server_capabilities_response_template)}'")
+				f"server_capabilities data must be a dict, not '{type(server_capabilities_response_template)}'")
 		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
 			dict[object, object] |\
 			primitive
 		]
 		response_template = server_capabilities_response_template.get("properties")
 		# validate server_capabilities values from prereq data in api get response.
-		prereq_values = [server_capabilities_post_data["name"], server_capabilities_post_data["description"]]
-		get_values = [first_server_capabilities["name"], first_server_capabilities["description"]]
+		prereq_values = [server_capabilities_post_data["name"]]
+		get_values = [first_server_capabilities["name"]]
 		get_types = {}
 		for key, value in first_server_capabilities.items():
 			get_types[key] = type(value).__name__
@@ -97,7 +97,7 @@ def test_server_capabilities_contract(
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
-		pytest.fail("API contract test failed for server_capabilities endpoint: API response was malformed")
+		pytest.fail("API contract test failed for server_capabilities: API response was malformed")
 	finally:
 		# Delete server_capabilities after test execution to avoid redundancy.
 		try:

@@ -480,7 +480,7 @@ def parameter_post_data(to_session: TOSession, request_template_data: list[JSOND
 	PyTest Fixture to create POST data for parameters endpoint.
 
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get parameter request template data from a prerequisites file.
+	:param request_template_data: Fixture to get parameter data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
 
@@ -637,7 +637,7 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 	PyTest Fixture to create POST data for server_capabilities endpoint.
 
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get server_capabilities request template data from a prerequisites file.
+	:param request_template_data: Fixture to get server_capabilities data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
 
@@ -645,11 +645,11 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 		server_capabilities = request_template_data[0]
 	except IndexError as e:
 		raise TypeError(
-			"malformed prerequisite data; no server_capabilities present in 'server_capabilities' array property") from e
+			"malformed prerequisite data; no data present in 'server_capabilities' array property") from e
 
 	if not isinstance(server_capabilities, dict):
 		raise TypeError(
-			f"malformed prerequisite data; server_capabilities must be objects, not '{type(server_capabilities)}'")
+			f"malformed prerequisite data; data must be objects, not '{type(server_capabilities)}'")
 
 	# Return new post data and post response from server_capabilities POST request
 	randstr = str(randint(0, 1000))
@@ -662,8 +662,9 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 		raise TypeError(f"missing server_capabilities property '{e.args[0]}'") from e
 
 	logger.info("New server_capabilities data to hit POST method %s", request_template_data)
-	# Hitting cdns POST methed
-	response: tuple[JSONData, requests.Response] = to_session.create_server_capabilities(data=server_capabilities)
+	# Hitting server_capabilities POST method
+	response: tuple[
+		JSONData, requests.Response] = to_session.create_server_capabilities(data=server_capabilities)
 	try:
 		resp_obj = response[0]
 		if not isinstance(resp_obj, dict):

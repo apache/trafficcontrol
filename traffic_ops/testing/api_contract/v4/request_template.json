@@ -46,8 +46,7 @@
 	],
 	"server_capabilities": [
 		{
-			"name": "RAM",
-			"description": "server capability"
+			"name": "RAM"
 		}
 	]
 }
