@@ -28,5 +28,11 @@
 			"configFile": "records.config",
 			"secure": false
 		}
+	],
+	"roles": [
+		{
+			"name": "test",
+			"description": "quest"
+		}
 	]
 }
