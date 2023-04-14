@@ -474,6 +474,54 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 
 
 @pytest.fixture()
+def parameter_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for parameters endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get CDN request template data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	try:
+		parameter = request_template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			"malformed prerequisite data; no Parameters present in 'parameters' array property") from e
+
+	if not isinstance(parameter, dict):
+		raise TypeError(
+			f"malformed prerequisite data; Paremeters must be objects, not '{type(parameter)}'")
+
+	# Return new post data and post response from parameters POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = parameter["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		parameter["name"] = name[:4] + randstr
+		value = parameter["value"]
+		if not isinstance(value, str):
+			raise TypeError(f"value must be str, not '{type(value)}")
+		parameter["value"] = value[:5] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
+
+	logger.info("New parameter data to hit POST method %s", request_template_data)
+	# Hitting cdns POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_parameter(data=parameter)
+	try:
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; parameter is not an object")
+		return resp_obj
+	except IndexError:
+		logger.error("No Parameter response data from parameters POST request.")
+		sys.exit(1)
+
+
+@pytest.fixture()
 def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 			) -> dict[str, object]:
 	"""
