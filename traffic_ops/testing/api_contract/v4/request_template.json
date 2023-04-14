@@ -43,5 +43,11 @@
 			"type": "UNK_PROFILE",
 			"routingDisabled": true
 		}
+	],
+	"server_capabilities": [
+		{
+			"name": "RAM",
+			"description": "server capability"
+		}
 	]
 }

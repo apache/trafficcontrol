@@ -1348,6 +1348,50 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+	#
+	# Server_capabilities
+	#
+	@api_request('get', 'server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def get_server_capabilities(self, query_params=None):
+		"""
+		Get all Server_capabilities.
+		:ref:`to-api-server_capabilities`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('post', 'server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def create_server_capabilities(self, data=None):
+		"""
+		Create Server_capabilities
+		:ref:`to-api-server_capabilities`
+		:param data: The server_capabilities(s) data to use for server_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('put', 'server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def update_server_capabilities(self, query_params=None):
+		"""
+		Update Server_capabilities
+		:ref:`to-api-server_capabilities`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('delete', 'server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_server_capabilities(self, query_params=None):
+		"""
+		Delete server_capabilities
+		:ref:`to-api-server_capabilities`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 	#
 	# Physical Location
