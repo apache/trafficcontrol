@@ -11,6 +11,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fs = require("fs");
+
+let config = {};
+try {
+	config = JSON.parse(fs.readFileSync("./dist/nightwatch/config.json", "utf8"));
+} catch(e) {
+	console.warn("Cannot read config.json");
+	config.tp_url = "http://localhost:4200";
+}
 
 // Refer to the online docs for more details: https://nightwatchjs.org/gettingstarted/configuration/
 const Services = {};
@@ -88,7 +98,7 @@ module.exports = {
 			},
 			disable_error_log: false,
 			enable_fail_fast: true,
-			launch_url: "http://localhost:4200",
+			launch_url: config.tp_url,
 			output_folder: "nightwatch/junit",
 			screenshots: {
 				enabled: true,
