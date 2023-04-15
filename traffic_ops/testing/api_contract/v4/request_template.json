@@ -20,6 +20,28 @@
 			],
 			"typeId": 23
 		}
+	],
+	"parameters": [
+		{
+			"name": "test",
+			"value": "quest",
+			"configFile": "records.config",
+			"secure": false
+		}
+	],
+	"roles": [
+		{
+			"name": "test",
+			"description": "quest"
+		}
+	],
+	"profiles": [
+		{
+			"name": "test",
+			"description": "A test profile for API examples",
+			"cdn": 2,
+			"type": "UNK_PROFILE",
+			"routingDisabled": true
+		}
 	]
 }
-

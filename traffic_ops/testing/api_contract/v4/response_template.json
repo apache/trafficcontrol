@@ -77,6 +77,77 @@
                 "type": "list"
             }
         }
+    },
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "configFile": {
+                "type": "str"
+            },
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            },
+            "profiles": {
+                "type": "list"
+            },
+            "secure": {
+                "type": "bool"
+            },
+            "value": {
+                "type": "str"
+            }
+        }
+    },
+    "roles": {
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "str"
+            },
+            "description": {
+                "type": "str"
+            },
+            "permissions": {
+                "type": "list"
+            },
+            "lastUpdated": {
+                "type": "str"
+            }
+        }
+    },
+    "profiles": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            },
+            "description": {
+                "type": "str"
+            },
+            "cdnName": {
+                "type": "str"
+            },
+            "cdn": {
+                "type": "int"
+            },
+            "routingDisabled": {
+                "type": "bool"
+            },
+            "type": {
+                "type": "str"
+            }
+        }
     }
 }
-
