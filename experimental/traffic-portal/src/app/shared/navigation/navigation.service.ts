@@ -139,12 +139,6 @@ export class NavigationService {
 			name: "Servers"
 		}, {
 			children: [{
-				href: "/core/types",
-				name: "Types"
-			}],
-			name: "Configuration"
-		}, {
-			children: [{
 				href: "/core/users",
 				name: "Users"
 			}, {
