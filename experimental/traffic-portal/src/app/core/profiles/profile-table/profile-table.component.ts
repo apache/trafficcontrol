@@ -13,7 +13,7 @@
 */
 
 import { Component, OnInit } from "@angular/core";
-import { UntypedFormControl } from "@angular/forms";
+import { FormControl, UntypedFormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
@@ -82,7 +82,7 @@ export class ProfileTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl: UntypedFormControl = new UntypedFormControl("");
+	public fuzzControl: UntypedFormControl = new FormControl<string>("", {nonNullable: true});
 
 	/**
 	 * Constructs the component with its required injections.

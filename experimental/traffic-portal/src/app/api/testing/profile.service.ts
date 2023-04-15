@@ -183,7 +183,7 @@ export class ProfileService {
 	public async createProfile(profile: RequestProfile): Promise<ResponseProfile> {
 		const t = {
 			...profile,
-			cdnName: "test",
+			cdnName: null,
 			id: ++this.lastID,
 			lastUpdated: new Date()
 		};
