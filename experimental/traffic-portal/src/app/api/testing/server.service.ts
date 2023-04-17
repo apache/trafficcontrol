@@ -47,13 +47,7 @@ export class ServerService {
 
 	public servers = new Array<ResponseServer>();
 
-	private statuses = [
-		{
-			description: "Sever is administrative down and does not receive traffic.",
-			id: 0,
-			lastUpdated: new Date(),
-			name: "ADMIN_DOWNS"
-		},
+	private readonly statuses: ResponseStatus[] = [
 		{
 			description: "Sever is administrative down and does not receive traffic.",
 			id: 4,
@@ -313,15 +307,16 @@ export class ServerService {
 	/**
 	 * Creates a status.
 	 *
-	 * @param status The status details (name & description) to create.
+	 * @param status The status details (name & description) to create. Description is an optional property in status.
 	 * @returns The status as created and returned by the API.
 	 */
 	public async createStatus(status: RequestStatus): Promise<ResponseStatus> {
 		const newStatus = {
-			...status,
+			description: status.description ? status.description : null,
 			id: ++this.statusIdCounter,
-			lastUpdated: new Date()
-		} as { description: string; id: number; lastUpdated: Date; name: string };
+			lastUpdated: new Date(),
+			name: status.name
+		};
 		this.statuses.push(newStatus);
 		return newStatus;
 	}

@@ -18,6 +18,7 @@ import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
+import { ServerService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -28,6 +29,7 @@ describe("StatusDetailsComponent", () => {
 	let fixture: ComponentFixture<StatusDetailsComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
+	let service: ServerService;
 
 	const navSvc = jasmine.createSpyObj([], { headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>() });
 	beforeEach(async () => {
@@ -46,6 +48,7 @@ describe("StatusDetailsComponent", () => {
 
 		route = TestBed.inject(ActivatedRoute);
 		paramMap = spyOn(route.snapshot.paramMap, "get");
+		service = TestBed.inject(ServerService);
 		paramMap.and.returnValue(null);
 		fixture = TestBed.createComponent(StatusDetailsComponent);
 		component = fixture.componentInstance;
@@ -69,15 +72,16 @@ describe("StatusDetailsComponent", () => {
 	});
 
 	it("existing status", async () => {
-		paramMap.and.returnValue("1");
-
+		const id = 1;
+		paramMap.and.returnValue(id);
+		const status = await service.getStatuses(id);
 		fixture = TestBed.createComponent(StatusDetailsComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.statusDetails).not.toBeNull();
-		expect(component.statusDetails.name).toBe("OFFLINE");
+		expect(component.statusDetails.name).toBe(status.name);
 		expect(component.new).toBeFalse();
 	});
 });
