@@ -95,7 +95,7 @@
     "@typescript-eslint/eslint-plugin": "^5.36.2",
     "@typescript-eslint/parser": "^5.36.2",
     "axios": "^0.27.2",
-    "chromedriver": "^110.0.0",
+    "chromedriver": "^112.0.0",
     "codelyzer": "^6.0.0",
     "eslint": "^8.23.0",
     "eslint-plugin-import": "^2.25.3",
