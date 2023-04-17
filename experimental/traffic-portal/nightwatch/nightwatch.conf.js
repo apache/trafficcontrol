@@ -19,7 +19,10 @@ try {
 	config = JSON.parse(fs.readFileSync("./dist/nightwatch/config.json", "utf8"));
 } catch(e) {
 	console.warn("Cannot read config.json");
-	config.tp_url = "http://localhost:4200";
+	config = {
+		disableColors: false,
+		tp_url: "http://localhost:4200"
+	};
 }
 
 // Refer to the online docs for more details: https://nightwatchjs.org/gettingstarted/configuration/
@@ -96,6 +99,7 @@ module.exports = {
 					]
 				}
 			},
+			disable_colors: config.disableColors,
 			disable_error_log: false,
 			enable_fail_fast: true,
 			launch_url: config.tp_url,

@@ -39,7 +39,6 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         wget \
         GConf2 \
         git \
-        jq \
         java-1.8.0-openjdk \
         net-tools \
         $utils_package && \
@@ -60,8 +59,6 @@ RUN dnf -y install nodejs || ( \
         dnf -y install nodejs \
     )
 
-# Install chromium
-RUN dnf -y install chromium
 
 FROM node-dependencies
 

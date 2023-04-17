@@ -44,7 +44,7 @@ TMOUT
 
 cd /lang/traffic-portal
 
-jq --arg TP_URL $TP_URL --arg TO_URL https://$TO_FQDN:$TO_PORT '.tp_url = $TP_URL | .to_url = $TO_URL' \
+jq --arg TPURL $TP_URL --arg TOURL https://$TO_FQDN:$TO_PORT '.tp_url = $TPURL | .to_url = $TOURL | .disableColors = true' \
 	nightwatch/config.json > config.tmp.json && mv config.tmp.json nightwatch/config.json
 
 npm run e2e:ci
