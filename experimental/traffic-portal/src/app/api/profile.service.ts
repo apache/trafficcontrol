@@ -14,7 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { ResponseProfile } from "trafficops-types";
+import { RequestProfile, ResponseProfile } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -57,4 +57,26 @@ export class ProfileService extends APIService {
 		}
 		return this.get<Array<ResponseProfile>>(path).toPromise();
 	}
+
+	/**
+	 * Creates a new type.
+	 *
+	 * @param profile The type to create.
+	 * @returns The created type.
+	 */
+	public async createProfile(profile: RequestProfile): Promise<ResponseProfile> {
+		return this.post<ResponseProfile>("profiles", profile).toPromise();
+	}
+
+	/**
+	 * Deletes an existing type.
+	 *
+	 * @param profileId Id of the profile to delete.
+	 * @returns The success message.
+	 */
+	public async deleteProfile(profileId: number | ResponseProfile): Promise<ResponseProfile> {
+		const id = typeof (profileId) === "number" ? profileId : profileId.id;
+		return this.delete<ResponseProfile>(`profiles/${id}`).toPromise();
+	}
+
 }
