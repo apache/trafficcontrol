@@ -13,14 +13,14 @@
 */
 
 import { Injectable } from "@angular/core";
-import { ProfileType, type ResponseProfile } from "trafficops-types";
+import { ProfileType, RequestProfile, type ResponseProfile } from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
  */
 @Injectable()
 export class ProfileService {
-
+	private lastID = 10;
 	private readonly profiles: ResponseProfile[] = [
 		{
 			cdn: 1,
@@ -173,4 +173,36 @@ export class ProfileService {
 			})
 		);
 	}
+
+	/**
+	 * Creates a new profile.
+	 *
+	 * @param profile The profile to create.
+	 * @returns The created profile.
+	 */
+	public async createProfile(profile: RequestProfile): Promise<ResponseProfile> {
+		const t = {
+			...profile,
+			cdnName: null,
+			id: ++this.lastID,
+			lastUpdated: new Date()
+		};
+		this.profiles.push(t);
+		return t;
+	}
+
+	/**
+	 * Deletes an existing profile.
+	 *
+	 * @param id Id of the profile to delete.
+	 * @returns The success message.
+	 */
+	public async deleteProfile(id: number): Promise<ResponseProfile> {
+		const index = this.profiles.findIndex(t => t.id === id);
+		if (index === -1) {
+			throw new Error(`no such Type: ${id}`);
+		}
+		return this.profiles.splice(index, 1)[0];
+	}
+
 }
