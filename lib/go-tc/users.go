@@ -127,7 +127,7 @@ type UserToken struct {
 	Token string `json:"t"`
 }
 
-// commonUserFields is unexported, but its contents are still visible when it is embedded
+// commonUserFields contents are still visible when it is embedded
 // LastUpdated is a new field for some structs.
 type commonUserFields struct {
 	AddressLine1    *string    `json:"addressLine1" db:"address_line1"`
@@ -470,11 +470,6 @@ func (u *CurrentUserUpdateRequestUser) UnmarshalAndValidate(user *User) error {
 
 	return util.JoinErrs(errs)
 }
-
-// ------------------- Response structs -------------------- //
-//  Response structs should only be used in the client       //
-//  The client's use of these will eventually be deprecated  //
-// --------------------------------------------------------- //
 
 // UsersResponse can hold a Traffic Ops API response to a request to get a list of users.
 type UsersResponse struct {

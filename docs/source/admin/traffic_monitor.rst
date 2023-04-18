@@ -79,6 +79,7 @@ traffic_monitor.cfg
 - ``health.polling.interval``
 - ``peers.polling.interval``
 - ``heartbeat.polling.interval``
+- ``tm.sameipservers.enabled`` - When set to true, performs an AND operation on the availability statuses of servers with same ip. Any unavailable server(s) with same ip as other server(s) will cause the other server(s) to be set to unavailable.
 
 Upon receiving this configuration, Traffic Monitor begins polling :term:`cache server` s. Once every :term:`cache server` has been polled, :ref:`health-proto` state is available via RESTful JSON endpoints and a web browser UI.
 

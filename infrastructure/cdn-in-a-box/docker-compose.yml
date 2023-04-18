@@ -99,7 +99,7 @@ services:
     volumes:
       - shared:/shared
 
-  trafficportal-v2:
+  trafficportalv2:
     build:
       context: .
       dockerfile: traffic_portal_v2/Dockerfile
