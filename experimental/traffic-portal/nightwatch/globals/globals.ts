@@ -32,6 +32,7 @@ import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deli
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
 import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceInvalidationJobs";
 import type { LoginPageObject } from "nightwatch/page_objects/login";
+import type { ProfilePageObject } from "nightwatch/page_objects/profiles/profilesTable";
 import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
 import type { PhysLocTablePageObject } from "nightwatch/page_objects/servers/physLocTable";
 import type { ServersPageObject } from "nightwatch/page_objects/servers/servers";
@@ -39,7 +40,6 @@ import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeL
 import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
 import type { UsersPageObject } from "nightwatch/page_objects/users/users";
-import type { ProfilePageObject } from "nightwatch/page_objects/profiles/profilesTable";
 import {
 	CDN,
 	GeoLimit,
