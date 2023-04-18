@@ -60,6 +60,7 @@ import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
+import { ProfileDetailComponent } from './profiles/profile-detail/profile-detail.component';
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
@@ -90,6 +91,7 @@ export const ROUTES: Routes = [
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
 	{ component: ISOGenerationFormComponent, path: "iso-gen"},
+	{ component: ProfileDetailComponent, path: "profiles/:id"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -132,6 +134,7 @@ export const ROUTES: Routes = [
 		TypeDetailComponent,
 		ISOGenerationFormComponent,
 		CDNDetailComponent,
+  		ProfileDetailComponent,
 	],
 	exports: [],
 	imports: [
