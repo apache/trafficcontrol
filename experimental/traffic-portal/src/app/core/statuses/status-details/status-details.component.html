@@ -15,6 +15,10 @@ limitations under the License.
     <tp-loading *ngIf="loading"></tp-loading>
     <form [formGroup]="statusDetailsForm" (ngSubmit)="onSubmit($event)" *ngIf="!loading">
         <mat-card-content>
+            <mat-form-field *ngIf="!new">
+				<mat-label>ID</mat-label>
+				<input matInput type="text" name="id" disabled readonly [defaultValue]="statusDetails.id" />
+			</mat-form-field>
             <mat-form-field>
                 <mat-label>Name</mat-label>
                 <input matInput type="text" name="name" required formControlName="name">
@@ -23,6 +27,10 @@ limitations under the License.
                 <mat-label>Description</mat-label>
                 <input matInput type="text" name="description" formControlName="description">
             </mat-form-field>
+            <mat-form-field *ngIf="!new">
+				<mat-label>Last Updated</mat-label>
+				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="statusDetails.lastUpdated" />
+			</mat-form-field>
         </mat-card-content>
         <mat-card-actions align="end">
             <button mat-raised-button type="button" color="warn" (click)="deleteStatus()" *ngIf="!new">Delete</button>
