@@ -113,6 +113,8 @@ declare module "nightwatch" {
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;
+		};
+		statuses: {
 			statusesTable: () => StatusesTablePageObject;
 			statusDetail: () => StatusDetailPageObject;
 		};
