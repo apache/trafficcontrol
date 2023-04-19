@@ -403,7 +403,7 @@ const globals = {
 			};
 			url = `${apiUrl}/statuses`;
 			resp = await client.post(url, JSON.stringify(status));
-			const respStatus: ResponseProfile = resp.data.response;
+			const respStatus: ResponseStatus = resp.data.response;
 			console.log(`Successfully created Profile ${respStatus.name}`);
 			data.statuses = respStatus;
 
