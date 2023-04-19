@@ -13,7 +13,7 @@
 */
 
 import { ComponentFixture, TestBed, fakeAsync, tick } from "@angular/core/testing";
-import { MatDialog, MatDialogModule, type MatDialogRef } from "@angular/material/dialog";
+import { MatDialog, MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { of } from "rxjs";

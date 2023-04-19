@@ -52,8 +52,7 @@ if (environment.customModule) {
 @NgModule({
 	exports: [RouterModule],
 	imports: [RouterModule.forRoot(routes, {
-		initialNavigation: "enabledNonBlocking",
-		relativeLinkResolution: "legacy"
+		initialNavigation: "enabledNonBlocking"
 	})],
 })
 export class AppRoutingModule { }

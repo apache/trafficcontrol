@@ -15,7 +15,7 @@ import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { MatDialog, MatDialogModule, MatDialogRef } from "@angular/material/dialog";
-import { MatDialogHarness } from "@angular/material/dialog/testing";
+import { MatLegacyDialogHarness as MatDialogHarness } from "@angular/material/legacy-dialog/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";

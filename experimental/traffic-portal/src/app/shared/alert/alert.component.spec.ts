@@ -14,8 +14,8 @@
 import type { HarnessLoader } from "@angular/cdk/testing";
 import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { TestBed, type ComponentFixture } from "@angular/core/testing";
+import { MatLegacySnackBarHarness as MatSnackBarHarness}  from "@angular/material/legacy-snack-bar/testing";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
-import { MatSnackBarHarness}  from "@angular/material/snack-bar/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { AlertLevel } from "trafficops-types";
 

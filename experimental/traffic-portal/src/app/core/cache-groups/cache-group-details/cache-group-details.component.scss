@@ -33,11 +33,20 @@ mat-card mat-card-content .pair {
 
 /* This is roughly the point where 350px is 80% of the viewport. */
 @media(max-width:440px) {
+	/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
+	/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
 	mat-card {
 		min-width: unset;
 		width: 100%;
 		form {
 			min-width: 100%;
+			/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
 			mat-card-content {
 				margin: 1em auto;
 				.pair {

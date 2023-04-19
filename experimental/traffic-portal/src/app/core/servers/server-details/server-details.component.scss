@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 
-.mat-card {
+.mat-mdc-card {
 	width: fit-content;
 	margin: 15px auto auto;
 	min-width: 685px;
@@ -107,7 +107,9 @@ form {
 			input {
 				margin-left: 5px;
 			}
-
+			/*
+TODO(mdc-migration): The following rule targets internal classes of checkbox that may no longer apply for the MDC version.
+*/
 			mat-checkbox {
 				margin: auto;
 			}

@@ -132,11 +132,17 @@ mat-horizontal-stepper {
 	height: 100%;
 }
 
+/*
+TODO(mdc-migration): The following rule targets internal classes of radio that may no longer apply for the MDC version.
+*/
 mat-radio-group {
 	display: flex;
 	flex-direction: column;
 }
 
+/*
+TODO(mdc-migration): The following rule targets internal classes of radio that may no longer apply for the MDC version.
+*/
 mat-radio-button {
 	margin: 15px auto 0 7px;
 }

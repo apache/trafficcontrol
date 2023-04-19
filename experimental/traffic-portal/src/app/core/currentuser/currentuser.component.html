@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card>
+<mat-card appearance="outlined">
 	<mat-card-content *ngIf="currentUser && !editMode">
 		<h1><span *ngIf=currentUser.fullName>{{currentUser.fullName}}, </span>{{currentUser.role}} user</h1>
 		<address>

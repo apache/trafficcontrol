@@ -16,6 +16,9 @@
 	margin: auto;
 }
 
+/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
 mat-card {
 	width: fit-content;
 	min-width: 50%;
@@ -38,6 +41,9 @@ mat-card {
 }
 // Low-res monitors
 @media(max-width: 1230px) {
+	/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
 	mat-card > div {
 		width: 75%;
 	}
@@ -45,6 +51,9 @@ mat-card {
 
 // Anything less than this is probably a phone
 @media(max-width: 630px) {
+	/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
 	mat-card > div {
 		width: 75%;
 		margin: auto;
@@ -59,6 +68,9 @@ mat-card {
 }
 
 @media(max-width: 480px) {
+	/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
 	mat-card > div {
 		left: 7px;
 		width: calc(100vw - 4em);

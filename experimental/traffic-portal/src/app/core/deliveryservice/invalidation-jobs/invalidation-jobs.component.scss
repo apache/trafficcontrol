@@ -21,12 +21,20 @@
 h2 {
 	text-align: center;
 }
+/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
+/*
+TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
+*/
 mat-card {
 	width: fit-content;
 	min-width: 50%;
 	margin: 1em auto;
 	min-height: 50px;
-
+	/*
+TODO(mdc-migration): The following rule targets internal classes of list that may no longer apply for the MDC version.
+*/
 	mat-list-item {
 		div.invalidation-job {
 			width: 100%;
