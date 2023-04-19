@@ -401,7 +401,7 @@ const globals = {
 				description: "blah",
 				name: `status${globals.uniqueString}`,
 			};
-			url = `${apiUrl}/profiles`;
+			url = `${apiUrl}/statuses`;
 			resp = await client.post(url, JSON.stringify(status));
 			const respStatus: ResponseProfile = resp.data.response;
 			console.log(`Successfully created Profile ${respStatus.name}`);
