@@ -47,6 +47,7 @@ type ServiceCategoriesResponseV50 struct {
 }
 
 // ServiceCategoryResponseV50 is a single Service Category response for Update and Create to
+// depict what changed.
 type ServiceCategoryResponseV50 struct {
 	Response ServiceCategoryV50 `json:"response"`
 	Alerts
@@ -58,6 +59,15 @@ type ServiceCategoryV50 struct {
 	Name        string    `json:"name" db:"name"`
 }
 
+// ServiceCategoriesResponseV5 is the type of a response from the service_categories
+// Traffic Ops endpoint.
+// It always points to the type for the latest minor version of ServiceCategoriesResponseV5x APIv5.
 type ServiceCategoriesResponseV5 = ServiceCategoriesResponseV50
+
+// ServiceCategoryResponseV5 is the type of a response from the service_categories
+// Traffic Ops endpoint.
+// It always points to the type for the latest minor version of ServiceCategoryResponseV5x APIv5.
 type ServiceCategoryResponseV5 = ServiceCategoryResponseV50
+
+// ServiceCategoryV5 always points to the type for the latest minor version of serviceCategoryV5x APIv5.
 type ServiceCategoryV5 = ServiceCategoryV50

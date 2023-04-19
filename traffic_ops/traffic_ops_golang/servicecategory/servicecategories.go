@@ -212,12 +212,14 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var maxTime time.Time
-	var err error
+	var usrErr error
+	var syErr error
+
 	var scList []tc.ServiceCategoryV5
 
 	tx := inf.Tx
 
-	scList, maxTime, code, err = GetServiceCategory(tx, inf.Params, useIMS, r.Header)
+	scList, maxTime, code, usrErr, syErr = GetServiceCategory(tx, inf.Params, useIMS, r.Header)
 	if code == http.StatusNotModified {
 		w.WriteHeader(code)
 		api.WriteResp(w, r, []tc.ServiceCategoryV5{})
@@ -225,12 +227,12 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if code == http.StatusBadRequest {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, usrErr, nil)
 		return
 	}
 
-	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(err.Error()))
+	if sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, syErr)
 		return
 	}
 
@@ -242,7 +244,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetServiceCategory [Version : V5] receives transactions from Get function and returns service_categories list.
-func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.ServiceCategoryV5, time.Time, int, error) {
+func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.ServiceCategoryV5, time.Time, int, error, error) {
 	var runSecond bool
 	var maxTime time.Time
 	scList := []tc.ServiceCategoryV5{}
@@ -258,14 +260,14 @@ func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, head
 	}
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs)
+		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
 	}
 
 	if useIMS {
 		runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
 		if !runSecond {
 			log.Debugln("IMS HIT")
-			return scList, maxTime, http.StatusNotModified, nil
+			return scList, maxTime, http.StatusNotModified, nil, nil
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -274,19 +276,19 @@ func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, head
 	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, time.Time{}, http.StatusInternalServerError, err
+		return nil, time.Time{}, http.StatusInternalServerError, nil, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
 		sc := tc.ServiceCategoryV5{}
 		if err = rows.Scan(&sc.Name, &sc.LastUpdated); err != nil {
-			return nil, time.Time{}, http.StatusInternalServerError, err
+			return nil, time.Time{}, http.StatusInternalServerError, nil, err
 		}
 		scList = append(scList, sc)
 	}
 
-	return scList, maxTime, http.StatusOK, nil
+	return scList, maxTime, http.StatusOK, nil, nil
 }
 
 // TryIfModifiedSinceQuery [Version : V5] function receives transactions and header from GetServiceCategory function and returns bool value if status is not modified.
@@ -316,13 +318,13 @@ func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, quer
 	query := imsQuery + where
 	rows, err := tx.NamedQuery(query, queryValues)
 
+	if errors.Is(err, sql.ErrNoRows) {
+		return dontRunSecond, max
+	}
+
 	if err != nil {
 		log.Warnf("Couldn't get the max last updated time: %v", err)
 		return runSecond, max
-	}
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return dontRunSecond, max
 	}
 
 	defer rows.Close()
@@ -479,8 +481,10 @@ func DeleteServiceCategory(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("no rows deleted for service_category"))
 		return
 	}
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "service_category was deleted.")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, name)
+
+	alertMessage := fmt.Sprintf("Service Category %s was deleted.", name)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
 	return
 }
 

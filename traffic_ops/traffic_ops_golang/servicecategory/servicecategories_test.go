@@ -135,7 +135,7 @@ func TestGetServiceCategory(t *testing.T) {
 		rows.AddRow("testObj1", lastUpdated.AddDate(0, 0, -5))
 		mock.ExpectQuery("SELECT name, last_updated FROM service_category").WithArgs().WillReturnRows(rows)
 
-		_, _, code, _ := GetServiceCategory(db.MustBegin(), params, testData[i].useIms, header)
+		_, _, code, _, _ := GetServiceCategory(db.MustBegin(), params, testData[i].useIms, header)
 
 		if testData[i].expected != code {
 			t.Errorf("Expected status code result doesn't match, got: %v; expected: %v", code, testData[i].expected)
