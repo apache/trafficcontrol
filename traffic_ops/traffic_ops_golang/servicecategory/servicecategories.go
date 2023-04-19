@@ -482,7 +482,7 @@ func DeleteServiceCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alertMessage := fmt.Sprintf("Service Category %s was deleted.", name)
+	alertMessage := fmt.Sprintf("%s was deleted.", name)
 	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
 	return
