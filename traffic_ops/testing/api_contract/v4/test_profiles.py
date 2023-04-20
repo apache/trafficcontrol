@@ -16,6 +16,7 @@
 import logging
 import pytest
 import requests
+from jsonschema import validate
 
 from trafficops.tosession import TOSession
 
@@ -24,7 +25,6 @@ logger = logging.getLogger()
 
 primitive = bool | int | float | str | None
 
-@pytest.mark.parametrize('request_template_data', ['profiles'], indirect=True)
 def test_profile_contract(
 	to_session: TOSession,
 	request_template_data: list[dict[str, object] | list[object] | primitive],
@@ -43,7 +43,7 @@ def test_profile_contract(
 	# validate Profile keys from profiles get response
 	logger.info("Accessing /profiles endpoint through Traffic ops session.")
 
-	profile = request_template_data[0]
+	profile = request_template_data["profiles"][0]
 	if not isinstance(profile, dict):
 		raise TypeError("malformed profile in prerequisite data; not an object")
 
@@ -63,39 +63,16 @@ def test_profile_contract(
 		first_profile = profile_data[0]
 		if not isinstance(first_profile, dict):
 			raise TypeError("malformed API response; first Profile in response is not an object")
-		profile_keys = set(first_profile.keys())
-
-		logger.info("Profile Keys from profiles endpoint response %s", profile_keys)
 		profile_response_template = response_template_data.get("profiles")
 		if not isinstance(profile_response_template, dict):
 			raise TypeError(
 				f"Profile response template data must be a dict, not '{type(profile_response_template)}'")
-		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
-			dict[object, object] |\
-			primitive
-		]
-		response_template = profile_response_template.get("properties")
-		# validate profile values from prereq data in profiles get response.
-		prereq_values = [
-			profile_post_data["name"],
-			profile_post_data["cdn"]
-		]
-		get_values = [first_profile["name"], first_profile["cdn"]]
-		get_types = {}
-		for key, value in first_profile.items():
-			get_types[key] = type(value).__name__
-		logger.info("Types from profile get response %s", get_types)
-		response_template_types= {}
-		for key, value in response_template.items():
-			actual_type = value.get("type")
-			if not isinstance(actual_type, str):
-				raise TypeError(
-					f"Type data must be a string, not '{type(actual_type)}'")
-			response_template_types[key] = actual_type
-		logger.info("Types from profile response template %s", response_template_types)
 
-		assert profile_keys == set(response_template.keys())
-		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
+		# validate profile values from prereq data in profiles get response.
+		prereq_values = [profile_post_data["name"], profile_post_data["cdn"]]
+		get_values = [first_profile["name"], first_profile["cdn"]]
+
+		assert validate(instance=first_profile, schema=profile_response_template) == None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")

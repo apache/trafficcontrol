@@ -1361,6 +1361,15 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request('post', 'phys_locations', ('3.0', '4.0', '4.1', '5.0'))
+	def create_physical_locations(self, data=None):
+		"""
+		Get Physical Locations.
+		:ref:`to-api-phys_locations`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	@api_request('put', 'phys_locations/{physical_location_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_physical_location(self, physical_location_id=None, query_params=None):
 		"""
@@ -1952,6 +1961,15 @@ class TOSession(RestApiSession):
 	def get_types(self, query_params=None):
 		"""
 		Get Data Types.
+		:ref:`to-api-types`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('post', 'types', ('3.0', '4.0', '4.1', '5.0'))
+	def create_type(self, data=None):
+		"""
+		Create Data Types.
 		:ref:`to-api-types`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
