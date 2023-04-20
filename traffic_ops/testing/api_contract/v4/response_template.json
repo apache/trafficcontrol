@@ -149,5 +149,19 @@
                 "type": "str"
             }
         }
+    },
+    "divisions": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            }
+        }
     }
 }

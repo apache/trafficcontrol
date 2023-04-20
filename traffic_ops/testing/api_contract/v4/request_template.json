@@ -43,5 +43,11 @@
 			"type": "UNK_PROFILE",
 			"routingDisabled": true
 		}
+
+	],
+	"divisions":[
+		{
+			"name":"test"
+		}
 	]
 }

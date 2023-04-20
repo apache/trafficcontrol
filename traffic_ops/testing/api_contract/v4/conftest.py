@@ -628,3 +628,46 @@ def profile_post_data(to_session: TOSession, request_template_data: list[JSONDat
 	except IndexError:
 		logger.error("No Profile response data from cdns POST request.")
 		sys.exit(1)
+
+@pytest.fixture()
+def division_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for divisions endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get divisions request template data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	try:
+		division = request_template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			"malformed prerequisite data; no status present in 'status' array property") from e
+
+	if not isinstance(division, dict):
+		raise TypeError(
+			f"malformed prerequisite data; status must be objects, not '{type(division)}'")
+
+	# Return new post data and post response from status POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = division["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		division["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
+
+	logger.info("New division data to hit POST method %s", request_template_data)
+	# Hitting sdivision POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_division(data=division)
+	try:
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; division is not an object")
+		return resp_obj
+	except IndexError:
+		logger.error("No division response data from division POST request.")
+		sys.exit(1)		
