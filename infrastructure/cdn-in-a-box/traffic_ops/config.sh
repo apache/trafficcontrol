@@ -75,9 +75,8 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
 >"$cdn_conf" echo "$(jq -s '.[0] * .[1]' "$cdn_conf" <(cat <<-EOF
 {
     "hypnotoad" : {
-        "listen" : [
-            "https://[::]?cert=$crt&key=$key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
-        ]
+        "cert" : $crt,
+        "key": $key
     },
     "disable_auto_cert_deletion": false,
     "use_ims": true,

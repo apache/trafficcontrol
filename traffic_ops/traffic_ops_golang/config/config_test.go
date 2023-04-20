@@ -89,14 +89,8 @@ const (
 	goodConfig = `
 {
 	"hypnotoad" : {
-		"listen" : [
-			"https://[::]:60443?cert=/etc/pki/tls/certs/localhost.crt&key=/etc/pki/tls/private/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
-		],
-		"user" : "trafops",
-		"group" : "trafops",
-		"heartbeat_timeout" : 20,
-		"pid_file" : "/var/run/traffic_ops.pid",
-		"workers" : 12
+		"cert": "/etc/pki/tls/certs/localhost.crt",
+		"key": "/etc/pki/tls/private/localhost.key"
 	},
 	"user_cache_refresh_interval_sec": 30,
 	"server_update_status_cache_refresh_interval_sec": 15,

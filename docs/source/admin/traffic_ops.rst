@@ -343,14 +343,10 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	.. seealso:: :ref:`tp-tools-generate-iso`
 
-:hypnotoad: This is a group of options that mainly no longer have any meaning..
+:hypnotoad: This is a group of options that consists of cert and key..
 
-	:group:             Serves no known purpose anymore.
-	:heartbeat_timeout: Serves no known purpose anymore.
-	:listen:            This must always be an array containing a single string. This very odd string is apparently a URL. The scheme of the URL doesn't matter, as `traffic_ops_golang`_ ignores that and always uses HTTPS. The host (and optionally port) of the URL used to have a purpose, but no longer does. The "cert" query parameter sets the location of the SSL certificate to use for encrypting connections, while the "key" query parameter is the certificate's corresponding private key. The default configuration file also has the "verify" query parameter which serves no known purpose anymore.
-	:pid_file:          Serves no known purpose anymore.
-	:user:              Serves no known purpose anymore.
-	:workers:           Serves no known purpose anymore.
+	:cert:            The "cert" query parameter sets the location of the SSL certificate to use for encrypting connections.
+	:key:             The "key" query parameter is the certificate's corresponding private key.
 
 :inactivity_timeout: Serves no known purpose anymore.
 :influxdb_conf_path: An optional field which gives `traffic_ops_golang`_ the absolute or relative path to an `influxdb.conf`_ file. Default if not specified is to first check if the :envvar:`MOJO_MODE` environment variable is set. If it is, then Traffic Ops will look in the current working directory for a subdirectory named ``conf/``, then inside that for a subdirectory with the name that is the value of the :envvar:`MOJO_MODE` variable, and inside that directory for a file named ``influxdb.conf``. If :envvar:`MOJO_MODE` is *not* set, then Traffic Ops will look for a file named ``influxdb.conf`` in the same directory as this ``cdn.conf`` file.
@@ -731,7 +727,8 @@ You will need to update `cdn.conf`_ with any necessary changes.
 	:caption: Sample 'listen' Line When Path to ``trafficops.crt`` and ``trafficops.key`` are Known
 
 	'hypnotoad' => ...
-		'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
+		'cert' => '/etc/pki/tls/certs/trafficops.crt'
+		'key' => '/etc/pki/tls/private/trafficops.key'
 		...
 
 .. _admin-to-ext-script:

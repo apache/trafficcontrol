@@ -53,17 +53,25 @@ sub checkCdnConf {
 		$conf = decode_json(scalar <$fh>);
 	}
 
-	my $listen = $conf->{hypnotoad}{listen}[0];
+	my $key_conf = $conf->{hypnotoad}{key};
+	my $cert_conf = $conf->{hypnotoad}{cert};
 	my $msg;
 
-	if (!defined $listen) {
+	if (!defined $cert_conf) {
 		my $msg = <<"EOF";
-	The "listen" portion of $cdn_conf is missing from $cdn_conf.
+	The "cert" portion of $cdn_conf is missing from $cdn_conf.
 	Please ensure it contains the same structure as the one originally installed.
 EOF
 	}
 
-	if ($listen !~ m@cert=$cert@ || $listen !~ m@key=$key@) {
+	if (!defined $key_conf) {
+		my $msg = <<"EOF";
+	The "key" portion of $cdn_conf is missing from $cdn_conf.
+	Please ensure it contains the same structure as the one originally installed.
+EOF
+	}
+
+	if ($cert_conf !~ m@cert=$cert@ || $key_conf !~ m@key=$key@) {
 		$msg = << "EOF";
 	The "listen" portion of $cdn_conf is:
 	$listen

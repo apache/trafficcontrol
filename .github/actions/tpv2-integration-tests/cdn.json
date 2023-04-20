@@ -1,13 +1,7 @@
 {
 	"hypnotoad": {
-		"listen": [
-			"https://not-a-real-host.test:1?cert=$GITHUB_WORKSPACE/traffic_ops/traffic_ops_golang/localhost.crt&key=$GITHUB_WORKSPACE/traffic_ops/traffic_ops_golang/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
-		],
-		"user": "trafops",
-		"group": "trafops",
-		"heartbeat_timeout": 20,
-		"pid_file": "/var/run/traffic_ops.pid",
-		"workers": 12
+		"key" : "/etc/pki/tls/private/localhost.key",
+		"cert" : "/etc/pki/tls/certs/localhost.crt"
 	},
 	"disable_auto_cert_deletion": false,
 	"use_ims": true,
