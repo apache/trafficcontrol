@@ -320,6 +320,12 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:renew_days_before_expiration: Set the number of days before expiration date to renew certificates.
 	:summary_email: The email address to use for summarizing certificate expiration and renewal status. If it is blank, no email will be sent.
 
+:client_certificate_authentication: This is an optional section of configurations client provided certificate based authentication. However, if ``"ClientAuth" : "1"``` is enabled in the ``tls_config`` section in ``traffic_ops_golang``, then this field is required.
+
+	.. versionadded:: 7.0
+
+	:root_certificates_directory: A string representing the absolute path of the directory where Root CA certificates are located. These Root CA certificates are used for verifying the certificate provided by the client. 
+
 :default_certificate_info: This is an optional object to define default values when generating a self signed certificate when an HTTPS delivery service is created or updated. If this is an empty object or not present in the :ref:`cdn.conf` then the term "Placeholder" will be used for all fields.
 
  	:business_unit: An optional field which, if present, will represent the business unit for which the SSL certificate was generated
@@ -516,7 +522,6 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	.. warning:: Enabling the server update status cache improves performance by reducing the number of queries made to the Traffic Ops database, but it means that it may take up to this many seconds before any server updates or revalidations are reflected in the :ref:`to-api-servers-hostname-update_status` API.
 
 	.. versionadded:: 7.0
-
 
 Example cdn.conf
 ''''''''''''''''

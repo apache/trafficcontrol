@@ -108,135 +108,184 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 </html>
 `))
 
+// LoginHandler first attempts to verify and parse user information from an optionally
+// provided client TLS certificate. If it fails at any point, it will fall back and
+// continue with the standard submitted form authentication.
 func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
 		authenticated := false
 		form := auth.PasswordForm{}
-		if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
-			api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
-			return
-		}
-		if form.Username == "" || form.Password == "" {
-			api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("username and password are required"), nil)
-			return
-		}
-		resp := struct {
-			tc.Alerts
-		}{}
+		var resp tc.Alerts
 		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 		defer cancelTx()
-		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, dbCtx)
-		if blockingErr != nil {
-			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
-			return
+
+		// Attempt to perform client certificate authentication. If fails, goto standard form auth. If the
+		// certificate was verified, has a UID, and the UID matches an existing user we consider this to
+		// be a successful login.
+		{
+			// No certs provided by the client. Skip to form authentication
+			if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
+				goto FormAuth
+			}
+
+			// If no configuration is set, skip to form auth
+			if cfg.ClientCertAuth == nil || len(cfg.ClientCertAuth.RootCertsDir) == 0 {
+				goto FormAuth
+			}
+
+			// Perform certificate verification to ensure it is valid against Root CAs
+			err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir)
+			if err != nil {
+				log.Warnf("ClientCertAuth: error attempting to verify client provided TLS certificate. err: %s\n", err)
+				goto FormAuth
+			}
+
+			// Client provided a verified certificate. Extract UID value.
+			form.Username = auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0])
+			if len(form.Username) == 0 {
+				log.Infoln("ClientCertAuth: client provided certificate did not contain a UID object identifier or value")
+				goto FormAuth
+			}
+
+			// Check if user exists locally (TODB) and has a role.
+			var blockingErr error
+			authenticated, err, blockingErr = auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
+			if blockingErr != nil {
+				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user has role: %s", blockingErr.Error()))
+				return
+			}
+			if err != nil {
+				log.Warnf("ClientCertAuth: checking local user: %s\n", err.Error())
+			}
+
+			// Check LDAP if enabled
+			if !authenticated && cfg.LDAPEnabled {
+				_, authenticated, err = auth.LookupUserDN(form.Username, cfg.ConfigLDAP)
+				if err != nil {
+					log.Warnf("ClientCertAuth: checking ldap user: %s\n", err.Error())
+				}
+			}
 		}
-		if err != nil {
-			log.Errorf("checking local user: %s\n", err.Error())
-		}
-		if userAllowed {
+
+	FormAuth:
+		// Failed certificate-based auth, perform standard form auth
+		if !authenticated {
+			// Perform form authentication
+			if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
+				return
+			}
+			if form.Username == "" || form.Password == "" {
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("username and password are required"), nil)
+				return
+			}
+
+			// Check if user exists and has a role
+			userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
+			if blockingErr != nil {
+				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user has role: %s", blockingErr.Error()))
+				return
+			}
+			if err != nil {
+				log.Errorf("checking local user: %s\n", err.Error())
+			}
+
+			// User w/ role does not exist, return unauthorized
+			if !userAllowed {
+				resp = tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")
+				w.WriteHeader(http.StatusUnauthorized)
+				api.WriteRespRaw(w, r, resp)
+				return
+			}
+
+			// Check local DB or LDAP
 			authenticated, err, blockingErr = auth.CheckLocalUserPassword(form, db, dbCtx)
 			if blockingErr != nil {
-				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
+				api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s", blockingErr.Error()))
 				return
 			}
 			if err != nil {
 				log.Errorf("checking local user password: %s\n", err.Error())
 			}
 			var ldapErr error
-			if !authenticated {
-				if cfg.LDAPEnabled {
-					authenticated, ldapErr = auth.CheckLDAPUser(form, cfg.ConfigLDAP)
-					if ldapErr != nil {
-						log.Errorf("checking ldap user: %s\n", ldapErr.Error())
-					}
+			if !authenticated && cfg.LDAPEnabled {
+				authenticated, ldapErr = auth.CheckLDAPUser(form, cfg.ConfigLDAP)
+				if ldapErr != nil {
+					log.Errorf("checking ldap user: %s\n", ldapErr.Error())
 				}
 			}
-			if authenticated {
-				httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
-				http.SetCookie(w, httpCookie)
-
-				var jwtToken jwt.Token
-				var jwtSigned []byte
-				jwtBuilder := jwt.NewBuilder()
-
-				emptyConf := config.CdniConf{}
-				if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
-					ucdn, err := auth.GetUserUcdn(form, db, dbCtx)
-					if err != nil {
-						// log but do not error out since this is optional in the JWT for CDNi integration
-						log.Errorf("getting ucdn for user %s: %v", form.Username, err)
-					}
-					jwtBuilder.Claim("iss", ucdn)
-					jwtBuilder.Claim("aud", cfg.Cdni.DCdnId)
-				}
-
-				jwtBuilder.Claim("exp", httpCookie.Expires.Unix())
-				jwtBuilder.Claim(api.MojoCookie, httpCookie.Value)
-				jwtToken, err = jwtBuilder.Build()
-				if err != nil {
-					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("building token: %s", err))
-					return
-				}
-
-				jwtSigned, err = jwt.Sign(jwtToken, jwa.HS256, []byte(cfg.Secrets[0]))
-				if err != nil {
-					api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
-					return
-				}
-
-				http.SetCookie(w, &http.Cookie{
-					Name:     api.AccessToken,
-					Value:    string(jwtSigned),
-					Path:     "/",
-					MaxAge:   httpCookie.MaxAge,
-					Expires:  httpCookie.Expires,
-					HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
-				})
-
-				// If all's well until here, then update last authenticated time
-				tx, txErr := db.BeginTx(dbCtx, nil)
-				if txErr != nil {
-					api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("beginning transaction: %w", txErr))
-					return
-				}
-				defer func() {
-					if err := tx.Commit(); err != nil && err != sql.ErrTxDone {
-						log.Errorln("committing transaction: " + err.Error())
-					}
-				}()
-				_, dbErr := tx.Exec(UpdateLoginTimeQuery, form.Username)
-				if dbErr != nil {
-					log.Errorf("unable to update authentication time for a given user: %s\n", dbErr.Error())
-					resp = struct {
-						tc.Alerts
-					}{tc.CreateAlerts(tc.ErrorLevel, "Unable to update authentication time for a given user")}
-				} else {
-					resp = struct {
-						tc.Alerts
-					}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
-				}
-
-			} else {
-				resp = struct {
-					tc.Alerts
-				}{tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")}
-			}
-		} else {
-			resp = struct {
-				tc.Alerts
-			}{tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")}
 		}
-		respBts, err := json.Marshal(resp)
+
+		// Failed to authenticate in either local DB or LDAP, return unauthorized
+		if !authenticated {
+			resp = tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")
+			w.WriteHeader(http.StatusUnauthorized)
+			api.WriteRespRaw(w, r, resp)
+			return
+		}
+
+		// Successful authentication, write cookie and return
+		httpCookie := tocookie.GetCookie(form.Username, defaultCookieDuration, cfg.Secrets[0])
+		http.SetCookie(w, httpCookie)
+
+		var jwtToken jwt.Token
+		var jwtSigned []byte
+		jwtBuilder := jwt.NewBuilder()
+
+		emptyConf := config.CdniConf{}
+		if cfg.Cdni != nil && *cfg.Cdni != emptyConf {
+			ucdn, err := auth.GetUserUcdn(form, db, dbCtx)
+			if err != nil {
+				// log but do not error out since this is optional in the JWT for CDNi integration
+				log.Errorf("getting ucdn for user %s: %v", form.Username, err)
+			}
+			jwtBuilder.Claim("iss", ucdn)
+			jwtBuilder.Claim("aud", cfg.Cdni.DCdnId)
+		}
+
+		jwtBuilder.Claim("exp", httpCookie.Expires.Unix())
+		jwtBuilder.Claim(api.MojoCookie, httpCookie.Value)
+		jwtToken, err := jwtBuilder.Build()
+		if err != nil {
+			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("building token: %s", err))
+			return
+		}
+
+		jwtSigned, err = jwt.Sign(jwtToken, jwa.HS256, []byte(cfg.Secrets[0]))
 		if err != nil {
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 			return
 		}
-		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
-		if !authenticated {
-			w.WriteHeader(http.StatusUnauthorized)
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     api.AccessToken,
+			Value:    string(jwtSigned),
+			Path:     "/",
+			MaxAge:   httpCookie.MaxAge,
+			Expires:  httpCookie.Expires,
+			HttpOnly: true, // prevents the cookie being accessed by Javascript. DO NOT remove, security vulnerability
+		})
+
+		// If all's well until here, then update last authenticated time
+		tx, txErr := db.BeginTx(dbCtx, nil)
+		if txErr != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("beginning transaction: %w", txErr))
+			return
 		}
-		fmt.Fprintf(w, "%s", respBts)
+		defer func() {
+			if err := tx.Commit(); err != nil && err != sql.ErrTxDone {
+				log.Errorln("committing transaction: " + err.Error())
+			}
+		}()
+		_, dbErr := tx.Exec(UpdateLoginTimeQuery, form.Username)
+		if dbErr != nil {
+			log.Errorf("unable to update authentication time for a given user: %s\n", dbErr.Error())
+		}
+
+		resp = tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")
+		w.WriteHeader(http.StatusOK)
+		api.WriteRespRaw(w, r, resp)
 	}
 }
 
@@ -445,7 +494,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 		defer cancelTx()
-		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form, db, dbCtx)
+		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
 		if blockingErr != nil {
 			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 			return
