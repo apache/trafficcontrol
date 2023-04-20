@@ -12,17 +12,16 @@
 * limitations under the License.
 */
 div {
-	display: inline-flex;
+	display: grid;
+	grid-template-columns: 1fr min-content;
 	width: 100%;
-	align-items: center;
-
-	button {
-		margin-bottom: 1em;
-		flex: 0;
-		min-width: 40px;
-	}
+	height: 24px;
 
 	input {
-		flex: 1;
+		height: 24px;
+	}
+
+	button {
+		transform: translateY(-20px);
 	}
 }

@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { CommonModule } from "@angular/common";
+import { CommonModule, NgOptimizedImage } from "@angular/common";
 import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { MatMenuModule } from "@angular/material/menu";
@@ -81,7 +81,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		AppUIModule,
 		CommonModule,
 		RouterModule,
-		MatMenuModule
+		MatMenuModule,
+		NgOptimizedImage
 	],
 	providers: [
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },

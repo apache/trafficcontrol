@@ -11,19 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-/*
-TODO(mdc-migration): The following rule targets internal classes of dialog that may no longer apply for the MDC version.
-*/
-mat-dialog-actions {
+.mat-mdc-dialog-actions {
 	display: inline-flex;
 	justify-content: space-between;
 	width: 100%;
 }
 
-/*
-TODO(mdc-migration): The following rule targets internal classes of dialog that may no longer apply for the MDC version.
-*/
-mat-dialog-content {
+.mat-mdc-dialog-content {
 	display: grid;
 	grid-template-areas: "a a"
 	                     "b c";
@@ -42,10 +36,7 @@ mat-dialog-content {
 }
 
 @media(max-width: 630px) {
-	/*
-TODO(mdc-migration): The following rule targets internal classes of dialog that may no longer apply for the MDC version.
-*/
-	mat-dialog-content {
+	.mat-mdc-dialog-content {
 		grid-template-areas: "a"
 		                     "b"
 		                     "c";

@@ -19,19 +19,13 @@ ag-grid-angular {
 }
 
 @media(max-width: 1230px) {
-	/*
-TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
-*/
-	mat-card > div {
+	.mat-mdc-card > div {
 		width: 75%
 	}
 }
 
 @media(max-width: 630px) {
-	/*
-TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
-*/
-	mat-card > div {
+	.mat-mdc-card > div {
 		width: 75%;
 		margin: auto;
 		position: fixed;
@@ -45,10 +39,7 @@ TODO(mdc-migration): The following rule targets internal classes of card that ma
 }
 
 @media(max-width: 480px) {
-	/*
-TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
-*/
-	mat-card > div {
+	.mat-mdc-card > div {
 		left: 7px;
 		width: calc(100vw - 4em);
 	}

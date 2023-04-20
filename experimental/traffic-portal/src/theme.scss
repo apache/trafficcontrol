@@ -137,7 +137,6 @@
 			row-hover-color: map-get($background, hover),
 			selected-row-background-color: map-get($background, hover),
 			odd-row-background-color: map-get($ag-grid, odd-row-background-color),
-			borders: map-get($ag-grid, borders)
 		));
 	}
 }

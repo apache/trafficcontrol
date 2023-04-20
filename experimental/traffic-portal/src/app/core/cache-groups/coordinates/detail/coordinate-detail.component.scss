@@ -11,20 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-/*
-TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
-*/
-/*
-TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
-*/
-mat-card {
+.mat-mdc-card {
 	margin: 1em auto;
 	width: 80%;
 	min-width: 350px;
-	/*
-TODO(mdc-migration): The following rule targets internal classes of card that may no longer apply for the MDC version.
-*/
-	mat-card-content {
+	.mat-mdc-card-content {
 		display: grid;
 		grid-template-columns: 1fr;
 		grid-row-gap: 2em;

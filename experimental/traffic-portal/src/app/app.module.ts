@@ -18,6 +18,7 @@
  * `ng generate` to create new things (and then fix formatting/missing license)
  */
 
+import { NgOptimizedImage } from "@angular/common";
 import { HttpClientModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
@@ -65,13 +66,14 @@ Chart.plugins.register({
 		ResetPasswordDialogComponent
 	],
 	imports: [
-		BrowserModule.withServerTransition({ appId: "serverApp" }),
+		BrowserModule.withServerTransition({appId: "serverApp"}),
 		BrowserAnimationsModule,
 		AppRoutingModule,
 		HttpClientModule,
 		AppUIModule,
 		SharedModule,
-		APIModule
+		APIModule,
+		NgOptimizedImage
 	],
 	providers: [
 		AuthenticatedGuard

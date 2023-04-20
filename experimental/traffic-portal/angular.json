@@ -175,7 +175,7 @@
 					"builder": "@nightwatch/schematics:nightwatch",
 					"options": {
 						"devServerTarget": "traffic-portal:serve",
-						"tsConfig": "./tsconfig.e2e.json",
+						"tsConfig": "./nightwatch/tsconfig.e2e.json",
 						"config": "./nightwatch/nightwatch.conf.js"
 					},
 					"configurations": {
@@ -188,7 +188,7 @@
 					"builder": "@nightwatch/schematics:nightwatch",
 					"options": {
 						"devServerTarget": "traffic-portal:serve",
-						"tsConfig": "./tsconfig.e2e.json",
+						"tsConfig": "./nightwatch/tsconfig.e2e.json",
 						"config": "./nightwatch/nightwatch.conf.js"
 					},
 					"configurations": {

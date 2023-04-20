@@ -13,11 +13,11 @@ limitations under the License.
 -->
 <mat-card appearance="outlined">
 	<mat-card-header>
-		<img src="assets/logo.svg" alt="Apache Traffic Control logo"/>
+		<img ngSrc="assets/logo.svg" alt="Apache Traffic Control logo" height="16" width="16"/>
 		<h1>Traffic Portal</h1>
 	</mat-card-header>
-	<mat-card-content>
-		<form name="login" (ngSubmit)="submitLogin()" ngNativeValidate>
+	<form name="login" (ngSubmit)="submitLogin()" ngNativeValidate>
+		<mat-card-content>
 			<mat-form-field appearance="fill">
 				<mat-label>Username</mat-label>
 				<input matInput required autofocus type="text" [(ngModel)]="u" name="u"/>
@@ -26,11 +26,11 @@ limitations under the License.
 				<mat-label>Password</mat-label>
 				<tp-obscured-text-input [autocomplete]="passwordAutocomplete" required="true" [(value)]="p" name="p"></tp-obscured-text-input>
 			</mat-form-field>
-			<div>
-				<button name="login" mat-raised-button color="primary" type="submit">Login</button>
-				<button name="clear" mat-raised-button color="warn" type="reset">Clear</button>
-				<button name="reset" mat-button color="accent" type="button" (click)="resetPassword()">Forgot Password</button>
-			</div>
-		</form>
-	</mat-card-content>
+		</mat-card-content>
+		<mat-card-actions>
+			<button name="login" mat-raised-button color="primary" type="submit">Login</button>
+			<button name="clear" mat-raised-button color="warn" type="reset">Clear</button>
+			<button name="reset" mat-button color="accent" type="button" (click)="resetPassword()">Forgot Password</button>
+		</mat-card-actions>
+	</form>
 </mat-card>

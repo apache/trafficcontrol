@@ -15,9 +15,9 @@
 import { HarnessLoader } from "@angular/cdk/testing";
 import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatButtonHarness } from "@angular/material/button/testing";
 import { MatDialogModule } from "@angular/material/dialog";
-import { MatLegacyButtonHarness as MatButtonHarness } from "@angular/material/legacy-button/testing";
-import { MatLegacyDialogHarness as MatDialogHarness } from "@angular/material/legacy-dialog/testing";
+import { MatDialogHarness } from "@angular/material/dialog/testing";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
