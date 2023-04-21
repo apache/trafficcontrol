@@ -1374,16 +1374,6 @@ class TOSession(RestApiSession):
 		"""
 
 
-	@api_request('put', 'server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
-	def update_server_capabilities(self, query_params=None):
-		"""
-		Update Server_capabilities
-		:ref:`to-api-server_capabilities`
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
-
-
 	@api_request('delete', 'server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_server_capabilities(self, query_params=None):
 		"""
