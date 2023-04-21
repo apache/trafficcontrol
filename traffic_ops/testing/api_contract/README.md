@@ -27,7 +27,33 @@ In order to run the tests you will need a running instance of Traffic Ops and Tr
 
 1. Follow the instructions for building and running Traffic Ops from docs.
 
-2. Install the requirements for testing API contract tests.
+2. Make sure you don't have the published Apache TrafficControl
+
+   ```console
+   pip uninstall Apache-TrafficControl
+   ```
+
+3. Install packages via setup.py under traffic_control/clients/python/setup.py
+   
+   ```console
+   sudo python3 setup.py install
+   ```
+
+4. Install local Apache Traffic Control under trafficcontrol root directory
+
+   ```console
+   pip install traffic_control/clients/python
+   ```
+
+5. Make sure a build is generated under traffic_control/clients/python
+
+6. set the PYTHONPATH environment variable to that directory (replacing the absolute path with your own):
+
+   ```console
+   export PYTHONPATH=/absolute/path/to/your/repo/trafficcontrol/traffic_control/clients/python/build/lib
+   ```
+
+7. Install the requirements under traffic_ops/testing/api_contract/v4/requirements.txt.
 
     ```console
     pip install -r /path/to/requirements.txt
