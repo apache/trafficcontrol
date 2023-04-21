@@ -17,6 +17,7 @@ from setuptools import setup
 setup(
     name='trafficcontrol',
     version='1.0.0',
+    py_modules= [],
     install_requires=[
     'Apache-TrafficControl @ file:///os.path.abspath(os.getcwd())/traffic_control/clients/python',
     'pytest==7.2.1'
