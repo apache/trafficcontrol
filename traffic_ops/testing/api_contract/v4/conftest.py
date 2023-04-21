@@ -636,7 +636,8 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	PyTest Fixture to create POST data for divisions endpoint.
 
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get divisions request template data from reqest_template file.
+	:param request_template_data: Fixture to get divisions request template data from
+	request_template file.
 	:returns: Sample POST data and the actual API response.
 	"""
 
@@ -671,3 +672,4 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	except IndexError:
 		logger.error("No division response data from division POST request.")
 		sys.exit(1)
+		
