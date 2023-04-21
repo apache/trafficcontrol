@@ -13,9 +13,7 @@
 #
 
 """API Contract Test Case for divisions endpoint."""
-import json
 import logging
-import os
 import pytest
 import requests
 
@@ -66,7 +64,7 @@ def test_division_contract(
 		division_keys = set(first_division.keys())
 
 		logger.info("division Keys from divisions endpoint response %s", division_keys)
-		response_template = response_template_data.get("division").get("properties")
+		response_template = response_template_data.get("divisions").get("properties")
 		# validate division values from prereq data in divisions get response.
 		prereq_values = [
 			division_post_data["name"]]
@@ -94,4 +92,3 @@ def test_division_contract(
 		except IndexError:
 			logger.error("division returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_get_division")
-

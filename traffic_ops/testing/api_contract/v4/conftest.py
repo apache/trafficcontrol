@@ -636,7 +636,7 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	PyTest Fixture to create POST data for divisions endpoint.
 
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get divisions request template data from a prerequisites file.
+	:param request_template_data: Fixture to get divisions request template data from reqest_template file.
 	:returns: Sample POST data and the actual API response.
 	"""
 
@@ -644,13 +644,13 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 		division = request_template_data[0]
 	except IndexError as e:
 		raise TypeError(
-			"malformed prerequisite data; no status present in 'status' array property") from e
+			"malformed prerequisite data; no division present in 'division' array property") from e
 
 	if not isinstance(division, dict):
 		raise TypeError(
-			f"malformed prerequisite data; status must be objects, not '{type(division)}'")
+			f"malformed prerequisite data; divisions must be objects, not '{type(division)}'")
 
-	# Return new post data and post response from status POST request
+	# Return new post data and post response from division POST request
 	randstr = str(randint(0, 1000))
 	try:
 		name = division["name"]
@@ -661,7 +661,7 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
 
 	logger.info("New division data to hit POST method %s", request_template_data)
-	# Hitting sdivision POST methed
+	# Hitting division POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_division(data=division)
 	try:
 		resp_obj = response[0]
@@ -670,4 +670,4 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 		return resp_obj
 	except IndexError:
 		logger.error("No division response data from division POST request.")
-		sys.exit(1)		
+		sys.exit(1)
