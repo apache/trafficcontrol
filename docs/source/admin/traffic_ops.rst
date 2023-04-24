@@ -324,7 +324,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	.. versionadded:: 7.0
 
-	:root_certificates_directory: A string representing the absolute path of the directory where Root CA certificates are located. These Root CA certificates are used for verifying the certificate provided by the client. 
+	:root_certificates_directory: A string representing the absolute path of the directory where Root CA certificates are located. These Root CA certificates are used for verifying the certificate provided by the client.
 
 :default_certificate_info: This is an optional object to define default values when generating a self signed certificate when an HTTPS delivery service is created or updated. If this is an empty object or not present in the :ref:`cdn.conf` then the term "Placeholder" will be used for all fields.
 
