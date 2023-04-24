@@ -153,7 +153,7 @@ func loadRootCerts(dirPath string) error {
 			return nil
 		})
 	if err != nil {
-		return fmt.Errorf("failed to load root certs from path %s. err: %w", dirPath, err)
+		return fmt.Errorf("failed to load root certs from path %s. err: %s", dirPath, err)
 	}
 
 	return nil
