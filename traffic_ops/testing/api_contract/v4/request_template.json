@@ -49,5 +49,12 @@
 		{
 			"name":"test"
 		}
-	]
+	],
+	"regions": [
+		{
+			"divisionName": "Quebec",
+        	"division": 1,
+        	"name": "Montreal"
+		}
+	]		
 }

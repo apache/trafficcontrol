@@ -672,4 +672,55 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	except IndexError:
 		logger.error("No division response data from division POST request.")
 		sys.exit(1)
-		
+
+@pytest.fixture()
+def region_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for regions endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get regions request template data from
+	request_template file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	try:
+		region = request_template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			"malformed prerequisite data; no region present in 'regions' array property") from e
+
+	if not isinstance(region, dict):
+		raise TypeError(
+			f"malformed prerequisite data; regions must be objects, not '{type(region)}'")
+
+	# Return new post data and post response from region POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = region["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		region["name"] = name[:4] + randstr
+		division = region["division"]
+		if not isinstance(name, str):
+			raise TypeError(f"division must be int, not '{type(division)}'")
+		region["division"] = division[:4] + randstr
+		divisionName = region["divisionName"]
+		if not isinstance(name, str):
+			raise TypeError(f"divisionName must be str, not '{type(divisionName)}'")
+		region["divisionName"] = divisionName[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
+
+	logger.info("New region data to hit POST method %s", request_template_data)
+	# Hitting region POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_region(data=region)
+	try:
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; region is not an object")
+		return resp_obj
+	except IndexError:
+		logger.error("No region response data from region POST request.")
+		sys.exit(1)		
