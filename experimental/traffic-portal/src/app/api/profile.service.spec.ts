@@ -76,6 +76,36 @@ describe("ProfileService", () => {
 		await expectAsync(responseP).toBeResolvedTo(profile);
 	});
 
+	it("creates new Profiles", async () => {
+		const responseP = service.createProfile(profile);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBe(profile);
+		req.flush({response: profile});
+		await expectAsync(responseP).toBeResolvedTo(profile);
+	});
+
+	it("deletes existing Profiles", async () => {
+		const responseP = service.deleteProfile(profile);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles/${profile.id}`);
+		expect(req.request.method).toBe("DELETE");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBeNull();
+		req.flush({response: profile});
+		await expectAsync(responseP).toBeResolvedTo(profile);
+	});
+
+	it("deletes an existing Profile by ID", async () => {
+		const responseP = service.deleteProfile(profile.id);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles/${profile.id}`);
+		expect(req.request.method).toBe("DELETE");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBeNull();
+		req.flush({response: profile});
+		await expectAsync(responseP).toBeResolvedTo(profile);
+	});
+
 	afterEach(() => {
 		httpTestingController.verify();
 	});
