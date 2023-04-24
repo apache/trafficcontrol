@@ -1,19 +1,11 @@
 {
-	"hypnotoad": {
-		"listen": [
-			"https://not-a-real-host.test:1?cert=$PWD/localhost.crt&key=$PWD/localhost.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
-		],
-		"user": "trafops",
-		"group": "trafops",
-		"heartbeat_timeout": 20,
-		"pid_file": "/var/run/traffic_ops.pid",
-		"workers": 12
-	},
 	"disable_auto_cert_deletion": false,
 	"use_ims": true,
 	"role_based_permissions": true,
 	"traffic_ops_golang": {
 		"insecure": true,
+		"cert" : "/etc/pki/tls/certs/localhost.crt",
+		"key" : "/etc/pki/tls/private/localhost.key",
 		"port": "6443",
 		"log_location_error": "traffic.ops.log",
 		"log_location_warning": "traffic.ops.log",

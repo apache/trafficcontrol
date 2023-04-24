@@ -208,12 +208,12 @@ func main() {
 
 	go func() {
 		if cfg.KeyPath == "" {
-			log.Errorf("key cannot be blank in %s", cfg.ConfigHypnotoad.Listen)
+			log.Errorf("key cannot be blank in %s", cfg.Key)
 			os.Exit(1)
 		}
 
 		if cfg.CertPath == "" {
-			log.Errorf("cert cannot be blank in %s", cfg.ConfigHypnotoad.Listen)
+			log.Errorf("cert cannot be blank in %s", cfg.Cert)
 			os.Exit(1)
 		}
 

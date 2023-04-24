@@ -74,10 +74,6 @@ fi;
 cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
 >"$cdn_conf" echo "$(jq -s '.[0] * .[1]' "$cdn_conf" <(cat <<-EOF
 {
-    "hypnotoad" : {
-        "cert" : $crt,
-        "key": $key
-    },
     "disable_auto_cert_deletion": false,
     "use_ims": true,
     "server_update_status_cache_refresh_interval_sec": 0,
@@ -97,6 +93,8 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
             "query_timeout_seconds": ${DEBUGGING_TIMEOUT:-60},
             "aes_key_location": "$TV_AES_KEY_LOCATION"
         },
+        "cert" : $crt,
+        "key" : $key,
         "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},

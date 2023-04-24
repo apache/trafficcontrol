@@ -53,8 +53,8 @@ sub checkCdnConf {
 		$conf = decode_json(scalar <$fh>);
 	}
 
-	my $key_conf = $conf->{hypnotoad}{key};
-	my $cert_conf = $conf->{hypnotoad}{cert};
+	my $key_conf = $conf->{key};
+	my $cert_conf = $conf->{cert};
 	my $msg;
 
 	if (!defined $cert_conf) {

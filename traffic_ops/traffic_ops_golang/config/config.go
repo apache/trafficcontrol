@@ -70,7 +70,6 @@ type Config struct {
 	URL                                       *url.URL `json:"-"`
 	CertPath                                  string   `json:"-"`
 	KeyPath                                   string   `json:"-"`
-	ConfigHypnotoad                           `json:"hypnotoad"`
 	ConfigTrafficOpsGolang                    `json:"traffic_ops_golang"`
 	ConfigTO                                  *ConfigTO   `json:"to"`
 	SMTP                                      *ConfigSMTP `json:"smtp"`
@@ -98,17 +97,14 @@ type Config struct {
 	ClientCertAuth                            *ClientCertAuth         `json:"client_certificate_authentication"`
 }
 
-// ConfigHypnotoad carries http setting for hypnotoad (mojolicious) server
-type ConfigHypnotoad struct {
-	Listen []string `json:"listen"`
-	// NOTE: don't care about any other fields for now
-}
-
 // ConfigTrafficOpsGolang carries settings specific to traffic_ops_golang server
 type ConfigTrafficOpsGolang struct {
 	// Deprecated in 5.0
 	Insecure bool `json:"insecure"`
 	// end deprecated
+	//Moved from Hypnotoad-listen section
+	Cert                     string                     `json:"cert"`
+	Key                      string                     `json:"key"`
 	Port                     string                     `json:"port"`
 	ProxyTimeout             int                        `json:"proxy_timeout"`
 	ProxyKeepAlive           int                        `json:"proxy_keep_alive"`
@@ -463,6 +459,12 @@ const (
 // ParseConfig validates required fields, and parses non-JSON types
 func ParseConfig(cfg Config) (Config, error) {
 	missings := ""
+	if cfg.Cert == "" {
+		missings += `"cert", `
+	}
+	if cfg.Key == "" {
+		missings += `"key", `
+	}
 	if cfg.Port == "" {
 		missings += "port, "
 	}
@@ -500,21 +502,11 @@ func ParseConfig(cfg Config) (Config, error) {
 		cfg.ServerUpdateStatusCacheRefreshIntervalSec = 0
 	}
 
-	invalidTOURLStr := ""
-	var err error
-	if len(cfg.Listen) < 1 {
-		missings += `"listen", `
-	} else {
-		listen := cfg.Listen[0]
-		if cfg.URL, err = url.Parse(listen); err != nil {
-			invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
-		}
-		cfg.KeyPath = cfg.GetKeyPath()
-		cfg.CertPath = cfg.GetCertPath()
+	cfg.KeyPath = cfg.GetKeyPath()
+	cfg.CertPath = cfg.GetCertPath()
 
-		newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
-		cfg.URL = &newURL
-	}
+	newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
+	cfg.URL = &newURL
 
 	if cfg.ConfigTO == nil {
 		missings += "to, "
@@ -535,11 +527,8 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 
 	errStr := missings
-	if errStr != "" && invalidTOURLStr != "" {
-		errStr += "; "
-	}
-	errStr += invalidTOURLStr
 	if errStr != "" {
+		errStr += "; "
 		return Config{}, fmt.Errorf(errStr)
 	}
 

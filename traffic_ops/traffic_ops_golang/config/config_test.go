@@ -40,8 +40,7 @@ const (
 var debugLogging = flag.Bool("debug", false, "enable debug logging in test")
 
 var cfg = Config{
-	URL:             nil,
-	ConfigHypnotoad: ConfigHypnotoad{},
+	URL: nil,
 	ConfigTrafficOpsGolang: ConfigTrafficOpsGolang{
 		LogLocationError:   logError,
 		LogLocationWarning: logWarning,
@@ -88,14 +87,12 @@ func tempFileWith(content []byte) (string, error) {
 const (
 	goodConfig = `
 {
-	"hypnotoad" : {
-		"cert": "/etc/pki/tls/certs/localhost.crt",
-		"key": "/etc/pki/tls/private/localhost.key"
-	},
 	"user_cache_refresh_interval_sec": 30,
 	"server_update_status_cache_refresh_interval_sec": 15,
 	"disable_auto_cert_deletion": true,
 	"traffic_ops_golang" : {
+		"cert": "/etc/pki/tls/certs/localhost.crt",
+		"key": "/etc/pki/tls/private/localhost.key",
 		"port" : "443",
 		"proxy_timeout" : 60,
 		"proxy_keep_alive" : 60,

@@ -1,13 +1,11 @@
 {
-	"hypnotoad": {
-		"key" : "/etc/pki/tls/private/localhost.key",
-		"cert" : "/etc/pki/tls/certs/localhost.crt"
-	},
 	"disable_auto_cert_deletion": false,
 	"use_ims": true,
 	"role_based_permissions": true,
 	"traffic_ops_golang": {
 		"insecure": true,
+		"cert" : "/etc/pki/tls/certs/localhost.crt",
+		"key" : "/etc/pki/tls/private/localhost.key",
 		"port": "6443",
 		"log_location_error": "stderr",
 		"log_location_warning": "stderr",
