@@ -33,6 +33,9 @@ services:
   trafficportalv2:
     ports:
       - "8443:443"
+  tpv2_analytics:
+    ports:
+      - "4243:443"
   trafficportal:
     ports:
       - "443:443"
