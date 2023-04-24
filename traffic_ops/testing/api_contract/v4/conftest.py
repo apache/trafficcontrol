@@ -454,8 +454,8 @@ def create_or_get_existing(to_session: TOSession, get_object_type: str, post_obj
 def check_template_data(template_data: list[JSONData] | tuple[JSONData, requests.Response],
 			name: str) -> dict[str, object]:
 	"""
-	Checks API request/reposne template data.
-	:param request_template_data: Fixture to get profile data from a prerequisites file.
+	Checks API request/response template data.
+	:param template_data: Fixture to get template data from a prerequisites file.
 	:param name: Endpoint name
 	:returns: Verified endpoint data
 	"""
