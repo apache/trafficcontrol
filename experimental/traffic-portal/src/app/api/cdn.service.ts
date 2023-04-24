@@ -144,8 +144,11 @@ export class CDNService extends APIService {
 		return this.put<ResponseCDN>(`cdns/${id}`, body).toPromise();
 	}
 
-	/*
+	/**
 	 * Queues or dequeues updates on a CDN's servers.
+	 *
+	 * @param cdn The CDN to queue or dequeue updates on.
+	 * @param action The action to perform on the CDN, either "queue" or "dequeue".
 	 */
 	public async queueCDNUpdates(cdn: ResponseCDN, action: "queue" | "dequeue"): Promise<CDNQueueResponse> {
 		const path = `cdns/${cdn.id}/queue_update`;
