@@ -140,7 +140,8 @@ func loadRootCerts(dirPath string) error {
 			}
 			certificate, err := x509.ParseCertificate(pemBlock.Bytes)
 			if err != nil {
-				return fmt.Errorf("failed to parse PEM into x509. err: %w", err)
+				log.Errorf("failed to parse PEM into x509. err: %s", err)
+				return nil
 			}
 
 			if rootPool == nil {
