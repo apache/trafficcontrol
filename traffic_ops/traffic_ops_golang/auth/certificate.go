@@ -27,6 +27,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"path/filepath"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 // ParseCertificate takes a http.Request, pulls the (optionally) provided client TLS
@@ -114,6 +116,16 @@ func loadRootCerts(dirPath string) error {
 			// Don't traverse nested directories
 			if file.IsDir() {
 				return filepath.SkipDir
+			}
+
+			if info, err := file.Info(); err != nil {
+				return fmt.Errorf("getting info for file %s: %s", file.Name(), err)
+			} else if groupWritable := fs.FileMode(020); info.Mode().Perm()&groupWritable == groupWritable {
+				log.Errorf("refusing to use group-writable file err: %s", err)
+				return nil
+			} else if worldWritable := fs.FileMode(002); info.Mode().Perm()&worldWritable == worldWritable {
+				log.Errorf("refusing to use world-writable file err: %s", err)
+				return nil
 			}
 
 			// Read file
