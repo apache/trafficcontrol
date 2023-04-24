@@ -37,7 +37,7 @@ func TestServiceCategories(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServiceCategory]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServiceCategoryV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -103,12 +103,12 @@ func TestServiceCategories(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody:   tc.ServiceCategory{Name: "serviceCategory1"},
+					RequestBody:   tc.ServiceCategoryV5{Name: "serviceCategory1"},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when NAME FIELD is BLANK": {
 					ClientSession: TOSession,
-					RequestBody:   tc.ServiceCategory{Name: ""},
+					RequestBody:   tc.ServiceCategoryV5{Name: ""},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
@@ -116,7 +116,7 @@ func TestServiceCategories(t *testing.T) {
 				"OK when VALID request": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"name": {"barServiceCategory2"}}},
-					RequestBody:   tc.ServiceCategory{Name: "newName"},
+					RequestBody:   tc.ServiceCategoryV5{Name: "newName"},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServiceCategoriesUpdateCreateFields("newName", map[string]interface{}{"Name": "newName"})),
 				},
@@ -126,12 +126,12 @@ func TestServiceCategories(t *testing.T) {
 						QueryParameters: url.Values{"name": {"serviceCategory1"}},
 						Header:          http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}},
 					},
-					RequestBody:  tc.ServiceCategory{Name: "newName"},
+					RequestBody:  tc.ServiceCategoryV5{Name: "newName"},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					ClientSession: TOSession,
-					RequestBody:   tc.ServiceCategory{Name: "newName"},
+					RequestBody:   tc.ServiceCategoryV5{Name: "newName"},
 					RequestOpts: client.RequestOptions{
 						QueryParameters: url.Values{"name": {"serviceCategory1"}},
 						Header:          http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}},
@@ -196,7 +196,7 @@ func TestServiceCategories(t *testing.T) {
 func validateServiceCategoriesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Service Categories response to not be nil.")
-		serviceCategoryResp := resp.([]tc.ServiceCategory)
+		serviceCategoryResp := resp.([]tc.ServiceCategoryV5)
 		for field, expected := range expectedResp {
 			for _, serviceCategory := range serviceCategoryResp {
 				switch field {
@@ -223,7 +223,7 @@ func validateServiceCategoriesUpdateCreateFields(name string, expectedResp map[s
 
 func validateServiceCategoriesPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.ServiceCategory)
+		paginationResp := resp.([]tc.ServiceCategoryV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
@@ -247,7 +247,7 @@ func validateServiceCategoriesSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Service Categories response to not be nil.")
 		var serviceCategoryNames []string
-		serviceCategoryResp := resp.([]tc.ServiceCategory)
+		serviceCategoryResp := resp.([]tc.ServiceCategoryV5)
 		for _, serviceCategory := range serviceCategoryResp {
 			serviceCategoryNames = append(serviceCategoryNames, serviceCategory.Name)
 		}
@@ -258,7 +258,7 @@ func validateServiceCategoriesSort() utils.CkReqFunc {
 func validateServiceCategoriesDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Service Categories response to not be nil.")
-		serviceCategoriesDescResp := resp.([]tc.ServiceCategory)
+		serviceCategoriesDescResp := resp.([]tc.ServiceCategoryV5)
 		var descSortedList []string
 		var ascSortedList []string
 		assert.RequireGreaterOrEqual(t, len(serviceCategoriesDescResp), 2, "Need at least 2 Service Categories in Traffic Ops to test desc sort, found: %d", len(serviceCategoriesDescResp))

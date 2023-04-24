@@ -23,15 +23,20 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/jmoiron/sqlx"
 )
 
 type TOServiceCategory struct {
@@ -186,4 +191,318 @@ WHERE name=$2 RETURNING last_updated`
 
 func deleteQuery() string {
 	return `DELETE FROM service_category WHERE name=:name`
+}
+
+// Get [Version : V5] function Process the *http.Request and writes the response. It uses GetServiceCategory function.
+func Get(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	code := http.StatusOK
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+
+	var maxTime time.Time
+	var usrErr error
+	var syErr error
+
+	var scList []tc.ServiceCategoryV5
+
+	tx := inf.Tx
+
+	scList, maxTime, code, usrErr, syErr = GetServiceCategory(tx, inf.Params, useIMS, r.Header)
+	if code == http.StatusNotModified {
+		w.WriteHeader(code)
+		api.WriteResp(w, r, []tc.ServiceCategoryV5{})
+		return
+	}
+
+	if code == http.StatusBadRequest {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, usrErr, nil)
+		return
+	}
+
+	if sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, syErr)
+		return
+	}
+
+	if maxTime != (time.Time{}) && api.SetLastModifiedHeader(r, useIMS) {
+		api.AddLastModifiedHdr(w, maxTime)
+	}
+
+	api.WriteResp(w, r, scList)
+}
+
+// GetServiceCategory [Version : V5] receives transactions from Get function and returns service_categories list.
+func GetServiceCategory(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.ServiceCategoryV5, time.Time, int, error, error) {
+	var runSecond bool
+	var maxTime time.Time
+	scList := []tc.ServiceCategoryV5{}
+
+	selectQuery := `SELECT name, last_updated FROM service_category as sc`
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"name": {Column: "sc.name", Checker: nil},
+	}
+	if _, ok := params["orderby"]; !ok {
+		params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+	}
+
+	if useIMS {
+		runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return scList, maxTime, http.StatusNotModified, nil, nil
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+	query := selectQuery + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, time.Time{}, http.StatusInternalServerError, nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		sc := tc.ServiceCategoryV5{}
+		if err = rows.Scan(&sc.Name, &sc.LastUpdated); err != nil {
+			return nil, time.Time{}, http.StatusInternalServerError, nil, err
+		}
+		scList = append(scList, sc)
+	}
+
+	return scList, maxTime, http.StatusOK, nil, nil
+}
+
+// TryIfModifiedSinceQuery [Version : V5] function receives transactions and header from GetServiceCategory function and returns bool value if status is not modified.
+func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
+	var max time.Time
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
+	runSecond := true
+	dontRunSecond := false
+
+	if header == nil {
+		return runSecond, max
+	}
+
+	imsDateHeader = header[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
+		return runSecond, max
+	}
+
+	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
+		return runSecond, max
+	}
+
+	imsQuery := `SELECT max(last_updated) as t from service_category sc`
+	query := imsQuery + where
+	rows, err := tx.NamedQuery(query, queryValues)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return dontRunSecond, max
+	}
+
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := time.Time{}
+		if err = rows.Scan(&v); err != nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+			return runSecond, max
+		}
+
+		max = v
+		// The request IMS time is later than the max of (lastUpdated, deleted_time)
+		if imsDate.After(v) {
+			return dontRunSecond, max
+		}
+	}
+	return runSecond, max
+}
+
+// CreateServiceCategory [Version : V5] function creates the service category with the passed name.
+func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	sc, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if service category already exists
+	var exists bool
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * from service_category where name = $1)`, sc.Name).Scan(&exists)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if service category with name %s exists", err, sc.Name))
+		return
+	}
+	if exists {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("service category name '%s' already exists.", sc.Name), nil)
+		return
+	}
+
+	// create service category
+	query := `INSERT INTO service_category (name) VALUES ($1) RETURNING name, last_updated`
+	err = tx.QueryRow(query, sc.Name).Scan(&sc.Name, &sc.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating service category with name: %s", err, sc.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "service category was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/service_category?name=%s", inf.Version.Major, inf.Version.Minor, sc.Name))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
+	return
+}
+
+// UpdateServiceCategory [Version : V5] function updates the name of the service category passed.
+func UpdateServiceCategory(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	sc, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	requestedName := inf.Params["name"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedName, "service_category")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	//update name of a service category
+	query := `UPDATE service_category sc SET
+		name = $1
+	WHERE sc.name = $2
+	RETURNING sc.name, sc.last_updated`
+
+	err := tx.QueryRow(query, sc.Name, requestedName).Scan(&sc.Name, &sc.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("service category with name: %s not found", requestedName), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "service category was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
+	return
+}
+
+// DeleteServiceCategory [Version : V5] function deletes the service category passed.
+func DeleteServiceCategory(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	name := inf.Params["name"]
+	exists, err := dbhelpers.ServiceCategoryExists(tx, name)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no service category exists for name: %s", name), nil)
+		return
+
+	}
+
+	assignedDeliveryService := 0
+	if err := inf.Tx.Get(&assignedDeliveryService, "SELECT count(service_category) FROM deliveryservice d WHERE d.service_category=$1", name); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("service category delete, counting assigned Delivery Service(s): %w", err))
+		return
+	} else if assignedDeliveryService != 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a service category with %d assigned Delivery Service(s)", assignedDeliveryService), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM service_category AS sc WHERE sc.name=$1", name)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete service_category: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("no rows deleted for service_category"))
+		return
+	}
+
+	alertMessage := fmt.Sprintf("%s was deleted.", name)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+func readAndValidateJsonStruct(r *http.Request) (tc.ServiceCategoryV5, error) {
+	var sc tc.ServiceCategoryV5
+	if err := json.NewDecoder(r.Body).Decode(&sc); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into ServiceCategoryV5 struct %w", err)
+		return sc, userErr
+	}
+
+	// validate JSON body
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name": validation.Validate(sc.Name, validation.Required, rule),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return sc, userErr
+	}
+	return sc, nil
 }
