@@ -435,18 +435,18 @@ func LoadConfig(cdnConfPath string, dbConfPath string, appVersion string) (Confi
 
 // GetCertPath - extracts path to cert .cert file
 func (c Config) GetCertPath() string {
-	v, ok := c.URL.Query()["cert"]
-	if ok {
-		return v[0]
+	cert := c.Cert
+	if cert != "" {
+		return cert
 	}
 	return ""
 }
 
 // GetKeyPath - extracts path to cert .key file
 func (c Config) GetKeyPath() string {
-	v, ok := c.URL.Query()["key"]
-	if ok {
-		return v[0]
+	key := c.Key
+	if key != "" {
+		return key
 	}
 	return ""
 }
@@ -505,8 +505,10 @@ func ParseConfig(cfg Config) (Config, error) {
 	cfg.KeyPath = cfg.GetKeyPath()
 	cfg.CertPath = cfg.GetCertPath()
 
-	newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
-	cfg.URL = &newURL
+	//fmt.Println(cfg.URL) //this is nil and causing a null poitn dereference and building a newURl
+	//newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host}
+	//fmt.Println(newURL)
+	//cfg.URL = &newURL
 
 	if cfg.ConfigTO == nil {
 		missings += "to, "

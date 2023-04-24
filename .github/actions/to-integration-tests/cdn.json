@@ -4,8 +4,8 @@
 	"role_based_permissions": true,
 	"traffic_ops_golang": {
 		"insecure": true,
-		"cert" : "/etc/pki/tls/certs/localhost.crt",
-		"key" : "/etc/pki/tls/private/localhost.key",
+		"cert" : "$PWD/localhost.crt",
+		"key" : "$PWD/localhost.key",
 		"port": "6443",
 		"log_location_error": "traffic.ops.log",
 		"log_location_warning": "traffic.ops.log",

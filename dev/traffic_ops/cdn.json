@@ -1,7 +1,7 @@
 {
 	"traffic_ops_golang" : {
-		"cert" : "/etc/pki/tls/certs/localhost.crt",
-		"key" : "/etc/pki/tls/private/localhost.key",
+		"cert" : "/server.crt",
+		"key" : "/server.key",
 		"port" : "443",
 		"log_location_error": "stderr",
 		"log_location_warning": "stderr",
