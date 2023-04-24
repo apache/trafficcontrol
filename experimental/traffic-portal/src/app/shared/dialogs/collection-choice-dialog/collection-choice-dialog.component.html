@@ -16,7 +16,7 @@ limitations under the License.
 <mat-dialog-content>
 	<p>{{dialogData.message}}</p>
 	<mat-form-field>
-		<label>{{dialogData.label}}</label>
+		<mat-label>{{dialogData.label}}</mat-label>
 		<mat-select name="{{dialogData.label}}" [(ngModel)]="selected" required>
 			<mat-option *ngFor="let item of dialogData.collection" [value]="item.value">{{item.label}}</mat-option>
 		</mat-select>

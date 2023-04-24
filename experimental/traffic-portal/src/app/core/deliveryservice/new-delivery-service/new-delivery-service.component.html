@@ -16,7 +16,7 @@ limitations under the License.
 		<form #form1="ngForm" ngNativeValidate ngDefaultControl (ngSubmit)="setOriginURL()">
 			<h2>Step 1 - Origin Server</h2>
 			<div class="form-content">
-				<label for="origin">I want to create a Delivery Service for:</label>
+				<label for="origin">I want to create a Delivery Service for</label>
 				<input [formControl]="originURL" type="url" id="origin" name="origin" placeholder="this URL" autofocus title="Must be a URL (should start with `http://` or `https://`)" pattern="(https?|HTTPS?)://[a-zA-Z][a-zA-z0-9\-]*(\.[a-zA-Z][a-zA-z0-9\-]*)*(/[\w\.]+)*/?" required/>
 				<label for="active-immediately">This Delivery Service should become active immediately</label>
 				<input [formControl]="activeImmediately" id="active-immediately" type="checkbox" name="active-immediately" title="This Delivery Service should become active immediately"/>
@@ -31,16 +31,16 @@ limitations under the License.
 		<form #form2="ngForm" ngNativeValidate ngDefaultControl (ngSubmit)="setMetaInformation()">
 			<h2>Step 2 - Meta Information</h2>
 			<div class="form-content">
-				<label for="displayName">This Delivery Service's name will be:</label>
+				<label for="displayName">This Delivery Service's name will be</label>
 				<input type="text" autofocus title="This will be the name of the Delivery Service as it appears on the 'Home' screen" name="displayName" id="displayName" (change)="updateDisplayName()" [formControl]="displayName" placeholder="{{deliveryService.displayName}}" required>
-				<label for="longDesc">Please briefly describe this Delivery Service's purpose and function here:</label>
+				<label for="longDesc">Please briefly describe this Delivery Service's purpose and function</label>
 				<textarea id="longDesc" name="longDesc" title="No character limit - be as verbose as you like." required placeholder="e.g. This Delivery Service is for my website's image assets." [formControl]="description" rows="3"></textarea>
 			</div>
 			<div>
 				<input type="checkbox" class="sub-form" id="info-URL-sub-form" hidden/>
 				<label for="info-URL-sub-form" class="sub-form">Add Informational URL</label>
 				<div class="form-content">
-					<label for="infoURL" id="info-URL-label">For more information, people can look at this URL:</label>
+					<label for="infoURL" id="info-URL-label">For more information, people can look at this URL</label>
 					<input [formControl]="infoURL" type="url" name="infoURL" id="infoURL" placeholder="e.g. https://company.jira.com/ticket/9001"/>
 				</div>
 			</div>
@@ -54,7 +54,7 @@ limitations under the License.
 		<form ngNativeValidate ngDefaultControl (ngSubmit)="setInfrastructureInformation()">
 			<h2>Step 3 - Infrastructure</h2>
 			<div class="form-content">
-				<label for="cdnObject">This Delivery Service will be a part of this CDN:</label>
+				<label for="cdnObject">This Delivery Service will be a part of this CDN</label>
 				<select [formControl]="cdnObject" name="cdnObject" id="cdnObject" required>
 					<option *ngFor="let cdn of cdns" [selected]="cdn.id === deliveryService.cdnId" [ngValue]="cdn">{{cdn.name}}</option>
 				</select>
@@ -67,15 +67,15 @@ limitations under the License.
 					<select [formControl]="dsType" name="routingType" id="routingType">
 						<option *ngFor="let t of dsTypes" [selected]="t.id === deliveryService.typeId" [ngValue]="t">{{t.description}}</option>
 					</select>
-					<label id="protocol">How to handle request protocols</label>
-					<mat-radio-group aria-labelledby="protocol" [formControl]="protocol" name="protocol">
-						<mat-radio-button *ngFor="let p of protocols" [value]="p" name="protocol">{{protocolToString(p)}}</mat-radio-button>
+					<label for="protocol">How to handle request protocols</label>
+					<mat-radio-group aria-labelledby="protocol" [formControl]="protocol" id="protocol" name="protocol">
+						<mat-radio-button *ngFor="let p of protocols" [value]="p">{{protocolToString(p)}}</mat-radio-button>
 					</mat-radio-group>
 					<label for="disableIPv6">Disable IPv6 Routing</label>
 					<input type="checkbox" id="disableIPv6" name="disableIPv6" [formControl]="disableIPv6"/>
 					<fieldset name="bypass" id="bypass" *ngIf="bypassable(deliveryService)">
 						<legend>Bypass Options</legend>
-						<label>When the Delivery Service traffic becomes too heavy, clients can be redirected here:</label>
+						<label for="bypass-loc">When the Delivery Service traffic becomes too heavy, clients can be redirected here</label>
 						<input type="text" name="bypass-loc" id="bypass-loc" [formControl]="bypassLoc" title="can be either an IP (v4 or v6) address or a Fully Qualified Domain Name" pattern="(^[A-z]([A-z\d\-]*[A-z\d])?(\.[A-z]([A-z\d\-]*[A-z\d])?)*$)|(^(1\d\d|2[0-4]\d|25[0-5]|\d\d?)(\.(1\d\d|2[0-4]\d|25[0-5]|\d\d?)){3}$)|(^[a-fA-F\d]{1,4}(::?([a-fA-F\d]){1,4})*$)" /><!-- Yeah, I know that's pretty gnarly, and it doesn't exactly validate IPv6 addresses but it's a good litmus test -->
 					</fieldset>
 				</div>
