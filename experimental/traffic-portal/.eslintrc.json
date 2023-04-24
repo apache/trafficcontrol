@@ -396,7 +396,15 @@
 						"maxComplexity": 2
 					}
 				],
-				"@angular-eslint/template/cyclomatic-complexity": "error",
+				// Warning because it's difficult to know exactly when a
+				// refactor is strictly necessary and also because fixing this
+				// would be a huge changeset.
+				"@angular-eslint/template/cyclomatic-complexity": [
+					"warn",
+					{
+						"maxComplexity": 8
+					}
+				],
 				"@angular-eslint/template/eqeqeq": "error",
 				"@angular-eslint/template/mouse-events-have-key-events": "error",
 				"@angular-eslint/template/no-any": "error",
@@ -404,9 +412,6 @@
 				// usages would be out-of-scope for the PR adding this linting,
 				// IMO.
 				"@angular-eslint/template/no-autofocus": "warn",
-				// Currently a warning pending evaluation of legitimacy of
-				// current usages.
-				"@angular-eslint/template/no-call-expression": "warn",
 				"@angular-eslint/template/no-distracting-elements": "error",
 				"@angular-eslint/template/no-duplicate-attributes": "error",
 				// "@angular-eslint/template/no-inline-styles": "warn",
