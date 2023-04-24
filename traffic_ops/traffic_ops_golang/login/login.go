@@ -127,10 +127,11 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 	}
 
 	// Client provided a verified certificate. Extract UID value.
-	form.Username = auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0])
-	if len(form.Username) == 0 {
-		log.Infoln("client cert auth: client provided certificate did not contain a UID object identifier or value")
+	if username, err := auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0]); err != nil {
+		log.Errorln("parsing client certificate: %s", err.Error())
 		return false
+	} else {
+		form.Username = username
 	}
 
 	// Check if user exists locally (TODB) and has a role.

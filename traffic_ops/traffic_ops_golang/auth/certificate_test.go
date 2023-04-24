@@ -204,7 +204,7 @@ func TestParseClientCertificateUID_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to extract x509 from PEM string for clientCert. err: %s", err)
 	}
-	result := ParseClientCertificateUID(clientCert)
+	result, _ := ParseClientCertificateUID(clientCert)
 	if result != "userid" {
 		t.Fatal("failed to parse UID value from certificate")
 	}
@@ -219,7 +219,7 @@ func TestParseClientCertificateUID_Fail(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to extract x509 from PEM string for serverCert. err: %s", err)
 	}
-	result := ParseClientCertificateUID(serverCert)
+	result, _ := ParseClientCertificateUID(serverCert)
 	if len(result) > 0 {
 		t.Fatal("unexpected UID value from certificate")
 	}

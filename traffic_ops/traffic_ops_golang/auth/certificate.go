@@ -29,6 +29,7 @@ import (
 	"path/filepath"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc/ldap"
 )
 
 // ParseCertificate takes a http.Request, pulls the (optionally) provided client TLS
@@ -162,19 +163,22 @@ func loadRootCerts(dirPath string) error {
 // Subject. If it finds an asn.ObjectIdentifier that matches UID, it returns the
 // corresponding value. Otherwise returns empty string. If more than one UID is present,
 // the first result found to match is returned (order not guaranteed).
-func ParseClientCertificateUID(cert *x509.Certificate) string {
-
-	// Object Identifier value for UID used within LDAP
-	// LDAP OID reference: https://ldap.com/ldap-oid-reference-guide/
-	// 0.9.2342.19200300.100.1.1	uid	Attribute Type
-	// asn1.ObjectIdentifier([]int{0, 9, 2342, 19200300, 100, 1, 1})
-
+func ParseClientCertificateUID(cert *x509.Certificate) (string, error) {
+	foundUID := false
+	uid := ""
+	err := error(nil)
 	for _, name := range cert.Subject.Names {
-		t := name.Type
-		if len(t) == 7 && t[0] == 0 && t[1] == 9 && t[2] == 2342 && t[3] == 19200300 && t[4] == 100 && t[5] == 1 && t[6] == 1 {
-			return name.Value.(string)
+		if name.Type.Equal(ldap.OIDType) {
+			if foundUID {
+				err = fmt.Errorf("found more than 1 UID in certificate subject")
+				break
+			}
+			uid = name.Value.(string)
+			foundUID = true
 		}
 	}
-
-	return ""
+	if !foundUID {
+		err = fmt.Errorf("no UID found")
+	}
+	return uid, err
 }
