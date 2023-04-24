@@ -56,5 +56,21 @@
         	"division": 1,
         	"name": "Montreal"
 		}
+	],
+	"phys_locations":[
+		{
+			"address": "Buckingham Palace",
+    		"city": "London",
+    		"comments": "Buckingham Palace",
+    		"email": "steve.kingstone@royal.gsx.gov.uk",
+    		"name": "Great_Britain",
+    		"phone": "0-843-816-6276",
+    		"poc": "Her Majesty The Queen Elizabeth Alexandra Mary Windsor II",
+    		"regionId": 3,
+    		"region": null,
+    		"shortName": "uk",
+    		"state": "Westminster",
+    		"zip": "SW1A 1AA"	
+		}
 	]		
 }

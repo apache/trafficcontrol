@@ -436,10 +436,10 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
 		cachegroup["name"] = name[:4] + randstr
-		short_name = cachegroup["shortName"]
+		short_name = cachegroup["shortname"]
 		if not isinstance(short_name, str):
-			raise TypeError(f"shortName must be str, not '{type(short_name)}")
-		cachegroup["shortName"] = short_name[:5] + randstr
+			raise TypeError(f"shortname must be str, not '{type(short_name)}")
+		cachegroup["shortname"] = short_name[:5] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Cache group property '{e.args[0]}'") from e
 	# Hitting types GET method to access typeID for cachegroup POST data
@@ -703,13 +703,13 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
 			raise TypeError(f"name must be str, not '{type(name)}'")
 		region["name"] = name[:4] + randstr
 		division = region["division"]
-		if not isinstance(name, str):
+		if not isinstance(division, str):
 			raise TypeError(f"division must be int, not '{type(division)}'")
 		region["division"] = division[:4] + randstr
-		divisionName = region["divisionName"]
-		if not isinstance(name, str):
-			raise TypeError(f"divisionName must be str, not '{type(divisionName)}'")
-		region["divisionName"] = divisionName[:4] + randstr
+		divisionname = region["divisionname"]
+		if not isinstance(divisionname, str):
+			raise TypeError(f"divisionname must be str, not '{type(divisionname)}'")
+		region["divisionname"] = divisionname[:4] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
 
@@ -723,4 +723,92 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
 		return resp_obj
 	except IndexError:
 		logger.error("No region response data from region POST request.")
-		sys.exit(1)		
+		sys.exit(1)
+
+@pytest.fixture()
+def phys_locations__post_data(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for phys_locations endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get phys_locations request template data from
+	request_template file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	try:
+		phys_location = request_template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			"malformed prerequisite data; no phys_location in 'phys_locations' array property") from e
+
+	if not isinstance(phys_location, dict):
+		raise TypeError(
+			f"malformed prerequisite data; phys_locations must be objects, not '{type(phys_location)}'")
+
+	# Return new post data and post response from phys_locations POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = phys_location["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		phys_location["name"] = name[:4] + randstr
+		address = phys_location["address"]
+		if not isinstance(address, str):
+			raise TypeError(f"address must be str, not '{type(address)}'")
+		phys_location["address"] = address[:4] + randstr
+		city = phys_location["city"]
+		if not isinstance(city, str):
+			raise TypeError(f"city must be str, not '{type(city)}'")
+		phys_location["city"] = city[:4] + randstr
+		zip = phys_location["zip"]
+		if not isinstance(zip, str):
+			raise TypeError(f"zip must be str, not '{type(zip)}'")
+		phys_location["zip"] = zip[:4] + randstr
+		comments = phys_location["comments"]
+		if not isinstance(comments, str):
+			raise TypeError(f"comment must be str, not '{type(comments)}'")
+		phys_location["comments"] = comments[:4] + randstr
+		email = phys_location["email"]
+		if not isinstance(email, str):
+			raise TypeError(f"email must be str, not '{type(email)}'")
+		phys_location["email"] = email[:4] + randstr
+		phone = phys_location["phone"]
+		if not isinstance(phone, str):
+			raise TypeError(f"phone must be str, not '{type(phone)}'")
+		phys_location["phone"] = phone[:4] + randstr
+		poc = phys_location["poc"]
+		if not isinstance(poc, str):
+			raise TypeError(f"poc must be str, not '{type(poc)}'")
+		phys_location["poc"] = poc[:4] + randstr
+		regionid = phys_location["regionid"]
+		if not isinstance(regionid, int):
+			raise TypeError(f"regionid must be int, not '{type(regionid)}'")
+		phys_location["regionid"] = regionid[:4] + randstr
+		region = phys_location["region"]
+		if not isinstance(region, str):
+			raise TypeError(f"region must be str, not '{type(region)}'")
+		phys_location["region"] = region[:4] + randstr
+		shortname = phys_location["shortname"]
+		if not isinstance(shortname, str):
+			raise TypeError(f"shortname must be str, not '{type(shortname)}'")
+		phys_location["shortname"] = shortname[:4] + randstr
+		state = phys_location["state"]
+		if not isinstance(state, str):
+			raise TypeError(f"state must be str, not '{type(state)}'")
+		phys_location["state"] = state[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
+
+	logger.info("New phys_locations data to hit POST method %s", request_template_data)
+	# Hitting phys_location POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_region(data=phys_location)
+	try:
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; phys_location is not an object")
+		return resp_obj
+	except IndexError:
+		logger.error("No phys_location response data from phys_location POST request.")
+		sys.exit(1)
