@@ -58,7 +58,7 @@ Request Structure
 Response Structure
 ------------------
 :name:        This :term:`Service Category`'s name
-:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this :term:`Service Category` was last modified, in :rfc:`3339`
 
 .. code-block:: http
 	:caption: Response Example
@@ -72,7 +72,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: +pJm4c3O+JTaSXNt+LP+u240Ba/SsvSSDOQ4rDc6hcyZ0FIL+iY/WWrMHhpLulRGKGY88bM4YPCMaxGn3FZ9yQ==
 	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 11 Mar 2020 20:12:20 GMT
+	Date: Wed, 29 Mar 2023 15:58:37 GMT
 	Content-Length: 189
 
 	{
@@ -83,7 +83,7 @@ Response Structure
 			}
 		],
 		"response": {
-			"lastUpdated": "2020-03-11 14:12:20-06",
+			"lastUpdated": "2023-03-29T21:28:37.884457+05:30",
 			"name": "New Name"
 		}
 	}
@@ -136,7 +136,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 17 Aug 2020 16:13:31 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: yErJobzG9IA0khvqZQK+Yi7X4pFVvOqxn6PjrdzN5DnKVm/K8Kka3REul1XmKJnMXVRY8RayoEVGDm16mBFe4Q==
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 17 Aug 2020 15:13:31 GMT
+	Date: Wed, 29 Mar 2023 15:58:37 GMT
 	Content-Length: 103
 
 	{
