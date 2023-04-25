@@ -27,6 +27,7 @@ on:
       - .github/workflows/tpv2.yml
       - .github/actions/tpv2-integration-tests
       - lib/go-tc/**
+      - '!**_test.go'
       - traffic_ops/app/db/**
       - traffic_ops/traffic_ops_golang/**.go
   create:
@@ -35,6 +36,7 @@ on:
       - experimental/traffic-portal/**
       - .github/workflows/tpv2.yml
       - .github/actions/tpv2-integration-tests
+      - '!**_test.go'
       - lib/go-tc/**
       - traffic_ops/app/db/**
       - traffic_ops/traffic_ops_golang/**.go

@@ -30,6 +30,7 @@ on:
       - .github/actions/tp-integration-tests/**
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
+      - '!**_test.go'
       - infrastructure/cdn-in-a-box/optional/traffic_vault/**
       - lib/go-tc/**
       - traffic_ops/app/db/**
@@ -43,6 +44,7 @@ on:
       - .github/actions/tp-integration-tests/**
       - .github/workflows/tp.integration.tests.yml
       - GO_VERSION
+      - '!**_test.go'
       - infrastructure/cdn-in-a-box/optional/traffic_vault/**
       - lib/go-tc/**
       - traffic_ops/app/db/**

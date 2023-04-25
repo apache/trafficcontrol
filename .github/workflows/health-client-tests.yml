@@ -37,6 +37,8 @@ on:
       - traffic_ops/traffic_ops_golang/**.go
       - tc-health-client/**.go
       - tc-health-client/testing/**
+      - '!**_test.go'
+      - tc-health-client/**_test.go
       - vendor/**.go
       - vendor/modules.txt
       - .github/actions/build-ats-test-rpm/**
@@ -56,6 +58,8 @@ on:
       - traffic_ops/traffic_ops_golang/**.go
       - tc-health-client/**.go
       - tc-health-client/testing/**
+      - '!**_test.go'
+      - tc-health-client/**_test.go
       - vendor/**.go
       - vendor/modules.txt
       - .github/actions/build-ats-test-rpm/**
