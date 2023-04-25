@@ -39,13 +39,16 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         wget \
         GConf2 \
         git \
-        jq \
         java-1.8.0-openjdk \
         net-tools \
         $utils_package && \
     set -o pipefail && \
-    dnf -y install chromium jq && \
+    dnf -y install jq && \
     dnf -y clean all
+
+RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm && \
+    dnf install -y ./google-chrome-stable_current_x86_64.rpm && \
+    rm google-chrome-stable_current_x86_64.rpm
 
 FROM os-dependencies AS node-dependencies
 # Download and install node
@@ -60,8 +63,6 @@ RUN dnf -y install nodejs || ( \
         dnf -y install nodejs \
     )
 
-# Install chromium
-RUN dnf -y install chromium
 
 FROM node-dependencies
 
