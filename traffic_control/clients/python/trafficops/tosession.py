@@ -1847,6 +1847,17 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+	@api_request('delete', 'tenants/{tenant_id:d}', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_tenant(self, tenant_id=None):
+		"""
+		Delete a tenant
+		:ref:`to-api-tenants-id`
+		:param tenant_id: The tenant to delete
+		:type tenant_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 
 	#

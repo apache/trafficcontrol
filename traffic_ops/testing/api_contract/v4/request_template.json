@@ -43,5 +43,12 @@
 			"type": "UNK_PROFILE",
 			"routingDisabled": true
 		}
+	],
+	"tenants": [
+		{
+			"active": true,
+			"name": "test",
+			"parentId": 1
+		}
 	]
 }
