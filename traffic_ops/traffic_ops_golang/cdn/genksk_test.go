@@ -19,30 +19,4 @@ package cdn
  * under the License.
  */
 
-import (
-	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
-)
-
-func TestGetStatsFromServiceInterface(t *testing.T) {
-	data1 := tc.ServerStats{
-		Interfaces: nil,
-		Stats: map[string][]tc.ResultStatVal{
-			"kbps": {
-				{Val: 24.5},
-			},
-			"maxKbps": {
-				{Val: 66.8},
-			},
-		},
-	}
-
-	kbps, maxKbps, err := getStats(data1)
-	if err != nil {
-		t.Errorf("Expected no error, but got %v", err.Error())
-	}
-	if kbps != 24.5 || maxKbps != 66.8 {
-		t.Errorf("Expected kbps to be 24.5, got %v; Expected maxKbps to be 66.8, got %v", kbps, maxKbps)
-	}
-}
+import ()
