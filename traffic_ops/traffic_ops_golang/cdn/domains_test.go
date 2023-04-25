@@ -1,14 +1,5 @@
 package cdn
 
-import (
-	"net/http"
-	"testing"
-
-	"github.com/jmoiron/sqlx"
-
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -27,6 +18,15 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/jmoiron/sqlx"
+
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+)
 
 func TestGetDomainsList(t *testing.T) {
 	mockDB, mock, err := sqlmock.New()
