@@ -397,5 +397,277 @@
                 "type": "string"
             }
         }
+    },
+    "delivery_services": {
+        "type": "object",
+        "properties": {
+            "maxRequestHeaderBytes": {
+                "type": "integer"
+            },
+            "firstHeaderRewrite": {
+                "type": "null"
+            },
+            "innerHeaderRewrite": {
+                "type": "null"
+            },
+            "lastHeaderRewrite": {
+                "type": "null"
+            },
+            "serviceCategory": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "topology": {
+                "type": [
+                    "null",
+                    "object"
+                ]
+            },
+            "ecsEnabled": {
+                "type": "boolean"
+            },
+            "rangeSliceBlockSize": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "consistentHashRegex": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "consistentHashQueryParams": {
+                "type": "array",
+                "items": {}
+            },
+            "maxOriginConnections": {
+                "type": "integer"
+            },
+            "deepCachingType": {
+                "type": "string"
+            },
+            "fqPacingRate": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "signingAlgorithm": {
+                "type": [
+                    "null",
+                    "boolean"
+                ]
+            },
+            "tenant": {
+                "type": "string"
+            },
+            "trResponseHeaders": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "trRequestHeaders": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "active": {
+                "type": "boolean"
+            },
+            "anonymousBlockingEnabled": {
+                "type": "boolean"
+            },
+            "ccrDnsTtl": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "cdnId": {
+                "type": "integer"
+            },
+            "cdnName": {
+                "type": "string"
+            },
+            "checkPath": {
+                "type": "null"
+            },
+            "displayName": {
+                "type": "string"
+            },
+            "dnsBypassCname": {
+                "type": "null"
+            },
+            "dnsBypassIp": {
+                "type": "null"
+            },
+            "dnsBypassIp6": {
+                "type": "null"
+            },
+            "dnsBypassTtl": {
+                "type": "null"
+            },
+            "dscp": {
+                "type": "integer"
+            },
+            "edgeHeaderRewrite": {
+                "type": "null"
+            },
+            "exampleURLs": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "geoLimit": {
+                "type": "integer"
+            },
+            "geoLimitRedirectURL": {
+                "type": "null"
+            },
+            "geoProvider": {
+                "type": "integer"
+            },
+            "globalMaxMbps": {
+                "type": "null"
+            },
+            "globalMaxTps": {
+                "type": "null"
+            },
+            "httpBypassFqdn": {
+                "type": "null"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "infoUrl": {
+                "type": "null"
+            },
+            "initialDispersion": {
+                "type": "integer"
+            },
+            "ipv6RoutingEnabled": {
+                "type": "boolean"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "logsEnabled": {
+                "type": "boolean"
+            },
+            "longDesc": {
+                "type": "string"
+            },
+            "matchList": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "setNumber": {
+                            "type": "integer"
+                        },
+                        "pattern": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "maxDnsAnswers": {
+                "type": "null"
+            },
+            "midHeaderRewrite": {
+                "type": "null"
+            },
+            "missLat": {
+                "type": "integer"
+            },
+            "missLong": {
+                "type": "integer"
+            },
+            "multiSiteOrigin": {
+                "type": "boolean"
+            },
+            "originShield": {
+                "type": ["null", "string"]
+            },
+            "orgServerFqdn": {
+                "type": "string"
+            },
+            "profileDescription": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "profileId": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "profileName": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "protocol": {
+                "type": "integer"
+            },
+            "qstringIgnore": {
+                "type": "integer"
+            },
+            "rangeRequestHandling": {
+                "type": "integer"
+            },
+            "regexRemap": {
+                "type": ["null", "string"]
+            },
+            "regionalGeoBlocking": {
+                "type": "boolean"
+            },
+            "remapText": {
+                "type": ["null", "string"]
+            },
+            "routingName": {
+                "type": "string"
+            },
+            "signed": {
+                "type": "boolean"
+            },
+            "sslKeyVersion": {
+                "type": ["null", "integer"]
+            },
+            "tenantId": {
+                "type": "integer"
+            },
+            "type": {
+                "type": "string"
+            },
+            "typeId": {
+                "type": "integer"
+            },
+            "xmlId": {
+                "type": "string"
+            },
+            "tlsVersions": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "geoLimitCountries": {
+                "type": ["null", "array"]
+            }
+        }
     }
 }

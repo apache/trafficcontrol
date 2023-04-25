@@ -705,3 +705,57 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	response: tuple[JSONData, requests.Response] = to_session.create_server(data=server)
 	resp_obj = check_template_data(response, "server")
 	return resp_obj
+
+
+@pytest.fixture()
+def delivery_services_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		      ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for server endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get profile data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	delivery_services = check_template_data(request_template_data["delivery_services"], "delivery_services")
+
+	randstr = str(randint(0, 1000))
+	try:
+		xmlId = delivery_services["xmlId"]
+		if not isinstance(xmlId, str):
+			raise TypeError(f"xmlId must be str, not '{type(xmlId)}'")
+		delivery_services["xmlId"] = xmlId[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing delivery_services property '{e.args[0]}'") from e
+
+	# Check if cdn already exists, otherwise create it
+	cdn_data = check_template_data(request_template_data["cdns"], "cdns")
+	cdn_object = create_or_get_existing(to_session, "cdns", "cdn", cdn_data)
+	delivery_services["cdnId"] = cdn_object["id"]
+
+	# Check if profile with cdn already exists, otherwise create it
+	profile_data = check_template_data(request_template_data["profiles"], "profiles")
+	profile_data["cdn"] = cdn_object["id"]
+	profile_object = create_or_get_existing(to_session, "profiles", "profile", profile_data,
+					 {"cdn": cdn_object["id"]})
+	delivery_services["profileId"] = profile_object["id"]
+
+	# Check if status already exists, otherwise create it
+	tenant_data = check_template_data(request_template_data["tenants"], "tenants")
+	tenant_object = create_or_get_existing(to_session, "tenants", "tenant",
+					tenant_data, {"name": "root"})
+	delivery_services["tenantId"] = tenant_object["id"]
+
+	# Check if status already exists, otherwise create it
+	type_data = {"name": "HTTP", "useInTable":"deliveryservice"}
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"name": "HTTP", "useInTable":"deliveryservice"})
+	delivery_services["typeId"] = type_object["id"]
+	delivery_services["type"] = type_object["name"]
+
+
+	logger.info("New delivery_services data to hit POST method %s", delivery_services)
+	# Hitting delivery_services POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice(data=delivery_services)
+	resp_obj = check_template_data(response[0], "delivery_services")
+	return resp_obj
