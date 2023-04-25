@@ -213,7 +213,7 @@ export class ServerService extends APIService {
 	 *
 	 * @param id The Status ID
 	 */
-	public async deleteStatus(id: number): Promise<ResponseStatus> {
+	public async deleteStatus(id: number | ResponseStatus): Promise<ResponseStatus> {
 		return this.delete<ResponseStatus>(`statuses/${id}`).toPromise();
 	}
 }
