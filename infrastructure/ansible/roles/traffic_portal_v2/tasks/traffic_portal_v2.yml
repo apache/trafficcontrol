@@ -40,7 +40,7 @@
     mode: 0600
   notify: Restart Traffic Portal v2
 
-- name: Enable Traffic Portal in systemd
+- name: Enable Traffic Portal v2 in systemd
   systemd:
     name: traffic_portal_v2
     enabled: yes
