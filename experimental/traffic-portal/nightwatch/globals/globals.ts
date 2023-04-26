@@ -32,6 +32,7 @@ import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deli
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
 import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceInvalidationJobs";
 import type { LoginPageObject } from "nightwatch/page_objects/login";
+import type { ProfilePageObject } from "nightwatch/page_objects/profiles/profilesTable";
 import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
 import type { PhysLocTablePageObject } from "nightwatch/page_objects/servers/physLocTable";
 import type { ServersPageObject } from "nightwatch/page_objects/servers/servers";
@@ -65,8 +66,12 @@ import {
 	ResponseCoordinate,
 	RequestCoordinate,
 	RequestType,
+	ResponseProfile,
+	RequestProfile,
+	ProfileType
 } from "trafficops-types";
 
+import * as config from "../config.json";
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
 import {TypesPageObject} from "../page_objects/types/typesTable";
 
@@ -97,6 +102,9 @@ declare module "nightwatch" {
 			deliveryServiceInvalidationJobs: () => DeliveryServiceInvalidPageObject;
 		};
 		login: () => LoginPageObject;
+		profiles: {
+			profileTable: () => ProfilePageObject;
+		};
 		servers: {
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
@@ -143,13 +151,14 @@ export interface CreatedData {
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;
+	profile: ResponseProfile;
 }
 
 const testData = {};
 
 const globals = {
-	adminPass: "twelve12",
-	adminUser: "admin",
+	adminPass: config.adminPass,
+	adminUser: config.adminUser,
 	afterEach: (browser: NightwatchBrowser, done: () => void): void => {
 		browser.end(() => {
 			done();
@@ -381,6 +390,19 @@ const globals = {
 			console.log(`Successfully created Type ${respType.name}`);
 			data.type = respType;
 
+			const profile: RequestProfile = {
+				cdn: 1,
+				description: "blah",
+				name: `profile${globals.uniqueString}`,
+				routingDisabled: false,
+				type: ProfileType.ATS_PROFILE,
+			};
+			url = `${apiUrl}/profiles`;
+			resp = await client.post(url, JSON.stringify(profile));
+			const respProfile: ResponseProfile = resp.data.response;
+			console.log(`Successfully created Profile ${respProfile.name}`);
+			data.profile = respProfile;
+
 		} catch(e) {
 			console.error("Request for", url, "failed:", (e as AxiosError).message);
 			throw e;
@@ -397,9 +419,11 @@ const globals = {
 			done();
 		});
 	},
+	retryAssertionTimeout: config.retryAssertionTimeoutMS,
 	testData,
-	trafficOpsURL: "https://localhost:6443",
-	uniqueString: new Date().getTime().toString()
+	trafficOpsURL: config.to_url,
+	uniqueString: new Date().getTime().toString(),
+	waitForConditionTimeout:config.waitForConditionTimeoutMS
 };
 
 module.exports = globals;

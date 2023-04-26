@@ -3,6 +3,7 @@
 	"compilerOptions": {
 		"outDir": "../dist/nightwatch",
 		"module": "commonjs",
+		"resolveJsonModule": true,
 		"target": "es5",
 		"types": [
 			"node",
