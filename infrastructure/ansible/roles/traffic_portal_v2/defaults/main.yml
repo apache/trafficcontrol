@@ -18,7 +18,8 @@ tpv2_pkg_name: "{% if tpv2_version is defined and tpv2_version != omit %}{{ 'tra
 # TP installation information
 tpv2_base_install_dir: /opt/traffic_portal_v2
 tpv2_properties_dir: "{{ tpv2_base_install_dir }}/public"
-tpv2_conf_dir: /etc/traffic_portal_v2/conf
+# TPv2 config file == TP
+tpv2_conf_dir: /etc/traffic_portal/conf
 
 # config.js
 tpv2_timeout: "120s"
@@ -51,7 +52,7 @@ tpv2_default_properties_template:
       name: Kabletown2.0
       isProd: false
     api:
-      _comment: This should have the same value found in /etc/traffic_portal_v2/conf/config_v2.js
+      _comment: This should have the same value found in /etc/traffic_portal/conf/config.js
       baseUrl: "{{ tpv2_to_base_url }}/api/"
     # enforceCapabilities is not currently supported and must be false
     enforceCapabilities: false
