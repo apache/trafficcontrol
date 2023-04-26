@@ -25,7 +25,7 @@ const profileDetailPageObject = {
 			selector: "mat-select[name='cdn']"
 		},
 		description: {
-			selector: "input[name='description']"
+			selector: "textarea[name='description']"
 		},
 		id: {
 			selector: "input[name='id']"
