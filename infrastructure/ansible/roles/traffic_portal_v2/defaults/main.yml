@@ -51,7 +51,7 @@ tpv2_default_properties_template:
       name: Kabletown2.0
       isProd: false
     api:
-      _comment: This should have the same value found in /etc/traffic_portal_v2/conf/config.js
+      _comment: This should have the same value found in /etc/traffic_portal_v2/conf/config_v2.js
       baseUrl: "{{ tpv2_to_base_url }}/api/"
     # enforceCapabilities is not currently supported and must be false
     enforceCapabilities: false
