@@ -325,12 +325,11 @@ export class ServerService {
 	 * Updates status Details.
 	 *
 	 * @param payload containes name and description for the status., unique identifier thereof.
-	 * @param id The Status ID
 	 */
-	public async updateStatusDetail(payload: ResponseStatus, id: number): Promise<ResponseStatus> {
-		const index = this.statuses.findIndex(u => u.id === id);
+	public async updateStatusDetail(payload: ResponseStatus): Promise<ResponseStatus> {
+		const index = this.statuses.findIndex(u => u.id === payload.id);
 		if (index < 0) {
-			throw new Error(`no such status with id: ${id}`);
+			throw new Error(`no such status with id: ${payload.id}`);
 		}
 		const updated = {
 			...payload,

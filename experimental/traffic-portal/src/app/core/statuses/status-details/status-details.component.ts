@@ -115,7 +115,6 @@ export class StatusDetailsComponent {
 					name: this.statusDetailsForm.controls.name.value
 				};
 				this.statusDetails = await this.api.createStatus(newData);
-				this.location.back();
 			} else {
 				const editData: ResponseStatus = {
 					description: this.statusDetailsForm.controls.description.value,

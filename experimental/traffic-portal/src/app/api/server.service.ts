@@ -211,9 +211,10 @@ export class ServerService extends APIService {
 	/**
 	 * Deletes an existing Status.
 	 *
-	 * @param id The Status ID
+	 * @param statusId The Status ID
 	 */
-	public async deleteStatus(id: number | ResponseStatus): Promise<ResponseStatus> {
+	public async deleteStatus(statusId: number | ResponseStatus): Promise<ResponseStatus> {
+		const id = typeof (statusId) === "number" ? statusId : statusId.id;
 		return this.delete<ResponseStatus>(`statuses/${id}`).toPromise();
 	}
 }
