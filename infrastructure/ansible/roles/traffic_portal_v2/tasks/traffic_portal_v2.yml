@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-- name: Install Traffic Portal V2
+- name: Install Traffic Portal v2
   yum:
     name: "{{ tpv2_pkg_name }}"
     state: installed
     lock_timeout: 300
     enablerepo: "{{ additional_yum_repos | default([]) }}"
-  notify: Restart Traffic Portal V2
+  notify: Restart Traffic Portal v2
   retries: 5
   delay: 5
 
@@ -29,7 +29,7 @@
     owner: root
     group: root
     mode: 0600
-  notify: Restart Traffic Portal V2
+  notify: Restart Traffic Portal v2
 
 - name: Copy properties.json
   template:
@@ -38,7 +38,7 @@
     owner: root
     group: root
     mode: 0600
-  notify: Restart Traffic Portal V2
+  notify: Restart Traffic Portal v2
 
 - name: Enable Traffic Portal in systemd
   systemd:
