@@ -94,6 +94,7 @@ export class ProfileDetailComponent implements OnInit {
 				this.profile = await this.api.getProfiles(Number(id));
 				this.navSvc.headerTitle.next(`Profile: ${this.profile.name}`);
 			}
+			this.loading = false;
 		} else {
 			this.new = true;
 			this.navSvc.headerTitle.next("New Profile");
@@ -107,6 +108,7 @@ export class ProfileDetailComponent implements OnInit {
 				routingDisabled: false,
 				type: ProfileType.ATS_PROFILE
 			};
+			this.loading = false;
 		}
 	}
 

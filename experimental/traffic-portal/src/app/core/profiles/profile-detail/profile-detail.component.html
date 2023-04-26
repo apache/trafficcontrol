@@ -13,7 +13,7 @@ limitations under the License.
 -->
 
 <mat-card>
-    <tp-loading *ngIf="!profile"></tp-loading>
+    <tp-loading *ngIf="loading"></tp-loading>
     <form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="profile">
         <mat-card-content>
             <mat-form-field *ngIf="!new && profile">
