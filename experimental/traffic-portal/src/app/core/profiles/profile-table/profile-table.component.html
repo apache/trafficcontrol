@@ -25,3 +25,5 @@ limitations under the License.
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </mat-card>
+
+<a class="page-fab" mat-fab title="Create a new Profile" *ngIf="auth.hasPermission('PROFILE:CREATE')" routerLink="new"><mat-icon>add</mat-icon></a>

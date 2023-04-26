@@ -48,6 +48,7 @@ import {
 } from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
 import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
+import { ProfileDetailComponent } from "./profiles/profile-detail/profile-detail.component";
 import { ProfileTableComponent } from "./profiles/profile-table/profile-table.component";
 import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
 import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
@@ -61,7 +62,6 @@ import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
-import { ProfileDetailComponent } from './profiles/profile-detail/profile-detail.component';
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },

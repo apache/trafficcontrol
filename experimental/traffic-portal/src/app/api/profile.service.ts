@@ -59,17 +59,28 @@ export class ProfileService extends APIService {
 	}
 
 	/**
-	 * Creates a new type.
+	 * Creates a new profile.
 	 *
-	 * @param profile The type to create.
-	 * @returns The created type.
+	 * @param profile The profile to create.
+	 * @returns The created profile.
 	 */
 	public async createProfile(profile: RequestProfile): Promise<ResponseProfile> {
 		return this.post<ResponseProfile>("profiles", profile).toPromise();
 	}
 
 	/**
-	 * Deletes an existing type.
+	 * Replaces the current definition of a profile with the one given.
+	 *
+	 * @param profile The new profile.
+	 * @returns The updated profile.
+	 */
+	public async updateProfile(profile: ResponseProfile): Promise<ResponseProfile> {
+		const path = `profiles/${profile.id}`;
+		return this.put<ResponseProfile>(path, profile).toPromise();
+	}
+
+	/**
+	 * Deletes an existing profile.
 	 *
 	 * @param profileId Id of the profile to delete.
 	 * @returns The success message.

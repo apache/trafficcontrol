@@ -32,6 +32,7 @@ import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deli
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
 import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceInvalidationJobs";
 import type { LoginPageObject } from "nightwatch/page_objects/login";
+import type { ProfileDetailPageObject } from "nightwatch/page_objects/profiles/profileDetail";
 import type { ProfilePageObject } from "nightwatch/page_objects/profiles/profilesTable";
 import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
 import type { PhysLocTablePageObject } from "nightwatch/page_objects/servers/physLocTable";
@@ -104,6 +105,7 @@ declare module "nightwatch" {
 		login: () => LoginPageObject;
 		profiles: {
 			profileTable: () => ProfilePageObject;
+			profileDetail: () => ProfileDetailPageObject;
 		};
 		servers: {
 			physLocDetail: () => PhysLocDetailPageObject;
