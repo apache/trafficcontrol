@@ -30,4 +30,4 @@
     delay: 3
     port: "{{ tpv2_sslPort }}"
   listen: Wait for Traffic Portal v2 to become available
-  when: tp_useSSL
+  when: tpv2_useSSL
