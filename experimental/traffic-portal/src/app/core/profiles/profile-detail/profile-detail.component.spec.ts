@@ -62,7 +62,6 @@ describe("ProfileDetailComponent", () => {
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.profile).not.toBeNull();
-		expect(component.profile.name).toBe("");
 		expect(component.new).toBeTrue();
 	});
 

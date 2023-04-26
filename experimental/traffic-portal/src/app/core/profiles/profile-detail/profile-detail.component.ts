@@ -31,8 +31,16 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 })
 export class ProfileDetailComponent implements OnInit {
 	public new = false;
+
+	/** Loader status for the actions */
+	public loading = true;
+
+	/** All details of profile requested */
 	public profile!: ResponseProfile;
+
+	/** All cdns used for profile creation as input */
 	public cdns!: ResponseCDN[];
+
 	public types = [
 		{ value: "ATS_PROFILE" },
 		{ value: "TR_PROFILE" },
@@ -51,25 +59,42 @@ export class ProfileDetailComponent implements OnInit {
 		{ value: "GROVE_PROFILE" }
 	];
 
+	/**
+	 * Constructor.
+	 *
+	 * @param api The Profiles API which is used to provide functions for create, edit and delete profiles.
+	 * @param cdnService The CDN service API which is used to provide cdns.
+	 * @param dialog Dialog manager
+	 * @param navSvc Manages the header
+	 * @param route A reference to the route of this view which is used to get the 'id' query parameter of profile.
+	 * @param router Angular router
+	 */
 	constructor(
-		private readonly dialog: MatDialog,
-		private readonly route: ActivatedRoute,
-		private readonly router: Router,
-		private readonly navSvc: NavigationService,
 		private readonly api: ProfileService,
-		private readonly cdnService: CDNService
+		private readonly cdnService: CDNService,
+		private readonly dialog: MatDialog,
+		private readonly navSvc: NavigationService,
+		private readonly route: ActivatedRoute,
+		private readonly router: Router
 	) { }
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
 	 */
 	public async ngOnInit(): Promise<void> {
-		this.cdns = await this.cdnService.getCDNs();
+		// Getting id from the route
 		const id = this.route.snapshot.paramMap.get("id");
 
-		if (id === null) {
-			throw new Error("missing required route parameter 'id'");
-		} else if (id === "new") {
+		this.cdns = await this.cdnService.getCDNs();
+		if (id && id !== "new") {
+			const numID = parseInt(id, 10);
+			if (Number.isNaN(numID)) {
+				throw new Error(`route parameter 'id' was non-number:  ${{ id }}`);
+			} else {
+				this.profile = await this.api.getProfiles(Number(id));
+				this.navSvc.headerTitle.next(`Profile: ${this.profile.name}`);
+			}
+		} else {
 			this.new = true;
 			this.navSvc.headerTitle.next("New Profile");
 			this.profile = {
@@ -82,14 +107,6 @@ export class ProfileDetailComponent implements OnInit {
 				routingDisabled: false,
 				type: ProfileType.ATS_PROFILE
 			};
-		} else {
-			const numID = parseInt(id, 10);
-			if (Number.isNaN(numID)) {
-				throw new Error(`route parameter 'id' was non-number:  ${{ id }}`);
-			} else {
-				this.profile = await this.api.getProfiles(Number(id));
-				this.navSvc.headerTitle.next(`Profile: ${this.profile.name}`);
-			}
 		}
 	}
 
