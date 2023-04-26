@@ -343,10 +343,11 @@ export class ServerService {
 	/**
 	 * Deletes a Status.
 	 *
-	 * @param id The ID of the Status to delete.
+	 * @param statusId The ID of the Status to delete.
 	 * @returns The deleted status.
 	 */
-	public async deleteStatus(id: number): Promise<ResponseStatus> {
+	public async deleteStatus(statusId: number | ResponseStatus): Promise<ResponseStatus> {
+		const id = typeof (statusId) === "number" ? statusId : statusId.id;
 		const idx = this.statuses.findIndex(j => j.id === id);
 		if (idx < 0) {
 			throw new Error(`no such status: #${id}`);
