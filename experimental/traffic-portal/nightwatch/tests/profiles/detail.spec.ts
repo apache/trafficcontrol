@@ -18,14 +18,14 @@ describe("Profile Detail Spec", () => {
 		browser.url(`${page.api.launchUrl}/core/profiles/${browser.globals.testData.profile.id}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
+				.assert.enabled("@name")
 				.assert.enabled("@cdn")
+				.assert.enabled("@type")
+				.assert.enabled("@routingDisabled")
 				.assert.enabled("@description")
 				.assert.not.enabled("@id")
 				.assert.not.enabled("@lastUpdated")
-				.assert.enabled("@name")
-				.assert.enabled("@routingDisabled")
 				.assert.enabled("@saveBtn")
-				.assert.enabled("@type")
 				.assert.valueEquals("@name", browser.globals.testData.profile.name)
 				.assert.valueEquals("@id", String(browser.globals.testData.profile.id));
 		});
