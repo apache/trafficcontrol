@@ -18,7 +18,6 @@ tpv2_pkg_name: "{% if tpv2_version is defined and tpv2_version != omit %}{{ 'tra
 # TP installation information
 tpv2_base_install_dir: /opt/traffic_portal_v2
 tpv2_properties_dir: "{{ tpv2_base_install_dir }}/public"
-# TPv2 config file == TP
 tpv2_conf_dir: /etc/traffic_portal/conf
 
 # config.js

@@ -25,7 +25,7 @@
 - name: Copy config.js file
   template:
     src: "config_v2.js.j2"
-    dest: "{{ tpv2_conf_dir }}/config_v2.js"
+    dest: "{{ tpv2_conf_dir }}/config.js"
     owner: root
     group: root
     mode: 0600
