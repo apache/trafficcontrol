@@ -16,7 +16,7 @@ limitations under the License.
     <tp-loading *ngIf="loading"></tp-loading>
     <form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="profile">
         <mat-card-content>
-            <mat-form-field *ngIf="!new && profile">
+            <mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
 				<input matInput type="text" name="id" disabled readonly [defaultValue]="profile['id']" />
 			</mat-form-field>
@@ -45,9 +45,9 @@ limitations under the License.
             </mat-form-field>
             <mat-form-field>
                 <mat-label>Description</mat-label>
-                <textarea matInput [(ngModel)]="profile['description']" [ngModelOptions]="{standalone: true}" required></textarea>
+                <textarea matInput name="description" [(ngModel)]="profile['description']" [ngModelOptions]="{standalone: true}" required></textarea>
             </mat-form-field>
-            <mat-form-field *ngIf="!new && profile">
+            <mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>
 				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="profile['lastUpdated']" />
 			</mat-form-field>
