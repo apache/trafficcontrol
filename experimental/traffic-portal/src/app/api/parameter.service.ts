@@ -14,7 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import {ResponseParameter, TypeFromResponse} from "trafficops-types";
+import {RequestParameter, ResponseParameter} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -53,19 +53,43 @@ export class ParameterService extends APIService {
 					params = {name: idOrName};
 			}
 			const r = await this.get<[ResponseParameter]>(path, undefined, params).toPromise();
+			if (r.length !== 1) {
+				throw new Error(`Traffic Ops responded with ${r.length} Types by identifier ${idOrName}`);
+			}
 			return r[0];
 		}
 		return this.get<Array<ResponseParameter>>(path).toPromise();
 	}
 
 	/**
-	 * Deletes an existing type.
+	 * Deletes an existing parameter.
 	 *
-	 * @param typeOrId Id of the type to delete.
-	 * @returns The deleted type.
+	 * @param typeOrId Id of the parameter to delete.
+	 * @returns The deleted parameter.
 	 */
-	public async deleteParameter(typeOrId: number | TypeFromResponse): Promise<TypeFromResponse> {
+	public async deleteParameter(typeOrId: number | ResponseParameter): Promise<ResponseParameter> {
 		const id = typeof(typeOrId) === "number" ? typeOrId : typeOrId.id;
-		return this.delete<TypeFromResponse>(`parameters/${id}`).toPromise();
+		return this.delete<ResponseParameter>(`parameters/${id}`).toPromise();
+	}
+
+	/**
+	 * Creates a new parameter.
+	 *
+	 * @param parameter The parameter to create.
+	 * @returns The created parameter.
+	 */
+	public async createParameter(parameter: RequestParameter): Promise<ResponseParameter> {
+		return this.post<ResponseParameter>("parameters", parameter).toPromise();
+	}
+
+	/**
+	 * Replaces the current definition of a parameter with the one given.
+	 *
+	 * @param parameter The new parameter.
+	 * @returns The updated parameter.
+	 */
+	public async updateParameter(parameter: ResponseParameter): Promise<ResponseParameter> {
+		const path = `parameters/${parameter.id}`;
+		return this.put<ResponseParameter>(path, parameter).toPromise();
 	}
 }

@@ -68,7 +68,7 @@ import { UserDetailsComponent } from "./users/user-details/user-details.componen
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
 import {ParametersTableComponent} from "./parameters/table/parameters-table.component";
-import {ParameterDetailComponent} from "./parameters/details/parameter-details.component"
+import {ParameterDetailComponent} from "./parameters/detail/parameter-detail.component"
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
@@ -160,6 +160,7 @@ export const ROUTES: Routes = [
 		CapabilitiesComponent,
 		CapabilityDetailsComponent,
 		ParametersTableComponent,
+		ParameterDetailComponent,
 	],
 	exports: [],
 	imports: [
