@@ -71,6 +71,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: traffic_ops-coverage.out
-          flags: traffic_ops_unit,unit_tests
+          flags: traffic_ops_unit
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

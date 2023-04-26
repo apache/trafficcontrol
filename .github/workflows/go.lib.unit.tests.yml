@@ -71,6 +71,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: golib-coverage.out
-          flags: golib_unit,unit_tests
+          flags: golib_unit
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

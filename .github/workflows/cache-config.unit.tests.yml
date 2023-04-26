@@ -71,6 +71,6 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           files: cache-config-coverage.out
-          flags: t3c_unit,unit_tests
+          flags: t3c_unit
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
