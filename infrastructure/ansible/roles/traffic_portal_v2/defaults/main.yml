@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 install_traffic_portal_v2: False
-tpv2_pkg_name: "{% if tpv2_version is defined and tpv2_version != omit %}{{ 'traffic-portal-'+tpv2_version }}{% else %}traffic-portal{% endif %}"
+tpv2_pkg_name: "{% if tpv2_version is defined and tpv2_version != omit %}{{ 'traffic_portal_v2-'+tpv2_version }}{% else %}traffic_portal_v2{% endif %}"
 
 # TP installation information
 tpv2_base_install_dir: /opt/traffic-portal
