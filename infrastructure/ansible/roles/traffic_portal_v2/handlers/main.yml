@@ -14,7 +14,7 @@
 #
 - name: Restart Traffic Portal v2
   systemd:
-    name: traffic_portal_v2
+    name: traffic-portal
     state: restarted
     daemon_reload: yes
   notify: Wait for Traffic Portal v2 to become available
