@@ -19,10 +19,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 const GeneratedByStr = "trafficcontrol-go-tocookie"
