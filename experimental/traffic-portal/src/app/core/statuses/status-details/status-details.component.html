@@ -36,7 +36,6 @@ limitations under the License.
         </mat-card-content>
         <mat-card-actions align="end">
             <button mat-raised-button type="button" color="warn" (click)="deleteStatus()" *ngIf="!new">Delete</button>
-            <button mat-raised-button type="button" routerLink="/core/statuses">Cancel</button>
             <button mat-raised-button type="submit" color="primary">
                 {{new ? 'Create' : 'Save'}}
             </button>

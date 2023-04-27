@@ -67,11 +67,12 @@ export class StatusesTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on statuses data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseStatus>> = [
 		{
-			href: (u: ResponseStatus): string => `${u.id}`,
-			name: "View Status Details"
+			href: (status: ResponseStatus): string => `${status.id}`,
+			name: "Open in New Tab",
+			newTab: true
 		},
 		{
-			href: (u: ResponseStatus): string => `${u.id}`,
+			href: (status: ResponseStatus): string => `${status.id}`,
 			name: "Edit"
 		},
 		{
