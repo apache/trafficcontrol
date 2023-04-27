@@ -12,5 +12,4 @@
 # limitations under the License.
 #
 
-Apache-TrafficControl==3.1.0
 pytest==7.2.1
