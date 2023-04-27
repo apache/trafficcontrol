@@ -15,12 +15,15 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
+	Interface,
+	IPAddress,
 	RequestServer,
 	RequestServerCapability,
 	RequestStatus,
 	ResponseServer,
 	ResponseServerCapability,
 	ResponseStatus,
+	Server,
 	ServerCapability,
 	Servercheck,
 	ServerQueueResponse,
@@ -336,5 +339,54 @@ export class ServerService extends APIService {
 	 */
 	public async createCapability(cap: RequestServerCapability): Promise<ResponseServerCapability> {
 		return this.post<ResponseServerCapability>("server_capabilities", cap).toPromise();
+	}
+
+	/**
+	 * Gets the "service" interface for a server; that is, the interface that
+	 * contains service addresses.
+	 *
+	 * @param server Either the server for which to find the "service"
+	 * interface, or just the interfaces thereof.
+	 * @returns The network interface that contains the service addresses.
+	 * @throws {Error} If no service addresses are found on any interface.
+	 */
+	public getServiceInterface(server: Server | Interface[]): Interface {
+		const infs = Array.isArray(server) ? server : server.interfaces;
+		for (const inf of infs) {
+			for (const addr of inf.ipAddresses) {
+				if (addr.serviceAddress) {
+					return inf;
+				}
+			}
+		}
+		throw new Error("no service addresses found");
+	}
+
+	/**
+	 * Pulls apart an IP address with a CIDR-notation suffix into a plain
+	 * address (with no suffix) and a netmask that represents the same subnet
+	 * as the CIDR-notation suffix.
+	 *
+	 * @param addr The address from which to extract the netmask.
+	 * @returns The address without a netmask and the netmask itself (if one
+	 * could be found; otherwise it'll be `undefined`).
+	 */
+	public extractNetmask(addr: IPAddress | string): [string, string | undefined] {
+		let addrStr = typeof(addr) === "string" ? addr : addr.address;
+		let maskStr;
+		if (addrStr.includes("/")) {
+			const parts = addrStr.split("/");
+			addrStr = parts[0];
+			let masklen = Number(parts[1]);
+
+			const mask = [];
+			for (let k = 0; k < 4; ++k) {
+				const n = Math.min(masklen, 8);
+				mask.push(256 - Math.pow(2, 8 - n));
+				masklen -= n;
+			}
+			maskStr = mask.join(".");
+		}
+		return [addrStr, maskStr];
 	}
 }
