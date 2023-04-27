@@ -14,11 +14,13 @@
  */
 import { Component, type OnInit } from "@angular/core";
 import { FormControl, FormGroup, ValidationErrors, Validators } from "@angular/forms";
-import type { ISORequest } from "trafficops-types";
+import { MatDialog } from "@angular/material/dialog";
+import { serviceAddresses, type ISORequest, type ResponseServer } from "trafficops-types";
 
-import { MiscAPIsService } from "src/app/api";
+import { MiscAPIsService, ServerService } from "src/app/api";
 import { FileUtilsService } from "src/app/shared/file-utils.service";
 import { IPV4, IPV6, IPV6_WITH_CIDR } from "src/app/utils";
+import { CollectionChoiceDialogComponent, CollectionChoiceDialogData } from "src/app/shared/dialogs/collection-choice-dialog/collection-choice-dialog.component";
 
 /**
  * The controller for a form that can be used to generate ISOs.
@@ -67,7 +69,12 @@ export class ISOGenerationFormComponent implements OnInit {
 		return this.form.controls.useDHCP.value;
 	}
 
-	constructor(private readonly api: MiscAPIsService, private readonly fileService: FileUtilsService) {
+	constructor(
+		private readonly api: MiscAPIsService,
+		private readonly fileService: FileUtilsService,
+		private readonly dialog: MatDialog,
+		private readonly serverAPI: ServerService
+	) {
 		this.form.controls.rootPassConfirm.addValidators((ctrl): ValidationErrors | null => {
 			if (this.form.controls.rootPass.value !== ctrl.value) {
 				return {
@@ -150,6 +157,66 @@ export class ISOGenerationFormComponent implements OnInit {
 
 		const response = await this.api.generateISO(req);
 		this.fileService.download(response, `${fqdn}-${this.form.controls.osVersion.value}.iso`);
+	}
+
+	private copyServerData(server: ResponseServer): void {
+		const inf = this.serverAPI.getServiceInterface(server);
+		this.form.controls.useDHCP.setValue(false);
+		this.form.controls.fqdn.setValue(`${server.hostName}.${server.domainName}`);
+		this.form.controls.interfaceName.setValue(inf.name);
+		this.form.controls.mgmtIpAddress.setValue(server.mgmtIpAddress);
+		this.form.controls.mgmtIpGateway.setValue(server.mgmtIpGateway);
+		this.form.controls.mgmtIpNetmask.setValue(server.mgmtIpNetmask);
+		if (inf.mtu) {
+			this.form.controls.mtu.setValue(inf.mtu);
+		}
+
+		const [ipv4, ipv6] = serviceAddresses([inf]);
+		if (ipv4) {
+			if (ipv4.gateway) {
+				this.form.controls.ipv4Gateway.setValue(ipv4.gateway);
+			}
+
+			const [addr, mask] = this.serverAPI.extractNetmask(ipv4);
+			this.form.controls.ipv4Address.setValue(addr);
+			if (mask) {
+				this.form.controls.ipv4Netmask.setValue(mask);
+			}
+		}
+
+		if (ipv6) {
+			if (ipv6.gateway) {
+				this.form.controls.ipv6Gateway.setValue(ipv6.gateway);
+			}
+			this.form.controls.ipv6Address.setValue(ipv6.address);
+		}
+	}
+
+	public async openCopyDialog(): Promise<void> {
+		const collection = (await this.serverAPI.getServers()).map(
+			s => ({
+				label: `${s.hostName}.${s.domainName}`,
+				value: s
+			})
+		);
+
+		const data = {
+			collection,
+			message: "Select a server from which to copy ISO generation information.",
+			title: "Copy Attributes from Server"
+		};
+		const d = this.dialog.open<
+		CollectionChoiceDialogComponent<ResponseServer>,
+		CollectionChoiceDialogData<ResponseServer>,
+		ResponseServer
+		>(
+			CollectionChoiceDialogComponent, {data}
+		);
+
+		const selected = await d.afterClosed().toPromise();
+		if (selected) {
+			this.copyServerData(selected);
+		}
 	}
 
 }
