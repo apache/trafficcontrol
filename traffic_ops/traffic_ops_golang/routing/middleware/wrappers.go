@@ -225,10 +225,12 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		user := "-"
 		cookieToken := getCookieToken(r)
 		cookie, userErr, sysErr := tocookie.Parse(secret, cookieToken)
-		if userErr == nil && sysErr == nil {
-			user = cookie.AuthData
-		} else {
-			log.Errorf("Error retrieving user from cookie: User Error: %v System Error: %v", userErr, sysErr)
+		if cookie != nil {
+			if userErr == nil && sysErr == nil {
+				user = cookie.AuthData
+			} else {
+				log.Errorf("Error retrieving user from cookie: User Error: %v System Error: %v", userErr, sysErr)
+			}
 		}
 		start := time.Now()
 		defer func() {

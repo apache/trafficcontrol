@@ -19,6 +19,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strings"
 	"time"
@@ -46,7 +47,8 @@ func checkHmac(message, messageMAC, key []byte) bool {
 
 func Parse(secret, cookie string) (*Cookie, error, error) {
 	if cookie == "" {
-		return nil, fmt.Errorf("error parsing cookie: cookie is empty or missing"), nil
+		log.Warnf("cookie is empty or missing")
+		return nil, nil, nil
 	}
 
 	dashPos := strings.Index(cookie, "-")

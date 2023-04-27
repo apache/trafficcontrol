@@ -1091,7 +1091,7 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 	}
 
 	oldCookie, userErr, sysErr := tocookie.Parse(secret, cookie.Value)
-	if userErr != nil || sysErr != nil {
+	if oldCookie == nil || userErr != nil || sysErr != nil {
 		return auth.CurrentUser{}, userErr, sysErr, http.StatusUnauthorized
 	}
 
