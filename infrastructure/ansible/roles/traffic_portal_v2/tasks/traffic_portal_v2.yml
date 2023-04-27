@@ -42,5 +42,5 @@
 
 - name: Enable Traffic Portal v2 in systemd
   systemd:
-    name: traffic_portal_v2
+    name: traffic-portal
     enabled: yes

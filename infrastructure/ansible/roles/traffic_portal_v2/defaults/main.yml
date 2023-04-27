@@ -30,7 +30,7 @@ tpv2_conf_dir: /etc/traffic-portal
 "tpv2_browser_folder": "{{ tpv2_properties_dir }}"
 
 
-# Traffic_portal_v2_properties.json
+# Traffic_portal_v2_properties.json n/a
 # This makes me feel bad, but the structure itself isn't strongly defined
 # Addition is supported, but not removal
 tpv2_default_properties_template:
