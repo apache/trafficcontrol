@@ -47,7 +47,7 @@ Example Playbook
 ```yaml
   - name: Deploy Traffic Portal V2
       import_role:
-        name: traffic_portal_v2
+        name: traffic-portal
       vars:
         install_traffic_portal: true
         tpv2_useSSL: true
