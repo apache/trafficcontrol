@@ -21,12 +21,12 @@ tpv2_properties_dir: "{{ tpv2_base_install_dir }}/browser"
 tpv2_conf_dir: /etc/traffic-portal
 
 # config.json
-"tpv2_insecure": false,
-"tpv2_sslPort": 443,
-"tpv2_to_base_url": "https://localhost:6443",
-"tpv2_useSSL": true,
-"tpv2_ssl_cert_file": "/server.crt",
-"tpv2_ssl_key_file": "/server.key",
+"tpv2_insecure": false
+"tpv2_sslPort": 443
+"tpv2_to_base_url": "https://localhost:6443"
+"tpv2_useSSL": true
+"tpv2_ssl_cert_file": "/server.crt"
+"tpv2_ssl_key_file": "/server.key"
 "tpv2_browser_folder": "{{ tpv2_properties_dir }}"
 
 
