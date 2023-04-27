@@ -17,23 +17,18 @@ tpv2_pkg_name: "{% if tpv2_version is defined and tpv2_version != omit %}{{ 'tra
 
 # TP installation information
 tpv2_base_install_dir: /opt/traffic-portal
-tpv2_properties_dir: "{{ tpv2_base_install_dir }}"
+tpv2_properties_dir: "{{ tpv2_base_install_dir }}/browser"
 tpv2_conf_dir: /etc/traffic-portal
 
-# config.js
-tpv2_timeout: "120s"
-tpv2_useSSL: False
-tpv2_http_port: 8080
-tpv2_sslPort: 8443
-tpv2_ssl_key_file: "/etc/pki/tls/localhost.key"
-tpv2_ssl_cert_file: "/etc/pki/tls/localhost.crt"
-tpv2_ssl_ca_files:
-  - /etc/pki/tls/ca-localhost.crt
-tpv2_files_static_location: "{{ tpv2_properties_dir }}"
-tpv2_log_stream_location: "/var/log/traffic-portal/access.log"
-tpv2_reject_unauthorized: 0
-tpv2_ts_base_url: "https://localhost"
-tpv2_to_base_url: "https://localhost"
+# config.json
+"tpv2_insecure": false,
+"tpv2_port": 443,
+"tpv2_to_base_url": "https://localhost:6443",
+"tpv2_use_ssl": true,
+"tpv2_ssl_cert_file": "/server.crt",
+"tpv2_ssl_key_file": "/server.key",
+"tpv2_browser_folder": "{{ tpv2_properties_dir }}"
+
 
 # Traffic_portal_v2_properties.json
 # This makes me feel bad, but the structure itself isn't strongly defined
