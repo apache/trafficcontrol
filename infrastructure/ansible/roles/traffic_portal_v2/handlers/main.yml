@@ -19,11 +19,11 @@
     daemon_reload: yes
   notify: Wait for Traffic Portal v2 to become available
 
-- name: Wait for HTTP Traffic Portal v2 to become available
-  wait_for:
-    delay: 3
-    port: "{{ tpv2_http_port }}"
-  listen: Wait for Traffic Portal v2 to become available
+#- name: Wait for HTTP Traffic Portal v2 to become available
+#  wait_for:
+#    delay: 3
+#    port: "{{ tpv2_http_port }}"
+#  listen: Wait for Traffic Portal v2 to become available
 
 - name: Wait for HTTPS Traffic Portal v2 to become available
   wait_for:
