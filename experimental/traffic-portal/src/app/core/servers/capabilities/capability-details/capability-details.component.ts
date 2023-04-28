@@ -11,18 +11,112 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute, Router } from "@angular/router";
+import { ResponseServerCapability } from "trafficops-types";
 
+import { ServerService } from "src/app/api";
+import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+
+/**
+ * Controller for the form for creating and editing Server Capabilities.
+ */
 @Component({
 	selector: "tp-capability-details",
+	styleUrls: ["./capability-details.component.scss"],
 	templateUrl: "./capability-details.component.html",
-	styleUrls: ["./capability-details.component.scss"]
 })
 export class CapabilityDetailsComponent implements OnInit {
+	public new = false;
 
-	constructor() { }
+	public capability!: ResponseServerCapability;
 
-	ngOnInit(): void {
+	/**
+	 * This caches the original name of the Capability, so that updates can be
+	 * made.
+	 */
+	private name = "";
+
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly router: Router,
+		private readonly dialog: MatDialog,
+		private readonly navSvc: NavigationService,
+		private readonly api: ServerService,
+		private readonly location: Location
+	) {}
+
+	/**
+	 * Angular lifecycle hook.
+	 */
+	public async ngOnInit(): Promise<void> {
+		const name = this.route.snapshot.paramMap.get("name");
+		if (name === null) {
+			this.setHeader("New Capability");
+			this.new = true;
+			this.capability = {
+				lastUpdated: new Date(),
+				name: "",
+			};
+			return;
+		}
+
+		this.capability = await this.api.getCapabilities(name);
+		this.name = this.capability.name;
+		this.navSvc.headerTitle.next(`Capability: ${this.capability.name}`);
 	}
 
+	/**
+	 * Sets the value of the header text, and caches the Capability's initial
+	 * name.
+	 *
+	 * @param name The name of the current Capability (before editing).
+	 */
+	private setHeader(name: string): void {
+		this.name = name;
+		this.navSvc.headerTitle.next(`Capability: ${name}`);
+	}
+
+	/**
+	 * Deletes the current physLocation.
+	 */
+	public async deleteCapability(): Promise<void> {
+		if (this.new) {
+			console.error("Unable to delete new capability");
+			return;
+		}
+		const ref = this.dialog.open(DecisionDialogComponent, {
+			data: {
+				message: `Are you sure you want to delete the Capability '${this.capability.name}'?`,
+				title: "Confirm Delete"
+			}
+		});
+		ref.afterClosed().subscribe(result => {
+			if(result) {
+				this.api.deleteCapability(this.capability);
+				this.location.back();
+			}
+		});
+	}
+
+	/**
+	 * Submits new/updated physLocation.
+	 *
+	 * @param e HTML click event.
+	 */
+	public async submit(e: Event): Promise<void> {
+		e.preventDefault();
+		e.stopPropagation();
+		if(this.new) {
+			this.capability = await this.api.createCapability(this.capability);
+			this.new = false;
+		} else {
+			this.capability = await this.api.updateCapability(this.name, this.capability);
+		}
+		this.router.navigate([`/core/capabilities/${this.capability.name}`], {replaceUrl: true});
+		this.setHeader(this.name);
+	}
 }
