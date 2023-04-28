@@ -14,17 +14,21 @@
 
 import { Injectable } from "@angular/core";
 import type {
+	Interface,
+	IPAddress,
 	RequestServer,
 	RequestServerCapability,
 	RequestStatus,
 	ResponseServer,
 	ResponseServerCapability,
 	ResponseStatus,
+	Server,
 	ServerCapability,
-	Servercheck
+	Servercheck,
 } from "trafficops-types";
 
 import { CDNService, PhysicalLocationService, ProfileService, TypeService } from "..";
+import { ServerService as ConcreteService } from "../server.service";
 
 /**
  * Generates a `Servercheck` for a given `server`.
@@ -503,5 +507,31 @@ export class ServerService {
 		const ret = this.servers[index];
 		this.servers.splice(index, 1);
 		return ret;
+	}
+
+	/**
+	 * Gets the "service" interface for a server; that is, the interface that
+	 * contains service addresses.
+	 *
+	 * @param server Either the server for which to find the "service"
+	 * interface, or just the interfaces thereof.
+	 * @returns The network interface that contains the service addresses.
+	 * @throws {Error} If no service addresses are found on any interface.
+	 */
+	public static getServiceInterface(server: Server | Interface[]): Interface {
+		return ConcreteService.getServiceInterface(server);
+	}
+
+	/**
+	 * Pulls apart an IP address with a CIDR-notation suffix into a plain
+	 * address (with no suffix) and a netmask that represents the same subnet
+	 * as the CIDR-notation suffix.
+	 *
+	 * @param addr The address from which to extract the netmask.
+	 * @returns The address without a netmask and the netmask itself (if one
+	 * could be found; otherwise it'll be `undefined`).
+	 */
+	public static extractNetmask(addr: IPAddress | string): [string, string | undefined] {
+		return ConcreteService.extractNetmask(addr);
 	}
 }
