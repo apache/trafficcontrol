@@ -128,7 +128,7 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 
 	// Client provided a verified certificate. Extract UID value.
 	if username, err := auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0]); err != nil {
-		log.Errorln("parsing client certificate: %s", err.Error())
+		log.Errorf("parsing client certificate: %s\n", err)
 		return false
 	} else {
 		form.Username = username
@@ -142,14 +142,14 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 		return false
 	}
 	if err != nil {
-		log.Warnf("client cert auth: checking local user: %s\n", err.Error())
+		log.Warnf("client cert auth: checking local user: %s\n", err)
 	}
 
 	// Check LDAP if enabled
 	if !authenticated && cfg.LDAPEnabled {
 		_, authenticated, err = auth.LookupUserDN(form.Username, cfg.ConfigLDAP)
 		if err != nil {
-			log.Warnf("Client Cert Auth: checking ldap user: %s\n", err.Error())
+			log.Warnf("Client Cert Auth: checking ldap user: %s\n", err)
 		}
 	}
 
@@ -192,7 +192,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				return
 			}
 			if err != nil {
-				log.Errorf("checking local user: %s\n", err.Error())
+				log.Errorf("checking local user: %s\n", err)
 			}
 
 			// User w/ role does not exist, return unauthorized
@@ -210,7 +210,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				return
 			}
 			if err != nil {
-				log.Errorf("checking local user password: %s\n", err.Error())
+				log.Errorf("checking local user password: %s\n", err)
 			}
 			var ldapErr error
 			if !authenticated && cfg.LDAPEnabled {
@@ -279,7 +279,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		defer func() {
 			if err := tx.Commit(); err != nil && err != sql.ErrTxDone {
-				log.Errorln("committing transaction: " + err.Error())
+				log.Errorf("committing transaction: %s", err)
 			}
 		}()
 		_, dbErr := tx.Exec(UpdateLoginTimeQuery, form.Username)
@@ -459,7 +459,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		var result map[string]interface{}
 		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
-			log.Warnf("Error parsing JSON response from oAuth: %s", err.Error())
+			log.Warnf("Error parsing JSON response from oAuth: %s", err)
 			encodedToken = buf.String()
 		} else if _, ok := result[api.AccessToken]; !ok {
 			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
@@ -504,7 +504,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 		if err != nil {
-			log.Errorf("checking local user: %s\n", err.Error())
+			log.Errorf("checking local user: %s\n", err)
 		}
 
 		if userAllowed {
