@@ -18,9 +18,12 @@ import { MatDialog } from "@angular/material/dialog";
 import { serviceAddresses, type ISORequest, type ResponseServer } from "trafficops-types";
 
 import { MiscAPIsService, ServerService } from "src/app/api";
+import {
+	CollectionChoiceDialogComponent,
+	CollectionChoiceDialogData
+} from "src/app/shared/dialogs/collection-choice-dialog/collection-choice-dialog.component";
 import { FileUtilsService } from "src/app/shared/file-utils.service";
 import { IPV4, IPV6, IPV6_WITH_CIDR } from "src/app/utils";
-import { CollectionChoiceDialogComponent, CollectionChoiceDialogData } from "src/app/shared/dialogs/collection-choice-dialog/collection-choice-dialog.component";
 
 /**
  * The controller for a form that can be used to generate ISOs.
@@ -159,8 +162,13 @@ export class ISOGenerationFormComponent implements OnInit {
 		this.fileService.download(response, `${fqdn}-${this.form.controls.osVersion.value}.iso`);
 	}
 
+	/**
+	 * Copies information from a server to fill in form information.
+	 *
+	 * @param server The server from which to copy data.
+	 */
 	private copyServerData(server: ResponseServer): void {
-		const inf = this.serverAPI.getServiceInterface(server);
+		const inf = ServerService.getServiceInterface(server);
 		this.form.controls.useDHCP.setValue(false);
 		this.form.controls.fqdn.setValue(`${server.hostName}.${server.domainName}`);
 		this.form.controls.interfaceName.setValue(inf.name);
@@ -177,7 +185,7 @@ export class ISOGenerationFormComponent implements OnInit {
 				this.form.controls.ipv4Gateway.setValue(ipv4.gateway);
 			}
 
-			const [addr, mask] = this.serverAPI.extractNetmask(ipv4);
+			const [addr, mask] = ServerService.extractNetmask(ipv4);
 			this.form.controls.ipv4Address.setValue(addr);
 			if (mask) {
 				this.form.controls.ipv4Netmask.setValue(mask);
@@ -192,6 +200,10 @@ export class ISOGenerationFormComponent implements OnInit {
 		}
 	}
 
+	/**
+	 * Opens a dialog for copying the information stored on a Traffic Ops Server
+	 * object to fill in form fields.
+	 */
 	public async openCopyDialog(): Promise<void> {
 		const collection = (await this.serverAPI.getServers()).map(
 			s => ({

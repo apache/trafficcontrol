@@ -350,7 +350,7 @@ export class ServerService extends APIService {
 	 * @returns The network interface that contains the service addresses.
 	 * @throws {Error} If no service addresses are found on any interface.
 	 */
-	public getServiceInterface(server: Server | Interface[]): Interface {
+	public static getServiceInterface(server: Server | Interface[]): Interface {
 		const infs = Array.isArray(server) ? server : server.interfaces;
 		for (const inf of infs) {
 			for (const addr of inf.ipAddresses) {
@@ -371,7 +371,7 @@ export class ServerService extends APIService {
 	 * @returns The address without a netmask and the netmask itself (if one
 	 * could be found; otherwise it'll be `undefined`).
 	 */
-	public extractNetmask(addr: IPAddress | string): [string, string | undefined] {
+	public static extractNetmask(addr: IPAddress | string): [string, string | undefined] {
 		let addrStr = typeof(addr) === "string" ? addr : addr.address;
 		let maskStr;
 		if (addrStr.includes("/")) {
