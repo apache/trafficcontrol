@@ -591,7 +591,7 @@ func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
 		},
 	}
 
-	server := makeTestParentServer()
+	edge := makeTestParentServer()
 
 	origin0 := makeTestParentServer()
 	origin0.Cachegroup = util.StrPtr("originCG")
@@ -602,15 +602,15 @@ func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
 	origin0.Type = tc.OriginTypeName
 	origin0.TypeID = util.IntPtr(991)
 
-	servers := []Server{*server, *origin0}
+	servers := []Server{*edge, *origin0}
 
 	topologies := []tc.Topology{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullable{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
+	eCG.Name = edge.Cachegroup
+	eCG.ID = edge.CachegroupID
 	eCG.ParentName = origin0.Cachegroup
 	eCG.ParentCachegroupID = origin0.CachegroupID
 	eCGType := tc.CacheGroupEdgeTypeName
@@ -626,7 +626,7 @@ func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		{
-			Server:          *server.ID,
+			Server:          *edge.ID,
 			DeliveryService: *ds0.ID,
 		},
 		{
@@ -639,7 +639,7 @@ func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
 		Name:       "my-cdn-name",
 	}
 
-	cfg, err := MakeParentDotConfig(dses, server, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	cfg, err := MakeParentDotConfig(dses, edge, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -657,6 +657,131 @@ func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
 	}
 	if !strings.Contains(txtx, `max_simple_retries=2`) {
 		t.Errorf(`expected max_simple_retries=2 from DS params, actual: '%v'`, txt)
+	}
+}
+
+// Test for mso non topology where mid cache group has no primary/secondary
+// parents assigned, just any arbitrary servers.
+func TestMakeParentDotConfigMSONoTopoMultiCG(t *testing.T) {
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment"}
+
+	ds0 := makeParentDS()
+	ds0Type := tc.DSTypeHTTP
+	ds0.Type = &ds0Type
+	ds0.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
+	ds0.OrgServerFQDN = util.StrPtr("http://ds0.example.net")
+	ds0.MultiSiteOrigin = util.BoolPtr(true)
+
+	dses := []DeliveryService{*ds0}
+
+	parentConfigParams := []tc.Parameter{}
+
+	serverParams := []tc.Parameter{
+		tc.Parameter{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "9",
+			Profiles:   []byte(`["global"]`),
+		},
+	}
+
+	edge := makeTestParentServer()
+	edge.Cachegroup = util.StrPtr("edgeCG")
+	edge.CachegroupID = util.IntPtr(400)
+
+	mid := makeTestParentServer()
+	mid.Cachegroup = util.StrPtr("midCG")
+	mid.CachegroupID = util.IntPtr(500)
+	mid.HostName = util.StrPtr("mid0")
+	mid.ID = util.IntPtr(45)
+	setIP(mid, "192.168.2.2")
+
+	org0 := makeTestParentServer()
+	org0.Cachegroup = util.StrPtr("orgCG0")
+	org0.CachegroupID = util.IntPtr(501)
+	org0.HostName = util.StrPtr("org0")
+	org0.ID = util.IntPtr(46)
+	setIP(org0, "192.168.2.3")
+	org0.Type = tc.OriginTypeName
+	org0.TypeID = util.IntPtr(991)
+
+	org1 := makeTestParentServer()
+	org1.Cachegroup = util.StrPtr("orgCG1")
+	org1.CachegroupID = util.IntPtr(502)
+	org1.HostName = util.StrPtr("org1")
+	org1.ID = util.IntPtr(47)
+	setIP(org1, "192.168.2.4")
+	org1.Type = tc.OriginTypeName
+	org1.TypeID = util.IntPtr(991)
+
+	servers := []Server{*edge, *mid, *org0, *org1}
+
+	topologies := []tc.Topology{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+
+	eCG := &tc.CacheGroupNullable{}
+	eCG.Name = edge.Cachegroup
+	eCG.ID = edge.CachegroupID
+	eCG.ParentName = mid.Cachegroup
+	eCG.ParentCachegroupID = mid.CachegroupID
+	eCGType := tc.CacheGroupEdgeTypeName
+	eCG.Type = &eCGType
+
+	// NOTE: no parent cache groups specified
+	mCG := &tc.CacheGroupNullable{}
+	mCG.Name = mid.Cachegroup
+	mCG.ID = mid.CachegroupID
+	mCGType := tc.CacheGroupMidTypeName
+	mCG.Type = &mCGType
+
+	oCG0 := &tc.CacheGroupNullable{}
+	oCG0.Name = org0.Cachegroup
+	oCG0.ID = org0.CachegroupID
+	oCG0Type := tc.CacheGroupOriginTypeName
+	oCG0.Type = &oCG0Type
+
+	oCG1 := &tc.CacheGroupNullable{}
+	oCG1.Name = org1.Cachegroup
+	oCG1.ID = org1.CachegroupID
+	oCG1Type := tc.CacheGroupOriginTypeName
+	oCG1.Type = &oCG1Type
+
+	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *oCG0, *oCG1}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          *edge.ID,
+			DeliveryService: *ds0.ID,
+		},
+		DeliveryServiceServer{
+			Server:          *org0.ID,
+			DeliveryService: *ds0.ID,
+		},
+		DeliveryServiceServer{
+			Server:          *org1.ID,
+			DeliveryService: *ds0.ID,
+		},
+	}
+	cdn := &tc.CDN{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	cfg, err := MakeParentDotConfig(dses, mid, servers, topologies, serverParams, parentConfigParams, serverCapabilities, dsRequiredCapabilities, cgs, dss, cdn, hdr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	testComment(t, txt, hdr.HdrComment)
+
+	if strings.Contains(txt, `secondary_parent="`) {
+		t.Errorf("Did not expect secondary parent', actual: '%v'", txt)
+	}
+
+	if !strings.Contains(txt, ` parent="org0.mydomain.example.net:80|0.999;org1.mydomain.example.net:80|0.999"`) {
+		t.Errorf("Expected parent with org0 and org1 both listed, actual: '%v'", txt)
 	}
 }
 

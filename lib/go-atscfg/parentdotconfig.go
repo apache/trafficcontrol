@@ -167,8 +167,9 @@ func MakeParentDotConfig(
 
 // primarySecondary contains the names of the primary and secondary parent cache groups.
 type primarySecondary struct {
-	Primary   string
-	Secondary string
+	Primaries   []string
+	Secondaries []string
+	Nulls       []string
 }
 
 // createTopology creates an on the fly topology for this server and non topology delivery service.
@@ -214,7 +215,7 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 		topo.Nodes = append(topo.Nodes, node)
 	} else {
 		// If mid cache group, insert fake edge cache group.
-		// This is incorrect if there are multiple MID tiers.
+		// This is technically incorrect if there are multiple MID tiers.
 		pind := 1
 		if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
 			parents := []int{pind}
@@ -227,13 +228,22 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 		}
 
 		parents := []int{}
-		if cgprimsec.Primary != "" {
+		for _, _ = range cgprimsec.Primaries {
 			parents = append(parents, pind)
 			pind++
 		}
-		if cgprimsec.Secondary != "" {
+		for _, _ = range cgprimsec.Secondaries {
 			parents = append(parents, pind)
 			pind++
+		}
+		for _, _ = range cgprimsec.Nulls {
+			parents = append(parents, pind)
+			pind++
+		}
+
+		// Adding a '-1' in the parent indices indicates that this has non topology MSO parents, all should just go into primary
+		if 0 < len(cgprimsec.Nulls) {
+			parents = append(parents, -1)
 		}
 
 		// create the cache group this server belongs to
@@ -243,11 +253,14 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 		}
 		topo.Nodes = append(topo.Nodes, node)
 
-		if cgprimsec.Primary != "" {
-			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cgprimsec.Primary})
+		for _, prim := range cgprimsec.Primaries {
+			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: prim})
 		}
-		if cgprimsec.Secondary != "" {
-			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cgprimsec.Secondary})
+		for _, sec := range cgprimsec.Secondaries {
+			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: sec})
+		}
+		for _, null := range cgprimsec.Nulls {
+			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: null})
 		}
 	}
 	return topoName, topo, warns
@@ -425,6 +438,7 @@ func makeParentDotConfigData(
 	cgServerIDs[*server.ID] = struct{}{}
 
 	cgDSServers := filterDSS(dss, nil, cgServerIDs)
+
 	parentServerDSes := map[int]map[int]struct{}{} // map[serverID][dsID]
 	for _, dss := range cgDSServers {
 		if parentServerDSes[dss.Server] == nil {
@@ -629,22 +643,30 @@ func (p parentInfo) ToAbstract() *ParentAbstractionServiceParent {
 
 type parentInfos map[OriginHost]parentInfo
 
+type primSec struct {
+	isPrim bool
+	isSec  bool
+}
+
 // Returns a map of parent cache groups names per origin host.
 func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost]primarySecondary {
 	ocgnames := map[OriginHost]primarySecondary{}
 
 	for host, pis := range opis {
-		cgnames := make(map[string]bool)
+		cgnames := map[string]primSec{}
 		for _, pi := range pis {
-			cgnames[string(pi.Cachegroup)] = pi.PrimaryParent
+			cgnames[string(pi.Cachegroup)] =
+				primSec{isPrim: pi.PrimaryParent, isSec: pi.SecondaryParent}
 		}
 
 		ps := primarySecondary{}
-		for cg, isPrim := range cgnames {
-			if isPrim {
-				ps.Primary = cg
+		for cg, primsec := range cgnames {
+			if primsec.isPrim {
+				ps.Primaries = append(ps.Primaries, cg)
+			} else if primsec.isSec {
+				ps.Secondaries = append(ps.Secondaries, cg)
 			} else {
-				ps.Secondary = cg
+				ps.Nulls = append(ps.Nulls, cg)
 			}
 		}
 		ocgnames[host] = ps
@@ -1311,9 +1333,9 @@ func getTopologyParents(
 	dsMergeGroups []string, // sorted parent merge groups for this ds
 ) ([]*ParentAbstractionServiceParent, []*ParentAbstractionServiceParent, []string, error) {
 	warnings := []string{}
+
 	// If it's the last tier, then the parent is the origin.
 	// Note this doesn't include MSO, whose final tier cachegroup points to the origin cachegroup.
-
 	if serverIsLastTier {
 		orgURI, orgWarns, err := getOriginURI(*ds.OrgServerFQDN) // TODO pass, instead of calling again
 		warnings = append(warnings, orgWarns...)
@@ -1346,27 +1368,54 @@ func getTopologyParents(
 		return nil, nil, warnings, errors.New("This server '" + *server.HostName + "' not in DS " + *ds.XMLID + " topology, skipping")
 	}
 
-	if len(svNode.Parents) == 0 {
+	numParents := len(svNode.Parents)
+
+	// No parents (or special case mso non topo)
+	if numParents == 0 || -1 == svNode.Parents[0] {
 		return nil, nil, warnings, errors.New("DS " + *ds.XMLID + " topology '" + *ds.Topology + "' is last tier, but NonLastTier called! Should never happen")
 	}
-	if numParents := len(svNode.Parents); numParents > 2 {
-		warnings = append(warnings, "DS "+*ds.XMLID+" topology '"+*ds.Topology+"' has "+strconv.Itoa(numParents)+" parent nodes, but Apache Traffic Server only supports Primary and Secondary (2) lists of parents. CacheGroup nodes after the first 2 will be ignored!")
-	}
-	if len(topology.Nodes) <= svNode.Parents[0] {
-		return nil, nil, warnings, errors.New("DS " + *ds.XMLID + " topology '" + *ds.Topology + "' node parent " + strconv.Itoa(svNode.Parents[0]) + " greater than number of topology nodes " + strconv.Itoa(len(topology.Nodes)) + ". Cannot create parents!")
-	}
-	if len(svNode.Parents) > 1 && len(topology.Nodes) <= svNode.Parents[1] {
-		warnings = append(warnings, "DS "+*ds.XMLID+" topology '"+*ds.Topology+"' node secondary parent "+strconv.Itoa(svNode.Parents[1])+" greater than number of topology nodes "+strconv.Itoa(len(topology.Nodes))+". Secondary parent will be ignored!")
-	}
 
-	parentCG := topology.Nodes[svNode.Parents[0]].Cachegroup
-	secondaryParentCG := ""
-	if len(svNode.Parents) > 1 && len(topology.Nodes) > svNode.Parents[1] {
-		secondaryParentCG = topology.Nodes[svNode.Parents[1]].Cachegroup
-	}
+	primaryCGs := map[string]struct{}{}
+	secondaryCG := ""
 
-	if parentCG == "" {
-		return nil, nil, warnings, errors.New("Server '" + *server.HostName + "' DS " + *ds.XMLID + " topology '" + *ds.Topology + "' cachegroup '" + *server.Cachegroup + "' topology node parent " + strconv.Itoa(svNode.Parents[0]) + " is not in the topology!")
+	// Check for special case of MSO non topology with no parent
+	// cache groups assigned to the server cache group.
+	if -1 == svNode.Parents[numParents-1] {
+		for _, pind := range svNode.Parents {
+			if -1 == pind {
+				break
+			}
+			parentCG := topology.Nodes[pind].Cachegroup
+			if parentCG != "" {
+				primaryCGs[parentCG] = struct{}{}
+			} else {
+				warnings = append(warnings, "Server '"+*server.HostName+"' DS "+*ds.XMLID+" topology '"+*ds.Topology+"' cachegroup '"+*server.Cachegroup+"' topology node parent "+strconv.Itoa(pind)+" is not in the topology!")
+			}
+		}
+	} else { // normal topology/mso configuration
+		if 2 < numParents && 0 <= svNode.Parents[0] {
+			warnings = append(warnings, "DS "+*ds.XMLID+" topology '"+*ds.Topology+"' has "+strconv.Itoa(numParents)+" parent nodes, but Apache Traffic Server only supports Primary and Secondary (2) lists of parents. CacheGroup nodes after the first 2 will be ignored!")
+		}
+
+		numNodes := len(topology.Nodes)
+
+		if numNodes <= svNode.Parents[0] {
+			return nil, nil, warnings, errors.New("DS " + *ds.XMLID + " topology '" + *ds.Topology + "' node parent " + strconv.Itoa(svNode.Parents[0]) + " greater than number of topology nodes " + strconv.Itoa(numNodes) + ". Cannot create parents!")
+		}
+		if 1 < numParents && numNodes <= svNode.Parents[1] {
+			warnings = append(warnings, "DS "+*ds.XMLID+" topology '"+*ds.Topology+"' node secondary parent "+strconv.Itoa(svNode.Parents[1])+" greater than number of topology nodes "+strconv.Itoa(numNodes)+". Secondary parent will be ignored!")
+		}
+
+		parentCG := topology.Nodes[svNode.Parents[0]].Cachegroup
+		if 1 < numParents && svNode.Parents[1] < numNodes {
+			secondaryCG = topology.Nodes[svNode.Parents[1]].Cachegroup
+		}
+
+		if parentCG == "" {
+			return nil, nil, warnings, errors.New("Server '" + *server.HostName + "' DS " + *ds.XMLID + " topology '" + *ds.Topology + "' cachegroup '" + *server.Cachegroup + "' topology node parent " + strconv.Itoa(svNode.Parents[0]) + " is not in the topology!")
+		}
+
+		primaryCGs[parentCG] = struct{}{}
 	}
 
 	parentStrs := []*ParentAbstractionServiceParent{}
@@ -1403,7 +1452,7 @@ func getTopologyParents(
 		if sv.Type != tc.OriginTypeName && !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
-		if *sv.Cachegroup == parentCG {
+		if _, ok := primaryCGs[*sv.Cachegroup]; ok {
 			parentStr, err := serverParentStr(&sv.Server, sv.Params)
 			if err != nil {
 				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
@@ -1411,8 +1460,7 @@ func getTopologyParents(
 			if parentStr != nil { // will be nil if server is not_a_parent (possibly other reasons)
 				parentStrs = append(parentStrs, parentStr)
 			}
-		}
-		if *sv.Cachegroup == secondaryParentCG {
+		} else if *sv.Cachegroup == secondaryCG {
 			parentStr, err := serverParentStr(&sv.Server, sv.Params)
 			if err != nil {
 				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
@@ -1422,7 +1470,12 @@ func getTopologyParents(
 	}
 
 	if 0 < len(dsMergeGroups) && 0 < len(secondaryParentStrs) {
-		if util.ContainsStr(dsMergeGroups, parentCG) && util.ContainsStr(dsMergeGroups, secondaryParentCG) {
+		parentCG := ""
+		for key, _ := range primaryCGs {
+			parentCG = key
+			break
+		}
+		if util.ContainsStr(dsMergeGroups, parentCG) && util.ContainsStr(dsMergeGroups, secondaryCG) {
 			parentStrs = append(parentStrs, secondaryParentStrs...)
 			secondaryParentStrs = nil
 		}
