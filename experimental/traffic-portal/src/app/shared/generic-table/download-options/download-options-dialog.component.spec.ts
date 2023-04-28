@@ -31,7 +31,11 @@ describe("DownloadOptionsComponent", () => {
 	let fixture: ComponentFixture<DownloadOptionsDialogComponent>;
 	const data: DownloadOptionsDialogData = {
 		allRows: 5,
-		columns: [],
+		columns: [{
+			hide: true
+		}, {
+			hide: false
+		}],
 		name: "test",
 		selectedRows: undefined,
 		visibleRows: 5
@@ -67,11 +71,14 @@ describe("DownloadOptionsComponent", () => {
 		expect(fixture.componentInstance.fileName).toEqual(data.name);
 		expect(fixture.componentInstance.selectedRows).toEqual(data.selectedRows);
 		expect(fixture.componentInstance.visibleRows).toEqual(data.visibleRows);
+
+		expect(fixture.componentInstance.visibleColumns).toEqual(data.columns.filter(c => !c.hide));
+		expect(fixture.componentInstance.columns).toEqual(data.columns);
 	});
 
 	it("default submission", async () => {
 		const cbs = await loader.getAllHarnesses(MatCheckboxHarness);
-		expect(cbs.length).toBe(1);
+		expect(cbs.length).toBe(2);
 
 		fixture.componentInstance.onSubmit();
 		expect(spyRef.close.calls.count()).toBe(1);
