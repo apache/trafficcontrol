@@ -84,10 +84,6 @@ export class CapabilityDetailsComponent implements OnInit {
 	 * Deletes the current physLocation.
 	 */
 	public async deleteCapability(): Promise<void> {
-		if (this.new) {
-			console.error("Unable to delete new capability");
-			return;
-		}
 		const ref = this.dialog.open(DecisionDialogComponent, {
 			data: {
 				message: `Are you sure you want to delete the Capability '${this.capability.name}'?`,
