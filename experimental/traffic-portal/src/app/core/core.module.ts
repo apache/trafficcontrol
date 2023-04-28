@@ -51,6 +51,7 @@ import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogenerat
 import { ProfileDetailComponent } from "./profiles/profile-detail/profile-detail.component";
 import { ProfileTableComponent } from "./profiles/profile-table/profile-table.component";
 import { CapabilitiesComponent } from "./servers/capabilities/capabilities.component";
+import { CapabilityDetailsComponent } from "./servers/capabilities/capability-details/capability-details.component";
 import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
 import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
@@ -146,6 +147,7 @@ export const ROUTES: Routes = [
 		CDNDetailComponent,
   		ProfileDetailComponent,
 		CapabilitiesComponent,
+		CapabilityDetailsComponent,
 	],
 	exports: [],
 	imports: [
