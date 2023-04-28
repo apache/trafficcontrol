@@ -50,6 +50,7 @@ import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-serv
 import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
 import { ProfileDetailComponent } from "./profiles/profile-detail/profile-detail.component";
 import { ProfileTableComponent } from "./profiles/profile-table/profile-table.component";
+import { CapabilitiesComponent } from "./servers/capabilities/capabilities.component";
 import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
 import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
@@ -144,6 +145,7 @@ export const ROUTES: Routes = [
   		ProfileTableComponent,
 		CDNDetailComponent,
   		ProfileDetailComponent,
+		CapabilitiesComponent,
 	],
 	exports: [],
 	imports: [
