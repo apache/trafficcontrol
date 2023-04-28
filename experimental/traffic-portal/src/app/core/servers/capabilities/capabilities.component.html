@@ -25,3 +25,5 @@ limitations under the License.
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </mat-card>
+
+<a class="page-fab" mat-fab title="Create a new Capability" *ngIf="auth.hasPermission('SERVER-CAPABILITY:CREATE')" href="/core/new-capability"><mat-icon>add</mat-icon></a>

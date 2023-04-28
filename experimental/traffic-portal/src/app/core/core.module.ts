@@ -82,6 +82,7 @@ export const ROUTES: Routes = [
 	{ component: ServerDetailsComponent, path: "servers/:id" },
 	{ component: CapabilitiesComponent, path: "capabilities" },
 	{ component: CapabilityDetailsComponent, path: "capabilities/:name" },
+	{ component: CapabilityDetailsComponent, path: "new-capability" },
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id" },
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
 	{ component: CurrentuserComponent, path: "me" },
