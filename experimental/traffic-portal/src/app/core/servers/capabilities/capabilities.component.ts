@@ -56,11 +56,11 @@ export class CapabilitiesComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseServerCapability>> = [
 		{
-			href: (c: ResponseServerCapability): string => `${c.name}`,
+			href: (c: ResponseServerCapability): string => c.name,
 			name: "View Details",
 		},
 		{
-			href: (c: ResponseServerCapability): string => `${c.name}`,
+			href: (c: ResponseServerCapability): string => c.name,
 			name: "Open in New Tab",
 			newTab: true,
 		},
