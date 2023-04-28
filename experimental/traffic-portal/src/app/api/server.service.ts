@@ -14,7 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { RequestServer, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
+import type { RequestServer, RequestStatus, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -118,7 +118,8 @@ export class ServerService extends APIService {
 		let ret;
 		switch (typeof idOrName) {
 			case "number":
-				ret = this.get<[ResponseStatus]>(path, {params: {id: String(idOrName)}}).toPromise();
+				const response = await this.get<[ResponseStatus]>(path, undefined, { id: String(idOrName) }).toPromise();
+				ret = response[0];
 				break;
 			case "string":
 				ret = this.get<[ResponseStatus]>(path, {params: {name: idOrName}}).toPromise();
@@ -185,5 +186,35 @@ export class ServerService extends APIService {
 		}
 
 		return this.put(`servers/${id}/status`, {offlineReason, status}).toPromise();
+	}
+
+	/**
+	 * Creating new Status.
+	 *
+	 * @param status The status to create.
+	 * @returns The created status.
+	 */
+	public async createStatus(status: RequestStatus): Promise<ResponseStatus> {
+		return this.post<ResponseStatus>("statuses", status).toPromise();
+	}
+
+	/**
+	 * Updates status Details.
+	 *
+	 * @param status The status to update.
+	 * @returns The updated status.
+	 */
+	public async updateStatusDetail(status: ResponseStatus): Promise<ResponseStatus> {
+		return this.put<ResponseStatus>(`statuses/${status.id}`, status).toPromise();
+	}
+
+	/**
+	 * Deletes an existing Status.
+	 *
+	 * @param statusId The Status ID
+	 */
+	public async deleteStatus(statusId: number | ResponseStatus): Promise<ResponseStatus> {
+		const id = typeof (statusId) === "number" ? statusId : statusId.id;
+		return this.delete<ResponseStatus>(`statuses/${id}`).toPromise();
 	}
 }
