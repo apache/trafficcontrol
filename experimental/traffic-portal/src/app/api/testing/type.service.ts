@@ -135,6 +135,13 @@ export class TypeService {
 			lastUpdated: new Date(),
 			name: "STEERING",
 			useInTable: "deliveryservice"
+		},
+		{
+			description: "Edge Cache",
+			id: 15,
+			lastUpdated: new Date(),
+			name: "EDGE",
+			useInTable: "server"
 		}
 	];
 
