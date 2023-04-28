@@ -23,6 +23,7 @@ import {
 	Output,
 	ViewChild
 } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, type ParamMap, type Params, Router } from "@angular/router";
 import type {
 	CellContextMenuEvent,
@@ -30,7 +31,6 @@ import type {
 	ColGroupDef,
 	Column,
 	ColumnApi,
-	CsvExportParams,
 	DateFilterModel,
 	FilterChangedEvent,
 	GridApi,
@@ -43,6 +43,7 @@ import type {
 } from "ag-grid-community";
 import type { BehaviorSubject, Subscription } from "rxjs";
 
+import { DownloadOptionsDialogComponent } from "src/app/shared/generic-table/download-options/download-options-dialog.component";
 import { fuzzyScore } from "src/app/utils";
 
 import { LoggingService } from "../logging.service";
@@ -406,7 +407,10 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		return (this.columnAPI.getColumns() ?? []).reverse();
 	}
 
-	constructor(private readonly router: Router, private readonly route: ActivatedRoute, private readonly log: LoggingService) {
+	constructor(private readonly router: Router,
+		private readonly route: ActivatedRoute,
+		private readonly dialog: MatDialog,
+		private readonly log: LoggingService) {
 		this.gridOptions = {
 			defaultColDef: {
 				filter: true,

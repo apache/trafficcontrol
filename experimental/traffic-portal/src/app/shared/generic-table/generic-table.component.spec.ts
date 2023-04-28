@@ -13,12 +13,19 @@
 */
 
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatDialog, MatDialogModule } from "@angular/material/dialog";
 import { MatMenuModule } from "@angular/material/menu";
 import { Params } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { AgGridModule } from "ag-grid-angular";
-import type { CellContextMenuEvent, ColDef, GridApi, RowNode, ValueGetterParams } from "ag-grid-community";
-import { BehaviorSubject } from "rxjs";
+import type {
+	CellContextMenuEvent,
+	ColDef,
+	GridApi,
+	RowNode,
+	ValueGetterParams
+} from "ag-grid-community";
+import { BehaviorSubject, of } from "rxjs";
 
 import { type ContextMenuAction, GenericTableComponent, getColType, ContextMenuItem } from "./generic-table.component";
 
@@ -136,18 +143,22 @@ describe("GenericTableComponent", () => {
 	let component: GenericTableComponent<unknown>;
 	let fixture: ComponentFixture<GenericTableComponent<unknown>>;
 	let fuzzySearch: BehaviorSubject<string>;
+	const dialogSpy = jasmine.createSpyObj("MatDialog", ["open", "afterClosed"]);
 
 	beforeEach(async () => {
 		fuzzySearch = new BehaviorSubject("");
 		await TestBed.configureTestingModule({
 			declarations: [
 				GenericTableComponent,
-
 			],
 			imports: [
 				AgGridModule,
 				RouterTestingModule,
-				MatMenuModule
+				MatMenuModule,
+				MatDialogModule
+			],
+			providers: [
+				{ provide: MatDialog, useValue: dialogSpy }
 			]
 		}).compileComponents();
 
@@ -330,12 +341,11 @@ describe("GenericTableComponent", () => {
 	it("triggers a download of CSV data properly", async () => {
 		component.selected = {};
 		await fixture.whenStable();
-		const spy = spyOn(component.gridOptions.api as GridApi, "exportDataAsCsv");
+		dialogSpy.open.and.returnValue({afterClosed: () => of({fileName: "test.csv"})});
+		const exportSpy = spyOn(component.gridOptions.api as GridApi, "exportDataAsCsv");
 		component.download();
-		expect(spy).toHaveBeenCalledWith({onlySelected: false});
-		component.context = "test-context";
-		component.download();
-		expect(spy).toHaveBeenCalledWith({fileName: "test-context.csv", onlySelected: false});
+		expect(dialogSpy.open.calls.count()).toBe(1);
+		expect(exportSpy).toHaveBeenCalledWith({fileName: "test.csv"});
 	});
 
 	it("checks if a menu action is disabled", async () => {
