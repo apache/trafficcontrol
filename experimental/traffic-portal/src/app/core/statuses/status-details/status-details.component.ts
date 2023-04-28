@@ -88,7 +88,7 @@ export class StatusDetailsComponent {
 		this.statusDetails = await this.api.getStatuses(Number(id));
 
 		// Set page title with status Name
-		this.navSvc.headerTitle.next(`Status #${this.statusDetails.name}`);
+		this.navSvc.headerTitle.next(`Status ${this.statusDetails.name}`);
 
 		// Patch the form with existing data we got from service requested above.
 		this.statusDetailsForm.setValue({
