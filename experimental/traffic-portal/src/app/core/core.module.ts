@@ -80,6 +80,8 @@ export const ROUTES: Routes = [
 	{ component: CDNDetailComponent, path: "cdns/:id" },
 	{ component: ServersTableComponent, path: "servers" },
 	{ component: ServerDetailsComponent, path: "servers/:id" },
+	{ component: CapabilitiesComponent, path: "capabilities" },
+	{ component: CapabilityDetailsComponent, path: "capabilities/:name" },
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id" },
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
 	{ component: CurrentuserComponent, path: "me" },
