@@ -18,7 +18,6 @@
  * `ng generate` to create new things (and then fix formatting/missing license)
  */
 
-import { NgOptimizedImage } from "@angular/common";
 import { HttpClientModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
@@ -72,8 +71,7 @@ Chart.plugins.register({
 		HttpClientModule,
 		AppUIModule,
 		SharedModule,
-		APIModule,
-		NgOptimizedImage
+		APIModule
 	],
 	providers: [
 		AuthenticatedGuard

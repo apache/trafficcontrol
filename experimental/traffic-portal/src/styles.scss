@@ -41,7 +41,8 @@ $traffic-portal-theme: mat.define-light-theme((
 
 $traffic-portal-theme: set-ag-grid($traffic-portal-theme, (
 	odd-row-background-color: map-get(mat.$gray-palette,100),
-	borders: true,
+	row-border-color: #e2e2e2,
+	border-color: #e2e2e2
 ));
 $traffic-portal-theme: add-extra-colors($traffic-portal-theme, (
 	success: $traffic-portal-success,
