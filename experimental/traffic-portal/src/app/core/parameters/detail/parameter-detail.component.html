@@ -28,18 +28,15 @@ limitations under the License.
 				<mat-label>Config File</mat-label>
 				<input matInput type="text" name="configFile" required [(ngModel)]="parameter.configFile" />
 			</mat-form-field>
-<!--			ToDo: View Profiles button-->
-<!--			<mat-form-field>-->
-<!--				<mat-label>Profiles</mat-label>-->
-<!--				<input matInput type="text" name="profiles" [(ngModel)]="parameter.profiles" />-->
-<!--			</mat-form-field>-->
 			<mat-form-field>
 				<mat-label>Value</mat-label>
 				<input matInput type="text" name="value" required [(ngModel)]="parameter.value" />
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Secure</mat-label>
-				<input matInput type="text" name="secure" required [(ngModel)]="parameter.secure" />
+				<mat-select name="secure"[(ngModel)]="parameter.secure" required>
+					<mat-option *ngFor="let s of secure" [value]="s.value">{{s.label}}</mat-option>
+				</mat-select>
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>
@@ -47,7 +44,6 @@ limitations under the License.
 			</mat-form-field>
 		</mat-card-content>
 		<mat-card-actions align="end">
-			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="deleteParameter()">View Profiles</button>
 			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="deleteParameter()">Delete</button>
 			<button mat-raised-button type="submit" color="primary">Save</button>
 		</mat-card-actions>

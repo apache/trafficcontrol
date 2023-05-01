@@ -33,6 +33,10 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 export class ParameterDetailComponent implements OnInit {
 	public new = false;
 	public parameter!: ResponseParameter;
+	public secure = [
+		{ label: "true", value: true },
+		{ label: "false", value: false }
+	];
 
 	constructor(private readonly route: ActivatedRoute, private readonly parameterService: ParameterService,
 		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService) { }

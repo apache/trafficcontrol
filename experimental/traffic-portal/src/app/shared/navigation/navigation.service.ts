@@ -180,10 +180,14 @@ export class NavigationService {
 					name: "Types"
 				},
 				{
+					href: "/core/profiles",
+					name: "Profiles"
+				},
+				{
 					href: "/core/parameters",
 					name: "Parameters"
 				}
-				],
+			],
 			name: "Configuration"
 		}]);
 	}

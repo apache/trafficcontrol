@@ -49,6 +49,8 @@ import {
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
 import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
 import { ProfileDetailComponent } from "./profiles/profile-detail/profile-detail.component";
+import { ParameterDetailComponent } from "./parameters/detail/parameter-detail.component";
+import { ParametersTableComponent } from "./parameters/table/parameters-table.component";
 import { ProfileTableComponent } from "./profiles/profile-table/profile-table.component";
 import { CapabilitiesComponent } from "./servers/capabilities/capabilities.component";
 import { CapabilityDetailsComponent } from "./servers/capabilities/capability-details/capability-details.component";
@@ -67,8 +69,6 @@ import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
-import {ParametersTableComponent} from "./parameters/table/parameters-table.component";
-import {ParameterDetailComponent} from "./parameters/detail/parameter-detail.component"
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },

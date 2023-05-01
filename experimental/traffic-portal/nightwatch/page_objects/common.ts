@@ -58,6 +58,7 @@ const commonPageObject = {
 				dashboard: "[aria-label='Navigate to Dashboard']",
 				divisions: "[aria-label='Navigate to Divisions']",
 				otherContainer: "[aria-label='Toggle Other']",
+				parameters: "[aria-label='Navigate to Parameters']",
 				physicalLocations: "[aria-label='Navigate to Physical Locations']",
 				profile: "[aria-label='Navigate to My Profile']",
 				profiles: "[aria-label='Navigate to Profiles']",
