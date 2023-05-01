@@ -24,74 +24,90 @@ logger = logging.getLogger()
 
 primitive = bool | int | float | str | None
 
+
 @pytest.mark.parametrize('request_template_data', ["regions"], indirect=True)
 def test_region_contract(
-	to_session: TOSession,
-	request_template_data: list[dict[str, object] | list[object] | primitive],
-	response_template_data: list[dict[str, object] | list[object] | primitive],
-	region_post_data: dict[str, object]
+    to_session: TOSession,
+    request_template_data: list[dict[str, object] | list[object] | primitive],
+    response_template_data: list[dict[str, object] | list[object] | primitive],
+    region_post_data: dict[str, object]
 ) -> None:
-	"""
-	Test step to validate keys, values and data types from regions endpoint
-	response.
-	:param to_session: Fixture to get Traffic Ops session.
-	:param get_region_data: Fixture to get region data from a prerequisites file.
-	:param region_prereq: Fixture to get sample region data and actual region response.
-	"""
-	# validate region keys from regions get response
-	logger.info("Accessing /regions endpoint through Traffic ops session.")
+    """
+    Test step to validate keys, values and data types from regions endpoint
+    response.
+    :param to_session: Fixture to get Traffic Ops session.
+    :param get_region_data: Fixture to get region data from a prerequisites file.
+    :param region_prereq: Fixture to get sample region data and actual region response.
+    """
+    # validate region keys from regions get response
+    logger.info("Accessing /regions endpoint through Traffic ops session.")
 
-	region = request_template_data[0]
-	if not isinstance(region, dict):
-		raise TypeError("malformed region in prerequisite data; not an object")
+    region = request_template_data[0]
+    if not isinstance(region, dict):
+        raise TypeError("malformed region in prerequisite data; not an object")
 
-	region_name = region.get("name")
-	if not isinstance(region_name, str):
-		raise TypeError("malformed region in prerequisite data; 'name' not a string")
+    region_name = region.get("name")
+    if not isinstance(region_name, str):
+        raise TypeError("malformed region in prerequisite data; 'name' not a string")
 
-	region_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
-		requests.Response
-	] = to_session.get_regions(query_params={"name": region_name})
-	try:
-		region_data = region_get_response[0]
-		if not isinstance(region_data, list):
-			raise TypeError("malformed API response; 'response' property not an array")
+    region_get_response: tuple[
+        dict[str, object] | list[dict[str, object]
+            | list[object] | primitive] | primitive,
+        requests.Response
+    ] = to_session.get_regions(query_params={"name": region_name})
+    try:
+        region_data = region_get_response[0]
+        if not isinstance(region_data, list):
+            raise TypeError("malformed API response; 'response' property not an array")
 
-		first_region = region_data[0]
-		if not isinstance(first_region, dict):
-			raise TypeError("malformed API response; first region in response is not an object")
-		region_keys = set(first_region.keys())
+        first_region = region_data[0]
+        if not isinstance(first_region, dict):
+            raise TypeError(
+                "malformed API response; first region in response is not an object")
+        region_keys = set(first_region.keys())
 
-		logger.info("region Keys from regions endpoint response %s", region_keys)
-		response_template = response_template_data.get("region").get("properties")
-		# validate region values from prereq data in regions get response.
-		prereq_values = [
-			region_post_data["name"],
-			region_post_data["division"],
+        logger.info("Region Keys from regions endpoint response %s", region_keys)
+        region_response_template = response_template_data.get("regions")
+        if not isinstance(region_response_template, dict):
+            raise TypeError(
+                f"Region response template data must be a dict, not '{type(region_response_template)}'")
+        response_template: dict[str, list[dict[str, object] | list[object] | primitive] |
+            dict[object, object] |
+            primitive
+        ]
+        response_template = region_response_template.get("properties")
+        # validate region values from prereq data in regions get response.
+        prereq_values = [
+            region_post_data["name"],
+            region_post_data["division"],
             region_post_data["divisionName"]]
-            
-		get_values = [first_region["name"], first_region["division"], first_region["divisionName"]]
-		get_types = {}
-		for key in first_region:
-			get_types[key] = first_region[key].__class__.__name__
-		logger.info("types from region get response %s", get_types)
-		response_template_types= {}
-		for key in response_template:
-			response_template_types[key] = response_template.get(key).get("type")
-		logger.info("types from region response template %s", response_template_types)
 
-		assert region_keys == set(response_template.keys())
-		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
-		assert get_values == prereq_values
-	except IndexError:
-		logger.error("Either prerequisite data or API response was malformed")
-		pytest.fail("Either prerequisite data or API response was malformed")
-	finally:
-		# Delete region after test execution to avoid redundancy.
-		try:
-			region_id = region_post_data["id"]
-			to_session.delete_region_by_id(region_id=region_id)
-		except IndexError:
-			logger.error("region returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_get_region")
+        get_values = [first_region["name"],
+            first_region["division"], first_region["divisionName"]]
+        get_types = {}
+        for key, value in first_region.items():
+            get_types[key] = type(value).__name__
+        logger.info("types from region get response %s", get_types)
+        response_template_types = {}
+        for key, value in response_template.items():
+            actual_type = value.get("type")
+            if not isinstance(actual_type, str):
+                    raise TypeError(
+                        f"Type data must be a string, not '{type(actual_type)}'")
+            response_template_types[key] = actual_type
+        logger.info("types from region response template %s", response_template_types)
+        assert region_keys == set(response_template.keys())
+        assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
+        assert get_values == prereq_values
+    except IndexError:
+        logger.error("Either prerequisite data or API response was malformed")
+        pytest.fail("API contract test failed for regions endpoint: API response was malformed")
+    finally:
+        # Delete region after test execution to avoid redundancy.
+        try:
+            region_name = region_post_data["name"]
+            to_session.delete_region(query_params={"name": region_name})
+        except IndexError:
+            logger.error("region returned by Traffic Ops is missing an 'id' property")
+            pytest.fail("Response from delete request is empty, Failing test_get_region")
+   
