@@ -647,15 +647,13 @@ func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
 
 	testComment(t, txt, hdr.HdrComment)
 
-	txtx := strings.Replace(txt, " ", "", -1)
-
-	if !strings.Contains(txtx, `parent="myorigin0.mydomain.example.net:80`) {
+	if !strings.Contains(txt, `parent="myorigin0.mydomain.example.net:80`) {
 		t.Errorf("expected parent myorigin0, actual: '%v'", txt)
 	}
-	if !strings.Contains(txtx, `unavailable_server_retry_responses="500,502,503,542`) {
+	if !strings.Contains(txt, `unavailable_server_retry_responses="500,502,503,542`) {
 		t.Errorf(`expected unavailable_server_retry_repsonse 500,502,503,542 from DS params, actual: '%v'`, txt)
 	}
-	if !strings.Contains(txtx, `max_simple_retries=2`) {
+	if !strings.Contains(txt, `max_simple_retries=2`) {
 		t.Errorf(`expected max_simple_retries=2 from DS params, actual: '%v'`, txt)
 	}
 }
