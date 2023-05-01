@@ -73,12 +73,16 @@ import {
 	RequestStatus,
 	ResponseProfile,
 	RequestProfile,
-	ProfileType
+	ProfileType,
+	ResponseServerCapability,
+	RequestServerCapability
 } from "trafficops-types";
 
 import * as config from "../config.json";
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
 import {TypesPageObject} from "../page_objects/types/typesTable";
+import { CapabilityDetailsPageObject } from "nightwatch/page_objects/servers/capabilities/capabilityDetails";
+import { CapabilitiesPageObject } from "nightwatch/page_objects/servers/capabilities/capabilitiesTable";
 
 declare module "nightwatch" {
 	/**
@@ -112,6 +116,8 @@ declare module "nightwatch" {
 			profileDetail: () => ProfileDetailPageObject;
 		};
 		servers: {
+			capabilityDetail: () => CapabilityDetailsPageObject;
+			capabilitiesTable: () => CapabilitiesPageObject;
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;
@@ -150,6 +156,7 @@ declare module "nightwatch" {
  */
 export interface CreatedData {
 	cacheGroup: ResponseCacheGroup;
+	capability: ResponseServerCapability;
 	cdn: ResponseCDN;
 	coordinate: ResponseCoordinate;
 	division: ResponseDivision;
@@ -175,7 +182,7 @@ const globals = {
 			done();
 		});
 	},
-	apiVersion: "3.1",
+	apiVersion: "4.0",
 	before: async (done: () => void): Promise<void> => {
 		const apiUrl = `${globals.trafficOpsURL}/api/${globals.apiVersion}`;
 		const client = axios.create({
@@ -423,6 +430,15 @@ const globals = {
 			const respProfile: ResponseProfile = resp.data.response;
 			console.log(`Successfully created Profile ${respProfile.name}`);
 			data.profile = respProfile;
+
+			const capability: RequestServerCapability = {
+				name: `test${globals.uniqueString}`
+			};
+			url = `${apiUrl}/server_capabilities`;
+			resp = await client.post(url, JSON.stringify(capability));
+			const respCap: ResponseServerCapability = resp.data.response;
+			console.log("Successfully created Capability:", respCap);
+			data.capability = respCap;
 
 		} catch(e) {
 			console.error("Request for", url, "failed:", (e as AxiosError).message);
