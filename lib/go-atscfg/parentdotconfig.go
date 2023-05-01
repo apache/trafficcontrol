@@ -165,15 +165,20 @@ func MakeParentDotConfig(
 	}, nil
 }
 
-// primarySecondary contains the names of the primary and secondary parent cache groups.
-type primarySecondary struct {
-	Primaries   []string
-	Secondaries []string
-	Nulls       []string
+// parentCacheGroups holds parent cache groups names for OTF topologies.
+// Primaries and Secondaries are from origin parent cache groups with
+// assigned primary and secondary cache groups.
+// For last, any origin parent cache groups that aren't primary or secondary.
+// The Null parent cache groups aren't considered unless the current server
+// cache group has no primary/secondary parents selected.
+type parentCacheGroups struct {
+	Primary   string
+	Secondary string
+	Nulls     []string
 }
 
 // createTopology creates an on the fly topology for this server and non topology delivery service.
-func createTopology(server *Server, ds DeliveryService, nameTopologies map[TopologyName]tc.Topology, ocgmap map[OriginHost]primarySecondary) (string, tc.Topology, []string) {
+func createTopology(server *Server, ds DeliveryService, nameTopologies map[TopologyName]tc.Topology, ocgmap map[OriginHost]parentCacheGroups) (string, tc.Topology, []string) {
 
 	topoName := ""
 	topo := tc.Topology{}
@@ -227,22 +232,27 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 			topo.Nodes = append(topo.Nodes, edgeNode)
 		}
 
+		hasprimsec := false
 		parents := []int{}
-		for _, _ = range cgprimsec.Primaries {
+		if cgprimsec.Primary != "" {
+			hasprimsec = true
 			parents = append(parents, pind)
 			pind++
 		}
-		for _, _ = range cgprimsec.Secondaries {
-			parents = append(parents, pind)
-			pind++
-		}
-		for _, _ = range cgprimsec.Nulls {
+		if cgprimsec.Secondary != "" {
+			hasprimsec = true
 			parents = append(parents, pind)
 			pind++
 		}
 
-		// Adding a '-1' in the parent indices indicates that this has non topology MSO parents, all should just go into primary
-		if 0 < len(cgprimsec.Nulls) {
+		// Only consider arbitrarily assigned parents if the current
+		// cache group does not have primary or secondary parents assigned.
+		if !hasprimsec && 0 < len(cgprimsec.Nulls) {
+			for _, _ = range cgprimsec.Nulls {
+				parents = append(parents, pind)
+				pind++
+			}
+			// Adding a '-1' in the parent indices indicates that this has non topology MSO parents, all should just go into primary
 			parents = append(parents, -1)
 		}
 
@@ -253,14 +263,16 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 		}
 		topo.Nodes = append(topo.Nodes, node)
 
-		for _, prim := range cgprimsec.Primaries {
-			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: prim})
+		if cgprimsec.Primary != "" {
+			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cgprimsec.Primary})
 		}
-		for _, sec := range cgprimsec.Secondaries {
-			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: sec})
+		if cgprimsec.Secondary != "" {
+			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: cgprimsec.Secondary})
 		}
-		for _, null := range cgprimsec.Nulls {
-			topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: null})
+		if !hasprimsec {
+			for _, null := range cgprimsec.Nulls {
+				topo.Nodes = append(topo.Nodes, tc.TopologyNode{Cachegroup: null})
+			}
 		}
 	}
 	return topoName, topo, warns
@@ -337,7 +349,7 @@ func makeParentDotConfigData(
 	// serverParams are the parent.config params for this particular server
 	serverParams := getServerParentConfigParams(server, parentConfigParams)
 
-	parentCacheGroups := map[string]struct{}{}
+	parentCGs := map[string]struct{}{}
 	if cacheIsTopLevel {
 		for _, cg := range cacheGroups {
 			if cg.Type == nil {
@@ -350,7 +362,7 @@ func makeParentDotConfigData(
 			if *cg.Type != tc.CacheGroupOriginTypeName {
 				continue
 			}
-			parentCacheGroups[*cg.Name] = struct{}{}
+			parentCGs[*cg.Name] = struct{}{}
 		}
 	} else {
 		for _, cg := range cacheGroups {
@@ -363,10 +375,10 @@ func makeParentDotConfigData(
 
 			if *cg.Name == *server.Cachegroup {
 				if cg.ParentName != nil && *cg.ParentName != "" {
-					parentCacheGroups[*cg.ParentName] = struct{}{}
+					parentCGs[*cg.ParentName] = struct{}{}
 				}
 				if cg.SecondaryParentName != nil && *cg.SecondaryParentName != "" {
-					parentCacheGroups[*cg.SecondaryParentName] = struct{}{}
+					parentCGs[*cg.SecondaryParentName] = struct{}{}
 				}
 				break
 			}
@@ -406,7 +418,7 @@ func makeParentDotConfigData(
 			}
 			continue
 		}
-		if _, ok := parentCacheGroups[*sv.Cachegroup]; !ok {
+		if _, ok := parentCGs[*sv.Cachegroup]; !ok {
 			continue
 		}
 		if sv.Type != tc.OriginTypeName &&
@@ -460,7 +472,7 @@ func makeParentDotConfigData(
 	warnings = append(warnings, dsOriginWarns...)
 
 	// Note map cache group lists are ordered, prim first, sec second
-	ocgmap := map[OriginHost]primarySecondary{}
+	ocgmap := map[OriginHost]parentCacheGroups{}
 
 	for _, ds := range dses {
 
@@ -497,7 +509,7 @@ func makeParentDotConfigData(
 			if len(ocgmap) == 0 {
 				ocgmap = makeOCGMap(parentInfos)
 				if len(ocgmap) == 0 {
-					ocgmap[""] = primarySecondary{}
+					ocgmap[""] = parentCacheGroups{}
 				}
 			}
 
@@ -643,14 +655,14 @@ func (p parentInfo) ToAbstract() *ParentAbstractionServiceParent {
 
 type parentInfos map[OriginHost]parentInfo
 
-type primSec struct {
-	isPrim bool
-	isSec  bool
-}
-
 // Returns a map of parent cache groups names per origin host.
-func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost]primarySecondary {
-	ocgnames := map[OriginHost]primarySecondary{}
+func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost]parentCacheGroups {
+	ocgnames := map[OriginHost]parentCacheGroups{}
+
+	type primSec struct {
+		isPrim bool
+		isSec  bool
+	}
 
 	for host, pis := range opis {
 		cgnames := map[string]primSec{}
@@ -659,12 +671,12 @@ func makeOCGMap(opis map[OriginHost][]parentInfo) map[OriginHost]primarySecondar
 				primSec{isPrim: pi.PrimaryParent, isSec: pi.SecondaryParent}
 		}
 
-		ps := primarySecondary{}
+		ps := parentCacheGroups{}
 		for cg, primsec := range cgnames {
 			if primsec.isPrim {
-				ps.Primaries = append(ps.Primaries, cg)
+				ps.Primary = cg
 			} else if primsec.isSec {
-				ps.Secondaries = append(ps.Secondaries, cg)
+				ps.Secondary = cg
 			} else {
 				ps.Nulls = append(ps.Nulls, cg)
 			}
