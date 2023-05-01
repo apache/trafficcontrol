@@ -142,6 +142,11 @@ export class ProfileTableComponent implements OnInit {
 				}
 			}
 		);
+		const ID = this.route.snapshot.paramMap.get("id");
+		if (ID === null) {
+			return;
+		}
+		this.profiles = this.api.getProfilesByParam(+ID);
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */

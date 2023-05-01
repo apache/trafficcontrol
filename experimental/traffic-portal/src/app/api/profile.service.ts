@@ -72,8 +72,23 @@ export class ProfileService extends APIService {
 	}
 
 	/**
-	 * Creates a new profile.
+	 * Retrieves Profiles associated with a Parameter from the API.
 	 *
+	 * @param id Specify the integral, unique identifier (number) of a specific Parameter, for which the Profiles are to be retrieved.
+	 * @returns The requested Profile(s).
+	 */
+	public async getProfilesByParam(id: number): Promise<Array<ResponseProfile>> {
+		const path = "profiles";
+		if (id !== undefined) {
+			const params = {param: String(id)};
+			const r = await this.get<[ResponseProfile]>(path, undefined, params).toPromise();
+			return r;
+		}
+		return this.get<Array<ResponseProfile>>(path).toPromise();
+	}
+
+	/**
+	 * Creates a new profile.
 	 * @param profile The profile to create.
 	 * @returns The created profile.
 	 */
