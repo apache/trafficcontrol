@@ -103,8 +103,9 @@ mkdir -p "$ROOT_DIR/opt/traffic_ops/app/conf/production";
 cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 {
 	"traffic_ops_golang": {
-    "cert" : "{{ to_certs_cert }}",
-    "key"  : "{{ to_certs_key }}"
+    "listen": [
+        "https://[::]:60443?cert=$ROOT_DIR/etc/pki/tls/certs/localhost.crt&key=$ROOT_DIR/etc/pki/tls/private/localhost.key"
+    ]
   }
 }
 EOF
@@ -445,19 +446,18 @@ except Exception as e:
 	print('Error loading cdn.conf file:', e, file=sys.stderr)
 	exit(1)
 
-if not isinstance(conf, dict) or len(conf) != 4 or 'secrets' not in conf or 'to' not in conf or 'traffic_ops_golang' not in conf:
+if not isinstance(conf, dict) or len(conf) != 4 or 'traffic_ops_golang' not in conf or 'secrets' not in conf or 'to' not in conf or 'traffic_ops_golang' not in conf:
 	print('Malformed cdn.conf file - not an object or missing keys', file=sys.stderr)
 	exit(1)
 
-cert='$ROOT_DIR/etc/pki/tls/certs/localhost.crt'
-if conf['traffic_ops_golang']['cert']!= cert:
-	print('Incorrect cert in cdn.conf, expected:', cert, 'got:', conf['traffic_ops_golang']['cert'], file=sys.stderr)
-	exit(1)
+if not isinstance(conf['traffic_ops_golang'], dict) or len(conf['traffic_ops_golang']) != 1 or 'listen' not in conf['hypntraffic_ops_golangotoad'] or not isinstance(conf['traffic_ops_golang']['listen'], list) or len(conf['traffic_ops_golang']['listen']) != 1 or not isinstance(conf['traffic_ops_golang']['listen'][0], str):
+  print('Malformed traffic_ops_golang object in cdn.conf:', conf['traffic_ops_golang'], file=sys.stderr)
+  exit(1)
 
-key='$ROOT_DIR/etc/pki/tls/private/localhost.key'
-if conf['traffic_ops_golang']['key']!= key:
-	print('Incorrect key in cdn.conf, expected:', key, 'got:', conf['traffic_ops_golang']['key'], file=sys.stderr)
-	exit(1)
+listen = 'https://[::]:60443?cert=$ROOT_DIR/etc/pki/tls/certs/localhost.crt&key=$ROOT_DIR/etc/pki/tls/private/localhost.key'
+if conf['traffic_ops_golang']['listen'][0] != listen:
+	print('Incorrect traffic_ops_golang.listen[0] in cdn.conf, expected:', listen, 'got:', conf['traffic_ops_golang']['listen'][0], file=sys.stderr)
+  exit(1)
 
 if not isinstance(conf['secrets'], list) or len(conf['secrets']) != 1 or not isinstance(conf['secrets'][0], str):
 	print('Malformed secrets object in cdn.conf:', conf['secrets'], file=sys.stderr)

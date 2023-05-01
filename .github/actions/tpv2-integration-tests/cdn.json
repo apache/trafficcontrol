@@ -4,8 +4,9 @@
 	"role_based_permissions": true,
 	"traffic_ops_golang": {
 		"insecure": true,
-		"cert" : "$GITHUB_WORKSPACE/traffic_ops/traffic_ops_golang/localhost.crt",
-		"key" : "$GITHUB_WORKSPACE/traffic_ops/traffic_ops_golang/localhost.key",
+		"listen": [
+			"https://not-a-real-host.test:1?cert=$GITHUB_WORKSPACE/traffic_ops/traffic_ops_golang/localhost.crt&key=$GITHUB_WORKSPACE/traffic_ops/traffic_ops_golang/localhost.key"
+		],
 		"port": "6443",
 		"log_location_error": "stderr",
 		"log_location_warning": "stderr",

@@ -93,8 +93,9 @@ cdn_conf=/opt/traffic_ops/app/conf/cdn.conf
             "query_timeout_seconds": ${DEBUGGING_TIMEOUT:-60},
             "aes_key_location": "$TV_AES_KEY_LOCATION"
         },
-        "cert" : $crt,
-        "key" : $key,
+        "listen" : [
+            "https://[::]?cert=$crt&key=$key"
+        ],
         "proxy_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_tls_timeout" : ${DEBUGGING_TIMEOUT:-60},
         "proxy_read_header_timeout" : ${DEBUGGING_TIMEOUT:-60},

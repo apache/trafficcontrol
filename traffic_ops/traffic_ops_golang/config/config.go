@@ -103,8 +103,7 @@ type ConfigTrafficOpsGolang struct {
 	Insecure bool `json:"insecure"`
 	// end deprecated
 	//Moved from Hypnotoad-listen section
-	Cert                     string                     `json:"cert"`
-	Key                      string                     `json:"key"`
+	Listen                   []string                   `json:"listen"`
 	Port                     string                     `json:"port"`
 	ProxyTimeout             int                        `json:"proxy_timeout"`
 	ProxyKeepAlive           int                        `json:"proxy_keep_alive"`
@@ -435,18 +434,18 @@ func LoadConfig(cdnConfPath string, dbConfPath string, appVersion string) (Confi
 
 // GetCertPath - extracts path to cert .cert file
 func (c Config) GetCertPath() string {
-	cert := c.Cert
-	if cert != "" {
-		return cert
+	v, ok := c.URL.Query()["cert"]
+	if ok {
+		return v[0]
 	}
 	return ""
 }
 
 // GetKeyPath - extracts path to cert .key file
 func (c Config) GetKeyPath() string {
-	key := c.Key
-	if key != "" {
-		return key
+	v, ok := c.URL.Query()["key"]
+	if ok {
+		return v[0]
 	}
 	return ""
 }
@@ -459,12 +458,6 @@ const (
 // ParseConfig validates required fields, and parses non-JSON types
 func ParseConfig(cfg Config) (Config, error) {
 	missings := ""
-	if cfg.Cert == "" {
-		missings += `"cert", `
-	}
-	if cfg.Key == "" {
-		missings += `"key", `
-	}
 	if cfg.Port == "" {
 		missings += "port, "
 	}
@@ -502,13 +495,21 @@ func ParseConfig(cfg Config) (Config, error) {
 		cfg.ServerUpdateStatusCacheRefreshIntervalSec = 0
 	}
 
-	cfg.KeyPath = cfg.GetKeyPath()
-	cfg.CertPath = cfg.GetCertPath()
+	invalidTOURLStr := ""
+	var err error
+	if len(cfg.Listen) < 1 {
+		missings += `"listen", `
+	} else {
+		listen := cfg.Listen[0]
+		if cfg.URL, err = url.Parse(listen); err != nil {
+			invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
+		}
+		cfg.KeyPath = cfg.GetKeyPath()
+		cfg.CertPath = cfg.GetCertPath()
 
-	//fmt.Println(cfg.URL) //this is nil and causing a null poitn dereference and building a newURl
-	//newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host}
-	//fmt.Println(newURL)
-	//cfg.URL = &newURL
+		newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
+		cfg.URL = &newURL
+	}
 
 	if cfg.ConfigTO == nil {
 		missings += "to, "
@@ -529,11 +530,10 @@ func ParseConfig(cfg Config) (Config, error) {
 	}
 
 	errStr := missings
-	if errStr != "" {
+	if errStr != "" && invalidTOURLStr != "" {
 		errStr += "; "
-		return Config{}, fmt.Errorf(errStr)
 	}
-
+	errStr += invalidTOURLStr
 	if err := ValidateRoutingBlacklist(cfg.RoutingBlacklist); err != nil {
 		return Config{}, err
 	}
