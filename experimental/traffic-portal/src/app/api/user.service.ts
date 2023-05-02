@@ -15,7 +15,6 @@
 import { HttpClient, type HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import {
-	type Capability,
 	type ResponseUser,
 	type PostRequestUser,
 	type RequestTenant,
@@ -30,7 +29,7 @@ import {
 import { APIService } from "./base-api.service";
 
 /**
- * UserService exposes API functionality related to Users, Roles and Capabilities.
+ * UserService exposes API functionality related to Users, Roles and Tenants.
  */
 @Injectable()
 export class UserService extends APIService {
@@ -85,7 +84,7 @@ export class UserService extends APIService {
 	 */
 	public async updateCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		const path = "user/current";
-		return this.put<ResponseCurrentUser>(path, {user}).toPromise().then(
+		return this.put<ResponseCurrentUser>(path, user).toPromise().then(
 			() => true,
 			() => false
 		);
@@ -127,7 +126,7 @@ export class UserService extends APIService {
 					params = {username: nameOrID};
 					break;
 				case "number":
-					params = {id: String(nameOrID)};
+					params = {id: nameOrID};
 			}
 			const r = await this.get<[ResponseUser]>(path, undefined, params).toPromise();
 			return r[0];
@@ -234,32 +233,34 @@ export class UserService extends APIService {
 		await this.post("users/register", request).toPromise();
 	}
 
-	/** Fetches the Role with the given ID. */
-	public async getRoles (nameOrID: number | string): Promise<ResponseRole>;
-	/** Fetches all Roles. */
+	/**
+	 * Fetches one or all Roles from Traffic Ops.
+	 *
+	 * @param nameOrID The name or integral, unique identifier of the single
+	 * Role which will be fetched.
+	 * @returns The requested Role.
+	 */
+	public async getRoles (nameOrID: string): Promise<ResponseRole>;
+	/**
+	 * Fetches all Roles from Traffic Ops.
+	 *
+	 * @returns An Array of Roles.
+	 */
 	public async getRoles (): Promise<Array<ResponseRole>>;
 	/**
 	 * Fetches one or all Roles from Traffic Ops.
 	 *
-	 * @param nameOrID Optionally, the name or integral, unique identifier of a single Role which will be fetched
+	 * @param name Optionally, the name of a single Role which will be fetched.
 	 * @throws {TypeError} When called with an improper argument.
 	 * @returns Either an Array of Roles, or a single Role, depending on whether
-	 * `name`/`id` was passed
+	 * `name`/`id` was passed.
 	 */
-	public async getRoles(nameOrID?: string | number): Promise<Array<ResponseRole> | ResponseRole> {
+	public async getRoles(name?: string): Promise<Array<ResponseRole> | ResponseRole> {
 		const path = "roles";
-		if (nameOrID !== undefined) {
-			let params;
-			switch (typeof nameOrID) {
-				case "string":
-					params = {name: nameOrID};
-					break;
-				case "number":
-					params = {id: String(nameOrID)};
-			}
-			const resp = await this.get<[ResponseRole]>(path, undefined, params).toPromise();
+		if (name !== undefined) {
+			const resp = await this.get<[ResponseRole]>(path, undefined, {name}).toPromise();
 			if (resp.length !== 1) {
-				throw new Error(`Traffic Ops responded with ${resp.length} Roles by identifier ${nameOrID}`);
+				throw new Error(`Traffic Ops responded with ${resp.length} Roles by identifier ${name}`);
 			}
 			return resp[0];
 		}
@@ -295,7 +296,7 @@ export class UserService extends APIService {
 					params = {name: nameOrID};
 					break;
 				case "number":
-					params = {id: String(nameOrID)};
+					params = {id: nameOrID};
 			}
 			const resp = await this.get<[ResponseTenant]>(path, undefined, params).toPromise();
 			return resp[0];
@@ -326,40 +327,13 @@ export class UserService extends APIService {
 	/**
 	 * Deletes an existing tenant.
 	 *
-	 * @param id Id of the tenant to delete.
-	 * @returns The deleted tenant.
+	 * @param tenant The Tenant to be deleted, or just its ID.
+	 * @returns The deleted Tenant.
 	 */
-	public async deleteTenant(id: number): Promise<ResponseTenant> {
+	public async deleteTenant(tenant: number | ResponseTenant): Promise<ResponseTenant> {
+		const id = typeof(tenant) === "number" ? tenant : tenant.id;
 		return this.delete<ResponseTenant>(`tenants/${id}`).toPromise();
 	}
-
-	/** Fetches the User Capability (Permission) with the given name. */
-	public async getCapabilities (name: string): Promise<Capability>;
-	/** Fetches all User Capabilities (Permissions). */
-	public async getCapabilities (): Promise<Array<Capability>>;
-	/**
-	 * Fetches one or all Capabilities from Traffic Ops.
-	 *
-	 * @deprecated "Capabilities" are deprecated in favor of Permissions.
-	 * "Capabilities" are removed from API v4 and later.
-	 *
-	 * @param name Optionally, the name of a single Capability which will be fetched
-	 * @throws {TypeError} When called with an improper argument.
-	 * @returns Either an Array of Capabilities, or a single Capability,
-	 * depending on whether `name`/`id` was passed
-	 */
-	public async getCapabilities(name?: string): Promise<Array<Capability> | Capability> {
-		const path = "capabilities";
-		if (name) {
-			const caps = await this.get<[Capability]>(path, undefined, {name}).toPromise();
-			if (caps.length !== 1) {
-				throw new Error(`Traffic Ops responded with ${caps.length} capabilities with the name '${name}'`);
-			}
-			return caps[0];
-		}
-		return this.get<Array<Capability>>(path).toPromise();
-	}
-
 	/**
 	 * Requests a password reset for a user.
 	 *

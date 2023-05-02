@@ -18,7 +18,7 @@ import type { RequestCDN, ResponseCDN } from "trafficops-types";
 import { APIService } from "./base-api.service";
 
 /**
- * CDNService expose API functionality relating to CDNs.
+ * CDNService exposes API functionality relating to CDNs.
  */
 @Injectable()
 export class CDNService extends APIService {
@@ -27,24 +27,34 @@ export class CDNService extends APIService {
 		super(http);
 	}
 
+	/**
+	 * Gets a specific CDN from Traffic Ops
+	 *
+	 * @param id The integral, unique identifier of the CDN to be returned.
+	 * @returns The CDN with the given ID.
+	 */
 	public async getCDNs(id: number): Promise<ResponseCDN>;
+	/**
+	 * Gets all CDNs from Traffic Ops
+	 *
+	 * @returns An Array of all CDNs configured in Traffic Ops.
+	 */
 	public async getCDNs(): Promise<Array<ResponseCDN>>;
 	/**
 	 * Gets one or all CDNs from Traffic Ops
 	 *
-	 * @param id The integral, unique identifier of a single CDN to be returned
-	 * @returns Either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was
-	 * 	passed.
-	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
+	 * @param id The integral, unique identifier of a single CDN to be returned.
+	 * @returns Either an Array of CDN objects, or a single CDN, depending on
+	 * whether `id` was	passed.
 	 */
 	public async getCDNs(id?: number): Promise<Array<ResponseCDN> | ResponseCDN> {
 		const path = "cdns";
 		if (id) {
-			const cdn = await this.get<[ResponseCDN]>(path, undefined, {id: String(id)}).toPromise();
+			const cdn = await this.get<[ResponseCDN]>(path, undefined, {id}).toPromise();
 			if (cdn.length !== 1) {
 				throw new Error(`${cdn.length} CDNs found by ID ${id}`);
 			}
-			return cdn;
+			return cdn[0];
 		}
 		return this.get<Array<ResponseCDN>>(path).toPromise();
 	}
