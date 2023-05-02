@@ -25,20 +25,11 @@
 - name: Copy config.js file
   template:
     src: "config_v2.js.j2"
-    dest: "{{ tpv2_conf_dir }}/config.js"
+    dest: "{{ tpv2_conf_dir }}/config.json"
     owner: root
     group: root
     mode: 0600
   notify: Restart Traffic Portal v2
-
-#- name: Copy properties.json
-#  template:
-#    src: "traffic_portal_v2_properties.json.j2"
-#    dest: "{{ tpv2_properties_dir }}/traffic_portal_v2_properties.json"
-#    owner: root
-#    group: root
-#    mode: 0600
-#  notify: Restart Traffic Portal v2
 
 - name: Enable Traffic Portal v2 in systemd
   systemd:

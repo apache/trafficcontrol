@@ -13,7 +13,7 @@
 #
 galaxy_info:
   author: Jonathan Gray
-  description: A role to assist with deploying the traffic portal component of Apache Traffic Control
+  description: A role to assist with deploying the traffic portal v2 component of Apache Traffic Control
   company: Apache Traffic Control
   issue_tracker_url: https://github.com/apache/trafficcontrol/issues
   license: Apache 2.0
