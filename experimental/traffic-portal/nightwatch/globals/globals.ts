@@ -36,6 +36,8 @@ import type { ProfilePageObject } from "nightwatch/page_objects/profiles/profile
 import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
 import type { PhysLocTablePageObject } from "nightwatch/page_objects/servers/physLocTable";
 import type { ServersPageObject } from "nightwatch/page_objects/servers/servers";
+import type { StatusDetailPageObject } from "nightwatch/page_objects/statuses/statusDetail";
+import type { StatusesTablePageObject } from "nightwatch/page_objects/statuses/statusesTable";
 import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
 import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
@@ -66,6 +68,8 @@ import {
 	ResponseCoordinate,
 	RequestCoordinate,
 	RequestType,
+	ResponseStatus,
+	RequestStatus,
 	ResponseProfile,
 	RequestProfile,
 	ProfileType
@@ -110,6 +114,10 @@ declare module "nightwatch" {
 			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;
 		};
+		statuses: {
+			statusesTable: () => StatusesTablePageObject;
+			statusDetail: () => StatusDetailPageObject;
+		};
 		users: {
 			changeLogs: () => ChangeLogsPageObject;
 			tenants: () => TenantsPageObject;
@@ -151,6 +159,7 @@ export interface CreatedData {
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;
+	statuses: ResponseStatus;
 	profile: ResponseProfile;
 }
 
@@ -389,6 +398,16 @@ const globals = {
 			const respType: TypeFromResponse = resp.data.response;
 			console.log(`Successfully created Type ${respType.name}`);
 			data.type = respType;
+
+			const status: RequestStatus = {
+				description: "blah",
+				name: `status${globals.uniqueString}`,
+			};
+			url = `${apiUrl}/statuses`;
+			resp = await client.post(url, JSON.stringify(status));
+			const respStatus: ResponseStatus = resp.data.response;
+			console.log(`Successfully created Profile ${respStatus.name}`);
+			data.statuses = respStatus;
 
 			const profile: RequestProfile = {
 				cdn: 1,

@@ -37,6 +37,8 @@ on:
       - GO_VERSION
       - lib/atscfg-go/**.go
       - lib/go-atscfg/**.go
+      - '!**_test.go'
+      - 'cache-config/testing/**_test.go'
       - 'traffic_ops/app/db/**'
       - '!traffic_ops/app/db/**.md'
       - traffic_ops/*client/**.go
@@ -59,6 +61,8 @@ on:
       - GO_VERSION
       - lib/atscfg-go/**.go
       - lib/go-atscfg/**.go
+      - '!**_test.go'
+      - 'cache-config/testing/**_test.go'
       - 'traffic_ops/app/db/**'
       - '!traffic_ops/app/db/**.md'
       - traffic_ops/*client/**.go
