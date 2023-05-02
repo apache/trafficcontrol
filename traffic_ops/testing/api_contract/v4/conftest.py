@@ -383,7 +383,8 @@ def get_json_keys(data: dict) -> list:
 	return api_keys
 
 def api_response_data(api_response: tuple[primitive | dict[str, object] | list[primitive |
-			 dict[str, object] | list[object]], requests.Response], request_type: str=None) -> dict[str, object]:
+	dict[str, object] | list[object]], requests.Response],
+	request_type: str=None) -> dict[str, object]:
 	"""
 	Checks API get/post response.
 	:param api_response: Raw api response.
@@ -404,7 +405,7 @@ def api_response_data(api_response: tuple[primitive | dict[str, object] | list[p
 				raise TypeError("malformed API response; 'response' property not an dict")
 		except IndexError as e:
 			raise TypeError(f"No response data from api request.'{e.args[0]}'") from e
-	
+
 	return api_data
 
 
@@ -501,7 +502,6 @@ def cdn_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	response: tuple[JSONData, requests.Response] = to_session.create_cdn(data=cdn)
 	resp_obj = check_template_data(response, "cdns")
 	return resp_obj
-		
 
 
 @pytest.fixture()
@@ -528,10 +528,11 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 		cachegroup["shortName"] = short_name[:5] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Cache group property '{e.args[0]}'") from e
-	
+
 	# Check if type already exists, otherwise create it
 	type_data = check_template_data(request_template_data["types"], "types")
-	type_object = create_or_get_existing(to_session, "types", "type", type_data, {"useInTable": "cachegroup"})
+	type_object = create_or_get_existing(to_session, "types", "type",
+				      type_data, {"useInTable": "cachegroup"})
 	cachegroup["typeId"] = type_object["id"]
 
 	logger.info("New cachegroup data to hit POST method %s", cachegroup)
@@ -717,14 +718,15 @@ def delivery_services_post_data(to_session: TOSession, request_template_data: li
 	:param request_template_data: Fixture to get profile data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-	delivery_services = check_template_data(request_template_data["delivery_services"], "delivery_services")
+	delivery_services = check_template_data(
+		request_template_data["delivery_services"], "delivery_services")
 
 	randstr = str(randint(0, 1000))
 	try:
-		xmlId = delivery_services["xmlId"]
-		if not isinstance(xmlId, str):
-			raise TypeError(f"xmlId must be str, not '{type(xmlId)}'")
-		delivery_services["xmlId"] = xmlId[:4] + randstr
+		xml_id= delivery_services["xmlId"]
+		if not isinstance(xml_id, str):
+			raise TypeError(f"xmlId must be str, not '{type(xml_id)}'")
+		delivery_services["xmlId"] = xml_id[:4] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing delivery_services property '{e.args[0]}'") from e
 
@@ -756,6 +758,7 @@ def delivery_services_post_data(to_session: TOSession, request_template_data: li
 
 	logger.info("New delivery_services data to hit POST method %s", delivery_services)
 	# Hitting delivery_services POST method
-	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice(data=delivery_services)
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice(
+		data=delivery_services)
 	resp_obj = check_template_data(response[0], "delivery_services")
 	return resp_obj

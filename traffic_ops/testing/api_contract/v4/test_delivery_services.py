@@ -33,11 +33,11 @@ def test_delivery_services_contract(
 	delivery_services_post_data: dict[str, object]
 ) -> None:
 	"""
-	Test step to validate keys, values and data types from servers endpoint
+	Test step to validate keys, values and data types from delivery_services endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
-	:param delivery_services_post_data: Fixture to get sample delivery service data and actual response.
+	:param delivery_services_post_data: Fixture to get delivery service data and actual response.
 	"""
 	# validate delivery services keys from api get response
 	logger.info("Accessing /delivery_services endpoint through Traffic ops session.")
@@ -58,17 +58,19 @@ def test_delivery_services_contract(
 		first_delivery_services = delivery_services_data[0]
 		if not isinstance(first_delivery_services, dict):
 			raise TypeError("malformed API response; first delivery_services in response is not an object")
-		logger.info(f"delivery_services Api response {first_delivery_services}")
+		logger.info("delivery_services Api response %s", first_delivery_services)
 		delivery_services_response_template = response_template_data.get("delivery_services")
 		if not isinstance(delivery_services_response_template, dict):
 			raise TypeError(
-				f"delivery_services response template data must be a dict, not '{type(delivery_services_response_template)}'")
-	
+				f"delivery_services response template data must be a dict, "
+		        f"not '{type(delivery_services_response_template)}'")
+
 		keys = ["cdnId", "profileId", "type", "typeId", "tenantId", "xmlId"]
 		prereq_values = [delivery_services_post_data[key] for key in keys]
 		get_values = [first_delivery_services[key] for key in keys]
-		
-		assert validate(instance=first_delivery_services, schema=delivery_services_response_template) == None
+
+		assert validate(instance=first_delivery_services,
+		  schema=delivery_services_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
