@@ -116,8 +116,10 @@ declare module "nightwatch" {
 			profileDetail: () => ProfileDetailPageObject;
 		};
 		servers: {
-			capabilityDetail: () => CapabilityDetailsPageObject;
-			capabilitiesTable: () => CapabilitiesPageObject;
+			capabilities: {
+				capabilityDetail: () => CapabilityDetailsPageObject;
+				capabilitiesTable: () => CapabilitiesPageObject;
+			};
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;
