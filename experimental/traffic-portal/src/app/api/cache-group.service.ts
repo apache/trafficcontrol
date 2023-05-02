@@ -82,7 +82,7 @@ export class CacheGroupService extends APIService {
 					params = {name: idOrName};
 					break;
 				case "number":
-					params = {id: String(idOrName)};
+					params = {id: idOrName};
 			}
 			const resp = await this.get<[ResponseCacheGroup]>(path, undefined, params).toPromise();
 			if (resp.length !== 1) {
@@ -248,7 +248,7 @@ export class CacheGroupService extends APIService {
 					params = {name: nameOrID};
 					break;
 				case "number":
-					params = {id: String(nameOrID)};
+					params = {id: nameOrID};
 			}
 			const div = await this.get<[ResponseDivision]>(path, undefined, params).toPromise();
 			return div[0];
@@ -281,10 +281,11 @@ export class CacheGroupService extends APIService {
 	/**
 	 * Deletes an existing division.
 	 *
-	 * @param id Id of the division to delete.
+	 * @param division The Division to be deleted, or just its ID.
 	 * @returns The deleted division.
 	 */
-	public async deleteDivision(id: number): Promise<ResponseDivision> {
+	public async deleteDivision(division: number | ResponseDivision): Promise<ResponseDivision> {
+		const id = typeof(division) === "number" ? division : division.id;
 		return this.delete<ResponseDivision>(`divisions/${id}`).toPromise();
 	}
 
@@ -308,7 +309,7 @@ export class CacheGroupService extends APIService {
 					params = {name: nameOrID};
 					break;
 				case "number":
-					params = {id: String(nameOrID)};
+					params = {id: nameOrID};
 			}
 			const r = await this.get<[ResponseRegion]>(path, undefined, params).toPromise();
 			return r[0];
@@ -345,7 +346,7 @@ export class CacheGroupService extends APIService {
 	 */
 	public async deleteRegion(regionOrId: number | ResponseRegion): Promise<void> {
 		const id = typeof(regionOrId) === "number" ? regionOrId : regionOrId.id;
-		await this.delete("regions/", undefined, { id : String(id) }).toPromise();
+		await this.delete("regions", undefined, { id }).toPromise();
 	}
 
 	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
@@ -368,7 +369,7 @@ export class CacheGroupService extends APIService {
 					params = {name: nameOrID};
 					break;
 				case "number":
-					params = {id: String(nameOrID)};
+					params = {id: nameOrID};
 			}
 			const r = await this.get<[ResponseCoordinate]>(path, undefined, params).toPromise();
 			return r[0];
@@ -383,8 +384,7 @@ export class CacheGroupService extends APIService {
 	 * @returns The updated coordinate.
 	 */
 	public async updateCoordinate(coordinate: ResponseCoordinate): Promise<ResponseCoordinate> {
-		const id = coordinate.id;
-		return this.put<ResponseCoordinate>("coordinates", coordinate, { id : String(id) }).toPromise();
+		return this.put<ResponseCoordinate>("coordinates", coordinate, { id: coordinate.id }).toPromise();
 	}
 
 	/**
@@ -405,23 +405,34 @@ export class CacheGroupService extends APIService {
 	 */
 	public async deleteCoordinate(coordinateOrId: number | ResponseCoordinate): Promise<void> {
 		const id = typeof(coordinateOrId) === "number" ? coordinateOrId : coordinateOrId.id;
-		await this.delete("coordinates/", undefined, { id : String(id) }).toPromise();
+		await this.delete("coordinates", undefined, { id }).toPromise();
 	}
 
+	/**
+	 * Gets all ASNs from Traffic Ops.
+	 *
+	 * @returns All ASNs configured in Traffic Ops.
+	 */
 	public async getASNs(): Promise<Array<ResponseASN>>;
+	/**
+	 * Gets a single ASN from Traffic Ops.
+	 *
+	 * @param id The ID of the ASN to fetch.
+	 * @returns The ASN with the given ID.
+	 */
 	public async getASNs(id: number): Promise<ResponseASN>;
 
 	/**
-	 * Gets an array of ASNs from Traffic Ops.
+	 * Gets ASNs from Traffic Ops.
 	 *
-	 * @param id If given, returns only the asn with the given id (number).
-	 * @returns An Array of ASNs objects - or a single ASN object if 'id'
+	 * @param id If given, returns only the asn with the given ID.
+	 * @returns An Array of ASNs objects - or a single ASN object if `id`
 	 * was given.
 	 */
 	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
 		const path = "/asns";
 		if(id) {
-			const r = await this.get<[ResponseASN]>(path, undefined, { id: String(id) }).toPromise();
+			const r = await this.get<[ResponseASN]>(path, undefined, { id }).toPromise();
 			return r[0];
 
 		}

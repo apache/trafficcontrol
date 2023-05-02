@@ -13,7 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type {RequestType, TypeFromResponse} from "trafficops-types";
+import type { RequestType, TypeFromResponse } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -32,12 +32,27 @@ type UseInTable = "cachegroup" |
  */
 @Injectable()
 export class TypeService extends APIService {
+	/**
+	 * Gets a specific Type from Traffic Ops.
+	 *
+	 * @param idOrName Either the integral, unique identifier (number) or name
+	 * (string) of the Type to be returned.
+	 * @returns The requested Type.
+	 */
 	public async getTypes(idOrName: number | string): Promise<TypeFromResponse>;
+	/**
+	 * Gets Types from Traffic Ops.
+	 *
+	 * @param idOrName Either the integral, unique identifier (number) or name
+	 * (string) of a single Type to be returned.
+	 * @returns The requested Type(s).
+	 */
 	public async getTypes(): Promise<Array<TypeFromResponse>>;
 	/**
-	 * Gets one or all Types from Traffic Ops
+	 * Gets one or all Types from Traffic Ops.
 	 *
-	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single Type to be returned.
+	 * @param idOrName Optionally the integral, unique identifier (number) or
+	 * name (string) of a single Type to be returned.
 	 * @returns The requested Type(s).
 	 */
 	public async getTypes(idOrName?: number | string): Promise<TypeFromResponse | Array<TypeFromResponse>> {
@@ -49,7 +64,7 @@ export class TypeService extends APIService {
 					params = {name: idOrName};
 					break;
 				case "number":
-					params = {id: String(idOrName)};
+					params = {id: idOrName};
 			}
 			const r = await this.get<[TypeFromResponse]>(path, undefined, params).toPromise();
 			if (r.length !== 1) {
