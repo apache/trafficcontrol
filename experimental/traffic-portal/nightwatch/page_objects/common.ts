@@ -63,6 +63,7 @@ const commonPageObject = {
 				regions: "[aria-label='Navigate to Regions']",
 				servers: "[aria-label='Navigate to Servers']",
 				serversContainer: "[aria-label='Toggle Servers']",
+				statuses: "[aria-label='Navigate to Statuses']",
 				tenants: "[aria-label='Navigate to Tenants']",
 				types: "[aria-label='Navigate to Types']",
 				users: "[aria-label='Navigate to Users']",
