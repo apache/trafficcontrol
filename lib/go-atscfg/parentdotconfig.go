@@ -168,7 +168,6 @@ func MakeParentDotConfig(
 // parentCacheGroups holds parent cache groups names for OTF topologies.
 // Primaries and Secondaries are from origin parent cache groups with
 // assigned primary and secondary cache groups.
-// For last, any origin parent cache groups that aren't primary or secondary.
 // The Null parent cache groups aren't considered unless the current server
 // cache group has no primary/secondary parents selected.
 type parentCacheGroups struct {
@@ -246,7 +245,7 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 		}
 
 		// Only consider arbitrarily assigned parents if the current
-		// cache group does not have primary or secondary parents assigned.
+		// cache group does not have primary and secondary parents assigned.
 		if !hasprimsec && 0 < len(cgprimsec.Nulls) {
 			for _, _ = range cgprimsec.Nulls {
 				parents = append(parents, pind)
