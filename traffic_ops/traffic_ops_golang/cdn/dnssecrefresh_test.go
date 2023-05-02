@@ -19,4 +19,33 @@ package cdn
  * under the License.
  */
 
-import ()
+import (
+	"fmt"
+	"testing"
+
+	"github.com/jmoiron/sqlx"
+
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+)
+
+func TestGetDNSSECKeyRefreshParams_test(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	cols := []string{"cdn_name", "cdn_domain", "cdn_dnssec_enabled", "parameter_name", "parameter_value"}
+	rows := sqlmock.NewRows(cols)
+	rows.AddRow("test", "test.com", false, "", "")
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("WITH cdn_profile_ids").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	_, err1 := getDNSSECKeyRefreshParams(db.MustBegin().Tx)
+	fmt.Println(err1)
+}

@@ -19,4 +19,60 @@ package cdn
  * under the License.
  */
 
-import ()
+import (
+	"fmt"
+	"testing"
+
+	"github.com/jmoiron/sqlx"
+
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+)
+
+func TestGetKSKParams(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	cols := []string{"name", "value"}
+	rows := sqlmock.NewRows(cols)
+	rows.AddRow("test", "2")
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("WITH cdn_profile_id").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	ttl, mult, err := getKSKParams(db.MustBegin().Tx, "test")
+	fmt.Println(ttl, mult, err)
+	if ttl != nil {
+		fmt.Errorf("expected: nil, got: %v", ttl)
+	}
+	if *mult != 2 {
+		fmt.Errorf("expected: 2, got: %v", *mult)
+	}
+	if err != nil {
+		fmt.Errorf("%s", err)
+	}
+
+	rows1 := sqlmock.NewRows(cols)
+	rows1.AddRow("tld.ttls.DNSKEY", "5")
+	mock.ExpectBegin()
+	mock.ExpectQuery("WITH cdn_profile_id").WillReturnRows(rows1)
+	mock.ExpectCommit()
+
+	ttl1, mult1, err1 := getKSKParams(db.MustBegin().Tx, "test")
+	fmt.Println(ttl1, mult1, err1)
+	if *ttl1 != 5 {
+		fmt.Errorf("expected: 5, got: %v", *ttl1)
+	}
+	if mult1 != nil {
+		fmt.Errorf("expected: nil, got: %v", mult1)
+	}
+	if err1 != nil {
+		fmt.Errorf("%s", err1)
+	}
+}
