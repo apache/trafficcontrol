@@ -87,9 +87,8 @@ export class ParametersTableComponent implements OnInit {
 		},
 		{
 			href: (selectedRow: ResponseParameter): string => `/core/profiles/param/${selectedRow.id}`,
-			name: "View Profiles",
+			name: "Manage Profiles",
 			newTab: true,
-			// queryParams: (responseParameter: ResponseParameter): Params => ({param: responseParameter.id}),
 		}
 	];
 
