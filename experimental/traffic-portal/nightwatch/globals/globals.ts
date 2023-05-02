@@ -79,10 +79,10 @@ import {
 } from "trafficops-types";
 
 import * as config from "../config.json";
+import { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
+import { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
 import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
 import {TypesPageObject} from "../page_objects/types/typesTable";
-import { CapabilityDetailsPageObject } from "nightwatch/page_objects/servers/capabilities/capabilityDetails";
-import { CapabilitiesPageObject } from "nightwatch/page_objects/servers/capabilities/capabilitiesTable";
 
 declare module "nightwatch" {
 	/**

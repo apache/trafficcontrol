@@ -21,7 +21,7 @@ describe("Capability Details Spec", () => {
 				.assert.enabled("@name")
 				.assert.enabled("@saveBtn")
 				.assert.not.enabled("@lastUpdated")
-				.assert.valueEquals("@name", browser.globals.testData.capability.name)
+				.assert.valueEquals("@name", browser.globals.testData.capability.name);
 		});
 	});
 
