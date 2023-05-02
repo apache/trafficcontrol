@@ -70,12 +70,12 @@ def test_division_contract(
 			division_post_data["name"]]
 		get_values = [first_division["name"]]
 		get_types = {}
-		for key in first_division:
-			get_types[key] = first_division[key].__class__.__name__
+		for key, value in first_division.items():
+			get_types[key] = type(value).__name__
 		logger.info("types from division get response %s", get_types)
 		response_template_types= {}
-		for key in response_template:
-			response_template_types[key] = response_template.get(key).get("type")
+		for key, value in response_template.items():
+			response_template_types[key] = value.get("type")
 		logger.info("types from division response template %s", response_template_types)
 
 		assert division_keys == set(response_template.keys())
