@@ -632,7 +632,7 @@ def tenant_post_data(to_session: TOSession, request_template_data: list[JSONData
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	tenant = check_template_data(request_template_data, "tenants")
+	tenant = check_template_data(request_template_data["tenants"], "tenants")
 
 	# Return new post data and post response from tenants POST request
 	randstr = str(randint(0, 1000))
@@ -747,4 +747,99 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting server POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_server(data=server)
 	resp_obj = check_template_data(response, "server")
+	return resp_obj
+
+
+@pytest.fixture()
+def delivery_services_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		      ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for server endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get profile data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	delivery_services = check_template_data(
+		request_template_data["delivery_services"], "delivery_services")
+
+	randstr = str(randint(0, 1000))
+	try:
+		xml_id = delivery_services["xmlId"]
+		if not isinstance(xml_id, str):
+			raise TypeError(f"xmlId must be str, not '{type(xml_id)}'")
+		delivery_services["xmlId"] = xml_id[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing delivery_services property '{e.args[0]}'") from e
+
+	# Check if cdn already exists, otherwise create it
+	cdn_data = check_template_data(request_template_data["cdns"], "cdns")
+	cdn_object = create_or_get_existing(to_session, "cdns", "cdn", cdn_data)
+	delivery_services["cdnId"] = cdn_object["id"]
+
+	# Check if profile with cdn already exists, otherwise create it
+	profile_data = check_template_data(request_template_data["profiles"], "profiles")
+	profile_data["cdn"] = cdn_object["id"]
+	profile_object = create_or_get_existing(to_session, "profiles", "profile", profile_data,
+					 {"cdn": cdn_object["id"]})
+	delivery_services["profileId"] = profile_object["id"]
+
+	# Check if status already exists, otherwise create it
+	tenant_data = check_template_data(request_template_data["tenants"], "tenants")
+	tenant_object = create_or_get_existing(to_session, "tenants", "tenant",
+					tenant_data, {"name": "root"})
+	delivery_services["tenantId"] = tenant_object["id"]
+
+	# Check if status already exists, otherwise create it
+	type_data = {"name": "HTTP", "useInTable":"deliveryservice"}
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"name": "HTTP", "useInTable":"deliveryservice"})
+	delivery_services["typeId"] = type_object["id"]
+	delivery_services["type"] = type_object["name"]
+
+
+	logger.info("New delivery_services data to hit POST method %s", delivery_services)
+	# Hitting delivery_services POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice(
+		data=delivery_services)
+	resp_obj = check_template_data(response[0], "delivery_services")
+	return resp_obj
+
+
+@pytest.fixture()
+def origin_post_data(to_session: TOSession, request_template_data: list[JSONData],
+		     delivery_services_post_data: dict[str, object], tenant_post_data: dict[str, object]
+		      ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for origins endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get profile data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	origin = check_template_data(request_template_data["origins"], "origins")
+
+	randstr = str(randint(0, 1000))
+	try:
+		name = origin["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		origin["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing origin property '{e.args[0]}'") from e
+
+	# Check if delivery_service already exists, otherwise create it
+	delivery_services_id = delivery_services_post_data["id"]
+	if not isinstance(delivery_services_id, int):
+		raise TypeError("malformed API response; 'id' property not a integer")
+	origin["deliveryServiceId"] = delivery_services_id
+
+	# Check if tenant already exists, otherwise create it
+	tenant_id = tenant_post_data["id"]
+	if not isinstance(tenant_id, int):
+		raise TypeError("malformed API response; 'id' property not a integer")
+	origin["tenantId"] = tenant_id
+
+	logger.info("New origin data to hit POST method %s", origin)
+	# Hitting origins POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_origins(data=origin)
+	resp_obj = check_template_data(response, "origins")
 	return resp_obj
