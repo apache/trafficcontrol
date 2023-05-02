@@ -113,7 +113,7 @@ export class ProfileDetailComponent implements OnInit {
 	}
 
 	/**
-	 * Submits new/updated type.
+	 * Submits new/updated profile.
 	 *
 	 * @param e HTML form submission event.
 	 */
@@ -129,11 +129,11 @@ export class ProfileDetailComponent implements OnInit {
 	}
 
 	/**
-	 * Deletes the current type.
+	 * Deletes the current profile.
 	 */
-	public async deleteType(): Promise<void> {
+	public async deleteProfile(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new type");
+			console.error("Unable to delete new profile");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {
