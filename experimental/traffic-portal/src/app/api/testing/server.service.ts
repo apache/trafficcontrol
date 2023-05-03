@@ -27,8 +27,9 @@ import type {
 	Servercheck,
 } from "trafficops-types";
 
-import { CDNService, PhysicalLocationService, ProfileService, TypeService } from "..";
-import { ServerService as ConcreteService } from "../server.service";
+import { CDNService, PhysicalLocationService, ProfileService, TypeService, ServerService as ConcreteServerService } from "..";
+
+import { APITestingService } from "./base-api.service";
 
 /**
  * Generates a `Servercheck` for a given `server`.
@@ -56,7 +57,7 @@ function serverCheck(server: ResponseServer): Servercheck {
  * ServerService exposes API functionality related to Servers.
  */
 @Injectable()
-export class ServerService {
+export class ServerService extends APITestingService implements ConcreteServerService {
 
 	public servers = new Array<ResponseServer>();
 
@@ -109,7 +110,9 @@ export class ServerService {
 		private readonly physLocService: PhysicalLocationService,
 		private readonly typeService: TypeService,
 		private readonly profileService: ProfileService
-	){}
+	){
+		super();
+	}
 
 	public async getServers(idOrName: number | string): Promise<ResponseServer>;
 	public async getServers(): Promise<Array<ResponseServer>>;
@@ -364,9 +367,9 @@ export class ServerService {
 	}
 
 	/**
-	 * Updates status Details.
+	 * Updates a Status.
 	 *
-	 * @param payload containes name and description for the status., unique identifier thereof.
+	 * @param payload The Status as it is desired to be after updating.
 	 */
 	public async updateStatusDetail(payload: ResponseStatus): Promise<ResponseStatus> {
 		const index = this.statuses.findIndex(u => u.id === payload.id);
@@ -519,7 +522,7 @@ export class ServerService {
 	 * @throws {Error} If no service addresses are found on any interface.
 	 */
 	public static getServiceInterface(server: Server | Interface[]): Interface {
-		return ConcreteService.getServiceInterface(server);
+		return ConcreteServerService.getServiceInterface(server);
 	}
 
 	/**
@@ -532,6 +535,6 @@ export class ServerService {
 	 * could be found; otherwise it'll be `undefined`).
 	 */
 	public static extractNetmask(addr: IPAddress | string): [string, string | undefined] {
-		return ConcreteService.extractNetmask(addr);
+		return ConcreteServerService.extractNetmask(addr);
 	}
 }
