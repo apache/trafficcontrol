@@ -13,13 +13,17 @@
  */
 
 import { Injectable } from "@angular/core";
-import { Log } from "trafficops-types";
+import type { Log } from "trafficops-types";
+
+import type { ChangeLogsService as ConcreteChangeLogService } from "../change-logs.service";
+
+import { APITestingService } from "./base-api.service";
 
 /**
  * Defines & handles api endpoints related to change logs
  */
 @Injectable()
-export class ChangeLogsService {
+export class ChangeLogsService extends APITestingService implements ConcreteChangeLogService {
 
 	private readonly changeLogs: Array<Log> = [{
 		id: 0,
