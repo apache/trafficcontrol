@@ -12,7 +12,11 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import {RequestType, TypeFromResponse} from "trafficops-types";
+import type { RequestType, TypeFromResponse } from "trafficops-types";
+
+import type { TypeService as ConcreteTypeService } from "../type.service";
+
+import { APITestingService } from "./base-api.service";
 
 /** The allowed values for the 'useInTables' query parameter of GET requests to /types. */
 type UseInTable = "cachegroup" |
@@ -28,7 +32,7 @@ type UseInTable = "cachegroup" |
  * TypeService exposes API functionality relating to Types.
  */
 @Injectable()
-export class TypeService {
+export class TypeService extends APITestingService implements ConcreteTypeService {
 	private lastID = 20;
 	private readonly types = [
 		{
@@ -218,5 +222,25 @@ export class TypeService {
 		};
 		this.types.push(t);
 		return t;
+	}
+
+	/**
+	 * Replaces the current definition of a type with the one given.
+	 *
+	 * @param type The new type.
+	 * @returns The updated type.
+	 */
+	public async updateType(type: TypeFromResponse): Promise<TypeFromResponse> {
+		const idx = this.types.findIndex(t => t.id === type.id);
+		if (idx < 0) {
+			throw new Error(`no such Type #${type.id}`);
+		}
+
+		const inserted = {
+			...type,
+			lastUpdated: new Date()
+		};
+		this.types[idx] = inserted;
+		return inserted;
 	}
 }
