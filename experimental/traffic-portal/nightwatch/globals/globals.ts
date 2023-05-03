@@ -44,45 +44,46 @@ import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenan
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
 import type { UsersPageObject } from "nightwatch/page_objects/users/users";
 import {
-	CDN,
 	GeoLimit,
 	GeoProvider,
-	LoginRequest,
-	Protocol,
-	RequestDeliveryService,
-	ResponseCDN,
-	ResponseDeliveryService,
-	RequestTenant,
-	ResponseTenant,
-	TypeFromResponse,
-	RequestSteeringTarget,
-	ResponseASN,
-	RequestASN,
-	ResponseDivision,
-	RequestDivision,
-	ResponseRegion,
-	RequestRegion,
-	RequestCacheGroup,
-	ResponseCacheGroup,
-	ResponsePhysicalLocation,
-	RequestPhysicalLocation,
-	ResponseCoordinate,
-	RequestCoordinate,
-	RequestType,
-	ResponseStatus,
-	RequestStatus,
-	ResponseProfile,
-	RequestProfile,
 	ProfileType,
-	ResponseServerCapability,
-	RequestServerCapability
+	Protocol,
+
+	type CDN,
+	type LoginRequest,
+	type RequestASN,
+	type RequestCacheGroup,
+	type RequestCoordinate,
+	type RequestDeliveryService,
+	type RequestDivision,
+	type RequestPhysicalLocation,
+	type RequestProfile,
+	type RequestRegion,
+	type RequestServerCapability,
+	type RequestStatus,
+	type RequestSteeringTarget,
+	type RequestTenant,
+	type RequestType,
+	type ResponseASN,
+	type ResponseCacheGroup,
+	type ResponseCDN,
+	type ResponseCoordinate,
+	type ResponseDeliveryService,
+	type ResponseDivision,
+	type ResponsePhysicalLocation,
+	type ResponseProfile,
+	type ResponseRegion,
+	type ResponseServerCapability,
+	type ResponseStatus,
+	type ResponseTenant,
+	type TypeFromResponse,
 } from "trafficops-types";
 
 import * as config from "../config.json";
-import { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
-import { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
-import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
-import {TypesPageObject} from "../page_objects/types/typesTable";
+import type { CapabilitiesPageObject } from "../page_objects/capabilities/capabilitiesTable";
+import type { CapabilityDetailsPageObject } from "../page_objects/capabilities/capabilityDetails";
+import type { TypeDetailPageObject } from "../page_objects/types/typeDetail";
+import type { TypesPageObject } from "../page_objects/types/typesTable";
 
 declare module "nightwatch" {
 	/**
@@ -102,6 +103,10 @@ declare module "nightwatch" {
 			asnsTable: () => AsnsPageObject;
 			asnDetail: () => AsnDetailPageObject;
 		};
+		capabilities: {
+			capabilityDetail: () => CapabilityDetailsPageObject;
+			capabilitiesTable: () => CapabilitiesPageObject;
+		};
 		cdns: {
 			cdnDetail: () => CDNDetailPageObject;
 		};
@@ -116,10 +121,6 @@ declare module "nightwatch" {
 			profileDetail: () => ProfileDetailPageObject;
 		};
 		servers: {
-			capabilities: {
-				capabilityDetail: () => CapabilityDetailsPageObject;
-				capabilitiesTable: () => CapabilitiesPageObject;
-			};
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;
