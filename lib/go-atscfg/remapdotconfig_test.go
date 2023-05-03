@@ -7759,7 +7759,6 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 
 	dsType := tc.DSType("HTTP_NO_CACHE")
 
-	// BNO
 	// show up at mid due to topo
 	ds0 := DeliveryService{}
 	ds0.ID = util.IntPtr(48)
