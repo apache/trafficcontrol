@@ -16,12 +16,16 @@ form {
 	max-width: calc(100% - 32px);
 }
 
-mat-card mat-card-content .pair {
+.mat-mdc-card .mat-mdc-card-content .pair {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	column-gap: 48px;
 	align-items: center;
 	justify-content: space-between;
+}
+
+.mat-mdc-card-actions .mdc-button {
+	margin: 0 8px;
 }
 
 /* Chosen more or less arbitrarily. */
@@ -33,12 +37,12 @@ mat-card mat-card-content .pair {
 
 /* This is roughly the point where 350px is 80% of the viewport. */
 @media(max-width:440px) {
-	mat-card {
+	.mat-mdc-card {
 		min-width: unset;
 		width: 100%;
 		form {
 			min-width: 100%;
-			mat-card-content {
+			.mat-mdc-card-content {
 				margin: 1em auto;
 				.pair {
 					grid-template-columns: 1fr;

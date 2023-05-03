@@ -11,21 +11,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<div class="mat-select-trigger" (focusin)="focus()" (focusout)="blur($event)">
-<input
-	matInput
-	[type]="type"
-	[formControl]="control"
-	[placeholder]="placeholder"
-	[required]="required"
-	[disabled]="disabled"
-	[attr.aria-describedby]="describedBy"
-	[attr.aria-labelledby]="parentFormField?.getLabelId()"
-	[name]="name"
-	(change)="onChange($event)"
-	[attr.autocomplete]="autocomplete"
-/>
-<button type="button" mat-icon-button (click)="toggle()">
-	<mat-icon>{{ type === "password" ? "visibility" : "visibility_off"}}</mat-icon>
-</button>
+<div (focusin)="focus()" (focusout)="blur($event)">
+	<input
+		matInput
+		[type]="type"
+		[formControl]="control"
+		[placeholder]="placeholder"
+		[required]="required"
+		[disabled]="disabled"
+		[attr.aria-describedby]="describedBy"
+		[attr.aria-labelledby]="parentFormField?.getLabelId()"
+		[name]="name"
+		(change)="onChange($event)"
+		[attr.autocomplete]="autocomplete"
+	/>
+	<button type="button" matIconSuffix mat-icon-button (click)="toggle()">
+		<mat-icon>{{ type === "password" ? "visibility" : "visibility_off"}}</mat-icon>
+	</button>
 </div>
