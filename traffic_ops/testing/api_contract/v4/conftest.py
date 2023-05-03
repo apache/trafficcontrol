@@ -718,7 +718,7 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
 		division_id = region["division"]
 		logger.info("extracted %s from %s", division_id, division_get_response)
 	except KeyError as e:
-		raise TypeError(f"missing Division property '{e.args[0]}'") from e
+		raise TypeError(f"missing Regions property '{e.args[0]}'") from e
 
 	logger.info("New region data to hit POST method %s", request_template_data)
 	# Hitting region POST method
