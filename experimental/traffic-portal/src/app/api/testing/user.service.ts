@@ -20,6 +20,7 @@ import type {
 	PostResponseRole,
 	PutResponseRole,
 	RequestRole,
+	RegistrationRequest,
 	RequestTenant,
 	ResponseCurrentUser,
 	ResponseRole,
@@ -29,21 +30,15 @@ import type {
 
 import { LoggingService } from "src/app/shared/logging.service";
 
-/**
- * Represents a request to register a user via email using the `/users/register`
- * API endpoint.
- */
-interface UserRegistrationRequest {
-	email: string;
-	role: number;
-	tenantId: number;
-}
+import { UserService as ConcreteUserService } from "../user.service";
+
+import { APITestingService } from "./base-api.service";
 
 /**
  * UserService exposes API functionality related to Users, Roles and Capabilities.
  */
 @Injectable()
-export class UserService {
+export class UserService extends APITestingService implements ConcreteUserService {
 
 	private lastID = 0;
 
@@ -105,7 +100,9 @@ export class UserService {
 
 	private readonly tokens = new Map<string, string>();
 
-	constructor(private readonly log: LoggingService) {}
+	constructor(private readonly log: LoggingService) {
+		super();
+	}
 
 	/**
 	 * Performs authentication with the Traffic Ops server.
@@ -365,17 +362,17 @@ export class UserService {
 	 *
 	 * @param request The full registration request.
 	 */
-	public async registerUser(request: UserRegistrationRequest): Promise<void>;
+	public async registerUser(request: RegistrationRequest): Promise<void>;
 	/**
 	 * Registers a new user via email.
 	 *
 	 * Note that in testing this has no real effect.
 	 *
 	 * @param email The email address to use for registration.
-	 * @param role The new user's Role (or just its ID).
+	 * @param role The new user's Role (or just its name).
 	 * @param tenant The new user's Tenant (or just its ID).
 	 */
-	public async registerUser(email: string, role: number | ResponseRole, tenant: number | ResponseTenant): Promise<void>;
+	public async registerUser(email: string, role: string | ResponseRole, tenant: number | ResponseTenant): Promise<void>;
 	/**
 	 * Registers a new user via email.
 	 *
@@ -389,8 +386,8 @@ export class UserService {
 	 * `userOrEmail` is given as an email address, and is ignored otherwise.
 	 */
 	public async registerUser(
-		userOrEmail: UserRegistrationRequest | string,
-		role?: number | ResponseRole,
+		userOrEmail: RegistrationRequest | string,
+		role?: string | ResponseRole,
 		tenant?: number | ResponseTenant
 	): Promise<void> {
 		if (typeof(userOrEmail) === "string") {
