@@ -28,18 +28,20 @@ primitive = bool | int | float | str | None
 def test_region_contract(
 	to_session: TOSession,
 	request_template_data: list[dict[str, object] | list[object] | primitive],
-	response_template_data: list[dict[str, object] | list[object] | primitive],
+	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
+						    | list[object]] | dict[object, object]],
 	region_post_data: dict[str, object]
 ) -> None:
 	"""
 	Test step to validate keys, values and data types from regions endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param get_region_data: Fixture to get region data from a prerequisites file.
-	:param region_prereq: Fixture to get sample region data and actual region response.
+	:param request_template_data: Fixture to get request template data from a prerequisites file.
+	:param response_template_data: Fixture to get response template data from a prerequisites file.
+	:param region_post_data: Fixture to get sample region data and actual region response.
 	"""
 	# validate region keys from regions get response
-	logger.info("Accessing regions endpoint through Traffic ops session.")
+	logger.info("Accessing /regions endpoint through Traffic ops session.")
 
 	region = request_template_data[0]
 	if not isinstance(region, dict):
@@ -65,23 +67,18 @@ def test_region_contract(
 
 		logger.info("region Keys from regions endpoint response %s", region_keys)
 		region_response_template = response_template_data.get("regions")
-        if not isinstance(region_response_template, dict):
-            raise TypeError(
-                f"Region response template data must be a dict, not '{type(region_response_template)}")
-        response_template_data: dict[str, list[dict[str, object] | list[object] | primitive] |
-            dict |object, object |
-            primitive
-        ]
-        response_template = region_response_template.get("properties")
+		if not isinstance(region_response_template, dict):
+			raise TypeError(
+				f"region response template data must be a dict, not '{type(region_response_template)}'")
+		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
+			dict[object, object] |\
+			primitive
+		]
+		response_template = region_response_template.get("properties")
 		# validate region values from prereq data in regions get response.
-		prereq_values = [
-			region_post_data["name"],
-            region_post_data["division"],
-            region_post_data["divisionName"]]
-
-		get_values = [first_region["name"],
-        first_region["division"], first_region["divisionName"]]
-
+		prereq_values = [region_post_data["name"], region_post_data["division"],
+		region_post_data["divisionName"]]
+		get_values = [first_region["name"], first_region["division"], first_region["divisionName"]]
 		get_types = {}
 		for key, value in first_region.items():
 			get_types[key] = type(value).__name__
@@ -89,12 +86,12 @@ def test_region_contract(
 		response_template_types= {}
 		for key, value in response_template.items():
 			actual_type = value.get("type")
-            if not isinstance(actual_type, str):
-                raise TypeError(
-                    f"Type data must be a string, not '{type(actual_type)}'")
-            response_template_types[key] = actual_type
-		logger.info("types from region response template %s", response_template_types)
-
+			if not isinstance(actual_type, str):
+				raise TypeError(
+					f"Type data must be a string, not '{type(actual_type)}'")
+			response_template_types[key] = actual_type
+		logger.info("types from regions response template %s", response_template_types)
+		# validate keys, data types and values from regions get json response.
 		assert region_keys == set(response_template.keys())
 		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
 		assert get_values == prereq_values
@@ -104,8 +101,8 @@ def test_region_contract(
 	finally:
 		# Delete region after test execution to avoid redundancy.
 		try:
-			region_name = region_post_data["name"]
-			to_session.delete_region(query_params={"name": region_name})
+			region_id = region_post_data["id"]
+			to_session.delete_region(region_id=region_id)
 		except IndexError:
 			logger.error("region returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_get_region")
+			pytest.fail("Response from delete request is empty, Failing test_region_contract")
