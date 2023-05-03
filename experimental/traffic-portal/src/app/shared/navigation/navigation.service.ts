@@ -164,6 +164,9 @@ export class NavigationService {
 				href: "/core/me",
 				name: "My Profile"
 			}, {
+				href: "/core/roles",
+				name: "Roles"
+			}, {
 				href: "/core/tenants",
 				name: "Tenants"
 			}],

@@ -66,6 +66,7 @@ import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
+import { RolesTableComponent } from "./users/roles/tables/roles-table.component";
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },
@@ -89,6 +90,7 @@ export const ROUTES: Routes = [
 	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
 	{ component: CacheGroupTableComponent, path: "cache-groups" },
 	{ component: CacheGroupDetailsComponent, path: "cache-groups/:id"},
+	{ component: RolesTableComponent, path: "roles"},
 	{ component: TenantsComponent, path: "tenants"},
 	{ component: ChangeLogsComponent, path: "change-logs" },
 	{ component: TenantDetailsComponent, path: "tenants/:id"},
@@ -126,6 +128,7 @@ export const ROUTES: Routes = [
 		UserDetailsComponent,
 		TenantsComponent,
 		UserRegistrationDialogComponent,
+		RolesTableComponent,
 		TenantDetailsComponent,
 		ChangeLogsComponent,
 		LastDaysComponent,
