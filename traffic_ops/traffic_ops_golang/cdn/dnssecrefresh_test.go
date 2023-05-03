@@ -20,7 +20,6 @@ package cdn
  */
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/jmoiron/sqlx"
@@ -46,6 +45,20 @@ func TestGetDNSSECKeyRefreshParams_test(t *testing.T) {
 	mock.ExpectQuery("WITH cdn_profile_ids").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	_, err1 := getDNSSECKeyRefreshParams(db.MustBegin().Tx)
-	fmt.Println(err1)
+	params, err := getDNSSECKeyRefreshParams(db.MustBegin().Tx)
+	for _, v := range params {
+		if v.CDNName != "test" {
+			t.Errorf("Expected cdn name: test, got: %s", v.CDNName)
+		}
+		if v.CDNDomain != "test.com" {
+			t.Errorf("Expected cdn domain: test.com, got: %s", v.CDNDomain)
+		}
+		if v.DNSSECEnabled != false {
+			t.Errorf("Expected DNSSEC to not be enabled")
+		}
+		if err != nil {
+			t.Errorf("expected no error, got: %s", err)
+		}
+	}
+
 }
