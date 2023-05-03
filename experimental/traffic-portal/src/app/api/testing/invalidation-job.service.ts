@@ -17,7 +17,9 @@ import { RequestInvalidationJob, ResponseDeliveryService, ResponseInvalidationJo
 
 // This needs to be imported from above, because that's how the services are
 // specified in `providers`.
-import { DeliveryServiceService } from "..";
+import { DeliveryServiceService, InvalidationJobService as ConcreteInvalidationJobService } from "..";
+
+import { APITestingService } from "./base-api.service";
 
 /**
  * JobOpts defines the options that can be passed to getInvalidationJobs.
@@ -39,12 +41,14 @@ interface JobOpts {
  * InvalidationJobService exposes API functionality related to Content Invalidation Jobs.
  */
 @Injectable()
-export class InvalidationJobService {
+export class InvalidationJobService extends APITestingService implements ConcreteInvalidationJobService {
 
 	private readonly jobs = new Array<ResponseInvalidationJob>();
 	private idCounter = 0;
 
-	constructor(private readonly dsService: DeliveryServiceService) {}
+	constructor(private readonly dsService: DeliveryServiceService) {
+		super();
+	}
 
 	/**
 	 * Fetches all invalidation jobs that match the passed criteria.
