@@ -26,7 +26,7 @@ limitations under the License.
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Cache Group</mat-label>
-				<mat-select name="cachegroup"[(ngModel)]="asn.cachegroupId" required>
+				<mat-select name="cachegroup" [(ngModel)]="asn.cachegroupId" required>
 					<mat-option *ngFor="let cachegroup of cachegroups" [value]="cachegroup.id">{{cachegroup.name}}</mat-option>
 				</mat-select>
 			</mat-form-field>

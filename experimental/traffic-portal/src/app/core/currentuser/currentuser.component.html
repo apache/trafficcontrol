@@ -19,7 +19,7 @@ limitations under the License.
 			<p *ngIf=currentUser.addressLine1>{{currentUser.addressLine1}}</p>
 			<p *ngIf=currentUser.addressLine2>{{currentUser.addressLine2}}</p>
 			<p *ngIf=currentUser.company>{{currentUser.company}}</p>
-			<p *ngIf="currentUser.city || currentUser.country || currentUser.stateOrProvince || currentUser.postalCode"><span *ngIf="currentUser.city">{{currentUser.city}}<span *ngIf="currentUser.country || currentUser.stateOrProvince || currentUser.postalCode">&nbsp;</span></span><span *ngIf="currentUser.stateOrProvince">{{currentUser.stateOrProvince}}<span *ngIf="currentUser.country || currentUser.postalCode">, </span></span><span *ngIf="currentUser.country">{{currentUser.country}}<span *ngIf="currentUser.postalCode">, </span></span><span *ngIf=currentUser.postalCode>{{currentUser.postalCode}}</span></p>
+			<p *ngIf="hasBottomAddress()"><span *ngIf="currentUser.city">{{currentUser.city}}<span *ngIf="currentUser.country || currentUser.stateOrProvince || currentUser.postalCode">&nbsp;</span></span><span *ngIf="currentUser.stateOrProvince">{{currentUser.stateOrProvince}}<span *ngIf="currentUser.country || currentUser.postalCode">, </span></span><span *ngIf="currentUser.country">{{currentUser.country}}<span *ngIf="currentUser.postalCode">, </span></span><span *ngIf=currentUser.postalCode>{{currentUser.postalCode}}</span></p>
 		</address>
 		<div>
 			<h2>User Theme</h2>
@@ -75,7 +75,7 @@ limitations under the License.
 			</mat-form-field>
 		</mat-card-content>
 		<mat-card-actions>
-			<button mat-raised-button style="grid-area: k;">Submit</button>
+			<button mat-raised-button style="grid-area: k;" type="submit">Submit</button>
 			<button mat-raised-button color="accent" style="grid-area: l;" type="button" (click)="updatePassword()">Update Password</button>
 			<button type="button" mat-raised-button color="warn" (click)="cancelEdit()" style="grid-area: m;">Cancel</button>
 		</mat-card-actions>
