@@ -23,11 +23,15 @@ import {
 	type ResponseParameter,
 } from "trafficops-types";
 
+import { ProfileService as ConcreteProfileService } from "../profile.service";
+
+import { APITestingService } from "./base-api.service";
+
 /**
  * ProfileService exposes API functionality related to Profiles.
  */
 @Injectable()
-export class ProfileService {
+export class ProfileService extends APITestingService implements ConcreteProfileService {
 	private lastID = 10;
 	private readonly profiles: ResponseProfile[] = [
 		{
