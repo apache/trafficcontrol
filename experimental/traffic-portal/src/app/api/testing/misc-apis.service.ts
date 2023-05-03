@@ -15,6 +15,12 @@
 import { Injectable } from "@angular/core";
 import type { OSVersions } from "trafficops-types";
 
+import { AlertService } from "src/app/shared/alert/alert.service";
+
+import type { MiscAPIsService as ConcreteMiscAPIsService } from "../misc-apis.service";
+
+import { APITestingService } from "./base-api.service";
+
 /**
  * This service implements APIs that aren't specific to any given ATC object.
  * They can provide things like system information, access to the wacky external
@@ -22,7 +28,7 @@ import type { OSVersions } from "trafficops-types";
  * API service.
  */
 @Injectable()
-export class MiscAPIsService {
+export class MiscAPIsService extends APITestingService implements ConcreteMiscAPIsService {
 	/** Some static mock OS versions. */
 	public readonly osVersions = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -30,6 +36,10 @@ export class MiscAPIsService {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		"Rocky Linux 8": "rocky8"
 	};
+
+	constructor(public readonly alertsService: AlertService) {
+		super();
+	}
 
 	/**
 	 * Retrieves the operating system versions that can be used to generate
