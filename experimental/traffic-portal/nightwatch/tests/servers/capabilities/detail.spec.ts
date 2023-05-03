@@ -14,7 +14,7 @@
 
 describe("Capability Details Spec", () => {
 	it("Test capability", () => {
-		const page = browser.page.servers.capabilities.capabilitiesTable();
+		const page = browser.page.servers.capabilities.capabilityDetail();
 		browser.url(`${page.api.launchUrl}/core/capabilities/${browser.globals.testData.capability.name}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("form")
