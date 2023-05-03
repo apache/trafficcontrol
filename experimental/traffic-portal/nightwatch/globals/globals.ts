@@ -104,7 +104,7 @@ declare module "nightwatch" {
 			asnDetail: () => AsnDetailPageObject;
 		};
 		capabilities: {
-			capabilityDetail: () => CapabilityDetailsPageObject;
+			capabilityDetails: () => CapabilityDetailsPageObject;
 			capabilitiesTable: () => CapabilitiesPageObject;
 		};
 		cdns: {
