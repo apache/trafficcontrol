@@ -149,6 +149,9 @@ interface ConfigWithSSL {
 	certPath: string;
 	/** The path to the SSL private key Traffic Portal will use. */
 	keyPath: string;
+	/** The paths to trusted root certificates, setting this is equivalent
+	 * to the path to the environment variable NODE_EXTRA_CA_CERTS */
+	certificateAuthPaths: Array<string>;
 	/** Whether or not to serve HTTPS */
 	useSSL: true;
 }
@@ -384,6 +387,7 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 			cfg = {
 				browserFolder: cfg.browserFolder,
 				certPath: args.certPath,
+				certificateAuthPaths: [],
 				insecure: cfg.insecure,
 				keyPath: args.keyPath,
 				port: cfg.port,
