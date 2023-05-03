@@ -116,12 +116,8 @@ export function constructDataSetFromResponse(r: DSStats): DataSetWithSummary {
 @Injectable()
 export class DeliveryServiceService extends APIService {
 
-	/** This is where DS Types are cached, as they are presumed to not change (often). */
-	private deliveryServiceTypes: Array<TypeFromResponse>;
-
 	constructor(http: HttpClient, private readonly log: LoggingService) {
 		super(http);
-		this.deliveryServiceTypes = new Array<TypeFromResponse>();
 	}
 
 	/**
@@ -433,13 +429,8 @@ export class DeliveryServiceService extends APIService {
 	 * specifically to Delivery Service types.
 	 */
 	public async getDSTypes(): Promise<Array<TypeFromResponse>> {
-		if (this.deliveryServiceTypes.length > 0) {
-			return this.deliveryServiceTypes;
-		}
 		const path = "types";
-		const r = await this.get<Array<TypeFromResponse>>(path, undefined, {useInTable: "deliveryservice"}).toPromise();
-		this.deliveryServiceTypes = r;
-		return r;
+		return this.get<Array<TypeFromResponse>>(path, undefined, {useInTable: "deliveryservice"}).toPromise();
 	}
 
 	/**
