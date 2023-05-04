@@ -82,7 +82,7 @@ function generateDataSet(start: Date, end: Date, step: number): GeneratedDataSet
 @Injectable()
 export class DeliveryServiceService extends APITestingService implements ConcreteDeliveryServiceService {
 
-	private readonly deliveryServices = new Array<ResponseDeliveryService>();
+	public readonly deliveryServices = new Array<ResponseDeliveryService>();
 	private idCounter = 0;
 	public deliveryServiceTypes = [
 		{
@@ -196,10 +196,10 @@ export class DeliveryServiceService extends APITestingService implements Concret
 			let ds;
 			switch (typeof id) {
 				case "string":
-					ds = this.deliveryServices.filter(d=>d.xmlId === id)[0];
+					ds = this.deliveryServices.find(d=>d.xmlId === id);
 					break;
 				case "number":
-					ds = this.deliveryServices.filter(d=>d.id === id);
+					ds = this.deliveryServices.find(d=>d.id === id);
 			}
 			if (!ds) {
 				throw new Error(`no such Delivery Service: ${id}`);
@@ -235,7 +235,7 @@ export class DeliveryServiceService extends APITestingService implements Concret
 			dnsBypassCname: ds.dnsBypassCname ?? null,
 			dnsBypassIp: ds.dnsBypassIp ?? null,
 			dnsBypassIp6: ds.dnsBypassIp6 ?? null,
-			dnsBypassTtl: ds.dnsBypassTtl ? Number(ds.dnsBypassTtl) : null,
+			dnsBypassTtl: ds.dnsBypassTtl ?? null,
 			ecsEnabled: ds.ecsEnabled ?? false,
 			edgeHeaderRewrite: ds.edgeHeaderRewrite ?? null,
 			exampleURLs: [
@@ -316,27 +316,19 @@ export class DeliveryServiceService extends APITestingService implements Concret
 	 * @throws If `d` is a {@link ResponseDeliveryService} that has no (valid) id
 	 */
 	public async getDSCapacity(d: number | ResponseDeliveryService): Promise<Capacity> {
-		let id: number;
-		if (typeof d === "number") {
-			id = d;
-		} else {
-			if (!d.id || d.id < 0) {
-				throw new Error("Delivery Service id must be defined!");
-			}
-			id = d.id;
-		}
+		const id = typeof(d) === "number" ? d : d.id;
 
-		const ds = this.deliveryServices.filter(service=>service.id === id)[0];
+		const ds = this.deliveryServices.find(service=>service.id === id);
 		if (!ds) {
 			throw new Error(`no such Delivery Service: #${id}`);
 		}
-		const val = ds.lastUpdated ? ds.lastUpdated.valueOf() : 100;
+		const val = ds.lastUpdated.valueOf();
 
 		return {
-			availablePercent: val %40,
-			maintenancePercent: val %40,
-			unavailablePercent: val %10,
-			utilizedPercent: val %20
+			availablePercent: val%39 + 1,
+			maintenancePercent: val%39 + 1,
+			unavailablePercent: val%9 + 1,
+			utilizedPercent: val%19 + 1
 		};
 	}
 
@@ -344,15 +336,16 @@ export class DeliveryServiceService extends APITestingService implements Concret
 	 * Retrieves the Cache Group health of a Delivery Service identified by a given, unique,
 	 * integral value.
 	 *
-	 * @param d The integral, unique identifier of a Delivery Service
+	 * @param d The DS for which to fetch Health information, or just its ID.
 	 * @returns A response from the health endpoint
 	 */
-	public async getDSHealth(d: number): Promise<Health> {
-		const ds = this.deliveryServices.filter(service => service.id === d)[0];
+	public async getDSHealth(d: number | ResponseDeliveryService): Promise<Health> {
+		const id = typeof(d) === "number" ? d : d.id;
+		const ds = this.deliveryServices.find(service => service.id === id);
 		if (!ds) {
-			throw new Error(`no such Delivery Service: #${d}`);
+			throw new Error(`no such Delivery Service: #${id}`);
 		}
-		const val = ds.lastUpdated ? ds.lastUpdated.valueOf() : 100;
+		const val = ds.lastUpdated.valueOf();
 		return {
 			cacheGroups: [],
 			totalOffline: val % 50,
@@ -396,6 +389,8 @@ export class DeliveryServiceService extends APITestingService implements Concret
 	 * "binned".
 	 * @param useMids Collect data regarding Mid-tier cache servers rather than
 	 * Edge-tier cache servers
+	 * @param dataOnly Only returns the data series, not any supplementing meta
+	 * info found in the API response.
 	 * @returns The API response.
 	 */
 	public async getDSKBPS(
@@ -403,7 +398,8 @@ export class DeliveryServiceService extends APITestingService implements Concret
 		start: Date,
 		end: Date,
 		interval: string,
-		useMids: boolean
+		useMids: boolean,
+		dataOnly?: false
 	): Promise<DSStats>;
 	/**
 	 * Retrieves Delivery Service throughput statistics for a given time period,
@@ -422,16 +418,17 @@ export class DeliveryServiceService extends APITestingService implements Concret
 	 * the entire API response otherwise.
 	 */
 	public async getDSKBPS(
-		d: string,
+		d: string | ResponseDeliveryService,
 		start: Date,
 		end: Date,
 		interval: string,
 		_: boolean,
 		dataOnly?: boolean
 	): Promise<Array<DataPoint> | DSStats> {
-		const ds = this.deliveryServices.filter(service=>service.xmlId === d)[0];
+		const xmlID = typeof(d) === "string" ? d : d.xmlId;
+		const ds = this.deliveryServices.find(service=>service.xmlId === xmlID);
 		if (!ds) {
-			throw new Error(`no such Delivery Service: ${d}`);
+			throw new Error(`no such Delivery Service: ${xmlID}`);
 		}
 		// Here we assume that `interval` is a number followed by 'm' for 'minutes'.
 		const step = parseInt(interval.slice(0, -1), 10)*60000;
@@ -475,14 +472,15 @@ export class DeliveryServiceService extends APITestingService implements Concret
 	 * @returns The requested DataResponse.
 	 */
 	public async getDSTPS(
-		d: string,
+		d: string | ResponseDeliveryService,
 		start: Date,
 		end: Date,
 		interval: string,
 	): Promise<DSStats> {
-		const ds = this.deliveryServices.filter(service=>service.xmlId === d)[0];
+		const xmlID = typeof(d) === "string" ? d : d.xmlId;
+		const ds = this.deliveryServices.find(service=>service.xmlId === xmlID);
 		if (!ds) {
-			throw new Error(`no such Delivery Service: ${d}`);
+			throw new Error(`no such Delivery Service: ${xmlID}`);
 		}
 		// Here we assume that `interval` is a number followed by 'm' for 'minutes'.
 		const step = parseInt(interval.slice(0, -1), 10)*60000;
@@ -522,14 +520,15 @@ export class DeliveryServiceService extends APITestingService implements Concret
 	 * @returns The requested TPSData.
 	 */
 	public async getAllDSTPSData(
-		d: string,
+		d: string | ResponseDeliveryService,
 		start: Date,
 		end: Date,
 		interval: string,
 	): Promise<TPSData> {
-		const ds = this.deliveryServices.filter(service=>service.xmlId === d)[0];
+		const xmlID = typeof(d) === "string" ? d : d.xmlId;
+		const ds = this.deliveryServices.find(service=>service.xmlId === xmlID);
 		if (!ds) {
-			throw new Error(`no such Delivery Service: ${d}`);
+			throw new Error(`no such Delivery Service: ${xmlID}`);
 		}
 
 		// Here we assume that `interval` is a number followed by 'm' for 'minutes'.
@@ -556,7 +555,7 @@ export class DeliveryServiceService extends APITestingService implements Concret
 			fifthPercentile: total.fifthPercentile / 4,
 			max: Math.random()*4 >= 3 ? total.max : total.max / 4,
 			mean: total.mean / 4,
-			min: Math.random()*4 >=3 ? total.min : (total.min + 7 > total.max ? total.min : total.min + 7) ,
+			min: total.min + 0.1,
 			ninetyEighthPercentile: total.ninetyEighthPercentile / 4,
 			ninetyFifthPercentile: total.ninetyFifthPercentile / 4
 		});
