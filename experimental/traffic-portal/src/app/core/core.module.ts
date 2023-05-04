@@ -61,12 +61,12 @@ import { StatusDetailsComponent } from "./statuses/status-details/status-details
 import { StatusesTableComponent } from "./statuses/statuses-table/statuses-table.component";
 import { TypeDetailComponent } from "./types/detail/type-detail.component";
 import { TypesTableComponent } from "./types/table/types-table.component";
+import { RolesTableComponent } from "./users/roles/tables/roles-table.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
 import { UserRegistrationDialogComponent } from "./users/user-registration-dialog/user-registration-dialog.component";
 import { UsersComponent } from "./users/users.component";
-import { RolesTableComponent } from "./users/roles/tables/roles-table.component";
 
 export const ROUTES: Routes = [
 	{ component: DashboardComponent, path: "" },

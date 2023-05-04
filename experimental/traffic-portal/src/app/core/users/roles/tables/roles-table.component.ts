@@ -14,15 +14,14 @@
 
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
+import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import type { ResponseRole } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
-import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import { ActivatedRoute } from "@angular/router";
-import {ContextMenuActionEvent} from "src/app/shared/generic-table/generic-table.component";
 /**
  * AsnsTableComponent is the controller for the "Asns" table.
  */
