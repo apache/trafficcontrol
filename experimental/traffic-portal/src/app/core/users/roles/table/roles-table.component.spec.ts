@@ -62,7 +62,7 @@ describe("RolesTableComponent", () => {
 	it("handles contextmenu events", () => {
 		expect(async () => component.handleContextMenu({
 			action: component.contextMenuItems[0].name,
-			data: {name: "test", description: "Can only read", lastUpdated: new Date()}
+			data: {description: "Can only read", lastUpdated: new Date(), name: "test"}
 		})).not.toThrow();
 	});
 });
