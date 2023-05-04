@@ -23,7 +23,7 @@ import { CurrentUserService } from "src/app/shared/current-user/current-user.ser
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 /**
- * AsnsTableComponent is the controller for the "Asns" table.
+ * RolesTableComponent is the controller for the "Roles" table.
  */
 @Component({
 	selector: "tp-roles",
@@ -72,7 +72,7 @@ export class RolesTableComponent implements OnInit {
 		}
 	];
 
-	/** Definitions for the context menu items (which act on augmented asn data). */
+	/** Definitions for the context menu items (which act on augmented roles data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseRole>> = [
 		{
 			href: (selectedRow: ResponseRole): string => `${selectedRow.name}`,

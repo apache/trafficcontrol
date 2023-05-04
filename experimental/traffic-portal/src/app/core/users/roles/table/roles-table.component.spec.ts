@@ -17,20 +17,20 @@ import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
-import { RoleTableComponent } from "src/app/core/users/roles/table/roles-table.component";
+import { RolesTableComponent } from "src/app/core/users/roles/table/roles-table.component";
 
-describe("RoleTableComponent", () => {
-	let component: RoleTableComponent;
-	let fixture: ComponentFixture<RoleTableComponent>;
+describe("RolesTableComponent", () => {
+	let component: RolesTableComponent;
+	let fixture: ComponentFixture<RolesTableComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ RoleTableComponent ],
+			declarations: [ RolesTableComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ]
 		})
 			.compileComponents();
 
-		fixture = TestBed.createComponent(RoleTableComponent);
+		fixture = TestBed.createComponent(RolesTableComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});

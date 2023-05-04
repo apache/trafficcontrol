@@ -447,11 +447,11 @@ const globals = {
 			data.capability = respCap;
 
 			const role: RequestRole = {
-				description: "Has access to everything - cannot be modified or deleted",
-				name: "admin",
 				permissions: [
 					"ALL"
 				],
+				description: "Has access to everything - cannot be modified or deleted",
+				name: `admin${globals.uniqueString}`
 			};
 			url = `${apiUrl}/roles`;
 			resp = await client.post(url, JSON.stringify(role));

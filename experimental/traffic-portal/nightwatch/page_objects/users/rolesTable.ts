@@ -17,7 +17,7 @@ import { EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI } from "nigh
 import { TABLE_COMMANDS, TableSectionCommands } from "../../globals/tables";
 
 /**
- * Defines the ASNs table commands
+ * Defines the Roles table commands
  */
 type RolesTableCommands = TableSectionCommands;
 
