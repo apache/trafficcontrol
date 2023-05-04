@@ -84,7 +84,7 @@ export class DeliveryServiceService extends APITestingService implements Concret
 
 	private readonly deliveryServices = new Array<ResponseDeliveryService>();
 	private idCounter = 0;
-	private readonly dsTypes = [
+	public deliveryServiceTypes = [
 		{
 			description: "No Content Routing - arbitrary remap at the edge, no Traffic Router config",
 			id: 5,
@@ -584,7 +584,7 @@ export class DeliveryServiceService extends APITestingService implements Concret
 	 * 	types.
 	 */
 	public async getDSTypes(): Promise<Array<TypeFromResponse>> {
-		return this.dsTypes;
+		return this.deliveryServiceTypes;
 	}
 
 	/**
