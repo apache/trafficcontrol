@@ -29,9 +29,9 @@ import type {
 } from "trafficops-types";
 
 import { CacheGroupService as ConcreteCacheGroupService } from "../cache-group.service";
+import { ServerService } from "../server.service";
 
 import { APITestingService } from "./base-api.service";
-import { ServerService } from "./server.service";
 
 /**
  * The names of properties of {@link ResponseCacheGroup}s that define its
@@ -94,29 +94,26 @@ function isRequest(x: CacheGroupQueueRequest | CDN | string | number): x is Cach
 export class CacheGroupService extends APITestingService implements ConcreteCacheGroupService {
 	private lastID = 10;
 
-	private readonly asns: Array<ResponseASN> = [{
+	public readonly asns: Array<ResponseASN> = [{
 		asn: 0,
 		cachegroup: "Mid",
 		cachegroupId: 1,
 		id: 1,
 		lastUpdated: new Date()
-	}
-	];
-	private readonly divisions: Array<ResponseDivision> = [{
+	}];
+	public readonly divisions: Array<ResponseDivision> = [{
 		id: 1,
 		lastUpdated: new Date(),
 		name: "Div1"
-	}
-	];
-	private readonly regions: Array<ResponseRegion> = [{
+	}];
+	public readonly regions: Array<ResponseRegion> = [{
 		division: 1,
 		divisionName: "div1",
 		id: 1,
 		lastUpdated: new Date(),
 		name: "Reg1"
-	}
-	];
-	private readonly cacheGroups: Array<ResponseCacheGroup> = [
+	}];
+	public readonly cacheGroups: Array<ResponseCacheGroup> = [
 		{
 			fallbackToClosest: true,
 			fallbacks: [],
@@ -186,14 +183,13 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 			typeName: "TC_LOC"
 		}
 	];
-	private readonly coordinates: Array<ResponseCoordinate> = [{
+	public readonly coordinates: Array<ResponseCoordinate> = [{
 		id: 1,
 		lastUpdated: new Date(),
 		latitude: 0,
 		longitude: 0,
 		name: "Coord1"
-	}
-	];
+	}];
 
 	constructor(private readonly servers: ServerService) {
 		super();
@@ -249,7 +245,7 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 	 * not).
 	 * @returns The parentage portion of a Cache Group.
 	 */
-	private getParents(parentID: number | null | undefined, secondaryParentID: number | null | undefined): AllParentage {
+	public getParents(parentID: number | null | undefined, secondaryParentID: number | null | undefined): AllParentage {
 		let parent: Parentage = {
 			parentCachegroupId: null,
 			parentCachegroupName: null
@@ -447,7 +443,7 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 		}
 		const updPendingValue = action === "queue";
 		const serverNames = [];
-		for (const server of this.servers.servers) {
+		for (const server of await this.servers.getServers()) {
 			if (server.cachegroupId === cachegroupID && (server.cdnId === cdn || server.cdnName === cdn)) {
 				server.updPending = updPendingValue;
 				serverNames.push(server.hostName);
@@ -461,9 +457,9 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 			serverNames,
 		};
 	}
+
 	public async getDivisions(): Promise<Array<ResponseDivision>>;
 	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
-
 	/**
 	 * Gets an array of divisions from Traffic Ops.
 	 *
@@ -524,20 +520,20 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 	/**
 	 * Deletes an existing division.
 	 *
-	 * @param id Id of the division to delete.
+	 * @param division The Division to be deleted, or just its ID.
 	 * @returns The deleted division.
 	 */
-	public async deleteDivision(id: number): Promise<ResponseDivision> {
+	public async deleteDivision(division: number | ResponseDivision): Promise<ResponseDivision> {
+		const id = typeof(division) === "number" ? division : division.id;
 		const index = this.divisions.findIndex(d => d.id === id);
 		if (index === -1) {
-			throw new Error(`no such Division: ${id}`);
+			throw new Error(`no such Division: #${id}`);
 		}
 		return this.divisions.splice(index, 1)[0];
 	}
 
 	public async getRegions(): Promise<Array<ResponseRegion>>;
 	public async getRegions(nameOrID: string | number): Promise<ResponseRegion>;
-
 	/**
 	 * Gets an array of regions from Traffic Ops.
 	 *
@@ -586,8 +582,12 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 	 * @returns The created region.
 	 */
 	public async createRegion(region: RequestRegion): Promise<ResponseRegion> {
+		const div = this.divisions.find(d => d.id === region.division);
+		if (!div) {
+			throw new Error(`no such Division: #${region.division}`);
+		}
 		const reg = {
-			divisionName: this.divisions.find(d => d.id === region.division)?.name ?? "",
+			divisionName: div.name,
 			...region,
 			id: ++this.lastID,
 			lastUpdated: new Date()
@@ -597,21 +597,21 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 	}
 
 	/**
-	 * Deletes an existing region.
+	 * Deletes an existing Region.
 	 *
-	 * @param id Id of the region to delete.
-	 * @returns The deleted region.
+	 * @param region The Region to be deleted, or just its ID.
 	 */
-	public async deleteRegion(id: number | ResponseRegion): Promise<void> {
+	public async deleteRegion(region: number | ResponseRegion): Promise<void> {
+		const id = typeof(region) === "number" ? region : region.id;
 		const index = this.regions.findIndex(d => d.id === id);
 		if (index === -1) {
-			throw new Error(`no such Region: ${id}`);
+			throw new Error(`no such Region: #${id}`);
 		}
 		this.regions.splice(index, 1);
 	}
+
 	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
 	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
-
 	/**
 	 * Gets an array of coordinates from Traffic Ops.
 	 *
@@ -686,7 +686,6 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 
 	public async getASNs(): Promise<Array<ResponseASN>>;
 	public async getASNs(id: number): Promise<ResponseASN>;
-
 	/**
 	 * Gets an array of ASNs from Traffic Ops.
 	 *
@@ -727,10 +726,15 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 	 * @returns The created ASN.
 	 */
 	public async createASN(asn: RequestASN): Promise<ResponseASN> {
+		const cg = this.cacheGroups.find(c => c.id === asn.cachegroupId);
+		if (!cg) {
+			throw new Error(`no such Cache Group #${asn.cachegroupId}`);
+		}
+
 		const sn = {
 			...asn,
-			cachegroup: this.cacheGroups.find(cg => cg.id === asn.cachegroupId)?.name ?? "",
-			cachegroupId: asn.cachegroupId,
+			cachegroup: cg.name,
+			cachegroupId: cg.id,
 			id: ++this.lastID,
 			lastUpdated: new Date()
 		};
@@ -745,9 +749,10 @@ export class CacheGroupService extends APITestingService implements ConcreteCach
 	 * @returns The deleted asn.
 	 */
 	public async deleteASN(asn: number | ResponseASN): Promise<void> {
-		const index = this.asns.findIndex(a => a.asn === asn);
+		const id = typeof(asn) === "number" ? asn : asn.id;
+		const index = this.asns.findIndex(a => a.id === id);
 		if (index === -1) {
-			throw new Error(`no such asn: ${asn}`);
+			throw new Error(`no such asn: #${id}`);
 		}
 		this.asns.splice(index, 1);
 	}
