@@ -234,3 +234,4 @@ tpv2_default_properties_template:
       redirectUriParameterOverride: "example_redirect_url_key"
       clientId: "exampleClient"
       oAuthCodeTokenUrl: "https://oauthProvider.example.com/auth/token"
+

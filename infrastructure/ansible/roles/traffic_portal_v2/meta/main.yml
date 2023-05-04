@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 galaxy_info:
-  author: Jonathan Gray
+  author: Ekaterina Terekhova
   description: A role to assist with deploying the traffic portal v2 component of Apache Traffic Control
   company: Apache Traffic Control
   issue_tracker_url: https://github.com/apache/trafficcontrol/issues
