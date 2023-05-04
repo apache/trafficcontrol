@@ -37,6 +37,15 @@ type StrategiesYAMLOpts struct {
 	// These comments are human-readable and not guarnateed to be consistent between versions. Automating anything based on them is strongly discouraged.
 	VerboseComments bool
 
+	// GoDirect is set with a command line argument default is true.
+	// This value can be overridden by a delivery serivce parameter go_direct [true|false]
+	GoDirect bool
+
+	// ParentIsProxy A boolean value which indicates if the groups of hosts are proxy caches or origins.
+	// true (default) means all the hosts used are Traffic Server caches.
+	// false means the hosts are origins.
+	ParentIsProxy bool
+
 	// HdrComment is the header comment to include at the beginning of the file.
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
 	// To omit the header comment, pass the empty string.
@@ -88,6 +97,7 @@ func MakeStrategiesDotYAML(
 			AddComments:     opt.VerboseComments,
 			HdrComment:      opt.HdrComment,
 			ATSMajorVersion: opt.ATSMajorVersion,
+			GoDirect:        opt.GoDirect,
 		}, // TODO change makeParentDotConfigData to its own opt?
 		atsMajorVersion,
 	)

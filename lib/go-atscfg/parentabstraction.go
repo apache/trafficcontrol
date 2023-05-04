@@ -80,9 +80,16 @@ type ParentAbstractionService struct {
 
 	// GoDirect is whether to go direct to parents via normal HTTP requests.
 	// False means to make proxy requests to the parents.
-	// Becomes parent.config go_direct and parent_is_proxy directives
+	// Becomes parent.config go_direct directive.
 	// Becomes strategies.yaml TODO
 	GoDirect bool
+
+	// ParentIsProxy A boolean value which indicates if the groups of hosts are proxy caches or origins.
+	// true (default) means all the hosts used are Traffic Server caches.
+	// false means the hosts are origins.
+	// Becomes parent_is_proxy directive.
+	// Becomes strategies.yaml TODO
+	ParentIsProxy bool
 
 	// IgnoreQueryStringInParentSelection is whether to use the query string of the request
 	// when selecting a parent, e.g. via Consistent Hash.
@@ -356,7 +363,7 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 	} else {
 		txt += `ignore`
 	}
-	txt += ` parent_is_proxy=` + strconv.FormatBool(!svc.GoDirect)
+	txt += ` parent_is_proxy=` + strconv.FormatBool(svc.ParentIsProxy)
 
 	if svc.MaxSimpleRetries > 0 && svc.MaxMarkdownRetries > 0 {
 		txt += ` parent_retry=both`

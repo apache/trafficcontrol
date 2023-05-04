@@ -52,6 +52,12 @@ const ParentConfigCacheParamUseIP = "use_ip_address"
 const ParentConfigCacheParamRank = "rank"
 const ParentConfigCacheParamNotAParent = "not_a_parent"
 const StrategyConfigUsePeering = "use_peering"
+const ParentConfigGoDirectParam = "go_direct"
+const ParentConfigGoDirectEdge = ParentConfigGoDirectParam + "_edge"
+const ParentConfigGoDirectMid = ParentConfigGoDirectParam + "_mid"
+const ParentConfigGoDirectFirst = ParentConfigGoDirectParam + "_first"
+const ParentConfigGoDirectInner = ParentConfigGoDirectParam + "_inner"
+const ParentConfigGoDirectLast = ParentConfigGoDirectParam + "_last"
 
 // same across DS
 const ParentConfigParamQString = "qstring"
@@ -94,6 +100,15 @@ type ParentConfigOpts struct {
 	// Note this does not include the header comment, which is configured separately with HdrComment.
 	// These comments are human-readable and not guarnateed to be consistent between versions. Automating anything based on them is strongly discouraged.
 	AddComments bool
+
+	// GoDirect is set with a command line argument default is true.
+	// This value can be overridden by a delivery serivce parameter go_direct [true|false]
+	GoDirect bool
+
+	// ParentIsProxy A boolean value which indicates if the groups of hosts are proxy caches or origins.
+	// true (default) means all the hosts used are Traffic Server caches.
+	// false means the hosts are origins.
+	ParentIsProxy bool
 
 	// HdrComment is the header comment to include at the beginning of the file.
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
@@ -528,6 +543,7 @@ func makeParentDotConfigData(
 			nameTopologies[TopologyName(topoName)] = topo
 			ds.Topology = util.StrPtr(topoName)
 		}
+		opt.ParentIsProxy = false
 
 		isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
 
@@ -546,6 +562,8 @@ func makeParentDotConfigData(
 			atsMajorVersion,
 			dsOrigins[DeliveryServiceID(*ds.ID)],
 			opt.AddComments,
+			opt.GoDirect,
+			opt.ParentIsProxy,
 		)
 		warnings = append(warnings, topoWarnings...)
 		if err != nil {
@@ -582,6 +600,7 @@ func makeParentDotConfigData(
 		}
 		defaultDestText.RetryPolicy = ParentAbstractionServiceRetryPolicyConsistentHash
 		defaultDestText.GoDirect = false
+		defaultDestText.ParentIsProxy = true
 		// defaultDestText += ` round_robin=consistent_hash go_direct=false`
 
 		if qStr := serverParams[ParentConfigParamQString]; qStr != "" {
@@ -808,6 +827,7 @@ type parentDSParams struct {
 	SimpleServerRetryResponses      string
 	UnavailableServerRetryResponses string
 	TryAllPrimariesBeforeSecondary  bool
+	GoDirect                        *string
 
 	UsePeering  bool
 	MergeGroups []string
@@ -874,6 +894,24 @@ func (dsp *parentDSParams) FillParentRetries(keys ParentConfigRetryKeys, dsParam
 
 	return hasValues, warnings
 }
+func getGoDirectOverRides(dsParams map[string]string, serverPlacement TopologyPlacement) *string {
+	if val, ok := dsParams[ParentConfigGoDirectEdge]; ok && serverPlacement.IsFirstCacheTier && !serverPlacement.IsLastCacheTier {
+		return &val
+	}
+	if val, ok := dsParams[ParentConfigGoDirectMid]; ok && serverPlacement.IsInnerCacheTier || serverPlacement.IsLastCacheTier {
+		return &val
+	}
+	if val, ok := dsParams[ParentConfigGoDirectFirst]; ok && serverPlacement.IsFirstCacheTier {
+		return &val
+	}
+	if val, ok := dsParams[ParentConfigGoDirectInner]; ok && serverPlacement.IsInnerCacheTier {
+		return &val
+	}
+	if val, ok := dsParams[ParentConfigGoDirectLast]; ok && serverPlacement.IsLastCacheTier {
+		return &val
+	}
+	return nil
+}
 
 // getDSParams returns the Delivery Service Profile Parameters used in parent.config, and any warnings.
 // If Parameters don't exist, defaults are returned. Non-MSO Delivery Services default to no custom retry logic (we should reevaluate that).
@@ -906,6 +944,8 @@ func getParentDSParams(ds DeliveryService, profileParentConfigParams map[string]
 			params.UsePeering = true
 		}
 	}
+
+	params.GoDirect = getGoDirectOverRides(dsParams, serverPlacement)
 
 	// the following may be blank, no default
 	params.QueryStringHandling = dsParams[ParentConfigParamQStringHandling]
@@ -964,6 +1004,8 @@ func getTopologyParentConfigLine(
 	atsMajorVersion uint,
 	dsOrigins map[ServerID]struct{},
 	addComments bool,
+	setGoDirect bool,
+	parentIsProxy bool,
 ) (*ParentAbstractionService, []string, error) {
 	warnings := []string{}
 
@@ -983,6 +1025,13 @@ func getTopologyParentConfigLine(
 
 	if !serverPlacement.InTopology {
 		return nil, warnings, nil // server isn't in topology, no error
+	}
+
+	if !serverPlacement.IsLastTier {
+		parentIsProxy = true
+	}
+	if isMSO && serverPlacement.IsLastCacheTier {
+		parentIsProxy = false
 	}
 
 	dsParams, dswarns := getParentDSParams(*ds, profileParentConfigParams, serverPlacement, isMSO)
@@ -1040,8 +1089,13 @@ func getTopologyParentConfigLine(
 	pasvc.RetryPolicy = getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 	// txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 
-	pasvc.GoDirect = getTopologyGoDirect(ds, serverPlacement)
+	pasvc.GoDirect, err = getTopologyGoDirect(ds, dsParams.GoDirect, setGoDirect)
+	if err != nil {
+		warnings = append(warnings, err.Error())
+	}
 	// txt += ` go_direct=` + getTopologyGoDirect(ds, serverPlacement.IsLastTier)
+
+	pasvc.ParentIsProxy = parentIsProxy
 
 	// TODO convert
 	useQueryStringInParentSelection := (*bool)(nil)
@@ -1213,17 +1267,18 @@ func getTopologyRoundRobin(
 	return ParentAbstractionServiceRetryPolicyConsistentHash
 }
 
-func getTopologyGoDirect(ds *DeliveryService, serverPlacement TopologyPlacement) bool {
-	if serverPlacement.IsLastCacheTier {
-		return true
-	} else if !serverPlacement.IsLastTier {
-		return false
-	} else if ds.OriginShield != nil && *ds.OriginShield != "" {
-		return true
-	} else if ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin {
-		return false
+func getTopologyGoDirect(ds *DeliveryService, goDirectParam *string, cmdArgGoDirect bool) (bool, error) {
+	goDirect := cmdArgGoDirect
+	if goDirectParam != nil && *goDirectParam != "" {
+		overRideGoDirect, err := strconv.ParseBool(*goDirectParam)
+		if err != nil {
+			// if something happens converting override string to bool we don't want to fail,
+			// just print a warning and fall back to command line setting.
+			return goDirect, errors.New("error overriding go_direct param, could not convert string to bool, using command line arg default for delivery service: " + *ds.XMLID)
+		}
+		goDirect = overRideGoDirect
 	}
-	return true
+	return goDirect, nil
 }
 
 func getTopologyQueryStringIgnore(

@@ -103,6 +103,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args = append(args, "--no-outgoing-ip="+strconv.FormatBool(cfg.NoOutgoingIP))
 	args = append(args, "--disable-parent-config-comments="+strconv.FormatBool(cfg.DisableParentConfigComments))
 	args = append(args, "--use-strategies="+cfg.UseStrategies.String())
+	args = append(args, "--set-go-direct="+strconv.FormatBool(cfg.SetGoDirect))
 
 	generatedFiles, stdErr, code := t3cutil.DoInput(configData, t3cpath, args...)
 	if code != 0 {

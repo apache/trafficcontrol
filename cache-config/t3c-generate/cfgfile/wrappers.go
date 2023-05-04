@@ -201,6 +201,7 @@ func MakeParentDotConfig(toData *t3cutil.ConfigData, fileName string, hdrComment
 			HdrComment:      hdrCommentTxt,
 			AddComments:     cfg.ParentComments, // TODO add a CLI flag?
 			ATSMajorVersion: cfg.ATSMajorVersion,
+			GoDirect:        cfg.SetGoDirect,
 		},
 	)
 }
@@ -331,6 +332,7 @@ func MakeStrategiesDotYAML(toData *t3cutil.ConfigData, fileName string, hdrComme
 			HdrComment:      hdrCommentTxt,
 			VerboseComments: cfg.ParentComments, // TODO add a CLI flag?
 			ATSMajorVersion: cfg.ATSMajorVersion,
+			GoDirect:        cfg.SetGoDirect,
 		},
 	)
 }
