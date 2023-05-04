@@ -68,6 +68,7 @@ import { UserService as TestingUserService } from "./user.service";
 
 		TestingCacheGroupService,
 		TestingCDNService,
+		TestingChangeLogsService,
 		TestingMiscAPIsService,
 		TestingServerService,
 	]

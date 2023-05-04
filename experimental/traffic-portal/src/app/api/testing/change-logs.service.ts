@@ -12,9 +12,11 @@
  * limitations under the License.
  */
 
+import { HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type { Log } from "trafficops-types";
 
+import type { QueryParams } from "../base-api.service";
 import type { ChangeLogsService as ConcreteChangeLogService } from "../change-logs.service";
 
 import { APITestingService } from "./base-api.service";
@@ -25,7 +27,7 @@ import { APITestingService } from "./base-api.service";
 @Injectable()
 export class ChangeLogsService extends APITestingService implements ConcreteChangeLogService {
 
-	private readonly changeLogs: Array<Log> = [{
+	public readonly changeLogs: Array<Log> = [{
 		id: 0,
 		lastUpdated: new Date(),
 		level: "APICHANGE",
@@ -57,16 +59,15 @@ export class ChangeLogsService extends APITestingService implements ConcreteChan
 	 * @param params Request parameters to add
 	 * @returns Change logs
 	 */
-	public async getChangeLogs(params?: Record<string, string>): Promise<Array<Log>> {
-		if (params === undefined) {
-			return this.changeLogs;
-		}
-		if("user" in params) {
+	public async getChangeLogs(params?: QueryParams): Promise<Array<Log>> {
+		if (params instanceof HttpParams) {
+			const user = params.get("user");
+			if (user) {
+				return this.changeLogs.filter(cl => cl.user === user);
+			}
+		} else if (params && "user" in params) {
 			return this.changeLogs.filter(cl => cl.user === params.user);
 		}
-		if("days" in params) {
-			return this.changeLogs;
-		}
-		throw new Error(`unknown params ${params}`);
+		return this.changeLogs;
 	}
 }
