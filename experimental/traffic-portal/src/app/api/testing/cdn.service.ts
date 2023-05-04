@@ -26,7 +26,7 @@ import { APITestingService } from "./base-api.service";
 export class CDNService extends APITestingService implements ConcreteCDNService{
 	private lastID = 10;
 
-	private readonly cdns = [
+	public readonly cdns = [
 		{
 			dnssecEnabled: false,
 			domainName: "-",

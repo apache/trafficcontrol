@@ -65,9 +65,11 @@ import { UserService as TestingUserService } from "./user.service";
 		{provide: TopologyService, useClass: TestingTopologyService},
 		{provide: TypeService, useClass: TestingTypeService},
 		{provide: UserService, useClass: TestingUserService},
-		TestingServerService,
-		TestingMiscAPIsService,
+
 		TestingCacheGroupService,
+		TestingCDNService,
+		TestingMiscAPIsService,
+		TestingServerService,
 	]
 })
 export class APITestingModule { }
