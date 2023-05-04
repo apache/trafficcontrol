@@ -21,7 +21,7 @@ tpv2_properties_dir: "{{ tpv2_base_install_dir }}/browser"
 tpv2_conf_dir: /etc/traffic-portal
 
 # config.json
-tpv2_insecure: false
+tpv2_insecure: true
 tpv2_sslPort: 443
 tpv2_to_base_url: "https://localhost:6443"
 tpv2_useSSL: true
