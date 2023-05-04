@@ -2,7 +2,7 @@
   "insecure": {{ tpv2_insecure | lower }},
   "port": {{ tpv2_sslPort }},
   "trafficOps": "{{ tpv2_to_base_url }}",
-  "certificateAuthPaths": "{{ tpv2_ssl_ca_files }}"
+  "certificateAuthPaths": [ '{{ tp_ssl_ca_files | join("', '") }}' ]
   "useSSL": {{ tpv2_useSSL | lower }},
   "certPath": "{{ tpv2_ssl_cert_file }}",
   "keyPath": "{{ tpv2_ssl_key_file }}",
