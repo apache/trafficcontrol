@@ -14,7 +14,7 @@
 
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import { ActivatedRoute } from "@angular/router";
+import {ActivatedRoute, type Params} from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import type { ResponseRole } from "trafficops-types";
 
@@ -84,8 +84,9 @@ export class RolesTableComponent implements OnInit {
 			newTab: true
 		},
 		{
-			href: (selectedRow: ResponseRole): string => `/core/users?role=${selectedRow.name}`,
-			name: "View Users"
+			href: "/core/users",
+			name: "View Users",
+			queryParams: (selectedRow: ResponseRole): Params => ({role: selectedRow.name})
 		},
 	];
 
