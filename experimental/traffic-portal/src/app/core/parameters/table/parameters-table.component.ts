@@ -17,7 +17,7 @@ import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import {ResponseParameter} from "trafficops-types";
+import { ResponseParameter } from "trafficops-types";
 
 import { ParameterService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
@@ -41,7 +41,9 @@ export class ParametersTableComponent implements OnInit {
 	public columnDefs = [
 		{
 			field: "id",
-			headerName: "ID"
+			filter: "agNumberColumnFilter",
+			headerName: "ID",
+			hide: true
 		},
 		{
 			field: "configFile",
@@ -53,11 +55,14 @@ export class ParametersTableComponent implements OnInit {
 		},
 		{
 			field: "profiles",
-			headerName: "Profiles"
+			headerName: "Profiles",
+			valueFormatter: ({data}: {data: ResponseParameter}): string => `${data.profiles}`
 		},
 		{
 			field: "secure",
-			headerName: "Secure"
+			filter: "tpBooleanFilter",
+			headerName: "Secure",
+			hide: true
 		},
 		{
 			field: "value",
@@ -65,7 +70,9 @@ export class ParametersTableComponent implements OnInit {
 		},
 		{
 			field: "lastUpdated",
-			headerName: "Last Updated"
+			filter: "agDateColumnFilter",
+			headerName: "Last Updated",
+			hide: true
 		}
 	];
 
@@ -87,7 +94,7 @@ export class ParametersTableComponent implements OnInit {
 		},
 		{
 			href: (selectedRow: ResponseParameter): string => `/core/profiles/param/${selectedRow.id}`,
-			name: "Manage Profiles",
+			name: "View Profiles",
 			newTab: true,
 		}
 	];
@@ -102,7 +109,7 @@ export class ParametersTableComponent implements OnInit {
 		private readonly api: ParameterService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.parameters = this.api.getParameters();
-		this.navSvc.headerTitle.next("Parameter");
+		this.navSvc.headerTitle.next("Parameters");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -133,7 +140,7 @@ export class ParametersTableComponent implements OnInit {
 		switch(evt.action) {
 			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
-					data: {message: `Are you sure you want to delete parameter ${data.name} with id ${data.id} ?`, title: "Confirm Delete"}
+					data: {message: `Are you sure you want to delete Parameter ${data.name} with ID ${data.id}?`, title: "Confirm Delete"}
 				});
 				ref.afterClosed().subscribe(result => {
 					if(result) {

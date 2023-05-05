@@ -14,7 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { RequestProfile, ResponseProfile } from "trafficops-types";
+import {RequestProfile, ResponseParameter, ResponseProfile} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -74,14 +74,24 @@ export class ProfileService extends APIService {
 	/**
 	 * Retrieves Profiles associated with a Parameter from the API.
 	 *
-	 * @param id Specify the integral, unique identifier (number) of a specific Parameter, for which the Profiles are to be retrieved.
+	 * @param p Either a {@link ResponseParameter} or an integral, unique identifier of a Parameter, for which the Profiles are to be retrieved.
 	 * @returns The requested Profile(s).
 	 */
-	public async getProfilesByParam(id: number): Promise<Array<ResponseProfile>> {
+	public async getProfilesByParam(p: number| ResponseParameter): Promise<Array<ResponseProfile>> {
+		let id: number;
+		if (typeof p === "number") {
+			id = p;
+		} else {
+			if (!p.id || p.id < 0) {
+				throw new Error("Parameter id must be defined!");
+			}
+			id = p.id;
+		}
+
 		const path = "profiles";
 		if (id !== undefined) {
-			const params = {param: String(id)};
-			const r = await this.get<[ResponseProfile]>(path, undefined, params).toPromise();
+			const params = {param: id};
+			const r = await this.get<Array<ResponseProfile>>(path, undefined, params).toPromise();
 			return r;
 		}
 		return this.get<Array<ResponseProfile>>(path).toPromise();

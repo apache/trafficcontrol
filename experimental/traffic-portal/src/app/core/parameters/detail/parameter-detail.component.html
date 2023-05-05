@@ -34,9 +34,14 @@ limitations under the License.
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Secure</mat-label>
-				<mat-select name="secure"[(ngModel)]="parameter.secure" required>
-					<mat-option *ngFor="let s of secure" [value]="s.value">{{s.label}}</mat-option>
-				</mat-select>
+				<input matInput type="boolean" name="secure" required [(ngModel)]="parameter.secure" />
+					<mat-card-header matSuffix>
+						<mat-slide-toggle
+							[checked]="parameter.secure === true ? true : false"
+							(change)="setValue($event)">
+							{{parameter.secure}}
+						</mat-slide-toggle>
+					</mat-card-header>
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>

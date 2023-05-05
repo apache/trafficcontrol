@@ -47,7 +47,7 @@ export class ParameterService extends APIService {
 			let params;
 			switch (typeof idOrName) {
 				case "number":
-					params = {id: String(idOrName)};
+					params = {id: idOrName};
 					break;
 				case "string":
 					params = {name: idOrName};
@@ -67,9 +67,9 @@ export class ParameterService extends APIService {
 	 * @param typeOrId Id of the parameter to delete.
 	 * @returns The deleted parameter.
 	 */
-	public async deleteParameter(typeOrId: number | ResponseParameter): Promise<ResponseParameter> {
+	public async deleteParameter(typeOrId: number | ResponseParameter) {
 		const id = typeof(typeOrId) === "number" ? typeOrId : typeOrId.id;
-		return this.delete<ResponseParameter>(`parameters/${id}`).toPromise();
+		return this.delete<ResponseParameter>(`parameters/${id}`);
 	}
 
 	/**

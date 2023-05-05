@@ -21,13 +21,14 @@ import { ResponseParameter } from "trafficops-types";
 import { ParameterService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { MatSlideToggleChange } from "@angular/material/slide-toggle";
 
 /**
  * ParameterDetailsComponent is the controller for the parameter add/edit form.
  */
 @Component({
 	selector: "tp-parameters-detail",
-	styleUrls: ["./parameter-detail.component.scss"],
+	styleUrls: ["../../styles/form.page.scss"],
 	templateUrl: "./parameter-detail.component.html"
 })
 export class ParameterDetailComponent implements OnInit {
@@ -73,7 +74,7 @@ export class ParameterDetailComponent implements OnInit {
 		}
 
 		this.parameter = await this.parameterService.getParameters(numID);
-		this.navSvc.headerTitle.next(`Parameter: ${this.parameter.name}`);
+		this.navSvc.headerTitle.next(`Parameter: ${this.parameter.name} (${this.parameter.id})`);
 	}
 
 	/**
@@ -112,4 +113,11 @@ export class ParameterDetailComponent implements OnInit {
 		}
 	}
 
+	public async setValue(e: MatSlideToggleChange){
+		if(e.checked){
+			this.parameter.secure = true
+		}else{
+			this.parameter.secure = false
+		}
+	}
 }

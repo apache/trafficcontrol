@@ -165,4 +165,21 @@ describe("ParametersTableComponent", () => {
 		expect(item.fragment).toBeUndefined();
 		expect(item.newTab).toBeTrue();
 	});
+
+	it("generates 'View Profiles' context menu item href", () => {
+		const item = component.contextMenuItems.find(i => i.name === "View Profiles");
+		if (!item) {
+			return fail("missing 'View Profiles' context menu item");
+		}
+		if (isAction(item)) {
+			return fail("expected a link, not an action");
+		}
+		if (typeof(item.href) !== "function") {
+			return fail(`'View Profiles' context menu item should use a function to determine href, instead uses: ${item.href}`);
+		}
+		expect(item.href(testParameter)).toBe(String("/core/profiles/param/"+ String(testParameter.id)));
+		expect(item.queryParams).toBeUndefined();
+		expect(item.fragment).toBeUndefined();
+		expect(item.newTab).toBeTrue();
+	});
 });

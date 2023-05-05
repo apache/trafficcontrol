@@ -17,7 +17,6 @@ describe("Parameter Detail Spec", () => {
 		const page = browser.page.parameters.parameterDetail();
 		browser.url(`${page.api.launchUrl}/core/parameters/${browser.globals.testData.parameter.id}`, res => {
 			browser.assert.ok(res.status === 0);
-			console.log("Srijeet");
 			console.log(res.value);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@name")
