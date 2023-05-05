@@ -22,11 +22,22 @@ import { APIService } from "./base-api.service";
  */
 @Injectable()
 export class PhysicalLocationService extends APIService {
-	public async getPhysicalLocations(): Promise<Array<ResponsePhysicalLocation>>;
-	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
-
 	/**
-	 * Gets an array of Physical Location from Traffic Ops.
+	 * Gets Physical Locations from Traffic Ops.
+	 *
+	 * @returns An Array of Physical Locations.
+	 */
+	public async getPhysicalLocations(): Promise<Array<ResponsePhysicalLocation>>;
+	/**
+	 * Gets a single Physical Location from Traffic Ops.
+	 *
+	 * @param nameOrID Specifies the name or ID of the Physical Location to
+	 * fetch.
+	 * @returns The requested Physical Location.
+	 */
+	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
+	/**
+	 * Gets Physical Locations from Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the PhysicalLocation with the given name
 	 * (string) or ID (number).
@@ -42,7 +53,7 @@ export class PhysicalLocationService extends APIService {
 					params = {name: nameOrID};
 					break;
 				case "number":
-					params = {id: String(nameOrID)};
+					params = {id: nameOrID};
 			}
 			const r = await this.get<[ResponsePhysicalLocation]>(path, undefined, params).toPromise();
 			return r[0];
@@ -69,7 +80,7 @@ export class PhysicalLocationService extends APIService {
 	 * @returns The created Physical Location.
 	 */
 	public async createPhysicalLocation(physicalLocation: RequestPhysicalLocation): Promise<ResponsePhysicalLocation> {
-		return this.post<ResponsePhysicalLocation>("physicalLocations", physicalLocation).toPromise();
+		return this.post<ResponsePhysicalLocation>("phys_locations", physicalLocation).toPromise();
 	}
 
 	/**

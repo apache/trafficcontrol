@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card>
+<mat-card appearance="outlined">
 	<form [formGroup]="form" (ngSubmit)="submit($event)">
 		<mat-card-header>
 			<mat-slide-toggle name="useDHCP" formControlName="useDHCP">Use DHCP?</mat-slide-toggle>
@@ -43,7 +43,7 @@ limitations under the License.
 				<input matInput type="number" name="interfaceMTU" min="1" max="9000" formControlName="mtu"/>
 				<mat-hint class="input-warning" [hidden]="hideMTUWarning()"><mat-icon color="warn">warning</mat-icon> Network interface <abbr title="Maximum Transmission Unit">MTU</abbr> values should almost always be either 1500 or 9000 - this value may not work correctly!</mat-hint>
 			</mat-form-field>
-			<mat-card *ngIf="!useDHCP">
+			<mat-card appearance="outlined" *ngIf="!useDHCP">
 				<fieldset>
 					<legend mat-card-title>IPv4 Network Details</legend>
 					<mat-form-field>
@@ -64,7 +64,7 @@ limitations under the License.
 					</mat-form-field>
 				</fieldset>
 			</mat-card>
-			<mat-card>
+			<mat-card appearance="outlined">
 				<fieldset>
 					<legend mat-card-title>IPv6 Network Details</legend>
 					<mat-form-field>
@@ -79,7 +79,7 @@ limitations under the License.
 					</mat-form-field>
 				</fieldset>
 			</mat-card>
-			<mat-card>
+			<mat-card appearance="outlined">
 				<fieldset>
 					<legend mat-card-title>Management Network Interface Details</legend>
 					<mat-form-field>

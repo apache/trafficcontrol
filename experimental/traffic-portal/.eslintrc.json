@@ -372,7 +372,56 @@
 			"extends": [
 				"plugin:@angular-eslint/template/recommended"
 			],
-			"rules": {}
+			// Rules that are commented out in this block are not available
+			// until Angular 15, and should be un-commented once that upgrade is
+			// done.
+			"rules": {
+				"@angular-eslint/template/accessibility-alt-text": "error",
+				"@angular-eslint/template/accessibility-elements-content": "error",
+				// "@angular-eslint/template/accessibility-interactive-supports-focus": "error",
+				"@angular-eslint/template/accessibility-label-has-associated-control": "error",
+				// "@angular-eslint/template/accessibility-role-has-required-aria": "error",
+				"@angular-eslint/template/accessibility-table-scope": "error",
+				"@angular-eslint/template/accessibility-valid-aria": "error",
+				// I want to see the results of this before committing to it,
+				// which is difficult to do until I can actually use it.
+				// "@angular-eslint/template/attributes-order": "warn",
+				"@angular-eslint/template/banana-in-box": "error",
+				"@angular-eslint/template/button-has-type": "error",
+				// Currently a warning because of suspected false positives.
+				"@angular-eslint/template/click-events-have-key-events": "warn",
+				"@angular-eslint/template/conditional-complexity": [
+					"error",
+					{
+						"maxComplexity": 2
+					}
+				],
+				// Warning because it's difficult to know exactly when a
+				// refactor is strictly necessary and also because fixing this
+				// would be a huge changeset.
+				"@angular-eslint/template/cyclomatic-complexity": [
+					"warn",
+					{
+						"maxComplexity": 8
+					}
+				],
+				"@angular-eslint/template/eqeqeq": "error",
+				"@angular-eslint/template/mouse-events-have-key-events": "error",
+				"@angular-eslint/template/no-any": "error",
+				// Currently a warning because of rampant use, and fixing such
+				// usages would be out-of-scope for the PR adding this linting,
+				// IMO.
+				"@angular-eslint/template/no-autofocus": "warn",
+				"@angular-eslint/template/no-distracting-elements": "error",
+				"@angular-eslint/template/no-duplicate-attributes": "error",
+				// "@angular-eslint/template/no-inline-styles": "warn",
+				// "@angular-eslint/template/no-interpolation-in-attributes": "error",
+				"@angular-eslint/template/no-negated-async": "error",
+				"@angular-eslint/template/no-positive-tabindex": "error",
+				// Warning because not always necessary, and appears to have no
+				// options to control when it is required.
+				"@angular-eslint/template/use-track-by-function": "warn"
+			}
 		}
 	]
 }

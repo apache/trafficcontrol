@@ -11,11 +11,19 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-mat-card mat-card-content {
-	grid-template-columns: 1fr 1fr;
-	column-gap: 2em;
+.mat-mdc-card {
+	.mat-mdc-card-content {
+		grid-template-columns: 1fr 1fr;
+		column-gap: 1em;
 
-	.doubleColSpan {
-		grid-column: span 2;
+		.doubleColSpan {
+			grid-column: span 2;
+		}
+	}
+
+	.mat-mdc-card-actions {
+		.mdc-button {
+			margin: 0 8px;
+		}
 	}
 }

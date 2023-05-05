@@ -16,6 +16,7 @@
 
 @import '../../theme.scss';
 
+@include mat.all-component-typographies();
 @include mat.core();
 
 $traffic-portal-primary: mat.define-palette(mat.$blue-palette, 800);
@@ -34,7 +35,11 @@ $traffic-portal-theme: add-extra-colors($traffic-portal-theme, (
 	success: $traffic-portal-success,
 	error: $traffic-portal-error,
 ));
-$traffic-portal-theme: set-ag-grid($traffic-portal-theme, (odd-row-background-color: map-get(mat.$gray-palette,900)));
+$traffic-portal-theme: set-ag-grid($traffic-portal-theme, (
+	odd-row-background-color: map-get(mat.$gray-palette,900),
+	row-border-color: map-get(mat.$gray-palette,800),
+	border-color: map-get(mat.$gray-palette,800)
+));
 
 @include mat.all-component-themes($traffic-portal-theme);
 @include theme($traffic-portal-theme);

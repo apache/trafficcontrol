@@ -21,13 +21,13 @@
 h2 {
 	text-align: center;
 }
-mat-card {
+.mat-mdc-card {
 	width: fit-content;
 	min-width: 50%;
 	margin: 1em auto;
 	min-height: 50px;
-
-	mat-list-item {
+	padding: 0 0 15px 10px;
+	.mat-mdc-list-item {
 		div.invalidation-job {
 			width: 100%;
 			justify-content: space-between;
