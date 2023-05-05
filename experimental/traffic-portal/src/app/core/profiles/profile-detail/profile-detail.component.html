@@ -22,30 +22,30 @@ limitations under the License.
 			</mat-form-field>
             <mat-form-field>
                 <mat-label>Name</mat-label>
-                <input matInput type="text" name="name" [(ngModel)]="profile['name']" [ngModelOptions]="{standalone: true}" required />
+                <input matInput type="text" name="name" [(ngModel)]="profile['name']" required />
             </mat-form-field>
             <mat-form-field>
                 <mat-label>CDN</mat-label>
-                <mat-select name="cdn" [(ngModel)]="profile['cdn']" [ngModelOptions]="{standalone: true}" required>
+                <mat-select name="cdn" [(ngModel)]="profile['cdn']" required>
                     <mat-option [value]="cdn.id" *ngFor="let cdn of cdns">{{cdn.name}}</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
                 <mat-label>Type</mat-label>
-                <mat-select name="type" [(ngModel)]="profile['type']" [ngModelOptions]="{standalone: true}" required>
+                <mat-select name="type" [(ngModel)]="profile['type']" required>
                     <mat-option [value]="type.value" *ngFor="let type of types">{{type.value}}</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
                 <mat-label>Routing Disabled</mat-label>
-                <mat-select name="routingDisabled" [(ngModel)]="profile['routingDisabled']" [ngModelOptions]="{standalone: true}" required>
+                <mat-select name="routingDisabled" [(ngModel)]="profile['routingDisabled']" required>
                     <mat-option [value]="true">True</mat-option>
                     <mat-option [value]="false">False</mat-option>
                 </mat-select>
             </mat-form-field>
             <mat-form-field>
                 <mat-label>Description</mat-label>
-                <textarea matInput name="description" [(ngModel)]="profile['description']" [ngModelOptions]="{standalone: true}" required></textarea>
+                <textarea matInput name="description" [(ngModel)]="profile['description']" required></textarea>
             </mat-form-field>
             <mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>

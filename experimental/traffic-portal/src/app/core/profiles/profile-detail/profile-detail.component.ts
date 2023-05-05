@@ -99,7 +99,7 @@ export class ProfileDetailComponent implements OnInit {
 			this.new = true;
 			this.navSvc.headerTitle.next("New Profile");
 			this.profile = {
-				cdn: -1,
+				cdn: 1,
 				cdnName: "",
 				description: "",
 				id: -1,
