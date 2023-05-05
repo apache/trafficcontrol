@@ -27,6 +27,7 @@ import {
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
+import {RequestRole} from "trafficops-types";
 
 /**
  * UserService exposes API functionality related to Users, Roles and Tenants.
@@ -265,6 +266,36 @@ export class UserService extends APIService {
 			return resp[0];
 		}
 		return this.get<Array<ResponseRole>>(path).toPromise();
+	}
+
+	/**
+	 * Creates a new Role.
+	 *
+	 * @param role The role to create.
+	 * @returns The created role.
+	 */
+	public async createRole(role: RequestRole): Promise<ResponseRole> {
+		return this.post<ResponseRole>("roles", role).toPromise();
+	}
+
+	/**
+	 * Updates an existing Role.
+	 *
+	 * @param role The role to update.
+	 * @returns The updated role.
+	 */
+	public async updateRole(role: ResponseRole): Promise<ResponseRole> {
+		return this.put<ResponseRole>(`roles/${role.name}`, role).toPromise();
+	}
+
+	/**
+	 * Deletes an existing role.
+	 *
+	 * @param tenant The role to be deleted.
+	 * @returns The deleted role.
+	 */
+	public async deleteRole(role: ResponseRole): Promise<ResponseRole> {
+		return this.delete<ResponseRole>(`roles/${role.name}`).toPromise();
 	}
 
 	/**

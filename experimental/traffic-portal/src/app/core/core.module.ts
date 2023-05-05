@@ -62,6 +62,7 @@ import { StatusesTableComponent } from "./statuses/statuses-table/statuses-table
 import { TypeDetailComponent } from "./types/detail/type-detail.component";
 import { TypesTableComponent } from "./types/table/types-table.component";
 import { RolesTableComponent } from "./users/roles/table/roles-table.component";
+import { RoleDetailComponent } from "./users/roles/detail/role-detail.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
@@ -91,6 +92,7 @@ export const ROUTES: Routes = [
 	{ component: CacheGroupTableComponent, path: "cache-groups" },
 	{ component: CacheGroupDetailsComponent, path: "cache-groups/:id"},
 	{ component: RolesTableComponent, path: "roles"},
+	{ component: RoleDetailComponent, path: "roles/:name"},
 	{ component: TenantsComponent, path: "tenants"},
 	{ component: ChangeLogsComponent, path: "change-logs" },
 	{ component: TenantDetailsComponent, path: "tenants/:id"},

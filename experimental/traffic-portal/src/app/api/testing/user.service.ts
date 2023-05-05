@@ -17,6 +17,7 @@ import { Injectable } from "@angular/core";
 import type {
 	PostRequestUser,
 	PutRequestUser,
+	RequestRole,
 	RequestTenant,
 	ResponseCurrentUser,
 	ResponseRole,
@@ -426,6 +427,51 @@ export class UserService {
 			return role;
 		}
 		return this.roles;
+	}
+
+	/**
+	 * Creates a new role.
+	 *
+	 * @param role The role to create.
+	 * @returns The created role.
+	 */
+	public async createRole(role: RequestRole): Promise<ResponseRole> {
+		const resp = {
+			...role,
+			name: role.name,
+			lastUpdated: new Date(),
+		};
+		this.roles.push(resp);
+		return resp;
+	}
+
+	/**
+	 * Updates an existing role.
+	 *
+	 * @param role The role to update.
+	 * @returns The updated role.
+	 */
+	public async updateRole(role: ResponseRole): Promise<ResponseRole> {
+		const name = this.tenants.findIndex(r => r.name === role.name);
+		if (name === null) {
+			throw new Error(`no such Role: ${role.name}`);
+		}
+		this.roles[name] = role;
+		return role;
+	}
+
+	/**
+	 * Deletes an existing role.
+	 *
+	 * @param tenant The role to be deleted.
+	 * @returns The deleted role.
+	 */
+	public async deleteRole(role: ResponseRole): Promise<ResponseRole> {
+		const index = this.tenants.findIndex(r => r.name === role.name);
+		if (index < 0) {
+			throw new Error(`no such role: ${role.name}`);
+		}
+		return this.roles.splice(index, 1)[0];
 	}
 
 	/**
