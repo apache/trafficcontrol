@@ -21,18 +21,10 @@ export type DivisionDetailPageObject = EnhancedPageObject<{}, typeof divisionDet
 
 const divisionDetailPageObject = {
 	elements: {
-		id: {
-			selector: "input[name='id']"
-		},
-		lastUpdated: {
-			selector: "input[name='lastUpdated']"
-		},
-		name: {
-			selector: "input[name='name']"
-		},
-		saveBtn: {
-			selector: "button[type='submit']"
-		}
+		id: "input[name='id']",
+		lastUpdated: "input[name='lastUpdated']",
+		name: "input[name='name']",
+		saveBtn: "button[type='submit']",
 	},
 };
 

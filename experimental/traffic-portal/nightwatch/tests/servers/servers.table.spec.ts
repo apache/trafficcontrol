@@ -12,13 +12,11 @@
 * limitations under the License.
 */
 
-describe("Servers Spec", () => {
+describe("Servers Table Spec", () => {
 	it("Filter by hostname", async () => {
-		await browser.page.common()
-			.section.sidebar
-			.navigateToNode("servers", ["serversContainer"]);
+		const page = browser.page.servers.serversTable();
+		await page.section.serversTable.open();
 		await browser.waitForElementPresent("input[name=fuzzControl]");
-		const page = browser.page.servers.servers();
 		page.section.serversTable.searchText("edge");
 		await page.assert.urlContains("search=edge");
 	});

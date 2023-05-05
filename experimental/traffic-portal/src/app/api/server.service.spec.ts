@@ -14,13 +14,14 @@
  */
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
+import { ResponseServer } from "trafficops-types";
 
 import { ServerService } from "./server.service";
 
 describe("ServerService", () => {
 	let service: ServerService;
 	let httpTestingController: HttpTestingController;
-	const server = {
+	const server: ResponseServer = {
 		cachegroup: "cachegroup",
 		cachegroupId: 1,
 		cdnId: 1,
@@ -43,9 +44,7 @@ describe("ServerService", () => {
 		offlineReason: null,
 		physLocation: "physicalLocation",
 		physLocationId: 1,
-		profile: "profile",
-		profileDesc: "profileDesc",
-		profileId: 1,
+		profileNames: ["profile"],
 		rack: null,
 		revalPending: false,
 		routerHostName: null,

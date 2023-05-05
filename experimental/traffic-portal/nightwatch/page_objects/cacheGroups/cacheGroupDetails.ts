@@ -21,30 +21,14 @@ export type CacheGroupDetailPageObject = EnhancedPageObject<{}, typeof cacheGrou
 
 const cacheGroupDetailPageObject = {
 	elements: {
-		id: {
-			selector: "input[name='id']"
-		},
-		lastUpdated: {
-			selector: "input[name='lastUpdated']"
-		},
-		latitude: {
-			selector: "input[name='latitude']"
-		},
-		longitude: {
-			selector: "input[name='longitude']"
-		},
-		name: {
-			selector: "input[name='name']"
-		},
-		parent: {
-			selector: "mat-select[name='parentCacheGroup']"
-		},
-		saveBtn: {
-			selector: "button[type='submit']"
-		},
-		secondaryParent: {
-			selector: "mat-select[name='secondaryParentCacheGroup]"
-		},
+		id: "input[name='id']",
+		lastUpdated: "input[name='lastUpdated']",
+		latitude: "input[name='latitude']",
+		longitude: "input[name='longitude']",
+		name: "input[name='name']",
+		parent: "mat-select[name='parentCacheGroup']",
+		saveBtn: "button[type='submit']",
+		secondaryParent: "mat-select[name='secondaryParentCacheGroup]",
 	},
 };
 

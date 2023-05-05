@@ -21,24 +21,12 @@ export type CoordinateDetailPageObject = EnhancedPageObject<{}, typeof coordinat
 
 const coordinateDetailPageObject = {
 	elements: {
-		id: {
-			selector: "input[name='id']"
-		},
-		lastUpdated: {
-			selector: "input[name='lastUpdated']"
-		},
-		latitude: {
-			selector: "input[name='latitude']"
-		},
-		longitude: {
-			selector: "input[name='longitude']"
-		},
-		name: {
-			selector: "input[name='name']"
-		},
-		saveBtn: {
-			selector: "button[type='submit']"
-		}
+		id: "input[name='id']",
+		lastUpdated: "input[name='lastUpdated']",
+		latitude: "input[name='latitude']",
+		longitude: "input[name='longitude']",
+		name: "input[name='name']",
+		saveBtn: "button[type='submit']",
 	},
 };
 

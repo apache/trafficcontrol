@@ -98,10 +98,6 @@ describe("ISOGenerationFormComponent", () => {
 			interfaceName: "eth0",
 			ip6Address: "f1d0::f00d",
 			ip6Gateway: "dead::beef",
-			mgmtInterface: "mgmt0",
-			mgmtIpAddress: "1.3.3.7",
-			mgmtIpGateway: "9.0.0.1",
-			mgmtIpNetmask: "0.4.2.0",
 			osVersionDir: "os version dir",
 			rootPass: "root password",
 		};
@@ -115,10 +111,6 @@ describe("ISOGenerationFormComponent", () => {
 		form.ipv4Netmask.setValue("");
 		form.ipv6Address.setValue(request.ip6Address);
 		form.ipv6Gateway.setValue(request.ip6Gateway);
-		form.mgmtInterface.setValue(request.mgmtInterface);
-		form.mgmtIpAddress.setValue(request.mgmtIpAddress);
-		form.mgmtIpGateway.setValue(request.mgmtIpGateway);
-		form.mgmtIpNetmask.setValue(request.mgmtIpNetmask);
 		form.osVersion.setValue(request.osVersionDir);
 		form.rootPass.setValue(request.rootPass);
 		form.rootPassConfirm.setValue(request.rootPass);
@@ -140,10 +132,6 @@ describe("ISOGenerationFormComponent", () => {
 			ipAddress: "1.2.3.4",
 			ipGateway: "4.3.2.1",
 			ipNetmask: "0.1.10.100",
-			mgmtInterface: "mgmt0",
-			mgmtIpAddress: "1.3.3.7",
-			mgmtIpGateway: "9.0.0.1",
-			mgmtIpNetmask: "0.4.2.0",
 			osVersionDir: "os version dir",
 			rootPass: "root password",
 		};
@@ -157,10 +145,6 @@ describe("ISOGenerationFormComponent", () => {
 		form.ipv4Netmask.setValue(request.ipNetmask);
 		form.ipv6Address.setValue(request.ip6Address);
 		form.ipv6Gateway.setValue(request.ip6Gateway);
-		form.mgmtInterface.setValue(request.mgmtInterface);
-		form.mgmtIpAddress.setValue(request.mgmtIpAddress);
-		form.mgmtIpGateway.setValue(request.mgmtIpGateway);
-		form.mgmtIpNetmask.setValue(request.mgmtIpNetmask);
 		form.osVersion.setValue(request.osVersionDir);
 		form.rootPass.setValue(request.rootPass);
 		form.rootPassConfirm.setValue(request.rootPass);

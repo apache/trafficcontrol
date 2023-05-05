@@ -12,7 +12,9 @@
 * limitations under the License.
 */
 
+import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { Component, OnInit } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
 import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
 import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
@@ -29,6 +31,11 @@ import type {
 
 import { CacheGroupService, CDNService, PhysicalLocationService, ProfileService, TypeService } from "src/app/api";
 import { ServerService } from "src/app/api/server.service";
+import { UpdateStatusComponent } from "src/app/core/servers/update-status/update-status.component";
+import {
+	DecisionDialogComponent,
+	DecisionDialogData
+} from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
@@ -59,23 +66,9 @@ export class ServerDetailsComponent implements OnInit {
 	 */
 	public validGatewayPattern = IP;
 	/**
-	 * Controls whether or not the "change status" dialog is open
-	 */
-	public changeStatusDialogOpen = false;
-
-	/**
-	 * Tracks whether ILO details should be hidden.
-	 */
-	public hideILO = false;
-	/**
-	 * Tracks whether management interface details should be hidden.
-	 */
-	public hideManagement = false;
-	/**
 	 * Tracks whether network interface details should be hidden.
 	 */
 	public hideInterfaces = false;
-
 	/**
 	 * Icon for adding to a collection.
 	 */
@@ -144,7 +137,8 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly profileService: ProfileService,
 		private readonly typeService: TypeService,
 		private readonly physlocService: PhysicalLocationService,
-		private readonly navSvc: NavigationService
+		private readonly navSvc: NavigationService,
+		private readonly dialog: MatDialog
 	) {
 	}
 
@@ -152,7 +146,6 @@ export class ServerDetailsComponent implements OnInit {
 	 * Initializes the controller based on route query parameters.
 	 */
 	public ngOnInit(): void {
-
 		const handleErr = (obj: string): (e: unknown) => void =>
 			(e: unknown): void => {
 				console.error(`Failed to get ${obj}:`, e);
@@ -202,7 +195,7 @@ export class ServerDetailsComponent implements OnInit {
 			this.serverService.getServers(Number(ID)).then(
 				s => {
 					this.server = s;
-					this.navSvc.headerTitle.next(`Server #${this.server.id}`);
+					this.updateTitlebar();
 				}
 			).catch(
 				e => {
@@ -210,18 +203,67 @@ export class ServerDetailsComponent implements OnInit {
 				}
 			);
 		} else {
-			this.server.interfaces = [{
-				ipAddresses: [{
-					address: "",
-					gateway: null,
-					serviceAddress: true
+			this.server = {
+				cachegroup: "",
+				cachegroupId: 0,
+				cdnId: 0,
+				cdnName: "",
+				domainName: "",
+				guid: null,
+				hostName: "",
+				httpsPort: null,
+				id: 0,
+				iloIpAddress: null,
+				iloIpGateway: null,
+				iloIpNetmask: null,
+				iloPassword: null,
+				iloUsername: null,
+				interfaces: [{
+					ipAddresses: [{
+						address: "",
+						gateway: null,
+						serviceAddress: true
+					}],
+					maxBandwidth: null,
+					monitor: true,
+					mtu: null,
+					name: "",
 				}],
-				maxBandwidth: null,
-				monitor: false,
-				mtu: null,
-				name: "",
-			}];
+				lastUpdated: new Date(),
+				mgmtIpAddress: null,
+				mgmtIpGateway: null,
+				mgmtIpNetmask: null,
+				offlineReason: null,
+				physLocation: "",
+				physLocationId: 0,
+				profileNames: [],
+				rack: null,
+				revalPending: false,
+				routerHostName: null,
+				routerPortName: null,
+				status: "",
+				statusId: 0,
+				statusLastUpdated: null,
+				tcpPort: null,
+				type: "",
+				typeId: 0,
+				updPending: false,
+				xmppId: ""
+			};
+			this.updateTitlebar();
+		}
+	}
+
+	/**
+	 * Updates the headerTitle based on current server state.
+	 *
+	 * @private
+	 */
+	private updateTitlebar(): void {
+		if (this.isNew) {
 			this.navSvc.headerTitle.next("New Server");
+		} else {
+			this.navSvc.headerTitle.next(`Server: ${this.server.hostName}`);
 		}
 	}
 
@@ -247,7 +289,78 @@ export class ServerDetailsComponent implements OnInit {
 					console.error("failed to create server:", err);
 				}
 			);
+		} else {
+			this.serverService.updateServer(this.server).then(
+				responseServer => {
+					this.server = responseServer;
+					this.updateTitlebar();
+				},
+				err => {
+					console.error(`failed to update server: ${err}`);
+				}
+			);
 		}
+	}
+	/**
+	 * Deletes the Server.
+	 */
+	public delete(): void {
+		if (this.isNew) {
+			console.error("Unable to delete new Cache Group");
+			return;
+		}
+		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(
+			DecisionDialogComponent,
+			{
+				data: {
+					message: `Are you sure you want to delete Server ${this.server.hostName} (#${this.server.id})?`,
+					title: "Confirm Delete"
+				}
+			}
+		);
+		ref.afterClosed().subscribe(result => {
+			if (result) {
+				this.serverService.deleteServer(this.server);
+				this.router.navigate(["core/servers"]);
+			}
+		});
+	}
+
+	/**
+	 * Handles when a profile list item is 'dropped'
+	 *
+	 * @param $event The Drop event that is emitted.
+	 */
+	public drop($event: CdkDragDrop<string[]>): void {
+		moveItemInArray(this.server.profileNames, $event.previousIndex, $event.currentIndex);
+	}
+
+	/**
+	 * Queues updates for the server
+	 */
+	public async queue(): Promise<void> {
+		this.serverService.queueUpdates(this.server).then(result => {
+			if(result.action === "queue") {
+				this.server.updPending = true;
+			}
+		},
+		err => {
+			console.error(`failed to queue updates: ${err}`);
+		});
+	}
+
+	/**
+	 * Dequeues updates for the server
+	 */
+	public async dequeue(): Promise<void> {
+		this.serverService.clearUpdates(this.server).then(result => {
+			if(result.action === "dequeue") {
+				this.server.updPending = false;
+			}
+		},
+		err => {
+			console.error(`failed to dequeue updates: ${err}`);
+		});
 	}
 
 	/**
@@ -269,11 +382,33 @@ export class ServerDetailsComponent implements OnInit {
 	}
 
 	/**
+	 * Returns a user-friendly name for an interface.
+	 *
+	 * @param inf The Interface to get the name from
+	 * @returns Friendly interface name
+	 */
+	public getInterfaceName(inf: Interface): string {
+		return inf.name === "" ? "<un-named>" : inf.name;
+	}
+
+	/**
+	 * Finds the ID of a given profile name
+	 *
+	 * @param profileName The profileName to find the id of.
+	 * @returns Profile id
+	 */
+	public profileNameToId(profileName: string): number {
+		return (this.profiles.find(p => p.name === profileName) ?? {id: -1}).id;
+	}
+
+	/**
 	 * Adds a new IP address to the server.
 	 *
+	 * @param event The triggering DOM event; its propagation is stopped.
 	 * @param inf The specific network interface to which to add the new IP address.
 	 */
-	public addIP(inf: Interface): void {
+	public addIP(event: MouseEvent, inf: Interface): void {
+		event.stopPropagation();
 		inf.ipAddresses.push({
 			address: "",
 			gateway: null,
@@ -284,19 +419,23 @@ export class ServerDetailsComponent implements OnInit {
 	/**
 	 * Removes an IP address from the server.
 	 *
+	 * @param event The triggering DOM event; its propagation is stopped.
 	 * @param inf The specific network interface from which to remove an IP address.
 	 * @param ip The index in the `ipAddresses` of `inf` to delete.
 	 */
-	public deleteIP(inf: Interface, ip: number): void {
+	public deleteIP(event: MouseEvent, inf: Interface, ip: number): void {
+		event.stopPropagation();
 		inf.ipAddresses.splice(ip, 1);
 	}
 
 	/**
 	 * Removes a network interface from the server.
 	 *
+	 * @param e The triggering DOM event; its propagation is stopped.
 	 * @param inf The index of the interface to remove.
 	 */
-	public deleteInterface(inf: number): void {
+	public deleteInterface(e: MouseEvent, inf: number): void {
+		e.stopPropagation();
 		this.server.interfaces.splice(inf, 1);
 	}
 
@@ -323,29 +462,19 @@ export class ServerDetailsComponent implements OnInit {
 		if (this.isNew) {
 			throw new Error("cannot update the status of a server that doesn't exist yet");
 		}
-		this.changeStatusDialogOpen = true;
+		const ref = this.dialog.open(UpdateStatusComponent, {
+			data: [this.server]
+		});
+		ref.afterClosed().subscribe(res => {
+			if (res) {
+				this.serverService.getServers(this.server.id).then(
+					s => this.server = s
+				).catch(
+					err => {
+						console.error("Failed to reload servers:", err);
+					}
+				);
+			}
+		});
 	}
-
-	/**
-	 * Handles the completion of a server update, closing the dialog and updating the view if necessary.
-	 *
-	 * @param reload Whether or not the server was actually changed (and thus needs to be reloaded)
-	 */
-	public doneUpdatingStatus(reload: boolean): void {
-		this.changeStatusDialogOpen = false;
-		if (this.isNew || !this.server.id) {
-			console.error("done fired on server with no ID");
-			return;
-		}
-		if (reload) {
-			this.serverService.getServers(this.server.id).then(
-				s => this.server = s
-			).catch(
-				e => {
-					console.error("Failed to reload servers:", e);
-				}
-			);
-		}
-	}
-
 }

@@ -13,16 +13,24 @@
 */
 
 import { Component , type OnInit} from "@angular/core";
-import { UntypedFormControl } from "@angular/forms";
+import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import type { ITooltipParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
-import { type ResponseServer, serviceAddresses } from "trafficops-types";
+import { ResponseCDN, type ResponseServer, serviceAddresses } from "trafficops-types";
 
-import { ServerService } from "src/app/api";
+import { CDNService, ServerService } from "src/app/api";
 import { UpdateStatusComponent } from "src/app/core/servers/update-status/update-status.component";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import {
+	CollectionChoiceDialogComponent, CollectionChoiceDialogData
+} from "src/app/shared/dialogs/collection-choice-dialog/collection-choice-dialog.component";
+import type {
+	ContextMenuActionEvent,
+	ContextMenuItem, DoubleClickLink,
+	TableTitleButton
+} from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -76,7 +84,9 @@ export class ServersTableComponent implements OnInit {
 
 	/** All of the servers which should appear in the table. */
 	public servers: Promise<Array<AugmentedServer>> | null = null;
-	// public servers: Array<Server>;
+
+	/** All of the CDNs (on which a user might (de/)queue updates). */
+	public readonly cdns: Promise<Array<ResponseCDN>>;
 
 	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
@@ -278,6 +288,23 @@ export class ServersTableComponent implements OnInit {
 		}
 	];
 
+	/** Definitions for the more menu buttons */
+	public moreMenuButtons: Array<TableTitleButton> = [
+		{
+			action: "queue",
+			text: "Queue Server Updates"
+		},
+		{
+			action: "dequeue",
+			text: "Clear Server Updates"
+		}
+	];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<AugmentedServer> = {
+		href: (row: AugmentedServer): string => `/core/servers/${row.id}`
+	};
+
 	/** Definitions for the context menu items (which act on augmented server data). */
 	public contextMenuItems: Array<ContextMenuItem<AugmentedServer>> = [
 		{
@@ -320,23 +347,27 @@ export class ServersTableComponent implements OnInit {
 	public fuzzySubject: BehaviorSubject<string>;
 
 	/** Form controller for the user search input. */
-	public fuzzControl: UntypedFormControl = new UntypedFormControl("");
+	public fuzzControl: FormControl = new FormControl("");
 
 	/**
 	 * Constructs the component with its required injections.
 	 *
+	 * @param auth The user authorization service.
 	 * @param api The Servers API which is used to provide row data.
 	 * @param route A reference to the route of this view which is used to set the fuzzy search box text from the 'search' query parameter.
-	 * @param router Angular router
 	 * @param navSvc Manages the header
+	 * @param cdn The CDN API
 	 * @param dialog Dialog manager
 	 */
 	constructor(private readonly api: ServerService,
+		public readonly auth: CurrentUserService,
 		private readonly route: ActivatedRoute,
 		private readonly navSvc: NavigationService,
+		private readonly cdn: CDNService,
 		private readonly dialog: MatDialog) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.navSvc.headerTitle.next("Servers");
+		this.cdns = this.cdn.getCDNs();
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
@@ -358,6 +389,38 @@ export class ServersTableComponent implements OnInit {
 	/** Update the URL's 'search' query parameter for the user's search input. */
 	public updateURL(): void {
 		this.fuzzySubject.next(this.fuzzControl.value);
+	}
+
+	/**
+	 * Handles user selection of a more menu action button.
+	 *
+	 * @param action The emitted more menu button action event.
+	 */
+	public async handleMoreMenu(action: string): Promise<void> {
+		const data: CollectionChoiceDialogData<number> = {
+			collection: (await this.cdns).map(cdn => ({label: cdn.name, value: cdn.id})),
+			label: "Please Select a CDN",
+			message: "",
+			title: "Queue Server Updates"
+		};
+		switch(action) {
+			case "dequeue":
+				data.title = "Clear Server Updates";
+			case "queue":
+				const ref = this.dialog.open<CollectionChoiceDialogComponent, CollectionChoiceDialogData<number>, number | false>(
+					CollectionChoiceDialogComponent,
+					{data}
+				);
+				const result = await ref.afterClosed().toPromise();
+				if (typeof(result) === "number") {
+					if (data.title.indexOf("Clear") > -1) {
+						await this.cdn.dequeueServerUpdates(result);
+					} else {
+						await this.cdn.queueServerUpdates(result);
+					}
+				}
+				break;
+		}
 	}
 
 	/**

@@ -13,7 +13,7 @@
 */
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { RequestCDN, ResponseCDN } from "trafficops-types";
+import type { CDNQueueResponse, RequestCDN, ResponseCDN } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -76,6 +76,28 @@ export class CDNService extends APIService {
 	 */
 	public async createCDN(cdn: RequestCDN): Promise<ResponseCDN> {
 		return this.post<ResponseCDN>("cdns", cdn).toPromise();
+	}
+
+	/**
+	 * Queue updates to servers by a CDN
+	 *
+	 * @param id The CDN id to queue server updates for
+	 */
+	public async queueServerUpdates(id: number): Promise<CDNQueueResponse> {
+		const path = `cdns/${id}/queue_update`;
+		const action = {action: "queue"};
+		return this.post<CDNQueueResponse>(path, action).toPromise();
+	}
+
+	/**
+	 * Dequeue updates to servers by a CDN
+	 *
+	 * @param id The CDN id to dequeue server updates for
+	 */
+	public async dequeueServerUpdates(id: number): Promise<CDNQueueResponse> {
+		const path = `cdns/${id}/queue_update`;
+		const action = {action: "dequeue"};
+		return this.post<CDNQueueResponse>(path, action).toPromise();
 	}
 
 	/**

@@ -17,7 +17,7 @@ limitations under the License.
 		<mat-form-field appearance="fill" *ngIf="true">
 			<mat-label>New Status</mat-label>
 			<select name="status" [(ngModel)]="status" required matNativeControl>
-				<option *ngFor="let status of statuses" [value]="status" [disabled]="status.id === currentStatus">{{status.name}}</option>
+				<option *ngFor="let status of statuses" [value]="status.name" [disabled]="status.id === currentStatus">{{status.name}}</option>
 			</select>
 		</mat-form-field>
 		<mat-form-field *ngIf="isOffline" appearance="fill">

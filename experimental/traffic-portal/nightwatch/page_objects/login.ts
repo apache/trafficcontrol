@@ -57,21 +57,11 @@ const loginPageObject = {
 				}
 			} as LoginFormSectionCommands,
 			elements: {
-				clearBtn: {
-					selector: "button[name='clear']"
-				},
-				loginBtn: {
-					selector: "button[name='login']"
-				},
-				passwordTxt: {
-					selector: "input[name='p']"
-				},
-				resetBtn: {
-					selector: "button[name='reset']"
-				},
-				usernameTxt: {
-					selector: "input[name='u']"
-				}
+				clearBtn: "button[name='clear']",
+				loginBtn: "button[name='login']",
+				passwordTxt: "input[name='p']",
+				resetBtn: "button[name='reset']",
+				usernameTxt: "input[name='u']",
 			},
 			selector: "form[name='login']"
 		}

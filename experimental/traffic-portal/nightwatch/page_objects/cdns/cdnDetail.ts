@@ -21,24 +21,12 @@ export type CDNDetailPageObject = EnhancedPageObject<{}, typeof cdnDetailPageObj
 
 const cdnDetailPageObject = {
 	elements: {
-		dnssecEnabled: {
-			selector: "input[name='dnssecEnabled']"
-		},
-		domainName: {
-			selector: "input[name='domainName']"
-		},
-		id: {
-			selector: "input[name='id']"
-		},
-		lastUpdated: {
-			selector: "input[name='lastUpdated']"
-		},
-		name: {
-			selector: "input[name='name']"
-		},
-		saveBtn: {
-			selector: "button[type='submit']"
-		},
+		dnssecEnabled: "input[name='dnssecEnabled']",
+		domainName: "input[name='domainName']",
+		id: "input[name='id']",
+		lastUpdated: "input[name='lastUpdated']",
+		name: "input[name='name']",
+		saveBtn: "button[type='submit']",
 	},
 };
 

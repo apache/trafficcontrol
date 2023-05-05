@@ -32,7 +32,7 @@ export class UpdateStatusComponent implements OnInit {
 	/** The ID of the current status of the server, or null if the servers have disparate statuses. */
 	public currentStatus: null | number = null;
 
-	public status: ResponseStatus | null = null;
+	public status: string | null = null;
 
 	public servers: Array<ResponseServer>;
 
@@ -40,7 +40,8 @@ export class UpdateStatusComponent implements OnInit {
 
 	/** Tells whether the user's selected status is considered "OFFLINE". */
 	public get isOffline(): boolean {
-		return this.status !== null && this.status !== undefined && this.status.name !== "ONLINE" && this.status.name !== "REPORTED";
+		return this.status !== null && this.status !== undefined &&
+			this.status !== "ONLINE" && this.status !== "REPORTED";
 	}
 
 	/** An appropriate title for the server or collection of servers being updated. */
@@ -100,10 +101,10 @@ export class UpdateStatusComponent implements OnInit {
 		let observables;
 		if (this.isOffline) {
 			observables = this.servers.map(
-				async x=>this.api.updateStatus(x, this.status?.name ?? "", this.offlineReason)
+				async x=>this.api.updateStatus(x, this.status ?? "", this.offlineReason)
 			);
 		} else {
-			observables = this.servers.map(async x=>this.api.updateStatus(x, this.status?.name ?? ""));
+			observables = this.servers.map(async x=>this.api.updateStatus(x, this.status ?? ""));
 		}
 		try {
 			await Promise.all(observables);

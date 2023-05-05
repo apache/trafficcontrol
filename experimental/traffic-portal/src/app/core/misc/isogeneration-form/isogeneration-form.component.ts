@@ -51,10 +51,6 @@ export class ISOGenerationFormComponent implements OnInit {
 		ipv4Netmask: new FormControl("", {nonNullable: true, validators: Validators.pattern(IPV4)}),
 		ipv6Address: new FormControl("", Validators.pattern(IPV6_WITH_CIDR)),
 		ipv6Gateway: new FormControl("", Validators.pattern(IPV6)),
-		mgmtInterface: new FormControl(""),
-		mgmtIpAddress: new FormControl("", Validators.pattern(IPV4)),
-		mgmtIpGateway: new FormControl("", Validators.pattern(IPV4)),
-		mgmtIpNetmask: new FormControl("", Validators.pattern(IPV4)),
 		mtu: new FormControl(1500, {nonNullable: true}),
 		osVersion: new FormControl("", {nonNullable: true}),
 		rootPass: new FormControl("", {nonNullable: true}),
@@ -119,10 +115,6 @@ export class ISOGenerationFormComponent implements OnInit {
 				interfaceName: this.form.controls.interfaceName.value,
 				ip6Address: this.form.controls.ipv6Address.value,
 				ip6Gateway: this.form.controls.ipv6Gateway.value,
-				mgmtInterface: this.form.controls.mgmtInterface.value,
-				mgmtIpAddress: this.form.controls.mgmtIpAddress.value,
-				mgmtIpGateway: this.form.controls.mgmtIpGateway.value,
-				mgmtIpNetmask: this.form.controls.mgmtIpNetmask.value,
 				osVersionDir: this.form.controls.osVersion.value,
 				rootPass: this.form.controls.rootPass.value
 			};
@@ -139,10 +131,6 @@ export class ISOGenerationFormComponent implements OnInit {
 				ipAddress: this.form.controls.ipv4Address.value,
 				ipGateway: this.form.controls.ipv4Gateway.value,
 				ipNetmask: this.form.controls.ipv4Netmask.value,
-				mgmtInterface: this.form.controls.mgmtInterface.value,
-				mgmtIpAddress: this.form.controls.mgmtIpAddress.value,
-				mgmtIpGateway: this.form.controls.mgmtIpGateway.value,
-				mgmtIpNetmask: this.form.controls.mgmtIpNetmask.value,
 				osVersionDir: this.form.controls.osVersion.value,
 				rootPass: this.form.controls.rootPass.value
 			};
