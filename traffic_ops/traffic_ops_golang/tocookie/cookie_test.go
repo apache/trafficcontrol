@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 )
@@ -33,7 +32,7 @@ func TestParse(t *testing.T) {
 	authData := "foobar"
 
 	// Generate a valid HTTP cookie.
-	httpCookie := GetCookie(authData, time.Minute, "fOObAR.")
+	httpCookie := GetCookie(authData, 0, "fOObAR.")
 	validCookie := http.Cookie{Name: httpCookie.Name, Value: httpCookie.Value}
 
 	// Create an empty string to simulate an empty cookie value.
