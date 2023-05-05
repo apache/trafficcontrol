@@ -33,7 +33,7 @@ import { APITestingService } from "./base-api.service";
 @Injectable()
 export class ProfileService extends APITestingService implements ConcreteProfileService {
 	private lastID = 10;
-	private readonly profiles: ResponseProfile[] = [
+	public readonly profiles: ResponseProfile[] = [
 		{
 			cdn: 1,
 			cdnName: "ALL",
@@ -148,6 +148,30 @@ export class ProfileService extends APITestingService implements ConcreteProfile
 		}
 	];
 
+	private lastParamID: number;
+
+	/**
+	 * Note that this in no way actually correlates to the Parameters that
+	 * appear on the Profiles stored in {@link profiles}.
+	 */
+	public readonly parameters:  ResponseParameter[];
+
+	constructor() {
+		super();
+		const paramMap = new Map(this.profiles.map(p => p.params ?? []).flat().map(
+			p => [
+				p.id,
+				{
+					...p,
+					lastUpdated: new Date(),
+				}
+			]
+		));
+
+		this.parameters = Array.from(paramMap.values());
+		this.lastParamID = Math.max(...paramMap.keys());
+	}
+
 	public async getProfiles(idOrName: number | string): Promise<ResponseProfile>;
 	public async getProfiles(): Promise<Array<ResponseProfile>>;
 	/**
@@ -221,14 +245,14 @@ export class ProfileService extends APITestingService implements ConcreteProfile
 	/**
 	 * Deletes an existing Profile.
 	 *
-	 * @param profile The Profile to delete, or just its ID.
-	 * @returns The deleted Profile.
+	 * @param profile The Profile to be deleted, or just its ID.
+	 * @returns The success message.
 	 */
 	public async deleteProfile(profile: number | ResponseProfile): Promise<ResponseProfile> {
 		const id = typeof(profile) === "number" ? profile : profile.id;
 		const index = this.profiles.findIndex(t => t.id === id);
 		if (index === -1) {
-			throw new Error(`no such Profile #${id}`);
+			throw new Error(`no such Profile: #${id}`);
 		}
 		return this.profiles.splice(index, 1)[0];
 	}
@@ -246,19 +270,6 @@ export class ProfileService extends APITestingService implements ConcreteProfile
 		};
 		return t;
 	}
-
-	private lastParamID = 20;
-	private readonly parameters:  ResponseParameter[] = [
-		{
-			configFile: "cfg.txt",
-			id: 1,
-			lastUpdated: new Date(),
-			name: "param1",
-			profiles: [],
-			secure: false,
-			value: "10"
-		}
-	];
 
 	public async getParameters(id: number): Promise<ResponseParameter>;
 	public async getParameters(): Promise<Array<ResponseParameter>>;
@@ -337,19 +348,12 @@ export class ProfileService extends APITestingService implements ConcreteProfile
 	 */
 	public async getProfilesByParam(parameter: number| ResponseParameter): Promise<Array<ResponseProfile>> {
 		const id = typeof parameter === "number" ? parameter : parameter.id;
-		if (id === -1) {
-			throw new Error(`no such parameter: ${id}`);
+
+		const param = this.parameters.find(d => d.id === id);
+		if (!param) {
+			throw new Error(`no such Parameter: #${id}`);
 		}
-		const index = this.parameters.findIndex(d => d.id === id);
-		const profiles = this.parameters[index].profiles;
-		if (profiles === null) {
-			return new Array<ResponseProfile>();
-		}
-		const returnedProfiles = new Array<ResponseProfile>();
-		for (const val of profiles) {
-			const p = this.getProfiles(val);
-			returnedProfiles.push(await p);
-		}
-		return returnedProfiles;
+
+		return this.profiles.filter(p => p.params && p.params.some(par => par.id === param.id));
 	}
 }

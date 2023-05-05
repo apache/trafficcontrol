@@ -71,6 +71,7 @@ import { UserService as TestingUserService } from "./user.service";
 		TestingChangeLogsService,
 		TestingMiscAPIsService,
 		TestingPhysicalLocationService,
+		TestingProfileService,
 		TestingServerService,
 	]
 })
