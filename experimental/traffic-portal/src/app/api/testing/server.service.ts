@@ -42,13 +42,13 @@ import { APITestingService } from "./base-api.service";
  */
 function serverCheck(server: ResponseServer): Servercheck {
 	return {
-		adminState: server.status ?? "SERVER HAD NO STATUS",
-		cacheGroup: server.cachegroup ?? "SERVER HAD NO CACHE GROUP",
-		hostName: server.hostName ?? "SERVER HAD NO HOST NAME",
+		adminState: server.status,
+		cacheGroup: server.cachegroup,
+		hostName: server.hostName,
 		id: server.id,
-		profile: server.profileNames[0] ?? "SERVER HAD NO PROFILE",
+		profile: server.profileNames[0],
 		revalPending: server.revalPending,
-		type: server.type ?? "SERVER HAD NO TYPE",
+		type: server.type,
 		updPending: server.updPending
 	};
 }
@@ -61,7 +61,7 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 
 	public servers = new Array<ResponseServer>();
 
-	private readonly statuses: ResponseStatus[] = [
+	public readonly statuses: ResponseStatus[] = [
 		{
 			description: "Sever is administrative down and does not receive traffic.",
 			id: 4,
@@ -100,7 +100,7 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 		}
 	];
 
-	private readonly capabilities = new Array<ResponseServerCapability>();
+	public readonly capabilities = new Array<ResponseServerCapability>();
 
 	private idCounter = 1;
 	private statusIdCounter = 6;
@@ -127,13 +127,13 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 			let server;
 			switch (typeof idOrName) {
 				case "number":
-					server = this.servers.filter(s=>s.id === idOrName)[0];
+					server = this.servers.find(s=>s.id === idOrName);
 					if (server === undefined) {
 						throw new Error(`no such server: #${idOrName}`);
 					}
 					break;
 				case "string":
-					server = this.servers.filter(s=>s.hostName === idOrName)[0];
+					server = this.servers.find(s=>s.hostName === idOrName);
 					if (server === undefined) {
 						throw new Error(`no such server: '${idOrName}'`);
 					}
@@ -220,21 +220,22 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 	}
 
 	public async getServerChecks(): Promise<Servercheck[]>;
-	public async getServerChecks(id: number): Promise<Servercheck>;
+	public async getServerChecks(server: number | ResponseServer): Promise<Servercheck>;
 	/**
 	 * Fetches server "check" stats from Traffic Ops.
 	 *
-	 * @param id If given, will return only the checks for the server with that ID.
-	 * @todo Ideally this filter would be implemented server-side; the data set gets huge.
-	 * @returns Serverchecks - or a single Servercheck if ID was given.
+	 * @param server If given, returns only a servercheck for the thereby
+	 * identified server.
+	 * @returns Serverchecks - or a single Servercheck if `server` was given.
 	 */
-	public async getServerChecks(id?: number): Promise<Servercheck | Servercheck[]> {
-		if (id !== undefined) {
-			const server = this.servers.filter(s=>s.id===id)[0];
-			if (!server) {
+	public async getServerChecks(server?: number | ResponseServer): Promise<Servercheck | Servercheck[]> {
+		if (server !== undefined) {
+			const id = typeof(server) === "number" ? server : server.id;
+			const srv = this.servers.find(s=>s.id===id);
+			if (!srv) {
 				throw new Error(`no such server: #${id}`);
 			}
-			return serverCheck(server);
+			return serverCheck(srv);
 		}
 		return this.servers.map(serverCheck);
 	}
@@ -251,9 +252,9 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 		if (idOrName !== undefined) {
 			let status;
 			if (typeof(idOrName) === "number") {
-				status = this.statuses.filter(s=>s.id===idOrName)[0];
+				status = this.statuses.find(s=>s.id===idOrName);
 			} else {
-				status = this.statuses.filter(s=>s.name===idOrName)[0];
+				status = this.statuses.find(s=>s.name===idOrName);
 			}
 			if (!status) {
 				throw new Error(`no such Status: ${idOrName}`);
@@ -270,16 +271,9 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 	 * @returns The 'response' property of the TO server's response. See TO API docs.
 	 */
 	public async queueUpdates(server: number | ResponseServer): Promise<{serverId: number; action: "queue"}> {
-		let id: number;
-		if (typeof server === "number") {
-			id = server;
-		} else if (!server.id) {
-			throw new Error("server has no id");
-		} else {
-			id = server.id;
-		}
+		const id = typeof(server) === "number" ? server : server.id;
 
-		const srv = this.servers.filter(s=>s.id===id)[0];
+		const srv = this.servers.find(s=>s.id===id);
 		if (!srv) {
 			throw new Error(`no such Server: #${id}`);
 		}
@@ -295,16 +289,9 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 	 * @returns The 'response' property of the TO server's response. See TO API docs.
 	 */
 	public async clearUpdates(server: number | ResponseServer): Promise<{serverId: number; action: "dequeue"}> {
-		let id: number;
-		if (typeof server === "number") {
-			id = server;
-		} else if (!server.id) {
-			throw new Error("server has no id");
-		} else {
-			id = server.id;
-		}
+		const id = typeof(server) === "number" ? server : server.id;
 
-		const srv = this.servers.filter(s=>s.id===id)[0];
+		const srv = this.servers.find(s=>s.id===id);
 		if (!srv) {
 			throw new Error(`no such Server: #${id}`);
 		}
@@ -316,36 +303,32 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 	/**
 	 * Updates a server's status.
 	 *
-	 * @param server Either the server that will have its status changed, or the integral, unique identifier thereof.
-	 * @param statusName The name of the status to which to set the server.
-	 * @param offlineReason The reason why the server was placed into a non-ONLINE or REPORTED status.
-	 * @returns Nothing.
+	 * @param server Either the server that will have its status changed, or the
+	 * integral, unique identifier thereof.
+	 * @param status The Status to which to set the server, or just its Name.
+	 * @param offlineReason The reason why the server was placed into a
+	 * non-ONLINE or REPORTED status.
 	 */
-	public async updateStatus(server: number | ResponseServer, statusName: string, offlineReason?: string): Promise<void> {
-		let id: number;
-		if (typeof server === "number") {
-			id = server;
-		} else if (!server.id) {
-			throw new Error("server has no id");
-		} else {
-			id = server.id;
-		}
+	public async updateServerStatus(
+		server: number | ResponseServer,
+		status: string | ResponseStatus,
+		offlineReason?: string
+	): Promise<void> {
+		const id = typeof(server) === "number" ? server : server.id;
 
 		const srv = this.servers.find(s=>s.id===id);
 		if (!srv) {
 			throw new Error(`no such Server: #${id}`);
 		}
 
-		const status = this.statuses.find(s=>s.name===statusName);
-		if (!status) {
+		const statusName = typeof(status) === "string" ? status : status.name;
+		const statusObj = this.statuses.find(s=>s.name===statusName);
+		if (!statusObj) {
 			throw new Error(`no such Status: '${statusName}'`);
-		}
-		if (status.id === undefined) {
-			throw new Error(`Status with name '${statusName} has no ID`);
 		}
 
 		srv.status = statusName;
-		srv.statusId = status.id;
+		srv.statusId = statusObj.id;
 		srv.offlineReason = offlineReason ?? null;
 	}
 
@@ -357,7 +340,7 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 	 */
 	public async createStatus(status: RequestStatus): Promise<ResponseStatus> {
 		const newStatus = {
-			description: status.description ? status.description : null,
+			description: status.description ?? null,
 			id: ++this.statusIdCounter,
 			lastUpdated: new Date(),
 			name: status.name
@@ -371,7 +354,7 @@ export class ServerService extends APITestingService implements ConcreteServerSe
 	 *
 	 * @param payload The Status as it is desired to be after updating.
 	 */
-	public async updateStatusDetail(payload: ResponseStatus): Promise<ResponseStatus> {
+	public async updateStatus(payload: ResponseStatus): Promise<ResponseStatus> {
 		const index = this.statuses.findIndex(u => u.id === payload.id);
 		if (index < 0) {
 			throw new Error(`no such status with id: ${payload.id}`);

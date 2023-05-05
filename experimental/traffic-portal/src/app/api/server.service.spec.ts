@@ -144,6 +144,12 @@ describe("ServerService", () => {
 			await expectAsync(resp).toBeResolvedTo(server);
 		});
 
+		it("throws an error for invalid server update method call signatures", async () => {
+			const resp = (service as {updateServer: (id: number) => Promise<ResponseServer>}).updateServer(server.id);
+			httpTestingController.expectNone({method: "PUT"});
+			await expectAsync(resp).toBeRejected();
+		});
+
 		it("updates a server", async ()  => {
 			const resp = service.updateServer(server);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}`);
@@ -211,7 +217,7 @@ describe("ServerService", () => {
 			await expectAsync(responseP).toBeRejected();
 		});
 		it("updates a server's status", async () => {
-			const responseP = service.updateStatus(server, status);
+			const responseP = service.updateServerStatus(server, status);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}/status`);
 			expect(req.request.method).toBe("PUT");
 			// We specifically don't care whether the offline reason truly isn't
@@ -223,7 +229,7 @@ describe("ServerService", () => {
 		});
 		it("updates a server's status with an offlineReason", async () => {
 			const offlineReason = "because I told you to";
-			const responseP = service.updateStatus(server.id, status.name, offlineReason);
+			const responseP = service.updateServerStatus(server.id, status.name, offlineReason);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}/status`);
 			expect(req.request.method).toBe("PUT");
 			expect(req.request.body).toEqual({offlineReason, status: status.name});
@@ -239,7 +245,7 @@ describe("ServerService", () => {
 			await expectAsync(responseP).toBeResolvedTo(status);
 		});
 		it("updates an existing status", async () => {
-			const responseP = service.updateStatusDetail(status);
+			const responseP = service.updateStatus(status);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/statuses/${status.id}`);
 			expect(req.request.method).toBe("PUT");
 			expect(req.request.body).toEqual(status);
