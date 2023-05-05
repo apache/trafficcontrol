@@ -119,10 +119,11 @@ export class InvalidationJobService extends APITestingService implements Concret
 	/**
 	 * Deletes a Job.
 	 *
-	 * @param id The ID of the Job to delete.
+	 * @param job The Job to be deleted, or just its ID..
 	 * @returns The deleted Job.
 	 */
-	public async deleteInvalidationJob(id: number): Promise<ResponseInvalidationJob> {
+	public async deleteInvalidationJob(job: number | ResponseInvalidationJob): Promise<ResponseInvalidationJob> {
+		const id = typeof(job) === "number" ? job : job.id;
 		const idx = this.jobs.findIndex(j=>j.id===id);
 		if (idx < 0) {
 			throw new Error(`no such Job: #${id}`);
