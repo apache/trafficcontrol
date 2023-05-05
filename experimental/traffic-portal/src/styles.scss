@@ -22,6 +22,7 @@
 // Include the common styles for Angular Material. We include this here so that you only
 // have to load a single css file for Angular Material in your app.
 // Be sure that you only ever include this mixin once!
+@include mat.all-component-typographies();
 @include mat.core();
 
 // Define the default theme
@@ -40,7 +41,8 @@ $traffic-portal-theme: mat.define-light-theme((
 
 $traffic-portal-theme: set-ag-grid($traffic-portal-theme, (
 	odd-row-background-color: map-get(mat.$gray-palette,100),
-	borders: true,
+	row-border-color: #e2e2e2,
+	border-color: #e2e2e2
 ));
 $traffic-portal-theme: add-extra-colors($traffic-portal-theme, (
 	success: $traffic-portal-success,
@@ -98,7 +100,7 @@ body {
 	overflow-x: hidden;
 }
 
-.mat-button-base {
+.mat-mdc-button-base {
 	// cursor: pointer;
 	text-transform: uppercase;
 }
@@ -147,7 +149,7 @@ button {
 
 }
 
-.page-fab, .page-fab.mat-fab {
+.page-fab, .page-fab.mat-mdc-fab {
 	position: fixed;
 	bottom: 16px;
 	right: 16px;
@@ -157,7 +159,7 @@ abbr[title] {
 	cursor: help;
 }
 
-form mat-hint.mat-hint.input-warning {
+form mat-hint.mat-mdc-form-field-hint.input-warning {
 	color: #ff9800;
 	font-weight: bold;
 	font-size: x-small;

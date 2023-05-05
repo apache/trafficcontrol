@@ -16,7 +16,7 @@
 	margin: auto;
 }
 
-mat-card {
+.mat-mdc-card {
 	width: fit-content;
 	min-width: 50%;
 	margin: 1em auto;
@@ -38,14 +38,14 @@ mat-card {
 }
 // Low-res monitors
 @media(max-width: 1230px) {
-	mat-card > div {
+	.mat-mdc-card > div {
 		width: 75%;
 	}
 }
 
 // Anything less than this is probably a phone
 @media(max-width: 630px) {
-	mat-card > div {
+	.mat-mdc-card > div {
 		width: 75%;
 		margin: auto;
 		position: fixed;
@@ -59,7 +59,7 @@ mat-card {
 }
 
 @media(max-width: 480px) {
-	mat-card > div {
+	.mat-mdc-card > div {
 		left: 7px;
 		width: calc(100vw - 4em);
 	}

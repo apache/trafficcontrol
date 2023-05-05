@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card>
+<mat-card appearance="outlined">
 	<tp-loading *ngIf="!server"></tp-loading>
 	<mat-card-content *ngIf="server">
 		<div class="actions-container" *ngIf="!isNew">
@@ -189,7 +189,7 @@ limitations under the License.
 				</div>
 			</fieldset>
 			<div class="buttons">
-				<button mat-raised-button>Submit</button>
+				<button mat-raised-button type="submit">Submit</button>
 			</div>
 		</form>
 	</mat-card-content>

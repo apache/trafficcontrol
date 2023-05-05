@@ -172,5 +172,16 @@
                 "type": "str"
             }
         }
+    },
+    "server_capabilities": {
+        "type": "object",
+        "properties": {
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            }
+        }
     }
 }

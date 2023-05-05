@@ -16,7 +16,7 @@ limitations under the License.
 <mat-dialog-content>
 	<p>{{dialogData.message}}</p>
 	<mat-form-field>
-		<label>{{dialogData.label}}</label>
+		<mat-label>{{dialogData.label}}</mat-label>
 		<mat-select name="{{dialogData.label}}" [(ngModel)]="selected" required>
 			<mat-option *ngFor="let item of dialogData.collection" [value]="item.value">{{item.label}}</mat-option>
 		</mat-select>
@@ -26,6 +26,6 @@ limitations under the License.
 	</mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions>
-	<button mat-button [disabled]="!selected" [mat-dialog-close]="selected">Confirm</button>
-	<button mat-button [mat-dialog-close]="false">Cancel</button>
+	<button type="submit" mat-button [disabled]="!selected" [mat-dialog-close]="selected">Confirm</button>
+	<button type="button" mat-button [mat-dialog-close]="false">Cancel</button>
 </mat-dialog-actions>

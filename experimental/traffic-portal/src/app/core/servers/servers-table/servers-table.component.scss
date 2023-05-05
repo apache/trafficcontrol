@@ -19,13 +19,13 @@ ag-grid-angular {
 }
 
 @media(max-width: 1230px) {
-	mat-card > div {
+	.mat-mdc-card > div {
 		width: 75%
 	}
 }
 
 @media(max-width: 630px) {
-	mat-card > div {
+	.mat-mdc-card > div {
 		width: 75%;
 		margin: auto;
 		position: fixed;
@@ -39,7 +39,7 @@ ag-grid-angular {
 }
 
 @media(max-width: 480px) {
-	mat-card > div {
+	.mat-mdc-card > div {
 		left: 7px;
 		width: calc(100vw - 4em);
 	}

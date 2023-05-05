@@ -11,13 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-mat-dialog-actions {
+.mat-mdc-dialog-actions {
 	display: inline-flex;
 	justify-content: space-between;
 	width: 100%;
 }
 
-mat-dialog-content {
+.mat-mdc-dialog-content {
 	display: grid;
 	grid-template-areas: "a a"
 	                     "b c";
@@ -36,7 +36,7 @@ mat-dialog-content {
 }
 
 @media(max-width: 630px) {
-	mat-dialog-content {
+	.mat-mdc-dialog-content {
 		grid-template-areas: "a"
 		                     "b"
 		                     "c";

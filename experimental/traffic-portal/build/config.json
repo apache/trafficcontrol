@@ -1,9 +1,10 @@
 {
-  "insecure": false,
-  "port": 443,
-  "trafficOps": "https://localhost:6443",
-  "useSSL": true,
-  "certPath": "/server.crt",
-  "keyPath": "/server.key",
-  "browserFolder": "/opt/traffic-portal/browser"
+	"insecure": false,
+	"port": 443,
+	"trafficOps": "https://localhost:6443",
+	"useSSL": true,
+	"certificateAuthPaths": [],
+	"certPath": "/server.crt",
+	"keyPath": "/server.key",
+	"browserFolder": "/opt/traffic-portal/browser"
 }

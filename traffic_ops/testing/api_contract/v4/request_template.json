@@ -50,5 +50,10 @@
 			"name": "test",
 			"parentId": 1
 		}
+	],
+	"server_capabilities": [
+		{
+			"name": "RAM"
+		}
 	]
 }

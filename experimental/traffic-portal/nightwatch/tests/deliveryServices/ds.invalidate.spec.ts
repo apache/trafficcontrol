@@ -38,7 +38,7 @@ describe("DS Invalidation Jobs Spec", () => {
 		await browser.waitForElementVisible("tp-new-invalidation-job-dialog")
 			.assert.valueEquals("input[name='startDate']", startDate.toLocaleDateString())
 			.setValue("input[name='regexp']", "/invalidateMe")
-			.click("button#submit");
+			.click("button[type=submit]");
 		await common
 			.assert.textContains("@snackbarEle", "created")
 			.click("simple-snack-bar button");
@@ -51,7 +51,7 @@ describe("DS Invalidation Jobs Spec", () => {
 			.assert.valueEquals("input[name='startDate']", startDate.toLocaleDateString())
 			.assert.valueEquals("input[name='regexp']", "invalidateMe")
 			.setValue("input[name='regexp']", "/invalidateMe2")
-			.click("button#submit");
+			.click("button[type=submit]");
 		await common
 			.assert.textContains("@snackbarEle", "created")
 			.click("simple-snack-bar button");

@@ -65,7 +65,7 @@ Chart.plugins.register({
 		ResetPasswordDialogComponent
 	],
 	imports: [
-		BrowserModule.withServerTransition({ appId: "serverApp" }),
+		BrowserModule.withServerTransition({appId: "serverApp"}),
 		BrowserAnimationsModule,
 		AppRoutingModule,
 		HttpClientModule,

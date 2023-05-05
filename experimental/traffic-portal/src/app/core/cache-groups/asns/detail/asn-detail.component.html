@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card>
+<mat-card appearance="outlined">
 	<tp-loading *ngIf="!asn"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="asn">
 		<mat-card-content>
@@ -26,7 +26,7 @@ limitations under the License.
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Cache Group</mat-label>
-				<mat-select name="cachegroup"[(ngModel)]="asn.cachegroupId" required>
+				<mat-select name="cachegroup" [(ngModel)]="asn.cachegroupId" required>
 					<mat-option *ngFor="let cachegroup of cachegroups" [value]="cachegroup.id">{{cachegroup.name}}</mat-option>
 				</mat-select>
 			</mat-form-field>

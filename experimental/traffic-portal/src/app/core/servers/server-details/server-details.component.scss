@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 
-.mat-card {
+.mat-mdc-card {
 	width: fit-content;
 	margin: 15px auto auto;
 	min-width: 685px;
@@ -108,7 +108,7 @@ form {
 				margin-left: 5px;
 			}
 
-			mat-checkbox {
+			.mat-mdc-checkbox {
 				margin: auto;
 			}
 		}
