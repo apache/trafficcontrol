@@ -70,6 +70,7 @@ import { UserService as TestingUserService } from "./user.service";
 		TestingCDNService,
 		TestingChangeLogsService,
 		TestingMiscAPIsService,
+		TestingPhysicalLocationService,
 		TestingServerService,
 	]
 })

@@ -24,7 +24,7 @@ import { APITestingService } from "./base-api.service";
 @Injectable()
 export class PhysicalLocationService extends APITestingService implements ConcretePhysicalLocationService {
 	private lastID = 1;
-	private readonly physicalLocations: Array<ResponsePhysicalLocation> = [{
+	public readonly physicalLocations: Array<ResponsePhysicalLocation> = [{
 		address: "street",
 		city: "city",
 		comments: null,
