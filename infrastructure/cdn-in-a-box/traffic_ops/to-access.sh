@@ -36,6 +36,7 @@ export TP2_FQDN="$TP2_HOST.$INFRA_FQDN"
 export TR_FQDN="$TR_HOST.$INFRA_FQDN"
 export TS_FQDN="$TS_HOST.$INFRA_FQDN"
 export TV_FQDN="$TV_HOST.$INFRA_FQDN"
+export TCH_FQDN="$TCH_HOST.$INFRA_FQDN"
 
 export TO_URL=${TO_URL:-https://$TO_FQDN:$TO_PORT}
 export TO_USER=${TO_USER:-$TO_ADMIN_USER}
@@ -228,6 +229,11 @@ to-enroll() {
 		"tm" )
 			export MY_TYPE="RASCAL"
 			export MY_PROFILE="RASCAL-Traffic_Monitor"
+			export MY_STATUS="ONLINE"
+			;;
+		"tchealthclient" )
+			export MY_TYPE="HEALTH"
+			export MY_PROFILE="TC_HEALTH_CLIENT"
 			export MY_STATUS="ONLINE"
 			;;
 		"to" )

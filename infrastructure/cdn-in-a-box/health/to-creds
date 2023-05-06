@@ -1,0 +1,10 @@
+# This file is controlled by ansible role /opt/ansible/local/playbooks/roles/crontab
+# path in cdn-in-a-box: infrastructure/ansible/roles/traffic_ops/tasks/main.yml, might need to update main
+# These are staging to-creds from: cdn-ec-bad-321.gambrills.md.bad.comcast.net
+# export TO_URL="https://trafficops.staging.cdnlab.comcast.net"
+# export TO_USER="syncds"
+# export TO_PASS="ahdee>Fi6iFap9tophaikiew@e"
+
+export TO_URL="https://trafficops.staging.cdnlab.comcast.net"
+export TO_USER="syncds"
+export TO_PASS="ahdee>Fi6iFap9tophaikiew@e"

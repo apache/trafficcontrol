@@ -122,6 +122,14 @@ RUN rpm -Uvh /$(basename $ORT_RPM) &&\
     rm /$(basename $ORT_RPM)
 CMD /run.sh
 
+ARG TCH_RPM=infrastructure/cdn-in-a-box/health/trafficcontrol-health-client.rpm 
+COPY $TCH_RPM /
+RUN rpm -Uvh /$(basename $TCH_RPM) &&\
+    rm /$(basename $TCH_RPM)
+
+ADD tc-health-client/tc-health-client.service /usr/lib/systemd/system
+COPY infrastructure/cdn-in-a-box/health/to-creds /etc/to-creds
+
 FROM common-traffic-server-dependencies AS get-delve
 RUN dnf -y install golang && \
     go install github.com/go-delve/delve/cmd/dlv@latest
