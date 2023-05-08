@@ -66,10 +66,6 @@ export class ServerDetailsComponent implements OnInit {
 	 */
 	public validGatewayPattern = IP;
 	/**
-	 * Tracks whether network interface details should be hidden.
-	 */
-	public hideInterfaces = false;
-	/**
 	 * Icon for adding to a collection.
 	 */
 	public addIcon = faPlus;

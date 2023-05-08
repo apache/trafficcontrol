@@ -76,7 +76,6 @@ export async function getColumnState(this: TableSectionCommands, column: string)
 	const selector = `input[type='checkbox'][name='${column}']`;
 	await this.click(columnMenuBtnSelector);
 	const selected = await browser.isSelected(selector);
-	// The types are lying, this fails without the `=== true`
 	return Promise.resolve(selected);
 }
 

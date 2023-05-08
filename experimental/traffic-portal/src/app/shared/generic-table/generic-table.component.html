@@ -37,10 +37,10 @@ limitations under the License.
 			<fa-icon [icon]="caretIcon" [ngClass]="{'rotate': extraTrigger.menuOpen}" class="caret"></fa-icon>
 		</button>
 		<mat-menu #extraMenu="matMenu">
+			<button mat-menu-item type="button" *ngFor="let btn of moreMenuButtons" (click)="emitMoreButtonAction(btn.action)">{{btn.text}}</button>
+			<mat-divider></mat-divider>
 			<button mat-menu-item type="button" (click)="download()" title="save as CSV">Export Grid</button>
 			<button mat-menu-item type="button" (click)="gridAPI.sizeColumnsToFit()">Resize</button>
-			<mat-divider></mat-divider>
-			<button mat-menu-item type="button" *ngFor="let btn of moreMenuButtons" (click)="emitMoreButtonAction(btn.action)">{{btn.text}}</button>
 		</mat-menu>
 	</div>
 </div>
