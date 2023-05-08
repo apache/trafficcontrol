@@ -18,17 +18,17 @@ import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
+import {ProfileService} from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { ParameterDetailComponent } from "src/app/core/parameters/detail/parameter-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import { ParameterService } from "../../../api";
 
 describe("ParameterDetailComponent", () => {
 	let component: ParameterDetailComponent;
 	let fixture: ComponentFixture<ParameterDetailComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
-	let service: ParameterService;
+	let service: ProfileService;
 
 	const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
@@ -42,7 +42,7 @@ describe("ParameterDetailComponent", () => {
 		route = TestBed.inject(ActivatedRoute);
 		paramMap = spyOn(route.snapshot.paramMap, "get");
 		paramMap.and.returnValue(null);
-		service = TestBed.inject(ParameterService);
+		service = TestBed.inject(ProfileService);
 		fixture = TestBed.createComponent(ParameterDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
@@ -67,17 +67,6 @@ describe("ParameterDetailComponent", () => {
 	});
 
 	it("existing parameter", async () => {
-		// paramMap.and.returnValue("1");
-		//
-		// fixture = TestBed.createComponent(ParameterDetailComponent);
-		// component = fixture.componentInstance;
-		// fixture.detectChanges();
-		// await fixture.whenStable();
-		// expect(paramMap).toHaveBeenCalled();
-		// expect(component.parameter).not.toBeNull();
-		// expect(component.parameter.name).toBe("param1");
-		// expect(component.new).toBeFalse();
-
 		const id = 1;
 		paramMap.and.returnValue(id);
 		const parameter = await service.getParameters(id);

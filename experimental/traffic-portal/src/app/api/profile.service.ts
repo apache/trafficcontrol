@@ -14,7 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import {RequestProfile, ResponseParameter, ResponseProfile} from "trafficops-types";
+import {RequestParameter, RequestProfile, ResponseParameter, ResponseProfile} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -74,7 +74,8 @@ export class ProfileService extends APIService {
 	/**
 	 * Retrieves Profiles associated with a Parameter from the API.
 	 *
-	 * @param p Either a {@link ResponseParameter} or an integral, unique identifier of a Parameter, for which the Profiles are to be retrieved.
+	 * @param p Either a {@link ResponseParameter} or an integral, unique identifier of a Parameter, for which the
+	 * Profiles are to be retrieved.
 	 * @returns The requested Profile(s).
 	 */
 	public async getProfilesByParam(p: number| ResponseParameter): Promise<Array<ResponseProfile>> {
@@ -128,4 +129,64 @@ export class ProfileService extends APIService {
 		return this.delete<ResponseProfile>(`profiles/${id}`).toPromise();
 	}
 
+	public async getParameters(idOrName: number | string): Promise<ResponseParameter>;
+	public async getParameters(): Promise<Array<ResponseParameter>>;
+	/**
+	 * Retrieves Parameters from the API.
+	 *
+	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Parameter to retrieve,
+	 * or its name (string).
+	 * @returns The requested Parameter(s).
+	 */
+	public async getParameters(idOrName?: number | string): Promise<Array<ResponseParameter> | ResponseParameter> {
+		const path = "parameters";
+		if (idOrName !== undefined) {
+			let params;
+			switch (typeof idOrName) {
+				case "number":
+					params = {id: idOrName};
+					break;
+				case "string":
+					params = {name: idOrName};
+			}
+			const r = await this.get<[ResponseParameter]>(path, undefined, params).toPromise();
+			if (r.length !== 1) {
+				throw new Error(`Traffic Ops responded with ${r.length} Types by identifier ${idOrName}`);
+			}
+			return r[0];
+		}
+		return this.get<Array<ResponseParameter>>(path).toPromise();
+	}
+
+	/**
+	 * Deletes an existing parameter.
+	 *
+	 * @param typeOrId Id of the parameter to delete.
+	 * @returns The deleted parameter.
+	 */
+	public async deleteParameter(typeOrId: number | ResponseParameter): Promise<void> {
+		const id = typeof(typeOrId) === "number" ? typeOrId : typeOrId.id;
+		return this.delete(`parameters/${id}`).toPromise();
+	}
+
+	/**
+	 * Creates a new parameter.
+	 *
+	 * @param parameter The parameter to create.
+	 * @returns The created parameter.
+	 */
+	public async createParameter(parameter: RequestParameter): Promise<ResponseParameter> {
+		return this.post<ResponseParameter>("parameters", parameter).toPromise();
+	}
+
+	/**
+	 * Replaces the current definition of a parameter with the one given.
+	 *
+	 * @param parameter The new parameter.
+	 * @returns The updated parameter.
+	 */
+	public async updateParameter(parameter: ResponseParameter): Promise<ResponseParameter> {
+		const path = `parameters/${parameter.id}`;
+		return this.put<ResponseParameter>(path, parameter).toPromise();
+	}
 }

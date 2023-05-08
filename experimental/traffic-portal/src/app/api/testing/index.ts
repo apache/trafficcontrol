@@ -22,7 +22,6 @@ import {
 	DeliveryServiceService,
 	InvalidationJobService,
 	MiscAPIsService,
-	ParameterService,
 	PhysicalLocationService,
 	ProfileService,
 	ServerService,
@@ -36,7 +35,6 @@ import { ChangeLogsService as TestingChangeLogsService} from "./change-logs.serv
 import { DeliveryServiceService as TestingDeliveryServiceService } from "./delivery-service.service";
 import { InvalidationJobService as TestingInvalidationJobService } from "./invalidation-job.service";
 import { MiscAPIsService as TestingMiscAPIsService } from "./misc-apis.service";
-import { ParameterService as TestingParameterService } from "./parameter.service";
 import { PhysicalLocationService as TestingPhysicalLocationService } from "./physical-location.service";
 import { ProfileService as TestingProfileService } from "./profile.service";
 import { ServerService as TestingServerService } from "./server.service";
@@ -59,7 +57,6 @@ import { UserService as TestingUserService } from "./user.service";
 		{provide: DeliveryServiceService, useClass: TestingDeliveryServiceService},
 		{provide: InvalidationJobService, useClass: TestingInvalidationJobService},
 		{provide: MiscAPIsService, useClass: TestingMiscAPIsService},
-		{provide: ParameterService, useClass: TestingParameterService},
 		{provide: PhysicalLocationService, useClass: TestingPhysicalLocationService},
 		{provide: ProfileService, useClass: TestingProfileService},
 		{provide: ServerService, useClass: TestingServerService},

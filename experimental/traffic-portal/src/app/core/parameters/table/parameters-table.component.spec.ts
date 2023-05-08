@@ -18,7 +18,7 @@ import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { of } from "rxjs";
 
-import { ParameterService } from "src/app/api";
+import { ProfileService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { ParametersTableComponent } from "src/app/core/parameters/table/parameters-table.component";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
@@ -110,7 +110,7 @@ describe("ParametersTableComponent", () => {
 		expect(item.multiRow).toBeFalsy();
 		expect(item.disabled).toBeUndefined();
 
-		const api = TestBed.inject(ParameterService);
+		const api = TestBed.inject(ProfileService);
 		const spy = spyOn(api, "deleteParameter").and.callThrough();
 		expect(spy).not.toHaveBeenCalled();
 

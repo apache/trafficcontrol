@@ -15,13 +15,13 @@
 import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
+import { MatSlideToggleChange } from "@angular/material/slide-toggle";
 import { ActivatedRoute } from "@angular/router";
 import { ResponseParameter } from "trafficops-types";
 
-import { ParameterService } from "src/app/api";
+import { ProfileService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import { MatSlideToggleChange } from "@angular/material/slide-toggle";
 
 /**
  * ParameterDetailsComponent is the controller for the parameter add/edit form.
@@ -39,7 +39,7 @@ export class ParameterDetailComponent implements OnInit {
 		{ label: "false", value: false }
 	];
 
-	constructor(private readonly route: ActivatedRoute, private readonly parameterService: ParameterService,
+	constructor(private readonly route: ActivatedRoute, private readonly profileService: ProfileService,
 		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService) { }
 
 	/**
@@ -73,7 +73,7 @@ export class ParameterDetailComponent implements OnInit {
 			return;
 		}
 
-		this.parameter = await this.parameterService.getParameters(numID);
+		this.parameter = await this.profileService.getParameters(numID);
 		this.navSvc.headerTitle.next(`Parameter: ${this.parameter.name} (${this.parameter.id})`);
 	}
 
@@ -91,7 +91,7 @@ export class ParameterDetailComponent implements OnInit {
 		});
 		ref.afterClosed().subscribe(result => {
 			if(result) {
-				this.parameterService.deleteParameter(this.parameter.id);
+				this.profileService.deleteParameter(this.parameter.id);
 				this.location.back();
 			}
 		});
@@ -106,18 +106,23 @@ export class ParameterDetailComponent implements OnInit {
 		e.preventDefault();
 		e.stopPropagation();
 		if(this.new) {
-			this.parameter = await this.parameterService.createParameter(this.parameter);
+			this.parameter = await this.profileService.createParameter(this.parameter);
 			this.new = false;
 		} else {
-			this.parameter = await this.parameterService.updateParameter(this.parameter);
+			this.parameter = await this.profileService.updateParameter(this.parameter);
 		}
 	}
 
-	public async setValue(e: MatSlideToggleChange){
+	/**
+	 * Sets the value of a parameter, corresponding to the value of the toggle bar
+	 *
+	 * @param e MatSlideToggleChange event.
+	 */
+	public async setValue(e: MatSlideToggleChange): Promise<void> {
 		if(e.checked){
-			this.parameter.secure = true
+			this.parameter.secure = true;
 		}else{
-			this.parameter.secure = false
+			this.parameter.secure = false;
 		}
 	}
 }

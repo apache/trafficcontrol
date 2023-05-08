@@ -13,7 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-import { ProfileType, RequestProfile, type ResponseProfile } from "trafficops-types";
+import {ProfileType, RequestParameter, RequestProfile, ResponseParameter, type ResponseProfile} from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
@@ -220,4 +220,76 @@ export class ProfileService {
 		return this.profiles.splice(index, 1)[0];
 	}
 
+	private lastParamID = 20;
+	private readonly parameters = [
+		{
+			configFile: "cfg.txt",
+			id: 1,
+			lastUpdated: new Date(),
+			name: "param1",
+			profiles: [],
+			secure: false,
+			value: "10"
+		}
+	];
+
+	public async getParameters(idOrName: number | string): Promise<ResponseParameter>;
+	public async getParameters(): Promise<Array<ResponseParameter>>;
+	/**
+	 * Gets one or all Parameters from Traffic Ops
+	 *
+	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single parameter to be returned.
+	 * @returns The requested parameter(s).
+	 */
+	public async getParameters(idOrName?: number | string): Promise<ResponseParameter | Array<ResponseParameter>> {
+		if (idOrName !== undefined) {
+			let parameter;
+			switch (typeof idOrName) {
+				case "string":
+					parameter = this.parameters.filter(t=>t.name === idOrName)[0];
+					break;
+				case "number":
+					parameter = this.parameters.filter(t=>t.id === idOrName)[0];
+			}
+			if (!parameter) {
+				throw new Error(`no such Parameter: ${idOrName}`);
+			}
+			return parameter;
+		}
+		return this.parameters;
+	}
+
+	/**
+	 * Deletes an existing parameter.
+	 *
+	 * @param id Id of the parameter to delete.
+	 * @returns The deleted parameter.
+	 */
+	public async deleteParameter(id: number): Promise<ResponseParameter> {
+		const index = this.parameters.findIndex(t => t.id === id);
+		if (index === -1) {
+			throw new Error(`no such Parameter: ${id}`);
+		}
+		return this.parameters.splice(index, 1)[0];
+	}
+
+	/**
+	 * Creates a new parameter.
+	 *
+	 * @param parameter The parameter to create.
+	 * @returns The created parameter.
+	 */
+	public async createParameter(parameter: RequestParameter): Promise<ResponseParameter> {
+		const t = {
+			...parameter,
+			configFile: "cfg.txt",
+			id: ++this.lastParamID,
+			lastUpdated: new Date(),
+			profiles: [],
+			secure: false,
+			value: "100"
+		};
+		this.parameters.push(t);
+		return t;
+	}
 }

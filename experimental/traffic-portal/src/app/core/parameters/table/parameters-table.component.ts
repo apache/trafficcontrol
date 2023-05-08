@@ -19,7 +19,7 @@ import { ActivatedRoute, Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import { ResponseParameter } from "trafficops-types";
 
-import { ParameterService } from "src/app/api";
+import { ProfileService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
@@ -107,7 +107,7 @@ export class ParametersTableComponent implements OnInit {
 	public fuzzControl = new FormControl<string>("", {nonNullable: true});
 
 	constructor(private readonly route: ActivatedRoute, private readonly navSvc: NavigationService,
-		private readonly api: ParameterService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
+		private readonly api: ProfileService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.parameters = this.api.getParameters();
 		this.navSvc.headerTitle.next("Parameters");
