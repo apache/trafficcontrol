@@ -157,9 +157,12 @@ export class NavigationService {
 						{
 							href: "/core/parameters",
 							name: "Parameters"
+						},
+						{
+							href: "/core/profiles",
+							name: "Profiles"
 						}
 					],
-					href: "/core/profiles",
 					name: "Profiles"
 				}
 			],

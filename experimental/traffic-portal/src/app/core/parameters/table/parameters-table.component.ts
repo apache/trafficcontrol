@@ -15,7 +15,7 @@
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import { ResponseParameter } from "trafficops-types";
 
@@ -93,9 +93,10 @@ export class ParametersTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			href: (selectedRow: ResponseParameter): string => `/core/profiles/param/${selectedRow.id}`,
+			href: "/core/profiles",
 			name: "View Profiles",
 			newTab: true,
+			queryParams: (selectedRow: ResponseParameter): Params => ({hasParameter: selectedRow.id}),
 		}
 	];
 

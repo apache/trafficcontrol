@@ -109,7 +109,6 @@ export const ROUTES: Routes = [
 	{ component: ISOGenerationFormComponent, path: "iso-gen"},
 	{ component: ProfileDetailComponent, path: "profiles/:id"},
 	{ component: ProfileTableComponent, path: "profiles"},
-	{ component: ProfileTableComponent, path: "profiles/param/:id"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**

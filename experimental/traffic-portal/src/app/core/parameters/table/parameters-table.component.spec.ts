@@ -174,11 +174,19 @@ describe("ParametersTableComponent", () => {
 		if (isAction(item)) {
 			return fail("expected a link, not an action");
 		}
-		if (typeof(item.href) !== "function") {
-			return fail(`'View Profiles' context menu item should use a function to determine href, instead uses: ${item.href}`);
+		if (!item.href) {
+			return fail("missing 'href' property");
 		}
-		expect(item.href(testParameter)).toBe(String("/core/profiles/param/"+ String(testParameter.id)));
-		expect(item.queryParams).toBeUndefined();
+		if (typeof(item.href) !== "string") {
+			return fail("'View Profiles' context menu item should use a static string to determine href, instead uses a function");
+		}
+		expect(item.href).toBe("/core/profiles");
+		if (typeof(item.queryParams) !== "function") {
+			return fail(
+				`'View Profiles' context menu item should use a function to determine query params, instead uses: ${item.queryParams}`
+			);
+		}
+		expect(item.queryParams(testParameter)).toEqual({hasParameter: testParameter.id});
 		expect(item.fragment).toBeUndefined();
 		expect(item.newTab).toBeTrue();
 	});
