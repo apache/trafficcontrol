@@ -18,10 +18,18 @@ import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
 import { RolesTableComponent } from "src/app/core/users/roles/table/roles-table.component";
+import { isAction } from "../../../../shared/generic-table/generic-table.component";
+import { ResponseRole } from "trafficops-types";
 
 describe("RolesTableComponent", () => {
 	let component: RolesTableComponent;
 	let fixture: ComponentFixture<RolesTableComponent>;
+
+	const role: ResponseRole = {
+		description: "Test Role",
+		lastUpdated: new Date(),
+		name: "test"
+	};
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
@@ -64,5 +72,62 @@ describe("RolesTableComponent", () => {
 			action: component.contextMenuItems[0].name,
 			data: {description: "Can only read", lastUpdated: new Date(), name: "test"}
 		})).not.toThrow();
+	});
+
+	it("builds an 'Open in New Tab' link", () => {
+		const item = component.contextMenuItems.find(i => i.name === "Open in New Tab");
+		if (!item) {
+			return fail("missing 'Open in New Tab' context menu item");
+		}
+
+		if (isAction(item)) {
+			return fail("incorrect type for 'Open in New Tab' menu item. Expected an action, not a link");
+		}
+
+		expect(item.newTab).toBe(true);
+
+		if (typeof(item.href) !== "function") {
+			return fail("link should be built from data, not static");
+		}
+
+		expect(item.href(role)).toBe(role.name);
+	});
+
+	it("has context menu items that aren't implemented yet", () => {
+		let item = component.contextMenuItems.find(i => i.name === "Edit");
+		if (!item) {
+			return fail("missing 'Edit' context menu item");
+		}
+		if (isAction(item)) {
+			return fail("incorrect type for 'Edit' menu item. Expected an action, not a link");
+		}
+		if (typeof(item.disabled) !== "function") {
+			return fail("'Edit' context menu item should be disabled, but no disabled function is defined");
+		}
+	});
+
+	it("generate 'View Users' context menu item href", () => {
+		const item = component.contextMenuItems.find(i => i.name === "View Users");
+		if (!item) {
+			return fail("missing 'View Users' context menu item");
+		}
+		if (isAction(item)) {
+			return fail("incorrect type for 'View Users' menu item. Expected an action, not a link");
+		}
+		if (!item.href) {
+			return fail("missing 'href' property");
+		}
+		if (typeof(item.href) !== "string") {
+			return fail("'View Users' context menu item should use a static string to determine href, instead uses a function");
+		}
+		expect(item.href).toBe("/core/users");
+		if (typeof(item.queryParams) !== "function") {
+			return fail(
+				`'View Users' context menu item should use a function to determine query params, instead uses: ${item.queryParams}`
+			);
+		}
+		expect(item.queryParams(role)).toEqual({role: role.name});
+		expect(item.fragment).toBeUndefined();
+		expect(item.newTab).toBeFalsy();
 	});
 });

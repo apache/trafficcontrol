@@ -75,8 +75,9 @@ export class RolesTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented roles data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseRole>> = [
 		{
+			disabled: (): true => true,
 			href: (selectedRow: ResponseRole): string => `${selectedRow.name}`,
-			name: "View Role"
+			name: "Edit"
 		},
 		{
 			href: (selectedRow: ResponseRole): string => `${selectedRow.name}`,
@@ -86,7 +87,7 @@ export class RolesTableComponent implements OnInit {
 		{
 			href: "/core/users",
 			name: "View Users",
-			queryParams: (selectedRow: ResponseRole): Params => ({role: selectedRow.name})
+			queryParams: (selectedRow): Params => ({role: selectedRow.name})
 		},
 	];
 
