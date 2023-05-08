@@ -43,10 +43,6 @@ export class CapabilitiesComponent implements OnInit {
 			headerName: "Name"
 		},
 		{
-			field: "description",
-			headerName: "Description",
-		},
-		{
 			field: "lastUpdated",
 			headerName: "Last Updated",
 			hide: true
