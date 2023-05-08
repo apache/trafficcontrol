@@ -123,8 +123,7 @@ export class CDNTableComponent implements OnInit {
 			name: "Manage Delivery Services"
 		},
 		{
-			disabled: (): true => true,
-			href: (selectedRow): string => `/core/profiles?cdnName=${selectedRow.id}` ,
+			href: (selectedRow): string => `/core/profiles?cdnName=${selectedRow.name}` ,
 			name: "Manage Profiles"
 		},
 		{
