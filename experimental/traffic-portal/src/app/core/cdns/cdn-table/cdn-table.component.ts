@@ -229,10 +229,18 @@ export class CDNTableComponent implements OnInit {
 	public handleContextMenu(a: ContextMenuActionEvent<ResponseCDN>): void {
 		switch(a.action) {
 			case "queue":
-				this.queueUpdates(a.data as ResponseCDN);
+				if (Array.isArray(a.data)) {
+					console.error("cannot queue multiple cache groups at once:", a.data);
+					return;
+				}
+				this.queueUpdates(a.data);
 				break;
 			case "dequeue":
-				this.queueUpdates(a.data as ResponseCDN, false);
+				if (Array.isArray(a.data)) {
+					console.error("cannot dequeue multiple cache groups at once:", a.data);
+					return;
+				}
+				this.queueUpdates(a.data, false);
 				break;
 			case "delete":
 				if (Array.isArray(a.data)) {
