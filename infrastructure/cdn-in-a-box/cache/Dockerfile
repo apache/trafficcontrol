@@ -127,7 +127,8 @@ COPY $TCH_RPM /
 RUN rpm -Uvh /$(basename $TCH_RPM) &&\
     rm /$(basename $TCH_RPM)
 
-ADD tc-health-client/tc-health-client.service /usr/lib/systemd/system
+ADD infrastructure/cdn-in-a-box/health/tc-health-client.service /usr/lib/systemd/system
+COPY infrastructure/cdn-in-a-box/health/tc-health-client.json  /etc/trafficcontrol/tc-health-client.json
 COPY infrastructure/cdn-in-a-box/health/to-creds /etc/to-creds
 
 FROM common-traffic-server-dependencies AS get-delve
