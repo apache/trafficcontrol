@@ -128,7 +128,7 @@ export class CDNTableComponent implements OnInit {
 		},
 		{
 			disabled: (): true => true,
-			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/servers` ,
+			href: (selectedRow): string => `/core/servers?cdnName=${selectedRow.name}` ,
 			name: "Manage Servers"
 		},
 		{
