@@ -189,7 +189,7 @@ export class CDNTableComponent implements OnInit {
 		const action = queue ? "queue" : "dequeue";
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
 			data: {
-				message: `Are you sure you want to ${action} server updates for all the ${cdn.name} servers?`,
+				message: `Are you sure you want to ${action} server updates for all of the ${cdn.name} servers?`,
 				title,
 			}
 		});
