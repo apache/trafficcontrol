@@ -15,11 +15,11 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
+import { ResponseRole } from "trafficops-types";
 
 import { APITestingModule } from "src/app/api/testing";
 import { RolesTableComponent } from "src/app/core/users/roles/table/roles-table.component";
-import { isAction } from "../../../../shared/generic-table/generic-table.component";
-import { ResponseRole } from "trafficops-types";
+import { isAction } from "src/app/shared/generic-table/generic-table.component";
 
 describe("RolesTableComponent", () => {
 	let component: RolesTableComponent;
@@ -94,7 +94,7 @@ describe("RolesTableComponent", () => {
 	});
 
 	it("has context menu items that aren't implemented yet", () => {
-		let item = component.contextMenuItems.find(i => i.name === "Edit");
+		const item = component.contextMenuItems.find(i => i.name === "Edit");
 		if (!item) {
 			return fail("missing 'Edit' context menu item");
 		}
