@@ -14,7 +14,6 @@
 import { CommonModule } from "@angular/common";
 import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { NgModule } from "@angular/core";
-import { MatMenuModule } from "@angular/material/menu";
 import { RouterModule } from "@angular/router";
 
 import { AppUIModule } from "src/app/app.ui.module";
@@ -80,8 +79,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 	imports: [
 		AppUIModule,
 		CommonModule,
-		RouterModule,
-		MatMenuModule
+		RouterModule
 	],
 	providers: [
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor },

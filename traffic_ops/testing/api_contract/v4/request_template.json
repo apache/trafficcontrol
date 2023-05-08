@@ -44,7 +44,19 @@
 			"routingDisabled": true
 		}
 	],
-	"divisions": [
+	"tenants": [
+		{
+			"active": true,
+			"name": "test",
+			"parentId": 1
+		}
+	],
+	"server_capabilities": [
+		{
+			"name": "RAM"
+		}
+	],
+  "divisions": [
 		{
 			"name": "test"
 		}
@@ -54,6 +66,7 @@
 			"divisionName": "Quebec",
 			"division": 1,
 			"name": "Montreal"
-		}
-	]
-}
+    }
+   ]
+ }
+ 

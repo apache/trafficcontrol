@@ -11,16 +11,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-mat-card {
+.mat-mdc-card {
 	margin: 1em auto;
 	box-sizing: border-box;
 	width: 80%;
 	min-width: 350px;
-
-	mat-card-content {
+	.mat-mdc-card-content {
 		display: grid;
 		grid-template-columns: 1fr;
 		row-gap: 2em;
 		margin: 1em auto 50px;
+	}
+	.mat-mdc-card-actions .mdc-button {
+		margin: 0 8px;
 	}
 }

@@ -67,7 +67,7 @@
 							"budgets": [
 								{
 									"type": "initial",
-									"maximumWarning": "2mb",
+									"maximumWarning": "4mb",
 									"maximumError": "5mb"
 								},
 								{
@@ -175,7 +175,7 @@
 					"builder": "@nightwatch/schematics:nightwatch",
 					"options": {
 						"devServerTarget": "traffic-portal:serve",
-						"tsConfig": "./tsconfig.e2e.json",
+						"tsConfig": "./nightwatch/tsconfig.e2e.json",
 						"config": "./nightwatch/nightwatch.conf.js"
 					},
 					"configurations": {
@@ -188,7 +188,7 @@
 					"builder": "@nightwatch/schematics:nightwatch",
 					"options": {
 						"devServerTarget": "traffic-portal:serve",
-						"tsConfig": "./tsconfig.e2e.json",
+						"tsConfig": "./nightwatch/tsconfig.e2e.json",
 						"config": "./nightwatch/nightwatch.conf.js"
 					},
 					"configurations": {
@@ -198,6 +198,14 @@
 					}
 				}
 			}
+		}
+	},
+	"schematics": {
+		"@angular-eslint/schematics:application": {
+			"setParserOptionsProject": true
+		},
+		"@angular-eslint/schematics:library": {
+			"setParserOptionsProject": true
 		}
 	}
 }

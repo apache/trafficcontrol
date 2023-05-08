@@ -69,7 +69,7 @@ export class RegionsTableComponent implements OnInit {
 		{
 			field: "divisionName",
 			headerName: "Division",
-			valueGetter: ({data}: {data: ResponseRegion}): string => `${data.divisionName} (#${data.division})`
+			valueFormatter: ({data}: {data: ResponseRegion}): string => `${data.divisionName} (#${data.division})`
 		},
 		{
 			field: "id",

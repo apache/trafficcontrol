@@ -1,11 +1,5 @@
 package cdn
 
-import (
-	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,6 +18,12 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
 
 func TestGetStatsFromServiceInterface(t *testing.T) {
 	data1 := tc.ServerStats{

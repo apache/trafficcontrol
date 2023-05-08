@@ -117,7 +117,12 @@ export class NavigationService {
 			}, {
 				href: "/core/phys-locs",
 				name: "Physical Locations"
-			}, {
+			},
+			{
+				href: "/core/statuses",
+				name: "Statuses"
+			},
+			{
 				children: [{
 					href: "/core/cache-groups",
 					name: "Cache Groups"

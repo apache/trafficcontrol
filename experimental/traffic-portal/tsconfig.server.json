@@ -1,8 +1,7 @@
 {
 	"extends": "./tsconfig.app.json",
 	"compilerOptions": {
-		"outDir": "./out-tsc/server",
-		"target": "es2016",
+    "outDir": "./out-tsc/server",
 		"types": [
 			"node"
 		]

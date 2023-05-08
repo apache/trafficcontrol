@@ -12,14 +12,14 @@
 * limitations under the License.
 */
 
-mat-card {
+.mat-mdc-card {
 	width: fit-content;
 	margin: 15px auto auto;
 	min-width: 685px;
 }
 
 
-mat-card-content {
+.mat-mdc-card-content {
 	display: grid;
 	grid-template-columns: 1fr 1fr 1fr;
 	grid-column-gap: 15px;

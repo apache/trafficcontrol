@@ -150,13 +150,46 @@
             }
         }
     },
+    "tenants": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "int"
+            },
+            "name": {
+                "type": "str"
+            },
+            "active": {
+                "type": "bool"
+            },
+            "parentId": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "parentName": {
+                "type": "str"
+            }
+        }
+    },
+    "server_capabilities": {
+        "type": "object",
+        "properties": {
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            }
+        }
     "divisions": {
         "type": "object",
         "properties": {
             "id": {
                 "type": "int"
             },
-            "lastUpdated": {
+             "lastUpdated": {
                 "type": "str"
             },
             "name": {
@@ -183,5 +216,5 @@
                 "type": "str"
             }
         }
-    }    
+    }   
 }
