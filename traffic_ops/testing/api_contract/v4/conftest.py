@@ -681,9 +681,9 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get server_capabilities data from a prerequisites file.
-  :returns: Sample POST data and the actual API response.
+  	:returns: Sample POST data and the actual API response.
 	"""
-  try:
+  	try:
 		server_capabilities = request_template_data[0]
 	except IndexError as e:
 		raise TypeError(
@@ -726,7 +726,7 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get divisions request template data from
 	request_template file.
-  :returns: Sample POST data and the actual API response.
+  	:returns: Sample POST data and the actual API response.
 	"""
 
 	try:
