@@ -219,7 +219,7 @@ class DeliveryServiceService {
 	 * @returns {Promise<DeliveryService[]>} The Delivery Services for which the identified server is responsible for serving content.
 	 */
 	async getServerDeliveryServices(serverID) {
-		const result = await this.$http.get(`${this.ENV.api.unstable}servers/${serverID}/deliveryservices`);
+		const result = await this.$http.get(`${this.ENV.api.next}servers/${serverID}/deliveryservices`);
 		return result.data.response;
 	}
 
