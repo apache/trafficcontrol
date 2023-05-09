@@ -635,7 +635,6 @@ def tenant_post_data(to_session: TOSession, request_template_data: list[JSONData
 		  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for tenants endpoint.
-
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get tenant request template from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
