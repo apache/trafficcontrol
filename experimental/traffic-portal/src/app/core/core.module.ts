@@ -48,6 +48,7 @@ import {
 } from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
 import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
+import { ProfileDetailComponent } from "./profiles/profile-detail/profile-detail.component";
 import { ProfileTableComponent } from "./profiles/profile-table/profile-table.component";
 import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
 import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
@@ -95,6 +96,7 @@ export const ROUTES: Routes = [
 	{ component: StatusesTableComponent, path: "statuses" },
 	{ component: StatusDetailsComponent, path: "statuses/:id" },
 	{ component: ISOGenerationFormComponent, path: "iso-gen"},
+	{ component: ProfileDetailComponent, path: "profiles/:id"},
 	{ component: ProfileTableComponent, path: "profiles"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
@@ -141,6 +143,7 @@ export const ROUTES: Routes = [
 		ISOGenerationFormComponent,
   		ProfileTableComponent,
 		CDNDetailComponent,
+  		ProfileDetailComponent,
 	],
 	exports: [],
 	imports: [

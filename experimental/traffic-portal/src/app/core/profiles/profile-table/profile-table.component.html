@@ -14,7 +14,7 @@ limitations under the License.
 
 <mat-card appearance="outlined" class="table-page-content">
 	<div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Profiles" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Profiles" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
 	</div>
 	<tp-generic-table
 		[data]="profiles | async"
@@ -25,3 +25,5 @@ limitations under the License.
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </mat-card>
+
+<a class="page-fab" mat-fab title="Create a new Profile" *ngIf="auth.hasPermission('PROFILE:CREATE')" routerLink="new"><mat-icon>add</mat-icon></a>
