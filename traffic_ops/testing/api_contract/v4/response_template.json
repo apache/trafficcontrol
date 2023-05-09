@@ -176,9 +176,6 @@
     "server_capabilities": {
         "type": "object",
         "properties": {
-            "id": {
-                "type": "int"
-            },
             "lastUpdated": {
                 "type": "str"
             },
