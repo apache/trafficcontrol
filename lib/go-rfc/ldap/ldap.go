@@ -1,4 +1,6 @@
-package cdn
+package ldap
+
+import "encoding/asn1"
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -19,30 +21,17 @@ package cdn
  * under the License.
  */
 
-import (
-	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
+const (
+	iTUTT              = 0
+	data               = 9
+	pSS                = 2342
+	uCL                = 19200300
+	pilot              = 100
+	pilotAttributeType = 1
+	uID                = 1
 )
 
-func TestGetStatsFromServiceInterface(t *testing.T) {
-	data1 := tc.ServerStats{
-		Interfaces: nil,
-		Stats: map[string][]tc.ResultStatVal{
-			"kbps": {
-				{Val: 24.5},
-			},
-			"maxKbps": {
-				{Val: 66.8},
-			},
-		},
-	}
-
-	kbps, maxKbps, err := getStats(data1)
-	if err != nil {
-		t.Errorf("Expected no error, but got %v", err.Error())
-	}
-	if kbps != 24.5 || maxKbps != 66.8 {
-		t.Errorf("Expected kbps to be 24.5, got %v; Expected maxKbps to be 66.8, got %v", kbps, maxKbps)
-	}
-}
+// OIDType is the Object Identifier value for UID used within LDAP
+// LDAP OID reference: https://ldap.com/ldap-oid-reference-guide/
+// 0.9.2342.19200300.100.1.1	uid	Attribute Type (see RFC 4519)
+var OIDType = asn1.ObjectIdentifier{iTUTT, data, pSS, uCL, pilot, pilotAttributeType, uID}

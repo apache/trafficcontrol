@@ -19,6 +19,7 @@
 %define TRAFFIC_OPS_USER trafops
 %define TRAFFIC_OPS_GROUP trafops
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
+%define TRAFFIC_OPS_ROOT_CERTIFICATES_DIR /var/log/traffic_ops
 %define debug_package %{nil}
 
 Summary:          Traffic Ops
@@ -191,7 +192,7 @@ fi
 %__chmod +x %{PACKAGEDIR}/install/bin/*
 /sbin/chkconfig --add traffic_ops
 
-%__mkdir -p %{TRAFFIC_OPS_LOG_DIR}
+%__mkdir -p %{TRAFFIC_OPS_LOG_DIR} TRAFFIC_OPS_ROOT_CERTIFICATES_DIR
 
 if [ -f /var/tmp/traffic_ops-backup.tar ]; then
 	echo -e "\nRestoring config files.\n"
@@ -214,7 +215,7 @@ if [ "$1" == "2" ]; then
 	echo -e "To stop Traffic Ops:   systemctl stop traffic_ops\n\n";
 fi
 /bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{PACKAGEDIR}
-/bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR}
+/bin/chown -R %{TRAFFIC_OPS_USER}:%{TRAFFIC_OPS_GROUP} %{TRAFFIC_OPS_LOG_DIR} TRAFFIC_OPS_ROOT_CERTIFICATES_DIR
 setcap cap_net_bind_service=+ep %{PACKAGEDIR}/app/bin/traffic_ops_golang
 
 %preun

@@ -142,7 +142,10 @@ const (
 	"secrets" : [
 		"mONKEYDOmONKEYSEE."
 	],
-	"inactivity_timeout" : 60
+	"inactivity_timeout" : 60,
+	"client_cert_auth" : {
+		"root_certs_dir" : "/etc/pki/tls/certs/"
+	}
 }
 `
 
@@ -259,11 +262,11 @@ func TestLoadConfig(t *testing.T) {
 	}
 
 	if cfg.CertPath != "/etc/pki/tls/certs/localhost.crt" {
-		t.Error("Expected KeyPath() == /etc/pki/tls/private/localhost.key")
+		t.Error("expected CertPath() == /etc/pki/tls/private/localhost.crt")
 	}
 
 	if cfg.KeyPath != "/etc/pki/tls/private/localhost.key" {
-		t.Error("Expected KeyPath() == /etc/pki/tls/private/localhost.key")
+		t.Error("expected KeyPath() == /etc/pki/tls/private/localhost.key")
 	}
 }
 

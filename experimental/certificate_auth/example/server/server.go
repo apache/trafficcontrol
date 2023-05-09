@@ -1,4 +1,4 @@
-package cdn
+package main
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -20,29 +20,37 @@ package cdn
  */
 
 import (
-	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"crypto/tls"
+	"fmt"
+	"log"
+	"net/http"
 )
 
-func TestGetStatsFromServiceInterface(t *testing.T) {
-	data1 := tc.ServerStats{
-		Interfaces: nil,
-		Stats: map[string][]tc.ResultStatVal{
-			"kbps": {
-				{Val: 24.5},
-			},
-			"maxKbps": {
-				{Val: 66.8},
-			},
-		},
+func main() {
+	handler := http.NewServeMux()
+	handler.HandleFunc("/", HelloHandler)
+
+	tlsConfig := &tls.Config{
+		ClientAuth: tls.RequestClientCert,
 	}
 
-	kbps, maxKbps, err := getStats(data1)
-	if err != nil {
-		t.Errorf("Expected no error, but got %v", err.Error())
+	server := http.Server{
+		Addr:      "server.local:8443",
+		Handler:   handler,
+		TLSConfig: tlsConfig,
 	}
-	if kbps != 24.5 || maxKbps != 66.8 {
-		t.Errorf("Expected kbps to be 24.5, got %v; Expected maxKbps to be 66.8, got %v", kbps, maxKbps)
+
+	if err := server.ListenAndServeTLS("../certs/server.crt.pem", "../certs/server.key.pem"); err != nil {
+		log.Fatalf("error listening to port: %v", err)
 	}
+}
+
+func HelloHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.TLS.PeerCertificates != nil {
+		clientCert := r.TLS.PeerCertificates[0]
+		fmt.Println("Client cert subject: ", clientCert.Subject)
+	}
+
+	fmt.Println("Hello")
 }
