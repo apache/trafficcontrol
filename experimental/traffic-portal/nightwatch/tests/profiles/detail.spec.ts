@@ -33,7 +33,7 @@ describe("Profile Detail Spec", () => {
 
 	it("New Profile", () => {
 		const page = browser.page.profiles.profileDetail();
-		browser.url(`${page.api.launchUrl}/core/types/new`, res => {
+		browser.url(`${page.api.launchUrl}/core/profiles/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@cdn")
