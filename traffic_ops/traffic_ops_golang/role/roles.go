@@ -645,9 +645,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning RoleV4 row: %w", err))
 			return
 		}
-		sort.Slice(roleV4.Permissions, func(i, j int) bool {
-			return roleV4.Permissions[i] < roleV4.Permissions[j]
-		})
+		sort.Strings(roleV4.Permissions)
 		rolesV4 = append(rolesV4, roleV4)
 	}
 	api.WriteResp(w, r, rolesV4)
