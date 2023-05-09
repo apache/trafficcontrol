@@ -36,15 +36,15 @@ describe("Profile Detail Spec", () => {
 		browser.url(`${page.api.launchUrl}/core/profiles/new`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
-				.assert.enabled("@cdn")
-				.assert.enabled("@description")
 				.assert.enabled("@name")
-				.assert.enabled("@routingDisabled")
-				.assert.enabled("@saveBtn")
+				.assert.enabled("@cdn")
 				.assert.enabled("@type")
+				.assert.enabled("@routingDisabled")
+				.assert.enabled("@description")
 				.assert.not.elementPresent("@id")
 				.assert.not.elementPresent("@lastUpdated")
-				.assert.valueEquals("@name", "");
+				.assert.enabled("@saveBtn")
+				.assert.valueEquals("@name", "")
 		});
 	});
 });
