@@ -895,21 +895,28 @@ func (dsp *parentDSParams) FillParentRetries(keys ParentConfigRetryKeys, dsParam
 	return hasValues, warnings
 }
 func getGoDirectOverRides(dsParams map[string]string, serverPlacement TopologyPlacement) *string {
-	if val, ok := dsParams[ParentConfigGoDirectEdge]; ok && serverPlacement.IsFirstCacheTier && !serverPlacement.IsLastCacheTier {
-		return &val
+	if serverPlacement.IsFirstCacheTier && !serverPlacement.IsLastCacheTier{
+		if val, ok := dsParams[ParentConfigGoDirectEdge]; ok {
+			return &val
+		}
+		if val, ok := dsParams[ParentConfigGoDirectFirst]; ok {
+			return &val
+		}
 	}
-	if val, ok := dsParams[ParentConfigGoDirectMid]; ok && serverPlacement.IsInnerCacheTier || serverPlacement.IsLastCacheTier {
-		return &val
+	if serverPlacement.IsInnerCacheTier {
+		if val, ok := dsParams[ParentConfigGoDirectInner]; ok {
+			return &val
+		}
+		if val, ok := dsParams[ParentConfigGoDirectMid]; ok {
+			return &val
+		}
 	}
-	if val, ok := dsParams[ParentConfigGoDirectFirst]; ok && serverPlacement.IsFirstCacheTier {
-		return &val
+	if serverPlacement.IsLastCacheTier {
+		if val, ok := dsParams[ParentConfigGoDirectLast]; ok && serverPlacement.IsLastCacheTier {
+			return &val
+		}
 	}
-	if val, ok := dsParams[ParentConfigGoDirectInner]; ok && serverPlacement.IsInnerCacheTier {
-		return &val
-	}
-	if val, ok := dsParams[ParentConfigGoDirectLast]; ok && serverPlacement.IsLastCacheTier {
-		return &val
-	}
+	
 	return nil
 }
 
