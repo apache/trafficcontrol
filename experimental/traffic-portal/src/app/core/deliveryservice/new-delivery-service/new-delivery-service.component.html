@@ -17,7 +17,7 @@ limitations under the License.
 			<h2>Step 1 - Origin Server</h2>
 			<div class="form-content">
 				<label for="origin">I want to create a Delivery Service for</label>
-				<input [formControl]="originURL" type="url" id="origin" name="origin" placeholder="this URL" autofocus title="Must be a URL (should start with `http://` or `https://`)" pattern="(https?|HTTPS?)://[a-zA-Z][a-zA-z0-9\-]*(\.[a-zA-Z][a-zA-z0-9\-]*)*(/[\w\.]+)*/?" required/>
+				<input [formControl]="originURL" type="url" id="origin" name="origin" placeholder="this URL" title="Must be a URL (should start with `http://` or `https://`)" pattern="(https?|HTTPS?)://[a-zA-Z][a-zA-z0-9\-]*(\.[a-zA-Z][a-zA-z0-9\-]*)*(/[\w\.]+)*/?" required/>
 				<label for="active-immediately">This Delivery Service should become active immediately</label>
 				<input [formControl]="activeImmediately" id="active-immediately" type="checkbox" name="active-immediately" title="This Delivery Service should become active immediately"/>
 			</div>
@@ -32,7 +32,7 @@ limitations under the License.
 			<h2>Step 2 - Meta Information</h2>
 			<div class="form-content">
 				<label for="displayName">This Delivery Service's name will be</label>
-				<input type="text" autofocus title="This will be the name of the Delivery Service as it appears on the 'Home' screen" name="displayName" id="displayName" (change)="updateDisplayName()" [formControl]="displayName" placeholder="{{deliveryService.displayName}}" required>
+				<input type="text" title="This will be the name of the Delivery Service as it appears on the 'Home' screen" name="displayName" id="displayName" (change)="updateDisplayName()" [formControl]="displayName" placeholder="{{deliveryService.displayName}}" required>
 				<label for="longDesc">Please briefly describe this Delivery Service's purpose and function</label>
 				<textarea id="longDesc" name="longDesc" title="No character limit - be as verbose as you like." required placeholder="e.g. This Delivery Service is for my website's image assets." [formControl]="description" rows="3"></textarea>
 			</div>

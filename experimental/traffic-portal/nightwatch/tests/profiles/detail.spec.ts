@@ -44,7 +44,7 @@ describe("Profile Detail Spec", () => {
 				.assert.not.elementPresent("@id")
 				.assert.not.elementPresent("@lastUpdated")
 				.assert.enabled("@saveBtn")
-				.assert.valueEquals("@name", "")
+				.assert.valueEquals("@name", "");
 		});
 	});
 });
