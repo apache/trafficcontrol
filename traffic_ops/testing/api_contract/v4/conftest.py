@@ -336,7 +336,7 @@ def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.Fixtur
 @pytest.fixture()
 def response_template_data(pytestconfig: pytest.Config
 			   ) -> dict[str, primitive | list[primitive |
-				      dict[str, object] | list[object]] | dict[object, object]]:
+					  dict[str, object] | list[object]] | dict[object, object]]:
 	"""
 	PyTest Fixture to store response template data for api endpoint.
 	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object.
@@ -572,7 +572,7 @@ def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 
 @pytest.fixture()
 def profile_post_data(to_session: TOSession, request_template_data: list[JSONData]
-		      ) -> dict[str, object]:
+			  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for profile endpoint.
 
@@ -681,9 +681,8 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get server_capabilities data from a prerequisites file.
-	:returns: Sample POST data and the actual API response.
+	  :returns: Sample POST data and the actual API response.
 	"""
-
 	try:
 		server_capabilities = request_template_data[0]
 	except IndexError as e:
@@ -715,4 +714,49 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 		return resp_obj
 	except IndexError:
 		logger.error("No server_capabilities response data from server_capabilities POST request.")
+		sys.exit(1)
+
+
+@pytest.fixture()
+def division_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for divisions endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get divisions request template data from
+	request_template file.
+	  :returns: Sample POST data and the actual API response.
+	"""
+
+	try:
+		division = request_template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			"malformed prerequisite data; no division present in 'division' array property") from e
+
+	if not isinstance(division, dict):
+		raise TypeError(
+			f"malformed prerequisite data; divisions must be objects, not '{type(division)}'")
+
+	# Return new post data and post response from division POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = division["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		division["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
+
+	logger.info("New division data to hit POST method %s", request_template_data)
+	# Hitting division POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_division(data=division)
+	try:
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; division is not an object")
+		return resp_obj
+	except IndexError:
+		logger.error("No division response data from division POST request.")
 		sys.exit(1)

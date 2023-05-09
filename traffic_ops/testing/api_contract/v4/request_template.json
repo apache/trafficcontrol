@@ -1,59 +1,64 @@
 {
-	"cdns": [
-		{
-			"name": "test",
-			"domainName": "quest",
-			"dnssecEnabled": false
-		}
-	],
-	"cachegroup": [
-		{
-			"name": "test",
-			"shortName": "test",
-			"latitude": 38.897663,
-			"longitude": -77.036574,
-			"fallbackToClosest": true,
-			"localizationMethods": [
-				"DEEP_CZ",
-				"CZ",
-				"GEO"
-			],
-			"typeId": 23
-		}
-	],
-	"parameters": [
-		{
-			"name": "test",
-			"value": "quest",
-			"configFile": "records.config",
-			"secure": false
-		}
-	],
-	"roles": [
-		{
-			"name": "test",
-			"description": "quest"
-		}
-	],
-	"profiles": [
-		{
-			"name": "test",
-			"description": "A test profile for API examples",
-			"cdn": 2,
-			"type": "UNK_PROFILE",
-			"routingDisabled": true
-		}
-	],
-	"tenants": [
-		{
-			"active": true,
-			"name": "test",
-			"parentId": 1
-		}
-	],
-	"server_capabilities": [
-		{
-			"name": "RAM"
-		}
-	]
+    "cdns": [
+        {
+            "name": "test",
+            "domainName": "quest",
+            "dnssecEnabled": false
+        }
+    ],
+    "cachegroup": [
+        {
+            "name": "test",
+            "shortName": "test",
+            "latitude": 38.897663,
+            "longitude": -77.036574,
+            "fallbackToClosest": true,
+            "localizationMethods": [
+                "DEEP_CZ",
+                "CZ",
+                "GEO"
+            ],
+            "typeId": 23
+        }
+    ],
+    "parameters": [
+        {
+            "name": "test",
+            "value": "quest",
+            "configFile": "records.config",
+            "secure": false
+        }
+    ],
+    "roles": [
+        {
+            "name": "test",
+            "description": "quest"
+        }
+    ],
+    "profiles": [
+        {
+            "name": "test",
+            "description": "A test profile for API examples",
+            "cdn": 2,
+            "type": "UNK_PROFILE",
+            "routingDisabled": true
+        }
+    ],
+    "tenants": [
+        {
+            "active": true,
+            "name": "test",
+            "parentId": 1
+        }
+    ],
+    "server_capabilities": [
+        {
+            "name": "RAM"
+        }
+    ],
+    "divisions":[
+        {
+            "name":"test"
+            }
+      ]
 }
