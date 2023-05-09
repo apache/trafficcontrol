@@ -62,6 +62,7 @@ const commonPageObject = {
 				physicalLocations: "[aria-label='Navigate to Physical Locations']",
 				profile: "[aria-label='Navigate to My Profile']",
 				profiles: "[aria-label='Navigate to Profiles']",
+				profilesContainer: "[aria-label='Toggle Profiles']",
 				regions: "[aria-label='Navigate to Regions']",
 				roles: "[aria-label='Navigate to Roles']",
 				servers: "[aria-label='Navigate to Servers']",
