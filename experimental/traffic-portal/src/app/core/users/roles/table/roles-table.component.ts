@@ -68,7 +68,9 @@ export class RolesTableComponent implements OnInit {
 		},
 		{
 			field: "lastUpdated",
-			headerName: "Last Updated"
+			filter: "agDateColumnFilter",
+			headerName: "Last Updated",
+			hide: true,
 		}
 	];
 
