@@ -101,8 +101,8 @@ def test_region_contract(
 	finally:
 		# Delete region after test execution to avoid redundancy.
 		try:
-			region_id = region_post_data["id"]
-			to_session.delete_region(region_id=region_id)
+			region_name = region_post_data["name"]
+			to_session.delete_region(query_params={"name": region_name})
 		except IndexError:
-			logger.error("region returned by Traffic Ops is missing an 'id' property")
+			logger.error("region returned by Traffic Ops is missing a 'name' property")
 			pytest.fail("Response from delete request is empty, Failing test_region_contract")
