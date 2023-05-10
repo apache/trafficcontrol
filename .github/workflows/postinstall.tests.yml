@@ -31,6 +31,10 @@ on:
       - traffic_ops/install/bin/postinstall.test.sh
     types: [ opened, reopened, ready_for_review, synchronize ]
 
+env:
+  PYTHON3_VERSION: '3.6'
+  PYTHON2_VERSION: '2.7'
+
 jobs:
   postinstall-tests:
     if: github.event.pull_request.draft == false
@@ -40,14 +44,16 @@ jobs:
         uses: actions/checkout@master
         if: ${{ (github.repository_owner == 'apache' && github.ref == 'refs/heads/master' ) || github.event_name != 'schedule' }}
         id: checkout
-      - name: Install Python 3.6
+      - name: Install Python ${{ env.PYTHON3_VERSION }}
         uses: actions/setup-python@v2
         if: ${{ steps.checkout.outcome == 'success' }}
-        with: { python-version: 3.6 }
-      - name: Install Python 2.7
+        with:
+          python-version: '${{ env.PYTHON3_VERSION }}'
+      - name: Install Python ${{ env.PYTHON2_VERSION }}
         uses: actions/setup-python@v2
         if: ${{ steps.checkout.outcome == 'success' }}
-        with: { python-version: 2.7 }
+        with:
+          python-version: '${{ env.PYTHON2_VERSION }}'
       - name: Run Postinstall Tests
         if: ${{ steps.checkout.outcome == 'success' }}
         run: traffic_ops/install/bin/postinstall.test.sh
