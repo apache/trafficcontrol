@@ -183,7 +183,10 @@ export class CDNTableComponent implements OnInit {
 	 * @param queue Whether updates should be queued (`true`) or cleared
 	 * (`false`).
 	 */
-	private async queueUpdates(cdn: ResponseCDN, queue: boolean = true): Promise<void> {
+	private async queueUpdates(cdn: ResponseCDN | number, queue: boolean = true): Promise<void> {
+		if (typeof cdn === "number") {
+			cdn = await this.api.getCDNs(cdn);
+		}
 		const title = `${queue ? "Queue" : "Clear"} Updates on ${cdn.name}?`;
 		const action = queue ? "queue" : "dequeue";
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
@@ -207,7 +210,10 @@ export class CDNTableComponent implements OnInit {
 	 *
 	 * @param cdn The CDN (potentially) being deleted.
 	 */
-	private async delete(cdn: ResponseCDN): Promise<void> {
+	private async delete(cdn: ResponseCDN | number): Promise<void> {
+		if (typeof cdn === "number") {
+			cdn = await this.api.getCDNs(cdn);
+		}
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
 			data: {
 				message: `Are you sure you want to delete the ${cdn.name} CDN?`,
