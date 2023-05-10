@@ -123,6 +123,10 @@ export class NavigationService {
 				name: "Statuses"
 			},
 			{
+				href: "/core/capabilities",
+				name: "Capabilities",
+			},
+			{
 				children: [{
 					href: "/core/cache-groups",
 					name: "Cache Groups"

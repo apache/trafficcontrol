@@ -44,41 +44,46 @@ import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenan
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
 import type { UsersPageObject } from "nightwatch/page_objects/users/users";
 import {
-	CDN,
 	GeoLimit,
 	GeoProvider,
-	LoginRequest,
+	ProfileType,
 	Protocol,
-	RequestDeliveryService,
-	ResponseCDN,
-	ResponseDeliveryService,
-	RequestTenant,
-	ResponseTenant,
-	TypeFromResponse,
-	RequestSteeringTarget,
-	ResponseASN,
-	RequestASN,
-	ResponseDivision,
-	RequestDivision,
-	ResponseRegion,
-	RequestRegion,
-	RequestCacheGroup,
-	ResponseCacheGroup,
-	ResponsePhysicalLocation,
-	RequestPhysicalLocation,
-	ResponseCoordinate,
-	RequestCoordinate,
-	RequestType,
-	ResponseStatus,
-	RequestStatus,
-	ResponseProfile,
-	RequestProfile,
-	ProfileType
+
+	type CDN,
+	type LoginRequest,
+	type RequestASN,
+	type RequestCacheGroup,
+	type RequestCoordinate,
+	type RequestDeliveryService,
+	type RequestDivision,
+	type RequestPhysicalLocation,
+	type RequestProfile,
+	type RequestRegion,
+	type RequestServerCapability,
+	type RequestStatus,
+	type RequestSteeringTarget,
+	type RequestTenant,
+	type RequestType,
+	type ResponseASN,
+	type ResponseCacheGroup,
+	type ResponseCDN,
+	type ResponseCoordinate,
+	type ResponseDeliveryService,
+	type ResponseDivision,
+	type ResponsePhysicalLocation,
+	type ResponseProfile,
+	type ResponseRegion,
+	type ResponseServerCapability,
+	type ResponseStatus,
+	type ResponseTenant,
+	type TypeFromResponse,
 } from "trafficops-types";
 
 import * as config from "../config.json";
-import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
-import {TypesPageObject} from "../page_objects/types/typesTable";
+import type { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
+import type { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
+import type { TypeDetailPageObject } from "../page_objects/types/typeDetail";
+import type { TypesPageObject } from "../page_objects/types/typesTable";
 
 declare module "nightwatch" {
 	/**
@@ -112,6 +117,10 @@ declare module "nightwatch" {
 			profileDetail: () => ProfileDetailPageObject;
 		};
 		servers: {
+			capabilities: {
+				capabilityDetails: () => CapabilityDetailsPageObject;
+				capabilitiesTable: () => CapabilitiesPageObject;
+			};
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;
@@ -150,6 +159,7 @@ declare module "nightwatch" {
  */
 export interface CreatedData {
 	cacheGroup: ResponseCacheGroup;
+	capability: ResponseServerCapability;
 	cdn: ResponseCDN;
 	coordinate: ResponseCoordinate;
 	division: ResponseDivision;
@@ -175,7 +185,7 @@ const globals = {
 			done();
 		});
 	},
-	apiVersion: "3.1",
+	apiVersion: "4.0",
 	before: async (done: () => void): Promise<void> => {
 		const apiUrl = `${globals.trafficOpsURL}/api/${globals.apiVersion}`;
 		const client = axios.create({
@@ -423,6 +433,15 @@ const globals = {
 			const respProfile: ResponseProfile = resp.data.response;
 			console.log(`Successfully created Profile ${respProfile.name}`);
 			data.profile = respProfile;
+
+			const capability: RequestServerCapability = {
+				name: `test${globals.uniqueString}`
+			};
+			url = `${apiUrl}/server_capabilities`;
+			resp = await client.post(url, JSON.stringify(capability));
+			const respCap: ResponseServerCapability = resp.data.response;
+			console.log("Successfully created Capability:", respCap);
+			data.capability = respCap;
 
 		} catch(e) {
 			console.error("Request for", url, "failed:", (e as AxiosError).message);
