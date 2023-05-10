@@ -45,12 +45,12 @@ jobs:
         if: ${{ (github.repository_owner == 'apache' && github.ref == 'refs/heads/master' ) || github.event_name != 'schedule' }}
         id: checkout
       - name: Install Python ${{ env.PYTHON3_VERSION }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         if: ${{ steps.checkout.outcome == 'success' }}
         with:
           python-version: '${{ env.PYTHON3_VERSION }}'
       - name: Install Python ${{ env.PYTHON2_VERSION }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         if: ${{ steps.checkout.outcome == 'success' }}
         with:
           python-version: '${{ env.PYTHON2_VERSION }}'
