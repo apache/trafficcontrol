@@ -46,9 +46,6 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 	this.$onInit = function() {
 		$scope.originalRoutingName = deliveryService.routingName;
 		$scope.originalCDN = deliveryService.cdnId;
-
-		$scope.loadGeoLimitCountriesRaw(deliveryService);
-		$scope.loadGeoLimitCountriesRaw(this.dsCurrent);
 	};
 
 	/**

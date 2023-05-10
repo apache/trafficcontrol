@@ -504,6 +504,11 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 	$scope.tlsVersionHasPropertyError = tlsVersionHasPropertyError;
 
+	this.$onInit = function() {
+		$scope.loadGeoLimitCountriesRaw(this.deliveryService);
+		$scope.loadGeoLimitCountriesRaw(this.dsCurrent);
+	}
+
 	/**
 	 * Checks if a TLS Version has any error.
 	 *
