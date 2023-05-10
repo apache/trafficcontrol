@@ -97,6 +97,27 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 	$scope.toggleTLSRestrict = toggleTLSRestrict;
 
+	$scope.hasGeoLimitCountries = function() {
+		return deliveryService.geoLimit === 1 || deliveryService.geoLimit === 2;
+	}
+
+	$scope.loadGeoLimitCountriesRaw = function () {
+		if($scope.hasGeoLimitCountries()) {
+			deliveryService.geoLimitCountriesRaw = (deliveryService.geoLimitCountries ?? []).join(",");
+		} else {
+			deliveryService.geoLimitCountriesRaw = "";
+		}
+	}
+
+	$scope.loadGeoLimitCountries = function () {
+		if($scope.hasGeoLimitCountries()) {
+			deliveryService.geoLimitCountries = deliveryService.geoLimitCountriesRaw.split(",");
+		} else {
+			deliveryService.geoLimitCountriesRaw = "";
+			deliveryService.geoLimitCountries = [];
+		}
+	}
+
 	/**
 	 * Removes a TLS version at the given index.
 	 * @param {number} index
