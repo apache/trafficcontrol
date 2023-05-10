@@ -116,7 +116,7 @@ limitations under the License.
 			<mat-expansion-panel [expanded]="true">
 				<mat-expansion-panel-header>
 					<mat-panel-title>
-						<p>Profiles</p>
+						Profiles
 					</mat-panel-title>
 				</mat-expansion-panel-header>
 				<div class="expansion-content-profile">
@@ -127,7 +127,7 @@ limitations under the License.
 						</mat-select>
 					</mat-form-field>
 					<div class="profile-order">
-						<p>Ordering</p>
+						Ordering
 						<mat-list class="drop-list mat-elevation-z3" cdkDropList (cdkDropListDropped)="drop($event)">
 							<mat-list-item class="drop-list-item mat-elevation-z1" *ngFor="let profile of server.profileNames; index as i" cdkDrag>
 								{{i+1}}: {{profile}}

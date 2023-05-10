@@ -30,14 +30,17 @@ import {
 	RequestDivision,
 	RequestPhysicalLocation,
 	RequestProfile,
-	RequestRegion, RequestServer, RequestStatus,
+	RequestRegion,
+	RequestServer,
+	RequestStatus,
 	RequestSteeringTarget,
 	RequestTenant,
 	RequestType,
 	ResponseCacheGroup,
 	ResponseDeliveryService,
 	ResponseDivision,
-	ResponsePhysicalLocation, ResponseProfile,
+	ResponsePhysicalLocation,
+	ResponseProfile,
 	ResponseRegion, ResponseStatus,
 	TypeFromResponse
 } from "trafficops-types";
@@ -54,6 +57,7 @@ export class DataClient {
 	public loggedIn = false;
 	/** Client used to talk to the TO API */
 	private readonly client: AxiosInstance;
+
 	public constructor(toURL: string, apiVersion: string, adminUser: string, adminPass: string) {
 		this.toURL = toURL;
 		this.apiVersion = apiVersion;
@@ -135,285 +139,207 @@ export class DataClient {
 		let url = `${apiUrl}/cdns`;
 		try {
 			resp = await this.client.post(url, JSON.stringify(cdn));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on CDN post as ${url}`;
-			throw e;
-		}
-		const respCDN = resp.data.response;
-		data.cdn = respCDN;
+			const respCDN = resp.data.response;
+			data.cdn = respCDN;
 
-		const ds: RequestDeliveryService = {
-			active: false,
-			cacheurl: null,
-			cdnId: respCDN.id,
-			displayName: `test DS${id}`,
-			dscp: 0,
-			ecsEnabled: false,
-			edgeHeaderRewrite: null,
-			fqPacingRate: null,
-			geoLimit: GeoLimit.NONE,
-			geoProvider: GeoProvider.MAX_MIND,
-			httpBypassFqdn: null,
-			infoUrl: null,
-			initialDispersion: 1,
-			ipv6RoutingEnabled: false,
-			logsEnabled: false,
-			maxOriginConnections: 0,
-			maxRequestHeaderBytes: 0,
-			midHeaderRewrite: null,
-			missLat: 0,
-			missLong: 0,
-			multiSiteOrigin: false,
-			orgServerFqdn: "http://test.com",
-			profileId: 1,
-			protocol: Protocol.HTTP,
-			qstringIgnore: 0,
-			rangeRequestHandling: 0,
-			regionalGeoBlocking: false,
-			remapText: null,
-			routingName: "test",
-			signed: false,
-			tenantId: 1,
-			typeId: httpType.id,
-			xmlId: `testDS${id}`
-		};
-		url = `${apiUrl}/deliveryservices`;
-		try {
+			const ds: RequestDeliveryService = {
+				active: false,
+				cacheurl: null,
+				cdnId: respCDN.id,
+				displayName: `test DS${id}`,
+				dscp: 0,
+				ecsEnabled: false,
+				edgeHeaderRewrite: null,
+				fqPacingRate: null,
+				geoLimit: GeoLimit.NONE,
+				geoProvider: GeoProvider.MAX_MIND,
+				httpBypassFqdn: null,
+				infoUrl: null,
+				initialDispersion: 1,
+				ipv6RoutingEnabled: false,
+				logsEnabled: false,
+				maxOriginConnections: 0,
+				maxRequestHeaderBytes: 0,
+				midHeaderRewrite: null,
+				missLat: 0,
+				missLong: 0,
+				multiSiteOrigin: false,
+				orgServerFqdn: "http://test.com",
+				profileId: 1,
+				protocol: Protocol.HTTP,
+				qstringIgnore: 0,
+				rangeRequestHandling: 0,
+				regionalGeoBlocking: false,
+				remapText: null,
+				routingName: "test",
+				signed: false,
+				tenantId: 1,
+				typeId: httpType.id,
+				xmlId: `testDS${id}`
+			};
+			url = `${apiUrl}/deliveryservices`;
 			resp = await this.client.post(url, JSON.stringify(ds));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on DS post at ${url}`;
-			throw e;
-		}
-		let respDS: ResponseDeliveryService = resp.data.response[0];
-		data.ds = respDS;
+			let respDS: ResponseDeliveryService = resp.data.response[0];
+			data.ds = respDS;
 
-		ds.displayName = `test DS2${id}`;
-		ds.xmlId = `testDS2${id}`;
-		try {
+			ds.displayName = `test DS2${id}`;
+			ds.xmlId = `testDS2${id}`;
 			resp = await this.client.post(url, JSON.stringify(ds));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on DS post at ${url}`;
-			throw e;
-		}
-		respDS = resp.data.response[0];
-		data.ds2 = respDS;
+			respDS = resp.data.response[0];
+			data.ds2 = respDS;
 
-		ds.displayName = `test steering DS${id}`;
-		ds.xmlId = `testSDS${id}`;
-		ds.typeId = steeringType.id;
-		try {
+			ds.displayName = `test steering DS${id}`;
+			ds.xmlId = `testSDS${id}`;
+			ds.typeId = steeringType.id;
 			resp = await this.client.post(url, JSON.stringify(ds));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on DS post at ${url}`;
-			throw e;
-		}
-		respDS = resp.data.response[0];
-		data.steeringDS = respDS;
+			respDS = resp.data.response[0];
+			data.steeringDS = respDS;
 
-		const target: RequestSteeringTarget = {
-			targetId: data.ds.id,
-			typeId: steeringWeightType.id,
-			value: 1
-		};
-		url = `${apiUrl}/steering/${data.steeringDS.id}/targets`;
-		try {
+			const target: RequestSteeringTarget = {
+				targetId: data.ds.id,
+				typeId: steeringWeightType.id,
+				value: 1
+			};
+			url = `${apiUrl}/steering/${data.steeringDS.id}/targets`;
 			await this.client.post(url, JSON.stringify(target));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on  at ${url}`;
-			throw e;
-		}
-		target.targetId = data.ds2.id;
-		try {
+			target.targetId = data.ds2.id;
 			await this.client.post(url, JSON.stringify(target));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on Steering post at ${url}`;
-			throw e;
-		}
 
-		const tenant: RequestTenant = {
-			active: true,
-			name: `testT${id}`,
-			parentId: 1
-		};
-		url = `${apiUrl}/tenants`;
-		try {
+			const tenant: RequestTenant = {
+				active: true,
+				name: `testT${id}`,
+				parentId: 1
+			};
+			url = `${apiUrl}/tenants`;
 			resp = await this.client.post(url, JSON.stringify(tenant));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on Tenant post at ${url}`;
-			throw e;
-		}
-		data.tenant = resp.data.response;
+			data.tenant = resp.data.response;
 
-		const division: RequestDivision = {
-			name: `testD${id}`
-		};
-		url = `${apiUrl}/divisions`;
-		try {
+			const division: RequestDivision = {
+				name: `testD${id}`
+			};
+			url = `${apiUrl}/divisions`;
 			resp = await this.client.post(url, JSON.stringify(division));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on Divisions post at ${url}`;
-			throw e;
-		}
-		const respDivision: ResponseDivision = resp.data.response;
-		data.division = respDivision;
+			const respDivision: ResponseDivision = resp.data.response;
+			data.division = respDivision;
 
-		const region: RequestRegion = {
-			division: respDivision.id,
-			name: `testR${id}`
-		};
-		url = `${apiUrl}/regions`;
-		try {
+			const region: RequestRegion = {
+				division: respDivision.id,
+				name: `testR${id}`
+			};
+			url = `${apiUrl}/regions`;
 			resp = await this.client.post(url, JSON.stringify(region));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on Regions post at ${url}`;
-			throw e;
-		}
-		const respRegion: ResponseRegion = resp.data.response;
-		data.region = respRegion;
+			const respRegion: ResponseRegion = resp.data.response;
+			data.region = respRegion;
 
-		const cacheGroup: RequestCacheGroup = {
-			name: `test${id}`,
-			shortName: `test${id}`,
-			typeId: cgType.id
-		};
-		url = `${apiUrl}/cachegroups`;
-		try {
+			const cacheGroup: RequestCacheGroup = {
+				name: `test${id}`,
+				shortName: `test${id}`,
+				typeId: cgType.id
+			};
+			url = `${apiUrl}/cachegroups`;
 			resp = await this.client.post(url, JSON.stringify(cacheGroup));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on CacheGroups post at ${url}`;
-			throw e;
-		}
-		const responseCG: ResponseCacheGroup = resp.data.response;
-		data.cacheGroup = responseCG;
+			const responseCG: ResponseCacheGroup = resp.data.response;
+			data.cacheGroup = responseCG;
 
-		const asn: RequestASN = {
-			asn: +id,
-			cachegroupId: responseCG.id
-		};
-		url = `${apiUrl}/asns`;
-		try {
+			const asn: RequestASN = {
+				asn: +id,
+				cachegroupId: responseCG.id
+			};
+			url = `${apiUrl}/asns`;
 			resp = await this.client.post(url, JSON.stringify(asn));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on ASN post at ${url}`;
-			throw e;
-		}
-		data.asn = resp.data.response;
+			data.asn = resp.data.response;
 
-		const physLoc: RequestPhysicalLocation = {
-			address: "street",
-			city: "city",
-			comments: "someone set us up the bomb",
-			email: "email@test.com",
-			name: `phys${id}`,
-			phone: "111-867-5309",
-			poc: "me",
-			regionId: respRegion.id,
-			shortName: `short${id}`,
-			state: "CA",
-			zip: "80000"
-		};
-		url = `${apiUrl}/phys_locations`;
-		try {
+			const physLoc: RequestPhysicalLocation = {
+				address: "street",
+				city: "city",
+				comments: "someone set us up the bomb",
+				email: "email@test.com",
+				name: `phys${id}`,
+				phone: "111-867-5309",
+				poc: "me",
+				regionId: respRegion.id,
+				shortName: `short${id}`,
+				state: "CA",
+				zip: "80000"
+			};
+			url = `${apiUrl}/phys_locations`;
 			resp = await this.client.post(url, JSON.stringify(physLoc));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on PhysLoc post at ${url}`;
-			throw e;
-		}
-		const respPhysLoc: ResponsePhysicalLocation = resp.data.response;
-		respPhysLoc.region = respRegion.name;
-		data.physLoc = respPhysLoc;
+			const respPhysLoc: ResponsePhysicalLocation = resp.data.response;
+			respPhysLoc.region = respRegion.name;
+			data.physLoc = respPhysLoc;
 
-		const coordinate: RequestCoordinate = {
-			latitude: 0,
-			longitude: 0,
-			name: `coord${id}`
-		};
-		url = `${apiUrl}/coordinates`;
-		try {
+			const coordinate: RequestCoordinate = {
+				latitude: 0,
+				longitude: 0,
+				name: `coord${id}`
+			};
+			url = `${apiUrl}/coordinates`;
 			resp = await this.client.post(url, JSON.stringify(coordinate));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on Coordinates post at ${url}`;
-			throw e;
-		}
-		data.coordinate = resp.data.response;
+			data.coordinate = resp.data.response;
 
-		const type: RequestType = {
-			description: "blah",
-			name: `type${id}`,
-			useInTable: "server"
-		};
-		url = `${apiUrl}/types`;
-		try {
+			const type: RequestType = {
+				description: "blah",
+				name: `type${id}`,
+				useInTable: "server"
+			};
+			url = `${apiUrl}/types`;
 			resp = await this.client.post(url, JSON.stringify(type));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on Types post at ${url}`;
-			throw e;
-		}
 
-		data.type = resp.data.response;
-		const status: RequestStatus = {
-			description: "blah",
-			name: `status${id}`,
-		};
-		url = `${apiUrl}/statuses`;
-		try {
+			data.type = resp.data.response;
+			const status: RequestStatus = {
+				description: "blah",
+				name: `status${id}`,
+			};
+			url = `${apiUrl}/statuses`;
 			resp = await this.client.post(url, JSON.stringify(status));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on Status post at ${url}`;
-			throw e;
-		}
-		const respStatus: ResponseStatus = resp.data.response;
-		data.statuses = respStatus;
+			const respStatus: ResponseStatus = resp.data.response;
+			data.statuses = respStatus;
 
-		const profile: RequestProfile = {
-			cdn: respCDN.id,
-			description: "blah",
-			name: `profile${id}`,
-			routingDisabled: false,
-			type: ProfileType.ATS_PROFILE,
-		};
-		url = `${apiUrl}/profiles`;
-		try {
+			const profile: RequestProfile = {
+				cdn: respCDN.id,
+				description: "blah",
+				name: `profile${id}`,
+				routingDisabled: false,
+				type: ProfileType.ATS_PROFILE,
+			};
+			url = `${apiUrl}/profiles`;
 			resp = await this.client.post(url, JSON.stringify(profile));
-		} catch(e) {
-			(e as AxiosError).message += ` Failed on Profiles post at ${url}`;
-			throw e;
-		}
-		const respProfile: ResponseProfile = resp.data.response;
-		data.profile = respProfile;
+			const respProfile: ResponseProfile = resp.data.response;
+			data.profile = respProfile;
 
-		const server: RequestServer = {
-			cachegroupId: responseCG.id,
-			cdnId: respCDN.id,
-			domainName: "domain.com",
-			hostName: id,
-			interfaces: [{
-				ipAddresses: [{
-					address: "192.160.1.0",
-					gateway: null,
-					serviceAddress: true
+			const server: RequestServer = {
+				cachegroupId: responseCG.id,
+				cdnId: respCDN.id,
+				domainName: "domain.com",
+				hostName: id,
+				interfaces: [{
+					ipAddresses: [{
+						address: "192.160.1.0",
+						gateway: null,
+						serviceAddress: true
+					}],
+					maxBandwidth: 0,
+					monitor: true,
+					mtu: 1500,
+					name: "eth0"
 				}],
-				maxBandwidth: 0,
-				monitor: true,
-				mtu: 1500,
-				name: "eth0"
-			}],
-			physLocationId: respPhysLoc.id,
-			profileNames: [respProfile.name],
-			statusId: respStatus.id,
-			typeId: edgeType.id
+				physLocationId: respPhysLoc.id,
+				profileNames: [respProfile.name],
+				statusId: respStatus.id,
+				typeId: edgeType.id
 
-		};
-		url = `${apiUrl}/servers`;
-		try {
+			};
+			url = `${apiUrl}/servers`;
 			resp = await this.client.post(url, JSON.stringify(server));
-		} catch(e) {
-			console.log(e);
-			(e as AxiosError).message += ` Failed on Servers post at ${url}`;
-			throw e;
+			data.edgeServer = resp.data.response;
+		} catch (e) {
+			const ae = e as AxiosError;
+			ae.message = `Request (${ae.config.method}) failed to ${url}`;
+			ae.message += ae.response ? ` with response code ${ae.response.status}` : " with no response";
+			throw ae;
 		}
-		data.edgeServer = resp.data.response;
 
-		return Promise.resolve(data);
+
+		return data;
 	}
 }

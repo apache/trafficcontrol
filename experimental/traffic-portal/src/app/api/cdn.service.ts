@@ -81,9 +81,10 @@ export class CDNService extends APIService {
 	/**
 	 * Queue updates to servers by a CDN
 	 *
-	 * @param id The CDN id to queue server updates for
+	 * @param cdn The CDN or ID to queue from
 	 */
-	public async queueServerUpdates(id: number): Promise<CDNQueueResponse> {
+	public async queueServerUpdates(cdn: ResponseCDN | number): Promise<CDNQueueResponse> {
+		const id = typeof cdn === "number" ? cdn : cdn.id;
 		const path = `cdns/${id}/queue_update`;
 		const action = {action: "queue"};
 		return this.post<CDNQueueResponse>(path, action).toPromise();
@@ -92,9 +93,10 @@ export class CDNService extends APIService {
 	/**
 	 * Dequeue updates to servers by a CDN
 	 *
-	 * @param id The CDN id to dequeue server updates for
+	 * @param cdn The CDN or ID to dequeue from
 	 */
-	public async dequeueServerUpdates(id: number): Promise<CDNQueueResponse> {
+	public async dequeueServerUpdates(cdn: ResponseCDN | number): Promise<CDNQueueResponse> {
+		const id = typeof cdn === "number" ? cdn : cdn.id;
 		const path = `cdns/${id}/queue_update`;
 		const action = {action: "dequeue"};
 		return this.post<CDNQueueResponse>(path, action).toPromise();

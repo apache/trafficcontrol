@@ -147,16 +147,16 @@ describe("UpdateStatusComponent", () => {
 		component.status = null;
 		expect(component.isOffline).toBeFalse();
 
-		component.status = "OFFLINE";
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "OFFLINE"};
 		expect(component.isOffline).toBeTrue();
 
-		component.status = "some weird custom status";
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "some weird custom status"};
 		expect(component.isOffline).toBeTrue();
 
-		component.status = "ONLINE";
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "ONLINE"};
 		expect(component.isOffline).toBeFalse();
 
-		component.status = "REPORTED";
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "REPORTED"};
 		expect(component.isOffline).toBeFalse();
 	});
 
@@ -168,7 +168,7 @@ describe("UpdateStatusComponent", () => {
 		});
 
 		const service = TestBed.inject(ServerService);
-		component.status = (await service.getStatuses()).find(s=>s.name==="ONLINE")?.name ?? null;
+		component.status = (await service.getStatuses()).find(s=>s.name==="ONLINE") ?? null;
 
 		const srv = await service.createServer({...defaultServer});
 		component.servers = [srv];
@@ -177,13 +177,13 @@ describe("UpdateStatusComponent", () => {
 
 		result = true;
 		mockMatDialog.afterClosed.and.returnValue(of(result));
-		component.status = (await service.getStatuses()).find(s=>s.name==="OFFLINE")?.name ?? null;
+		component.status = (await service.getStatuses()).find(s=>s.name==="OFFLINE") ?? null;
 		await component.submit(new Event("click"));
 		expect(mockMatDialog.close.calls.count()).toBe(2);
 
 		result = false;
 		mockMatDialog.afterClosed.and.returnValue(of(result));
-		component.status = "no such status";
+		component.status = {description: "", id: 1, lastUpdated: new Date(), name: "no such status"};
 		await component.submit(new Event("click"));
 		expect(mockMatDialog.close.calls.count()).toBe(3);
 	});

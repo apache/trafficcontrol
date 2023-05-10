@@ -349,16 +349,6 @@ export class ServersTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl: FormControl = new FormControl("");
 
-	/**
-	 * Constructs the component with its required injections.
-	 *
-	 * @param auth The user authorization service.
-	 * @param api The Servers API which is used to provide row data.
-	 * @param route A reference to the route of this view which is used to set the fuzzy search box text from the 'search' query parameter.
-	 * @param navSvc Manages the header
-	 * @param cdn The CDN API
-	 * @param dialog Dialog manager
-	 */
 	constructor(private readonly api: ServerService,
 		public readonly auth: CurrentUserService,
 		private readonly route: ActivatedRoute,

@@ -133,12 +133,12 @@ form {
 	form {
 		grid-template-columns: 1fr;
 
-		fieldset div, .mat-expansion-panel .expansion-content{
-			grid-template-columns: 1fr 1fr;
+		.mat-expansion-panel .expansion-content-profile {
+			grid-template-columns: 1fr;
 		}
 
-		.expansion-content-profile {
-			grid-template-columns: 1fr !important;
+		fieldset div, .mat-expansion-panel .expansion-content {
+			grid-template-columns: 1fr 1fr;
 		}
 	}
 }

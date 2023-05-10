@@ -29,6 +29,7 @@ import { CurrentUserService } from "src/app/shared/current-user/current-user.ser
 import { SharedModule } from "src/app/shared/shared.module";
 
 import { ServerDetailsComponent } from "./server-details.component";
+import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 
 describe("ServerDetailsComponent", () => {
 	let component: ServerDetailsComponent;
@@ -43,7 +44,7 @@ describe("ServerDetailsComponent", () => {
 				HttpClientModule,
 				RouterTestingModule.withRoutes([
 					{component: ServerDetailsComponent, path: "server/:id"},
-					{component: ServerDetailsComponent, path: "server/new"}
+					{component: ServerDetailsComponent, path: "server/new"},
 				]),
 				FormsModule,
 				ReactiveFormsModule,
@@ -157,20 +158,15 @@ describe("ServerDetailsComponent", () => {
 	}));
 
 	it("opens the 'change status' dialog", () => {
-		/*
-		expect(component.changeStatusDialogOpen).toBeFalse();
-		component.changeStatus(new MouseEvent("click"));
-		expect(component.changeStatusDialogOpen).toBeTrue();
+		const mockMatDialog = TestBed.inject(MatDialog);
+		const openSpy = spyOn(mockMatDialog, "open").and.returnValue({
+			afterClosed: () => of(true)
+		} as MatDialogRef<unknown>);
 		component.isNew = true;
 		expect(() => component.changeStatus(new MouseEvent("click"))).toThrow();
-*/
-	});
-
-	it("closes the 'change status' dialog when done", () => {
-		/*
-		component.changeStatusDialogOpen = true;
-		component.doneUpdatingStatus(true);
-		expect(component.changeStatusDialogOpen).toBeFalse();
-*/
+		expect(openSpy).not.toHaveBeenCalled();
+		component.isNew = false;
+		component.changeStatus(new MouseEvent("click"));
+		expect(openSpy).toHaveBeenCalled();
 	});
 });

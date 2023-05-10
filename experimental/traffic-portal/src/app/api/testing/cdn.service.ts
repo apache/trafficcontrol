@@ -91,32 +91,34 @@ export class CDNService {
 	/**
 	 * Queue updates to servers by a CDN
 	 *
-	 * @param id The CDN id to queue server updates for
+	 * @param cdn The CDN or id to queue server updates for
 	 */
-	public async queueServerUpdates(id: number): Promise<CDNQueueResponse> {
-		const cdn = this.cdns.find(c => c.id === id);
-		if (!cdn) {
+	public async queueServerUpdates(cdn: ResponseCDN | number): Promise<CDNQueueResponse> {
+		const id = typeof cdn === "number" ? cdn : cdn.id;
+		const realCDN = this.cdns.find(c => c.id === id);
+		if (!realCDN) {
 			throw new Error(`No CDN ${id}`);
 		}
 		return {
 			action: "queue",
-			cdnId: cdn.id
+			cdnId: id
 		};
 	}
 
 	/**
 	 * Dequeue updates to servers by a CDN
 	 *
-	 * @param id The CDN id to dequeue server updates for
+	 * @param cdn The CDN or id to dequeue server updates for
 	 */
-	public async dequeueServerUpdates(id: number): Promise<CDNQueueResponse> {
-		const cdn = this.cdns.find(c => c.id === id);
-		if (!cdn) {
+	public async dequeueServerUpdates(cdn: ResponseCDN | number): Promise<CDNQueueResponse> {
+		const id = typeof cdn === "number" ? cdn : cdn.id;
+		const realCDN = this.cdns.find(c => c.id === id);
+		if (!realCDN) {
 			throw new Error(`No CDN ${id}`);
 		}
 		return {
 			action: "dequeue",
-			cdnId: cdn.id
+			cdnId: id
 		};
 	}
 

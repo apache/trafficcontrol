@@ -14,7 +14,7 @@
  */
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
-import { ResponseServer } from "trafficops-types";
+import { type ResponseServer } from "trafficops-types";
 
 import { ServerService } from "./server.service";
 

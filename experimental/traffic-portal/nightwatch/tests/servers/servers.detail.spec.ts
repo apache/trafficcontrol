@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-describe("Servers Table Spec", () => {
+describe("Servers Detail Spec", () => {
 	it("New server loads correctly", async () => {
 		await browser.page.servers.serversTable()
 			.section.serversTable

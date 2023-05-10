@@ -171,8 +171,7 @@ const globals = {
 	adminUser: config.adminUser,
 	after: async (done: () => void): Promise<void> => {
 		if (dataCreateFailed){
-			done();
-			return;
+			return done();
 		} else if(client.loggedIn) {
 			try {
 				await client.createData(String((+globals.uniqueString)-1));

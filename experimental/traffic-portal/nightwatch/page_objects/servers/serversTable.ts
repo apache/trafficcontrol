@@ -16,7 +16,7 @@ import {
 	EnhancedSectionInstance,
 	NightwatchAPI
 } from "nightwatch";
-import { ResponseServer } from "trafficops-types";
+import { type ResponseServer } from "trafficops-types";
 
 import { TableSectionCommands, TABLE_COMMANDS } from "../../globals/tables";
 
