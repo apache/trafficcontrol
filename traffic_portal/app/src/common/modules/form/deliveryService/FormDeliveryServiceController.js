@@ -97,24 +97,24 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 	$scope.toggleTLSRestrict = toggleTLSRestrict;
 
-	$scope.hasGeoLimitCountries = function() {
-		return deliveryService.geoLimit === 1 || deliveryService.geoLimit === 2;
+	$scope.hasGeoLimitCountries = function(ds) {
+		return ds && ds.geoLimit === 1 || ds.geoLimit === 2;
 	}
 
-	$scope.loadGeoLimitCountriesRaw = function () {
-		if($scope.hasGeoLimitCountries()) {
-			deliveryService.geoLimitCountriesRaw = (deliveryService.geoLimitCountries ?? []).join(",");
+	$scope.loadGeoLimitCountriesRaw = function (ds) {
+		if($scope.hasGeoLimitCountries(ds)) {
+			ds.geoLimitCountriesRaw = (ds.geoLimitCountries ?? []).join(",");
 		} else {
-			deliveryService.geoLimitCountriesRaw = "";
+			ds.geoLimitCountriesRaw = "";
 		}
 	}
 
-	$scope.loadGeoLimitCountries = function () {
-		if($scope.hasGeoLimitCountries()) {
-			deliveryService.geoLimitCountries = deliveryService.geoLimitCountriesRaw.split(",");
+	$scope.loadGeoLimitCountries = function (ds) {
+		if($scope.hasGeoLimitCountries(ds)) {
+			ds.geoLimitCountries = ds.geoLimitCountriesRaw.split(",");
 		} else {
-			deliveryService.geoLimitCountriesRaw = "";
-			deliveryService.geoLimitCountries = [];
+			ds.geoLimitCountriesRaw = "";
+			ds.geoLimitCountries = [];
 		}
 	}
 

@@ -1117,7 +1117,7 @@ under the License.
                             </aside>
                         </div>
                     </div>
-                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoLimitCountriesRaw), 'has-feedback': hasError(routingConfig.geoLimitCountriesRaw)}" ng-show="hasGeoLimitCountries()">
+                    <div class="form-group" ng-class="{'has-error': hasError(routingConfig.geoLimitCountriesRaw), 'has-feedback': hasError(routingConfig.geoLimitCountriesRaw)}" ng-show="hasGeoLimitCountries(deliveryService)">
                         <label class="has-tooltip control-label col-md-2 col-sm-2 col-xs-12" for="geoLimitCountriesRaw">Geo Limit Countries<div class="helptooltip">
                             <div class="helptext">How (if at all) is this service to be limited by geography. Example Country Codes: <abbr title="Canada">CA</abbr>, <abbr title="India">IN</abbr>, <abbr title="Puerto Rico">PR</abbr>.</div>
                         </div>
