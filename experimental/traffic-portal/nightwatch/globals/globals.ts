@@ -80,8 +80,8 @@ import {
 } from "trafficops-types";
 
 import * as config from "../config.json";
-import type { CapabilitiesPageObject } from "../page_objects/capabilities/capabilitiesTable";
-import type { CapabilityDetailsPageObject } from "../page_objects/capabilities/capabilityDetails";
+import type { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
+import type { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
 import type { TypeDetailPageObject } from "../page_objects/types/typeDetail";
 import type { TypesPageObject } from "../page_objects/types/typesTable";
 
@@ -103,10 +103,6 @@ declare module "nightwatch" {
 			asnsTable: () => AsnsPageObject;
 			asnDetail: () => AsnDetailPageObject;
 		};
-		capabilities: {
-			capabilityDetails: () => CapabilityDetailsPageObject;
-			capabilitiesTable: () => CapabilitiesPageObject;
-		};
 		cdns: {
 			cdnDetail: () => CDNDetailPageObject;
 		};
@@ -121,6 +117,10 @@ declare module "nightwatch" {
 			profileDetail: () => ProfileDetailPageObject;
 		};
 		servers: {
+			capabilities: {
+				capabilityDetails: () => CapabilityDetailsPageObject;
+				capabilitiesTable: () => CapabilitiesPageObject;
+			};
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;

@@ -14,7 +14,7 @@
 
 describe("Capability Details Spec", () => {
 	it("Test capability", () => {
-		const page = browser.page.capabilities.capabilityDetails();
+		const page = browser.page.servers.capabilities.capabilityDetails();
 		browser.url(`${page.api.launchUrl}/core/capabilities/${browser.globals.testData.capability.name}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("form")
@@ -26,7 +26,7 @@ describe("Capability Details Spec", () => {
 	});
 
 	it("New capability", () => {
-		const page = browser.page.capabilities.capabilityDetails();
+		const page = browser.page.servers.capabilities.capabilityDetails();
 		browser.url(`${page.api.launchUrl}/core/new-capability`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")

@@ -14,7 +14,7 @@
 
 import { EnhancedPageObject, EnhancedSectionInstance, NightwatchAPI } from "nightwatch";
 
-import { TABLE_COMMANDS, TableSectionCommands } from "../../globals/tables";
+import { TABLE_COMMANDS, TableSectionCommands } from "../../../globals/tables";
 
 /**
  * Defines the Capabilities table commands.
