@@ -98,7 +98,6 @@ export class UpdateStatusComponent implements OnInit {
 	public async submit(e: Event): Promise<void> {
 		e.preventDefault();
 		e.stopPropagation();
-		console.log(this.status);
 		let observables;
 		if (this.isOffline) {
 			observables = this.servers.map(
