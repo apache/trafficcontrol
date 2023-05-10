@@ -47,6 +47,8 @@ import {
 
 /**
  * Generates a unique string used for tests, uses the current epoch time.
+ *
+ * @returns a unique string
  */
 export function generateUniqueString(): string {
 	return new Date().getTime().toString();
@@ -345,7 +347,6 @@ export class DataClient {
 			ae.message += ae.response ? ` with response code ${ae.response.status}` : " with no response";
 			throw ae;
 		}
-
 
 		return data;
 	}

@@ -79,6 +79,31 @@ limitations under the License.
 					</mat-form-field>
 				</fieldset>
 			</mat-card>
+			<mat-card appearance="outlined">
+				<fieldset>
+					<legend mat-card-title>Management Network Interface Details</legend>
+					<mat-form-field>
+						<mat-label>Management Interface Device Name</mat-label>
+						<input matInput type="text" formControlName="mgmtInterface" placeholder="eth0"/>
+						<mat-hint>This should be the name of the network device relative to <code>/dev/</code>.</mat-hint>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>Management IPv4 Address</mat-label>
+						<input matInput type="text" formControlName="mgmtIpAddress"/>
+						<mat-error>Invalid IPv4 address</mat-error>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>Management Gateway IPv4 Address</mat-label>
+						<input matInput type="text" formControlName="mgmtIpGateway"/>
+						<mat-error>Invalid IPv4 address</mat-error>
+					</mat-form-field>
+					<mat-form-field>
+						<mat-label>Management IPv4 Netmask</mat-label>
+						<input matInput type="text" formControlName="mgmtIpNetmask"/>
+						<mat-error>Invalid IPv4 Netmask</mat-error>
+					</mat-form-field>
+				</fieldset>
+			</mat-card>
 			<mat-form-field>
 				<mat-label>Password for Root User</mat-label>
 				<input type="password" matInput formControlName="rootPass" required />

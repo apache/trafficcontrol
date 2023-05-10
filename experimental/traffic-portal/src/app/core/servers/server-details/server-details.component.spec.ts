@@ -15,6 +15,7 @@
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
@@ -29,7 +30,6 @@ import { CurrentUserService } from "src/app/shared/current-user/current-user.ser
 import { SharedModule } from "src/app/shared/shared.module";
 
 import { ServerDetailsComponent } from "./server-details.component";
-import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 
 describe("ServerDetailsComponent", () => {
 	let component: ServerDetailsComponent;

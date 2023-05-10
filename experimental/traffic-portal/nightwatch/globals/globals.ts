@@ -176,7 +176,7 @@ const globals = {
 			try {
 				await client.createData(generateUniqueString());
 			} catch(e) {
-				console.error(`Idempotency test failed, err:`, e);
+				console.error("Idempotency test failed, err:", e);
 				throw e;
 			}
 			console.log("Data creation is idempotent");
