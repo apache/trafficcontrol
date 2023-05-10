@@ -336,7 +336,7 @@ def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.Fixtur
 @pytest.fixture()
 def response_template_data(pytestconfig: pytest.Config
 			   ) -> dict[str, primitive | list[primitive |
-				      dict[str, object] | list[object]] | dict[object, object]]:
+					  dict[str, object] | list[object]] | dict[object, object]]:
 	"""
 	PyTest Fixture to store response template data for api endpoint.
 	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object.
@@ -572,7 +572,7 @@ def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 
 @pytest.fixture()
 def profile_post_data(to_session: TOSession, request_template_data: list[JSONData]
-		      ) -> dict[str, object]:
+			  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for profile endpoint.
 
@@ -718,17 +718,17 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 
 @pytest.fixture()
 def region_post_data(to_session: TOSession, request_template_data: list[JSONData]
-		      ) -> dict[str, object]:
+			  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for region endpoint.
 
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get region data from a prerequisites file.
-  :returns: Sample POST data and the actual API response.
+  	:returns: Sample POST data and the actual API response.
 	"""
 
 	try:
-    	region = request_template_data[0]
+		region = request_template_data[0]
 	except IndexError as e:
 		raise TypeError(
 			"malformed prerequisite data; no Region present in 'regions' array property") from e
@@ -736,7 +736,7 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
 	if not isinstance(region, dict):
 		raise TypeError(f"malformed prerequisite data; region must be objects, not '{type(region)}'")
 
-	# Return new post data and post response from divisions POST request
+	# Return new post data and post response from regions POST request
 	randstr = str(randint(0, 1000))
 	try:
 		name = region["name"]
@@ -772,5 +772,5 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
 			raise TypeError("malformed API response; region is not an object")
 		return resp_obj
 	except IndexError:
-		logger.error("No Region response data from divisiond POST request.")
-    sys.exit(1)
+		logger.error("No Region response data from divisions POST request.")
+	sys.exit(1)
