@@ -56,7 +56,7 @@
 			"name": "RAM"
 		}
 	],
-  "divisions": [
+  	"divisions": [
 		{
 			"name": "test"
 		}
@@ -66,7 +66,7 @@
 			"divisionName": "Quebec",
 			"division": 1,
 			"name": "Montreal"
-    }
-   ]
+    		}
+   	]
  }
  
