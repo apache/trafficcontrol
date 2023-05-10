@@ -40,6 +40,7 @@ import type { ServersPageObject } from "nightwatch/page_objects/servers/servers"
 import type { StatusDetailPageObject } from "nightwatch/page_objects/statuses/statusDetail";
 import type { StatusesTablePageObject } from "nightwatch/page_objects/statuses/statusesTable";
 import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
+import type { RolesPageObject } from "nightwatch/page_objects/users/rolesTable";
 import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
 import type { UsersPageObject } from "nightwatch/page_objects/users/users";
@@ -59,6 +60,7 @@ import {
 	type RequestPhysicalLocation,
 	type RequestProfile,
 	type RequestRegion,
+	type RequestRole,
 	type RequestServerCapability,
 	type RequestStatus,
 	type RequestSteeringTarget,
@@ -73,6 +75,7 @@ import {
 	type ResponsePhysicalLocation,
 	type ResponseProfile,
 	type ResponseRegion,
+	type ResponseRole,
 	type ResponseServerCapability,
 	type ResponseStatus,
 	type ResponseTenant,
@@ -131,6 +134,7 @@ declare module "nightwatch" {
 		};
 		users: {
 			changeLogs: () => ChangeLogsPageObject;
+			roles: () => RolesPageObject;
 			tenants: () => TenantsPageObject;
 			tenantDetail: () => TenantDetailPageObject;
 			users: () => UsersPageObject;
@@ -158,6 +162,7 @@ declare module "nightwatch" {
  * Contains the data created by the client before the test suite runs.
  */
 export interface CreatedData {
+	asn: ResponseASN;
 	cacheGroup: ResponseCacheGroup;
 	capability: ResponseServerCapability;
 	cdn: ResponseCDN;
@@ -165,14 +170,14 @@ export interface CreatedData {
 	division: ResponseDivision;
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
+	profile: ResponseProfile;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
-	asn: ResponseASN;
+	role: ResponseRole;
+	statuses: ResponseStatus;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;
-	statuses: ResponseStatus;
-	profile: ResponseProfile;
 }
 
 const testData = {};
@@ -418,7 +423,7 @@ const globals = {
 			url = `${apiUrl}/statuses`;
 			resp = await client.post(url, JSON.stringify(status));
 			const respStatus: ResponseStatus = resp.data.response;
-			console.log(`Successfully created Profile ${respStatus.name}`);
+			console.log(`Successfully created Status ${respStatus.name}`);
 			data.statuses = respStatus;
 
 			const profile: RequestProfile = {
@@ -442,6 +447,19 @@ const globals = {
 			const respCap: ResponseServerCapability = resp.data.response;
 			console.log("Successfully created Capability:", respCap);
 			data.capability = respCap;
+
+			const role: RequestRole = {
+				description: "Has access to everything - cannot be modified or deleted",
+				name: `admin${globals.uniqueString}`,
+				permissions: [
+					"ALL"
+				]
+			};
+			url = `${apiUrl}/roles`;
+			resp = await client.post(url, JSON.stringify(role));
+			const respRole: ResponseRole = resp.data.response;
+			console.log(`Successfully created Roles ${respRole.name}`);
+			data.role = respRole;
 
 		} catch(e) {
 			console.error("Request for", url, "failed:", (e as AxiosError).message);
