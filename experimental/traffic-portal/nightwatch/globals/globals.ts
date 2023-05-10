@@ -56,11 +56,11 @@ import {
 	ResponseCoordinate,
 	ResponseStatus,
 	ResponseProfile,
-	ResponseServer,
+	ResponseServer, ResponseServerCapability, ResponseRole,
 } from "trafficops-types";
 
 import * as config from "../config.json";
-import {DataClient} from "../dataClient";
+import { DataClient, generateUniqueString } from "../dataClient";
 import type { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
 import type { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
 import type { TypeDetailPageObject } from "../page_objects/types/typeDetail";
@@ -174,9 +174,9 @@ const globals = {
 			return done();
 		} else if(client.loggedIn) {
 			try {
-				await client.createData(String((+globals.uniqueString)-1));
+				await client.createData(generateUniqueString());
 			} catch(e) {
-				console.error(`Idempotency test failed, err: ${e}`);
+				console.error(`Idempotency test failed, err:`, e);
 				throw e;
 			}
 			console.log("Data creation is idempotent");
@@ -215,7 +215,7 @@ const globals = {
 	retryAssertionTimeout: config.retryAssertionTimeoutMS,
 	testData,
 	trafficOpsURL: config.to_url,
-	uniqueString: new Date().getTime().toString(),
+	uniqueString: generateUniqueString(),
 	waitForConditionTimeout:config.waitForConditionTimeoutMS
 };
 

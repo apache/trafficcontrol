@@ -46,6 +46,13 @@ import {
 } from "trafficops-types";
 
 /**
+ * Generates a unique string used for tests, uses the current epoch time.
+ */
+export function generateUniqueString(): string {
+	return new Date().getTime().toString();
+}
+
+/**
  * Defines the class used to create test data for the E2E environment
  */
 export class DataClient {
