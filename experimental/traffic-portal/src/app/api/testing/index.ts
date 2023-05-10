@@ -73,6 +73,7 @@ import { UserService as TestingUserService } from "./user.service";
 		TestingPhysicalLocationService,
 		TestingProfileService,
 		TestingServerService,
+		TestingTypeService,
 	]
 })
 export class APITestingModule { }
