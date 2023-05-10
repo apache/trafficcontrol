@@ -124,8 +124,7 @@ describe("DeliveryServiceService", () => {
 		it("gets DS health by ID", async () => {
 			const health = await service.getDSHealth(testDS.id);
 			expect(health.cacheGroups).not.toBeNull();
-			expect(health.totalOffline).toBeGreaterThan(0);
-			expect(health.totalOnline).toBeGreaterThan(0);
+			expect(health.totalOffline+health.totalOnline).toBeCloseTo(100);
 		});
 		it("throws an error when health is requested for a non-existent DS", async () => {
 			await expectAsync(service.getDSHealth(-1)).toBeRejected();
