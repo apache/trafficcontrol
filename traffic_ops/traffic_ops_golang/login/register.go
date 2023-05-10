@@ -275,7 +275,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	msg, err := createRegistrationMsg(email, t, tx, inf.Config.ConfigPortal)
 	if err != nil {
-		sysErr = fmt.Errorf("Failed to create email message: %v", err)
+		sysErr = fmt.Errorf("failed to create email message: %v", err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
@@ -287,13 +287,16 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-
+	username := ""
+	if user.Username != nil {
+		username = *user.Username
+	}
 	var alert = "Sent user registration to %s with the following permissions [ role: %s | tenant: %s ]"
 	alert = fmt.Sprintf(alert, email, role, tenant)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, alert)
 
 	var changeLog = "USER: %s, EMAIL: %s, ACTION: registration sent with role %s and tenant %s"
-	changeLog = fmt.Sprintf(changeLog, email, email, role, tenant)
+	changeLog = fmt.Sprintf(changeLog, username, email, role, tenant)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLog, inf.User, tx)
 }
 
