@@ -197,5 +197,25 @@
                 "type": "str"
             }
         }
+    },
+    "regions": {
+        "type": "object",
+        "properties": {
+            "divisionName": {
+                "type": "str"
+            },
+            "division": {
+                "type": "int"
+            },  
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            }
+        }
     }
 }
