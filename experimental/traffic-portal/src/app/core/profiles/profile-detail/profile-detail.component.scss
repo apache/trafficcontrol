@@ -11,15 +11,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-.mat-mdc-card {
-    margin: 1em auto;
-    width: 95%;
-    min-width: 350px;
 
-    .mat-mdc-card-content {
-        display: grid;
-        grid-template-columns: 1fr;
-        row-gap: 2em;
-        margin: 1em auto 10px;
-    }
+.mat-mdc-card {
+	margin: 1em auto;
+	width: 80%;
+	min-width: 350px;
+
+	.mat-mdc-card-content {
+		display: grid;
+		grid-template-columns: 1fr;
+		grid-row-gap: 2em;
+		margin: 1em auto 50px;
+	}
 }

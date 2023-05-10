@@ -466,7 +466,7 @@ func TestGetCookieToken(t *testing.T) {
 			user = cookie.AuthData
 		}
 		if user != "foobar" {
-			t.Errorf("Error: Unable to user from cookie. Expected: %v Got: %v", authUser, user)
+			t.Errorf("Error: Unable to parse user from cookie. Expected: %v Got: %v", authUser, user)
 		}
 	}
 

@@ -183,13 +183,14 @@
                 "type": "str"
             }
         }
+    },
     "divisions": {
         "type": "object",
         "properties": {
             "id": {
                 "type": "int"
             },
-             "lastUpdated": {
+            "lastUpdated": {
                 "type": "str"
             },
             "name": {
@@ -205,7 +206,7 @@
             },
             "division": {
                 "type": "int"
-            },
+            },  
             "id": {
                 "type": "int"
             },
@@ -216,5 +217,5 @@
                 "type": "str"
             }
         }
-    }   
+    }
 }

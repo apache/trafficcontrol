@@ -22,6 +22,8 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-log"
 )
 
 const GeneratedByStr = "trafficcontrol-go-tocookie"
@@ -45,6 +47,11 @@ func checkHmac(message, messageMAC, key []byte) bool {
 }
 
 func Parse(secret, cookie string) (*Cookie, error, error) {
+	if cookie == "" {
+		log.Warnf("cookie is empty or missing")
+		return nil, nil, nil
+	}
+
 	dashPos := strings.Index(cookie, "-")
 	if dashPos == -1 {
 		return nil, fmt.Errorf("error parsing cookie: malformed cookie '%s' - no dashes", cookie), nil
