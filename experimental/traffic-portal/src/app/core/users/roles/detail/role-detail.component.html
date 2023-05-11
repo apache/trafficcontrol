@@ -16,23 +16,18 @@ limitations under the License.
 	<tp-loading *ngIf="!role"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="role">
 		<mat-card-content>
-			<mat-form-field *ngIf="!new">
-				<mat-label>ID</mat-label>
-				<input matInput type="text" name="name" disabled readonly [defaultValue]="role.name" />
+			<mat-form-field>
+				<mat-label>Name</mat-label>
+				<input matInput type="text" name="name" required [(ngModel)]="role.name" />
 			</mat-form-field>
 			<mat-form-field>
-				<mat-label>ASN</mat-label>
-				<input matInput type="text" name="description" required [(ngModel)]="role.description" />
+				<mat-label>Description</mat-label>
+				<input matInput type="text" name="description" [(ngModel)]="role.description" />
 			</mat-form-field>
 			<mat-form-field>
-				<mat-label>Cache Group</mat-label>
-				<mat-select name="permissions" [(ngModel)]="role.permissions" required>
-					<mat-option *ngFor="" [value]="">{{}}</mat-option>
-				</mat-select>
+				<mat-label>Permissions</mat-label>
+				<textarea name="permissions" [(ngModel)]="role.permissions" matInput rows="10" wrap="hard" cdkTextareaAutosize></textarea>
 			</mat-form-field>
-			<mat-form-field *ngIf="!new">
-				<mat-label>Last Updated</mat-label>
-				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="role.lastUpdated" /> </mat-form-field>
 		</mat-card-content>
 		<mat-card-actions align="end">
 			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="deleteRole()">Delete</button>

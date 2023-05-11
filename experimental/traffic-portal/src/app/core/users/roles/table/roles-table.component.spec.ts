@@ -13,10 +13,12 @@
 */
 
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
-import { MatDialogModule } from "@angular/material/dialog";
+import { MatDialog, MatDialogModule, type MatDialogRef } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 import { ResponseRole } from "trafficops-types";
+import { of } from "rxjs";
 
+import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { RolesTableComponent } from "src/app/core/users/roles/table/roles-table.component";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
@@ -35,8 +37,7 @@ describe("RolesTableComponent", () => {
 		await TestBed.configureTestingModule({
 			declarations: [ RolesTableComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ]
-		})
-			.compileComponents();
+		}).compileComponents();
 
 		fixture = TestBed.createComponent(RolesTableComponent);
 		component = fixture.componentInstance;
@@ -93,18 +94,38 @@ describe("RolesTableComponent", () => {
 		expect(item.href(role)).toBe(role.name);
 	});
 
-	it("has context menu items that aren't implemented yet", () => {
-		const item = component.contextMenuItems.find(i => i.name === "Edit");
+	it("deletes Roles", fakeAsync(async () => {
+		const item = component.contextMenuItems.find(i => i.name === "Delete");
 		if (!item) {
-			return fail("missing 'Edit' context menu item");
+			return fail("missing 'Delete' context menu item");
 		}
-		if (isAction(item)) {
-			return fail("incorrect type for 'Edit' menu item. Expected an action, not a link");
+		if (!isAction(item)) {
+			return fail("incorrect type for 'Delete' menu item. Expected an action, not a link");
 		}
-		if (typeof(item.disabled) !== "function") {
-			return fail("'Edit' context menu item should be disabled, but no disabled function is defined");
-		}
-	});
+		expect(item.multiRow).toBeFalsy();
+		expect(item.disabled).toBeUndefined();
+
+		const api = TestBed.inject(UserService);
+		const spy = spyOn(api, "deleteRole").and.callThrough();
+		expect(spy).not.toHaveBeenCalled();
+
+		const dialogService = TestBed.inject(MatDialog);
+		const openSpy = spyOn(dialogService, "open").and.returnValue({
+			afterClosed: () => of(true)
+		} as MatDialogRef<unknown>);
+
+		const testRole = await api.createRole(role);
+		expect(openSpy).not.toHaveBeenCalled();
+		const asyncExpectation = expectAsync(component.handleContextMenu({action: "delete", data: testRole})).toBeResolvedTo(undefined);
+		tick();
+
+		expect(openSpy).toHaveBeenCalled();
+		tick();
+
+		expect(spy).toHaveBeenCalled();
+
+		await asyncExpectation;
+	}));
 
 	it("generate 'View Users' context menu item href", () => {
 		const item = component.contextMenuItems.find(i => i.name === "View Users");

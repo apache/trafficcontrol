@@ -24,9 +24,6 @@ const roleDetailPageObject = {
 		description: {
 			selector: "input[name='description']"
 		},
-		lastUpdated: {
-			selector: "input[name='lastUpdated']"
-		},
 		name: {
 			selector: "input[name='name']"
 		},

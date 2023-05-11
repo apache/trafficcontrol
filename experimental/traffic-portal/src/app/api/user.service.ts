@@ -17,6 +17,7 @@ import { Injectable } from "@angular/core";
 import {
 	type ResponseUser,
 	type PostRequestUser,
+	type RequestRole,
 	type RequestTenant,
 	type ResponseCurrentUser,
 	type ResponseRole,
@@ -27,7 +28,6 @@ import {
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
-import {RequestRole} from "trafficops-types";
 
 /**
  * UserService exposes API functionality related to Users, Roles and Tenants.
@@ -285,7 +285,7 @@ export class UserService extends APIService {
 	 * @returns The updated role.
 	 */
 	public async updateRole(role: ResponseRole): Promise<ResponseRole> {
-		return this.put<ResponseRole>(`roles/${role.name}`, role).toPromise();
+		return this.put<ResponseRole>(`roles?name=${role.name}`, role).toPromise();
 	}
 
 	/**
@@ -294,8 +294,9 @@ export class UserService extends APIService {
 	 * @param tenant The role to be deleted.
 	 * @returns The deleted role.
 	 */
-	public async deleteRole(role: ResponseRole): Promise<ResponseRole> {
-		return this.delete<ResponseRole>(`roles/${role.name}`).toPromise();
+	public async deleteRole(role: string | ResponseRole): Promise<void> {
+		const roleName = typeof(role) === "string" ? role : role.name;
+		return this.delete(`roles?name=${roleName}`).toPromise();
 	}
 
 	/**

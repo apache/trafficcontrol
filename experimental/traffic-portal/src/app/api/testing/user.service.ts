@@ -86,6 +86,15 @@ export class UserService {
 			privLevel: 30
 		}
 	];
+	private readonly roleDetail: Array<ResponseRole> = [{
+		description: "Has access to everything - cannot be modified or deleted",
+		lastUpdated: new Date(),
+		name: "admin",
+		permissions: [
+			"ALL"
+		],
+	}
+	];
 
 	private readonly tenants: Array<ResponseTenant> = [
 		{
@@ -438,10 +447,8 @@ export class UserService {
 	public async createRole(role: RequestRole): Promise<ResponseRole> {
 		const resp = {
 			...role,
-			name: role.name,
-			lastUpdated: new Date(),
 		};
-		this.roles.push(resp);
+		this.roleDetail.push(resp);
 		return resp;
 	}
 
@@ -452,11 +459,11 @@ export class UserService {
 	 * @returns The updated role.
 	 */
 	public async updateRole(role: ResponseRole): Promise<ResponseRole> {
-		const name = this.tenants.findIndex(r => r.name === role.name);
-		if (name === null) {
+		const roleName = this.roleDetail.findIndex(r => r.name === role.name);
+		if (roleName < 0 ) {
 			throw new Error(`no such Role: ${role.name}`);
 		}
-		this.roles[name] = role;
+		this.roleDetail[roleName] = role;
 		return role;
 	}
 
@@ -466,12 +473,13 @@ export class UserService {
 	 * @param tenant The role to be deleted.
 	 * @returns The deleted role.
 	 */
-	public async deleteRole(role: ResponseRole): Promise<ResponseRole> {
-		const index = this.tenants.findIndex(r => r.name === role.name);
-		if (index < 0) {
-			throw new Error(`no such role: ${role.name}`);
+	public async deleteRole(role: string | ResponseRole): Promise<ResponseRole> {
+		const roleName = typeof(role) === "string" ? role : role.name;
+		const index = this.roleDetail.findIndex(r => r.name === roleName);
+		if (index === -1) {
+			throw new Error(`no such role: ${role}`);
 		}
-		return this.roles.splice(index, 1)[0];
+		return this.roleDetail.splice(index, 1)[0];
 	}
 
 	/**

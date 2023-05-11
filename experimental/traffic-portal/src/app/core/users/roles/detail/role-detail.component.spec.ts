@@ -12,11 +12,12 @@
 * limitations under the License.
 */
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { MatDialogModule } from "@angular/material/dialog";
+import { MatDialog, MatDialogModule, type MatDialogRef } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import { ReplaySubject } from "rxjs";
+import { of, ReplaySubject } from "rxjs";
 
+import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { RoleDetailComponent } from "src/app/core/users/roles/detail/role-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
@@ -57,21 +58,15 @@ describe("RoleDetailComponent", () => {
 		fixture.detectChanges();
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
-		expect(component.roles).not.toBeNull();
-		expect(component.roles.name).toBe(1);
+		expect(component.role).not.toBeNull();
+		expect(component.role.name).toBe("");
 		expect(component.new).toBeTrue();
 	});
 
 	it("existing role", async () => {
-		paramMap.and.returnValue("1");
-
-		fixture = TestBed.createComponent(RoleDetailComponent);
-		component = fixture.componentInstance;
-		fixture.detectChanges();
-		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
-		expect(component.roles).not.toBeNull();
-		expect(component.roles.name).toBe(0);
+		expect(component.role).not.toBeNull();
+		expect(component.role.name).toBe("");
 		expect(component.new).toBeFalse();
 	});
 });

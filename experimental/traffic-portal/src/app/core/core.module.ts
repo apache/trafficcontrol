@@ -131,6 +131,7 @@ export const ROUTES: Routes = [
 		TenantsComponent,
 		UserRegistrationDialogComponent,
 		RolesTableComponent,
+		RoleDetailComponent,
 		TenantDetailsComponent,
 		ChangeLogsComponent,
 		LastDaysComponent,

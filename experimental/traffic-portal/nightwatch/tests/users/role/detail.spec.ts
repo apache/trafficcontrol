@@ -14,31 +14,29 @@
 
 describe("Role Detail Spec", () => {
 	it("Test Role", () => {
-		const page = browser.page.users.roles();
+		const page = browser.page.users.roleDetail();
 		browser.url(`${page.api.launchUrl}/core/roles/${browser.globals.testData.role.name}`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
-				.assert.enabled("@role")
 				.assert.enabled("@description")
+				.assert.enabled("@name")
 				.assert.enabled("@permissions")
 				.assert.enabled("@saveBtn")
-				.assert.not.enabled("@lastUpdated")
 				.assert.valueEquals("@name", String(browser.globals.testData.role.name))
-				.assert.valueEquals("@permission", String(browser.globals.testData.role.permissions));
+				.assert.valueEquals("@permissions", String(browser.globals.testData.role.permissions));
 		});
 	});
 
-	// it("New asn", () => {
-	// 	const page = browser.page.cacheGroups.asnDetail();
-	// 	browser.url(`${page.api.launchUrl}/core/asns/new`, res => {
-	// 		browser.assert.ok(res.status === 0);
-	// 		page.waitForElementVisible("mat-card")
-	// 			.assert.enabled("@asn")
-	// 			.assert.enabled("@cachegroup")
-	// 			.assert.enabled("@saveBtn")
-	// 			.assert.not.elementPresent("@id")
-	// 			.assert.not.elementPresent("@lastUpdated")
-	// 			.assert.valueEquals("@asn", "1");
-	// 	});
-	// });
+	it("New asn", () => {
+		const page = browser.page.users.roleDetail();
+		browser.url(`${page.api.launchUrl}/core/roles/new`, res => {
+			browser.assert.ok(res.status === 0);
+			page.waitForElementVisible("mat-card")
+				.assert.enabled("@description")
+				.assert.enabled("@name")
+				.assert.enabled("@permissions")
+				.assert.enabled("@saveBtn")
+				.assert.valueEquals("@name", "test");
+		});
+	});
 });

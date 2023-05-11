@@ -31,9 +31,10 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 })
 export class RoleDetailComponent implements OnInit {
 	public new = false;
-	public asn!: ResponseRole;
-	constructor(private readonly route: ActivatedRoute, private readonly location: Location,
-				private readonly dialog: MatDialog, private readonly header: NavigationService) {
+	public role!: ResponseRole;
+	constructor(private readonly route: ActivatedRoute, private readonly userService: UserService,
+				private readonly location: Location, private readonly dialog: MatDialog,
+				private readonly header: NavigationService) {
 	}
 
 	/**
@@ -50,15 +51,14 @@ export class RoleDetailComponent implements OnInit {
 			this.header.headerTitle.next("New Role");
 			this.new = true;
 			this.role = {
-				description: "Read Only",
-				lastUpdated: new Date(),
-				name: "test",
+				description: "",
+				name: "",
 				permissions: []
 			};
 			return;
 		}
 
-		this.role = await this.UserService.getRoles(role);
+		this.role = await this.userService.getRoles(role);
 		this.header.headerTitle.next(`Role: ${this.role.name}`);
 	}
 
@@ -76,7 +76,7 @@ export class RoleDetailComponent implements OnInit {
 		});
 		ref.afterClosed().subscribe(result => {
 			if(result) {
-				this.UserService.deleteRole(this.role.name);
+				this.userService.deleteRole(this.role);
 				this.location.back();
 			}
 		});
@@ -91,10 +91,10 @@ export class RoleDetailComponent implements OnInit {
 		e.preventDefault();
 		e.stopPropagation();
 		if(this.new) {
-			this.asn = await this.UserService.createRole(this.role);
+			this.role = await this.userService.createRole(this.role);
 			this.new = false;
 		} else {
-			this.asn = await this.UserService.updateRoleN(this.Role);
+			this.role = await this.userService.updateRole(this.role);
 		}
 	}
 
