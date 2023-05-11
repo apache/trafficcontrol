@@ -470,7 +470,7 @@ export class UserService {
 	/**
 	 * Deletes an existing role.
 	 *
-	 * @param tenant The role to be deleted.
+	 * @param role The role to be deleted.
 	 * @returns The deleted role.
 	 */
 	public async deleteRole(role: string | ResponseRole): Promise<ResponseRole> {

@@ -11,13 +11,13 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { MatDialog, MatDialogModule, type MatDialogRef } from "@angular/material/dialog";
+import { MatDialogModule } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import { of, ReplaySubject } from "rxjs";
+import { ReplaySubject } from "rxjs";
 
-import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { RoleDetailComponent } from "src/app/core/users/roles/detail/role-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";

@@ -14,7 +14,9 @@
 
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import {ActivatedRoute, type Params} from "@angular/router";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute, type Params } from "@angular/router";
+
 import { BehaviorSubject } from "rxjs";
 import type { ResponseRole } from "trafficops-types";
 
@@ -23,7 +25,7 @@ import { CurrentUserService } from "src/app/shared/current-user/current-user.ser
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
-import {MatDialog} from "@angular/material/dialog";
+
 /**
  * RolesTableComponent is the controller for the "Roles" table.
  */

@@ -33,8 +33,8 @@ export class RoleDetailComponent implements OnInit {
 	public new = false;
 	public role!: ResponseRole;
 	constructor(private readonly route: ActivatedRoute, private readonly userService: UserService,
-				private readonly location: Location, private readonly dialog: MatDialog,
-				private readonly header: NavigationService) {
+		private readonly location: Location, private readonly dialog: MatDialog,
+		private readonly header: NavigationService) {
 	}
 
 	/**

@@ -39,8 +39,8 @@ import type { ServersTablePageObject } from "nightwatch/page_objects/servers/ser
 import type { StatusDetailPageObject } from "nightwatch/page_objects/statuses/statusDetail";
 import type { StatusesTablePageObject } from "nightwatch/page_objects/statuses/statusesTable";
 import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
-import type { RolesPageObject } from "nightwatch/page_objects/users/rolesTable";
 import type { RoleDetailPageObject } from "nightwatch/page_objects/users/roleDetail";
+import type { RolesPageObject } from "nightwatch/page_objects/users/rolesTable";
 import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
 import type { UsersPageObject } from "nightwatch/page_objects/users/users";
