@@ -188,6 +188,5 @@ describe("ParametersTableComponent", () => {
 		}
 		expect(item.queryParams(testParameter)).toEqual({hasParameter: testParameter.id});
 		expect(item.fragment).toBeUndefined();
-		expect(item.newTab).toBeTrue();
 	});
 });

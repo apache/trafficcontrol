@@ -282,12 +282,12 @@ export class ProfileService {
 	public async createParameter(parameter: RequestParameter): Promise<ResponseParameter> {
 		const t = {
 			...parameter,
-			configFile: "cfg.txt",
+			configFile: parameter.configFile,
 			id: ++this.lastParamID,
 			lastUpdated: new Date(),
 			profiles: [],
-			secure: false,
-			value: "100"
+			secure: parameter.secure,
+			value: parameter.value ?? ""
 		};
 		this.parameters.push(t);
 		return t;

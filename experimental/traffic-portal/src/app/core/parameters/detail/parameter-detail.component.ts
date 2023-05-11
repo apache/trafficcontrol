@@ -15,7 +15,6 @@
 import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import { MatSlideToggleChange } from "@angular/material/slide-toggle";
 import { ActivatedRoute } from "@angular/router";
 import { ResponseParameter } from "trafficops-types";
 
@@ -110,19 +109,6 @@ export class ParameterDetailComponent implements OnInit {
 			this.new = false;
 		} else {
 			this.parameter = await this.profileService.updateParameter(this.parameter);
-		}
-	}
-
-	/**
-	 * Sets the value of a parameter, corresponding to the value of the toggle bar
-	 *
-	 * @param e MatSlideToggleChange event.
-	 */
-	public async setValue(e: MatSlideToggleChange): Promise<void> {
-		if(e.checked){
-			this.parameter.secure = true;
-		}else{
-			this.parameter.secure = false;
 		}
 	}
 }

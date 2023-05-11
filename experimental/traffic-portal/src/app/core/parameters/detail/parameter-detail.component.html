@@ -32,17 +32,7 @@ limitations under the License.
 				<mat-label>Value</mat-label>
 				<input matInput type="text" name="value" required [(ngModel)]="parameter.value" />
 			</mat-form-field>
-			<mat-form-field>
-				<mat-label>Secure</mat-label>
-				<input matInput type="boolean" name="secure" required [(ngModel)]="parameter.secure" />
-					<mat-card-header matSuffix>
-						<mat-slide-toggle
-							[checked]="parameter.secure === true ? true : false"
-							(change)="setValue($event)">
-							{{parameter.secure}}
-						</mat-slide-toggle>
-					</mat-card-header>
-			</mat-form-field>
+			<mat-slide-toggle required [(ngModel)]="parameter.secure" name="secure">Secure</mat-slide-toggle>
 			<mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>
 				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="parameter.lastUpdated" />

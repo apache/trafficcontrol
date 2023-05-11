@@ -56,7 +56,7 @@ export class ParametersTableComponent implements OnInit {
 		{
 			field: "profiles",
 			headerName: "Profiles",
-			valueFormatter: ({data}: {data: ResponseParameter}): string => `${data.profiles}`
+			valueFormatter: ({data}: {data: ResponseParameter}): string => `${data.profiles}`.replace(",", ", ")
 		},
 		{
 			field: "secure",
@@ -95,7 +95,6 @@ export class ParametersTableComponent implements OnInit {
 		{
 			href: "/core/profiles",
 			name: "View Profiles",
-			newTab: true,
 			queryParams: (selectedRow: ResponseParameter): Params => ({hasParameter: selectedRow.id}),
 		}
 	];
