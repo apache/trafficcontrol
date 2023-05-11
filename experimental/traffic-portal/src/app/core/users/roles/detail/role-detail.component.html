@@ -18,15 +18,15 @@ limitations under the License.
 		<mat-card-content>
 			<mat-form-field>
 				<mat-label>Name</mat-label>
-				<input matInput type="text" name="name" required [(ngModel)]="role.name" />
+				<input matInput type="text" name="name" required [(ngModel)]="role.name" [readonly]="role.name === 'admin'"/>
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Description</mat-label>
-				<input matInput type="text" name="description" [(ngModel)]="role.description" />
+				<input matInput type="text" name="description" [(ngModel)]="role.description" [readonly]="role.name === 'admin'" />
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Permissions</mat-label>
-				<textarea name="permissions" [(ngModel)]="role.permissions" matInput rows="10" wrap="hard" cdkTextareaAutosize></textarea>
+				<textarea name="permissions" [(ngModel)]="role.permissions" matInput readonly rows="10" wrap="hard" cdkTextareaAutosize></textarea>
 			</mat-form-field>
 		</mat-card-content>
 		<mat-card-actions align="end">

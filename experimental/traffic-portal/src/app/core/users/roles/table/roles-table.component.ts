@@ -16,7 +16,6 @@ import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, type Params } from "@angular/router";
-
 import { BehaviorSubject } from "rxjs";
 import type { ResponseRole } from "trafficops-types";
 

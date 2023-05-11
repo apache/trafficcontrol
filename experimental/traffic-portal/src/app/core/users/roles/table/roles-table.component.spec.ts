@@ -15,8 +15,8 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { MatDialog, MatDialogModule, type MatDialogRef } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
-import { ResponseRole } from "trafficops-types";
 import { of } from "rxjs";
+import { ResponseRole } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
