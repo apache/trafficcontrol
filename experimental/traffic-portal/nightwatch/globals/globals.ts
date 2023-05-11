@@ -150,11 +150,9 @@ export interface CreatedData {
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
 	edgeServer: ResponseServer;
-	profile: ResponseProfile;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
 	role: ResponseRole;
-	statuses: ResponseStatus;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;

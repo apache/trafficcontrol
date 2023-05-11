@@ -31,7 +31,9 @@ import {
 	RequestPhysicalLocation,
 	RequestProfile,
 	RequestRegion,
+	RequestRole,
 	RequestServer,
+	RequestServerCapability,
 	RequestStatus,
 	RequestSteeringTarget,
 	RequestTenant,
@@ -41,7 +43,8 @@ import {
 	ResponseDivision,
 	ResponsePhysicalLocation,
 	ResponseProfile,
-	ResponseRegion, ResponseStatus,
+	ResponseRegion,
+	ResponseStatus,
 	TypeFromResponse
 } from "trafficops-types";
 
@@ -341,6 +344,25 @@ export class DataClient {
 			url = `${apiUrl}/servers`;
 			resp = await this.client.post(url, JSON.stringify(server));
 			data.edgeServer = resp.data.response;
+
+			let capability: RequestServerCapability;
+			capability = {
+				name: `test${id}`
+			};
+			url = `${apiUrl}/server_capabilities`;
+			resp = await this.client.post(url, JSON.stringify(capability));
+			data.capability = resp.data.response;
+
+			const role: RequestRole = {
+				description: "Has access to everything - cannot be modified or deleted",
+				name: `admin${id}`,
+				permissions: [
+					"ALL"
+				]
+			};
+			url = `${apiUrl}/roles`;
+			resp = await this.client.post(url, JSON.stringify(role));
+			data.role = resp.data.response;
 		} catch (e) {
 			const ae = e as AxiosError;
 			ae.message = `Request (${ae.config.method}) failed to ${url}`;
