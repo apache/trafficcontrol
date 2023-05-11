@@ -270,6 +270,84 @@ describe("ServerService", () => {
 		});
 	});
 
+	describe("Capability methods", () => {
+		const cap = {
+			lastUpdated: new Date(),
+			name: "test"
+		};
+
+		it("sends requests for multiple capabilities", async () => {
+			const responseP = service.getCapabilities();
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: [cap]});
+			await expectAsync(responseP).toBeResolvedTo([cap]);
+		});
+		it("sends requests for a single capability by name", async () => {
+			const responseP = service.getCapabilities(cap.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: [cap]});
+			await expectAsync(responseP).toBeResolvedTo(cap);
+		});
+		it("throws an error when TO presents it with multiple matches by name", async () => {
+			const responseP = service.getCapabilities(cap.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: [cap, {...cap, name: `${cap.name}-duplicate`}]});
+			await expectAsync(responseP).toBeRejected();
+		});
+		it("throws an error when fetching a non-existent capability", async () => {
+			const responseP = service.getCapabilities(cap.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: []});
+			await expectAsync(responseP).toBeRejected();
+		});
+		it("sends requests for creating a new capability", async () => {
+			const responseP = service.createCapability(cap);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("POST");
+			expect(req.request.body).toEqual(cap);
+			req.flush({response: cap});
+			await expectAsync(responseP).toBeResolvedTo(cap);
+		});
+		it("sends requests for updating an existing capability", async () => {
+			const responseP = service.updateCapability(cap.name, cap);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("PUT");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			expect(req.request.body).toEqual(cap);
+			req.flush({response: cap});
+			await expectAsync(responseP).toBeResolvedTo(cap);
+		});
+		it("sends requests for deleting an existing capability", async () => {
+			const responseP = service.deleteCapability(cap);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			req.flush({alerts: [{level: "success", text: "capability deleted"}]});
+			await expectAsync(responseP).toBeResolvedTo(undefined);
+		});
+		it("sends requests for deleting an existing capability by name", async () => {
+			const responseP = service.deleteCapability(cap.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			req.flush({alerts: [{level: "success", text: "capability deleted"}]});
+			await expectAsync(responseP).toBeResolvedTo(undefined);
+		});
+	});
+
 	describe("other methods", () => {
 		const serverCheck = {
 			adminState: "ONLINE",
