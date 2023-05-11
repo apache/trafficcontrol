@@ -672,7 +672,6 @@ def tenant_post_data(to_session: TOSession, request_template_data: list[JSONData
 		logger.error("No Parameter response data from parameters POST request.")
 		sys.exit(1)
 
-
 @pytest.fixture()
 def server_capabilities_post_data(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
@@ -715,7 +714,6 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 	except IndexError:
 		logger.error("No server_capabilities response data from server_capabilities POST request.")
 		sys.exit(1)
-
 
 @pytest.fixture()
 def division_post_data(to_session: TOSession, request_template_data: list[JSONData]
@@ -760,3 +758,62 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	except IndexError:
 		logger.error("No division response data from division POST request.")
 		sys.exit(1)
+
+@pytest.fixture()
+def region_post_data(to_session: TOSession, request_template_data: list[JSONData]
+			  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for region endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get region data from a prerequisites file.
+  	:returns: Sample POST data and the actual API response.
+	"""
+
+	try:
+		region = request_template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			"malformed prerequisite data; no Region present in 'regions' array property") from e
+
+	if not isinstance(region, dict):
+		raise TypeError(f"malformed prerequisite data; region must be objects, not '{type(region)}'")
+
+	# Return new post data and post response from regions POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = region["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		region["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Region property '{e.args[0]}'") from e
+	# Hitting types GET method to access typeID for region POST data
+	division_get_response: tuple[
+		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		requests.Response
+	] = to_session.get_divisions()
+	try:
+		division_data = division_get_response[0]
+		if not isinstance(division_data, list):
+			raise TypeError("malformed API response; 'response' property not an array")
+		first_division = division_data[0]
+		if not isinstance(first_division, dict):
+			raise TypeError("malformed API response; first Division in response is not an object")
+		region["division"] = first_division["id"]
+		division_id = region["division"]
+		logger.info("extracted %s from %s", division_id, division_get_response)
+	except KeyError as e:
+		raise TypeError(f"missing Regions property '{e.args[0]}'") from e
+
+	logger.info("New region data to hit POST method %s", request_template_data)
+	# Hitting region POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_region(data=region)
+	try:
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; region is not an object")
+		return resp_obj
+	except IndexError:
+		logger.error("No Region response data from divisions POST request.")
+	sys.exit(1)
