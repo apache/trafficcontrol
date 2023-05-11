@@ -28,7 +28,7 @@ const roleDetailPageObject = {
 			selector: "input[name='name']"
 		},
 		permissions: {
-			selector: "input[name='permissions']"
+			selector: "textarea[name='permissions']"
 		},
 		saveBtn: {
 			selector: "button[type='submit']"

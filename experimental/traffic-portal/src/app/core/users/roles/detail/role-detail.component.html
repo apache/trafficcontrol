@@ -26,7 +26,7 @@ limitations under the License.
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Permissions</mat-label>
-				<textarea name="permissions" [(ngModel)]="role.permissions" matInput readonly rows="10" wrap="hard" cdkTextareaAutosize></textarea>
+				<textarea matInput name="permissions" [(ngModel)]="permissions" (input)="updatePermissions()" [readonly]="!new" cdkTextareaAutosize></textarea>
 			</mat-form-field>
 		</mat-card-content>
 		<mat-card-actions align="end">

@@ -64,9 +64,15 @@ describe("RoleDetailComponent", () => {
 	});
 
 	it("existing role", async () => {
+		paramMap.and.returnValue("admin");
+
+		fixture = TestBed.createComponent(RoleDetailComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.role).not.toBeNull();
-		expect(component.role.name).toBe("");
+		expect(component.role.name).toBe("admin");
 		expect(component.new).toBeFalse();
 	});
 });

@@ -31,6 +31,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 })
 export class RoleDetailComponent implements OnInit {
 	public new = false;
+	public permissions = ""
 	public role!: ResponseRole;
 	constructor(private readonly route: ActivatedRoute, private readonly userService: UserService,
 		private readonly location: Location, private readonly dialog: MatDialog,
@@ -59,6 +60,7 @@ export class RoleDetailComponent implements OnInit {
 		}
 
 		this.role = await this.userService.getRoles(role);
+		this.permissions = this.role.permissions?.join("\n")??"";
 		this.header.headerTitle.next(`Role: ${this.role.name}`);
 	}
 
@@ -80,6 +82,15 @@ export class RoleDetailComponent implements OnInit {
 				this.location.back();
 			}
 		});
+	}
+
+	/**
+	 * Updates permissions list from a string to an array.
+	 *
+	 * @param e HTML form submission event.
+	 */
+	public async updatePermissions(): Promise<void> {
+		this.role.permissions = this.permissions.split("\n")
 	}
 
 	/**

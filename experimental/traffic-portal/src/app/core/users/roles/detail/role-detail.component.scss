@@ -22,5 +22,9 @@ mat-card {
 		grid-template-columns: 1fr;
 		row-gap: 2em;
 		margin: 1em auto 50px;
+		textarea{
+			white-space: pre-wrap;
+			max-height: 250px;
+		}
 	}
 }
