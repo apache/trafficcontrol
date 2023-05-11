@@ -345,8 +345,7 @@ export class DataClient {
 			resp = await this.client.post(url, JSON.stringify(server));
 			data.edgeServer = resp.data.response;
 
-			let capability: RequestServerCapability;
-			capability = {
+			const capability: RequestServerCapability = {
 				name: `test${id}`
 			};
 			url = `${apiUrl}/server_capabilities`;
