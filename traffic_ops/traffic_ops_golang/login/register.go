@@ -69,7 +69,8 @@ RETURNING (
 	SELECT tenant.name
 	FROM tenant
 	WHERE tenant.id=tm_user.tenant_id
-) AS tenant
+) AS tenant,
+username
 `
 
 const renewRegistrationQuery = `
@@ -246,6 +247,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	var role string
 	var tenant string
+	var username string
 	user, exists, err := dbhelpers.GetUserByEmail(email.Address.Address, inf.Tx.Tx)
 	if err != nil {
 		errCode = http.StatusInternalServerError
@@ -263,7 +265,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 		role, tenant, err = renewRegistration(tx, req, t, user)
 	} else {
-		role, tenant, err = newRegistration(tx, req, t)
+		role, tenant, username, err = newRegistration(tx, req, t)
 	}
 
 	if err != nil {
@@ -287,7 +289,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-	username := ""
 	if user.Username != nil {
 		username = *user.Username
 	}
@@ -312,14 +313,14 @@ func renewRegistration(tx *sql.Tx, req tc.UserRegistrationRequest, t string, u t
 	return role, tenant, nil
 }
 
-func newRegistration(tx *sql.Tx, req tc.UserRegistrationRequest, t string) (string, string, error) {
+func newRegistration(tx *sql.Tx, req tc.UserRegistrationRequest, t string) (string, string, string, error) {
 	var role string
 	var tenant string
-
+	var username string
 	var row = tx.QueryRow(registerUserQuery, req.Email.Address.Address, req.Role, req.TenantID, t)
-	if err := row.Scan(&role, &tenant); err != nil {
-		return "", "", err
+	if err := row.Scan(&role, &tenant, &username); err != nil {
+		return "", "", "", err
 	}
 
-	return role, tenant, nil
+	return role, tenant, username, nil
 }
