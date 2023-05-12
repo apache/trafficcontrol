@@ -28,7 +28,8 @@ import {
 } from "src/app/shared/dialogs/collection-choice-dialog/collection-choice-dialog.component";
 import type {
 	ContextMenuActionEvent,
-	ContextMenuItem, DoubleClickLink,
+	ContextMenuItem,
+	DoubleClickLink,
 	TableTitleButton
 } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
