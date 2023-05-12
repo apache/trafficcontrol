@@ -32,48 +32,61 @@ import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deli
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
 import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceInvalidationJobs";
 import type { LoginPageObject } from "nightwatch/page_objects/login";
+import type { ProfileDetailPageObject } from "nightwatch/page_objects/profiles/profileDetail";
 import type { ProfilePageObject } from "nightwatch/page_objects/profiles/profilesTable";
 import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
 import type { PhysLocTablePageObject } from "nightwatch/page_objects/servers/physLocTable";
 import type { ServersPageObject } from "nightwatch/page_objects/servers/servers";
+import type { StatusDetailPageObject } from "nightwatch/page_objects/statuses/statusDetail";
+import type { StatusesTablePageObject } from "nightwatch/page_objects/statuses/statusesTable";
 import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
+import type { RolesPageObject } from "nightwatch/page_objects/users/rolesTable";
 import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
 import type { UsersPageObject } from "nightwatch/page_objects/users/users";
 import {
-	CDN,
 	GeoLimit,
 	GeoProvider,
-	LoginRequest,
+	ProfileType,
 	Protocol,
-	RequestDeliveryService,
-	ResponseCDN,
-	ResponseDeliveryService,
-	RequestTenant,
-	ResponseTenant,
-	TypeFromResponse,
-	RequestSteeringTarget,
-	ResponseASN,
-	RequestASN,
-	ResponseDivision,
-	RequestDivision,
-	ResponseRegion,
-	RequestRegion,
-	RequestCacheGroup,
-	ResponseCacheGroup,
-	ResponsePhysicalLocation,
-	RequestPhysicalLocation,
-	ResponseCoordinate,
-	RequestCoordinate,
-	RequestType,
-	ResponseProfile,
-	RequestProfile,
-	ProfileType
+
+	type CDN,
+	type LoginRequest,
+	type RequestASN,
+	type RequestCacheGroup,
+	type RequestCoordinate,
+	type RequestDeliveryService,
+	type RequestDivision,
+	type RequestPhysicalLocation,
+	type RequestProfile,
+	type RequestRegion,
+	type RequestRole,
+	type RequestServerCapability,
+	type RequestStatus,
+	type RequestSteeringTarget,
+	type RequestTenant,
+	type RequestType,
+	type ResponseASN,
+	type ResponseCacheGroup,
+	type ResponseCDN,
+	type ResponseCoordinate,
+	type ResponseDeliveryService,
+	type ResponseDivision,
+	type ResponsePhysicalLocation,
+	type ResponseProfile,
+	type ResponseRegion,
+	type ResponseRole,
+	type ResponseServerCapability,
+	type ResponseStatus,
+	type ResponseTenant,
+	type TypeFromResponse,
 } from "trafficops-types";
 
 import * as config from "../config.json";
-import {TypeDetailPageObject} from "../page_objects/types/typeDetail";
-import {TypesPageObject} from "../page_objects/types/typesTable";
+import type { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
+import type { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
+import type { TypeDetailPageObject } from "../page_objects/types/typeDetail";
+import type { TypesPageObject } from "../page_objects/types/typesTable";
 
 declare module "nightwatch" {
 	/**
@@ -104,14 +117,24 @@ declare module "nightwatch" {
 		login: () => LoginPageObject;
 		profiles: {
 			profileTable: () => ProfilePageObject;
+			profileDetail: () => ProfileDetailPageObject;
 		};
 		servers: {
+			capabilities: {
+				capabilityDetails: () => CapabilityDetailsPageObject;
+				capabilitiesTable: () => CapabilitiesPageObject;
+			};
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
 			servers: () => ServersPageObject;
 		};
+		statuses: {
+			statusesTable: () => StatusesTablePageObject;
+			statusDetail: () => StatusDetailPageObject;
+		};
 		users: {
 			changeLogs: () => ChangeLogsPageObject;
+			roles: () => RolesPageObject;
 			tenants: () => TenantsPageObject;
 			tenantDetail: () => TenantDetailPageObject;
 			users: () => UsersPageObject;
@@ -139,19 +162,22 @@ declare module "nightwatch" {
  * Contains the data created by the client before the test suite runs.
  */
 export interface CreatedData {
+	asn: ResponseASN;
 	cacheGroup: ResponseCacheGroup;
+	capability: ResponseServerCapability;
 	cdn: ResponseCDN;
 	coordinate: ResponseCoordinate;
 	division: ResponseDivision;
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
+	profile: ResponseProfile;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
-	asn: ResponseASN;
+	role: ResponseRole;
+	statuses: ResponseStatus;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;
-	profile: ResponseProfile;
 }
 
 const testData = {};
@@ -164,7 +190,7 @@ const globals = {
 			done();
 		});
 	},
-	apiVersion: "3.1",
+	apiVersion: "4.0",
 	before: async (done: () => void): Promise<void> => {
 		const apiUrl = `${globals.trafficOpsURL}/api/${globals.apiVersion}`;
 		const client = axios.create({
@@ -390,6 +416,16 @@ const globals = {
 			console.log(`Successfully created Type ${respType.name}`);
 			data.type = respType;
 
+			const status: RequestStatus = {
+				description: "blah",
+				name: `status${globals.uniqueString}`,
+			};
+			url = `${apiUrl}/statuses`;
+			resp = await client.post(url, JSON.stringify(status));
+			const respStatus: ResponseStatus = resp.data.response;
+			console.log(`Successfully created Status ${respStatus.name}`);
+			data.statuses = respStatus;
+
 			const profile: RequestProfile = {
 				cdn: 1,
 				description: "blah",
@@ -402,6 +438,28 @@ const globals = {
 			const respProfile: ResponseProfile = resp.data.response;
 			console.log(`Successfully created Profile ${respProfile.name}`);
 			data.profile = respProfile;
+
+			const capability: RequestServerCapability = {
+				name: `test${globals.uniqueString}`
+			};
+			url = `${apiUrl}/server_capabilities`;
+			resp = await client.post(url, JSON.stringify(capability));
+			const respCap: ResponseServerCapability = resp.data.response;
+			console.log("Successfully created Capability:", respCap);
+			data.capability = respCap;
+
+			const role: RequestRole = {
+				description: "Has access to everything - cannot be modified or deleted",
+				name: `admin${globals.uniqueString}`,
+				permissions: [
+					"ALL"
+				]
+			};
+			url = `${apiUrl}/roles`;
+			resp = await client.post(url, JSON.stringify(role));
+			const respRole: ResponseRole = resp.data.response;
+			console.log(`Successfully created Roles ${respRole.name}`);
+			data.role = respRole;
 
 		} catch(e) {
 			console.error("Request for", url, "failed:", (e as AxiosError).message);

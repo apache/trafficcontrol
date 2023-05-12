@@ -33,12 +33,25 @@ export class ProfileService extends APIService {
 		super(http);
 	}
 
+	/**
+	 * Retrieves a single Profile from the API.
+	 *
+	 * @param idOrName Either the integral, unique identifier (number) or name
+	 * (string) of the specific Profile to retrieve.
+	 * @returns The requested Profile.
+	 */
 	public async getProfiles(idOrName: number | string): Promise<ResponseProfile>;
-	public async getProfiles(): Promise<Array<ResponseProfile>>;
 	/**
 	 * Retrieves Profiles from the API.
 	 *
-	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Profile to retrieve, or its name (string).
+	 * @returns The requested Profiles.
+	 */
+	public async getProfiles(): Promise<Array<ResponseProfile>>;
+	/**
+	 * Retrieves one or more Profiles from the API.
+	 *
+	 * @param idOrName Specify either the integral, unique identifier (number)
+	 * of a specific Profile to retrieve, or its name (string).
 	 * @returns The requested Profile(s).
 	 */
 	public async getProfiles(idOrName?: number | string): Promise<Array<ResponseProfile> | ResponseProfile> {
@@ -47,7 +60,7 @@ export class ProfileService extends APIService {
 			let params;
 			switch (typeof idOrName) {
 				case "number":
-					params = {id: String(idOrName)};
+					params = {id: idOrName};
 					break;
 				case "string":
 					params = {name: idOrName};
@@ -59,17 +72,28 @@ export class ProfileService extends APIService {
 	}
 
 	/**
-	 * Creates a new type.
+	 * Creates a new profile.
 	 *
-	 * @param profile The type to create.
-	 * @returns The created type.
+	 * @param profile The profile to create.
+	 * @returns The created profile.
 	 */
 	public async createProfile(profile: RequestProfile): Promise<ResponseProfile> {
 		return this.post<ResponseProfile>("profiles", profile).toPromise();
 	}
 
 	/**
-	 * Deletes an existing type.
+	 * Replaces the current definition of a profile with the one given.
+	 *
+	 * @param profile The new profile.
+	 * @returns The updated profile.
+	 */
+	public async updateProfile(profile: ResponseProfile): Promise<ResponseProfile> {
+		const path = `profiles/${profile.id}`;
+		return this.put<ResponseProfile>(path, profile).toPromise();
+	}
+
+	/**
+	 * Deletes an existing profile.
 	 *
 	 * @param profileId Id of the profile to delete.
 	 * @returns The success message.

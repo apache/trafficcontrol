@@ -170,18 +170,18 @@ func GetCurrentUser(ctx context.Context) (*CurrentUser, error) {
 	return &CurrentUser{"-", -1, PrivLevelInvalid, TenantIDInvalid, -1, "", []string{}, "", nil}, errors.New("No user found in Context")
 }
 
-func CheckLocalUserIsAllowed(form PasswordForm, db *sqlx.DB, ctx context.Context) (bool, error, error) {
+func CheckLocalUserIsAllowed(username string, db *sqlx.DB, ctx context.Context) (bool, error, error) {
 	if usersCacheIsEnabled() {
-		u, exists := getUserFromCache(form.Username)
+		u, exists := getUserFromCache(username)
 		if !exists {
-			return false, fmt.Errorf("user '%s' not found in cache", form.Username), nil
+			return false, fmt.Errorf("user '%s' not found in cache", username), nil
 		}
 		allowed := u.RoleName != disallowed
 		return allowed, nil, nil
 	}
 	var roleName string
 
-	err := db.GetContext(ctx, &roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", form.Username)
+	err := db.GetContext(ctx, &roleName, "SELECT role.name FROM role INNER JOIN tm_user ON tm_user.role = role.id where username=$1", username)
 	if err != nil {
 		if err == context.DeadlineExceeded || err == context.Canceled {
 			return false, nil, err

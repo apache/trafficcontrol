@@ -117,7 +117,16 @@ export class NavigationService {
 			}, {
 				href: "/core/phys-locs",
 				name: "Physical Locations"
-			}, {
+			},
+			{
+				href: "/core/statuses",
+				name: "Statuses"
+			},
+			{
+				href: "/core/capabilities",
+				name: "Capabilities",
+			},
+			{
 				children: [{
 					href: "/core/cache-groups",
 					name: "Cache Groups"
@@ -154,6 +163,9 @@ export class NavigationService {
 			}, {
 				href: "/core/me",
 				name: "My Profile"
+			}, {
+				href: "/core/roles",
+				name: "Roles"
 			}, {
 				href: "/core/tenants",
 				name: "Tenants"

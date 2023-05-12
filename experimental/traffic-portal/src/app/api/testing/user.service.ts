@@ -15,7 +15,6 @@
 import { HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
-	Capability,
 	PostRequestUser,
 	PutRequestUser,
 	RequestTenant,
@@ -86,18 +85,7 @@ export class UserService {
 			privLevel: 30
 		}
 	];
-	private readonly capabilities = [
-		{
-			description: "unknown - comes from a Permission",
-			lastUpdated: new Date(),
-			name: "ALL"
-		},
-		{
-			description: "unknown - comes from a Permission",
-			lastUpdated: new Date(),
-			name: "PARAMETER-SECURE:READ"
-		}
-	];
+
 	private readonly tenants: Array<ResponseTenant> = [
 		{
 			active: true,
@@ -511,41 +499,16 @@ export class UserService {
 	/**
 	 * Deletes an existing tenant.
 	 *
-	 * @param id Id of the tenant to delete.
-	 * @returns The deleted tenant.
+	 * @param tenant The Tenant to be deleted, or just its ID.
+	 * @returns The deleted Tenant.
 	 */
-	public async deleteTenant(id: number): Promise<ResponseTenant> {
+	public async deleteTenant(tenant: number | ResponseTenant): Promise<ResponseTenant> {
+		const id = typeof(tenant) === "number" ? tenant : tenant.id;
 		const index = this.tenants.findIndex(t => t.id === id);
 		if (index < 0) {
 			throw new Error(`no such Tenant: ${id}`);
 		}
 		return this.tenants.splice(index, 1)[0];
-	}
-
-	/** Fetches the User Capability (Permission) with the given name. */
-	public async getCapabilities (name: string): Promise<Capability>;
-	/** Fetches all User Capabilities (Permissions). */
-	public async getCapabilities (): Promise<Array<Capability>>;
-	/**
-	 * Fetches one or all Capabilities from Traffic Ops.
-	 *
-	 * @deprecated "Capabilities" are deprecated in favor of Permissions.
-	 * "Capabilities" are removed from API v4 and later.
-	 *
-	 * @param name Optionally, the name of a single Capability which will be fetched
-	 * @throws {TypeError} When called with an improper argument.
-	 * @returns Either an Array of Capabilities, or a single Capability,
-	 * depending on whether `name`/`id` was passed
-	 */
-	public async getCapabilities(name?: string): Promise<Array<Capability> | Capability> {
-		if (name) {
-			const cap = this.capabilities.find(c=>c.name === name);
-			if (!cap) {
-				throw new Error(`no such Capability: ${name}`);
-			}
-			return cap;
-		}
-		return this.capabilities;
 	}
 
 	/**

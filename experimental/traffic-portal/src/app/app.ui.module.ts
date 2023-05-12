@@ -13,6 +13,7 @@
 */
 
 import { CdkMenuModule } from "@angular/cdk/menu";
+import { NgOptimizedImage } from "@angular/common";
 import { NgModule } from "@angular/core";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
@@ -79,6 +80,10 @@ import { AgGridModule } from "ag-grid-angular";
 		MatTooltipModule,
 		MatTreeModule,
 		MatSlideToggleModule,
+		NgOptimizedImage
+	],
+	imports: [
+		NgOptimizedImage
 	]
 })
 export class AppUIModule {}

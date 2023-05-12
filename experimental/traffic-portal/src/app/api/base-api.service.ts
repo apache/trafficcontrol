@@ -12,7 +12,7 @@
 * limitations under the License.
 */
 
-import { HttpClient, HttpHeaders } from "@angular/common/http";
+import { HttpClient, HttpHeaders, type HttpParams } from "@angular/common/http";
 import type { Observable } from "rxjs";
 import { map } from "rxjs/operators";
 import type { Alert } from "trafficops-types";
@@ -20,6 +20,15 @@ import type { Alert } from "trafficops-types";
 import { environment } from "src/environments/environment";
 
 import { hasProperty, isArray } from "../utils";
+
+/**
+ * The type of parameters that can be sent in a query string.
+ *
+ * We're not using @angular/routing.Params because that's too permissive. It's
+ * front-end only, so it allows you to pass arbitrary data, even if it's not
+ * really representable in a URL query string.
+ */
+export type QueryParams = Record<Exclude<PropertyKey, symbol>, string | number | boolean> | HttpParams;
 
 /**
  * Checks if something is an Alert.
@@ -69,7 +78,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected delete<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected delete<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("delete", path, data, params);
 	}
 
@@ -81,7 +90,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected get<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected get<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("get", path, data, params);
 	}
 
@@ -93,7 +102,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected head<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected head<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("head", path, data, params);
 	}
 
@@ -105,7 +114,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected options<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected options<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("options", path, data, params);
 	}
 
@@ -117,7 +126,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected patch<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected patch<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("patch", path, data, params);
 	}
 
@@ -129,7 +138,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected post<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected post<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("post", path, data, params);
 	}
 
@@ -141,7 +150,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected put<T = undefined>(path: string, data?: object, params?: Record<string, string>): Observable<T> {
+	protected put<T = undefined>(path: string, data?: object, params?: QueryParams): Observable<T> {
 		return this.do<T>("put", path, data, params);
 	}
 
@@ -154,7 +163,7 @@ export abstract class APIService {
 	 * @param params Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	protected do<T>(method: string, path: string, body?: object, params?: Record<string, string>): Observable<T> {
+	protected do<T>(method: string, path: string, body?: object, params?: QueryParams): Observable<T> {
 
 		const options = {
 			body,

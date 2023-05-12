@@ -11,16 +11,16 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-mat-card {
+.mat-mdc-card {
 	width: fit-content;
 	margin: 45px auto auto auto;
-
-	mat-card-header {
+	.mat-mdc-card-header {
 		display: grid;
 		grid-template-columns: 1fr auto auto 1fr;
 
 		img {
 			height: 5em;
+			width: 5em;
 			margin-bottom: 15px;
 		}
 		h1 {
@@ -35,11 +35,11 @@ mat-card {
 		border-radius: 5px;
 		padding: 0;
 
-		mat-form-field {
+		.mat-mdc-form-field {
 			width: 100%;
 		}
 
-		div {
+		.mat-mdc-card-actions {
 			margin-top: 5px;
 			grid-column: span 2;
 			display: grid;

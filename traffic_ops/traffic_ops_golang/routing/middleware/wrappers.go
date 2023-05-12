@@ -226,7 +226,10 @@ func WrapAccessLog(secret string, h http.Handler) http.HandlerFunc {
 		cookieToken := getCookieToken(r)
 		cookie, userErr, sysErr := tocookie.Parse(secret, cookieToken)
 		if userErr == nil && sysErr == nil {
-			user = cookie.AuthData
+			// missing cookie will not throw error
+			if cookie != nil {
+				user = cookie.AuthData
+			}
 		} else {
 			log.Errorf("Error retrieving user from cookie: User Error: %v System Error: %v", userErr, sysErr)
 		}

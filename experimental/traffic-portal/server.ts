@@ -185,15 +185,18 @@ function run(): number {
 	if (config.useSSL) {
 		let cert: string;
 		let key: string;
+		let ca: Array<string>;
 		try {
 			cert = readFileSync(config.certPath, {encoding: "utf8"});
 			key = readFileSync(config.keyPath, {encoding: "utf8"});
+			ca = config.certificateAuthPaths.map(c => readFileSync(c, {encoding: "utf8"}));
 		} catch (e) {
 			console.error("reading SSL key/cert:", e);
 			return 1;
 		}
 		createServer(
 			{
+				ca,
 				cert,
 				key,
 				rejectUnauthorized: !config.insecure,

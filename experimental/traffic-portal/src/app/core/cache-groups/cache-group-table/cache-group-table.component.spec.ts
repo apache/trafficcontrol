@@ -202,7 +202,7 @@ describe("CacheGroupTableComponent", () => {
 		expect(item.href).toBe("/core/asns");
 		if (typeof(item.queryParams) !== "function") {
 			return fail(
-				`'Mange ASNs' context menu item should use a function to determine query params, instead uses: ${item.queryParams}`
+				`'Manage ASNs' context menu item should use a function to determine query params, instead uses: ${item.queryParams}`
 			);
 		}
 		expect(item.queryParams(sampleCG)).toEqual({cachegroup: sampleCG.name});

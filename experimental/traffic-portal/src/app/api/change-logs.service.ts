@@ -16,7 +16,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Log } from "trafficops-types";
 
-import { APIService } from "src/app/api/base-api.service";
+import { APIService, type QueryParams } from "src/app/api/base-api.service";
 
 /**
  * Defines & handles api endpoints related to change logs
@@ -34,7 +34,7 @@ export class ChangeLogsService extends APIService {
 	 * @param params Request parameters to add
 	 * @returns Change logs
 	 */
-	public async getChangeLogs(params?: Record<string, string>): Promise<Array<Log>> {
+	public async getChangeLogs(params?: QueryParams): Promise<Array<Log>> {
 		return this.get<Array<Log>>("logs", undefined, params).toPromise();
 	}
 }

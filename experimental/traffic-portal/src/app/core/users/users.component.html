@@ -11,9 +11,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card>
+<mat-card appearance="outlined">
 	<div>
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Users" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()"/>
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Users" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()"/>
 	</div>
 	<tp-generic-table
 		[data]="users"
@@ -34,7 +34,7 @@ limitations under the License.
 	  <a cdkMenuItem routerLink="new" color="accent" mat-mini-fab aria-label="Create user from scratch" title="Create user from scratch">
 		<mat-icon>person_add</mat-icon>
 	  </a>
-	  <button cdkMenuItem color="accent" mat-mini-fab color="accent" aria-label="Register a new user by email" title="Register a new user by email" (click)="register()">
+	  <button type="button" cdkMenuItem color="accent" mat-mini-fab aria-label="Register a new user by email" title="Register a new user by email" (click)="register()">
 		<mat-icon>contact_mail</mat-icon>
 	  </button>
 	</menu>

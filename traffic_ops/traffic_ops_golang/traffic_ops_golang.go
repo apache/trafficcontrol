@@ -198,7 +198,9 @@ func main() {
 		ErrorLog:          log.Error,
 	}
 	if httpServer.TLSConfig == nil {
-		httpServer.TLSConfig = &tls.Config{}
+		httpServer.TLSConfig = &tls.Config{
+			ClientAuth: tls.RequestClientCert,
+		}
 	}
 	// Deprecated in 5.0
 	httpServer.TLSConfig.InsecureSkipVerify = cfg.Insecure

@@ -153,4 +153,19 @@ export class CurrentuserComponent implements OnInit {
 			this.cancelEdit();
 		}
 	}
+
+	/**
+	 * Checks if the form's user has a "bottom-level" address, meaning any
+	 * combination of state/province, postal code, city, and/or country.
+	 *
+	 * @returns `true` if the user has a "bottom-level" address, `false`
+	 * otherwise.
+	 */
+	public hasBottomAddress(): boolean {
+		if (!this.currentUser) {
+			return false;
+		}
+		const {city, country, stateOrProvince, postalCode} = this.currentUser;
+		return !!(city || country || stateOrProvince || postalCode);
+	}
 }

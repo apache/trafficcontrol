@@ -13,7 +13,7 @@ limitations under the License.
 -->
 <mat-toolbar color="primary" *ngIf="!hidden">
 	<a routerLink="/core/">
-		<img src="/assets/logo.svg" alt="ATC logo"/>
+		<img ngSrc="/assets/logo.svg" alt="ATC logo" height="16" width="16"/>
 	</a>
 	<h1>{{title}}</h1>
 	<div></div>
@@ -21,37 +21,37 @@ limitations under the License.
 		<ul>
 			<li *ngFor="let nav of horizNavs">
 				<a *ngIf="navShown(nav, 'anchor')" mat-button [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
-				<button *ngIf="navShown(nav, 'button')" mat-button (click)="navClick(nav)">{{nav.text}}</button>
+				<button type="button" *ngIf="navShown(nav, 'button')" mat-button (click)="navClick(nav)">{{nav.text}}</button>
 			</li>
 			<li>
-				<button mat-icon-button [matMenuTriggerFor]="expandedMenu">
+				<button type="button" mat-icon-button [matMenuTriggerFor]="expandedMenu">
 					<mat-icon>manage_accounts</mat-icon>
 				</button>
 				<mat-menu #expandedMenu="matMenu">
-					<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
+					<button type="button" mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
 					<div *ngFor="let nav of vertNavs">
 						<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
-						<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
+						<button type="button" *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
 					</div>
 				</mat-menu>
 			</li>
 		</ul>
 	</nav>
 	<nav id="collapsed">
-		<button mat-icon-button [matMenuTriggerFor]="collapsedMenu"><mat-icon>menu</mat-icon></button>
+		<button type="button" mat-icon-button [matMenuTriggerFor]="collapsedMenu"><mat-icon>menu</mat-icon></button>
 		<mat-menu #collapsedMenu="matMenu">
 			<li *ngFor="let nav of horizNavs">
 				<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
-				<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
+				<button type="button" *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
 			</li>
-			<button mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
+			<button type="button" mat-menu-item [matMenuTriggerFor]="themeMenu">Theme</button>
 			<li *ngFor="let nav of vertNavs">
 				<a *ngIf="navShown(nav, 'anchor')" mat-menu-item [routerLink]="navRouterLink(nav)">{{nav.text}}</a>
-				<button *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
+				<button type="button" *ngIf="navShown(nav, 'button')" mat-menu-item (click)="navClick(nav)">{{nav.text}}</button>
 			</li>
 		</mat-menu>
 	</nav>
 	<mat-menu #themeMenu="matMenu">
-		<button mat-menu-item *ngFor="let theme of themeSvc.themes" (click)="themeSvc.loadTheme(theme)">{{theme.name}}</button>
+		<button type="button" mat-menu-item *ngFor="let theme of themeSvc.themes" (click)="themeSvc.loadTheme(theme)">{{theme.name}}</button>
 	</mat-menu>
 </mat-toolbar>

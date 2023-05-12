@@ -30,6 +30,8 @@ on:
       - go.sum
       - GO_VERSION
       - '**.go'
+      - '!**_test.go'
+      - 'grove/**_test.go'
       - vendor/modules.txt
   create:
   pull_request:
@@ -40,6 +42,8 @@ on:
       - go.sum
       - GO_VERSION
       - '**.go'
+      - '!**_test.go'
+      - 'grove/**_test.go'
       - vendor/modules.txt
     types: [opened, reopened, ready_for_review, synchronize]
 

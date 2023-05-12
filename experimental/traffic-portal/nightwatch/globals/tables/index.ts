@@ -28,7 +28,7 @@ export interface TableSectionCommands extends EnhancedSectionInstance, EnhancedE
  * A CSS selector for an AG-Grid generic table's column visibility dropdown
  * menu.
  */
-export const columnMenuSelector = "div.toggle-columns > button.mat-menu-trigger";
+export const columnMenuSelector = "div.toggle-columns > button.mat-mdc-menu-trigger";
 
 /**
  * A CSS selector for an AG-Grid generic table's "Fuzzy Search" input text box.
@@ -47,7 +47,7 @@ export const searchboxSelector = "input[name='fuzzControl']";
  * multiple columns exist with the same given name.
  */
 export async function getColumnState(this: TableSectionCommands, column: string): Promise<boolean> {
-	const selector = `.mat-checkbox-input[name='${column}']`;
+	const selector = `input[type='checkbox'][name='${column}']`;
 	return this.click(columnMenuSelector).parent
 		.getLocationInView(selector)
 		.isSelected(selector);

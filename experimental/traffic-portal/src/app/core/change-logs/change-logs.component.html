@@ -12,9 +12,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card>
+<mat-card appearance="outlined">
 	<div>
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Change Logs" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()" />
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Change Logs" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()" />
 	</div>
 	<tp-generic-table
 		[data]="changeLogs | async"

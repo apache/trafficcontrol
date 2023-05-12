@@ -186,7 +186,7 @@ export class DeliveryserviceComponent implements OnInit {
 
 		let data;
 		try {
-			data = await this.api.getDSKBPS(xmlID, this.from, this.to, interval, false);
+			data = await this.api.getDSKBPS(xmlID, this.from, this.to, interval, false, true);
 		} catch (e) {
 			this.alerts.newAlert(AlertLevel.WARNING, "Edge-Tier bandwidth data not found!");
 			console.error(`Failed to get edge KBPS data for '${xmlID}':`, e);
@@ -196,16 +196,10 @@ export class DeliveryserviceComponent implements OnInit {
 		const chartData = {
 			backgroundColor: "#BA3C57",
 			borderColor: "#BA3C57",
-			data: new Array<DataPoint>(),
+			data,
 			fill: false,
 			label: "Edge-Tier"
 		};
-		for (const v of data.series.values) {
-			if (v[1] === null) {
-				continue;
-			}
-			chartData.data.push({t: new Date(v[0]), y: v[1]});
-		}
 		this.bandwidthData.next([chartData]);
 	}
 

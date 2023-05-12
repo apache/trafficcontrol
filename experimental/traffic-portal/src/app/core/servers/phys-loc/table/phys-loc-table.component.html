@@ -12,9 +12,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card class="table-page-content">
+<mat-card appearance="outlined" class="table-page-content">
 	<div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Physical Locations" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Physical Locations" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
 	</div>
 	<tp-generic-table
 		[data]="physLocations | async"
@@ -26,4 +26,4 @@ limitations under the License.
 	</tp-generic-table>
 </mat-card>
 
-<button class="page-fab" mat-fab title="Create a new Division" *ngIf="auth.hasPermission('PHYSICAL-LOCATION:CREATE')" routerLink="new"><mat-icon>add</mat-icon></button>
+<a class="page-fab" mat-fab title="Create a new Physical Location" *ngIf="auth.hasPermission('PHYSICAL-LOCATION:CREATE')" routerLink="new"><mat-icon>add</mat-icon></a>

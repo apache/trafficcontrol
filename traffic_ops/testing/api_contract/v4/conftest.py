@@ -880,4 +880,4 @@ def phys_locations_post_data(to_session: TOSession, request_template_data: list[
 	except IndexError:
 		logger.error("No Phys_Location response data from regions POST request.")
 	sys.exit(1)
-	
+

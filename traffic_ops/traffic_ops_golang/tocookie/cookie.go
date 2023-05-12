@@ -45,6 +45,10 @@ func checkHmac(message, messageMAC, key []byte) bool {
 }
 
 func Parse(secret, cookie string) (*Cookie, error, error) {
+	if cookie == "" {
+		return nil, nil, nil
+	}
+
 	dashPos := strings.Index(cookie, "-")
 	if dashPos == -1 {
 		return nil, fmt.Errorf("error parsing cookie: malformed cookie '%s' - no dashes", cookie), nil

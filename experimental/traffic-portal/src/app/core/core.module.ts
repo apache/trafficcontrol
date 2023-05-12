@@ -48,14 +48,20 @@ import {
 } from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
 import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
+import { ProfileDetailComponent } from "./profiles/profile-detail/profile-detail.component";
 import { ProfileTableComponent } from "./profiles/profile-table/profile-table.component";
+import { CapabilitiesComponent } from "./servers/capabilities/capabilities.component";
+import { CapabilityDetailsComponent } from "./servers/capabilities/capability-details/capability-details.component";
 import { PhysLocDetailComponent } from "./servers/phys-loc/detail/phys-loc-detail.component";
 import { PhysLocTableComponent } from "./servers/phys-loc/table/phys-loc-table.component";
 import { ServerDetailsComponent } from "./servers/server-details/server-details.component";
 import { ServersTableComponent } from "./servers/servers-table/servers-table.component";
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
-import {TypeDetailComponent} from "./types/detail/type-detail.component";
-import {TypesTableComponent} from "./types/table/types-table.component";
+import { StatusDetailsComponent } from "./statuses/status-details/status-details.component";
+import { StatusesTableComponent } from "./statuses/statuses-table/statuses-table.component";
+import { TypeDetailComponent } from "./types/detail/type-detail.component";
+import { TypesTableComponent } from "./types/table/types-table.component";
+import { RolesTableComponent } from "./users/roles/table/roles-table.component";
 import { TenantDetailsComponent } from "./users/tenants/tenant-details/tenant-details.component";
 import { TenantsComponent } from "./users/tenants/tenants.component";
 import { UserDetailsComponent } from "./users/user-details/user-details.component";
@@ -75,12 +81,16 @@ export const ROUTES: Routes = [
 	{ component: CDNDetailComponent, path: "cdns/:id" },
 	{ component: ServersTableComponent, path: "servers" },
 	{ component: ServerDetailsComponent, path: "servers/:id" },
+	{ component: CapabilitiesComponent, path: "capabilities" },
+	{ component: CapabilityDetailsComponent, path: "capabilities/:name" },
+	{ component: CapabilityDetailsComponent, path: "new-capability" },
 	{ component: DeliveryserviceComponent, path: "deliveryservice/:id" },
 	{ component: InvalidationJobsComponent, path: "deliveryservice/:id/invalidation-jobs" },
 	{ component: CurrentuserComponent, path: "me" },
 	{ component: NewDeliveryServiceComponent, path: "new.Delivery.Service" },
 	{ component: CacheGroupTableComponent, path: "cache-groups" },
 	{ component: CacheGroupDetailsComponent, path: "cache-groups/:id"},
+	{ component: RolesTableComponent, path: "roles"},
 	{ component: TenantsComponent, path: "tenants"},
 	{ component: ChangeLogsComponent, path: "change-logs" },
 	{ component: TenantDetailsComponent, path: "tenants/:id"},
@@ -90,7 +100,10 @@ export const ROUTES: Routes = [
 	{ component: CoordinatesTableComponent, path: "coordinates" },
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
+	{ component: StatusesTableComponent, path: "statuses" },
+	{ component: StatusDetailsComponent, path: "statuses/:id" },
 	{ component: ISOGenerationFormComponent, path: "iso-gen"},
+	{ component: ProfileDetailComponent, path: "profiles/:id"},
 	{ component: ProfileTableComponent, path: "profiles"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
@@ -115,6 +128,7 @@ export const ROUTES: Routes = [
 		UserDetailsComponent,
 		TenantsComponent,
 		UserRegistrationDialogComponent,
+		RolesTableComponent,
 		TenantDetailsComponent,
 		ChangeLogsComponent,
 		LastDaysComponent,
@@ -128,13 +142,18 @@ export const ROUTES: Routes = [
 		RegionsTableComponent,
 		RegionDetailComponent,
 		CacheGroupDetailsComponent,
-		CoordinatesTableComponent,
-		CoordinateDetailComponent,
 		TypesTableComponent,
 		TypeDetailComponent,
+		CoordinatesTableComponent,
+		CoordinateDetailComponent,
+		StatusesTableComponent,
+		StatusDetailsComponent,
 		ISOGenerationFormComponent,
   		ProfileTableComponent,
 		CDNDetailComponent,
+  		ProfileDetailComponent,
+		CapabilitiesComponent,
+		CapabilityDetailsComponent,
 	],
 	exports: [],
 	imports: [

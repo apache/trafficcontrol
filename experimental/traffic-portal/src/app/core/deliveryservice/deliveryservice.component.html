@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <main>
-	<mat-card>
+	<mat-card appearance="outlined">
 		<form name="timespan" (ngSubmit)="newDateRange()" ngNativeValidate>
 			<div>
 				<mat-form-field>
@@ -35,7 +35,7 @@ limitations under the License.
 				</mat-form-field>
 			</div>
 			<div class="actions">
-				<button name="timespanRefresh" mat-raised-button>Refresh</button>
+				<button type="submit" name="timespanRefresh" mat-raised-button>Refresh</button>
 				<mat-icon *ngIf="steeringTargetsFor.size > 0" [matTooltip]="steeringTargetDisplay()" >assistant_direction</mat-icon>
 			</div>
 		</form>
@@ -48,7 +48,7 @@ limitations under the License.
 			Your browser does not support canvases or Javascript. Normally, this would be a graph of transaction data.
 		</canvas>
 		<a mat-fab id="invalidate" routerLink="/core/deliveryservice/{{deliveryservice.id}}/invalidation-jobs" title="invalidate content" aria-label="invalidate content">
-			<!-- <img src="assets/invalidate.svg" title="Invalidate Content"> -->
+			<!-- <img ngSrc="assets/invalidate.svg" title="Invalidate Content"> -->
 			<fa-icon [icon]="invalidateIcon"></fa-icon>
 		</a>
 	</mat-card>

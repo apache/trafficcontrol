@@ -31,7 +31,7 @@ mat-toolbar {
 
 		img {
 			height: 100%;
-			max-width: 3em;
+			width: 3em;
 		}
 	}
 
@@ -57,7 +57,7 @@ nav {
 	}
 }
 
-a.mat-menu-item {
+a.mat-mdc-menu-item {
 	text-transform: uppercase;
 }
 

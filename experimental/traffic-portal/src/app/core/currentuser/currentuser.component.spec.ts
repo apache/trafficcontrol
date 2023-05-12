@@ -167,4 +167,48 @@ describe("CurrentuserComponent", () => {
 
 		expect(updateSpy).toHaveBeenCalledTimes(2);
 	}));
+
+	it("determines whether a user has a 'bottom-level' address", () => {
+		component.currentUser = null;
+		expect(component.hasBottomAddress()).toBeFalse();
+		component.currentUser = {
+			addressLine1: null,
+			addressLine2: null,
+			changeLogCount: 0,
+			city: null,
+			company: null,
+			country: null,
+			email: "em@i.l",
+			fullName: "",
+			gid: null,
+			id: 1,
+			lastAuthenticated: null,
+			lastUpdated: new Date(),
+			localUser: false,
+			newUser: false,
+			phoneNumber: null,
+			postalCode: null,
+			publicSshKey: null,
+			registrationSent: null,
+			role: "",
+			stateOrProvince: null,
+			tenant: "",
+			tenantId: 1,
+			ucdn: "",
+			uid: null,
+			username: "",
+		};
+		expect(component.hasBottomAddress()).toBeFalse();
+		component.currentUser.city = "Townsville";
+		expect(component.hasBottomAddress()).toBeTrue();
+		component.currentUser.city = null;
+		component.currentUser.country = "Nationstan";
+		expect(component.hasBottomAddress()).toBeTrue();
+		component.currentUser.country = null;
+		component.currentUser.stateOrProvince = "Provincia";
+		expect(component.hasBottomAddress()).toBeTrue();
+		component.currentUser.stateOrProvince = null;
+		component.currentUser.postalCode = "00000";
+		expect(component.hasBottomAddress()).toBeTrue();
+	});
 });
