@@ -20,7 +20,9 @@ package cdn
  */
 
 import (
+	"database/sql"
 	"errors"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"reflect"
 	"strings"
 	"testing"
@@ -112,8 +114,8 @@ func TestFuncs(t *testing.T) {
 	if strings.Index(deleteQuery(), "DELETE") != 0 {
 		t.Errorf("expected deleteQuery to start with DELETE")
 	}
-
 }
+
 func TestInterfaces(t *testing.T) {
 	var i interface{}
 	i = &TOCDN{}
@@ -159,5 +161,64 @@ func TestValidate(t *testing.T) {
 	err, _ = c.Validate()
 	if err != nil {
 		t.Errorf("expected nil, got %s", err)
+	}
+}
+
+func TestTOCDNUpdate(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	cols := []string{"name"}
+	rows := sqlmock.NewRows(cols)
+	rows.AddRow("testcdn")
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT name").WithArgs(1).WillReturnRows(rows)
+
+	cols = []string{"username", "soft", "shared_usernames"}
+	rows = sqlmock.NewRows(cols)
+	mock.ExpectQuery("SELECT c.username").WithArgs("testcdn").WillReturnError(sql.ErrNoRows)
+
+	cols = []string{"last_updated"}
+	rows = sqlmock.NewRows(cols)
+	rows.AddRow(time.Now())
+	mock.ExpectQuery("select last_updated").WithArgs(1).WillReturnRows(rows)
+
+	cols = []string{"dnssec_enabled", "domain_name", "name", "ttl_override", "last_updated"}
+	rows = sqlmock.NewRows(cols)
+	rows.AddRow(false, "example.com", "testcdn", false, time.Now())
+	mock.ExpectQuery("UPDATE cdn").WithArgs(1).WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	reqInfo := api.APIInfo{
+		Tx:     db.MustBegin(),
+		Params: map[string]string{"dsId": "1"}, User: &auth.CurrentUser{
+			UserName: "admin",
+		},
+		Version: &api.Version{Major: 4, Minor: 1},
+	}
+	domainName := "example.com"
+	id := 1
+	lastUpdated := tc.TimeNoMod{Time: time.Now()}
+
+	cdn := &TOCDN{
+		api.APIInfoImpl{ReqInfo: &reqInfo},
+		tc.CDNNullable{DomainName: &domainName, ID: &id, LastUpdated: &lastUpdated},
+	}
+
+	// call the Update() function and check for expected results
+	userErr, sysErr, errCode := cdn.Update(nil)
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Unexpected error: userErr=%v, sysErr=%v, errCode=%d", userErr, sysErr, errCode)
+	}
+	if *cdn.DomainName != "example.com" {
+		t.Errorf("Unexpected domain name: %s", *cdn.DomainName)
+	}
+	if cdn.TTLOverride != nil {
+		t.Errorf("Unexpected TTL override value: %d", *cdn.TTLOverride)
 	}
 }
