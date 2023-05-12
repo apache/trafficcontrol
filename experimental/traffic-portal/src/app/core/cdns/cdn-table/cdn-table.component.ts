@@ -94,6 +94,7 @@ export class CDNTableComponent implements OnInit {
 		},
 		{
 			action: "snapshot-diff",
+			disabled: (): true => true,
 			multiRow: false,
 			name: "Diff Snapshot",
 		},
