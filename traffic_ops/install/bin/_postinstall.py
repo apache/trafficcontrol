@@ -897,7 +897,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 	to_golang = cdn_conf["traffic_ops_golang"]
 	if (
 		"cert" not in to_golang or
-		not isinstance(to_golang["cert"], list)
+		not isinstance(to_golang["cert"], str)
 	):
 		log_msg = """	The "cert" portion of %s is missing from %s
 	Please ensure it contains the same structure as the one originally installed"""
@@ -906,7 +906,7 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 
 	if (
 		"key" not in to_golang or
-		not isinstance(to_golang["key"], list)
+		not isinstance(to_golang["key"], str)
 	):
 		log_msg = """	The "key" portion of %s is missing from %s
 	Please ensure it contains the same structure as the one originally installed"""

@@ -103,8 +103,8 @@ mkdir -p "$ROOT_DIR/opt/traffic_ops/app/conf/production";
 cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 {
 	"traffic_ops_golang": {
-    "cert" : "{{ to_certs_cert }}",
-    "key"  : "{{ to_certs_key }}"
+    "cert" : "$ROOT_DIR/etc/pki/tls/certs/localhost.crt",
+    "key"  : "$ROOT_DIR/etc/pki/tls/private/localhost.key"
   }
 }
 EOF
@@ -445,7 +445,7 @@ except Exception as e:
 	print('Error loading cdn.conf file:', e, file=sys.stderr)
 	exit(1)
 
-if not isinstance(conf, dict) or len(conf) != 4 or 'secrets' not in conf or 'to' not in conf or 'traffic_ops_golang' not in conf:
+if not isinstance(conf, dict) or len(conf) != 3 or 'secrets' not in conf or 'to' not in conf or 'traffic_ops_golang' not in conf:
 	print('Malformed cdn.conf file - not an object or missing keys', file=sys.stderr)
 	exit(1)
 
