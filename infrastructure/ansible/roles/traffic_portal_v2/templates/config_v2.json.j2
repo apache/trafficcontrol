@@ -1,5 +1,4 @@
----
-#
+{#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -11,27 +10,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-- name: Install Traffic Portal v2
-  yum:
-    name: "{{ tpv2_pkg_name }}"
-    state: installed
-    lock_timeout: 600
-    enablerepo: "{{ additional_yum_repos | default([]) }}"
-  notify: Restart Traffic Portal v2
-  retries: 5
-  delay: 5
+#}
 
-- name: Copy config.js file
-  template:
-    src: "config_v2.json.j2"
-    dest: "{{ tpv2_conf_dir }}/config.json"
-    owner: root
-    group: root
-    mode: 0600
-  notify: Restart Traffic Portal v2
+{
+  "insecure": {{ tpv2_insecure | lower }},
+  "port": {{ tpv2_sslPort }},
+  "trafficOps": "{{ tpv2_to_base_url }}",
+  "certificateAuthPaths": [ "{{ tpv2_ssl_ca_files | join("', '") }}" ],
+  "useSSL": {{ tpv2_useSSL | lower }},
+  "certPath": "{{ tpv2_ssl_cert_file }}",
+  "keyPath": "{{ tpv2_ssl_key_file }}",
+  "browserFolder": "{{ tpv2_browser_folder }}"
+}
 
-- name: Enable Traffic Portal v2 in systemd
-  systemd:
-    name: traffic-portal
-    enabled: yes
