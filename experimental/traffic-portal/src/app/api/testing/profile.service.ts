@@ -221,7 +221,7 @@ export class ProfileService {
 	}
 
 	private lastParamID = 20;
-	private readonly parameters = [
+	private readonly parameters:  ResponseParameter[] = [
 		{
 			configFile: "cfg.txt",
 			id: 1,
@@ -282,11 +282,9 @@ export class ProfileService {
 	public async createParameter(parameter: RequestParameter): Promise<ResponseParameter> {
 		const t = {
 			...parameter,
-			configFile: parameter.configFile,
 			id: ++this.lastParamID,
 			lastUpdated: new Date(),
 			profiles: [],
-			secure: parameter.secure,
 			value: parameter.value ?? ""
 		};
 		this.parameters.push(t);

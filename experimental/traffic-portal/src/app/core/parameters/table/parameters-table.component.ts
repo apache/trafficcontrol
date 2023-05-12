@@ -56,7 +56,7 @@ export class ParametersTableComponent implements OnInit {
 		{
 			field: "profiles",
 			headerName: "Profiles",
-			valueFormatter: ({data}: {data: ResponseParameter}): string => `${data.profiles}`.replace(",", ", ")
+			valueFormatter: ({data}: {data: ResponseParameter}): string => data.profiles === null? "":data.profiles.join(", ")
 		},
 		{
 			field: "secure",
