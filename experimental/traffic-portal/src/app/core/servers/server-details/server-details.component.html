@@ -20,8 +20,8 @@ limitations under the License.
 		<button type="button" mat-icon-button title="change server status" (click)="changeStatus($event)"><fa-icon [icon]="statusChangeIcon"></fa-icon></button>
 	</mat-card-header>
 	<tp-loading *ngIf="!server"></tp-loading>
-	<form ngNativeValidate #serverForm="ngForm" (ngSubmit)="submit($event)">
-		<mat-card-content *ngIf="server" class="triple-column-responsive">
+	<form ngNativeValidate #serverForm="ngForm" class="triple-column-responsive" (ngSubmit)="submit($event)">
+		<mat-card-content *ngIf="server" class="container">
 			<mat-form-field>
 				<mat-label>Host Name</mat-label>
 				<input matInput [(ngModel)]="server.hostName" name="hostname" required maxlength="50"/>
