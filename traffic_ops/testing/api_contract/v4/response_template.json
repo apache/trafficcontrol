@@ -150,6 +150,40 @@
             }
         }
     },
+    "tenants": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "int"
+            },
+            "name": {
+                "type": "str"
+            },
+            "active": {
+                "type": "bool"
+            },
+            "parentId": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "parentName": {
+                "type": "str"
+            }
+        }
+    },
+    "server_capabilities": {
+        "type": "object",
+        "properties": {
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            }
+        }
+    },
     "divisions": {
         "type": "object",
         "properties": {
@@ -166,24 +200,69 @@
     },
     "regions": {
         "type": "object",
-        "properties":{
-            "divisionName":{ 
-                "type":"str"
+        "properties": {
+            "divisionName": {
+                "type": "str"
             },
             "division": {
-                "type":"int" 
-            },
+                "type": "int"
+            },  
             "id": {
-                "type":"int"
+                "type": "int"
             },
             "lastUpdated": {
-                "type":"str"
+                "type": "str"
             },
             "name": {
-                "type":"str"
+                "type": "str"
             }
-
-
+        }
+    },
+    "phys_locations": {
+        "type": "object",
+        "properties": {
+            "address": {
+                "type": "str"
+            },
+            "city": {
+                "type": "str"
+            },
+            "comments": {
+                "type": "str"
+            },
+            "email": {
+                "type": "str"
+            },
+            "id":{
+                "type": "int"
+            },
+            "lastUpdated":{
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            },
+            "phone": {
+                "type": "str"
+            },
+            "poc": {
+                "type": "str"
+            },
+            "regionId": {
+                "type": "int"
+            },
+            "region":{
+                "type": "str"
+            },
+            "shortName": {
+                "type": "str"
+            },
+            "state": {
+                "type": "str"
+            },
+            "zip": {
+                "type": "str"
+            }
         }
     }
 }
