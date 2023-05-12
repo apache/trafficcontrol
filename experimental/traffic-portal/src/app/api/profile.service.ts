@@ -100,6 +100,7 @@ export class ProfileService extends APIService {
 
 	/**
 	 * Creates a new profile.
+	 *
 	 * @param profile The profile to create.
 	 * @returns The created profile.
 	 */
