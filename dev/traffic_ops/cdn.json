@@ -1,9 +1,8 @@
 {
 	"traffic_ops_golang" : {
-		"listen" : [
-			"https://[::]:60443?cert=/server.crt&key=/server.key"
-		],
-		"port" : "443",
+		"cert": "/server.crt",
+		"key": "/server.key",
+		"port": "443",
 		"log_location_error": "stderr",
 		"log_location_warning": "stderr",
 		"log_location_info": "stdout",

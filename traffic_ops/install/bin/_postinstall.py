@@ -896,22 +896,22 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 
 	to_golang = cdn_conf["traffic_ops_golang"]
 	if (
-		"listen" not in traffic_ops_golang or
-		not isinstance(traffic_ops_golang["listen"], list) or
-		not traffic_ops_golang["listen"] or
-		not isinstance(traffic_ops_golang["listen"][0], str)
+		"cert" not in to_golang or
+		not isinstance(to_golang["cert"], list)
 	):
-		log_msg = """	The "listen" portion of %s is missing from %s
+		log_msg = """	The "cert" portion of %s is missing from %s
 	Please ensure it contains the same structure as the one originally installed"""
 		logging.error(log_msg, cdn_conf_path, cdn_conf_path)
 		return 1
 
-	listen = traffic_ops_golang["listen"][0]
-
-	if "cert={certpath}".format(certpath=certpath) not in listen or "key={keypath}".format(keypath=keypath) not in listen:
-		log_msg = """	The "listen" portion of %s does not reference the same "cert=" and "key=" values as are created here.
-	Please modify %s to add the following as parameters:
-	?cert=/path/to/SSL/certificate&key=/path/to/SSL/key"""
+	if (
+		"key" not in to_golang or
+		not isinstance(to_golang["key"], list)
+	):
+		log_msg = """	The "key" portion of %s is missing from %s
+	Please ensure it contains the same structure as the one originally installed"""
+		logging.error(log_msg, cdn_conf_path, cdn_conf_path)
+		return 1
 
 	return 0
 

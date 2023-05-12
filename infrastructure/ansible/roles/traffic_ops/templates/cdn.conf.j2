@@ -44,9 +44,8 @@
    "use_ims": {{ to_use_ims | bool | lower }},
    "role_based_permissions": {{ to_use_rbp | bool | lower }},
    "traffic_ops_golang" : {
-      "listen" : [
-         "https://[::]:{{ to_go_port }}?cert={{ to_certs_cert }}&key={{ to_certs_key }}"
-      ],
+      "cert" : {{ to_certs_cert }},
+      "key" : {{ to_certs_key }},
       "idle_timeout" : {{ to_go_inactive_timeout }},
       "log_location_debug" : "{{ to_go_logging_file_debug }}",
       "log_location_error" : "{{ to_go_logging_file_error }}",

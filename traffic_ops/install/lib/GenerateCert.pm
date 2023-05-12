@@ -53,23 +53,31 @@ sub checkCdnConf {
 		$conf = decode_json(scalar <$fh>);
 	}
 
-	my $listen = $conf->{traffic_ops_golang}{listen}[0];
+	my $key_conf = $conf->{key};
+	my $cert_conf = $conf->{cert};
 	my $msg;
 
-	if (!defined $listen) {
+	if (!defined cert_conf) {
 		my $msg = <<"EOF";
-	The "listen" portion of $cdn_conf is missing from $cdn_conf.
+	The "cert" portion of $cdn_conf is missing from $cdn_conf.
 	Please ensure it contains the same structure as the one originally installed.
 EOF
 	}
 
-	if ($listen !~ m@cert=$cert@ || $listen !~ m@key=$key@) {
+	if (!defined $key_conf) {
+		my $msg = <<"EOF";
+	The "key" portion of $cdn_conf is missing from $cdn_conf.
+	Please ensure it contains the same structure as the one originally installed.
+EOF
+	}
+
+	if ($cert_conf !~ m@cert=$cert@ || $key_conf !~ m@key=$key@) {
 		$msg = << "EOF";
-	The "listen" portion of $cdn_conf is:
-	$listen
+	The "cert and key" portion of $cdn_conf is:
+	$cert_conf $key_conf
 	and does not reference the same "cert=" and "key=" values as are created here.
-	Please modify $cdn_conf to add the following as parameters:
-	?cert=$cert&key=$key
+	Please modify $cdn_conf to add the following as fields:
+	cert: $cert, key: $key
 EOF
 	}
 

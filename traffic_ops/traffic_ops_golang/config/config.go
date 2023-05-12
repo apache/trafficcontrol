@@ -103,7 +103,8 @@ type ConfigTrafficOpsGolang struct {
 	Insecure bool `json:"insecure"`
 	// end deprecated
 	//Moved from Hypnotoad-listen section
-	Listen                   []string                   `json:"listen"`
+	Cert                     string                     `json:"cert"`
+	Key                      string                     `json:"key"`
 	Port                     string                     `json:"port"`
 	ProxyTimeout             int                        `json:"proxy_timeout"`
 	ProxyKeepAlive           int                        `json:"proxy_keep_alive"`
@@ -432,20 +433,20 @@ func LoadConfig(cdnConfPath string, dbConfPath string, appVersion string) (Confi
 	return cfg, []error{}, AllowStartup
 }
 
-// GetCertPath - extracts path to cert .cert file
+// GetCertPath - get the path to cert .cert file
 func (c Config) GetCertPath() string {
-	v, ok := c.URL.Query()["cert"]
-	if ok {
-		return v[0]
+	cert := c.Cert
+	if cert != "" {
+		return cert
 	}
 	return ""
 }
 
-// GetKeyPath - extracts path to cert .key file
+// GetKeyPath - get the path to cert .key file
 func (c Config) GetKeyPath() string {
-	v, ok := c.URL.Query()["key"]
-	if ok {
-		return v[0]
+	key := c.Key
+	if key != "" {
+		return key
 	}
 	return ""
 }
@@ -458,6 +459,12 @@ const (
 // ParseConfig validates required fields, and parses non-JSON types
 func ParseConfig(cfg Config) (Config, error) {
 	missings := ""
+	if cfg.Cert == "" {
+		missings += `"cert", `
+	}
+	if cfg.Key == "" {
+		missings += `"key", `
+	}
 	if cfg.Port == "" {
 		missings += "port, "
 	}
@@ -497,19 +504,15 @@ func ParseConfig(cfg Config) (Config, error) {
 
 	invalidTOURLStr := ""
 	var err error
-	if len(cfg.Listen) < 1 {
-		missings += `"listen", `
-	} else {
-		listen := cfg.Listen[0]
-		if cfg.URL, err = url.Parse(listen); err != nil {
-			invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", listen, err)
-		}
-		cfg.KeyPath = cfg.GetKeyPath()
-		cfg.CertPath = cfg.GetCertPath()
-
-		newURL := url.URL{Scheme: cfg.URL.Scheme, Host: cfg.URL.Host, Path: cfg.URL.Path}
-		cfg.URL = &newURL
+	rawURL := fmt.Sprintf("cert=%s&key=%s", cfg.Cert, cfg.Key)
+	if cfg.URL, err = url.Parse(rawURL); err != nil {
+		invalidTOURLStr = fmt.Sprintf("invalid Traffic Ops URL '%s': %v", rawURL, err)
 	}
+	cfg.KeyPath = cfg.GetKeyPath()
+	cfg.CertPath = cfg.GetCertPath()
+
+	newURL := url.URL{Scheme: "https", Host: cfg.URL.Host}
+	cfg.URL = &newURL
 
 	if cfg.ConfigTO == nil {
 		missings += "to, "
