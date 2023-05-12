@@ -428,7 +428,6 @@ func logConfig(cfg config.Config) {
 		Db Name:              %s
 		Db Ssl:               %t
 		Max Db Connections:   %d
-		TO URL:               %s
 		Insecure:             %t
 		Cert Path:            %s
 		Key Path:             %s
