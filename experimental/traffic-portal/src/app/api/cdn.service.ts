@@ -150,7 +150,10 @@ export class CDNService extends APIService {
 	 * @param cdn The CDN to queue or dequeue updates on.
 	 * @param action The action to perform on the CDN, either "queue" or "dequeue".
 	 */
-	public async queueCDNUpdates(cdn: ResponseCDN, action: "queue" | "dequeue"): Promise<CDNQueueResponse> {
+	public async queueCDNUpdates(cdn: ResponseCDN | number, action: "queue" | "dequeue"): Promise<CDNQueueResponse> {
+		if (typeof cdn === "number") {
+			cdn = await this.getCDNs(cdn);
+		}
 		const path = `cdns/${cdn.id}/queue_update`;
 		const request: CDNQueueRequest = {action};
 		return this.post<CDNQueueResponse>(path, request).toPromise();
