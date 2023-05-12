@@ -958,7 +958,7 @@ func UpdateV40(w http.ResponseWriter, r *http.Request) {
 
 	if job.InvalidationType != input.InvalidationType {
 		if input.InvalidationType == tc.REFETCH && !refetchAllowed(inf.Tx.Tx) {
-			userErr = errors.New("Invalidation Type REFRESH is disallowed")
+			userErr = errors.New("Invalidation Type REFETCH is disallowed")
 			errCode = http.StatusBadRequest
 			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, nil)
 			return
@@ -1455,7 +1455,7 @@ func validateJobCreateV4(job tc.InvalidationJobCreateV4, tx *sql.Tx) error {
 	}
 
 	if job.InvalidationType == tc.REFETCH && !refetchAllowed(tx) {
-		errs = append(errs, "InvalidationType is invalid")
+		errs = append(errs, "invalidationType is not allowed since 'refetch_enabled' parameter doesn't exists or the value is not set to a case-sensitive 'true'")
 	}
 
 	if len(errs) > 0 {
