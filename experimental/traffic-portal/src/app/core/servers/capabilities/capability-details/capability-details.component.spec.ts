@@ -32,7 +32,18 @@ describe("CapabilityDetailsComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ CapabilityDetailsComponent ],
-			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
+			imports: [
+				APITestingModule,
+				RouterTestingModule.withRoutes([
+					{component: CapabilityDetailsComponent, path: "core/capabilities/:name"},
+					// This route is never actually loaded, but the tests
+					// complain that it can't be routed to, so it doesn't matter
+					// that it's loading the wrong component, only that it has a
+					// route definition.
+					{component: CapabilityDetailsComponent, path: "core/capabilities"}
+				]),
+				MatDialogModule
+			],
 		}).compileComponents();
 
 		route = TestBed.inject(ActivatedRoute);
