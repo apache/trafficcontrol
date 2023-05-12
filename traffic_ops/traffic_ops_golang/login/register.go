@@ -262,7 +262,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, errCode, userErr, nil)
 			return
 		}
-
 		role, tenant, err = renewRegistration(tx, req, t, user)
 	} else {
 		role, tenant, username, err = newRegistration(tx, req, t)
@@ -273,6 +272,9 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		userErr, sysErr, errCode = api.ParseDBError(err)
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
+	}
+	if user.Username != nil {
+		username = *user.Username
 	}
 
 	msg, err := createRegistrationMsg(email, t, tx, inf.Config.ConfigPortal)
@@ -288,9 +290,6 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if errCode, userErr, sysErr = inf.SendMail(email, msg); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
-	}
-	if user.Username != nil {
-		username = *user.Username
 	}
 	var alert = "Sent user registration to %s with the following permissions [ role: %s | tenant: %s ]"
 	alert = fmt.Sprintf(alert, email, role, tenant)
