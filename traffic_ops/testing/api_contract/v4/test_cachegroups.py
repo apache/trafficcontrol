@@ -26,48 +26,48 @@ logger = logging.getLogger()
 primitive = bool | int | float | str | None
 
 
-def test_cachegroup_contract(to_session: TOSession,
+def test_cache_group_contract(to_session: TOSession,
 	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
 						    | list[object]] | dict[object, object]],
-	cachegroup_post_data: dict[str, object]
+	cache_group_post_data: dict[str, object]
 	) -> None:
 	"""
 	Test step to validate keys, values and data types from cachegroup endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
-	:param cachegroup_post_data: Fixture to get sample cachegroup data and actual cachegroup response.
+	:param cache_group_post_data: Fixture to get sample cachegroup data and actual cachegroup response.
 	"""
 	# validate CDN keys from cdns get response
 	logger.info("Accessing /cachegroup endpoint through Traffic ops session.")
 
-	cachegroup_name = cachegroup_post_data.get("name")
-	if not isinstance(cachegroup_name, str):
+	cache_group_name = cache_group_post_data.get("name")
+	if not isinstance(cache_group_name, str):
 		raise TypeError("malformed cachegroup in prerequisite data; 'name' not a string")
 
-	cachegroup_get_response: tuple[
+	cache_group_get_response: tuple[
 		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
 		requests.Response
-	] = to_session.get_cachegroups(query_params={"name": str(cachegroup_name)})
+	] = to_session.get_cachegroups(query_params={"name": str(cache_group_name)})
 
 	try:
-		cachegroup_data = cachegroup_get_response[0]
-		if not isinstance(cachegroup_data, list):
+		cache_group_data = cache_group_get_response[0]
+		if not isinstance(cache_group_data, list):
 			raise TypeError("malformed API response; 'response' property not an array")
 
-		first_cachegroup = cachegroup_data[0]
-		if not isinstance(first_cachegroup, dict):
+		first_cache_group = cache_group_data[0]
+		if not isinstance(first_cache_group, dict):
 			raise TypeError("malformed API response; first Cache group in response is not an object")
-		logger.info("Cachegroup API get response %s", first_cachegroup)
-		cachegroup_response_template = response_template_data.get("cachegroup")
+		logger.info("Cachegroup API get response %s", first_cache_group)
+		cache_group_response_template = response_template_data.get("cachegroup")
 
 		# validate cachegroup values from prereq data in cachegroup get response.
 		keys = ["name", "shortName", "fallbackToClosest", "typeId"]
-		prereq_values = [cachegroup_post_data[key] for key in keys]
-		get_values = [first_cachegroup[key] for key in keys]
+		prereq_values = [cache_group_post_data[key] for key in keys]
+		get_values = [first_cache_group[key] for key in keys]
 
 		# validate keys,data types and values for cachegroup endpoint.
-		assert validate(instance=first_cachegroup, schema=cachegroup_response_template) is None
+		assert validate(instance=first_cache_group, schema=cache_group_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
@@ -75,8 +75,8 @@ def test_cachegroup_contract(to_session: TOSession,
 	finally:
 		# Delete Cache group after test execution to avoid redundancy.
 		try:
-			cachegroup_id = cachegroup_post_data["id"]
-			to_session.delete_cachegroups(cache_group_id=cachegroup_id)
+			cache_group_id = cache_group_post_data["id"]
+			to_session.delete_cachegroups(cache_group_id=cache_group_id)
 		except IndexError:
 			logger.error("Cachegroup returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_cachegroup_contract")

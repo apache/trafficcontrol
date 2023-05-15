@@ -488,7 +488,7 @@ def cdn_post_data(to_session: TOSession, request_template_data: list[JSONData]
 
 
 @pytest.fixture()
-def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSONData]
+def cache_group_post_data(to_session: TOSession, request_template_data: list[JSONData]
 			 ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for cachegroup endpoint.
@@ -497,18 +497,18 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 	:param request_template_data: Fixture to get Cachegroup data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-	cachegroup = check_template_data(request_template_data["cachegroup"], "cachegroup")
+	cache_group = check_template_data(request_template_data["cachegroup"], "cachegroup")
 	# Return new post data and post response from cachegroups POST request
 	randstr = str(randint(0, 1000))
 	try:
-		name = cachegroup["name"]
+		name = cache_group["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		cachegroup["name"] = name[:4] + randstr
-		short_name = cachegroup["shortName"]
+		cache_group["name"] = name[:4] + randstr
+		short_name = cache_group["shortName"]
 		if not isinstance(short_name, str):
 			raise TypeError(f"shortName must be str, not '{type(short_name)}")
-		cachegroup["shortName"] = short_name[:5] + randstr
+		cache_group["shortName"] = short_name[:5] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Cache group property '{e.args[0]}'") from e
 
@@ -516,11 +516,11 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 	type_data = check_template_data(request_template_data["types"], "types")
 	type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"useInTable": "cachegroup"})
-	cachegroup["typeId"] = type_object["id"]
+	cache_group["typeId"] = type_object["id"]
 
-	logger.info("New cachegroup data to hit POST method %s", cachegroup)
+	logger.info("New cachegroup data to hit POST method %s", cache_group)
 	# Hitting cachegroup POST method
-	response: tuple[JSONData, requests.Response] = to_session.create_cachegroups(data=cachegroup)
+	response: tuple[JSONData, requests.Response] = to_session.create_cachegroups(data=cache_group)
 	resp_obj = check_template_data(response, "cachegroup")
 	return resp_obj
 
@@ -601,7 +601,7 @@ def profile_post_data(to_session: TOSession, request_template_data: list[JSONDat
 	:returns: Sample POST data and the actual API response.
 	"""
 	profile = check_template_data(request_template_data["profiles"], "profiles")
-	# Return new post data and post response from cachegroups POST request
+	# Return new post data and post response from profiles POST request
 	randstr = str(randint(0, 1000))
 	try:
 		name = profile["name"]
@@ -770,10 +770,10 @@ def phys_locations_data_post(to_session: TOSession, request_template_data: list[
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
 		phys_locations["name"] = name[:4] + randstr
-		shortname = phys_locations["shortName"]
+		short_name = phys_locations["shortName"]
 		if not isinstance(name, str):
-			raise TypeError(f"shortName must be str, not '{type(shortname)}'")
-		phys_locations["shortName"] = shortname[:4] + randstr
+			raise TypeError(f"shortName must be str, not '{type(short_name)}'")
+		phys_locations["shortName"] = short_name[:4] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Phys_location property '{e.args[0]}'") from e
 
@@ -811,10 +811,10 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	server["typeId"] = type_id
 
 	# Check if cachegroup with type already exists, otherwise create it
-	cachegroup_data = check_template_data(request_template_data["cachegroup"], "cachegroup")
-	cachegroup_object = create_or_get_existing(to_session, "cachegroups", "cachegroups",
-					    cachegroup_data, {"typeId": type_id})
-	server["cachegroupId"]= cachegroup_object["id"]
+	cache_group_data = check_template_data(request_template_data["cachegroup"], "cachegroup")
+	cache_group_object = create_or_get_existing(to_session, "cachegroups", "cachegroups",
+					    cache_group_data, {"typeId": type_id})
+	server["cachegroupId"]= cache_group_object["id"]
 
 	# Check if cdn already exists, otherwise create it
 	cdn_data = check_template_data(request_template_data["cdns"], "cdns")
