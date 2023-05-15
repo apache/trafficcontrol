@@ -855,7 +855,7 @@
       "orgServerFqdn": "http://origin.topology.example.net",
       "originShield": null,
       "profileDescription": null,
-      "profileName": null,
+      "profileName": "DS_ds-top",
       "protocol": 2,
       "qstringIgnore": 1,
       "rangeRequestHandling": 0,
@@ -1172,7 +1172,7 @@
       "orgServerFqdn": "http://192.0.2.1",
       "originShield": null,
       "profileDescription": null,
-      "profileName": null,
+      "profileName": "DS_ds-origin-ip-0",
       "protocol": 2,
       "qstringIgnore": 1,
       "rangeRequestHandling": 0,
@@ -1498,6 +1498,36 @@
     }
   ],
   "profiles": [
+    {
+      "cdnName": "cdn1",
+      "description": "needed for go_direct override",
+      "name": "DS_ds-origin-ip-0",
+      "routingDisabled": false,
+      "type": "DS_PROFILE",
+      "params": [
+        {
+          "configFile": "parent.config",
+          "name": "go_direct_edge",
+          "secure": false,
+          "value": "false"
+        }
+      ]
+    },
+    {
+      "cdnName": "cdn1",
+      "description": "needed for go_direct override",
+      "name": "DS_ds-top",
+      "routingDisabled": false,
+      "type": "DS_PROFILE",
+      "params": [
+        {
+          "configFile": "parent.config",
+          "name": "go_direct_edge",
+          "secure": false,
+          "value": "false"
+        }
+      ]
+    },
     {
       "cdnName": "cdn1",
       "description": "Edge Cache - Apache Traffic Server",
