@@ -1,0 +1,138 @@
+{
+	"cdns": [
+		{
+			"name": "test",
+			"domainName": "quest",
+			"dnssecEnabled": false
+		}
+	],
+	"cachegroup": [
+		{
+			"name": "test",
+			"shortName": "test",
+			"latitude": 38.897663,
+			"longitude": -77.036574,
+			"fallbackToClosest": true,
+			"localizationMethods": [
+				"DEEP_CZ",
+				"CZ",
+				"GEO"
+			],
+			"typeId": 23
+		}
+	],
+	"parameters": [
+		{
+			"name": "test",
+			"value": "quest",
+			"configFile": "records.config",
+			"secure": false
+		}
+	],
+	"roles": [
+		{
+			"name": "test",
+			"description": "quest"
+		}
+	],
+	"profiles": [
+		{
+			"name": "test",
+			"description": "A test profile for API examples",
+			"cdn": 2,
+			"type": "UNK_PROFILE",
+			"routingDisabled": true
+		}
+	],
+	"tenants": [
+		{
+			"active": true,
+			"name": "test",
+			"parentId": 1
+		}
+	],
+	"server_capabilities": [
+		{
+			"name": "RAM"
+		}
+	],
+	"types": [
+		{
+			"name": "MID_LOC",
+			"description": "Mid Logical Location",
+			"useInTable": "cachegroup"
+		}
+	],
+	"status": [
+		{
+			"description": "Server is online and reported in the health protocol.",
+			"name": "REPORTED"
+		}
+	],
+	"divisions": [
+		{
+			"name": "test"
+		}
+	],
+	"regions": [
+		{
+			"name": "Manchester",
+			"division": "4",
+			"divisionName": "England"
+		}
+	],
+	"physical_locations": [
+		{
+			"address": "Buckingham Palace",
+			"city": "London",
+			"comments": "Buckingham Palace",
+			"email": "steve.kingstone@royal.gsx.gov.uk",
+			"name": "test",
+			"phone": "0-843-816-6276",
+			"poc": "Her Majesty The Queen Elizabeth Alexandra Mary Windsor II",
+			"regionId": 1,
+			"shortName": "test",
+			"state": "Westminster",
+			"zip": "SW1A 1AA"
+		}
+	],
+	"servers": [
+		{
+			"cachegroupId": 79,
+			"cdnId": 2,
+			"domainName": "mycdn.ciab.test",
+			"hostName": "mid",
+			"httpsPort": 443,
+			"interfaces": [
+				{
+					"ipAddresses": [
+						{
+							"address": "127.0.0.1",
+							"gateway": "0.0.0.1",
+							"serviceAddress": true
+						}
+					],
+					"maxBandwidth": null,
+					"monitor": true,
+					"mtu": 1500,
+					"name": "eth0"
+				}
+			],
+			"interfaceMtu": 1500,
+			"interfaceName": "eth0",
+			"ip6Address": "::1",
+			"ip6Gateway": "::2",
+			"ipAddress": "127.0.0.1",
+			"ipGateway": "0.0.0.1",
+			"ipNetmask": "255.255.255.0",
+			"physLocationId": 3,
+			"profileNames": [
+				"MID_TIER_ATS_CACHE"
+			],
+			"statusId": 3,
+			"tcpPort": 80,
+			"typeId": 96,
+			"updPending": false
+		}
+	]
+}

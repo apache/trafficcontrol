@@ -22,7 +22,7 @@ import logging
 import sys
 import os
 from random import randint
-from typing import NamedTuple, Union, Optional, TypeAlias
+from typing import Any, NamedTuple, Union, Optional, TypeAlias
 from urllib.parse import urlparse
 
 import pytest
@@ -124,17 +124,17 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 	parser.addoption(
 		"--config",
 		help="Path to configuration file.",
-		default=os.path.join(os.path.dirname(__file__), "to_data.json")
+		default=os.path.join(os.path.dirname(__file__), "data", "to_data.json")
 	)
 	parser.addoption(
 		"--request-template",
 		help="Path to request prerequisites file.",
-		default=os.path.join(os.path.dirname(__file__), "request_template.json")
+		default=os.path.join(os.path.dirname(__file__), "data", "request_template.json")
 	)
 	parser.addoption(
 		"--response-template",
 		help="Path to response prerequisites file.",
-		default=os.path.join(os.path.dirname(__file__), "response_template.json")
+		default=os.path.join(os.path.dirname(__file__), "data", "response_template.json")
 	)
 
 def coalesce_config(
@@ -327,16 +327,18 @@ def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.Fixtur
 		data = json.load(prereq_file)
 	if not isinstance(data, dict):
 		raise TypeError(f"request template data must be an object, not '{type(data)}'")
-	request_template = data[request.param]
-	if not isinstance(request_template, list):
-		raise TypeError(f"Request template data must be a list, not '{type(request_template)}'")
-
+	try:
+		request_template = data[request.param]
+		if not isinstance(request_template, list):
+			raise TypeError(f"Request template data must be a list, not '{type(request_template)}'")
+	except AttributeError:
+		request_template = data
 	return request_template
 
 @pytest.fixture()
 def response_template_data(pytestconfig: pytest.Config
 			   ) -> dict[str, primitive | list[primitive |
-					  dict[str, object] | list[object]] | dict[object, object]]:
+				      dict[str, object] | list[object]] | dict[object, object]]:
 	"""
 	PyTest Fixture to store response template data for api endpoint.
 	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object.
@@ -363,6 +365,94 @@ def response_template_data(pytestconfig: pytest.Config
 	return response_template
 
 
+def api_response_data(api_response: tuple[primitive | dict[str, object] | list[primitive |
+					dict[str, object] | list[object]], requests.Response],
+					request_type: str=None) -> dict[str, object]:
+	"""
+	Checks API get/post response.
+	:param api_response: Raw api response.
+	:returns: Verified response data
+	"""
+	if request_type == "get":
+		try:
+			api_response = api_response[0]
+			if not isinstance(api_response, list):
+				raise TypeError("malformed API response; 'response' property not an array")
+		except KeyError as e:
+			raise TypeError(f"missing API property '{e.args[0]}'") from e
+	if api_response:
+		try:
+			api_data = api_response[0]
+			if not isinstance(api_data, dict):
+				raise TypeError("malformed API response; 'response' property not an dict")
+		except IndexError as e:
+			raise TypeError(f"No response data from api request.'{e.args[0]}'") from e
+
+	return api_data
+
+
+def get_existing_object(to_session: TOSession, object_type: str, query_params:
+			dict[str, Any]| None) -> Union[dict[str, Any], None]:
+	"""
+	Check if the given endpoint with the given query params already exists.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param object_type: api call name for get request.
+	:param query_params: query params for api get request.
+	:returns: Api data for the corresponding api request.
+    """
+	api_get_response: tuple[dict[str, object] | list[dict[str, object] | list[object] | primitive] |
+			 primitive, requests.Response] = getattr(to_session,
+			f"get_{object_type}")(query_params=query_params)
+	return api_response_data(api_get_response, "get")
+
+
+def create_if_not_exists(to_session: TOSession, object_type: str,
+			 data: dict[str, Any]) -> Union[dict[str, Any], None]:
+	"""
+	Hits Post request of the given endpoint with the given data.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param object_type: api call name for post request.
+	:param data: Post data for api post request.
+	:returns: Api data for the corresponding api request.
+	"""
+	api_post_response: tuple[dict[str, object] | list[dict[str, object] | list[object] | primitive]
+	| primitive, requests.Response] = getattr(to_session, f"create_{object_type}")(data=data)
+	return api_response_data(api_post_response)
+
+
+def create_or_get_existing(to_session: TOSession, get_object_type: str, post_object_type: str, data:
+	dict[str, Any], query_params: Optional[dict[str, Any]] = None) -> Union[dict[str, Any], None]:
+	"""
+	Get Api data of the given endpoint with the given query params if it exists. If not, create it.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param get_object_type: api call name for get request.
+	:param post_object_type: api call name for post request.
+	:param query_params: query params for api get request.
+	:returns: Api data for the corresponding api request.
+	"""
+	existing_object = get_existing_object(to_session, get_object_type, query_params)
+	return existing_object or create_if_not_exists(to_session, post_object_type, data)
+
+
+def check_template_data(template_data: list[JSONData] | tuple[JSONData, requests.Response],
+			name: str) -> dict[str, object]:
+	"""
+	Checks API request/response template data.
+	:param template_data: Fixture to get template data from a prerequisites file.
+	:param name: Endpoint name
+	:returns: Verified endpoint data
+	"""
+	try:
+		endpoint = template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			f"malformed  data; no {name} present in {name} array property") from e
+
+	if not isinstance(endpoint, dict):
+		raise TypeError(f"malformed data; {name} must be objects, not '{type(endpoint)}'")
+	return endpoint
+
+
 @pytest.fixture()
 def cdn_post_data(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
@@ -373,14 +463,7 @@ def cdn_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	:param request_template_data: Fixture to get CDN request template data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-
-	try:
-		cdn = request_template_data[0]
-	except IndexError as e:
-		raise TypeError("malformed prerequisite data; no CDNs present in 'cdns' array property") from e
-
-	if not isinstance(cdn, dict):
-		raise TypeError(f"malformed prerequisite data; CDNs must be objects, not '{type(cdn)}'")
+	cdn = check_template_data(request_template_data, "cdns")
 
 	# Return new post data and post response from cdns POST request
 	randstr = str(randint(0, 1000))
@@ -396,17 +479,11 @@ def cdn_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	except KeyError as e:
 		raise TypeError(f"missing CDN property '{e.args[0]}'") from e
 
-	logger.info("New cdn data to hit POST method %s", request_template_data)
+	logger.info("New cdn data to hit POST method %s", cdn)
 	# Hitting cdns POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_cdn(data=cdn)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; cdn is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No CDN response data from cdns POST request.")
-		sys.exit(1)
+	resp_obj = check_template_data(response, "cdns")
+	return resp_obj
 
 
 @pytest.fixture()
@@ -419,16 +496,7 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 	:param request_template_data: Fixture to get Cachegroup data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-	try:
-		cachegroup = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no Cache group present in 'cachegroup' array property") from e
-
-	if not isinstance(cachegroup, dict):
-		raise TypeError(
-			f"malformed prerequisite data; Cache group must be objects, not '{type(cachegroup)}'")
-
+	cachegroup = check_template_data(request_template_data["cachegroup"], "cachegroup")
 	# Return new post data and post response from cachegroups POST request
 	randstr = str(randint(0, 1000))
 	try:
@@ -442,35 +510,18 @@ def cachegroup_post_data(to_session: TOSession, request_template_data: list[JSON
 		cachegroup["shortName"] = short_name[:5] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Cache group property '{e.args[0]}'") from e
-	# Hitting types GET method to access typeID for cachegroup POST data
-	type_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
-		requests.Response
-	] = to_session.get_types(query_params={"useInTable": "cachegroup"})
-	try:
-		type_data = type_get_response[0]
-		if not isinstance(type_data, list):
-			raise TypeError("malformed API response; 'response' property not an array")
-		first_type = type_data[0]
-		if not isinstance(first_type, dict):
-			raise TypeError("malformed API response; first Type in response is not an object")
-		cachegroup["typeId"] = first_type["id"]
-		type_id = cachegroup["typeId"]
-		logger.info("extracted %s from %s", type_id, type_get_response)
-	except KeyError as e:
-		raise TypeError(f"missing Type property '{e.args[0]}'") from e
 
-	logger.info("New cachegroup data to hit POST method %s", request_template_data)
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "cachegroup"})
+	cachegroup["typeId"] = type_object["id"]
+
+	logger.info("New cachegroup data to hit POST method %s", cachegroup)
 	# Hitting cachegroup POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_cachegroups(data=cachegroup)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; cache group is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No Cache group response data from cdns POST request.")
-		sys.exit(1)
+	resp_obj = check_template_data(response, "cachegroup")
+	return resp_obj
 
 
 @pytest.fixture()
@@ -480,20 +531,10 @@ def parameter_post_data(to_session: TOSession, request_template_data: list[JSOND
 	PyTest Fixture to create POST data for parameters endpoint.
 
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get parameter data from a prerequisites file.
+	:param request_template_data: Fixture to get CDN request template data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-
-	try:
-		parameter = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no Parameters present in 'parameters' array property") from e
-
-	if not isinstance(parameter, dict):
-		raise TypeError(
-			f"malformed prerequisite data; Paremeters must be objects, not '{type(parameter)}'")
-
+	parameter = check_template_data(request_template_data, "parameters")
 	# Return new post data and post response from parameters POST request
 	randstr = str(randint(0, 1000))
 	try:
@@ -508,17 +549,11 @@ def parameter_post_data(to_session: TOSession, request_template_data: list[JSOND
 	except KeyError as e:
 		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
 
-	logger.info("New parameter data to hit POST method %s", request_template_data)
+	logger.info("New parameter data to hit POST method %s", parameter)
 	# Hitting cdns POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_parameter(data=parameter)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; parameter is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No Parameter response data from parameters POST request.")
-		sys.exit(1)
+	resp_obj = check_template_data(response, "parameter")
+	return resp_obj
 
 
 @pytest.fixture()
@@ -531,16 +566,7 @@ def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	:param request_template_data: Fixture to get role data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-
-	try:
-		role = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no Roles present in 'roles' array property") from e
-
-	if not isinstance(role, dict):
-		raise TypeError(
-			f"malformed prerequisite data; Roles must be objects, not '{type(role)}'")
+	role = check_template_data(request_template_data, "roles")
 
 	# Return new post data and post response from roles POST request
 	randstr = str(randint(0, 1000))
@@ -556,23 +582,16 @@ def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	except KeyError as e:
 		raise TypeError(f"missing Role property '{e.args[0]}'") from e
 
-	logger.info("New role data to hit POST method %s", request_template_data)
+	logger.info("New role data to hit POST method %s", role)
 	# Hitting roles POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_role(data=role)
-	logger.info(response[0])
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; role is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No Role response data from roles POST request.")
-		sys.exit(1)
+	resp_obj = check_template_data(response, "role")
+	return resp_obj
 
 
 @pytest.fixture()
 def profile_post_data(to_session: TOSession, request_template_data: list[JSONData]
-			  ) -> dict[str, object]:
+		      ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for profile endpoint.
 
@@ -580,16 +599,7 @@ def profile_post_data(to_session: TOSession, request_template_data: list[JSONDat
 	:param request_template_data: Fixture to get profile data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-
-	try:
-		profile = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no Profile present in 'profile' array property") from e
-
-	if not isinstance(profile, dict):
-		raise TypeError(f"malformed prerequisite data; profile must be objects, not '{type(profile)}'")
-
+	profile = check_template_data(request_template_data["profiles"], "profiles")
 	# Return new post data and post response from cachegroups POST request
 	randstr = str(randint(0, 1000))
 	try:
@@ -599,35 +609,17 @@ def profile_post_data(to_session: TOSession, request_template_data: list[JSONDat
 		profile["name"] = name[:4] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Profile property '{e.args[0]}'") from e
-	# Hitting types GET method to access typeID for profile POST data
-	cdn_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
-		requests.Response
-	] = to_session.get_cdns()
-	try:
-		cdn_data = cdn_get_response[0]
-		if not isinstance(cdn_data, list):
-			raise TypeError("malformed API response; 'response' property not an array")
-		first_cdn = cdn_data[0]
-		if not isinstance(first_cdn, dict):
-			raise TypeError("malformed API response; first CDN in response is not an object")
-		profile["cdn"] = first_cdn["id"]
-		cdn_id = profile["cdn"]
-		logger.info("extracted %s from %s", cdn_id, cdn_get_response)
-	except KeyError as e:
-		raise TypeError(f"missing CDN property '{e.args[0]}'") from e
 
-	logger.info("New profile data to hit POST method %s", request_template_data)
+	# Check if cdn already exists, otherwise create it
+	cdn_data = check_template_data(request_template_data["cdns"], "cdns")
+	cdn_object = create_or_get_existing(to_session, "cdns", "cdn", cdn_data)
+	profile["cdn"] = cdn_object["id"]
+	logger.info("New profile data to hit POST method %s", profile)
+
 	# Hitting profile POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_profile(data=profile)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; profile is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No Profile response data from cdns POST request.")
-		sys.exit(1)
+	resp_obj = check_template_data(response, "profile")
+	return resp_obj
 
 
 @pytest.fixture()
@@ -640,15 +632,7 @@ def tenant_post_data(to_session: TOSession, request_template_data: list[JSONData
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	try:
-		tenant = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no Parameters present in 'tenants' array property") from e
-
-	if not isinstance(tenant, dict):
-		raise TypeError(
-			f"malformed prerequisite data; tenants must be objects, not '{type(tenant)}'")
+	tenant = check_template_data(request_template_data, "tenants")
 
 	# Return new post data and post response from tenants POST request
 	randstr = str(randint(0, 1000))
@@ -660,17 +644,12 @@ def tenant_post_data(to_session: TOSession, request_template_data: list[JSONData
 	except KeyError as e:
 		raise TypeError(f"missing tenant property '{e.args[0]}'") from e
 
-	logger.info("New tenant data to hit POST method %s", request_template_data)
+	logger.info("New tenant data to hit POST method %s", tenant)
 	# Hitting tenants POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_tenant(data=tenant)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; parameter is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No Parameter response data from parameters POST request.")
-		sys.exit(1)
+	resp_obj = check_template_data(response, "tenant")
+	return resp_obj
+
 
 @pytest.fixture()
 def server_capabilities_post_data(to_session: TOSession, request_template_data: list[JSONData]
@@ -680,17 +659,10 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get server_capabilities data from a prerequisites file.
-	  :returns: Sample POST data and the actual API response.
+	:returns: Sample POST data and the actual API response.
 	"""
-	try:
-		server_capabilities = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no data present in 'server_capabilities' array property") from e
 
-	if not isinstance(server_capabilities, dict):
-		raise TypeError(
-			f"malformed prerequisite data; data must be objects, not '{type(server_capabilities)}'")
+	server_capabilities = check_template_data(request_template_data, "server_capabilities")
 
 	# Return new post data and post response from server_capabilities POST request
 	randstr = str(randint(0, 1000))
@@ -706,14 +678,65 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 	# Hitting server_capabilities POST method
 	response: tuple[
 		JSONData, requests.Response] = to_session.create_server_capabilities(data=server_capabilities)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; server_capabilities is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No server_capabilities response data from server_capabilities POST request.")
-		sys.exit(1)
+	resp_obj = check_template_data(response, "server_capabilities")
+	return resp_obj
+
+
+@pytest.fixture()
+def server_post_data(to_session: TOSession, request_template_data: list[JSONData],
+		      phys_locations_post_data: dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for server endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get profile data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	server = check_template_data(request_template_data["servers"], "servers")
+
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "server"})
+	type_id = type_object["id"]
+	server["typeId"] = type_id
+
+	# Check if cachegroup with type already exists, otherwise create it
+	cachegroup_data = check_template_data(request_template_data["cachegroup"], "cachegroup")
+	cachegroup_object = create_or_get_existing(to_session, "cachegroups", "cachegroups",
+					    cachegroup_data, {"typeId": type_id})
+	server["cachegroupId"]= cachegroup_object["id"]
+
+	# Check if cdn already exists, otherwise create it
+	cdn_data = check_template_data(request_template_data["cdns"], "cdns")
+	cdn_object = create_or_get_existing(to_session, "cdns", "cdn", cdn_data, {"name": "CDN-in-a-Box"})
+	server["cdnId"] = cdn_object["id"]
+	server["domainName"] = cdn_object["domainName"]
+
+	# Check if profile with cdn already exists, otherwise create it
+	profile_data = check_template_data(request_template_data["profiles"], "profiles")
+	profile_object = create_or_get_existing(to_session, "profiles", "profile", profile_data,
+					 {"name": "test"})
+	server["profileNames"] = [profile_object["name"]]
+
+	# Check if status already exists, otherwise create it
+	status_data = check_template_data(request_template_data["status"], "status")
+	status_object = create_or_get_existing(to_session, "statuses", "statuses",
+					status_data, {"name": "REPORTED"})
+	server["statusId"] = status_object["id"]
+
+	# Check if physical location with region already exists, otherwise create it
+	physical_location_id = phys_locations_post_data["id"]
+	if not isinstance(physical_location_id, int):
+		raise TypeError("malformed API response; 'id' property not a integer")
+	server["physLocationId"] = physical_location_id
+
+	logger.info("New server data to hit POST method %s", server)
+	# Hitting server POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_server(data=server)
+	resp_obj = check_template_data(response, "server")
+	return resp_obj
+
 
 @pytest.fixture()
 def division_post_data(to_session: TOSession, request_template_data: list[JSONData]
@@ -722,20 +745,11 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	PyTest Fixture to create POST data for divisions endpoint.
 
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get divisions request template data from
-	request_template file.
-	  :returns: Sample POST data and the actual API response.
+	:param request_template_data: Fixture to get divisions data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
 	"""
 
-	try:
-		division = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no division present in 'division' array property") from e
-
-	if not isinstance(division, dict):
-		raise TypeError(
-			f"malformed prerequisite data; divisions must be objects, not '{type(division)}'")
+	division = check_template_data(request_template_data, "divisions")
 
 	# Return new post data and post response from division POST request
 	randstr = str(randint(0, 1000))
@@ -750,14 +764,9 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	logger.info("New division data to hit POST method %s", request_template_data)
 	# Hitting division POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_division(data=division)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; division is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No division response data from division POST request.")
-		sys.exit(1)
+	resp_obj = check_template_data(response, "divisions")
+	return resp_obj
+	
 
 @pytest.fixture()
 def region_post_data(to_session: TOSession, request_template_data: list[JSONData]
@@ -770,14 +779,7 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
   	:returns: Sample POST data and the actual API response.
 	"""
 
-	try:
-		region = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no Region present in 'regions' array property") from e
-
-	if not isinstance(region, dict):
-		raise TypeError(f"malformed prerequisite data; region must be objects, not '{type(region)}'")
+	region = check_template_data(request_template_data, "regions")
 
 	# Return new post data and post response from regions POST request
 	randstr = str(randint(0, 1000))
@@ -788,39 +790,23 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
 		region["name"] = name[:4] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Region property '{e.args[0]}'") from e
-	# Hitting types GET method to access typeID for region POST data
-	division_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
-		requests.Response
-	] = to_session.get_divisions()
-	try:
-		division_data = division_get_response[0]
-		if not isinstance(division_data, list):
-			raise TypeError("malformed API response; 'response' property not an array")
-		first_division = division_data[0]
-		if not isinstance(first_division, dict):
-			raise TypeError("malformed API response; first Division in response is not an object")
-		region["division"] = first_division["id"]
-		division_id = region["division"]
-		logger.info("extracted %s from %s", division_id, division_get_response)
-	except KeyError as e:
-		raise TypeError(f"missing Regions property '{e.args[0]}'") from e
+
+	# Check if division already exists, otherwise create it
+	division_data = check_template_data(request_template_data["divisions"], "divisions")
+	division_object = create_or_get_existing(to_session, "divisions", "division", division_data)
+	region["division"] = division_object["id"]
+	region["divisionName"] = division_object["name"]
 
 	logger.info("New region data to hit POST method %s", request_template_data)
 	# Hitting region POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_region(data=region)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; region is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No Region response data from divisions POST request.")
-	sys.exit(1)
+	resp_obj = check_template_data(response, "regions")
+	return resp_obj
+
 
 @pytest.fixture()
-def phys_locations_post_data(to_session: TOSession, request_template_data: list[JSONData]
-			  ) -> dict[str, object]:
+def phys_locations_post_data(to_session: TOSession, request_template_data: list[JSONData],
+			  region_post_data: dict[str, object]) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for phys_location endpoint.
 
@@ -829,14 +815,7 @@ def phys_locations_post_data(to_session: TOSession, request_template_data: list[
   	:returns: Sample POST data and the actual API response.
 	"""
 
-	try:
-		phys_locations = request_template_data[0]
-	except IndexError as e:
-		raise TypeError(
-			"malformed prerequisite data; no data in 'phys_locations' array property") from e
-
-	if not isinstance(phys_locations, dict):
-		raise TypeError(f"malformed prerequisite data; PLs must be objects, not '{type(phys_locations)}'")
+	phys_locations = check_template_data(request_template_data, "phys_locations")
 
 	# Return new post data and post response from phys_locations POST request
 	randstr = str(randint(0, 1000))
@@ -851,33 +830,16 @@ def phys_locations_post_data(to_session: TOSession, request_template_data: list[
 		phys_locations["shortName"] = shortName[:4] + randstr
 	except KeyError as e:
 		raise TypeError(f"missing Phys_location property '{e.args[0]}'") from e
-	# Hitting types GET method to access typeID for phys_locations POST data
-	region_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
-		requests.Response
-	] = to_session.get_regions()
-	try:
-		region_data = region_get_response[0]
-		if not isinstance(region_data, list):
-			raise TypeError("malformed API response; 'response' property not an array")
-		first_region = region_data[0]
-		if not isinstance(first_region, dict):
-			raise TypeError("malformed API response; first Region in response is not an object")
-		phys_locations["regionId"] = first_region["id"]
-		region_id = phys_locations["regionId"]
-		logger.info("extracted %s from %s", region_id, region_get_response)
-	except KeyError as e:
-		raise TypeError(f"missing Phys_Locations property '{e.args[0]}'") from e
+
+	# Check if region already exists, otherwise create it
+	region_id = region_post_data["id"]
+	if not isinstance(region_id, int):
+		raise TypeError("malformed API response; 'id' property not a integer")
+	phys_locations["regionId"] = region_id
 
 	logger.info("New Phys_locations data to hit POST method %s", request_template_data)
 	# Hitting region POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_physical_locations(data=phys_locations)
-	try:
-		resp_obj = response[0]
-		if not isinstance(resp_obj, dict):
-			raise TypeError("malformed API response; phys_location is not an object")
-		return resp_obj
-	except IndexError:
-		logger.error("No Phys_Location response data from regions POST request.")
-	sys.exit(1)
+	resp_obj = check_template_data(response, "phys_locations")
+	return resp_obj
 
