@@ -187,6 +187,16 @@ func directoryExists(dir string) (bool, os.FileInfo) {
 	}
 	return info.IsDir(), info
 }
+// verifies the rpm database if there is any database corruption
+// it will return false
+func RpmDBisOk() bool {
+	cmd := exec.Command("/bin/rpm", "--verifydb")
+	err := cmd.Run()
+	if err != nil || cmd.ProcessState.ExitCode() > 0 {
+		return false
+	}
+	return true
+}
 
 // derives the ATS Installation directory from
 // the rpm config file list.
@@ -471,6 +481,8 @@ If any of the related flags are also set, they override the mode's default behav
 		os.Setenv("TO_PASS", toPass)
 	}
 
+	rpmDBisOk := RpmDBisOk()
+	toInfoLog = append(toInfoLog, fmt.Sprintf("rpm database is ok: %v", rpmDBisOk))
 	// set TSHome
 	var tsHome = ""
 	if *tsHomePtr != "" {
