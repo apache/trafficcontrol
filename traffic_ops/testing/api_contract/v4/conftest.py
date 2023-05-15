@@ -335,6 +335,7 @@ def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.Fixtur
 		request_template = data
 	return request_template
 
+
 @pytest.fixture()
 def response_template_data(pytestconfig: pytest.Config
 			   ) -> dict[str, primitive | list[primitive |
@@ -534,7 +535,7 @@ def parameter_post_data(to_session: TOSession, request_template_data: list[JSOND
 	:param request_template_data: Fixture to get CDN request template data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-	parameter = check_template_data(request_template_data, "parameters")
+	parameter = check_template_data(request_template_data["parameters"], "parameters")
 	# Return new post data and post response from parameters POST request
 	randstr = str(randint(0, 1000))
 	try:
@@ -566,7 +567,7 @@ def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	:param request_template_data: Fixture to get role data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-	role = check_template_data(request_template_data, "roles")
+	role = check_template_data(request_template_data["roles"], "roles")
 
 	# Return new post data and post response from roles POST request
 	randstr = str(randint(0, 1000))
@@ -662,7 +663,8 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	server_capabilities = check_template_data(request_template_data, "server_capabilities")
+	server_capabilities = check_template_data(request_template_data["server_capabilities"],
+					   "server_capabilities")
 
 	# Return new post data and post response from server_capabilities POST request
 	randstr = str(randint(0, 1000))
@@ -679,6 +681,113 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 	response: tuple[
 		JSONData, requests.Response] = to_session.create_server_capabilities(data=server_capabilities)
 	resp_obj = check_template_data(response, "server_capabilities")
+	return resp_obj
+
+
+@pytest.fixture()
+def division_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for divisions endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get divisions data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	division = check_template_data(request_template_data["divisions"], "divisions")
+
+	# Return new post data and post response from division POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = division["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		division["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
+
+	logger.info("New division data to hit POST method %s", request_template_data)
+	# Hitting division POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_division(data=division)
+	resp_obj = check_template_data(response, "divisions")
+	return resp_obj
+
+
+@pytest.fixture(name="region_post_data")
+def region_data_post(to_session: TOSession, request_template_data: list[JSONData]
+			  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for region endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get region data from a prerequisites file.
+  	:returns: Sample POST data and the actual API response.
+	"""
+
+	region = check_template_data(request_template_data["regions"], "regions")
+
+	# Return new post data and post response from regions POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = region["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		region["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Region property '{e.args[0]}'") from e
+
+	# Check if division already exists, otherwise create it
+	division_data = check_template_data(request_template_data["divisions"], "divisions")
+	division_object = create_or_get_existing(to_session, "divisions", "division", division_data)
+	region["division"] = division_object["id"]
+	region["divisionName"] = division_object["name"]
+
+	logger.info("New region data to hit POST method %s", request_template_data)
+	# Hitting region POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_region(data=region)
+	resp_obj = check_template_data(response, "regions")
+	return resp_obj
+
+
+@pytest.fixture(name="phys_locations_post_data")
+def phys_locations_data_post(to_session: TOSession, request_template_data: list[JSONData],
+			  region_post_data: dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for phys_location endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get phys_location data from a prerequisites file.
+  	:returns: Sample POST data and the actual API response.
+	"""
+
+	phys_locations = check_template_data(request_template_data["phys_locations"], "phys_locations")
+
+	# Return new post data and post response from phys_locations POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = phys_locations["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		phys_locations["name"] = name[:4] + randstr
+		shortname = phys_locations["shortName"]
+		if not isinstance(name, str):
+			raise TypeError(f"shortName must be str, not '{type(shortname)}'")
+		phys_locations["shortName"] = shortname[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Phys_location property '{e.args[0]}'") from e
+
+	# Check if region already exists, otherwise create it
+	region_id = region_post_data["id"]
+	if not isinstance(region_id, int):
+		raise TypeError("malformed API response; 'id' property not a integer")
+	phys_locations["regionId"] = region_id
+
+	logger.info("New Phys_locations data to hit POST method %s", request_template_data)
+	# Hitting region POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_physical_locations(
+		data=phys_locations)
+	resp_obj = check_template_data(response, "phys_locations")
 	return resp_obj
 
 
@@ -735,110 +844,4 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting server POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_server(data=server)
 	resp_obj = check_template_data(response, "server")
-	return resp_obj
-
-
-@pytest.fixture()
-def division_post_data(to_session: TOSession, request_template_data: list[JSONData]
-		  ) -> dict[str, object]:
-	"""
-	PyTest Fixture to create POST data for divisions endpoint.
-
-	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get divisions data from a prerequisites file.
-	:returns: Sample POST data and the actual API response.
-	"""
-
-	division = check_template_data(request_template_data["divisions"], "divisions")
-
-	# Return new post data and post response from division POST request
-	randstr = str(randint(0, 1000))
-	try:
-		name = division["name"]
-		if not isinstance(name, str):
-			raise TypeError(f"name must be str, not '{type(name)}'")
-		division["name"] = name[:4] + randstr
-	except KeyError as e:
-		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
-
-	logger.info("New division data to hit POST method %s", request_template_data)
-	# Hitting division POST methed
-	response: tuple[JSONData, requests.Response] = to_session.create_division(data=division)
-	resp_obj = check_template_data(response, "divisions")
-	return resp_obj
-	
-
-@pytest.fixture()
-def region_post_data(to_session: TOSession, request_template_data: list[JSONData]
-			  ) -> dict[str, object]:
-	"""
-	PyTest Fixture to create POST data for region endpoint.
-
-	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get region data from a prerequisites file.
-  	:returns: Sample POST data and the actual API response.
-	"""
-
-	region = check_template_data(request_template_data["regions"], "regions")
-
-	# Return new post data and post response from regions POST request
-	randstr = str(randint(0, 1000))
-	try:
-		name = region["name"]
-		if not isinstance(name, str):
-			raise TypeError(f"name must be str, not '{type(name)}'")
-		region["name"] = name[:4] + randstr
-	except KeyError as e:
-		raise TypeError(f"missing Region property '{e.args[0]}'") from e
-
-	# Check if division already exists, otherwise create it
-	division_data = check_template_data(request_template_data["divisions"], "divisions")
-	division_object = create_or_get_existing(to_session, "divisions", "division", division_data)
-	region["division"] = division_object["id"]
-	region["divisionName"] = division_object["name"]
-
-	logger.info("New region data to hit POST method %s", request_template_data)
-	# Hitting region POST method
-	response: tuple[JSONData, requests.Response] = to_session.create_region(data=region)
-	resp_obj = check_template_data(response, "regions")
-	return resp_obj
-
-
-@pytest.fixture()
-def phys_locations_post_data(to_session: TOSession, request_template_data: list[JSONData],
-			  region_post_data: dict[str, object]) -> dict[str, object]:
-	"""
-	PyTest Fixture to create POST data for phys_location endpoint.
-
-	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get phys_location data from a prerequisites file.
-  	:returns: Sample POST data and the actual API response.
-	"""
-
-	phys_locations = check_template_data(request_template_data["phys_locations"], "phys_locations")
-
-	# Return new post data and post response from phys_locations POST request
-	randstr = str(randint(0, 1000))
-	try:
-		name = phys_locations["name"]
-		if not isinstance(name, str):
-			raise TypeError(f"name must be str, not '{type(name)}'")
-		phys_locations["name"] = name[:4] + randstr
-		shortName = phys_locations["shortName"]
-		if not isinstance(name, str):
-			raise TypeError(f"shortName must be str, not '{type(shortName)}'")
-		phys_locations["shortName"] = shortName[:4] + randstr
-	except KeyError as e:
-		raise TypeError(f"missing Phys_location property '{e.args[0]}'") from e
-
-	# Check if region already exists, otherwise create it
-	region_id = region_post_data["id"]
-	if not isinstance(region_id, int):
-		raise TypeError("malformed API response; 'id' property not a integer")
-	phys_locations["regionId"] = region_id
-
-	logger.info("New Phys_locations data to hit POST method %s", request_template_data)
-	# Hitting region POST method
-	response: tuple[JSONData, requests.Response] = to_session.create_physical_locations(data=phys_locations)
-	resp_obj = check_template_data(response, "phys_locations")
 	return resp_obj

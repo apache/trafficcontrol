@@ -56,7 +56,7 @@ def test_division_contract(to_session: TOSession,
 		first_division = division_data[0]
 		if not isinstance(first_division, dict):
 			raise TypeError("malformed API response; first division in response is not an object")
-		
+
 		logger.info("Division Api get response %s", first_division)
 		division_response_template = response_template_data.get("divisions")
 		if not isinstance(division_response_template, dict):
@@ -66,7 +66,7 @@ def test_division_contract(to_session: TOSession,
 		# validate division values from prereq data in divisions get response.
 		prereq_values = division_post_data["name"]
 		get_values = first_division["name"]
-		
+
 		assert validate(instance=first_division, schema=division_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:

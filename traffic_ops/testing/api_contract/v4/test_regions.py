@@ -40,8 +40,8 @@ def test_region_contract(to_session: TOSession,
 	# validate region keys from regions get response
 	logger.info("Accessing /regions endpoint through Traffic ops session.")
 
-	region = region_post_data.get("name")
-	if not isinstance(region, dict):
+	region_name = region_post_data.get("name")
+	if not isinstance(region_name, str):
 		raise TypeError("malformed region in prerequisite data; 'name' not a string")
 
 	region_get_response: tuple[
@@ -62,12 +62,12 @@ def test_region_contract(to_session: TOSession,
 		if not isinstance(region_response_template, dict):
 			raise TypeError(
 				f"region response template data must be a dict, not '{type(region_response_template)}'")
-		
+
 		# validate region values from prereq data in regions get response.
 		keys = ["name", "division", "divisionName"]
 		prereq_values = [region_post_data[key] for key in keys]
 		get_values = [first_region[key] for key in keys]
-		
+
 		# validate keys, data types and values from regions get json response.
 		assert validate(instance=first_region, schema=region_response_template) is None
 		assert get_values == prereq_values

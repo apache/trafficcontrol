@@ -62,9 +62,10 @@ def test_phys_locations_contract(to_session: TOSession,
 		if not isinstance(phys_location_response_template, dict):
 			raise TypeError(
 				f"phys_loc response template data must be a dict, not'{type(phys_location_response_template)}'")
-		
+
 		# validate phys_location values from prereq data in phys_locations get response.
-		keys = ["name", "address", "city", "zip", "comments", "email", "phone", "poc", "regionId", "shortName", "state"]
+		keys = ["name", "address", "city", "zip", "comments", "email", "phone","poc",
+	            "regionId", "shortName", "state"]
 		prereq_values = [phys_locations_post_data[key] for key in keys]
 		get_values = [first_phys_location[key] for key in keys]
 

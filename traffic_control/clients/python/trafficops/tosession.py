@@ -1395,8 +1395,8 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'phys_locations', ('3.0', '3.1', '4.0', '4.1', '5.0'))
-	def create_physical_locations(self, query_params=None, data=None):
+	@api_request('post', 'phys_locations', ('3.0', '4.0', '4.1', '5.0'))
+	def create_physical_locations(self, data=None):
 		"""
 		Create a Physical Location
 		:ref:`to-api-phys_locations`

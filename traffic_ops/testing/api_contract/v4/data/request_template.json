@@ -81,7 +81,7 @@
 			"divisionName": "England"
 		}
 	],
-	"physical_locations": [
+	"phys_locations": [
 		{
 			"address": "Buckingham Palace",
 			"city": "London",
