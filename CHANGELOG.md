@@ -57,6 +57,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
 - [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
 - [#7519] (https://github.com/apache/trafficcontrol/issues/7519) *Traffic Ops* Fixed TO API /servers/{id}/deliveryservices endpoint to responding with all DS's on cache that are directly assigned and inherited through topology. 
+- [#7519] (https://github.com/apache/trafficcontrol/issues/7519) *Traffic Ops* Fixed TO API /servers/{id}/deliveryservices endpoint to respond with all DS's on cache that are directly assigned and inherited through topology. 
 - [#7511](https://github.com/apache/trafficcontrol/pull/7511) *Traffic Ops* Fixed the changelog registration message to include the username instead of duplicate email entry.
 - [#7465](https://github.com/apache/trafficcontrol/issues/7465) *Traffic Ops* Fixes server_capabilities v5 apis to respond with RFC3339 date/time Format
 - [#7441](https://github.com/apache/trafficcontrol/pull/7441) *Traffic Ops* Fixed the invalidation jobs endpoint to respect CDN locks.
