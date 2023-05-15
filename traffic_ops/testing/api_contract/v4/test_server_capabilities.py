@@ -16,6 +16,7 @@
 import logging
 import pytest
 import requests
+from jsonschema import validate
 
 from trafficops.tosession import TOSession
 
@@ -25,9 +26,7 @@ logger = logging.getLogger()
 primitive = bool | int | float | str | None
 
 @pytest.mark.parametrize('request_template_data', ["server_capabilities"], indirect=True)
-def test_server_capabilities_contract(
-	to_session: TOSession,
-	request_template_data: list[dict[str, object] | list[object] | primitive],
+def test_server_capabilities_contract(to_session: TOSession,
 	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
 						    | list[object]] | dict[object, object]],
 	server_capabilities_post_data: dict[str, object]
@@ -36,7 +35,6 @@ def test_server_capabilities_contract(
 	Test step to validate keys, values and data types from server_capabilities endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get request template data from a prerequisites file.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
 	:param server_capabilities_post_data: Fixture to get sample server_capabilities data 
     and actual server_capabilities response.
@@ -44,11 +42,7 @@ def test_server_capabilities_contract(
 	# validate server_capabilities keys from server_capabilities get response
 	logger.info("Accessing /server_capabilities endpoint through Traffic ops session.")
 
-	server_capabilities = request_template_data[0]
-	if not isinstance(server_capabilities, dict):
-		raise TypeError("malformed server_capabilities in prerequisite data; not an object")
-
-	server_capabilities_name = server_capabilities.get("name")
+	server_capabilities_name = server_capabilities_post_data.get("name")
 	if not isinstance(server_capabilities_name, str):
 		raise TypeError("malformed server_capabilities in prerequisite data; 'name' not a string")
 
@@ -64,36 +58,16 @@ def test_server_capabilities_contract(
 		first_server_capabilities = server_capabilities_data[0]
 		if not isinstance(first_server_capabilities, dict):
 			raise TypeError("malformed API response; first server_capabilities in response is not an object")
-		server_capabilities_keys = set(first_server_capabilities.keys())
+		logger.info("Server capabilities Api get response %s", first_server_capabilities)
 
-		logger.info("server_capabilities Keys from endpoint response %s", server_capabilities_keys)
-		server_capabilities_response_template = response_template_data.get("server_capabilities")
-		if not isinstance(server_capabilities_response_template, dict):
-			raise TypeError(
-				f"server_capabilities data must be a dict, not '{type(server_capabilities_response_template)}'")
-		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
-			dict[object, object] |\
-			primitive
-		]
-		response_template = server_capabilities_response_template.get("properties")
+		response_template = response_template_data.get("server_capabilities")
+
 		# validate server_capabilities values from prereq data in api get response.
-		prereq_values = [server_capabilities_post_data["name"]]
-		get_values = [first_server_capabilities["name"]]
-		get_types = {}
-		for key, value in first_server_capabilities.items():
-			get_types[key] = type(value).__name__
-		logger.info("types from server_capabilities get response %s", get_types)
-		response_template_types= {}
-		for key, value in response_template.items():
-			actual_type = value.get("type")
-			if not isinstance(actual_type, str):
-				raise TypeError(
-					f"Type data must be a string, not '{type(actual_type)}'")
-			response_template_types[key] = actual_type
-		logger.info("types from server_capabilities response template %s", response_template_types)
+		prereq_values = server_capabilities_post_data["name"]
+		get_values = first_server_capabilities["name"]
+
 		# validate keys, data types and values from server_capabilities get json response.
-		assert server_capabilities_keys == set(response_template.keys())
-		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
+		assert validate(instance=first_server_capabilities, schema=response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
