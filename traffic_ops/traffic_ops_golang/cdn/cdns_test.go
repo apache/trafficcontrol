@@ -165,60 +165,109 @@ func TestValidate(t *testing.T) {
 }
 
 func TestTOCDNUpdate(t *testing.T) {
+	// Create a new mock database and retrieve a mock connection
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
 	defer mockDB.Close()
+
+	// Create a new sqlx database object using the mock connection
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
+	// Define the columns for the database rows
 	cols := []string{"name"}
+
+	// Create a new sqlmock.Rows object with the defined columns
 	rows := sqlmock.NewRows(cols)
 	rows.AddRow("testcdn")
+
+	// Expect a transaction begin
 	mock.ExpectBegin()
+
+	// Expect a query to select a name from the database with an argument of 1
 	mock.ExpectQuery("SELECT name").WithArgs(1).WillReturnRows(rows)
 
+	// Redefine the columns for the database rows
 	cols = []string{"username", "soft", "shared_usernames"}
+
+	// Create a new sqlmock.Rows object with the new columns
 	rows = sqlmock.NewRows(cols)
+
+	// Expect a query to select username from the database with an argument of "testcdn"
+	// and return an error of "sql.ErrNoRows"
 	mock.ExpectQuery("SELECT c.username").WithArgs("testcdn").WillReturnError(sql.ErrNoRows)
 
+	// Redefine the columns for the database rows
 	cols = []string{"last_updated"}
+
+	// Create a new sqlmock.Rows object with the new columns
 	rows = sqlmock.NewRows(cols)
 	rows.AddRow(time.Now())
+
+	// Expect a query to select last_updated from the database with an argument of 1
 	mock.ExpectQuery("select last_updated").WithArgs(1).WillReturnRows(rows)
 
-	cols = []string{"dnssec_enabled", "domain_name", "name", "ttl_override", "last_updated"}
-	rows = sqlmock.NewRows(cols)
-	rows.AddRow(false, "example.com", "testcdn", false, time.Now())
-	mock.ExpectQuery("UPDATE cdn").WithArgs(1).WillReturnRows(rows)
-	mock.ExpectCommit()
-
+	// Create a new APIInfo object with required information
 	reqInfo := api.APIInfo{
 		Tx:     db.MustBegin(),
-		Params: map[string]string{"dsId": "1"}, User: &auth.CurrentUser{
+		Params: map[string]string{"dsId": "1"},
+		User: &auth.CurrentUser{
 			UserName: "admin",
 		},
 		Version: &api.Version{Major: 4, Minor: 1},
 	}
+
+	// Define variables for the CDN update
 	domainName := "example.com"
 	id := 1
 	lastUpdated := tc.TimeNoMod{Time: time.Now()}
+	dnsSecEnabled := false
+	name := "testcdn"
+	ttlOverride := 0
 
+	// Create a new TOCDN object with the defined variables
 	cdn := &TOCDN{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
-		tc.CDNNullable{DomainName: &domainName, ID: &id, LastUpdated: &lastUpdated},
+		tc.CDNNullable{
+			DNSSECEnabled: &dnsSecEnabled,
+			DomainName:    &domainName,
+			Name:          &name,
+			ID:            &id,
+			TTLOverride:   &ttlOverride,
+			LastUpdated:   &lastUpdated,
+		},
 	}
 
-	// call the Update() function and check for expected results
+	// Redefine the columns for the database rows
+	cols = []string{"last_updated"}
+
+	// Create a new sqlmock.Rows object with the new columns
+	rows = sqlmock.NewRows(cols)
+	rows.AddRow(time.Now())
+
+	// Expect a query to update the CDN in the database with the CDN object values
+	mock.ExpectQuery("UPDATE cdn SET").WithArgs(*cdn.DNSSECEnabled, *cdn.DomainName, *cdn.Name, *cdn.TTLOverride, *cdn.ID).WillReturnRows(rows)
+
+	// Expect a transaction commit
+	mock.ExpectCommit()
+
+	// Call the update method on the CDN object and retrieve the error values
 	userErr, sysErr, errCode := cdn.Update(nil)
+
+	// Check if there are any unexpected errors
 	if userErr != nil || sysErr != nil {
 		t.Errorf("Unexpected error: userErr=%v, sysErr=%v, errCode=%d", userErr, sysErr, errCode)
 	}
+
+	// Check if the domain name is updated correctly
 	if *cdn.DomainName != "example.com" {
 		t.Errorf("Unexpected domain name: %s", *cdn.DomainName)
 	}
-	if cdn.TTLOverride != nil {
+
+	// Check if the TTL override value is set correctly
+	if cdn.TTLOverride == nil {
 		t.Errorf("Unexpected TTL override value: %d", *cdn.TTLOverride)
 	}
 }
