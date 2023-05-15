@@ -817,3 +817,67 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
 	except IndexError:
 		logger.error("No Region response data from divisions POST request.")
 	sys.exit(1)
+
+@pytest.fixture()
+def phys_locations_post_data(to_session: TOSession, request_template_data: list[JSONData]
+			  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for phys_location endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get phys_location data from a prerequisites file.
+  	:returns: Sample POST data and the actual API response.
+	"""
+
+	try:
+		phys_locations = request_template_data[0]
+	except IndexError as e:
+		raise TypeError(
+			"malformed prerequisite data; no data in 'phys_locations' array property") from e
+
+	if not isinstance(phys_locations, dict):
+		raise TypeError(f"malformed prerequisite data; PLs must be objects, not '{type(phys_locations)}'")
+
+	# Return new post data and post response from phys_locations POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = phys_locations["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		phys_locations["name"] = name[:4] + randstr
+		shortName = phys_locations["shortName"]
+		if not isinstance(name, str):
+			raise TypeError(f"shortName must be str, not '{type(shortName)}'")
+		phys_locations["shortName"] = shortName[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Phys_location property '{e.args[0]}'") from e
+	# Hitting types GET method to access typeID for phys_locations POST data
+	region_get_response: tuple[
+		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		requests.Response
+	] = to_session.get_regions()
+	try:
+		region_data = region_get_response[0]
+		if not isinstance(region_data, list):
+			raise TypeError("malformed API response; 'response' property not an array")
+		first_region = region_data[0]
+		if not isinstance(first_region, dict):
+			raise TypeError("malformed API response; first Region in response is not an object")
+		phys_locations["regionId"] = first_region["id"]
+		region_id = phys_locations["regionId"]
+		logger.info("extracted %s from %s", region_id, region_get_response)
+	except KeyError as e:
+		raise TypeError(f"missing Phys_Locations property '{e.args[0]}'") from e
+
+	logger.info("New Phys_locations data to hit POST method %s", request_template_data)
+	# Hitting region POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_physical_locations(data=phys_locations)
+	try:
+		resp_obj = response[0]
+		if not isinstance(resp_obj, dict):
+			raise TypeError("malformed API response; phys_location is not an object")
+		return resp_obj
+	except IndexError:
+		logger.error("No Phys_Location response data from regions POST request.")
+	sys.exit(1)
+
