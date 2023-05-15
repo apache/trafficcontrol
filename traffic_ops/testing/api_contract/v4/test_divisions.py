@@ -16,6 +16,7 @@
 import logging
 import pytest
 import requests
+from jsonschema import validate
 
 from trafficops.tosession import TOSession
 
@@ -24,10 +25,8 @@ logger = logging.getLogger()
 
 primitive = bool | int | float | str | None
 
-@pytest.mark.parametrize('request_template_data', ["divisions"], indirect=True)
-def test_division_contract(
-	to_session: TOSession,
-	request_template_data: list[dict[str, object] | list[object] | primitive],
+
+def test_division_contract(to_session: TOSession,
 	response_template_data: list[dict[str, object] | list[object] | primitive],
 	division_post_data: dict[str, object]
 ) -> None:
@@ -35,19 +34,15 @@ def test_division_contract(
 	Test step to validate keys, values and data types from divisions endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param get_division_data: Fixture to get division data from a prerequisites file.
-	:param division_prereq: Fixture to get sample division data and actual division response.
+	:param response_template_data: Fixture to get response template data from a prerequisites file.
+	:param division_post_dat: Fixture to get sample division data and actual division response.
 	"""
 	# validate division keys from divisions get response
 	logger.info("Accessing divisions endpoint through Traffic ops session.")
 
-	division = request_template_data[0]
-	if not isinstance(division, dict):
-		raise TypeError("malformed division in prerequisite data; not an object")
-
-	division_name = division.get("name")
+	division_name = division_post_data.get("name")
 	if not isinstance(division_name, str):
-		raise TypeError("malformed division in prerequisite data; 'name' not a string")
+		raise TypeError("malformed cdn in prerequisite data; 'name' not a string")
 
 	division_get_response: tuple[
 		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
@@ -61,25 +56,18 @@ def test_division_contract(
 		first_division = division_data[0]
 		if not isinstance(first_division, dict):
 			raise TypeError("malformed API response; first division in response is not an object")
-		division_keys = set(first_division.keys())
+		
+		logger.info("Division Api get response %s", first_division)
+		division_response_template = response_template_data.get("divisions")
+		if not isinstance(division_response_template, dict):
+			raise TypeError(
+				f"Division response template data must be a dict, not '{type(division_response_template)}'")
 
-		logger.info("division Keys from divisions endpoint response %s", division_keys)
-		response_template = response_template_data.get("divisions").get("properties")
 		# validate division values from prereq data in divisions get response.
-		prereq_values = [
-			division_post_data["name"]]
-		get_values = [first_division["name"]]
-		get_types = {}
-		for key, value in first_division.items():
-			get_types[key] = type(value).__name__
-		logger.info("types from division get response %s", get_types)
-		response_template_types= {}
-		for key, value in response_template.items():
-			response_template_types[key] = value.get("type")
-		logger.info("types from division response template %s", response_template_types)
-
-		assert division_keys == set(response_template.keys())
-		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
+		prereq_values = division_post_data["name"]
+		get_values = first_division["name"]
+		
+		assert validate(instance=first_division, schema=division_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")

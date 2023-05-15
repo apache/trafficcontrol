@@ -25,7 +25,7 @@ logger = logging.getLogger()
 
 primitive = bool | int | float | str | None
 
-@pytest.mark.parametrize('request_template_data', ["roles"], indirect=True)
+
 def test_role_contract(
 	to_session: TOSession,
 	response_template_data: dict[str, primitive | list[primitive | dict[str, object]

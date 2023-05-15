@@ -16,7 +16,7 @@
 import logging
 import pytest
 import requests
-from jsonschema import validate, Draft202012Validator
+from jsonschema import validate
 
 from trafficops.tosession import TOSession
 
@@ -26,7 +26,6 @@ logger = logging.getLogger()
 primitive = bool | int | float | str | None
 
 
-@pytest.mark.parametrize('request_template_data', ["cdns"], indirect=True)
 def test_cdn_contract(
 	to_session: TOSession,
 	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
@@ -70,7 +69,7 @@ def test_cdn_contract(
 		prereq_values = [cdn_post_data[key] for key in keys]
 		get_values = [first_cdn[key] for key in keys]
 
-		assert validate(instance=first_cdn, schema=cdn_response_template, format_checker=Draft202012Validator.FORMAT_CHECKER) is None
+		assert validate(instance=first_cdn, schema=cdn_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")

@@ -463,7 +463,7 @@ def cdn_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	:param request_template_data: Fixture to get CDN request template data from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
-	cdn = check_template_data(request_template_data, "cdns")
+	cdn = check_template_data(request_template_data["cdns"], "cdns")
 
 	# Return new post data and post response from cdns POST request
 	randstr = str(randint(0, 1000))
@@ -632,7 +632,7 @@ def tenant_post_data(to_session: TOSession, request_template_data: list[JSONData
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	tenant = check_template_data(request_template_data, "tenants")
+	tenant = check_template_data(request_template_data["tenants"], "tenants")
 
 	# Return new post data and post response from tenants POST request
 	randstr = str(randint(0, 1000))
@@ -749,7 +749,7 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	division = check_template_data(request_template_data, "divisions")
+	division = check_template_data(request_template_data["divisions"], "divisions")
 
 	# Return new post data and post response from division POST request
 	randstr = str(randint(0, 1000))
@@ -779,7 +779,7 @@ def region_post_data(to_session: TOSession, request_template_data: list[JSONData
   	:returns: Sample POST data and the actual API response.
 	"""
 
-	region = check_template_data(request_template_data, "regions")
+	region = check_template_data(request_template_data["regions"], "regions")
 
 	# Return new post data and post response from regions POST request
 	randstr = str(randint(0, 1000))
@@ -815,7 +815,7 @@ def phys_locations_post_data(to_session: TOSession, request_template_data: list[
   	:returns: Sample POST data and the actual API response.
 	"""
 
-	phys_locations = check_template_data(request_template_data, "phys_locations")
+	phys_locations = check_template_data(request_template_data["phys_locations"], "phys_locations")
 
 	# Return new post data and post response from phys_locations POST request
 	randstr = str(randint(0, 1000))
@@ -842,4 +842,3 @@ def phys_locations_post_data(to_session: TOSession, request_template_data: list[
 	response: tuple[JSONData, requests.Response] = to_session.create_physical_locations(data=phys_locations)
 	resp_obj = check_template_data(response, "phys_locations")
 	return resp_obj
-
