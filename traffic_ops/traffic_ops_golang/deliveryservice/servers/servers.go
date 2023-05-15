@@ -895,7 +895,8 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	} else {
 		where = "WHERE "
 	}
-	where += "ds.id in (SELECT deliveryService FROM deliveryservice_server where server = :server)"
+
+	where += "ds.id in (SELECT deliveryService FROM deliveryservice_server WHERE server = :server) OR ds.id in (SELECT id FROM deliveryservice WHERE topology = ( SELECT topology FROM topology_cachegroup WHERE cachegroup = ( SELECT name FROM cachegroup WHERE id = ( SELECT cachegroup FROM server WHERE id = :server ))))"
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
 	if err != nil {
