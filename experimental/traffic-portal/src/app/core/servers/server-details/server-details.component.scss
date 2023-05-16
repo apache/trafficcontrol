@@ -11,9 +11,15 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import "../../../../styles/vars";
 
 .actions-container {
 	justify-content: flex-end;
+
+	button[mat-icon-button] {
+		padding: 0;
+		height: 36px;
+	}
 }
 
 .drop-list-item {
@@ -21,6 +27,8 @@
 		float: right;
 	}
 }
+
+@include small-icon-button();
 
 form {
 	.mat-mdc-card-actions .mdc-button {

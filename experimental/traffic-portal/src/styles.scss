@@ -108,31 +108,6 @@ body {
 	--content-max-width: calc(100vw - 5vw - var(--sidebar-max-width));
 }
 
-.small-icon-button {
-	width: 24px !important;
-	height: 24px !important;
-	padding: 0px !important;
-	align-items: center;
-	justify-content: center;
-	display: inline-flex !important;
-
-	& > *[role=img] {
-		width: 16px !important;
-		height: 16px !important;
-		font-size: 16px !important;
-
-		svg {
-			width: 16px !important;
-			height: 16px !important;
-		}
-	}
-
-	.mat-mdc-button-touch-target {
-		width: 24px !important;
-		height: 24px !important;
-	}
-}
-
 .multi-line-tooltip {
 	white-space: pre-line;
 }

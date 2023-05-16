@@ -41,7 +41,7 @@ function serverCheck(server: ResponseServer): Servercheck {
 		cacheGroup: server.cachegroup ?? "SERVER HAD NO CACHE GROUP",
 		hostName: server.hostName ?? "SERVER HAD NO HOST NAME",
 		id: server.id,
-		profile: server.profileNames.length > 0 ? server.profileNames[0] :  "SERVER HAD NO PROFILE",
+		profile: server.profileNames[0] ?? "SERVER HAD NO PROFILE",
 		revalPending: server.revalPending,
 		type: server.type ?? "SERVER HAD NO TYPE",
 		updPending: server.updPending
