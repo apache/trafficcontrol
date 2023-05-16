@@ -105,7 +105,7 @@ body {
 :root {
 	--toolbar-height: 3em;
 	--sidebar-max-width: 25vw;
-	--content-max-width: calc(100vw - 5vw - var(--sidebar-max-width));
+	--content-padding: 8vw;
 }
 
 .multi-line-tooltip {
@@ -118,7 +118,8 @@ body {
 
 .page-content {
 	min-width: 640px;
-	max-width: var(--content-max-width);
+	width: calc(100% - var(--content-padding));
+	max-width: 1080px;
 	margin: 1em auto;
 
 	& > div.search-container {
