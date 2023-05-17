@@ -54,6 +54,7 @@ LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name`
 	SelectAllCapabilityUpdatesQuery = `SELECT id, ucdn, data, request_type, host FROM cdni_capability_updates`
 
 	DeleteCapabilityUpdateQuery               = `DELETE FROM cdni_capability_updates WHERE id = $1`
+	DeleteCapabilityUpdateQueryByUcdn         = `DELETE FROM cdni_capability_updates WHERE ucdn = $1`
 	UpdateLimitsByCapabilityAndLimitTypeQuery = `UPDATE cdni_limits SET maximum_hard = $1 WHERE capability_id = $2 AND limit_type = $3`
 	hostQuery                                 = `SELECT count(*) FROM cdni_limits WHERE $1 = ANY(scope_value)`
 
@@ -198,6 +199,44 @@ func PutHostConfiguration(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add(rfc.Location, api.CurrentAsyncEndpoint+strconv.Itoa(asyncStatusId))
 	api.WriteAlerts(w, r, http.StatusAccepted, alerts)
+}
+
+// DeleteConfiguration deletes CDNi configuration for ucdn specified in JWT
+func DeleteConfiguration(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	if inf.Config.Cdni == nil || inf.Config.Secrets[0] == "" || inf.Config.Cdni.DCdnId == "" {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("cdn.conf does not contain CDNi information"))
+		return
+	}
+
+	bearerToken := getBearerToken(r)
+	ucdn, err := checkBearerToken(bearerToken, inf)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	_, err = inf.Tx.Tx.Exec(DeleteCapabilityUpdateQueryByUcdn, ucdn)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting capability update request: %w", err))
+		return
+	}
+
+	msg := "CDNi configuration delete request received."
+
+	var alerts tc.Alerts
+	alerts.AddAlert(tc.Alert{
+		Text:  msg,
+		Level: tc.SuccessLevel.String(),
+	})
+
+	api.WriteAlerts(w, r, http.StatusNoContent, alerts)
 }
 
 // PutConfiguration adds the requested CDNi configuration update to the queue and adds an async status.
