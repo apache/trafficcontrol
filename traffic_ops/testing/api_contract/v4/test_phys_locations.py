@@ -14,6 +14,8 @@
 
 """API Contract Test Case for phys_locations endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
 from jsonschema import validate
@@ -23,13 +25,13 @@ from trafficops.tosession import TOSession
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
 
 def test_phys_locations_contract(to_session: TOSession,
-	response_template_data: list[dict[str, object] | list[object] | primitive],
+	response_template_data: list[Union[dict[str, object], list[object], Primitive]],
 	phys_locations_post_data: dict[str, object]
-) -> None:
+	) -> None:
 	"""
 	Test step to validate keys, values and data types from phys_locations response.
 	:param to_session: Fixture to get Traffic Ops session.
@@ -45,7 +47,7 @@ def test_phys_locations_contract(to_session: TOSession,
 		raise TypeError("malformed phys_location in prerequisite data; 'name' not a string")
 
 	phys_location_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_physical_locations(query_params={"name": phys_location_name})
 	try:

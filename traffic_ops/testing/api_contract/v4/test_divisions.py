@@ -14,6 +14,8 @@
 
 """API Contract Test Case for divisions endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
 from jsonschema import validate
@@ -23,13 +25,12 @@ from trafficops.tosession import TOSession
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
 
 def test_division_contract(to_session: TOSession,
-	response_template_data: list[dict[str, object] | list[object] | primitive],
-	division_post_data: dict[str, object]
-) -> None:
+	response_template_data: list[Union[dict[str, object], list[object], Primitive]],
+	division_post_data: dict[str, object]) -> None:
 	"""
 	Test step to validate keys, values and data types from divisions endpoint
 	response.
@@ -45,7 +46,7 @@ def test_division_contract(to_session: TOSession,
 		raise TypeError("malformed cdn in prerequisite data; 'name' not a string")
 
 	division_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_divisions(query_params={"name": division_name})
 	try:

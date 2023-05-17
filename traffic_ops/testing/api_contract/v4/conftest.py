@@ -34,9 +34,9 @@ from trafficops.restapi import OperationError
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
-JSONData: TypeAlias = Union[dict[str, object], list[object], bool, int, float, str | None]
+JSONData: TypeAlias = Union[dict[str, object], list[object], bool, int, float, Optional[str]]
 JSONData.__doc__ = """An alias for the kinds of data that JSON can encode."""
 
 class APIVersion(NamedTuple):
@@ -138,9 +138,9 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 	)
 
 def coalesce_config(
-	arg: object | None,
+	arg: Optional[object],
 	file_key: str,
-	file_contents: dict[str, object | None] | None,
+	file_contents: Optional[dict[str, Optional[object]]],
 	env_key: str
 ) -> Optional[str]:
 	"""
@@ -176,7 +176,7 @@ def parse_to_url(raw: str) -> tuple[APIVersion, int]:
 	"""
 	Parses the API version and port number from a raw URL string.
 
-	>>> parse_to_url("https://trafficops.example.test:420/api/5.270)
+	>>> parse_to_url("https://trafficops.example.test:420/api/5.270")
 	(APIVersion(major=5, minor=270), 420)
 	>>> parse_to_url("trafficops.example.test")
 	(APIVersion(major=4, minor=0), 443)
@@ -302,7 +302,7 @@ def to_login(to_args: ArgsType) -> TOSession:
 
 @pytest.fixture(name="request_template_data", scope="session")
 def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.FixtureRequest
-			  ) -> list[dict[str, object] | list[object] | primitive]:
+			  ) -> list[Union[dict[str, object], list[object], Primitive]]:
 	"""
 	PyTest Fixture to store POST request template data for api endpoint.
 	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object.
@@ -316,13 +316,10 @@ def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.Fixtur
 		raise ValueError("prereqisites path not configured")
 
 	# Response keys for api endpoint
-	data: dict[
+	data: Union[dict[
 		str,
-		list[dict[str, object] | list[object] | primitive] |\
-			dict[object, object] |\
-			primitive
-		] |\
-	primitive = None
+		Union[list[Union[dict[str, object], list[object], Primitive]], dict[object, object], Primitive]
+	], Primitive] = None
 	with open(request_template_path, encoding="utf-8", mode="r") as prereq_file:
 		data = json.load(prereq_file)
 	if not isinstance(data, dict):
@@ -338,8 +335,8 @@ def request_prerequiste_data(pytestconfig: pytest.Config, request: pytest.Fixtur
 
 @pytest.fixture()
 def response_template_data(pytestconfig: pytest.Config
-			   ) -> dict[str, primitive | list[primitive |
-				      dict[str, object] | list[object]] | dict[object, object]]:
+			   ) -> dict[str, Union[Primitive, list[
+	Union[Primitive, dict[str, object], list[object]]], dict[object, object]]]:
 	"""
 	PyTest Fixture to store response template data for api endpoint.
 	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object.
@@ -351,13 +348,10 @@ def response_template_data(pytestconfig: pytest.Config
 		raise ValueError("prereqisites path not configured")
 
 	# Response keys for api endpoint
-	response_template: dict[
+	response_template: Union[dict[
 		str,
-		list[dict[str, object] | list[object] | primitive] |\
-			dict[object, object] |\
-			primitive
-		] |\
-	primitive = None
+		Union[list[Union[dict[str, object], list[object], Primitive]], dict[object, object], Primitive]
+	], Primitive] = None
 	with open(prereq_path, encoding="utf-8", mode="r") as prereq_file:
 		response_template = json.load(prereq_file)
 	if not isinstance(response_template, dict):
@@ -366,34 +360,35 @@ def response_template_data(pytestconfig: pytest.Config
 	return response_template
 
 
-def api_response_data(api_response: tuple[primitive | dict[str, object] | list[primitive |
-					dict[str, object] | list[object]], requests.Response],
-					request_type: str=None) -> dict[str, object]:
+def api_response_data(api_response: tuple[Union[Primitive, dict[str, object], list[
+	Union[Primitive, dict[str, object], list[
+		object]]]], requests.Response]) -> dict[str, object]:
 	"""
 	Checks API get/post response.
 	:param api_response: Raw api response.
 	:returns: Verified response data
 	"""
-	if request_type == "get":
-		try:
-			api_response = api_response[0]
-			if not isinstance(api_response, list):
-				raise TypeError("malformed API response; 'response' property not an array")
-		except KeyError as e:
-			raise TypeError(f"missing API property '{e.args[0]}'") from e
+	api_data = None
+	if isinstance(api_response, tuple):
+		api_response = api_response[0]
+		if not isinstance(api_response, list):
+			raise ValueError("Malformed API response; 'response' property not an array")
+	else:
+		raise ValueError("Invalid API response format")
+
 	if api_response:
 		try:
 			api_data = api_response[0]
 			if not isinstance(api_data, dict):
-				raise TypeError("malformed API response; 'response' property not an dict")
+				raise ValueError("Malformed API response; 'response' property not a dict")
 		except IndexError as e:
-			raise TypeError(f"No response data from api request.'{e.args[0]}'") from e
+			raise ValueError(f"No response data from API request '{e.args[0]}'") from e
 
 	return api_data
 
 
-def get_existing_object(to_session: TOSession, object_type: str, query_params:
-			dict[str, Any]| None) -> Union[dict[str, Any], None]:
+def get_existing_object(to_session: TOSession, object_type: str, query_params: Optional[
+	dict[str, Any]])-> Union[dict[str, Any], None]:
 	"""
 	Check if the given endpoint with the given query params already exists.
 	:param to_session: Fixture to get Traffic Ops session.
@@ -401,10 +396,10 @@ def get_existing_object(to_session: TOSession, object_type: str, query_params:
 	:param query_params: query params for api get request.
 	:returns: Api data for the corresponding api request.
     """
-	api_get_response: tuple[dict[str, object] | list[dict[str, object] | list[object] | primitive] |
-			 primitive, requests.Response] = getattr(to_session,
-			f"get_{object_type}")(query_params=query_params)
-	return api_response_data(api_get_response, "get")
+	api_get_response: tuple[Union[dict[str, object], list[
+		Union[dict[str, object], list[object], Primitive]], Primitive], requests.Response] = getattr(
+		to_session, f"get_{object_type}")(query_params=query_params)
+	return api_response_data(api_get_response)
 
 
 def create_if_not_exists(to_session: TOSession, object_type: str,
@@ -416,8 +411,9 @@ def create_if_not_exists(to_session: TOSession, object_type: str,
 	:param data: Post data for api post request.
 	:returns: Api data for the corresponding api request.
 	"""
-	api_post_response: tuple[dict[str, object] | list[dict[str, object] | list[object] | primitive]
-	| primitive, requests.Response] = getattr(to_session, f"create_{object_type}")(data=data)
+	api_post_response: tuple[Union[dict[str, object], list[
+		Union[dict[str, object], list[object], Primitive]], Primitive], requests.Response] = getattr(
+		to_session, f"create_{object_type}")(data=data)
 	return api_response_data(api_post_response)
 
 
@@ -430,13 +426,14 @@ def create_or_get_existing(to_session: TOSession, get_object_type: str, post_obj
 	:param post_object_type: api call name for post request.
 	:param query_params: query params for api get request.
 	:returns: Api data for the corresponding api request.
+	@param data: 
 	"""
 	existing_object = get_existing_object(to_session, get_object_type, query_params)
 	return existing_object or create_if_not_exists(to_session, post_object_type, data)
 
 
-def check_template_data(template_data: list[JSONData] | tuple[JSONData, requests.Response],
-			name: str) -> dict[str, object]:
+def check_template_data(template_data: Union[list[JSONData], tuple[JSONData, requests.Response]],
+						name: str) -> dict[str, object]:
 	"""
 	Checks API request/response template data.
 	:param template_data: Fixture to get template data from a prerequisites file.
@@ -758,6 +755,7 @@ def phys_locations_data_post(to_session: TOSession, request_template_data: list[
 
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get phys_location data from a prerequisites file.
+	:param region_post_data:
   	:returns: Sample POST data and the actual API response.
 	"""
 
@@ -799,6 +797,7 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get profile data from a prerequisites file.
+	:param phys_locations_post_data:
 	:returns: Sample POST data and the actual API response.
 	"""
 	server = check_template_data(request_template_data["servers"], "servers")

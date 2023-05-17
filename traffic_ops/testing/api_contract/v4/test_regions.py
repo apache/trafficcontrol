@@ -14,6 +14,8 @@
 
 """API Contract Test Case for regions endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
 from jsonschema import validate
@@ -23,14 +25,14 @@ from trafficops.tosession import TOSession
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
 
 def test_region_contract(to_session: TOSession,
-	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
-						    | list[object]] | dict[object, object]],
+	response_template_data: dict[str, Union[Primitive, list[Union[Primitive, 
+	dict[str, object], list[object]]], dict[object, object]]],
 	region_post_data: dict[str, object]
-) -> None:
+	) -> None:
 	"""
 	Test step to validate keys, values and data types from regions response.
 	:param to_session: Fixture to get Traffic Ops session.
@@ -45,7 +47,7 @@ def test_region_contract(to_session: TOSession,
 		raise TypeError("malformed region in prerequisite data; 'name' not a string")
 
 	region_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_regions(query_params={"name": region_name})
 	try:

@@ -14,6 +14,8 @@
 
 """API Contract Test Case for cachegroup endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
 from jsonschema import validate
@@ -23,14 +25,15 @@ from trafficops.tosession import TOSession
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
 
 def test_cache_group_contract(to_session: TOSession,
-	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
-						    | list[object]] | dict[object, object]],
-	cache_group_post_data: dict[str, object]
-	) -> None:
+							  response_template_data: dict[str, Union[Primitive, list[
+								  Union[Primitive, dict[str, object], list[object]]], dict[
+								  object, object]]],
+							  cache_group_post_data: dict[str, object]
+							  ) -> None:
 	"""
 	Test step to validate keys, values and data types from cachegroup endpoint
 	response.
@@ -46,7 +49,7 @@ def test_cache_group_contract(to_session: TOSession,
 		raise TypeError("malformed cachegroup in prerequisite data; 'name' not a string")
 
 	cache_group_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_cachegroups(query_params={"name": str(cache_group_name)})
 

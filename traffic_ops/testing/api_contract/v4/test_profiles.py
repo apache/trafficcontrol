@@ -14,6 +14,8 @@
 
 """API Contract Test Case for profiles endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
 from jsonschema import validate
@@ -23,14 +25,12 @@ from trafficops.tosession import TOSession
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
-def test_profile_contract(
-	to_session: TOSession,
-	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
-						    | list[object]] | dict[object, object]],
-	profile_post_data: dict[str, object]
-) -> None:
+def test_profile_contract(to_session: TOSession,
+	response_template_data: dict[str, Union[Primitive,
+					 list[Union[Primitive, dict[str, object], list[object]]],
+	dict[object, object]]], profile_post_data: dict[str, object]) -> None:
 	"""
 	Test step to validate keys, values and data types from profiles endpoint
 	response.
@@ -46,7 +46,7 @@ def test_profile_contract(
 		raise TypeError("malformed profile in prerequisite data; 'name' not a string")
 
 	profile_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_profiles(query_params={"name": profile_name})
 	try:

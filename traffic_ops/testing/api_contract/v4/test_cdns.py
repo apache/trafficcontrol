@@ -14,6 +14,8 @@
 
 """API Contract Test Case for cdns endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
 from jsonschema import validate
@@ -23,15 +25,13 @@ from trafficops.tosession import TOSession
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
 
 def test_cdn_contract(
 	to_session: TOSession,
-	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
-						    | list[object]] | dict[object, object]],
-	cdn_post_data: dict[str, object]
-	) -> None:
+	response_template_data: dict[str, Union[Primitive, list[Union[Primitive, dict[str, object],
+	list[object]]], dict[object, object]]], cdn_post_data: dict[str, object]) -> None:
 	"""
 	Test step to validate keys, values and data types from cdns endpoint
 	response.
@@ -47,7 +47,7 @@ def test_cdn_contract(
 		raise TypeError("malformed cdn in prerequisite data; 'name' not a string")
 
 	cdn_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_cdns(query_params={"name": cdn_name})
 	try:
