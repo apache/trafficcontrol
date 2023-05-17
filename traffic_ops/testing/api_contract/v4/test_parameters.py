@@ -14,45 +14,40 @@
 
 """API Contract Test Case for parameters endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
+from jsonschema import validate
 
 from trafficops.tosession import TOSession
 
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
-@pytest.mark.parametrize('request_template_data', ["parameters"], indirect=True)
-def test_parameter_contract(
-	to_session: TOSession,
-	request_template_data: list[dict[str, object] | list[object] | primitive],
-	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
-						    | list[object]] | dict[object, object]],
-	parameter_post_data: dict[str, object]
-) -> None:
+
+def test_parameter_contract(to_session: TOSession,
+	response_template_data: dict[str, Union[Primitive, list[Union[Primitive,
+							dict[str, object], list[object]]],
+	dict[object, object]]], parameter_post_data: dict[str, object]) -> None:
 	"""
 	Test step to validate keys, values and data types from parameters endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get request template data from a prerequisites file.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
 	:param parameter_post_data: Fixture to get sample parameter data and actual parameter response.
 	"""
 	# validate Parameter keys from parameters get response
 	logger.info("Accessing /parameters endpoint through Traffic ops session.")
 
-	parameter = request_template_data[0]
-	if not isinstance(parameter, dict):
-		raise TypeError("malformed parameter in prerequisite data; not an object")
-
-	parameter_name = parameter.get("name")
+	parameter_name = parameter_post_data.get("name")
 	if not isinstance(parameter_name, str):
 		raise TypeError("malformed parameter in prerequisite data; 'name' not a string")
 
 	parameter_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_parameters(query_params={"name": parameter_name})
 	try:
@@ -63,38 +58,20 @@ def test_parameter_contract(
 		first_parameter = parameter_data[0]
 		if not isinstance(first_parameter, dict):
 			raise TypeError("malformed API response; first Parameter in response is not an object")
-		parameter_keys = set(first_parameter.keys())
+		logger.info("Parameter Api get response %s", first_parameter)
 
-		logger.info("Parameter Keys from parameters endpoint response %s", parameter_keys)
 		parameter_response_template = response_template_data.get("parameters")
 		if not isinstance(parameter_response_template, dict):
 			raise TypeError(
 				f"Parameter response template data must be a dict, not '{type(parameter_response_template)}'")
-		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
-			dict[object, object] |\
-			primitive
-		]
-		response_template = parameter_response_template.get("properties")
+
 		# validate parameter values from prereq data in parameters get response.
-		prereq_values = [parameter_post_data["name"], parameter_post_data["value"],
-		parameter_post_data["configFile"], parameter_post_data["secure"]]
-		get_values = [first_parameter["name"], first_parameter["value"],
-		first_parameter["configFile"], first_parameter["secure"]]
-		get_types = {}
-		for key, value in first_parameter.items():
-			get_types[key] = type(value).__name__
-		logger.info("types from parameter get response %s", get_types)
-		response_template_types= {}
-		for key, value in response_template.items():
-			actual_type = value.get("type")
-			if not isinstance(actual_type, str):
-				raise TypeError(
-					f"Type data must be a string, not '{type(actual_type)}'")
-			response_template_types[key] = actual_type
-		logger.info("types from parameters response template %s", response_template_types)
+		keys = ["name", "value", "configFile", "secure"]
+		prereq_values = [parameter_post_data[key] for key in keys]
+		get_values = [first_parameter[key] for key in keys]
+
 		# validate keys, data types and values from parameters get json response.
-		assert parameter_keys == set(response_template.keys())
-		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
+		assert validate(instance=first_parameter, schema=parameter_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
