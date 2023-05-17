@@ -32,6 +32,16 @@ describe("ProfileService", () => {
 		type: ProfileType.ATS_PROFILE
 	};
 
+	const parameter = {
+		configFile: "cfg.txt",
+		id: 10,
+		lastUpdated: new Date(),
+		name: "TestParam",
+		profiles: null,
+		secure: false,
+		value: "TestVal"
+	};
+
 	beforeEach(() => {
 		TestBed.configureTestingModule({
 			imports: [HttpClientTestingModule],
@@ -104,6 +114,75 @@ describe("ProfileService", () => {
 		expect(req.request.body).toBeNull();
 		req.flush({response: profile});
 		await expectAsync(responseP).toBeResolvedTo(profile);
+	});
+
+	it("sends requests multiple Parameters", async () => {
+		const responseParams = service.getParameters();
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/parameters`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(0);
+		req.flush({response: [parameter]});
+		await expectAsync(responseParams).toBeResolvedTo([parameter]);
+	});
+
+	it("sends requests for a single Parameter by ID", async () => {
+		const responseParams = service.getParameters(parameter.id);
+		const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/parameters`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("id")).toBe(String(parameter.id));
+		req.flush({response: [parameter]});
+		await expectAsync(responseParams).toBeResolvedTo(parameter);
+	});
+
+	it("sends requests for a single Parameter by name", async () => {
+		const responseParams = service.getParameters(parameter.name);
+		const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/parameters`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("name")).toBe(parameter.name);
+		req.flush({response: [parameter]});
+		await expectAsync(responseParams).toBeResolvedTo(parameter);
+	});
+
+	it("creates new Parameters", async () => {
+		const responseParams = service.createParameter(parameter);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/parameters`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBe(parameter);
+		req.flush({response: parameter});
+		await expectAsync(responseParams).toBeResolvedTo(parameter);
+	});
+
+	it("deletes existing Parameters", async () => {
+		service.deleteParameter(parameter);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/parameters/${parameter.id}`);
+		expect(req.request.method).toBe("DELETE");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBeNull();
+		req.flush({response: parameter});
+	});
+
+	it("deletes an existing Parameter by ID", async () => {
+		service.deleteParameter(parameter.id);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/parameters/${parameter.id}`);
+		expect(req.request.method).toBe("DELETE");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBeNull();
+		req.flush({response: parameter});
+	});
+
+	it("updates an existing Parameter", async () => {
+		const p = parameter;
+		p.value = "newValue";
+		const responseParams = service.updateParameter(parameter);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/parameters/${parameter.id}`);
+		expect(req.request.method).toBe("PUT");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBe(p);
+		req.flush({response: p});
+		await expectAsync(responseParams).toBeResolvedTo(p);
 	});
 
 	afterEach(() => {

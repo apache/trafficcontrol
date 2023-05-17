@@ -83,19 +83,13 @@ export class ProfileService extends APIService {
 		if (typeof p === "number") {
 			id = p;
 		} else {
-			if (!p.id || p.id < 0) {
-				throw new Error("Parameter id must be defined!");
-			}
 			id = p.id;
 		}
 
 		const path = "profiles";
-		if (id !== undefined) {
-			const params = {param: id};
-			const r = await this.get<Array<ResponseProfile>>(path, undefined, params).toPromise();
-			return r;
-		}
-		return this.get<Array<ResponseProfile>>(path).toPromise();
+		const params = {param: id};
+		const r = await this.get<Array<ResponseProfile>>(path, undefined, params).toPromise();
+		return r;
 	}
 
 	/**
