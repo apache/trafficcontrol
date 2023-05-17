@@ -183,5 +183,86 @@
                 "type": "str"
             }
         }
+    },
+    "divisions": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            }
+        }
+    },
+    "regions": {
+        "type": "object",
+        "properties": {
+            "divisionName": {
+                "type": "str"
+            },
+            "division": {
+                "type": "int"
+            },  
+            "id": {
+                "type": "int"
+            },
+            "lastUpdated": {
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            }
+        }
+    },
+    "phys_locations": {
+        "type": "object",
+        "properties": {
+            "address": {
+                "type": "str"
+            },
+            "city": {
+                "type": "str"
+            },
+            "comments": {
+                "type": "str"
+            },
+            "email": {
+                "type": "str"
+            },
+            "id":{
+                "type": "int"
+            },
+            "lastUpdated":{
+                "type": "str"
+            },
+            "name": {
+                "type": "str"
+            },
+            "phone": {
+                "type": "str"
+            },
+            "poc": {
+                "type": "str"
+            },
+            "regionId": {
+                "type": "int"
+            },
+            "region":{
+                "type": "str"
+            },
+            "shortName": {
+                "type": "str"
+            },
+            "state": {
+                "type": "str"
+            },
+            "zip": {
+                "type": "str"
+            }
+        }
     }
 }

@@ -266,6 +266,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 	 */
 	$scope.save = async function(deliveryService) {
 		deliveryService.requiredCapabilities = Object.entries($scope.selectedCapabilities).filter(sc => (sc[1])).map(sc => sc[0])
+		$scope.loadGeoLimitCountries(deliveryService);
 
 		if (
 			deliveryService.sslKeyVersion !== null &&
