@@ -20,15 +20,26 @@ package role
  */
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func stringAddr(s string) *string {
@@ -115,4 +126,114 @@ func TestValidate(t *testing.T) {
 		t.Errorf("expected nil system error, got: %v", sysErr)
 	}
 
+}
+
+func TestCreateWithEmptyPermissions(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("", "", strings.NewReader(`{"name":"role", "description":"description"}`))
+	if err != nil {
+		t.Error("Error creating new request")
+	}
+
+	addRequestContext(r, db)
+
+	columns := []string{"id", "last_updated"}
+
+	mock.ExpectBegin()
+	mock.ExpectQuery("INSERT").WithArgs("role", "description", auth.PrivLevelAdmin).WillReturnRows(sqlmock.NewRows(columns).AddRow(1, time.Now()))
+	mock.ExpectCommit()
+
+	Create(w, r)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("Got status code %d but want 201", w.Code)
+	}
+
+	resp := struct {
+		tc.Alerts
+		Response tc.RoleV4 `json:"response"`
+	}{}
+
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatal("Error decoding response")
+	}
+
+	if resp.Response.Permissions == nil {
+		t.Error("Permissions should be empty not nil")
+	}
+}
+
+func TestUpdateWithEmptyPermissions(t *testing.T) {
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	w := httptest.NewRecorder()
+	r, err := http.NewRequest("", "", strings.NewReader(`{"name":"new_role", "description":"new_description"}`))
+	if err != nil {
+		t.Error("Error creating new request")
+	}
+
+	addRequestContext(r, db)
+
+	r.URL.RawQuery = "name=role"
+
+	mock.ExpectBegin()
+
+	mock.ExpectQuery("SELECT").WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(1))
+	mock.ExpectQuery("(?i)SELECT").WillReturnRows(sqlmock.NewRows([]string{"last_updated"}).AddRow(time.Now()))
+	mock.ExpectQuery("SET").WithArgs("new_role", "new_description", "role").WillReturnRows(sqlmock.NewRows([]string{"last_updated"}).AddRow(time.Now()))
+
+	mock.ExpectExec("DELETE").WithArgs("new_role").WillReturnResult(sqlmock.NewResult(1, 0))
+	mock.ExpectExec("INSERT").WithArgs(1, nil).WillReturnResult(sqlmock.NewResult(1, 0))
+
+	mock.ExpectCommit()
+
+	Update(w, r)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Got status code %d but want 200", w.Code)
+	}
+
+	resp := struct {
+		tc.Alerts
+		Response tc.RoleV4 `json:"response"`
+	}{}
+
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatal("Error decoding response")
+	}
+
+	if resp.Response.Permissions == nil {
+		t.Fatal("Permissions should be empty not nil")
+	}
+}
+
+func addRequestContext(r *http.Request, db *sqlx.DB) {
+	cfg := config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 20}, UseIMS: true}
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, auth.CurrentUserKey,
+		auth.CurrentUser{UserName: "username", ID: 1, PrivLevel: auth.PrivLevelAdmin})
+	ctx = context.WithValue(ctx, api.PathParamsKey, map[string]string{"id": "1"})
+	ctx = context.WithValue(ctx, api.DBContextKey, db)
+	ctx = context.WithValue(ctx, api.ConfigContextKey, &cfg)
+	ctx = context.WithValue(ctx, api.ReqIDContextKey, uint64(0))
+	var tv trafficvault.TrafficVault = &disabled.Disabled{}
+	ctx = context.WithValue(ctx, api.TrafficVaultContextKey, tv)
+
+	*r = *r.WithContext(ctx)
 }
