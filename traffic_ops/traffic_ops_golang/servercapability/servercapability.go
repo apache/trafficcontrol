@@ -506,7 +506,7 @@ func UpdateServerCapabilityV5(w http.ResponseWriter, r *http.Request) {
 func readAndValidateJsonStructV5(r *http.Request) (tc.ServerCapabilityV5, error) {
 	var sc tc.ServerCapabilityV5
 	if err := json.NewDecoder(r.Body).Decode(&sc); err != nil {
-		userErr := fmt.Errorf("error decoding POST request body into ServerCapabilityV41 struct %w", err)
+		userErr := fmt.Errorf("error decoding POST request body into ServerCapabilityV5 struct %w", err)
 		return sc, userErr
 	}
 
