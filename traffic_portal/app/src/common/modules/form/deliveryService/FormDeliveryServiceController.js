@@ -98,7 +98,7 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	$scope.toggleTLSRestrict = toggleTLSRestrict;
 
 	$scope.hasGeoLimitCountries = function(ds) {
-		return ds && ds.geoLimit === 1 || ds.geoLimit === 2;
+		return ds !== undefined && (ds.geoLimit === 1 || ds.geoLimit === 2);
 	}
 
 	$scope.loadGeoLimitCountriesRaw = function (ds) {
@@ -505,8 +505,8 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	$scope.tlsVersionHasPropertyError = tlsVersionHasPropertyError;
 
 	this.$onInit = function() {
-		$scope.loadGeoLimitCountriesRaw(this.deliveryService);
-		$scope.loadGeoLimitCountriesRaw(this.dsCurrent);
+		$scope.loadGeoLimitCountriesRaw(deliveryService);
+		$scope.loadGeoLimitCountriesRaw(dsCurrent);
 	}
 
 	/**
