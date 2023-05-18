@@ -57,7 +57,7 @@ def test_role_contract(to_session: TOSession,
 
 		first_role = role_data[0]
 		if not isinstance(first_role, dict):
-			raise TypeError("malformed API response; first role in response is not an object")
+			raise TypeError("malformed API response; first role in response is not an dict")
 		logger.info("Role Api get response %s", first_role)
 
 		role_response_template = response_template_data.get("roles")
@@ -77,9 +77,7 @@ def test_role_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for roles endpoint: API response was malformed")
 	finally:
 		# Delete Role after test execution to avoid redundancy.
-		try:
-			role_name = role_post_data["name"]
-			to_session.delete_role(query_params={"name": role_name})
-		except IndexError:
+		role_name = role_post_data.get("name")
+		if to_session.delete_role(query_params={"name": role_name}) is None:
 			logger.error("Role returned by Traffic Ops is missing an 'name' property")
 			pytest.fail("Response from delete request is empty, Failing test_role_contract")

@@ -59,7 +59,7 @@ def test_origin_contract(
 
 		first_origin = origin_data[0]
 		if not isinstance(first_origin, dict):
-			raise TypeError("malformed API response; first origin in response is not an object")
+			raise TypeError("malformed API response; first origin in response is not an dict")
 		logger.info("origin Api get response %s", first_origin)
 		origin_response_template = response_template_data.get("origins")
 		if not isinstance(origin_response_template, dict):
@@ -77,9 +77,8 @@ def test_origin_contract(
 		pytest.fail("API contract test failed for origin endpoint: API response was malformed")
 	finally:
 		# Delete origin after test execution to avoid redundancy.
-		try:
-			origin_id = origin_post_data.get("id")
-			to_session.delete_origins(query_params={"id": origin_id})
-		except IndexError:
+		origin_id = origin_post_data.get("id")
+
+		if to_session.delete_origins(query_params={"id": origin_id}) is None:
 			logger.error("Origin returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_origin_contract")

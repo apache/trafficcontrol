@@ -57,7 +57,7 @@ def test_phys_locations_contract(to_session: TOSession,
 
 		first_phys_location = phys_location_data[0]
 		if not isinstance(first_phys_location, dict):
-			raise TypeError("malformed API response; first phys_location in response is not an object")
+			raise TypeError("malformed API response; first phys_location in response is not an dict")
 
 		logger.info("phys_location Api response %s", first_phys_location)
 		phys_location_response_template = response_template_data.get("phys_locations")

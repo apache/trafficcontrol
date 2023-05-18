@@ -56,7 +56,7 @@ def test_division_contract(to_session: TOSession,
 
 		first_division = division_data[0]
 		if not isinstance(first_division, dict):
-			raise TypeError("malformed API response; first division in response is not an object")
+			raise TypeError("malformed API response; first division in response is not an dict")
 
 		logger.info("Division Api get response %s", first_division)
 		division_response_template = response_template_data.get("divisions")
@@ -75,9 +75,7 @@ def test_division_contract(to_session: TOSession,
 		pytest.fail("Failed due to malformation")
 	finally:
 		# Delete division after test execution to avoid redundancy.
-		try:
-			division_id = division_post_data["id"]
-			to_session.delete_division(division_id=division_id)
-		except IndexError:
+		division_id = division_post_data.get("id")
+		if to_session.delete_division(division_id=division_id) is None:
 			logger.error("Division returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_get_division")

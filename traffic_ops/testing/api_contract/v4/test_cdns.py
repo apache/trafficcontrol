@@ -76,9 +76,7 @@ def test_cdn_contract(
 		pytest.fail("API contract test failed for cdn endpoint: API response was malformed")
 	finally:
 		# Delete CDN after test execution to avoid redundancy.
-		try:
-			cdn_id = cdn_post_data["id"]
-			to_session.delete_cdn_by_id(cdn_id=cdn_id)
-		except IndexError:
+		cdn_id = cdn_post_data.get("id")
+		if to_session.delete_cdn_by_id(cdn_id=cdn_id) is None:
 			logger.error("CDN returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_get_cdn")

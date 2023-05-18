@@ -57,7 +57,7 @@ def test_region_contract(to_session: TOSession,
 
 		first_region = region_data[0]
 		if not isinstance(first_region, dict):
-			raise TypeError("malformed API response; first region in response is not an object")
+			raise TypeError("malformed API response; first region in response is not an dict")
 
 		logger.info("Region Api response %s", first_region)
 		region_response_template = response_template_data.get("regions")
@@ -78,9 +78,7 @@ def test_region_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for regions endpoint: API response was malformed")
 	finally:
 		# Delete region after test execution to avoid redundancy.
-		try:
-			region_name = region_post_data["name"]
-			to_session.delete_region(query_params={"name": region_name})
-		except IndexError:
+		region_name = region_post_data.get("name")
+		if to_session.delete_region(query_params={"name": region_name}) is None:
 			logger.error("region returned by Traffic Ops is missing a 'name' property")
 			pytest.fail("Response from delete request is empty, Failing test_region_contract")

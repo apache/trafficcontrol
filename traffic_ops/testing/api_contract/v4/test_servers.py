@@ -57,7 +57,7 @@ def test_server_contract(to_session: TOSession,
 
 		first_server = server_data[0]
 		if not isinstance(first_server, dict):
-			raise TypeError("malformed API response; first Server in response is not an object")
+			raise TypeError("malformed API response; first Server in response is not an dict")
 		logger.info("Server Api get response %s", first_server)
 		server_response_template = response_template_data.get("servers")
 		if not isinstance(server_response_template, dict):
@@ -76,9 +76,7 @@ def test_server_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for server endpoint: API response was malformed")
 	finally:
 		# Delete Server after test execution to avoid redundancy.
-		try:
-			server_id = server_post_data["id"]
-			to_session.delete_server_by_id(server_id=server_id)
-		except IndexError:
+		server_id = server_post_data.get("id")
+		if to_session.delete_server_by_id(server_id=server_id) is None:
 			logger.error("Profile returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_server_contract")

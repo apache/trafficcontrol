@@ -57,7 +57,7 @@ def test_delivery_services_contract(to_session: TOSession,
 
 		first_delivery_services = delivery_services_data[0]
 		if not isinstance(first_delivery_services, dict):
-			raise TypeError("malformed API response; first delivery_services in response is not an object")
+			raise TypeError("malformed API response; first delivery_services in response is not an dict")
 		logger.info("delivery_services Api response %s", first_delivery_services)
 		delivery_services_response_template = response_template_data.get("delivery_services")
 		if not isinstance(delivery_services_response_template, dict):
@@ -76,9 +76,8 @@ def test_delivery_services_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for delivery_services endpoint: API response was malformed")
 	finally:
 		# Delete delivery_services after test execution to avoid redundancy.
-		try:
-			delivery_service_id = delivery_services_post_data["id"]
-			to_session.delete_deliveryservice_by_id(delivery_service_id=delivery_service_id)
-		except IndexError:
+		delivery_service_id = delivery_services_post_data.get("id")
+
+		if to_session.delete_deliveryservice_by_id(delivery_service_id=delivery_service_id) is None:
 			logger.error("delivery_services returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_delivery_services_contract")
