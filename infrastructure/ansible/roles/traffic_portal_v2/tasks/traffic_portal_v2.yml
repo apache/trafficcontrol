@@ -16,7 +16,7 @@
   yum:
     name: "{{ tpv2_pkg_name }}"
     state: installed
-    skip_broken: 0,
+    skip_broken: 0
     lock_timeout: 600
     enablerepo: "{{ additional_yum_repos | default([]) }}"
   notify: Restart Traffic Portal v2
