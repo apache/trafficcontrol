@@ -284,8 +284,8 @@ export class UserService extends APIService {
 	 * @param role The role to update.
 	 * @returns The updated role.
 	 */
-	public async updateRole(role: ResponseRole): Promise<ResponseRole> {
-		return this.put<ResponseRole>(`roles?name=${role.name}`, role).toPromise();
+	public async updateRole(name: string, role: ResponseRole): Promise<ResponseRole> {
+		return this.put<ResponseRole>(`roles?`, role, {name}).toPromise();
 	}
 
 	/**
@@ -294,9 +294,9 @@ export class UserService extends APIService {
 	 * @param role The role to be deleted.
 	 * @returns The deleted role.
 	 */
-	public async deleteRole(role: string | ResponseRole): Promise<void> {
+	public async deleteRole(role: string | ResponseRole): Promise<ResponseRole> {
 		const roleName = typeof(role) === "string" ? role : role.name;
-		return this.delete(`roles?name=${roleName}`).toPromise();
+		return this.delete<ResponseRole>(`roles?name=${roleName}`).toPromise();
 	}
 
 	/**

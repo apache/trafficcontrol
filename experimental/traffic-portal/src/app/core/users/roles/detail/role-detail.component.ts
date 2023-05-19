@@ -26,7 +26,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-role-detail",
-	styleUrls: ["./role-detail.component.scss"],
+	styleUrls: ["../../../styles/form.page.scss"],
 	templateUrl: "./role-detail.component.html"
 })
 export class RoleDetailComponent implements OnInit {
@@ -48,7 +48,7 @@ export class RoleDetailComponent implements OnInit {
 			return;
 		}
 
-		if (role === "new") {
+		if (role === "new-role") {
 			this.header.headerTitle.next("New Role");
 			this.new = true;
 			this.role = {
@@ -73,7 +73,7 @@ export class RoleDetailComponent implements OnInit {
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {
-			data: {message: `Are you sure you want to delete role ${this.role.name} with description ${this.role.description}`,
+			data: {message: `Are you sure you want to delete role ${this.role.name}`,
 				title: "Confirm Delete"}
 		});
 		ref.afterClosed().subscribe(result => {
@@ -103,7 +103,7 @@ export class RoleDetailComponent implements OnInit {
 			this.role = await this.userService.createRole(this.role);
 			this.new = false;
 		} else {
-			this.role = await this.userService.updateRole(this.role);
+			this.role = await this.userService.updateRole(this.role.name, this.role);
 		}
 	}
 
