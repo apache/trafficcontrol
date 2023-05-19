@@ -14,7 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { RequestProfile, ResponseProfile } from "trafficops-types";
+import {  ProfileImport, ProfileImportResponse, RequestProfile, ResponseProfile } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -103,4 +103,13 @@ export class ProfileService extends APIService {
 		return this.delete<ResponseProfile>(`profiles/${id}`).toPromise();
 	}
 
+	/**
+	 * Import profile
+	 *
+	 * @param importJSON JSON object for import.
+	 * @returns profile response for imported object.
+	 */
+	public async importProfile(importJSON: ProfileImport): Promise<ProfileImportResponse>{
+		return this.post<ProfileImportResponse>("profiles/import", importJSON).toPromise();
+	}
 }

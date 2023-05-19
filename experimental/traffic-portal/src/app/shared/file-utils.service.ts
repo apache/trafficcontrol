@@ -153,4 +153,21 @@ export class FileUtilsService {
 		this.window.open(url, "_blank");
 		URL.revokeObjectURL(url);
 	}
+
+	/**
+	 * Exports File
+	 *
+	 * @param json object to be exported
+	 * @param fileName name for the download file
+	 * @param fileExtension extenstion of export file
+	 */
+	public exportFile(json: object, fileName: string, fileExtension: string): void {
+		const jsonStr = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(json, null, "\t"))}`;
+		const extension = fileExtension ?? "json";
+		const a = document.createElement("a");
+		a.setAttribute("href", jsonStr);
+		a.setAttribute("download", `${fileName}.${extension}`);
+		a.click();
+		a.remove();
+	};
 }

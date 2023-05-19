@@ -17,12 +17,15 @@ import { FormControl, UntypedFormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { ResponseProfile } from "trafficops-types";
+import { ProfileImport, ResponseProfile } from "trafficops-types";
 
 import { ProfileService } from "src/app/api";
+import { ExportAttachmentService } from "src/app/api/export-attachment.service";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { FileUtilsService } from "src/app/shared/file-utils.service";
+import { ContextMenuActionEvent, ContextMenuItem, TableTitleButton } from "src/app/shared/generic-table/generic-table.component";
+import { ImportJsonEditTxtComponent } from "src/app/shared/import-json-edit-txt/import-json-edit-txt.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -32,7 +35,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 @Component({
 	selector: "tp-profile-table",
 	styleUrls: ["./profile-table.component.scss"],
-	templateUrl: "./profile-table.component.html"
+	templateUrl: "./profile-table.component.html",
 })
 export class ProfileTableComponent implements OnInit {
 	/** All the physical locations which should appear in the table. */
@@ -64,6 +67,13 @@ export class ProfileTableComponent implements OnInit {
 		headerName: "Type"
 	}];
 
+	public titleBtns: Array<TableTitleButton> = [
+		{
+			action: "import",
+			text: "Import Profile",
+		}
+	];
+
 	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseProfile>> = [
 		{
@@ -81,14 +91,13 @@ export class ProfileTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			action: "import-profile",
+			action: "clone-profile",
 			disabled: (): true => true,
 			multiRow: false,
-			name: "Import Profile",
+			name: "Clone Profile",
 		},
 		{
 			action: "export-profile",
-			disabled: (): true => true,
 			multiRow: false,
 			name: "Export Profile",
 		},
@@ -125,14 +134,16 @@ export class ProfileTableComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly navSvc: NavigationService,
 		private readonly dialog: MatDialog,
-		public readonly auth: CurrentUserService) {
+		public readonly auth: CurrentUserService,
+		private readonly exportService: ExportAttachmentService,
+		private readonly fileUtil: FileUtilsService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.profiles = this.api.getProfiles();
 		this.navSvc.headerTitle.next("Profiles");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
-	public ngOnInit(): void {
+	public async ngOnInit(): Promise<void> {
 		this.route.queryParamMap.subscribe(
 			m => {
 				const search = m.get("search");
@@ -167,6 +178,38 @@ export class ProfileTableComponent implements OnInit {
 				ref.afterClosed().subscribe(result => {
 					if (result) {
 						this.api.deleteProfile(data.id).then(async () => this.profiles = this.api.getProfiles());
+					}
+				});
+				break;
+			case "export-profile":
+				const response = await this.exportService.exportProfile(data.id);
+				Reflect.deleteProperty(response, "alerts");
+				this.fileUtil.exportFile(response,data.name, "json");
+				break;
+		}
+	}
+
+	/**
+	 * handles when a title button is event is emitted
+	 *
+	 * @param action which button was pressed
+	 */
+	public async handleTitleButton(action: string): Promise<void> {
+		switch(action){
+			case "import":
+				const ref = this.dialog.open(ImportJsonEditTxtComponent,{
+					panelClass: "cmd-importjson-edittxt-dialog",
+					width: "70vw"
+				});
+
+				/** After submission from Import JSON dialog component */
+				ref.afterClosed().subscribe( (result: ProfileImport) => {
+					if (result) {
+						this.api.importProfile(result).then(response => {
+							if (response) {
+								this.profiles = this.api.getProfiles();
+							}
+						});
 					}
 				});
 				break;

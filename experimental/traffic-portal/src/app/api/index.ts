@@ -21,6 +21,7 @@ import { ChangeLogsService } from "src/app/api/change-logs.service";
 import { CacheGroupService } from "./cache-group.service";
 import { CDNService } from "./cdn.service";
 import { DeliveryServiceService } from "./delivery-service.service";
+import { ExportAttachmentService } from "./export-attachment.service";
 import { InvalidationJobService } from "./invalidation-job.service";
 import { MiscAPIsService } from "./misc-apis.service";
 import { PhysicalLocationService } from "./physical-location.service";
@@ -61,6 +62,7 @@ export * from "./user.service";
 		ServerService,
 		TypeService,
 		UserService,
+		ExportAttachmentService
 	]
 })
 export class APIModule { }
