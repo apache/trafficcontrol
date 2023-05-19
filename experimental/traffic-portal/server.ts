@@ -37,8 +37,8 @@ import { AppServerModule } from "./src/main.server";
 const versionParts = process.versions.node.split(".");
 if (versionParts.length !== 3) {
 	console.warn(`Unable to determine current node version, got ${versionParts.length} items`);
-} else if (versionParts[0] < "16" || (versionParts[0] === "16" && versionParts[1] < "18")) {
-	console.error(`Unsupported version of node found: ${process.version}, expected >=16.18`);
+} else if (versionParts[0] < "16" || (versionParts[0] === "16" && versionParts[1] < "20")) {
+	console.error(`Unsupported version of node found: ${process.version}, expected >=16.20`);
 	process.exit(1);
 }
 
