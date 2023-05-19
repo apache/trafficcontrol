@@ -26,27 +26,27 @@ import (
 // endpoint.
 const apiServerCapabilities = "/server_capabilities"
 
-// CreateServerCapability creates the given Server Capability.
-func (to *Session) CreateServerCapability(sc tc.ServerCapabilityV41, opts RequestOptions) (tc.ServerCapabilityDetailResponseV41, toclientlib.ReqInf, error) {
-	var scResp tc.ServerCapabilityDetailResponseV41
+// CreateServerCapabilityV5 creates the given Server Capability.
+func (to *Session) CreateServerCapabilityV5(sc tc.ServerCapabilityV5, opts RequestOptions) (tc.ServerCapabilityDetailResponseV5, toclientlib.ReqInf, error) {
+	var scResp tc.ServerCapabilityDetailResponseV5
 	reqInf, err := to.post(apiServerCapabilities, opts, sc, &scResp)
 	return scResp, reqInf, err
 }
 
-// GetServerCapabilities returns all the Server Capabilities in Traffic Ops.
-func (to *Session) GetServerCapabilities(opts RequestOptions) (tc.ServerCapabilitiesResponseV41, toclientlib.ReqInf, error) {
-	var data tc.ServerCapabilitiesResponseV41
+// GetServerCapabilitiesV5 returns all the Server Capabilities in Traffic Ops.
+func (to *Session) GetServerCapabilitiesV5(opts RequestOptions) (tc.ServerCapabilitiesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.ServerCapabilitiesResponseV5
 	reqInf, err := to.get(apiServerCapabilities, opts, &data)
 	return data, reqInf, err
 }
 
-// UpdateServerCapability updates a Server Capability by name.
-func (to *Session) UpdateServerCapability(name string, sc tc.ServerCapabilityV41, opts RequestOptions) (tc.ServerCapabilityDetailResponseV41, toclientlib.ReqInf, error) {
+// UpdateServerCapabilityV5 updates a Server Capability by name.
+func (to *Session) UpdateServerCapabilityV5(name string, sc tc.ServerCapabilityV5, opts RequestOptions) (tc.ServerCapabilityDetailResponseV5, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("name", name)
-	var data tc.ServerCapabilityDetailResponseV41
+	var data tc.ServerCapabilityDetailResponseV5
 	reqInf, err := to.put(apiServerCapabilities, opts, sc, &data)
 	return data, reqInf, err
 }

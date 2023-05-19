@@ -14,45 +14,40 @@
 
 """API Contract Test Case for tenants endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
+from jsonschema import validate
 
 from trafficops.tosession import TOSession
 
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
-@pytest.mark.parametrize('request_template_data', ["tenants"], indirect=True)
-def test_tenant_contract(
-	to_session: TOSession,
-	request_template_data: list[dict[str, object] | list[object] | primitive],
-	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
-						    | list[object]] | dict[object, object]],
-	tenant_post_data: dict[str, object]
-) -> None:
+
+def test_tenant_contract(to_session: TOSession,
+	response_template_data: dict[str, Union[Primitive, list[Union[Primitive,
+							dict[str, object], list[object]]], dict[object, object]]],
+	tenant_post_data: dict[str, object]) -> None:
 	"""
 	Test step to validate keys, values and data types from tenants endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get request template data from a prerequisites file.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
 	:param tenant_post_data: Fixture to get sample tenant data and actual tenant response.
 	"""
 	# validate tenant keys from tenants get response
 	logger.info("Accessing /tenants endpoint through Traffic ops session.")
 
-	tenant = request_template_data[0]
-	if not isinstance(tenant, dict):
-		raise TypeError("malformed tenant in prerequisite data; not an object")
-
-	tenant_name = tenant.get("name")
+	tenant_name = tenant_post_data.get("name")
 	if not isinstance(tenant_name, str):
 		raise TypeError("malformed tenant in prerequisite data; 'name' not a string")
 
 	tenant_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_tenants(query_params={"name": tenant_name})
 	try:
@@ -63,37 +58,20 @@ def test_tenant_contract(
 		first_tenant = tenant_data[0]
 		if not isinstance(first_tenant, dict):
 			raise TypeError("malformed API response; first tenant in response is not an object")
-		tenant_keys = set(first_tenant.keys())
+		logger.info("Tenant Api get response %s", first_tenant)
 
-		logger.info("tenant Keys from tenants endpoint response %s", tenant_keys)
 		tenant_response_template = response_template_data.get("tenants")
 		if not isinstance(tenant_response_template, dict):
 			raise TypeError(
 				f"tenant response template data must be a dict, not '{type(tenant_response_template)}'")
-		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
-			dict[object, object] |\
-			primitive
-		]
-		response_template = tenant_response_template.get("properties")
+
 		# validate tenant values from prereq data in tenants get response.
-		prereq_values = [tenant_post_data["name"], tenant_post_data["active"],
-		tenant_post_data["parentId"]]
-		get_values = [first_tenant["name"], first_tenant["active"], first_tenant["parentId"]]
-		get_types = {}
-		for key, value in first_tenant.items():
-			get_types[key] = type(value).__name__
-		logger.info("types from tenant get response %s", get_types)
-		response_template_types= {}
-		for key, value in response_template.items():
-			actual_type = value.get("type")
-			if not isinstance(actual_type, str):
-				raise TypeError(
-					f"Type data must be a string, not '{type(actual_type)}'")
-			response_template_types[key] = actual_type
-		logger.info("types from tenants response template %s", response_template_types)
+		keys = ["name", "active", "parentId"]
+		prereq_values = [tenant_post_data[key] for key in keys]
+		get_values = [first_tenant[key] for key in keys]
+
 		# validate keys, data types and values from tenants get json response.
-		assert tenant_keys == set(response_template.keys())
-		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
+		assert validate(instance=first_tenant, schema=tenant_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")

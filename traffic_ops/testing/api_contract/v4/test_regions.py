@@ -14,45 +14,40 @@
 
 """API Contract Test Case for regions endpoint."""
 import logging
+from typing import Union
+
 import pytest
 import requests
+from jsonschema import validate
 
 from trafficops.tosession import TOSession
 
 # Create and configure logger
 logger = logging.getLogger()
 
-primitive = bool | int | float | str | None
+Primitive = Union[bool, int, float, str, None]
 
-@pytest.mark.parametrize('request_template_data', ["regions"], indirect=True)
-def test_region_contract(
-	to_session: TOSession,
-	request_template_data: list[dict[str, object] | list[object] | primitive],
-	response_template_data: dict[str, primitive | list[primitive | dict[str, object]
-						    | list[object]] | dict[object, object]],
+
+def test_region_contract(to_session: TOSession,
+	response_template_data: dict[str, Union[Primitive, list[Union[Primitive, 
+	dict[str, object], list[object]]], dict[object, object]]],
 	region_post_data: dict[str, object]
-) -> None:
+	) -> None:
 	"""
-	Test step to validate keys, values and data types from regions endpoint
-	response.
+	Test step to validate keys, values and data types from regions response.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get request template data from a prerequisites file.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
 	:param region_post_data: Fixture to get sample region data and actual region response.
 	"""
 	# validate region keys from regions get response
 	logger.info("Accessing /regions endpoint through Traffic ops session.")
 
-	region = request_template_data[0]
-	if not isinstance(region, dict):
-		raise TypeError("malformed region in prerequisite data; not an object")
-
-	region_name = region.get("name")
+	region_name = region_post_data.get("name")
 	if not isinstance(region_name, str):
 		raise TypeError("malformed region in prerequisite data; 'name' not a string")
 
 	region_get_response: tuple[
-		dict[str, object] | list[dict[str, object] | list[object] | primitive] | primitive,
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_regions(query_params={"name": region_name})
 	try:
@@ -63,37 +58,20 @@ def test_region_contract(
 		first_region = region_data[0]
 		if not isinstance(first_region, dict):
 			raise TypeError("malformed API response; first region in response is not an object")
-		region_keys = set(first_region.keys())
 
-		logger.info("region Keys from regions endpoint response %s", region_keys)
+		logger.info("Region Api response %s", first_region)
 		region_response_template = response_template_data.get("regions")
 		if not isinstance(region_response_template, dict):
 			raise TypeError(
 				f"region response template data must be a dict, not '{type(region_response_template)}'")
-		response_template: dict[str, list[dict[str, object] | list[object] | primitive] |\
-			dict[object, object] |\
-			primitive
-		]
-		response_template = region_response_template.get("properties")
+
 		# validate region values from prereq data in regions get response.
-		prereq_values = [region_post_data["name"], region_post_data["division"],
-		region_post_data["divisionName"]]
-		get_values = [first_region["name"], first_region["division"], first_region["divisionName"]]
-		get_types = {}
-		for key, value in first_region.items():
-			get_types[key] = type(value).__name__
-		logger.info("types from region get response %s", get_types)
-		response_template_types= {}
-		for key, value in response_template.items():
-			actual_type = value.get("type")
-			if not isinstance(actual_type, str):
-				raise TypeError(
-					f"Type data must be a string, not '{type(actual_type)}'")
-			response_template_types[key] = actual_type
-		logger.info("types from regions response template %s", response_template_types)
+		keys = ["name", "division", "divisionName"]
+		prereq_values = [region_post_data[key] for key in keys]
+		get_values = [first_region[key] for key in keys]
+
 		# validate keys, data types and values from regions get json response.
-		assert region_keys == set(response_template.keys())
-		assert dict(sorted(get_types.items())) == dict(sorted(response_template_types.items()))
+		assert validate(instance=first_region, schema=region_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")

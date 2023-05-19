@@ -1395,6 +1395,17 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request('post', 'phys_locations', ('3.0', '3.1', '4.0', '4.1', '5.0'))
+	def create_physical_locations(self, data=None):
+		"""
+		Create a Physical Location
+		:ref:`to-api-phys_locations`
+		:param data: The parameter data to use for Physical Location creation
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	@api_request('put', 'phys_locations/{physical_location_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_physical_location(self, physical_location_id=None, query_params=None):
 		"""

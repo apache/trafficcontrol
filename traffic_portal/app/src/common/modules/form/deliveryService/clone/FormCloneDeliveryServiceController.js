@@ -37,6 +37,7 @@ var FormCloneDeliveryServiceController = function(deliveryService, origin, topol
 		// we're going to let them select an xmlId and a type for the clone
 		$scope.deliveryService.xmlId = null;
 		$scope.deliveryService.typeId = null;
+		$scope.loadGeoLimitCountriesRaw(deliveryService);
 	};
 	init();
 
