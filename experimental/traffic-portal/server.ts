@@ -34,6 +34,14 @@ import {
 
 import { AppServerModule } from "./src/main.server";
 
+const versionParts = process.versions.node.split(".");
+if (versionParts.length !== 3) {
+	console.warn(`Unable to determine current node version, got ${versionParts.length} items`);
+} else if (versionParts[0] < "16" || (versionParts[0] === "16" && versionParts[1] < "18")) {
+	console.error(`Unsupported version of node found: ${process.version}, expected >=16.18`);
+	process.exit(1);
+}
+
 let config: ServerConfig;
 
 /**
@@ -244,14 +252,18 @@ function run(): number {
 /* eslint-disable no-underscore-dangle */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const __non_webpack_require__: NodeRequire;
-/* eslint-enable no-underscore-dangle */
-const mainModule = __non_webpack_require__.main;
-const moduleFilename = mainModule && mainModule.filename || "";
-if (moduleFilename === __filename || moduleFilename.includes("iisnode")) {
-	const code = run();
-	if (code) {
-		process.exit(code);
+try {
+	/* eslint-enable no-underscore-dangle */
+	const mainModule = __non_webpack_require__.main;
+	const moduleFilename = mainModule && mainModule.filename || "";
+	if (moduleFilename === __filename || moduleFilename.includes("iisnode")) {
+		const code = run();
+		if (code) {
+			process.exit(code);
+		}
 	}
+} catch(e) {
+	console.error("Encountered error while running server:", e);
+	process.exit(1);
 }
-
 export * from "./src/main.server";
