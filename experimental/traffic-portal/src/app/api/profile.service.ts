@@ -124,29 +124,21 @@ export class ProfileService extends APIService {
 		return this.delete<ResponseProfile>(`profiles/${id}`).toPromise();
 	}
 
-	public async getParameters(idOrName: number | string): Promise<ResponseParameter>;
+	public async getParameters(id: number): Promise<ResponseParameter>;
 	public async getParameters(): Promise<Array<ResponseParameter>>;
 	/**
 	 * Retrieves Parameters from the API.
 	 *
-	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Parameter to retrieve,
-	 * or its name (string).
+	 * @param id Specify either the integral, unique identifier (number) of a specific Parameter to retrieve.
 	 * @returns The requested Parameter(s).
 	 */
-	public async getParameters(idOrName?: number | string): Promise<Array<ResponseParameter> | ResponseParameter> {
+	public async getParameters(id?: number): Promise<Array<ResponseParameter> | ResponseParameter> {
 		const path = "parameters";
-		if (idOrName !== undefined) {
-			let params;
-			switch (typeof idOrName) {
-				case "number":
-					params = {id: idOrName};
-					break;
-				case "string":
-					params = {name: idOrName};
-			}
+		if (id !== undefined) {
+			const params = {id};
 			const r = await this.get<[ResponseParameter]>(path, undefined, params).toPromise();
 			if (r.length !== 1) {
-				throw new Error(`Traffic Ops responded with ${r.length} Types by identifier ${idOrName}`);
+				throw new Error(`Traffic Ops responded with ${r.length} Parameters by identifier ${id}`);
 			}
 			return r[0];
 		}

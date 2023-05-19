@@ -13,7 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-import {ProfileType, RequestParameter, RequestProfile, ResponseParameter, type ResponseProfile} from "trafficops-types";
+import {ProfileType, RequestParameter, RequestProfile, ResponseParameter, ResponseProfile} from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
@@ -233,26 +233,19 @@ export class ProfileService {
 		}
 	];
 
-	public async getParameters(idOrName: number | string): Promise<ResponseParameter>;
+	public async getParameters(id: number): Promise<ResponseParameter>;
 	public async getParameters(): Promise<Array<ResponseParameter>>;
 	/**
 	 * Gets one or all Parameters from Traffic Ops
 	 *
-	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single parameter to be returned.
+	 * @param id The integral, unique identifier (number) of a single parameter to be returned.
 	 * @returns The requested parameter(s).
 	 */
-	public async getParameters(idOrName?: number | string): Promise<ResponseParameter | Array<ResponseParameter>> {
-		if (idOrName !== undefined) {
-			let parameter;
-			switch (typeof idOrName) {
-				case "string":
-					parameter = this.parameters.filter(t=>t.name === idOrName)[0];
-					break;
-				case "number":
-					parameter = this.parameters.filter(t=>t.id === idOrName)[0];
-			}
+	public async getParameters(id?: number): Promise<ResponseParameter | Array<ResponseParameter>> {
+		if (id !== undefined) {
+			const parameter = this.parameters.filter(t=>t.id === id)[0];
 			if (!parameter) {
-				throw new Error(`no such Parameter: ${idOrName}`);
+				throw new Error(`no such Parameter: ${id}`);
 			}
 			return parameter;
 		}

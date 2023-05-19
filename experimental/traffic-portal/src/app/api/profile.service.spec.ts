@@ -14,7 +14,7 @@
  */
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
-import { ProfileType } from "trafficops-types";
+import {ProfileType, ResponseProfile} from "trafficops-types";
 
 import { ProfileService } from "./profile.service";
 
@@ -135,16 +135,6 @@ describe("ProfileService", () => {
 		await expectAsync(responseParams).toBeResolvedTo(parameter);
 	});
 
-	it("sends requests for a single Parameter by name", async () => {
-		const responseParams = service.getParameters(parameter.name);
-		const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/parameters`);
-		expect(req.request.method).toBe("GET");
-		expect(req.request.params.keys().length).toBe(1);
-		expect(req.request.params.get("name")).toBe(parameter.name);
-		req.flush({response: [parameter]});
-		await expectAsync(responseParams).toBeResolvedTo(parameter);
-	});
-
 	it("creates new Parameters", async () => {
 		const responseParams = service.createParameter(parameter);
 		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/parameters`);
@@ -153,6 +143,16 @@ describe("ProfileService", () => {
 		expect(req.request.body).toBe(parameter);
 		req.flush({response: parameter});
 		await expectAsync(responseParams).toBeResolvedTo(parameter);
+	});
+
+	it("gets profiles associated with an existing Parameter", async () => {
+		const responseProfiles = service.getProfilesByParam(parameter);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles?param=${parameter.id}`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.body).toBe(null);
+		req.flush({response: []});
+		await expectAsync(responseProfiles).toBeResolvedTo(Array<ResponseProfile>());
 	});
 
 	it("deletes existing Parameters", async () => {
