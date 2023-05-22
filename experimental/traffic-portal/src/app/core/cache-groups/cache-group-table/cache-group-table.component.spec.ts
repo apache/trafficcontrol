@@ -172,7 +172,7 @@ describe("CacheGroupTableComponent", () => {
 			return fail(`invalid 'Open in New Tab' context menu item; either not a link or has a static href: ${menuItem}`);
 		}
 		expect(menuItem.newTab).toBeTrue();
-		expect(menuItem.href({...sampleCG, id: 5})).toBe("core/cache-groups/5");
+		expect(menuItem.href({...sampleCG, id: 5})).toBe("5");
 
 		menuItem = component.contextMenuItems.find(i => i.name === "Edit");
 		if (!menuItem) {
@@ -182,7 +182,7 @@ describe("CacheGroupTableComponent", () => {
 			return fail(`invalid 'Edit' context menu item; either not a link or has a static href: ${menuItem}`);
 		}
 		expect(menuItem.newTab).toBeFalsy();
-		expect(menuItem.href({...sampleCG, id: 5})).toBe("core/cache-groups/5");
+		expect(menuItem.href({...sampleCG, id: 5})).toBe("5");
 	});
 
 	it("generates 'View ASNs' context menu item href", () => {
