@@ -38,7 +38,7 @@ set -o errexit -o nounset -o pipefail
 
 hub_fqdn="http://localhost:4444/wd/hub/status"
 to_fqdn="https://localhost:6443"
-tp_fqdn="https://172.18.0.1:8443"
+tp_fqdn="https://localhost:8443"
 
 if ! curl -Lvsk "${hub_fqdn}" >/dev/null 2>&1; then
   echo "Selenium not started on ${hub_fqdn}" >&2;
