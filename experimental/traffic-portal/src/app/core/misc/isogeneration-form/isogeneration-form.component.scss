@@ -23,6 +23,11 @@
 	}
 }
 
-mat-card-actions mat-slide-toggle {
-	margin-left: 16px;
+div.form-header {
+	display: flex;
+	margin: 16px;
+	justify-content: space-between;
+	mat-slide-toggle {
+		margin-left: 16px;
+	}
 }
