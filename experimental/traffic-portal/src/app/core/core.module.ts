@@ -93,6 +93,7 @@ export const ROUTES: Routes = [
 	{ component: CacheGroupDetailsComponent, path: "cache-groups/:id"},
 	{ component: RolesTableComponent, path: "roles"},
 	{ component: RoleDetailComponent, path: "roles/:name"},
+	{ component: RoleDetailComponent, path: "new-role"},
 	{ component: TenantsComponent, path: "tenants"},
 	{ component: ChangeLogsComponent, path: "change-logs" },
 	{ component: TenantDetailsComponent, path: "tenants/:id"},

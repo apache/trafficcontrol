@@ -14,7 +14,7 @@
 import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import { ResponseRole } from "trafficops-types";
 
 import { UserService } from "src/app/api";
@@ -33,9 +33,16 @@ export class RoleDetailComponent implements OnInit {
 	public new = false;
 	public permissions = "";
 	public role!: ResponseRole;
-	constructor(private readonly route: ActivatedRoute, private readonly userService: UserService,
-		private readonly location: Location, private readonly dialog: MatDialog,
-		private readonly header: NavigationService) {
+
+	/**
+	 * This caches the original name of the Role, so that updates can be
+	 * made.
+	 */
+	private name = "";
+
+	constructor(private readonly route: ActivatedRoute, private readonly router: Router,
+		private readonly userService: UserService, private readonly location: Location,
+		private readonly dialog: MatDialog, private readonly header: NavigationService) {
 	}
 
 	/**
@@ -44,11 +51,6 @@ export class RoleDetailComponent implements OnInit {
 	public async ngOnInit(): Promise<void> {
 		const role = this.route.snapshot.paramMap.get("name");
 		if (role === null) {
-			console.error("missing required route parameter 'name'");
-			return;
-		}
-
-		if (role === "new-role") {
 			this.header.headerTitle.next("New Role");
 			this.new = true;
 			this.role = {
@@ -60,12 +62,24 @@ export class RoleDetailComponent implements OnInit {
 		}
 
 		this.role = await this.userService.getRoles(role);
+		this.name = this.role.name;
 		this.permissions = this.role.permissions?.join("\n")??"";
 		this.header.headerTitle.next(`Role: ${this.role.name}`);
 	}
 
 	/**
-	 * Deletes the current ASN.
+	 * Sets the value of the header text, and caches the Role's initial
+	 * name.
+	 *
+	 * @param name The name of the current Role (before editing).
+	 */
+	private setHeader(name: string): void {
+		this.name = name;
+		this.header.headerTitle.next(`Role: ${name}`);
+	}
+
+	/**
+	 * Deletes the current Role.
 	 */
 	public async deleteRole(): Promise<void> {
 		if (this.new) {
@@ -103,8 +117,11 @@ export class RoleDetailComponent implements OnInit {
 			this.role = await this.userService.createRole(this.role);
 			this.new = false;
 		} else {
-			this.role = await this.userService.updateRole(this.role.name, this.role);
+			this.role = await this.userService.updateRole(this.name, this.role);
 		}
+		this.router.navigate([`/core/roles/${this.role.name}`], {replaceUrl: true});
+		this.setHeader(this.name)
+
 	}
 
 }

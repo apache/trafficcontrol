@@ -272,7 +272,7 @@ export class UserService extends APIService {
 	 * Creates a new Role.
 	 *
 	 * @param role The role to create.
-	 * @returns The created role.
+	 * @returns The created role along with lastUpdated field.
 	 */
 	public async createRole(role: RequestRole): Promise<ResponseRole> {
 		return this.post<ResponseRole>("roles", role).toPromise();
@@ -282,7 +282,7 @@ export class UserService extends APIService {
 	 * Updates an existing Role.
 	 *
 	 * @param role The role to update.
-	 * @returns The updated role.
+	 * @returns The updated role without lastUpdated field.
 	 */
 	public async updateRole(name: string, role: ResponseRole): Promise<ResponseRole> {
 		return this.put<ResponseRole>(`roles?`, role, {name}).toPromise();
@@ -294,9 +294,9 @@ export class UserService extends APIService {
 	 * @param role The role to be deleted.
 	 * @returns The deleted role.
 	 */
-	public async deleteRole(role: string | ResponseRole): Promise<ResponseRole> {
-		const roleName = typeof(role) === "string" ? role : role.name;
-		return this.delete<ResponseRole>(`roles?name=${roleName}`).toPromise();
+	public async deleteRole(role: string | ResponseRole): Promise<void> {
+		const name = typeof(role) === "string" ? role : role.name;
+		return this.delete("roles", undefined, {name}).toPromise();
 	}
 
 	/**

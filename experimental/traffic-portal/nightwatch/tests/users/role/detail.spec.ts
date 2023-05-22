@@ -27,9 +27,9 @@ describe("Role Detail Spec", () => {
 		});
 	});
 
-	it("New asn", () => {
+	it("New Role", () => {
 		const page = browser.page.users.roleDetail();
-		browser.url(`${page.api.launchUrl}/core/roles/new`, res => {
+		browser.url(`${page.api.launchUrl}/core/new-role`, res => {
 			browser.assert.ok(res.status === 0);
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@description")

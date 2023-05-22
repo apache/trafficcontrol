@@ -13,12 +13,13 @@
 */
 
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { MatDialogModule } from "@angular/material/dialog";
+import { MatDialog, MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import { ReplaySubject } from "rxjs";
+import { of, ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
+import { UserService } from "src/app/api";
 import { RoleDetailComponent } from "src/app/core/users/roles/detail/role-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
@@ -27,31 +28,44 @@ describe("RoleDetailComponent", () => {
 	let fixture: ComponentFixture<RoleDetailComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
+	// const name = "test";
 
 	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ RoleDetailComponent ],
-			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
+			imports: [
+				APITestingModule,
+				RouterTestingModule.withRoutes([
+					{component: RoleDetailComponent, path: "core/roles/:name"},
+					// This route is never actually loaded, but the tests
+					// complain that it can't be routed to, so it doesn't matter
+					// that it's loading the wrong component, only that it has a
+					// route definition.
+					{component: RoleDetailComponent, path: "core/roles"}
+				]),
+				MatDialogModule
+			],
 			providers: [ { provide: NavigationService, useValue: headerSvc } ]
 		})
 			.compileComponents();
 
 		route = TestBed.inject(ActivatedRoute);
 		paramMap = spyOn(route.snapshot.paramMap, "get");
-		paramMap.and.returnValue(null);
+		// paramMap.and.returnValue(name);
 		fixture = TestBed.createComponent(RoleDetailComponent);
 		component = fixture.componentInstance;
+		component.role = {...await TestBed.inject(UserService).createRole(component.role)};
 		fixture.detectChanges();
 	});
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
-		expect(paramMap).toHaveBeenCalled();
+		// expect(paramMap).toHaveBeenCalled();
 	});
 
 	it("new role", async () => {
-		paramMap.and.returnValue("new");
+		paramMap.and.returnValue(null);
 
 		fixture = TestBed.createComponent(RoleDetailComponent);
 		component = fixture.componentInstance;
@@ -73,6 +87,57 @@ describe("RoleDetailComponent", () => {
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.role).not.toBeNull();
 		expect(component.role.name).toBe("admin");
+		expect(component.new).toBeFalse();
+	});
+
+	it("opens a dialog for role deletion", async () => {
+		const api = TestBed.inject(UserService);
+		const spy = spyOn(api, "deleteRole").and.callThrough();
+		expect(spy).not.toHaveBeenCalled();
+
+		const dialogService = TestBed.inject(MatDialog);
+		const openSpy = spyOn(dialogService, "open").and.returnValue({
+			afterClosed: () => of(true)
+		} as MatDialogRef<unknown>);
+
+		expect(openSpy).not.toHaveBeenCalled();
+
+		const asyncExpectation = expectAsync(component.deleteRole()).toBeResolvedTo(undefined);
+
+		expect(openSpy).toHaveBeenCalled();
+		expect(spy).toHaveBeenCalled();
+
+		await asyncExpectation;
+	});
+
+	it("submits requests to create new role", async () => {
+		const api = TestBed.inject(UserService);
+		const spy = spyOn(api, "createRole").and.callThrough();
+		paramMap.and.returnValue(null);
+
+		fixture = TestBed.createComponent(RoleDetailComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+		await fixture.whenStable();
+
+		expect(spy).not.toHaveBeenCalled();
+		await expectAsync(component.submit(new Event("submit"))).toBeResolvedTo(undefined);
+		expect(spy).toHaveBeenCalled();
+		expect(component.new).toBeFalse();
+	});
+
+	it("submits requests to update role", async () => {
+		const api = TestBed.inject(UserService);
+		const spy = spyOn(api, "updateRole").and.callThrough();
+		expect(spy).not.toHaveBeenCalled();
+
+		component.role = {
+			...component.role,
+			name: `${component.role.name}quest`
+		};
+
+		await expectAsync(component.submit(new Event("submit"))).toBeResolvedTo(undefined);
+		expect(spy).toHaveBeenCalled();
 		expect(component.new).toBeFalse();
 	});
 });

@@ -461,13 +461,13 @@ export class UserService {
 	 * @param role The role to be deleted.
 	 * @returns The deleted role.
 	 */
-	public async deleteRole(role: string | ResponseRole): Promise<ResponseRole> {
+	public async deleteRole(role: string | ResponseRole): Promise<void> {
 		const roleName = typeof(role) === "string" ? role : role.name;
 		const index = this.roleDetail.findIndex(r => r.name === roleName);
 		if (index === -1) {
 			throw new Error(`no such role: ${role}`);
 		}
-		return this.roleDetail.splice(index, 1)[0];
+		this.roleDetail.splice(index, 1)[0];
 	}
 
 	/**
