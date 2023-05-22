@@ -27,7 +27,7 @@ onFail() {
   if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang/out.log" ]]; then
     mv "${REPO_DIR}/traffic_ops/traffic_ops_golang/out.log" Reports/to.log
   fi
-  docker logs $CHROMIUM_CONTAINER > Reports/chromium.log 2>&1;
+  docker logs $CHROME_CONTAINER > Reports/chrome.log 2>&1;
   docker logs $HUB_CONTAINER > Reports/hub.log 2>&1;
   echo "Detailed logs produced info Reports artifact"
   exit 1
@@ -82,9 +82,9 @@ sudo apt-get install -y --no-install-recommends gettext curl
 
 sudo npm i -g pm2 grunt sass
 
-CHROMIUM_CONTAINER=$(docker ps -qf name=chromium)
-HUB_CONTAINER=$(docker ps -qf name=hub)
-CHROMIUM_VER=$(docker exec "$CHROMIUM_CONTAINER" chromium --version | grep -Eo '[0-9.]+')
+CHROME_CONTAINER=$(docker ps | grep "selenium/node-chrome" | awk '{print $1}')
+HUB_CONTAINER=$(docker ps | grep "selenium/hub" | awk '{print $1}')
+CHROME_VER=$(docker exec "$CHROME_CONTAINER" google-chrome --version | sed -E 's/.* ([0-9.]+).*/\1/')
 
 export GOPATH="${HOME}/go"
 readonly ORG_DIR="$GOPATH/src/github.com/apache"
@@ -124,7 +124,7 @@ popd
 cd "${REPO_DIR}/traffic_portal/test/integration"
 npm ci
 
-npx webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROMIUM_VER"
+npx webdriver-manager update --gecko false --versions.chrome "LATEST_RELEASE_$CHROME_VER"
 
 jq " .capabilities.chromeOptions.args = [
     \"--headless\",
