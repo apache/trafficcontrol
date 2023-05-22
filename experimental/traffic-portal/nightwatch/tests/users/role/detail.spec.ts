@@ -20,7 +20,7 @@ describe("Role Detail Spec", () => {
 			page.waitForElementVisible("mat-card")
 				.assert.enabled("@description")
 				.assert.enabled("@name")
-				.assert.attributeEquals("@permissions", "readonly", "true")
+				.assert.not.hasAttribute("@permissions", "readonly")
 				.assert.enabled("@saveBtn")
 				.assert.valueEquals("@name", String(browser.globals.testData.role.name))
 				.assert.valueEquals("@permissions", String(browser.globals.testData.role.permissions));

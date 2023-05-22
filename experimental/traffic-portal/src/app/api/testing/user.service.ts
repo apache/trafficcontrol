@@ -442,8 +442,8 @@ export class UserService {
 	/**
 	 * Updates an existing role.
 	 *
-	 * @param role The role to update.
 	 * @param name The original role name
+	 * @param role The role to update.
 	 * @returns The updated role without lastUpdated field.
 	 */
 	public async updateRole(name: string, role: ResponseRole): Promise<PutResponseRole> {
@@ -467,7 +467,7 @@ export class UserService {
 		if (index === -1) {
 			throw new Error(`no such role: ${role}`);
 		}
-		this.roleDetail.splice(index, 1)[0];
+		this.roleDetail.splice(index, 1);
 	}
 
 	/**

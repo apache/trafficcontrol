@@ -281,6 +281,7 @@ export class UserService extends APIService {
 	/**
 	 * Updates an existing Role.
 	 *
+	 * @param name The original role name
 	 * @param role The role to update.
 	 * @returns The updated role without lastUpdated field.
 	 */

@@ -18,8 +18,8 @@ import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { of, ReplaySubject } from "rxjs";
 
-import { APITestingModule } from "src/app/api/testing";
 import { UserService } from "src/app/api";
+import { APITestingModule } from "src/app/api/testing";
 import { RoleDetailComponent } from "src/app/core/users/roles/detail/role-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 

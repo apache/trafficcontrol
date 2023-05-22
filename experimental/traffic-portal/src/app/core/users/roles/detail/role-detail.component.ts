@@ -22,7 +22,7 @@ import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
- * AsnDetailComponent is the controller for the ASN add/edit form.
+ * RoleDetailComponent is the controller for the Role add/edit form.
  */
 @Component({
 	selector: "tp-role-detail",
@@ -106,7 +106,7 @@ export class RoleDetailComponent implements OnInit {
 	}
 
 	/**
-	 * Submits new/updated ASN.
+	 * Submits new/updated Role.
 	 *
 	 * @param e HTML form submission event.
 	 */
@@ -120,7 +120,7 @@ export class RoleDetailComponent implements OnInit {
 			this.role = await this.userService.updateRole(this.name, this.role);
 		}
 		this.router.navigate([`/core/roles/${this.role.name}`], {replaceUrl: true});
-		this.setHeader(this.name)
+		this.setHeader(this.name);
 
 	}
 
