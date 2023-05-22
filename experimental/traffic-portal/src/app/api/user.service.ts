@@ -286,7 +286,7 @@ export class UserService extends APIService {
 	 * @returns The updated role without lastUpdated field.
 	 */
 	public async updateRole(name: string, role: ResponseRole): Promise<ResponseRole> {
-		return this.put<ResponseRole>(`roles?`, role, {name}).toPromise();
+		return this.put<ResponseRole>("roles?", role, {name}).toPromise();
 	}
 
 	/**
