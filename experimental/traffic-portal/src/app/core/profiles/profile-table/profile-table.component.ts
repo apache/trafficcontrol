@@ -33,6 +33,9 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  * principally contains a table.
  */
 @Component({
+	providers: [
+		FileUtilsService
+	],
 	selector: "tp-profile-table",
 	styleUrls: ["./profile-table.component.scss"],
 	templateUrl: "./profile-table.component.html",
@@ -198,7 +201,6 @@ export class ProfileTableComponent implements OnInit {
 		switch(action){
 			case "import":
 				const ref = this.dialog.open(ImportJsonEditTxtComponent,{
-					panelClass: "cmd-importjson-edittxt-dialog",
 					width: "70vw"
 				});
 

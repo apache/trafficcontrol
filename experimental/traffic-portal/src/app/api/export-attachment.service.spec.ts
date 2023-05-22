@@ -12,19 +12,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
+import { ProfileExport, ProfileType } from "trafficops-types";
 
 import { ExportAttachmentService } from "./export-attachment.service";
 
 describe("ExportAttachmentService", () => {
 	let service: ExportAttachmentService;
+	let httpTestingController: HttpTestingController;
+	const exportProfile: ProfileExport = {
+		alerts: null,
+		parameters:[],
+		profile: {
+			cdn: "ALL",
+			description: "test",
+			name: "TRAFFIC_ANALYTICS",
+			type: ProfileType.TS_PROFILE
+		}
+	};
 
 	beforeEach(() => {
-		TestBed.configureTestingModule({});
+		TestBed.configureTestingModule({
+			imports: [HttpClientTestingModule],
+			providers: [
+				ExportAttachmentService,
+			]
+		});
 		service = TestBed.inject(ExportAttachmentService);
+		httpTestingController = TestBed.inject(HttpTestingController);
 	});
 
 	it("should be created", () => {
 		expect(service).toBeTruthy();
+	});
+
+	it("sends request for Export object by Profile ID", async () => {
+		const id = 1;
+		const response = service.exportProfile(id);
+		const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/profiles/${id}/export`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(0);
+		req.flush(exportProfile);
+		await expectAsync(response).toBeResolvedTo(exportProfile);
 	});
 });

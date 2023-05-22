@@ -20,6 +20,7 @@ import {
 	CDNService,
 	ChangeLogsService,
 	DeliveryServiceService,
+	ExportAttachmentService,
 	InvalidationJobService,
 	MiscAPIsService,
 	PhysicalLocationService,
@@ -33,6 +34,7 @@ import { CacheGroupService as TestingCacheGroupService } from "./cache-group.ser
 import { CDNService as TestingCDNService } from "./cdn.service";
 import { ChangeLogsService as TestingChangeLogsService} from "./change-logs.service";
 import { DeliveryServiceService as TestingDeliveryServiceService } from "./delivery-service.service";
+import { ExportAttachmentService as TestingExportAttachmentService } from "./export-attachment.service";
 import { InvalidationJobService as TestingInvalidationJobService } from "./invalidation-job.service";
 import { MiscAPIsService as TestingMiscAPIsService } from "./misc-apis.service";
 import { PhysicalLocationService as TestingPhysicalLocationService } from "./physical-location.service";
@@ -55,6 +57,7 @@ import { UserService as TestingUserService } from "./user.service";
 		{provide: ChangeLogsService, useClass: TestingChangeLogsService},
 		{provide: CDNService, useClass: TestingCDNService},
 		{provide: DeliveryServiceService, useClass: TestingDeliveryServiceService},
+		{provide: ExportAttachmentService, useClass: TestingExportAttachmentService},
 		{provide: InvalidationJobService, useClass: TestingInvalidationJobService},
 		{provide: MiscAPIsService, useClass: TestingMiscAPIsService},
 		{provide: PhysicalLocationService, useClass: TestingPhysicalLocationService},

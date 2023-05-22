@@ -34,6 +34,7 @@ export * from "./cache-group.service";
 export * from "./cdn.service";
 export * from "./change-logs.service";
 export * from "./delivery-service.service";
+export * from "./export-attachment.service";
 export * from "./invalidation-job.service";
 export * from "./misc-apis.service";
 export * from "./physical-location.service";
@@ -55,6 +56,7 @@ export * from "./user.service";
 		CDNService,
 		ChangeLogsService,
 		DeliveryServiceService,
+		ExportAttachmentService,
 		InvalidationJobService,
 		MiscAPIsService,
 		PhysicalLocationService,
@@ -62,7 +64,6 @@ export * from "./user.service";
 		ServerService,
 		TypeService,
 		UserService,
-		ExportAttachmentService
 	]
 })
 export class APIModule { }

@@ -13,7 +13,7 @@
 */
 
 import { DatePipe } from "@angular/common";
-import { Component, HostListener, Input} from "@angular/core";
+import { Component, HostListener } from "@angular/core";
 import { MatDialogRef } from "@angular/material/dialog";
 import { AlertLevel } from "trafficops-types";
 
@@ -25,19 +25,19 @@ import { AlertService } from "../alert/alert.service";
 @Component({
 	selector: "tp-import-json-edit-txt",
 	styleUrls: ["./import-json-edit-txt.component.scss"],
-	templateUrl: "./import-json-edit-txt.component.html"
+	templateUrl: "./import-json-edit-txt.component.html",
 })
 export class ImportJsonEditTxtComponent {
 
 	/**
 	 * Title for the dialog window
 	 */
-	@Input() public title = "Import Profile";
+	public title = "Import Profile";
 
 	/**
 	 * Allowed import file types
 	 */
-	@Input() public allowedType: string[] = ["application/json", "text/plain"];
+	public allowedType: string[] = ["application/json", "text/plain"];
 
 	/** Text editor value */
 	public inputTxt = "{}";

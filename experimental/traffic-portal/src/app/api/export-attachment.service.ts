@@ -20,6 +20,7 @@ import { environment } from "src/environments/environment";
 
 /**
  * Defines & handles api endpoints related to export attachments/json/text
+ * Here we are not using the base-api-service to tap the response.
  */
 @Injectable()
 export class ExportAttachmentService {

@@ -12,7 +12,9 @@
 * limitations under the License.
 */
 
+import { DatePipe } from "@angular/common";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 
 import { ImportJsonEditTxtComponent } from "./import-json-edit-txt.component";
 
@@ -22,9 +24,15 @@ describe("ImportJsonEditTxtComponent", () => {
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ ImportJsonEditTxtComponent ]
-		})
-			.compileComponents();
+			declarations: [ ImportJsonEditTxtComponent ],
+			imports: [
+				MatDialogModule
+			],
+			providers: [
+				DatePipe,
+				{provide: MatDialogRef, useValue: {}}
+			]
+		}).compileComponents();
 
 		fixture = TestBed.createComponent(ImportJsonEditTxtComponent);
 		component = fixture.componentInstance;
