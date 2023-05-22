@@ -130,7 +130,7 @@ jq " .capabilities.chromeOptions.args = [
     \"--headless\",
     \"--no-sandbox\",
     \"--disable-gpu\",
-    \"--ignore-certificate-errors\"
+    \"--ignore-certificate-errors\",
     \"--remote-allow-origins=*\"
   ] | .params.apiUrl = \"${to_fqdn}/api/4.0\" | .params.baseUrl =\"${tp_fqdn}\"
   | .capabilities[\"goog:chromeOptions\"].w3c = false | .capabilities.chromeOptions.w3c = false" \
