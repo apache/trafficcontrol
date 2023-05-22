@@ -98,17 +98,12 @@ jobs:
           - 4442:4442
           - 4443:4443
           - 4444:4444
-        env:
-          GRID_BROWSER_TIMEOUT: 90
-          GRID_NEW_SESSION_WAIT_TIMEOUT: 15000
         options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
         volumes:
           - /dev/shm:/dev/shm
-      chromium:
+      chrome:
         image: selenium/node-chrome
         env:
-          HUB_HOST: hub
-          HUB_PORT: 4444
           SE_EVENT_BUS_HOST: hub
           SE_EVENT_BUS_PUBLISH_PORT: 4442
           SE_EVENT_BUS_SUBSCRIBE_PORT: 4443

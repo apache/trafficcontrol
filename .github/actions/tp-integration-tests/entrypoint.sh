@@ -21,8 +21,8 @@ onFail() {
   if ! [[ -d Reports ]]; then
     mkdir Reports;
   fi
-  if [[ -f tp.log ]]; then
-    mv tp.log Reports/pm2.log
+  if [[ -f ${REPO_DIR}/traffic_portal/out.log ]]; then
+    mv ${REPO_DIR}/traffic_portal/out.log Reports/pm2.log
   fi
   if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang/out.log" ]]; then
     mv "${REPO_DIR}/traffic_ops/traffic_ops_golang/out.log" Reports/to.log
@@ -131,6 +131,7 @@ jq " .capabilities.chromeOptions.args = [
     \"--no-sandbox\",
     \"--disable-gpu\",
     \"--ignore-certificate-errors\"
+    \"--remote-allow-origins=*\"
   ] | .params.apiUrl = \"${to_fqdn}/api/4.0\" | .params.baseUrl =\"${tp_fqdn}\"
   | .capabilities[\"goog:chromeOptions\"].w3c = false | .capabilities.chromeOptions.w3c = false" \
   config.json > config.json.tmp && mv config.json.tmp config.json
