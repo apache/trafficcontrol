@@ -102,6 +102,8 @@ jobs:
           GRID_BROWSER_TIMEOUT: 90
           GRID_NEW_SESSION_WAIT_TIMEOUT: 15000
         options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
+        volumes:
+          - /dev/shm:/dev/shm
       chromium:
         image: selenium/node-chrome
         env:
