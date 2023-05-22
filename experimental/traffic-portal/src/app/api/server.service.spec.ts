@@ -14,13 +14,14 @@
  */
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
+import { type ResponseServer } from "trafficops-types";
 
 import { ServerService } from "./server.service";
 
 describe("ServerService", () => {
 	let service: ServerService;
 	let httpTestingController: HttpTestingController;
-	const server = {
+	const server: ResponseServer = {
 		cachegroup: "cachegroup",
 		cachegroupId: 1,
 		cdnId: 1,
@@ -43,9 +44,7 @@ describe("ServerService", () => {
 		offlineReason: null,
 		physLocation: "physicalLocation",
 		physLocationId: 1,
-		profile: "profile",
-		profileDesc: "profileDesc",
-		profileId: 1,
+		profileNames: ["profile"],
 		rack: null,
 		revalPending: false,
 		routerHostName: null,
@@ -133,6 +132,46 @@ describe("ServerService", () => {
 			expect(req.request.body).toEqual(server);
 			req.flush({response: server});
 			await expectAsync(responseP).toBeResolvedTo(server);
+		});
+
+		it("updates a server by ID", async ()  => {
+			const resp = service.updateServer(server.id, server);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}`);
+			expect(req.request.method).toBe("PUT");
+			expect(req.request.body).toEqual(server);
+
+			req.flush({response: server});
+			await expectAsync(resp).toBeResolvedTo(server);
+		});
+
+		it("updates a server", async ()  => {
+			const resp = service.updateServer(server);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}`);
+			expect(req.request.method).toBe("PUT");
+			expect(req.request.body).toEqual(server);
+
+			req.flush({response: server});
+			await expectAsync(resp).toBeResolvedTo(server);
+		});
+
+		it("delete a server", async ()  => {
+			const resp = service.deleteServer(server);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.body).toBeNull();
+
+			req.flush({response: server});
+			await expectAsync(resp).toBeResolvedTo(server);
+		});
+
+		it("delete a server by ID", async ()  => {
+			const resp = service.deleteServer(server.id);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.body).toBeNull();
+
+			req.flush({response: server});
+			await expectAsync(resp).toBeResolvedTo(server);
 		});
 	});
 

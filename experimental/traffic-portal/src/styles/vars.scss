@@ -1,4 +1,4 @@
-/*
+/*!
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,22 +12,30 @@
  * limitations under the License.
  */
 
-import { EnhancedPageObject } from "nightwatch";
+@mixin small-icon-button {
+	.small-icon-button {
+		width: 24px;
+		height: 24px;
+		padding: 0px;
+		align-items: center;
+		justify-content: center;
+		display: inline-flex;
 
-/**
- * Defines the PageObject for Coordinate Details.
- */
-export type CoordinateDetailPageObject = EnhancedPageObject<{}, typeof coordinateDetailPageObject.elements>;
+		& > *[role=img] {
+			width: 16px;
+			height: 16px;
+			font-size: 16px;
 
-const coordinateDetailPageObject = {
-	elements: {
-		id: "input[name='id']",
-		lastUpdated: "input[name='lastUpdated']",
-		latitude: "input[name='latitude']",
-		longitude: "input[name='longitude']",
-		name: "input[name='name']",
-		saveBtn: "button[type='submit']",
-	},
-};
+			svg {
+				width: 16px;
+				height: 16px;
+			}
+		}
 
-export default coordinateDetailPageObject;
+		.mat-mdc-button-touch-target {
+			width: 24px;
+			height: 24px;
+		}
+	}
+}
+

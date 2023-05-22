@@ -11,18 +11,21 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<main>
-	<mat-card appearance="outlined" class="table-page-content">
-		<div class="search-container">
-			<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
-		</div>
-		<tp-generic-table
-			[data]="servers | async"
-			[cols]="columnDefs"
-			[fuzzySearch]="fuzzySubject"
-			context="servers"
-			[contextMenuItems]="contextMenuItems"
-			(contextMenuAction)="handleContextMenu($event)">
-		</tp-generic-table>
-	</mat-card>
-</main>
+<mat-card appearance="outlined" class="page-content">
+	<div class="search-container">
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Servers" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
+	</div>
+	<tp-generic-table
+		[data]="servers | async"
+		[doubleClickLink]="doubleClickLink"
+		[cols]="columnDefs"
+		[fuzzySearch]="fuzzySubject"
+		context="servers"
+		[moreMenuButtons]="moreMenuButtons"
+		(moreMenuButtonAction)="handleMoreMenu($event)"
+		[contextMenuItems]="contextMenuItems"
+		(contextMenuAction)="handleContextMenu($event)">
+	</tp-generic-table>
+</mat-card>
+
+<a class="page-fab" mat-fab title="Create a new Server" *ngIf="auth.hasPermission('SERVER:CREATE')" routerLink="new"><mat-icon>add</mat-icon></a>

@@ -95,6 +95,7 @@ module.exports = {
 				"goog:chromeOptions": {
 					args: [
 						"--ignore-certificate-errors",
+						"--window-size=1920,1080",
 						"--allow-insecure-localhost"
 					]
 				}

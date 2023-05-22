@@ -23,9 +23,7 @@ export type DeliveryServiceInvalidPageObject = EnhancedPageObject<{}, typeof del
 
 const deliveryServiceInvalidPageObject = {
 	elements: {
-		addButton: {
-			selector: "button#new"
-		}
+		addButton: "button#new",
 	}
 };
 

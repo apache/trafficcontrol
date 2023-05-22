@@ -101,6 +101,29 @@ export class ServerService extends APIService {
 		return this.post<ResponseServer>("servers", s).toPromise();
 	}
 
+	/**
+	 * Updates a server by the given payload
+	 *
+	 * @param serverOrID The server object or id to be deleted
+	 * @param payload The server payload to update with.
+	 */
+	public async updateServer(serverOrID: ResponseServer | number, payload?: RequestServer): Promise<ResponseServer> {
+		let id;
+		let body;
+		if (typeof(serverOrID) === "number") {
+			if(!payload) {
+				throw new TypeError("invalid call signature - missing request paylaod");
+			}
+			body = payload;
+			id = +serverOrID;
+		} else {
+			body = serverOrID;
+			id = serverOrID.id;
+		}
+
+		return this.put<ResponseServer>(`servers/${id}`, body).toPromise();
+	}
+
 	public async getServerChecks(): Promise<Servercheck[]>;
 	public async getServerChecks(id: number): Promise<Servercheck>;
 	/**
@@ -233,6 +256,19 @@ export class ServerService extends APIService {
 	public async deleteStatus(statusId: number | ResponseStatus): Promise<ResponseStatus> {
 		const id = typeof (statusId) === "number" ? statusId : statusId.id;
 		return this.delete<ResponseStatus>(`statuses/${id}`).toPromise();
+	}
+
+	/**
+	 * Deletes an existing server.
+	 *
+	 * @param server The Server to be deleted, or just its ID.
+	 * @returns The deleted server.
+	 */
+	public async deleteServer(server: number | ResponseServer): Promise<ResponseServer> {
+		const id =  typeof(server) === "number" ? server : server.id;
+		const path = `servers/${id}`;
+		return this.delete<ResponseServer>(path).toPromise();
+
 	}
 
 	/**

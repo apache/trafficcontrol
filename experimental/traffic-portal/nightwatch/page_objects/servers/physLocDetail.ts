@@ -21,48 +21,20 @@ export type PhysLocDetailPageObject = EnhancedPageObject<{}, typeof physLocDetai
 
 const physLocDetailPageObject = {
 	elements: {
-		address: {
-			selector: "input[name='address']"
-		},
-		city: {
-			selector: "input[name='city']"
-		},
-		comments: {
-			selector: "textarea[name='comments']"
-		},
-		email: {
-			selector: "input[name='email']"
-		},
-		id: {
-			selector: "input[name='id']"
-		},
-		lastUpdated: {
-			selector: "input[name='lastUpdated']"
-		},
-		name: {
-			selector: "input[name='name']"
-		},
-		phone: {
-			selector: "input[name='phone']"
-		},
-		poc: {
-			selector: "input[name='poc']"
-		},
-		region: {
-			selector: "mat-select[name='region']"
-		},
-		saveBtn: {
-			selector: "button[type='submit']"
-		},
-		shortName: {
-			selector: "input[name='shortName']"
-		},
-		state: {
-			selector: "input[name='state']"
-		},
-		zip: {
-			selector: "input[name='postalCode']"
-		}
+		address: "input[name='address']",
+		city: "input[name='city']",
+		comments: "textarea[name='comments']",
+		email: "input[name='email']",
+		id: "input[name='id']",
+		lastUpdated: "input[name='lastUpdated']",
+		name: "input[name='name']",
+		phone: "input[name='phone']",
+		poc: "input[name='poc']",
+		region: "mat-select[name='region']",
+		saveBtn: "button[type='submit']",
+		shortName: "input[name='shortName']",
+		state: "input[name='state']",
+		zip: "input[name='postalCode']",
 	},
 };
 

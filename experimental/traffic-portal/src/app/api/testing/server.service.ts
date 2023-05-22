@@ -41,7 +41,7 @@ function serverCheck(server: ResponseServer): Servercheck {
 		cacheGroup: server.cachegroup ?? "SERVER HAD NO CACHE GROUP",
 		hostName: server.hostName ?? "SERVER HAD NO HOST NAME",
 		id: server.id,
-		profile: server.profile ?? "SERVER HAD NO PROFILE",
+		profile: server.profileNames[0] ?? "SERVER HAD NO PROFILE",
 		revalPending: server.revalPending,
 		type: server.type ?? "SERVER HAD NO TYPE",
 		updPending: server.updPending
@@ -146,7 +146,7 @@ export class ServerService {
 	public async createServer(server: RequestServer): Promise<ResponseServer> {
 		const cdn = await this.cdnService.getCDNs(server.cdnId);
 		const physLoc = await this.physLocService.getPhysicalLocations(server.physLocationId);
-		const profile = await this.profileService.getProfiles(server.profileId);
+		const profile = await this.profileService.getProfiles(server.profileNames[0]);
 		const type = await this.typeService.getTypes(server.typeId);
 		const status = await this.getStatuses(server.statusId);
 		const newServer = {
@@ -183,6 +183,33 @@ export class ServerService {
 		};
 		this.servers.push(newServer);
 		return newServer;
+	}
+
+	/**
+	 * Updates a server by the given payload
+	 *
+	 * @param serverOrID The server object or id to be deleted
+	 * @param payload The server payload to update with.
+	 */
+	public async updateServer(serverOrID: ResponseServer | number, payload?: RequestServer): Promise<ResponseServer> {
+		let id: number;
+		let body: ResponseServer;
+		if (typeof(serverOrID) === "number") {
+			if(!payload) {
+				throw new TypeError("invalid call signature - missing request paylaod");
+			}
+			id = +serverOrID;
+			body = payload as ResponseServer;
+		} else {
+			id = serverOrID.id;
+			body = serverOrID;
+		}
+		const index = this.servers.findIndex(s => s.id === id);
+		if (index < 0) {
+			throw new Error(`Unknown server ${id}`);
+		}
+		this.servers[index] = body;
+		return this.servers[index];
 	}
 
 	public async getServerChecks(): Promise<Servercheck[]>;
@@ -459,5 +486,22 @@ export class ServerService {
 
 		this.capabilities.push(created);
 		return created;
+	}
+
+	/**
+	 * Deletes an existing server.
+	 *
+	 * @param server The Server to be deleted, or just its ID.
+	 * @returns The deleted server.
+	 */
+	public async deleteServer(server: number | ResponseServer): Promise<ResponseServer> {
+		const id =  typeof(server) === "number" ? server : server.id;
+		const index = this.servers.findIndex(s => s.id === id);
+		if(index < 0) {
+			throw new Error(`no such Server ${id}`);
+		}
+		const ret = this.servers[index];
+		this.servers.splice(index, 1);
+		return ret;
 	}
 }
