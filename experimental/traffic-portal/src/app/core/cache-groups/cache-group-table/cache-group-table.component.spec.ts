@@ -172,7 +172,7 @@ describe("CacheGroupTableComponent", () => {
 			return fail(`invalid 'Open in New Tab' context menu item; either not a link or has a static href: ${menuItem}`);
 		}
 		expect(menuItem.newTab).toBeTrue();
-		expect(menuItem.href({...sampleCG, id: 5})).toBe("core/cache-groups/5");
+		expect(menuItem.href({...sampleCG, id: 5})).toBe("5");
 
 		menuItem = component.contextMenuItems.find(i => i.name === "Edit");
 		if (!menuItem) {
@@ -182,13 +182,13 @@ describe("CacheGroupTableComponent", () => {
 			return fail(`invalid 'Edit' context menu item; either not a link or has a static href: ${menuItem}`);
 		}
 		expect(menuItem.newTab).toBeFalsy();
-		expect(menuItem.href({...sampleCG, id: 5})).toBe("core/cache-groups/5");
+		expect(menuItem.href({...sampleCG, id: 5})).toBe("5");
 	});
 
-	it("generates 'Manage ASNs' context menu item href", () => {
-		const item = component.contextMenuItems.find(i => i.name === "Manage ASNs");
+	it("generates 'View ASNs' context menu item href", () => {
+		const item = component.contextMenuItems.find(i => i.name === "View ASNs");
 		if (!item) {
-			return fail("missing 'Manage ASNs' context menu item");
+			return fail("missing 'View ASNs' context menu item");
 		}
 		if (isAction(item)) {
 			return fail("expected an action, not a link");
@@ -197,7 +197,7 @@ describe("CacheGroupTableComponent", () => {
 			return fail("missing 'href' property");
 		}
 		if (typeof(item.href) !== "string") {
-			return fail("'Manage ASNs' context menu item should use a static string to determine href, instead uses a function");
+			return fail("'View ASNs' context menu item should use a static string to determine href, instead uses a function");
 		}
 		expect(item.href).toBe("/core/asns");
 		if (typeof(item.queryParams) !== "function") {
@@ -210,38 +210,23 @@ describe("CacheGroupTableComponent", () => {
 		expect(item.newTab).toBeFalsy();
 	});
 
-	it("doesn't allow selection of unimplemented context menu items", () => {
-		let menuItem = component.contextMenuItems.find(i => i.name === "Manage Servers");
+	it("builds links to the servers in a Cache Group", () => {
+		const menuItem = component.contextMenuItems.find(i => i.name === "View Servers");
 		if (!menuItem) {
-			return fail("'Manage Servers' context menu item not found");
+			return fail("'View Servers' context menu item not found");
 		}
-		if (!isAction(menuItem)) {
-			return fail(`Invalid 'Manage Servers' context menu item; not an action: ${menuItem}`);
-		}
-		if (typeof(menuItem.disabled) !== "function") {
-			return fail("'Manage Servers' context menu item should be disabled, but no disabled function is defined");
-		}
-		if (menuItem.multiRow) {
-			expect(menuItem.disabled([sampleCG])).toBeTrue();
-		} else {
-			expect(menuItem.disabled(sampleCG)).toBeTrue();
+		if (isAction(menuItem)) {
+			return fail("Invalid 'View Servers' context menu item; not a link");
 		}
 
-		menuItem = component.contextMenuItems.find(i => i.name === "Manage Parameters");
-		if (!menuItem) {
-			return fail("'Manage Parameters' context menu item not found");
+		expect(menuItem.href).toBe("/core/servers");
+		expect(menuItem.newTab).toBeFalsy();
+		expect(menuItem.fragment).not.toBeDefined();
+		expect(menuItem.queryParams).toBeDefined();
+		if (typeof(menuItem.queryParams) !== "function") {
+			return fail("invalid 'View Servers' context menu item; query params not a function");
 		}
-		if (!isAction(menuItem)) {
-			return fail(`Invalid 'Manage Parameters' context menu item; not an action: ${menuItem}`);
-		}
-		if (typeof(menuItem.disabled) !== "function") {
-			return fail("'Manage Parameters' context menu item should be disabled, but no disabled function is defined");
-		}
-		if (menuItem.multiRow) {
-			expect(menuItem.disabled([sampleCG])).toBeTrue();
-		} else {
-			expect(menuItem.disabled(sampleCG)).toBeTrue();
-		}
+		expect(menuItem.queryParams(sampleCG)).toEqual({cachegroup: sampleCG.name});
 	});
 
 	it("initializes from query string parameters", fakeAsync(() => {
