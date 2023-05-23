@@ -113,6 +113,7 @@ export class RoleDetailComponent implements OnInit {
 	public async submit(e: Event): Promise<void> {
 		e.preventDefault();
 		e.stopPropagation();
+		await this.updatePermissions();
 		if(this.new) {
 			this.role = await this.userService.createRole(this.role);
 			this.new = false;
