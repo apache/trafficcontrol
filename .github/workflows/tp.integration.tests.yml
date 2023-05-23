@@ -19,7 +19,6 @@ name: TP Tests
 
 env:
   # alpine:3.13
-  ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
   NODE_VERSION: 16
 
 on:
@@ -138,20 +137,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
-      - name: Cache Alpine Docker image
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/docker-images
-          key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-      - name: Import cached Alpine Docker image
-        run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('traffic_portal/package-lock.json traffic_portal/test/integration/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-modules-
       - name: Initialize Traffic Ops Database
         id: todb
         uses: ./.github/actions/todb-init
@@ -175,5 +160,3 @@ jobs:
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/traffic_portal/test/integration/Reports/
-      - name: Save Alpine Docker image
-        run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
