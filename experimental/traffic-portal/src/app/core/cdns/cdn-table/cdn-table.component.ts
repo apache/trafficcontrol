@@ -189,11 +189,12 @@ export class CDNTableComponent implements OnInit {
 		if (typeof cdn === "number") {
 			cdn = await this.api.getCDNs(cdn);
 		}
-		const title = `${queue ? "Queue" : "Clear"} Updates on ${cdn.name}?`;
+		const readableAction = queue ? "Queue" : "Clear";
+		const title = `${readableAction} Updates on ${cdn.name}?`;
 		const action = queue ? "queue" : "dequeue";
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
 			data: {
-				message: `Are you sure you want to ${action} server updates for all of the ${cdn.name} servers?`,
+				message: `Are you sure you want to ${readableAction.toLowerCase()} server updates for all of the ${cdn.name} servers?`,
 				title,
 			}
 		});
@@ -203,7 +204,7 @@ export class CDNTableComponent implements OnInit {
 		await this.api.queueCDNUpdates(cdn, action);
 		this.alerts.newAlert(
 			AlertLevel.SUCCESS,
-			"Queued CDN server updates",
+			`${readableAction}d CDN server updates`,
 		);
 	}
 
