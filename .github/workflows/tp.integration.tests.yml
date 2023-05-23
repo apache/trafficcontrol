@@ -98,22 +98,19 @@ jobs:
           - 4443:4443
           - 4444:4444
         env:
-          JAVA_OPTS: -Dselenium.LOGGER.level=DEBUG
           SE_ENABLE_TRACING: true
+          SE_SESSION_REQUEST_TIMEOUT: 60
+          JAVA_OPTS: -Dselenium.LOGGER.level=DEBUG
         options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
         volumes:
           - /dev/shm:/dev/shm
       chrome:
-        image: selenium/node-chrome-debug
+        image: selenium/node-chrome
         env:
           JAVA_OPTS: -Dselenium.LOGGER.level=DEBUG
           SE_EVENT_BUS_HOST: hub
           SE_EVENT_BUS_PUBLISH_PORT: 4442
           SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-          SE_NODE_SESSION_TIMEOUT: 60
-          SE_NODE_MAX_SESSIONS: 2
-          NODE_MAX_SESSIONS: 2
-          NODE_SESSION_TIMEOUT: 60
           SE_ENABLE_TRACING: true
         volumes:
           - /dev/shm:/dev/shm
