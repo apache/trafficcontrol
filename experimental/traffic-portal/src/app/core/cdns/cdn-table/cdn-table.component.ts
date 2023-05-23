@@ -26,7 +26,11 @@ import {
 	DecisionDialogComponent,
 	DecisionDialogData
 } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import type { ContextMenuActionEvent, ContextMenuItem, DoubleClickLink } from "src/app/shared/generic-table/generic-table.component";
+import type {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink
+} from "src/app/shared/generic-table/generic-table.component";
 
 /**
  * CDNTableComponent is the controller for the "CDNs" table.
@@ -89,7 +93,7 @@ export class CDNTableComponent implements OnInit {
 			newTab: true
 		},
 		{
-			href: (selectedRow): string => `/core/cdns/${selectedRow.id}` ,
+			href: (selectedRow): string => `/core/cdns/${selectedRow.id}`,
 			name: "Edit"
 		},
 		{
@@ -115,17 +119,17 @@ export class CDNTableComponent implements OnInit {
 		},
 		{
 			disabled: (): true => true,
-			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/dnssec-keys` ,
+			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/dnssec-keys`,
 			name: "Manage DNSSEC Keys"
 		},
 		{
 			disabled: (): true => true,
-			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/federations` ,
+			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/federations`,
 			name: "Manage Federations"
 		},
 		{
 			disabled: (): true => true,
-			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/delivery-services` ,
+			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/delivery-services`,
 			name: "Manage Delivery Services"
 		},
 		{
@@ -140,7 +144,7 @@ export class CDNTableComponent implements OnInit {
 		},
 		{
 			disabled: (): true => true,
-			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/notifications` ,
+			href: (selectedRow): string => `/core/cdns/${selectedRow.id}/notifications`,
 			name: "Manage Notifications"
 		},
 	];
@@ -240,7 +244,7 @@ export class CDNTableComponent implements OnInit {
 	 * @param a The action selected from the context menu.
 	 */
 	public handleContextMenu(a: ContextMenuActionEvent<ResponseCDN>): void {
-		switch(a.action) {
+		switch (a.action) {
 			case "queue":
 				if (Array.isArray(a.data)) {
 					console.error("cannot queue multiple cache groups at once:", a.data);
