@@ -125,13 +125,12 @@ export class CDNTableComponent implements OnInit {
 		},
 		{
 			href: "/core/profiles",
-			name: "Manage Profiles"
+			name: "View Profiles",
 			queryParams: (selectedRow): Params => ({cdnName: selectedRow.name}),
 		},
 		{
-			disabled: (): true => true,
 			href: "/core/servers",
-			name: "Manage Servers"
+			name: "View Servers",
 			queryParams: (selectedRow): Params => ({cdnName: selectedRow.name}),
 		},
 		{
