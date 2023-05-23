@@ -82,19 +82,19 @@ describe("CapabilityDetailsComponent", () => {
 	it("opens a dialog for Capability deletion", async () => {
 		const api = TestBed.inject(ServerService);
 		const spy = spyOn(api, "deleteCapability").and.callThrough();
-		expect(spy).not.toHaveBeenCalled();
+		await expect(spy).not.toHaveBeenCalled();
 
 		const dialogService = TestBed.inject(MatDialog);
 		const openSpy = spyOn(dialogService, "open").and.returnValue({
 			afterClosed: () => of(true)
 		} as MatDialogRef<unknown>);
 
-		expect(openSpy).not.toHaveBeenCalled();
+		await expect(openSpy).not.toHaveBeenCalled();
 
 		const asyncExpectation = expectAsync(component.deleteCapability()).toBeResolvedTo(undefined);
 
-		expect(openSpy).toHaveBeenCalled();
-		expect(spy).toHaveBeenCalled();
+		await expect(openSpy).toHaveBeenCalled();
+		await expect(spy).toHaveBeenCalled();
 
 		await asyncExpectation;
 	});
