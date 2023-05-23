@@ -28,7 +28,6 @@ describe("RoleDetailComponent", () => {
 	let fixture: ComponentFixture<RoleDetailComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
-	// const name = "test";
 
 	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
@@ -52,7 +51,6 @@ describe("RoleDetailComponent", () => {
 
 		route = TestBed.inject(ActivatedRoute);
 		paramMap = spyOn(route.snapshot.paramMap, "get");
-		// paramMap.and.returnValue(name);
 		fixture = TestBed.createComponent(RoleDetailComponent);
 		component = fixture.componentInstance;
 		component.role = {...await TestBed.inject(UserService).createRole(component.role)};
@@ -61,7 +59,6 @@ describe("RoleDetailComponent", () => {
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
-		// expect(paramMap).toHaveBeenCalled();
 	});
 
 	it("new role", async () => {

@@ -64,7 +64,7 @@ export class RoleDetailComponent implements OnInit {
 		this.role = await this.userService.getRoles(role);
 		this.name = this.role.name;
 		this.permissions = this.role.permissions?.join("\n")??"";
-		this.header.headerTitle.next(`Role: ${this.role.name}`);
+		this.header.headerTitle.next(`Role: ${this.name}`);
 	}
 
 	/**

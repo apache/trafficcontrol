@@ -408,14 +408,10 @@ export class UserService {
 	 * @returns Either an Array of Roles, or a single Role, depending on whether
 	 * name was passed
 	 */
-	public async getRoles(name?: string | number): Promise<Array<ResponseRole> | ResponseRole> {
+	public async getRoles(name?: string): Promise<Array<ResponseRole> | ResponseRole> {
 		if (name !== undefined) {
 			let role;
-			switch (typeof name) {
-				case "string":
-					role = this.roleDetail.find(r=>r.name === name);
-					break;
-			}
+			role = this.roleDetail.find(r=>r.name === name);
 			if (!role) {
 				throw new Error(`no such Role: ${name}`);
 			}
