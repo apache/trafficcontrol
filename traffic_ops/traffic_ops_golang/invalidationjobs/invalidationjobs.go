@@ -1455,7 +1455,7 @@ func validateJobCreateV4(job tc.InvalidationJobCreateV4, tx *sql.Tx) error {
 	}
 
 	if job.InvalidationType == tc.REFETCH && !refetchAllowed(tx) {
-		errs = append(errs, "invalidationType is not allowed since 'refetch_enabled' parameter doesn't exists or the value is not set to a case-sensitive 'true'")
+		errs = append(errs, "invalidationType is not allowed since 'refetch_enabled' parameter doesn't exists or the value is not set to a case-insensitive 'true'")
 	}
 
 	if len(errs) > 0 {
