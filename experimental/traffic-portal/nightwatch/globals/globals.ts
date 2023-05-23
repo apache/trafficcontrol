@@ -62,11 +62,11 @@ import {
 
 import * as config from "../config.json";
 import { DataClient, generateUniqueString } from "../dataClient";
+import {ParameterDetailPageObject} from "../page_objects/parameters/parameterDetail";
 import type { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
 import type { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
 import type { TypeDetailPageObject } from "../page_objects/types/typeDetail";
 import type { TypesPageObject } from "../page_objects/types/typesTable";
-import {ParameterDetailPageObject} from "../page_objects/parameters/parameterDetail";
 
 declare module "nightwatch" {
 	/**
