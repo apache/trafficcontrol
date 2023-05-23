@@ -410,8 +410,7 @@ export class UserService {
 	 */
 	public async getRoles(name?: string): Promise<Array<ResponseRole> | ResponseRole> {
 		if (name !== undefined) {
-			let role;
-			role = this.roleDetail.find(r=>r.name === name);
+			const role = this.roleDetail.find(r=>r.name === name);
 			if (!role) {
 				throw new Error(`no such Role: ${name}`);
 			}
