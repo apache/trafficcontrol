@@ -135,6 +135,22 @@ describe("ProfileService", () => {
 		await expectAsync(responseParams).toBeResolvedTo(parameter);
 	});
 
+	it("sends requests for multiple parameters by ID", async () => {
+		const responseParams = service.getParameters(parameter.id);
+		const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/parameters`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("id")).toBe(String(parameter.id));
+		const data = {
+			response: [
+				{ configFile: "test", id: 1, lastUpdated: new Date(), name: "test", secure: false, value: "test" },
+				{ configFile: "quest", id: 1, lastUpdated: new Date(), name: "quest", secure: false, value: "quest" },
+			]
+		};
+		req.flush(data);
+		await expectAsync(responseParams).toBeRejectedWithError("Traffic Ops responded with 2 Parameters by identifier 10");
+	});
+
 	it("creates new Parameters", async () => {
 		const responseParams = service.createParameter(parameter);
 		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/parameters`);
