@@ -82,7 +82,7 @@ sudo apt-get install -y --no-install-recommends gettext curl
 
 sudo npm i -g pm2 grunt sass
 
-CHROME_CONTAINER=$(docker ps | grep "selenium/node-chrome" | awk '{print $1}')
+CHROME_CONTAINER=$(docker ps | grep "selenium/node-chrome-debug" | awk '{print $1}')
 HUB_CONTAINER=$(docker ps | grep "selenium/hub" | awk '{print $1}')
 CHROME_VER=$(docker exec "$CHROME_CONTAINER" google-chrome --version | sed -E 's/.* ([0-9.]+).*/\1/')
 

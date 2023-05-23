@@ -103,11 +103,15 @@ jobs:
         volumes:
           - /dev/shm:/dev/shm
       chrome:
-        image: selenium/node-chrome
+        image: selenium/node-chrome-debug
         env:
           SE_EVENT_BUS_HOST: hub
           SE_EVENT_BUS_PUBLISH_PORT: 4442
           SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+          SE_NODE_SESSION_TIMEOUT: 60
+          SE_NODE_MAX_SESSIONS: 2
+          NODE_MAX_SESSIONS: 2
+          NODE_SESSION_TIMEOUT: 60
           SE_ENABLE_TRACING: true
         volumes:
           - /dev/shm:/dev/shm
