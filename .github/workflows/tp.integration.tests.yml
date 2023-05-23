@@ -89,7 +89,7 @@ jobs:
 
   integration-tests:
     if: github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       hub:
         image: selenium/hub
