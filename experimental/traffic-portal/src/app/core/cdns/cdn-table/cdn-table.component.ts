@@ -26,7 +26,7 @@ import {
 	DecisionDialogComponent,
 	DecisionDialogData
 } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuActionEvent, ContextMenuItem, DoubleClickLink } from "src/app/shared/generic-table/generic-table.component";
 
 /**
  * CDNTableComponent is the controller for the "CDNs" table.
@@ -72,6 +72,11 @@ export class CDNTableComponent implements OnInit {
 			hide: false,
 		},
 	];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseCDN> = {
+		href: (row: ResponseCDN): string => `/core/cdns/${row.id}`
+	};
 
 	/**
 	 * Definitions for the context menu items (which act on augmented

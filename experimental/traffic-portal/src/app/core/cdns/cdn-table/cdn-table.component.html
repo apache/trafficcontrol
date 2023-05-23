@@ -17,6 +17,7 @@ limitations under the License.
 	</div>
 	<tp-generic-table
 		[data]="cdns | async"
+		[doubleClickLink]="doubleClickLink"
 		[cols]="columnDefs"
 		[fuzzySearch]="fuzzySubject"
 		context="cdns"
