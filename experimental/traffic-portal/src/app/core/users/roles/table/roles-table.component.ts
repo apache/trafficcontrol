@@ -22,7 +22,7 @@ import type { ResponseRole } from "trafficops-types";
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuActionEvent, ContextMenuItem, DoubleClickLink } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -76,6 +76,11 @@ export class RolesTableComponent implements OnInit {
 			hide: true,
 		}
 	];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseRole> = {
+		href: (row: ResponseRole): string => `/core/roles/${row.name}`
+	};
 
 	/** Definitions for the context menu items (which act on augmented roles data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseRole>> = [

@@ -16,6 +16,7 @@ limitations under the License.
 	</div>
 	<tp-generic-table
 		[data]="roles | async"
+		[doubleClickLink]="doubleClickLink"
 		[cols]="columnDefs"
 		[fuzzySearch]="fuzzySubject"
 		context="roles"
