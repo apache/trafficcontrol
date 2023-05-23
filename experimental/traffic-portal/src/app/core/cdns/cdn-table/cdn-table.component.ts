@@ -14,7 +14,7 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Params } from "@angular/router";
 import { ColDef } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
 import { AlertLevel, ResponseCDN } from "trafficops-types";
@@ -124,13 +124,15 @@ export class CDNTableComponent implements OnInit {
 			name: "Manage Delivery Services"
 		},
 		{
-			href: (selectedRow): string => `/core/profiles?cdnName=${selectedRow.name}` ,
+			href: "/core/profiles",
 			name: "Manage Profiles"
+			queryParams: (selectedRow): Params => ({cdnName: selectedRow.name}),
 		},
 		{
 			disabled: (): true => true,
-			href: (selectedRow): string => `/core/servers?cdnName=${selectedRow.name}` ,
+			href: "/core/servers",
 			name: "Manage Servers"
+			queryParams: (selectedRow): Params => ({cdnName: selectedRow.name}),
 		},
 		{
 			disabled: (): true => true,
