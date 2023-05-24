@@ -90,12 +90,11 @@ export class RoleDetailComponent implements OnInit {
 			data: {message: `Are you sure you want to delete role ${this.role.name}`,
 				title: "Confirm Delete"}
 		});
-		ref.afterClosed().subscribe(result => {
-			if(result) {
-				this.userService.deleteRole(this.role);
-				this.location.back();
-			}
-		});
+		const result = await ref.afterClosed().toPromise();
+		if(result) {
+			await this.userService.deleteRole(this.role);
+			this.location.back();
+		}
 	}
 
 	/**

@@ -90,19 +90,19 @@ describe("RoleDetailComponent", () => {
 	it("opens a dialog for role deletion", async () => {
 		const api = TestBed.inject(UserService);
 		const spy = spyOn(api, "deleteRole").and.callThrough();
-		expect(spy).not.toHaveBeenCalled();
+		await expect(spy).not.toHaveBeenCalled();
 
 		const dialogService = TestBed.inject(MatDialog);
 		const openSpy = spyOn(dialogService, "open").and.returnValue({
 			afterClosed: () => of(true)
 		} as MatDialogRef<unknown>);
 
-		expect(openSpy).not.toHaveBeenCalled();
+		await expect(openSpy).not.toHaveBeenCalled();
 
 		const asyncExpectation = expectAsync(component.deleteRole()).toBeResolvedTo(undefined);
 
-		expect(openSpy).toHaveBeenCalled();
-		expect(spy).toHaveBeenCalled();
+		await expect(openSpy).toHaveBeenCalled();
+		await expect(spy).toHaveBeenCalled();
 
 		await asyncExpectation;
 	});
