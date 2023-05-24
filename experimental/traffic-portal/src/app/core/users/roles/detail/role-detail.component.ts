@@ -14,7 +14,7 @@
 import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import {ActivatedRoute, Router} from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ResponseRole } from "trafficops-types";
 
 import { UserService } from "src/app/api";
