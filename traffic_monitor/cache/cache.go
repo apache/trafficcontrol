@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -300,10 +301,14 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 	}
 
 	stats, miscStats, err := decoder.Parse(result.ID, rdr, pollCtx)
-	fmt.Println(miscStats["current_time_epoch_ms"])
-	//if val, ok := (miscStats["current_time_epoch_ms"]); ok {
-	//		result.Time = val
-	//}
+	if val, ok := miscStats["current_time_epoch_ms"]; ok {
+		valString := fmt.Sprintf("%s", val)
+		valInt, err := strconv.ParseInt(valString, 10, 64)
+		if err != nil {
+			log.Errorf("parse error '%v'", err)
+		}
+		result.Time = time.UnixMilli(valInt)
+	}
 	if err != nil {
 		log.Warnf("%s decode error '%v'", id, err)
 		result.Error = err
