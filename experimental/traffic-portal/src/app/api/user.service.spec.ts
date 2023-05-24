@@ -256,7 +256,8 @@ describe("UserService", () => {
 		const role = {
 			description: "description",
 			lastUpdated: new Date(),
-			name: "admin"
+			name: "test",
+			parameters: ["ALL"]
 		};
 
 		it("sends a request for multiple Roles", async () => {
@@ -285,6 +286,34 @@ describe("UserService", () => {
 			expect(req.request.params.get("name")).toBe(role.name);
 			req.flush({response: []});
 			await expectAsync(responseP).toBeRejected();
+		});
+
+		it("deletes an Role by name", async () => {
+			const responseP = service.deleteRole(role.name);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/roles?name=${role.name}`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.body).toBeNull();
+			expect(req.request.params.keys().length).toBe(1);
+			req.flush({alerts: []});
+			await expectAsync(responseP).toBeResolved();
+		});
+
+		it("creates a new Role", async () => {
+			const responseP = service.createRole(role);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/roles`);
+			expect(req.request.method).toBe("POST");
+			expect(req.request.body).toEqual(role);
+			req.flush({response: role});
+			await expectAsync(responseP).toBeResolved();
+		});
+
+		it("updates an existing Role", async () => {
+			const responseP = service.updateRole(role.name, role);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/roles?name=${role.name}`);
+			expect(req.request.method).toBe("PUT");
+			expect(req.request.body).toEqual(role);
+			req.flush({response: role});
+			await expectAsync(responseP).toBeResolved();
 		});
 	});
 
