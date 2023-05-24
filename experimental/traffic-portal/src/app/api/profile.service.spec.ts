@@ -171,6 +171,16 @@ describe("ProfileService", () => {
 		await expectAsync(responseProfiles).toBeResolvedTo(Array<ResponseProfile>());
 	});
 
+	it("gets profiles associated with an existing Parameter ID", async () => {
+		const responseProfiles = service.getProfilesByParam(parameter.id);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles?param=${parameter.id}`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.body).toBe(null);
+		req.flush({response: []});
+		await expectAsync(responseProfiles).toBeResolvedTo(Array<ResponseProfile>());
+	});
+
 	it("deletes existing Parameters", async () => {
 		service.deleteParameter(parameter);
 		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/parameters/${parameter.id}`);

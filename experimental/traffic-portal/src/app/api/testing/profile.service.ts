@@ -253,17 +253,17 @@ export class ProfileService {
 	}
 
 	/**
-	 * Deletes an existing parameter.
+	 * Deletes a Parameter.
 	 *
-	 * @param id Id of the parameter to delete.
-	 * @returns The deleted parameter.
+	 * @param typeOrId The Parameter to be deleted, or just its ID.
 	 */
-	public async deleteParameter(id: number): Promise<ResponseParameter> {
-		const index = this.parameters.findIndex(t => t.id === id);
-		if (index === -1) {
-			throw new Error(`no such Parameter: ${id}`);
+	public async deleteParameter(typeOrId: number | ResponseParameter): Promise<void> {
+		const id = typeof typeOrId === "number" ? typeOrId : typeOrId.id;
+		const idx = this.parameters.findIndex(p => p.id === id);
+		if (idx < 0) {
+			throw new Error(`no such Parameter: #${id}`);
 		}
-		return this.parameters.splice(index, 1)[0];
+		this.parameters.splice(idx, 1);
 	}
 
 	/**
@@ -282,5 +282,46 @@ export class ProfileService {
 		};
 		this.parameters.push(t);
 		return t;
+	}
+
+	/**
+	 * Replaces an existing Parameter with the provided new definition of a
+	 * Parameter.
+	 *
+	 * @param parameter The full new definition of the Parameter being
+	 * updated.
+	 * @returns The updated Parameter
+	 */
+	public async updateParameter(parameter: ResponseParameter): Promise<ResponseParameter> {
+		const id = this.parameters.findIndex(d => d.id === parameter.id);
+		if (id === -1) {
+			throw new Error(`no such parameter: ${parameter.id}`);
+		}
+		this.parameters[id] = parameter;
+		return parameter;
+	}
+
+	/**
+	 * Retrieves Profiles associated with a Parameter from the API.
+	 *
+	 * @param parameter Either a {@link ResponseParameter} or an integral, unique identifier of a Parameter, for which the
+	 * Profiles are to be retrieved.
+	 * @returns The requested Profile(s).
+	 */
+	public async getProfilesByParam(parameter: number| ResponseParameter): Promise<Array<ResponseProfile>> {
+		const id = typeof parameter === "number" ? parameter : parameter.id;
+		if (id === -1) {
+			throw new Error(`no such parameter: ${id}`);
+		}
+		const profiles = this.parameters[id].profiles;
+		if (profiles === null) {
+			return new Array<ResponseProfile>();
+		}
+		const returnedProfiles = new Array<ResponseProfile>();
+		for (const val of profiles) {
+			const p = this.getProfiles(val);
+			returnedProfiles.push(await p);
+		}
+		return returnedProfiles;
 	}
 }
