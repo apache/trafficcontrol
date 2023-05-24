@@ -130,5 +130,4 @@ func TestParseAndDecode(t *testing.T) {
 			t.Errorf("unable to read `current_time_epoch_ms`")
 		}
 	}
-
 }
