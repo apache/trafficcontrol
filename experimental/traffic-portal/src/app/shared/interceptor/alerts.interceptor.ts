@@ -42,7 +42,7 @@ export class AlertInterceptor implements HttpInterceptor {
 			r => {
 				if (Object.prototype.hasOwnProperty.call(r, "body") &&
 				Object.prototype.hasOwnProperty.call((r as {body: unknown}).body, "alerts") &&
-				(r as {body: {alerts: Array<unknown>}}).body?.alerts !== null) { //Ignore alerts with null value
+				(r as {body: {alerts: Array<unknown>}}).body.alerts !== null) { //Ignore alerts with null value
 					for (const a of (r as {body: {alerts: Array<unknown>}}).body.alerts) {
 						this.alertService.newAlert(a as Alert);
 					}

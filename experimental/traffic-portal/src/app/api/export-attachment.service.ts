@@ -29,7 +29,7 @@ export class ExportAttachmentService {
 	 * The API version used by the service(s) - this will be overridden by the
 	 * environment if a different API version is therein found.
 	 */
-	public apiVersion = "4.1";
+	public apiVersion = "4.0";
 
 	constructor(private readonly http: HttpClient) {
 		if (environment.apiVersion) {
