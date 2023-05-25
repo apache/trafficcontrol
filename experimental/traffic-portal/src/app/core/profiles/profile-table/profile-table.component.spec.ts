@@ -24,6 +24,7 @@ import { APITestingModule } from "src/app/api/testing";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
 
 import { ProfileTableComponent } from "./profile-table.component";
+import { FileUtilsService } from "src/app/shared/file-utils.service";
 
 describe("ProfileTableComponent", () => {
 	let component: ProfileTableComponent;
@@ -36,6 +37,9 @@ describe("ProfileTableComponent", () => {
 				APITestingModule,
 				RouterTestingModule,
 				MatDialogModule
+			],
+			providers:[
+				FileUtilsService
 			]
 		})
 			.compileComponents();

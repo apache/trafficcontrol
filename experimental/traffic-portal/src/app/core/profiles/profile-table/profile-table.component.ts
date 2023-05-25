@@ -33,9 +33,6 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  * principally contains a table.
  */
 @Component({
-	providers: [
-		FileUtilsService
-	],
 	selector: "tp-profile-table",
 	styleUrls: ["./profile-table.component.scss"],
 	templateUrl: "./profile-table.component.html",
