@@ -34,7 +34,7 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		yum -y install dnf || exit 1; \
 	fi
 
-RUN set -o nounset -o errexit && \
+RUN set -o nounset -o errexit -o xtrace && \
 	mkdir -p /etc/cron.d; \
 	if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
 		use_repo=''; \
@@ -43,9 +43,12 @@ RUN set -o nounset -o errexit && \
 		use_repo='--repo=pgdg13'; \
 		enable_repo='--enablerepo=powertools'; \
 	fi; \
-	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-$(rpm --eval %_arch)/pgdg-redhat-repo-latest.noarch.rpm"; \
 	dnf -y install epel-release libicu; \
+	dnf -y install "https://download.postgresql.org/pub/repos/yum/reporpms/EL-${RHEL_VERSION%%.*}-$(rpm --eval %_arch)/pgdg-redhat-repo-latest.noarch.rpm"; \
 	dnf -y $use_repo -- install postgresql13; \
+	if [[ -n "$enable_repo" ]]; then \
+		dnf -y remove pgdg-redhat-repo; \
+	fi; \
 	dnf -y $enable_repo install \
 		bind-utils           \
 		# find is required by to-access.sh
