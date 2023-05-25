@@ -124,7 +124,7 @@ describe("ISOGenerationFormComponent", () => {
 			hostName: "quest",
 			interfaces: [iface],
 			physLocationId: physLoc.id,
-			profileId: profile.id,
+			profileNames: [profile.name],
 			statusId: status.id,
 			typeId: serverType.id
 		});
