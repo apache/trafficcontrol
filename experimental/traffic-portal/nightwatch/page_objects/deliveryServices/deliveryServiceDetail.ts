@@ -23,37 +23,19 @@ export type DeliveryServiceDetailPageObject = EnhancedPageObject<{}, typeof deli
 
 const deliveryServiceDetailPageObject = {
 	elements: {
-		bandwidthChart: {
-			selector: "canvas#bandwidthData"
-		},
-		invalidateJobs: {
-			selector: "a#invalidate"
-		},
-		tpsChart: {
-			selector: "canvas#tpsChartData"
-		},
+		bandwidthChart: "canvas#bandwidthData",
+		invalidateJobs: "a#invalidate",
+		tpsChart: "canvas#tpsChartData",
 	},
 	sections: {
 		dateInputForm: {
 			elements: {
-				fromDate: {
-					selector: "input[name='fromdate']"
-				},
-				fromTime: {
-					selector: "input[name='fromtime']"
-				},
-				refreshBtn: {
-					selector: "button[name='timespanRefresh']"
-				},
-				steeringIcon: {
-					selector: "div.actions > mat-icon"
-				},
-				toDate: {
-					selector: "input[name='todate']"
-				},
-				toTime: {
-					selector: "input[name='totime']"
-				}
+				fromDate: "input[name='fromdate']",
+				fromTime: "input[name='fromtime']",
+				refreshBtn: "button[name='timespanRefresh']",
+				steeringIcon: "div.actions > mat-icon",
+				toDate: "input[name='todate']",
+				toTime: "input[name='totime']",
 			},
 			selector: "form[name='timespan']"
 		}

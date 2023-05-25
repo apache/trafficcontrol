@@ -16,24 +16,45 @@ import {
 	EnhancedSectionInstance,
 	NightwatchAPI
 } from "nightwatch";
+import { type ResponseServer } from "trafficops-types";
 
 import { TableSectionCommands, TABLE_COMMANDS } from "../../globals/tables";
 
 /**
  * Defines the commands for the servers table section.
  */
-type ServersTableSectionCommands = TableSectionCommands;
+interface ServersTableSectionCommands extends TableSectionCommands {
+	createNew(): Promise<void>;
+	openDetails(s: ResponseServer): Promise<void>;
+	open(): Promise<void>;
+}
 
 const serversPageObject = {
 	api: {} as NightwatchAPI,
 	sections: {
 		serversTable: {
 			commands: {
+				async createNew(): Promise<void> {
+					await this.open();
+					await browser.click("a.page-fab[routerLink='new']");
+				},
+				async open(): Promise<void> {
+					await browser.page.common()
+						.section.sidebar
+						.navigateToNode("servers", ["serversContainer"]);
+				},
+				async openDetails(server: ResponseServer): Promise<void> {
+					await this.open();
+					const table = browser.page.servers.serversTable().section.serversTable;
+					await table
+						.filterTableByColumn("Host", server.hostName);
+					await table.doubleClickRow(1);
+				},
 				...TABLE_COMMANDS
 			} as ServersTableSectionCommands,
 			elements: {
 			},
-			selector: "servers-table main"
+			selector: "mat-card"
 		}
 	},
 	url(): string {
@@ -50,6 +71,6 @@ type ServersTableSection = EnhancedSectionInstance<ServersTableSectionCommands, 
  * The type of the servers table page object as provided by the Nightwatch API at
  * runtime.
  */
-export type ServersPageObject = EnhancedPageObject<{}, {}, { serversTable: ServersTableSection }>;
+export type ServersTablePageObject = EnhancedPageObject<{}, {}, { serversTable: ServersTableSection }>;
 
 export default serversPageObject;

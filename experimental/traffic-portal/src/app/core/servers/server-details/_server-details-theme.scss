@@ -20,6 +20,11 @@
 	$error: map.get($color, error);
 	$background: map.get($color, background);
 	$foreground: map.get($color, foreground);
+
+	.mat-expansion-panel-body {
+		padding: 0 12px 16px !important;
+	}
+
 	tp-server-details form fieldset {
 		color: mat.get-color-from-palette($foreground, text);
 		background-color: mat.get-color-from-palette($background, background);

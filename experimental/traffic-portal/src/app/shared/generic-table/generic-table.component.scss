@@ -13,13 +13,13 @@
 */
 
 ag-grid-angular {
-	width: 80vw;
+	width: 100%;
 	margin: auto;
 	height: 85vh;
 }
 
 .extra-actions {
-	width: 80vw;
+	width: 100%;
 	display: flex;
 	margin: auto;
 
@@ -44,8 +44,11 @@ ag-grid-angular {
 	}
 }
 
+.column-menu {
+	max-height: 40vh;
+}
+
 .toggle-columns {
-	// margin-left: auto;
 	position: relative;
 
 	menu {
@@ -89,6 +92,7 @@ ag-grid-angular {
 
 	button {
 		fa-icon.caret {
+			display: inline-block;
 			line-height: 30px;
 			transition: 0.5s;
 

@@ -16,19 +16,31 @@ limitations under the License.
 	<button mat-flat-button type="button" title="de-select all rows" (click)="selectAll(true)">De-Select All</button>
 	<button mat-flat-button type="button" title="clear all active filters" (click)="clearFilters()"><mat-icon>filter_list</mat-icon> Clear</button>
 	<button mat-flat-button type="button"*ngFor="let btn of tableTitleButtons" (click)="emitTitleButtonAction(btn.action)">{{btn.text}}</button>
-	<button mat-flat-button type="button" (click)="download()" title="save as CSV"><fa-icon [icon]="downloadIcon"></fa-icon></button>
-	<button mat-flat-button type="button" (click)="gridAPI.sizeColumnsToFit()">Resize</button>
 	<div class="toggle-columns" role="group" title="Select Table Columns">
-		<button type="button" mat-flat-button [matMenuTriggerFor]="menu">
+		<button type="button" mat-flat-button [matMenuTriggerFor]="menu" #trigger="matMenuTrigger">
 			<fa-icon [icon]="columnsIcon"></fa-icon>&nbsp;
-			<fa-icon [icon]="caretIcon" class="caret" [ngClass]="{'rotate': showMenu}"></fa-icon>
+			<fa-icon [icon]="caretIcon" class="caret" [ngClass]="{'rotate': trigger.menuOpen}"></fa-icon>
 		</button>
 		<mat-menu #menu="matMenu">
-			<button type="button" mat-menu-item *ngFor="let c of columns" (click)="toggleVisibility($event, c.getColId())">
-				<mat-checkbox [checked]="c.isVisible()" (click)="$event.preventDefault()" [name]="c.getColDef().headerName">
-					{{c.getColDef().headerName}}
-				</mat-checkbox>
-			</button>
+			<div class="column-menu">
+				<button type="button" mat-menu-item *ngFor="let c of columns" (click)="toggleVisibility($event, c.getColId())">
+					<mat-checkbox [checked]="c.isVisible()" [name]="c.getColDef().headerName">
+						{{c.getColDef().headerName}}
+					</mat-checkbox>
+				</button>
+			</div>
+		</mat-menu>
+	</div>
+	<div class="toggle-columns" role="group" title="Extra Table Actions">
+		<button type="button" mat-flat-button [matMenuTriggerFor]="extraMenu" #extraTrigger="matMenuTrigger">
+			More
+			<fa-icon [icon]="caretIcon" [ngClass]="{'rotate': extraTrigger.menuOpen}" class="caret"></fa-icon>
+		</button>
+		<mat-menu #extraMenu="matMenu">
+			<button mat-menu-item type="button" *ngFor="let btn of moreMenuButtons" (click)="emitMoreButtonAction(btn.action)">{{btn.text}}</button>
+			<mat-divider></mat-divider>
+			<button mat-menu-item type="button" (click)="download()" title="save as CSV">Export Grid</button>
+			<button mat-menu-item type="button" (click)="gridAPI.sizeColumnsToFit()">Resize</button>
 		</mat-menu>
 	</div>
 </div>

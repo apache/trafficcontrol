@@ -16,7 +16,7 @@
 		"url": "https://trafficcontrol.apache.org"
 	},
 	"engines": {
-		"node": ">=16.20"
+		"node": ">=16.14"
 	},
 	"private": true,
 	"license": "Apache-2.0",

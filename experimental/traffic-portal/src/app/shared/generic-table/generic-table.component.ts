@@ -132,6 +132,28 @@ interface ContextMenuLink<T> {
 /** ContextMenuItems represent items in a context menu. They can be links or arbitrary actions. */
 export type ContextMenuItem<T> = ContextMenuAction<T> | ContextMenuLink<T>;
 
+/**
+ * Specifies what happens when a row in the grid is double-clicked.
+ */
+export interface DoubleClickLink<T> {
+	/**
+	 * If present, this method will be called to determine if the double click should be
+	 * ignored.
+	 *
+	 * @param data The selected data which can be used to make the
+	 * determination. This will be a single item if a single item is selected,
+	 * or an array if multiple are selected.
+	 * @param api A reference to the Grid's API - which must be checked for
+	 * initialization, unfortunately.
+	 */
+	disabled?: (selection: T | Array<T>) => boolean;
+	/**
+	 * href is inserted literally as the 'href' property of an anchor. Which means that if it's not relative it will be mangled for security
+	 * reasons.
+	 */
+	href: string | ((selectedRow: T) => string);
+}
+
 /** ContextMenuActionEvent is emitted by the GenericTableComponent when an action in its context menu was clicked. */
 export interface ContextMenuActionEvent<T> {
 	/** action is the 'action' property of the clicked action. */
@@ -278,7 +300,6 @@ export function setUpQueryParamFilter<T>(params: ParamMap, columns: ColDef<T>[],
 				break;
 		}
 		filter.setModel(filterModel);
-		// filter.applyModel();
 	}
 	api.onFilterChanged();
 }
@@ -305,10 +326,16 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	@Input() public contextMenuItems: readonly ContextMenuItem<Readonly<T>>[] = [];
 	/** Optionally a set of additional table title buttons. */
 	@Input() public tableTitleButtons: Array<TableTitleButton> = [];
+	/** Optionally a set of additional more menu buttons. */
+	@Input() public moreMenuButtons: Array<TableTitleButton> = [];
+	/** Optionally a link that determines the action when double-clicking a grid row */
+	@Input() public doubleClickLink: DoubleClickLink<T> | undefined;
 	/** Emits when context menu actions are clicked. Type safety is the host's responsibility! */
 	@Output() public contextMenuAction = new EventEmitter<ContextMenuActionEvent<T>>();
 	/** Emits when title button actions are clicked. Type safety is the host's responsibility! */
 	@Output() public tableTitleButtonAction = new EventEmitter<string>();
+	/** Emits when more menu title button actions are clicked. Type safety is the host's responsibility! */
+	@Output() public moreMenuButtonAction = new EventEmitter<string>();
 
 	public isAction = isAction;
 
@@ -325,7 +352,6 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	public clickOutside(e: MouseEvent): void {
 		e.stopPropagation();
 		this.showContextMenu = false;
-		this.menuClicked = false;
 	}
 
 	/** This holds a reference to the table's selected data, which is emitted on context menu action clicks. */
@@ -352,9 +378,6 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 
 	/** Used to handle the case that Angular loads faster than AG-Grid (as it usually does) */
 	private initialize = true;
-
-	/** Tracks whether the menu button has been clicked. */
-	private menuClicked = false;
 
 	/** Tells whether or not to show the cell context menu. */
 	public showContextMenu = false;
@@ -406,6 +429,19 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			rowSelection: "multiple",
 			suppressContextMenu: true,
 			tooltipShowDelay: 500
+		};
+		this.gridOptions.onRowDoubleClicked = (e): void => {
+			if (this.doubleClickLink !== undefined) {
+				if (!this.doubleClickLink?.disabled) {
+					let href = "";
+					if (typeof (this.doubleClickLink.href) === "string") {
+						href = this.doubleClickLink.href;
+					} else {
+						href = this.doubleClickLink.href(e.data);
+					}
+					this.router.navigate([href]);
+				}
+			}
 		};
 	}
 
@@ -671,12 +707,6 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	public toggleMenu(e: Event): void {
 		e.stopPropagation();
 		this.showContextMenu = false;
-		this.menuClicked = !this.menuClicked;
-	}
-
-	/** This tracks whether the column visibility menu is/should be open. */
-	public get showMenu(): boolean {
-		return this.menuClicked && (this.columnAPI ? true : false);
 	}
 
 	/** This is the styling of the table's context menu. */
@@ -708,8 +738,6 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			console.warn("cellContextMenu fired with no underlying event");
 			return;
 		}
-
-		this.menuClicked = false;
 
 		if (!this.contextmenu) {
 			console.warn("element reference to 'contextmenu' still null after view init");
@@ -795,6 +823,15 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 */
 	public emitTitleButtonAction(action: string): void {
 		this.tableTitleButtonAction.emit(action);
+	}
+
+	/**
+	 * Handles when the user clicks on a more menu title button action item by emitting the proper data.
+	 *
+	 * @param action The action that was clicked.
+	 */
+	public emitMoreButtonAction(action: string): void {
+		this.moreMenuButtonAction.emit(action);
 	}
 
 	/**

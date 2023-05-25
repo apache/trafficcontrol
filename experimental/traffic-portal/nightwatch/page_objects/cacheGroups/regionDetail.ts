@@ -21,22 +21,11 @@ export type RegionDetailPageObject = EnhancedPageObject<{}, typeof regionDetailP
 
 const regionDetailPageObject = {
 	elements: {
-		division: {
-			selector: "mat-select[name='division']"
-		},
-		id: {
-			selector: "input[name='id']"
-		},
-		lastUpdated: {
-			selector: "input[name='lastUpdated']"
-		},
-		name: {
-			selector: "input[name='name']"
-		},
-
-		saveBtn: {
-			selector: "button[type='submit']"
-		}
+		division: "mat-select[name='division']",
+		id: "input[name='id']",
+		lastUpdated: "input[name='lastUpdated']",
+		name: "input[name='name']",
+		saveBtn: "button[type='submit']",
 	},
 };
 

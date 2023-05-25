@@ -160,7 +160,7 @@ export const ROUTES: Routes = [
 		SharedModule,
 		AppUIModule,
 		CommonModule,
-		RouterModule.forChild(ROUTES)
+		RouterModule.forChild(ROUTES),
 	]
 })
 export class CoreModule { }
