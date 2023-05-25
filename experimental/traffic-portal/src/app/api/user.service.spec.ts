@@ -288,7 +288,17 @@ describe("UserService", () => {
 			await expectAsync(responseP).toBeRejected();
 		});
 
-		it("deletes an Role by name", async () => {
+		it("deletes an existing Role", async () => {
+			const responseP = service.deleteRole(role);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/roles?name=${role.name}`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.body).toBeNull();
+			req.flush({response: role});
+			await expectAsync(responseP).toBeResolved();
+		});
+
+		it("deletes a Role by name", async () => {
 			const responseP = service.deleteRole(role.name);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/roles?name=${role.name}`);
 			expect(req.request.method).toBe("DELETE");
