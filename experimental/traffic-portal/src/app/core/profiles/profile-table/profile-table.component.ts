@@ -146,7 +146,7 @@ export class ProfileTableComponent implements OnInit {
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
-	public async ngOnInit(): Promise<void> {
+	public ngOnInit(): void {
 		this.route.queryParamMap.subscribe(
 			m => {
 				const search = m.get("search");
