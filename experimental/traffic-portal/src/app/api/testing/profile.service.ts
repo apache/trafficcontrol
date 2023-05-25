@@ -313,7 +313,8 @@ export class ProfileService {
 		if (id === -1) {
 			throw new Error(`no such parameter: ${id}`);
 		}
-		const profiles = this.parameters[id].profiles;
+		const index = this.parameters.findIndex(d => d.id === id);
+		const profiles = this.parameters[index].profiles;
 		if (profiles === null) {
 			return new Array<ResponseProfile>();
 		}
