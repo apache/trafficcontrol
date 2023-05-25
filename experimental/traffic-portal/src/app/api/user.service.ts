@@ -17,6 +17,7 @@ import { Injectable } from "@angular/core";
 import {
 	type ResponseUser,
 	type PostRequestUser,
+	type RequestRole,
 	type RequestTenant,
 	type ResponseCurrentUser,
 	type ResponseRole,
@@ -265,6 +266,38 @@ export class UserService extends APIService {
 			return resp[0];
 		}
 		return this.get<Array<ResponseRole>>(path).toPromise();
+	}
+
+	/**
+	 * Creates a new Role.
+	 *
+	 * @param role The role to create.
+	 * @returns The created role along with lastUpdated field.
+	 */
+	public async createRole(role: RequestRole): Promise<ResponseRole> {
+		return this.post<ResponseRole>("roles", role).toPromise();
+	}
+
+	/**
+	 * Updates an existing Role.
+	 *
+	 * @param name The original role name
+	 * @param role The role to update.
+	 * @returns The updated role without lastUpdated field.
+	 */
+	public async updateRole(name: string, role: ResponseRole): Promise<ResponseRole> {
+		return this.put<ResponseRole>("roles?", role, {name}).toPromise();
+	}
+
+	/**
+	 * Deletes an existing role.
+	 *
+	 * @param role The role to be deleted.
+	 * @returns The deleted role.
+	 */
+	public async deleteRole(role: string | ResponseRole): Promise<void> {
+		const name = typeof(role) === "string" ? role : role.name;
+		return this.delete("roles", undefined, {name}).toPromise();
 	}
 
 	/**
