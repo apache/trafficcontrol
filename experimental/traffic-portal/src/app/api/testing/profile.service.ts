@@ -13,7 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-import { ProfileType, RequestProfile, type ResponseProfile } from "trafficops-types";
+import { ProfileImport, ProfileImportResponse, ProfileType, RequestProfile, type ResponseProfile } from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
@@ -220,4 +220,17 @@ export class ProfileService {
 		return this.profiles.splice(index, 1)[0];
 	}
 
+	/**
+	 * import profile from json or text file
+	 *
+	 * @param profile imported date for profile creation.
+	 * @returns The created profile which is profileImportResponse with id added.
+	 */
+	public async importProfile(profile: ProfileImport): Promise<ProfileImportResponse> {
+		const t = {
+			...profile.profile,
+			id: ++this.lastID,
+		};
+		return t;
+	}
 }
