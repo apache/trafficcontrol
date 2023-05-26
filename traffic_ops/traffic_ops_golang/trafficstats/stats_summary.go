@@ -186,3 +186,129 @@ VALUES (
 	:stat_date) RETURNING id
 `
 }
+
+// GetStatsSummaryV5 handler for getting stats summaries
+func GetStatsSummaryV5(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{}, []string{})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	lastSummaryDateStr := inf.Params["lastSummaryDate"]
+	if len(lastSummaryDateStr) != 0 { // Perl only checked for existence of query param
+		getLastSummaryDateV5(w, r, inf)
+		return
+	}
+
+	getStatsSummaryV5(w, r, inf)
+	return
+}
+
+func getLastSummaryDateV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"statName": dbhelpers.WhereColumnInfo{Column: "stat_name"},
+	}
+	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, util.JoinErrs(errs))
+		return
+	}
+	query := selectQuery() + where + " ORDER BY summary_time DESC"
+	statsSummaries, err := queryStatsSummaryV5(inf.Tx, query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	resp := tc.StatsSummaryLastUpdatedV5{}
+	if len(statsSummaries) >= 1 {
+		resp.SummaryTime = &statsSummaries[0].SummaryTime
+	}
+	api.WriteResp(w, r, resp)
+}
+
+func getStatsSummaryV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
+		"statName":            dbhelpers.WhereColumnInfo{Column: "stat_name"},
+		"cdnName":             dbhelpers.WhereColumnInfo{Column: "cdn_name"},
+		"deliveryServiceName": dbhelpers.WhereColumnInfo{Column: "deliveryservice_name"},
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToSQLCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, util.JoinErrs(errs))
+		return
+	}
+	query := selectQuery() + where + orderBy + pagination
+	statsSummaries, err := queryStatsSummaryV5(inf.Tx, query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	api.WriteResp(w, r, statsSummaries)
+}
+
+func queryStatsSummaryV5(tx *sqlx.Tx, q string, queryValues map[string]interface{}) ([]tc.StatsSummaryV5, error) {
+	rows, err := tx.NamedQuery(q, queryValues)
+	if err != nil {
+		return nil, fmt.Errorf("querying stats summary: %v", err)
+	}
+	defer rows.Close()
+
+	statsSummaries := []tc.StatsSummaryV5{}
+	for rows.Next() {
+		s := tc.StatsSummaryV5{}
+		if err = rows.StructScan(&s); err != nil {
+			return nil, fmt.Errorf("scanning stats summary: %v", err)
+		}
+		statsSummaries = append(statsSummaries, s)
+	}
+	return statsSummaries, nil
+}
+
+// CreateStatsSummaryV5 handler for creating stats summaries
+func CreateStatsSummaryV5(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{}, []string{})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ss := tc.StatsSummaryV5{}
+
+	if err := api.Parse(r.Body, inf.Tx.Tx, &ss); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	// CDN Name and Delivery service name are defaulted to "all" if not defined
+	if ss.CDNName == nil || len(*ss.CDNName) == 0 {
+		ss.CDNName = util.Ptr("all")
+	}
+
+	if ss.DeliveryService == nil || len(*ss.DeliveryService) == 0 {
+		ss.DeliveryService = util.Ptr("all")
+	}
+
+	id := -1
+	rows, err := inf.Tx.NamedQuery(insertQuery(), &ss)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("inserting stats summary: %v", err))
+		return
+	}
+	for rows.Next() {
+		if err := rows.Scan(&id); err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning created stats summary id: %v", err))
+			return
+		}
+	}
+	if id == -1 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("sstats summary id: %v", err))
+		return
+	}
+
+	successMsg := "Stats Summary was successfully created"
+	api.WriteRespAlert(w, r, tc.SuccessLevel, successMsg)
+}
