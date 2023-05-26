@@ -588,5 +588,28 @@
                 "type": "string"
             }
         }
+    },
+    "statuses": {
+        "type": "object",
+        "required": [
+            "description",
+            "name",
+            "id",
+            "lastUpdated"
+        ],
+        "properties": {
+            "description": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
     }
 }
