@@ -157,36 +157,6 @@ func CreateStatsSummary(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlert(w, r, tc.SuccessLevel, successMsg)
 }
 
-func selectQuery() string {
-	return `SELECT
-cdn_name,
-deliveryservice_name,
-stat_name,
-stat_value,
-summary_time,
-stat_date
-FROM stats_summary`
-}
-
-func insertQuery() string {
-	return `
-INSERT INTO stats_summary (
-	cdn_name,
-	deliveryservice_name,
-	stat_name,
-	stat_value,
-	summary_time,
-	stat_date)
-VALUES (
-	:cdn_name,
-	:deliveryservice_name,
-	:stat_name,
-	:stat_value,
-	:summary_time,
-	:stat_date) RETURNING id
-`
-}
-
 // GetStatsSummaryV5 handler for getting stats summaries
 func GetStatsSummaryV5(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{}, []string{})
@@ -198,15 +168,15 @@ func GetStatsSummaryV5(w http.ResponseWriter, r *http.Request) {
 
 	lastSummaryDateStr := inf.Params["lastSummaryDate"]
 	if len(lastSummaryDateStr) != 0 { // Perl only checked for existence of query param
-		getLastSummaryDateV5(w, r, inf)
+		GetLastSummaryDateV5(w, r, inf)
 		return
 	}
 
-	getStatsSummaryV5(w, r, inf)
+	GetStatsSummariesV5(w, r, inf)
 	return
 }
 
-func getLastSummaryDateV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+func GetLastSummaryDateV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"statName": dbhelpers.WhereColumnInfo{Column: "stat_name"},
 	}
@@ -216,7 +186,7 @@ func getLastSummaryDateV5(w http.ResponseWriter, r *http.Request, inf *api.APIIn
 		return
 	}
 	query := selectQuery() + where + " ORDER BY summary_time DESC"
-	statsSummaries, err := queryStatsSummaryV5(inf.Tx, query, queryValues)
+	statsSummaries, err := QueryStatsSummaryV5(inf.Tx, query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -228,7 +198,7 @@ func getLastSummaryDateV5(w http.ResponseWriter, r *http.Request, inf *api.APIIn
 	api.WriteResp(w, r, resp)
 }
 
-func getStatsSummaryV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
+func GetStatsSummariesV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"statName":            dbhelpers.WhereColumnInfo{Column: "stat_name"},
 		"cdnName":             dbhelpers.WhereColumnInfo{Column: "cdn_name"},
@@ -240,7 +210,7 @@ func getStatsSummaryV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo)
 		return
 	}
 	query := selectQuery() + where + orderBy + pagination
-	statsSummaries, err := queryStatsSummaryV5(inf.Tx, query, queryValues)
+	statsSummaries, err := QueryStatsSummaryV5(inf.Tx, query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -249,14 +219,14 @@ func getStatsSummaryV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo)
 	api.WriteResp(w, r, statsSummaries)
 }
 
-func queryStatsSummaryV5(tx *sqlx.Tx, q string, queryValues map[string]interface{}) ([]tc.StatsSummaryV5, error) {
+func QueryStatsSummaryV5(tx *sqlx.Tx, q string, queryValues map[string]interface{}) ([]tc.StatsSummaryV5, error) {
 	rows, err := tx.NamedQuery(q, queryValues)
 	if err != nil {
 		return nil, fmt.Errorf("querying stats summary: %v", err)
 	}
 	defer rows.Close()
 
-	statsSummaries := []tc.StatsSummaryV5{}
+	var statsSummaries []tc.StatsSummaryV5
 	for rows.Next() {
 		s := tc.StatsSummaryV5{}
 		if err = rows.StructScan(&s); err != nil {
@@ -311,4 +281,34 @@ func CreateStatsSummaryV5(w http.ResponseWriter, r *http.Request) {
 
 	successMsg := "Stats Summary was successfully created"
 	api.WriteRespAlert(w, r, tc.SuccessLevel, successMsg)
+}
+
+func selectQuery() string {
+	return `SELECT
+cdn_name,
+deliveryservice_name,
+stat_name,
+stat_value,
+summary_time,
+stat_date
+FROM stats_summary`
+}
+
+func insertQuery() string {
+	return `
+INSERT INTO stats_summary (
+	cdn_name,
+	deliveryservice_name,
+	stat_name,
+	stat_value,
+	summary_time,
+	stat_date)
+VALUES (
+	:cdn_name,
+	:deliveryservice_name,
+	:stat_name,
+	:stat_value,
+	:summary_time,
+	:stat_date) RETURNING id
+`
 }
