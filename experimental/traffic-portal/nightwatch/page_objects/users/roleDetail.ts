@@ -15,19 +15,25 @@
 import { EnhancedPageObject } from "nightwatch";
 
 /**
- * Defines the PageObject for Coordinate Details.
+ * Defines the PageObject for Role Details.
  */
-export type CoordinateDetailPageObject = EnhancedPageObject<{}, typeof coordinateDetailPageObject.elements>;
+export type RoleDetailPageObject = EnhancedPageObject<{}, typeof roleDetailPageObject.elements>;
 
-const coordinateDetailPageObject = {
+const roleDetailPageObject = {
 	elements: {
-		id: "input[name='id']",
-		lastUpdated: "input[name='lastUpdated']",
-		latitude: "input[name='latitude']",
-		longitude: "input[name='longitude']",
-		name: "input[name='name']",
-		saveBtn: "button[type='submit']",
+		description: {
+			selector: "input[name='description']"
+		},
+		name: {
+			selector: "input[name='name']"
+		},
+		permissions: {
+			selector: "textarea[name='permissions']"
+		},
+		saveBtn: {
+			selector: "button[type='submit']"
+		}
 	},
 };
 
-export default coordinateDetailPageObject;
+export default roleDetailPageObject;

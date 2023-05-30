@@ -129,6 +129,46 @@ describe("CDNService", () => {
 		await expectAsync(responseP).toBeResolved();
 	});
 
+	it("Queues Updates by CDN", async () => {
+		const resp = service.queueServerUpdates(cdn);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/cdns/${cdn.id}/queue_update`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toEqual({action: "queue"});
+		req.flush({response: { action: "queue", cdnId: cdn.id }});
+		await expectAsync(resp).toBeResolved();
+	});
+
+	it("Queues Updates by CDN ID", async () => {
+		const resp = service.queueServerUpdates(cdn.id);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/cdns/${cdn.id}/queue_update`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toEqual({action: "queue"});
+		req.flush({response: { action: "queue", cdnId: cdn.id }});
+		await expectAsync(resp).toBeResolved();
+	});
+
+	it("Dequeues Updates by CDN", async () => {
+		const resp = service.dequeueServerUpdates(cdn);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/cdns/${cdn.id}/queue_update`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toEqual({action: "dequeue"});
+		req.flush({response: { action: "dequeue", cdnId: cdn.id }});
+		await expectAsync(resp).toBeResolved();
+	});
+
+	it("Dequeues Updates by CDN ID", async () => {
+		const resp = service.dequeueServerUpdates(cdn.id);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/cdns/${cdn.id}/queue_update`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toEqual({action: "dequeue"});
+		req.flush({response: { action: "dequeue", cdnId: cdn.id }});
+		await expectAsync(resp).toBeResolved();
+	});
+
 	afterEach(() => {
 		httpTestingController.verify();
 	});

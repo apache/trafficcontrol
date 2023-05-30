@@ -11,10 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-mat-toolbar {
+
+.mat-toolbar {
 	display: inline-flex;
 	width: 100%;
-	height: 3em;
+	height: var(--toolbar-height);
 	padding: 5px;
 	position: sticky;
 	top: 0;

@@ -12,28 +12,54 @@
 * limitations under the License.
 */
 
-import type { Awaitable, EnhancedElementInstance, EnhancedPageObject, EnhancedSectionInstance } from "nightwatch";
+import type {
+	Awaitable,
+	EnhancedElementInstance,
+	EnhancedPageObject,
+	EnhancedSectionInstance,
+	WebDriverProtocolUserActions
+} from "nightwatch";
 
 /**
  * TableSectionCommands is the base type for page object sections representing
  * pages containing AG-Grid generic tables.
  */
-export interface TableSectionCommands extends EnhancedSectionInstance, EnhancedElementInstance<EnhancedPageObject> {
+export interface TableSectionCommands extends EnhancedSectionInstance,
+	EnhancedElementInstance<EnhancedPageObject>, WebDriverProtocolUserActions {
+	doubleClickRow<T extends this>(row: number): Promise<T>;
+
+	filterTableByColumn<T extends this>(column: string, search: string): Promise<T>;
+
+	gotoRowByColumn<T extends this>(column: string, search: string): Promise<T>;
+
 	getColumnState(column: string): Promise<boolean>;
+
 	searchText<T extends this>(text: string): T;
-	toggleColumn<T extends this>(column: string): T;
+
+	toggleColumn(column: string): Promise<this>;
 }
 
 /**
  * A CSS selector for an AG-Grid generic table's column visibility dropdown
  * menu.
  */
-export const columnMenuSelector = "div.toggle-columns > button.mat-mdc-menu-trigger";
+export const columnMenuBtnSelector = "div.toggle-columns > button.mat-mdc-menu-trigger";
+
+/**
+ * A CSS selector for an AG-Grid generic table's column visibility dropdown
+ * menu.
+ */
+export const columnMenuCloseSelector = ".cdk-overlay-backdrop";
 
 /**
  * A CSS selector for an AG-Grid generic table's "Fuzzy Search" input text box.
  */
 export const searchboxSelector = "input[name='fuzzControl']";
+
+/**
+ * CSS selector for the AG-Grid row(s).
+ */
+export const tableRowsSelector = ".ag-center-cols-clipper .ag-row";
 
 /**
  * Gets the state of an AG-Grid column by checking whether it's checked
@@ -48,9 +74,55 @@ export const searchboxSelector = "input[name='fuzzControl']";
  */
 export async function getColumnState(this: TableSectionCommands, column: string): Promise<boolean> {
 	const selector = `input[type='checkbox'][name='${column}']`;
-	return this.click(columnMenuSelector).parent
-		.getLocationInView(selector)
-		.isSelected(selector);
+	await this.click(columnMenuBtnSelector);
+	const selected = await browser.isSelected(selector);
+	return Promise.resolve(selected);
+}
+
+/**
+ * Filters a table by a column
+ *
+ * @param this Special parameter that tells the compiler what `this` is in a
+ * valid context for this function.
+ * @param column Which column to filter
+ * @param text Text to filter by
+ */
+export async function filterTableByColumn<T extends TableSectionCommands>(
+	this: TableSectionCommands,
+	column: string,
+	text: string): Promise<T> {
+	if (!await this.getColumnState(column)) {
+		await this.toggleColumn(column);
+	}
+	this.searchText(text);
+	return Promise.resolve(this) as Promise<T>;
+}
+
+/**
+ * Double-clicks the nth row on a table
+ *
+ * @param this Special parameter that tells the compiler what `this` is in a
+ * valid context for this function.
+ * @param rowNumber Which row to click
+ * @returns The calling command section for call-chaining the way Nightwatch
+ * likes to do.
+ */
+export function doubleClickRow<T extends TableSectionCommands>(this: TableSectionCommands, rowNumber: number): Awaitable<T, null> {
+	return this.doubleClick("css selector", `${tableRowsSelector}:nth-of-type(${rowNumber})`) as Awaitable<T, null>;
+}
+
+/**
+ * Filters a table by a column, then double-clicks the first row resulting from the filtering.
+ *
+ * @param this Special parameter that tells the compiler what `this` is in a
+ * valid context for this function.
+ * @param column Which column to filter
+ * @param text Text to filter by
+ */
+export async function gotoRowByColumn<T extends TableSectionCommands>(
+	this: TableSectionCommands, column: string, text: string): Promise<T> {
+	await this.filterTableByColumn(column, text);
+	return this.doubleClickRow(1);
 }
 
 /**
@@ -75,8 +147,13 @@ export function searchText<T extends TableSectionCommands>(this: T, text: string
  * @returns The calling command section for call-chaining the way Nightwatch
  * likes to do.
  */
-export function toggleColumn<T extends TableSectionCommands>(this: T, column: string): Awaitable<T, null> {
-	return this.click(columnMenuSelector).click(`mat-input[name='${column}']`).click(columnMenuSelector) as Awaitable<T, null>;
+export async function toggleColumn<T extends TableSectionCommands>(this: T, column: string): Promise<T> {
+	const selector = `input[type='checkbox'][name='${column}']`;
+	await browser.findElement(".mat-mdc-menu-panel")
+		.getLocationInView(selector)
+		.click(selector);
+	await browser.click(columnMenuCloseSelector);
+	return Promise.resolve(this);
 }
 
 /**
@@ -84,7 +161,10 @@ export function toggleColumn<T extends TableSectionCommands>(this: T, column: st
  * to most easily provide all the functionality of a table.
  */
 export const TABLE_COMMANDS = {
+	doubleClickRow,
+	filterTableByColumn,
 	getColumnState,
+	gotoRowByColumn,
 	searchText,
 	toggleColumn
 };

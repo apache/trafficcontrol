@@ -11,11 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-mat-sidenav-container {
-	height: calc(100% - 3.9em);
 
-	mat-sidenav {
+.mat-sidenav-container {
+	height: calc(100% - (var(--toolbar-height) + .9em));
+
+	.mat-sidenav {
 		min-width: 10em;
+		max-width: var(--sidebar-max-width);
 
 		.mat-icon {
 			margin-right: 0;

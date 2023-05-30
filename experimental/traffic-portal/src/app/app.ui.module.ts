@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 
+import { CdkDrag, CdkDropList } from "@angular/cdk/drag-drop";
 import { CdkMenuModule } from "@angular/cdk/menu";
 import { NgOptimizedImage } from "@angular/common";
 import { NgModule } from "@angular/core";
@@ -80,10 +81,14 @@ import { AgGridModule } from "ag-grid-angular";
 		MatTooltipModule,
 		MatTreeModule,
 		MatSlideToggleModule,
-		NgOptimizedImage
+		NgOptimizedImage,
+		CdkDrag,
+		CdkDropList
 	],
 	imports: [
-		NgOptimizedImage
+		NgOptimizedImage,
+		CdkDrag,
+		CdkDropList
 	]
 })
 export class AppUIModule {}

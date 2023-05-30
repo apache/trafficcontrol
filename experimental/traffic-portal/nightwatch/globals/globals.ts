@@ -12,9 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import * as https from "https";
-
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import { NightwatchBrowser } from "nightwatch";
 import type { AsnDetailPageObject } from "nightwatch/page_objects/cacheGroups/asnDetail";
 import type { AsnsPageObject } from "nightwatch/page_objects/cacheGroups/asnsTable";
@@ -36,53 +34,34 @@ import type { ProfileDetailPageObject } from "nightwatch/page_objects/profiles/p
 import type { ProfilePageObject } from "nightwatch/page_objects/profiles/profilesTable";
 import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
 import type { PhysLocTablePageObject } from "nightwatch/page_objects/servers/physLocTable";
-import type { ServersPageObject } from "nightwatch/page_objects/servers/servers";
+import type { ServersDetailPageObject } from "nightwatch/page_objects/servers/serversDetail";
+import type { ServersTablePageObject } from "nightwatch/page_objects/servers/serversTable";
 import type { StatusDetailPageObject } from "nightwatch/page_objects/statuses/statusDetail";
 import type { StatusesTablePageObject } from "nightwatch/page_objects/statuses/statusesTable";
 import type { ChangeLogsPageObject } from "nightwatch/page_objects/users/changeLogs";
+import type { RoleDetailPageObject } from "nightwatch/page_objects/users/roleDetail";
 import type { RolesPageObject } from "nightwatch/page_objects/users/rolesTable";
 import type { TenantDetailPageObject } from "nightwatch/page_objects/users/tenantDetail";
 import type { TenantsPageObject } from "nightwatch/page_objects/users/tenants";
 import type { UsersPageObject } from "nightwatch/page_objects/users/users";
 import {
-	GeoLimit,
-	GeoProvider,
-	ProfileType,
-	Protocol,
-
-	type CDN,
-	type LoginRequest,
-	type RequestASN,
-	type RequestCacheGroup,
-	type RequestCoordinate,
-	type RequestDeliveryService,
-	type RequestDivision,
-	type RequestPhysicalLocation,
-	type RequestProfile,
-	type RequestRegion,
-	type RequestRole,
-	type RequestServerCapability,
-	type RequestStatus,
-	type RequestSteeringTarget,
-	type RequestTenant,
-	type RequestType,
-	type ResponseASN,
-	type ResponseCacheGroup,
-	type ResponseCDN,
-	type ResponseCoordinate,
-	type ResponseDeliveryService,
-	type ResponseDivision,
-	type ResponsePhysicalLocation,
-	type ResponseProfile,
-	type ResponseRegion,
-	type ResponseRole,
-	type ResponseServerCapability,
-	type ResponseStatus,
-	type ResponseTenant,
-	type TypeFromResponse,
+	ResponseCDN,
+	ResponseDeliveryService,
+	ResponseTenant,
+	TypeFromResponse,
+	ResponseASN,
+	ResponseDivision,
+	ResponseRegion,
+	ResponseCacheGroup,
+	ResponsePhysicalLocation,
+	ResponseCoordinate,
+	ResponseStatus,
+	ResponseProfile,
+	ResponseServer, ResponseServerCapability, ResponseRole,
 } from "trafficops-types";
 
 import * as config from "../config.json";
+import { DataClient, generateUniqueString } from "../dataClient";
 import type { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
 import type { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
 import type { TypeDetailPageObject } from "../page_objects/types/typeDetail";
@@ -126,7 +105,8 @@ declare module "nightwatch" {
 			};
 			physLocDetail: () => PhysLocDetailPageObject;
 			physLocTable: () => PhysLocTablePageObject;
-			servers: () => ServersPageObject;
+			serversTable: () => ServersTablePageObject;
+			serversDetail: () => ServersDetailPageObject;
 		};
 		statuses: {
 			statusesTable: () => StatusesTablePageObject;
@@ -135,6 +115,7 @@ declare module "nightwatch" {
 		users: {
 			changeLogs: () => ChangeLogsPageObject;
 			roles: () => RolesPageObject;
+			roleDetail: () => RoleDetailPageObject;
 			tenants: () => TenantsPageObject;
 			tenantDetail: () => TenantDetailPageObject;
 			users: () => UsersPageObject;
@@ -170,21 +151,40 @@ export interface CreatedData {
 	division: ResponseDivision;
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
-	profile: ResponseProfile;
+	edgeServer: ResponseServer;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
 	role: ResponseRole;
-	statuses: ResponseStatus;
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;
+	statuses: ResponseStatus;
+	profile: ResponseProfile;
 }
 
-const testData = {};
+let testData = {};
+let client: DataClient;
+let dataCreateFailed = false;
 
 const globals = {
 	adminPass: config.adminPass,
 	adminUser: config.adminUser,
+	after: async (done: () => void): Promise<void> => {
+		if (dataCreateFailed){
+			return done();
+		} else if(client.loggedIn) {
+			try {
+				await client.createData(generateUniqueString());
+			} catch(e) {
+				console.error("Idempotency test failed, err:", e);
+				throw e;
+			}
+			console.log("Data creation is idempotent");
+		} else {
+			console.log("Client not logged in, skipping idempotency test");
+		}
+		done();
+	},
 	afterEach: (browser: NightwatchBrowser, done: () => void): void => {
 		browser.end(() => {
 			done();
@@ -192,277 +192,12 @@ const globals = {
 	},
 	apiVersion: "4.0",
 	before: async (done: () => void): Promise<void> => {
-		const apiUrl = `${globals.trafficOpsURL}/api/${globals.apiVersion}`;
-		const client = axios.create({
-			httpsAgent: new https.Agent({
-				rejectUnauthorized: false
-			})
-		});
-		let accessToken = "";
-		const loginReq: LoginRequest = {
-			p: globals.adminPass,
-			u: globals.adminUser
-		};
+		client = new DataClient(globals.trafficOpsURL, globals.apiVersion, globals.adminUser, globals.adminPass);
 		try {
-			const logResp = await client.post(`${apiUrl}/user/login`, JSON.stringify(loginReq));
-			if(logResp.headers["set-cookie"]) {
-				for (const cookie of logResp.headers["set-cookie"]) {
-					if(cookie.indexOf("access_token") > -1) {
-						accessToken = cookie;
-						break;
-					}
-				}
-			}
-		} catch (e) {
-			console.error((e as AxiosError).message);
-			throw e;
-		}
-		if(accessToken === "") {
-			const e = new Error("Access token is not set");
-			console.error(e.message);
-			throw e;
-		}
-		client.defaults.headers.common = { Cookie: accessToken };
-
-		const cdn: CDN = {
-			dnssecEnabled: false, domainName: `tests${globals.uniqueString}.com`, name: `testCDN${globals.uniqueString}`
-		};
-		let respCDN: ResponseCDN;
-
-		let resp = await client.get(`${apiUrl}/types`);
-		const types: Array<TypeFromResponse> = resp.data.response;
-		const httpType = types.find(typ => typ.name === "HTTP" && typ.useInTable === "deliveryservice");
-		if(httpType === undefined) {
-			throw new Error("Unable to find `HTTP` type");
-		}
-		const steeringType = types.find(typ => typ.name === "STEERING" && typ.useInTable === "deliveryservice");
-		if(steeringType === undefined) {
-			throw new Error("Unable to find `STEERING` type");
-		}
-		const steeringWeightType = types.find(typ => typ.name === "STEERING_WEIGHT" && typ.useInTable === "steering_target");
-		if(steeringWeightType === undefined) {
-			throw new Error("Unable to find `STEERING_WEIGHT` type");
-		}
-		const cgType = types.find(typ => typ.useInTable === "cachegroup");
-		if (!cgType) {
-			throw new Error("Unable to find any Cache Group Types");
-		}
-
-		let url = `${apiUrl}/cdns`;
-		try {
-			const data = testData as CreatedData;
-			resp = await client.post(url, JSON.stringify(cdn));
-			respCDN = resp.data.response;
-			console.log(`Successfully created CDN ${respCDN.name}`);
-			data.cdn = respCDN;
-
-			const ds: RequestDeliveryService = {
-				active: false,
-				cacheurl: null,
-				cdnId: respCDN.id,
-				displayName: `test DS${globals.uniqueString}`,
-				dscp: 0,
-				ecsEnabled: false,
-				edgeHeaderRewrite: null,
-				fqPacingRate: null,
-				geoLimit: GeoLimit.NONE,
-				geoProvider: GeoProvider.MAX_MIND,
-				httpBypassFqdn: null,
-				infoUrl: null,
-				initialDispersion: 1,
-				ipv6RoutingEnabled: false,
-				logsEnabled: false,
-				maxOriginConnections: 0,
-				maxRequestHeaderBytes: 0,
-				midHeaderRewrite: null,
-				missLat: 0,
-				missLong: 0,
-				multiSiteOrigin: false,
-				orgServerFqdn: "http://test.com",
-				profileId: 1,
-				protocol: Protocol.HTTP,
-				qstringIgnore: 0,
-				rangeRequestHandling: 0,
-				regionalGeoBlocking: false,
-				remapText: null,
-				routingName: "test",
-				signed: false,
-				tenantId: 1,
-				typeId: httpType.id,
-				xmlId: `testDS${globals.uniqueString}`
-			};
-			url = `${apiUrl}/deliveryservices`;
-			resp = await client.post(url, JSON.stringify(ds));
-			let respDS: ResponseDeliveryService = resp.data.response[0];
-			console.log(`Successfully created DS '${respDS.displayName}'`);
-			data.ds = respDS;
-
-			ds.displayName = `test DS2${globals.uniqueString}`;
-			ds.xmlId = `testDS2${globals.uniqueString}`;
-			resp = await client.post(url, JSON.stringify(ds));
-			respDS = resp.data.response[0];
-			console.log(`Successfully created DS '${respDS.displayName}'`);
-			data.ds2 = respDS;
-
-			ds.displayName = `test steering DS${globals.uniqueString}`;
-			ds.xmlId = `testSDS${globals.uniqueString}`;
-			ds.typeId = steeringType.id;
-			resp = await client.post(url, JSON.stringify(ds));
-			respDS = resp.data.response[0];
-			console.log(`Successfully created DS '${respDS.displayName}'`);
-			data.steeringDS = respDS;
-
-			const target: RequestSteeringTarget = {
-				targetId: data.ds.id,
-				typeId: steeringWeightType.id,
-				value: 1
-			};
-			url = `${apiUrl}/steering/${data.steeringDS.id}/targets`;
-			await client.post(url, JSON.stringify(target));
-			target.targetId = data.ds2.id;
-			await client.post(url, JSON.stringify(target));
-			console.log(`Created steering targets for ${data.steeringDS.displayName}`);
-
-			const tenant: RequestTenant = {
-				active: true,
-				name: `testT${globals.uniqueString}`,
-				parentId: 1
-			};
-			url = `${apiUrl}/tenants`;
-			resp = await client.post(url, JSON.stringify(tenant));
-			const respTenant: ResponseTenant = resp.data.response;
-			console.log(`Successfully created Tenant ${respTenant.name}`);
-			data.tenant = respTenant;
-
-			const division: RequestDivision = {
-				name: `testD${globals.uniqueString}`
-			};
-			url = `${apiUrl}/divisions`;
-			resp = await client.post(url, JSON.stringify(division));
-			const respDivision: ResponseDivision = resp.data.response;
-			console.log(`Successfully created Division ${respDivision.name}`);
-			data.division = respDivision;
-
-			const region: RequestRegion = {
-				division: respDivision.id,
-				name: `testR${globals.uniqueString}`
-			};
-			url = `${apiUrl}/regions`;
-			resp = await client.post(url, JSON.stringify(region));
-			const respRegion: ResponseRegion = resp.data.response;
-			console.log(`Successfully created Region ${respRegion.name}`);
-			data.region = respRegion;
-
-			const cacheGroup: RequestCacheGroup = {
-				name: `test${globals.uniqueString}`,
-				shortName: `test${globals.uniqueString}`,
-				typeId: cgType.id
-			};
-			url = `${apiUrl}/cachegroups`;
-			resp = await client.post(url, JSON.stringify(cacheGroup));
-			const responseCG: ResponseCacheGroup = resp.data.response;
-			console.log("Successfully created Cache Group:", responseCG.name);
-			data.cacheGroup = responseCG;
-
-			const asn: RequestASN = {
-				asn: +globals.uniqueString,
-				cachegroupId: responseCG.id
-			};
-			url = `${apiUrl}/asns`;
-			resp = await client.post(url, JSON.stringify(asn));
-			const respAsn: ResponseASN = resp.data.response;
-			console.log(`Successfully created ASN ${respAsn.asn}`);
-			data.asn = respAsn;
-
-			const physLoc: RequestPhysicalLocation = {
-				address: "street",
-				city: "city",
-				comments: "someone set us up the bomb",
-				email: "email@test.com",
-				name: `phys${globals.uniqueString}`,
-				phone: "111-867-5309",
-				poc: "me",
-				regionId: respRegion.id,
-				shortName: `short${globals.uniqueString}`,
-				state: "CA",
-				zip: "80000"
-			};
-			url = `${apiUrl}/phys_locations`;
-			resp = await client.post(url, JSON.stringify(physLoc));
-			const respPhysLoc: ResponsePhysicalLocation = resp.data.response;
-			respPhysLoc.region = respRegion.name;
-			console.log(`Successfully created Phys Loc ${respPhysLoc.name}`);
-			data.physLoc = respPhysLoc;
-
-			const coordinate: RequestCoordinate = {
-				latitude: 0,
-				longitude: 0,
-				name: `coord${globals.uniqueString}`
-			};
-			url = `${apiUrl}/coordinates`;
-			resp = await client.post(url, JSON.stringify(coordinate));
-			const respCoordinate: ResponseCoordinate = resp.data.response;
-			console.log(`Successfully created Coordinate ${respCoordinate.name}`);
-			data.coordinate = respCoordinate;
-
-			const type: RequestType = {
-				description: "blah",
-				name: `type${globals.uniqueString}`,
-				useInTable: "server"
-			};
-			url = `${apiUrl}/types`;
-			resp = await client.post(url, JSON.stringify(type));
-			const respType: TypeFromResponse = resp.data.response;
-			console.log(`Successfully created Type ${respType.name}`);
-			data.type = respType;
-
-			const status: RequestStatus = {
-				description: "blah",
-				name: `status${globals.uniqueString}`,
-			};
-			url = `${apiUrl}/statuses`;
-			resp = await client.post(url, JSON.stringify(status));
-			const respStatus: ResponseStatus = resp.data.response;
-			console.log(`Successfully created Status ${respStatus.name}`);
-			data.statuses = respStatus;
-
-			const profile: RequestProfile = {
-				cdn: 1,
-				description: "blah",
-				name: `profile${globals.uniqueString}`,
-				routingDisabled: false,
-				type: ProfileType.ATS_PROFILE,
-			};
-			url = `${apiUrl}/profiles`;
-			resp = await client.post(url, JSON.stringify(profile));
-			const respProfile: ResponseProfile = resp.data.response;
-			console.log(`Successfully created Profile ${respProfile.name}`);
-			data.profile = respProfile;
-
-			const capability: RequestServerCapability = {
-				name: `test${globals.uniqueString}`
-			};
-			url = `${apiUrl}/server_capabilities`;
-			resp = await client.post(url, JSON.stringify(capability));
-			const respCap: ResponseServerCapability = resp.data.response;
-			console.log("Successfully created Capability:", respCap);
-			data.capability = respCap;
-
-			const role: RequestRole = {
-				description: "Has access to everything - cannot be modified or deleted",
-				name: `admin${globals.uniqueString}`,
-				permissions: [
-					"ALL"
-				]
-			};
-			url = `${apiUrl}/roles`;
-			resp = await client.post(url, JSON.stringify(role));
-			const respRole: ResponseRole = resp.data.response;
-			console.log(`Successfully created Roles ${respRole.name}`);
-			data.role = respRole;
-
+			testData = await client.createData(globals.uniqueString);
 		} catch(e) {
-			console.error("Request for", url, "failed:", (e as AxiosError).message);
+			dataCreateFailed = true;
+			console.error("Request for", globals.trafficOpsURL, "failed:", (e as AxiosError).message);
 			throw e;
 		}
 		done();
@@ -480,7 +215,7 @@ const globals = {
 	retryAssertionTimeout: config.retryAssertionTimeoutMS,
 	testData,
 	trafficOpsURL: config.to_url,
-	uniqueString: new Date().getTime().toString(),
+	uniqueString: generateUniqueString(),
 	waitForConditionTimeout:config.waitForConditionTimeoutMS
 };
 

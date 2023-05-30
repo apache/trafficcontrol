@@ -24,7 +24,7 @@ describe("Users Spec", () => {
 		await browser.waitForElementPresent(".ag-row");
 		let tbl = page.section.usersTable;
 		if (! await tbl.getColumnState("Username")) {
-			tbl = tbl.toggleColumn("Username");
+			await tbl.toggleColumn("Username");
 		}
 
 		tbl = tbl.searchText(username);

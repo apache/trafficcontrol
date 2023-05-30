@@ -22,7 +22,7 @@ import { APITestingModule } from "src/app/api/testing";
 
 import { UpdateStatusComponent } from "./update-status.component";
 
-const defaultServer = {
+const defaultServer: ResponseServer = {
 	cachegroup: "",
 	cachegroupId: 1,
 	cdnId: 1,
@@ -59,9 +59,7 @@ const defaultServer = {
 	offlineReason: null,
 	physLocation: "",
 	physLocationId: 1,
-	profile: "",
-	profileDesc: "",
-	profileId: 1,
+	profileNames: ["GLOBAL"],
 	rack: null,
 	revalPending: false,
 	routerHostName: null,

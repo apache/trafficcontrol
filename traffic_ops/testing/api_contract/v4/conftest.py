@@ -938,4 +938,32 @@ def origin_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting origins POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_origins(data=origin)
 	resp_obj = check_template_data(response, "origins")
+
+
+@pytest.fixture()
+def status_post_data(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for statuses endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get Status request template data from a prerequisite file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	status = check_template_data(request_template_data["status"], "status")
+
+	# Return new post data and post response from statuses POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = status["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		status["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing Status property '{e.args[0]}'") from e
+
+	logger.info("New status data to hit POST method %s", status)
+	# Hitting statuses POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_statuses(data=status)
+	resp_obj = check_template_data(response, "statuses")
 	return resp_obj

@@ -17,6 +17,9 @@ import { Injectable } from "@angular/core";
 import type {
 	PostRequestUser,
 	PutRequestUser,
+	PostResponseRole,
+	PutResponseRole,
+	RequestRole,
 	RequestTenant,
 	ResponseCurrentUser,
 	ResponseRole,
@@ -72,19 +75,14 @@ export class UserService {
 			username: "test-admin"
 		}
 	];
-	private readonly roles = [
-		{
-			capabilities: [
-				"ALL",
-				"PARAMETER-SECURE:READ"
-			],
-			description: "Has access to everything - cannot be modified or deleted",
-			id: 1,
-			lastUpdated: new Date(),
-			name: "admin",
-			privLevel: 30
-		}
-	];
+	private readonly roleDetail: Array<ResponseRole> = [{
+		description: "Has access to everything - cannot be modified or deleted",
+		lastUpdated: new Date(),
+		name: "admin",
+		permissions: [
+			"ALL"
+		],
+	}];
 
 	private readonly tenants: Array<ResponseTenant> = [
 		{
@@ -320,7 +318,7 @@ export class UserService {
 	 * @returns The created user.
 	 */
 	public async createUser(user: PostRequestUser): Promise<ResponseUser> {
-		const role = this.roles.find(r=>r.name === user.role);
+		const role = this.roleDetail.find(r=>r.name === user.role);
 		if (!role) {
 			throw new Error(`no such Role: #${user.role}`);
 		}
@@ -398,34 +396,73 @@ export class UserService {
 		}
 	}
 
-	/** Fetches the Role with the given ID. */
-	public async getRoles (nameOrID: number | string): Promise<ResponseRole>;
+	/** Fetches the Role with the given name. */
+	public async getRoles (name: string): Promise<ResponseRole>;
 	/** Fetches all Roles. */
 	public async getRoles (): Promise<Array<ResponseRole>>;
 	/**
 	 * Fetches one or all Roles from Traffic Ops.
 	 *
-	 * @param nameOrID Optionally, the name or integral, unique identifier of a single Role which will be fetched
+	 * @param name unique identifier (name) of a single Role which will be fetched
 	 * @throws {TypeError} When called with an improper argument.
 	 * @returns Either an Array of Roles, or a single Role, depending on whether
-	 * `name`/`id` was passed
+	 * name was passed
 	 */
-	public async getRoles(nameOrID?: string | number): Promise<Array<ResponseRole> | ResponseRole> {
-		if (nameOrID !== undefined) {
-			let role;
-			switch (typeof nameOrID) {
-				case "string":
-					role = this.roles.find(r=>r.name === nameOrID);
-					break;
-				case "number":
-					role = this.roles.find(r=>r.id === nameOrID);
-			}
+	public async getRoles(name?: string): Promise<Array<ResponseRole> | ResponseRole> {
+		if (name !== undefined) {
+			const role = this.roleDetail.find(r=>r.name === name);
 			if (!role) {
-				throw new Error(`no such Role: ${nameOrID}`);
+				throw new Error(`no such Role: ${name}`);
 			}
 			return role;
 		}
-		return this.roles;
+		return this.roleDetail;
+	}
+
+	/**
+	 * Creates a new role.
+	 *
+	 * @param role The role to create.
+	 * @returns The created role along with lastUpdated field.
+	 */
+	public async createRole(role: RequestRole): Promise<PostResponseRole> {
+		const resp = {
+			lastUpdated: new Date(),
+			...role
+		};
+		this.roleDetail.push(resp);
+		return resp;
+	}
+
+	/**
+	 * Updates an existing role.
+	 *
+	 * @param name The original role name
+	 * @param role The role to update.
+	 * @returns The updated role without lastUpdated field.
+	 */
+	public async updateRole(name: string, role: ResponseRole): Promise<PutResponseRole> {
+		const roleName = this.roleDetail.findIndex(r => r.name === name);
+		if (roleName < 0 ) {
+			throw new Error(`no such Role: ${name}`);
+		}
+		this.roleDetail[roleName] = role;
+		return role;
+	}
+
+	/**
+	 * Deletes an existing role.
+	 *
+	 * @param role The role to be deleted.
+	 * @returns The deleted role.
+	 */
+	public async deleteRole(role: string | ResponseRole): Promise<void> {
+		const roleName = typeof(role) === "string" ? role : role.name;
+		const index = this.roleDetail.findIndex(r => r.name === roleName);
+		if (index === -1) {
+			throw new Error(`no such role: ${role}`);
+		}
+		this.roleDetail.splice(index, 1);
 	}
 
 	/**

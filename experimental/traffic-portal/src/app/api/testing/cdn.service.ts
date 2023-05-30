@@ -13,7 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-import { RequestCDN, ResponseCDN } from "trafficops-types";
+import { CDNQueueResponse, RequestCDN, ResponseCDN } from "trafficops-types";
 
 /**
  * CDNService expose API functionality relating to CDNs.
@@ -87,6 +87,39 @@ export class CDNService {
 		};
 		this.cdns.push(c);
 		return c;
+	}
+	/**
+	 * Queue updates to servers by a CDN
+	 *
+	 * @param cdn The CDN or id to queue server updates for
+	 */
+	public async queueServerUpdates(cdn: ResponseCDN | number): Promise<CDNQueueResponse> {
+		const id = typeof cdn === "number" ? cdn : cdn.id;
+		const realCDN = this.cdns.find(c => c.id === id);
+		if (!realCDN) {
+			throw new Error(`No CDN ${id}`);
+		}
+		return {
+			action: "queue",
+			cdnId: id
+		};
+	}
+
+	/**
+	 * Dequeue updates to servers by a CDN
+	 *
+	 * @param cdn The CDN or id to dequeue server updates for
+	 */
+	public async dequeueServerUpdates(cdn: ResponseCDN | number): Promise<CDNQueueResponse> {
+		const id = typeof cdn === "number" ? cdn : cdn.id;
+		const realCDN = this.cdns.find(c => c.id === id);
+		if (!realCDN) {
+			throw new Error(`No CDN ${id}`);
+		}
+		return {
+			action: "dequeue",
+			cdnId: id
+		};
 	}
 
 	/**

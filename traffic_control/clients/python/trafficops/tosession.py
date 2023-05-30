@@ -1846,6 +1846,28 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request('post', 'statuses', ('3.0', '3.1', '4.0', '4.1', '5.0'))
+	def create_statuses(self, query_params=None):
+		"""
+		Create server status code.
+		:ref:`to-api-statuses`
+		:param data: A new status code created.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'statuses/{status_id:d}', ('3.0', '3.1', '4.0', '4.1', '5.0'))
+	def delete_status_by_id(self, status_id=None):
+		"""
+		Delete a status
+		:ref:`to-api-status-id`
+		:param status_id: The status to delete
+		:type status_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	#
 	# System
 	#

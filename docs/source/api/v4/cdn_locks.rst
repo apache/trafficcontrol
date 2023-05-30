@@ -66,7 +66,7 @@ Response Structure
 			"sharedUserNames": [
 				"user1"
 			],
-			"lastUpdated": "2021-05-26T09:31:57-06"
+			"lastUpdated": "2021-05-26T09:31:57.01527-06:00"
 		}
 	]}
 
@@ -146,7 +146,7 @@ Response Structure
 		"sharedUserNames": [
 			"user1"
 		],
-		"lastUpdated": "2021-05-26T10:59:10-06"
+		"lastUpdated": "2021-05-26T10:59:10.03557-06:00"
 	}}
 
 ``DELETE``
@@ -212,5 +212,5 @@ Response Structure
 		"sharedUserNames": [
 			"user1"
 		],
-		"lastUpdated": "2021-05-26T10:59:10-06"
+		"lastUpdated": "2021-05-26T10:59:10.02632-06:00"
 	}}

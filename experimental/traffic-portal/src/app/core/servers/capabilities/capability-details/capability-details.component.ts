@@ -90,12 +90,11 @@ export class CapabilityDetailsComponent implements OnInit {
 				title: "Confirm Delete"
 			}
 		});
-		ref.afterClosed().subscribe(result => {
-			if(result) {
-				this.api.deleteCapability(this.capability);
-				this.location.back();
-			}
-		});
+		const result = await ref.afterClosed().toPromise();
+		if(result) {
+			await this.api.deleteCapability(this.capability);
+			this.location.back();
+		}
 	}
 
 	/**
