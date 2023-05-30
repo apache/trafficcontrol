@@ -21,7 +21,6 @@ import { ChangeLogsService } from "src/app/api/change-logs.service";
 import { CacheGroupService } from "./cache-group.service";
 import { CDNService } from "./cdn.service";
 import { DeliveryServiceService } from "./delivery-service.service";
-import { ExportAttachmentService } from "./export-attachment.service";
 import { InvalidationJobService } from "./invalidation-job.service";
 import { MiscAPIsService } from "./misc-apis.service";
 import { PhysicalLocationService } from "./physical-location.service";
@@ -34,7 +33,6 @@ export * from "./cache-group.service";
 export * from "./cdn.service";
 export * from "./change-logs.service";
 export * from "./delivery-service.service";
-export * from "./export-attachment.service";
 export * from "./invalidation-job.service";
 export * from "./misc-apis.service";
 export * from "./physical-location.service";
@@ -56,7 +54,6 @@ export * from "./user.service";
 		CDNService,
 		ChangeLogsService,
 		DeliveryServiceService,
-		ExportAttachmentService,
 		InvalidationJobService,
 		MiscAPIsService,
 		PhysicalLocationService,

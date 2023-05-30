@@ -20,7 +20,6 @@ import { BehaviorSubject } from "rxjs";
 import { ProfileImport, ResponseProfile } from "trafficops-types";
 
 import { ProfileService } from "src/app/api";
-import { ExportAttachmentService } from "src/app/api/export-attachment.service";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { FileUtilsService } from "src/app/shared/file-utils.service";
@@ -135,7 +134,6 @@ export class ProfileTableComponent implements OnInit {
 		private readonly navSvc: NavigationService,
 		private readonly dialog: MatDialog,
 		public readonly auth: CurrentUserService,
-		private readonly exportService: ExportAttachmentService,
 		private readonly fileUtil: FileUtilsService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.profiles = this.api.getProfiles();
@@ -182,8 +180,7 @@ export class ProfileTableComponent implements OnInit {
 				});
 				break;
 			case "export-profile":
-				const response = await this.exportService.exportProfile(data.id);
-				Reflect.deleteProperty(response, "alerts");
+				const response = await this.api.exportProfile(data.id);
 				this.fileUtil.exportFile(response,data.name, "json");
 				break;
 		}
