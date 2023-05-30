@@ -27,7 +27,7 @@ limitations under the License.
 
 	<mat-form-field class="w-100" appearance="outline">
 		<textarea matInput id="json-txt-editor"
-				[(ngModel)]="inputTxt" required></textarea>
+				[value]="inputTxt" required readonly></textarea>
 	</mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions align="end">

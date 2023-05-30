@@ -40,7 +40,7 @@ export class ImportJsonEditTxtComponent {
 	public allowedType: string[] = ["application/json", "text/plain"];
 
 	/** Text editor value */
-	public inputTxt = "{}";
+	public inputTxt = "";
 
 	/**  File data imported */
 	public fileData = "";
