@@ -13,7 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-import { ProfileImport, ProfileImportResponse, ProfileType, RequestProfile, type ResponseProfile } from "trafficops-types";
+import { ProfileExport, ProfileImport, ProfileImportResponse, ProfileType, RequestProfile, type ResponseProfile } from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
@@ -135,6 +135,16 @@ export class ProfileService {
 			type: ProfileType.ATS_PROFILE
 		}
 	];
+	private readonly profileExport: ProfileExport = {
+		alerts: null,
+		parameters:[],
+		profile: {
+			cdn: "ALL",
+			description: "test",
+			name: "TRAFFIC_ANALYTICS",
+			type: ProfileType.TS_PROFILE
+		},
+	};
 
 	public async getProfiles(idOrName: number | string): Promise<ResponseProfile>;
 	public async getProfiles(): Promise<Array<ResponseProfile>>;
@@ -218,6 +228,20 @@ export class ProfileService {
 			throw new Error(`no such Type: ${id}`);
 		}
 		return this.profiles.splice(index, 1)[0];
+	}
+
+	/**
+	 * Export Profile object from the API.
+	 *
+	 * @param id Specify unique identifier (number) of a specific Profile to retrieve the export object.
+	 * @returns The requested Profile as attachment.
+	 */
+	public async exportProfile(id?: number): Promise<ProfileExport> {
+		if( id !== undefined){
+			const exportProfile = this.profileExport;
+			return exportProfile;
+		}
+		return this.profileExport;
 	}
 
 	/**
