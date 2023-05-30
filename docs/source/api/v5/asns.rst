@@ -74,7 +74,7 @@ Response Structure
 :cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
+:lastUpdated:  The time and date this server entry was last updated in :rfc:`3339` Format
 
 .. code-block:: http
 	:caption: Response Example
@@ -89,7 +89,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 02 Dec 2019 22:51:14 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: F2NmDbTpXqrIQDX7IBKH9+1drtTL4XedSfJv6klMgLEZwbLCkddIXuSLpmgVCID6kTVqy3fTKjZS3U+HJ3YUEQ==
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 02 Dec 2019 21:51:14 GMT
+	Date: Thu, 25 May 2023 21:59:33 GMT
 	Content-Length: 128
 
 	{ "response": [
@@ -98,7 +98,7 @@ Response Structure
 			"cachegroup": "TRAFFIC_ANALYTICS",
 			"cachegroupId": 1,
 			"id": 1,
-			"lastUpdated": "2019-12-02 21:49:08+00"
+			"lastUpdated": "2023-05-25T15:59:33-06:00"
 		}
 	]}
 
@@ -144,7 +144,7 @@ Response Structure
 :cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
+:lastUpdated:  The time and date this server entry was last updated in :rfc:`3339` Format
 
 .. code-block:: http
 	:caption: Response Example
@@ -159,7 +159,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 02 Dec 2019 22:49:08 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: mx8b2GTYojz4QtMxXCMoQyZogCB504vs0yv6WGly4dwM81W3XiejWNuUwchRBYYi8QHaWsMZ3DaiGGfQi/8Giw==
 	X-Server-Name: traffic_ops_golang/
-	Date: Mon, 02 Dec 2019 21:49:08 GMT
+	Date: Thu, 25 May 2023 21:59:33 GMT
 	Content-Length: 150
 
 	{ "alerts": [
@@ -173,7 +173,7 @@ Response Structure
 		"cachegroup": null,
 		"cachegroupId": 1,
 		"id": 1,
-		"lastUpdated": "2019-12-02 21:49:08+00"
+		"lastUpdated": "2023-05-25T15:59:33-06:00"
 	}}
 
 ``PUT``
@@ -214,7 +214,7 @@ Response Structure
 :cachegroup:   A string that is the :ref:`cache-group-name` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :cachegroupId: An integer that is the :ref:`cache-group-id` of the :term:`Cache Group` that is associated with this :abbr:`ASN (Autonomous System Number)`
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
-:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
+:lastUpdated:  The time and date this server entry was last updated in :rfc:`3339` Format
 
 .. code-block:: http
 	:caption: Response Example
@@ -229,7 +229,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 25 Feb 2020 07:21:10 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: MjvwJg6AFbdqGPlAhK+2pfiN+VFjzgeNnhXoMVbh6+fRQYKeej6CCj3x09hwOl4uhp9d9RySrE/CQ3+L1b2VGQ==
 	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 25 Feb 2020 06:21:10 GMT
+	Date: Thu, 25 May 2023 21:59:33 GMT
 	Content-Length: 164
 
 	{
@@ -244,7 +244,7 @@ Response Structure
 			"cachegroup": "TRAFFIC_OPS",
 			"cachegroupId": 2,
 			"id": 1,
-			"lastUpdated": "2020-02-25 06:21:10+00"
+			"lastUpdated": 2023-05-25T15:59:33-06:00
 		}
 	}
 
@@ -287,7 +287,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 25 Feb 2020 08:27:33 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: Woz8NSHIYVpX4V5X4xZWZIX1hvGL2uian7nUhjZ8F23Nb9RWQRMIg/cc+1vXEzkT/ehKV9t11FKRLX+avSae0g==
 	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 25 Feb 2020 07:27:33 GMT
+	Date: Thu, 25 May 2023 21:59:33 GMT
 	Content-Length: 83
 
 	{

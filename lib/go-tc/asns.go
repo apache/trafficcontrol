@@ -1,5 +1,7 @@
 package tc
 
+import "time"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -35,6 +37,25 @@ type ASNsResponse struct {
 type ASNResponse struct {
 	// in: body
 	Response ASN `json:"response"`
+	Alerts
+}
+
+// ASNsResponseV5 is a list of ASNs (Autonomous System Numbers) as a response.
+// swagger:response ASNsResponse
+// in: body
+type ASNsResponseV5 struct {
+	// in: body
+	Response []ASNV5 `json:"response"`
+	Alerts
+}
+
+// ASNResponseV5 is a single ASN response for Update and Create to depict what
+// changed.
+// swagger:response ASNResponse
+// in: body
+type ASNResponseV5 struct {
+	// in: body
+	Response ASNV5 `json:"response"`
 	Alerts
 }
 
@@ -98,4 +119,30 @@ type ASNNullable struct {
 // The Traffic Ops API uses its own TOASNV11 instead.
 type ASNsV11 struct {
 	ASNs []interface{} `json:"asns"`
+}
+
+// ASNsV5 is used for RFC3339 format timestamp
+type ASNV5 struct {
+	// The ASN to retrieve
+	//
+	// Autonomous System Numbers per APNIC for identifying a service provider
+	// required: true
+	ASN int `json:"asn" db:"asn"`
+
+	// Related cachegroup name
+	//
+	Cachegroup string `json:"cachegroup" db:"cachegroup"`
+
+	// Related cachegroup id
+	//
+	CachegroupID int `json:"cachegroupId" db:"cachegroup_id"`
+
+	// ID of the ASN
+	//
+	// required: true
+	ID int `json:"id" db:"id"`
+
+	// LastUpdated
+	//
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 }
