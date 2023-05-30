@@ -14,14 +14,17 @@
 
 import { Component, type OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
-import {ActivatedRoute, type Params} from "@angular/router";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute, type Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import type { ResponseRole } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import type { ContextMenuActionEvent, ContextMenuItem, DoubleClickLink } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
+
 /**
  * RolesTableComponent is the controller for the "Roles" table.
  */
@@ -34,7 +37,7 @@ export class RolesTableComponent implements OnInit {
 	/** List of roles */
 	public roles: Promise<Array<ResponseRole>>;
 	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: NavigationService,
-		private readonly api: UserService, public readonly auth: CurrentUserService) {
+		private readonly api: UserService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.roles = this.api.getRoles();
 		this.headerSvc.headerTitle.next("Roles");
@@ -74,10 +77,14 @@ export class RolesTableComponent implements OnInit {
 		}
 	];
 
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseRole> = {
+		href: (row: ResponseRole): string => `/core/roles/${row.name}`
+	};
+
 	/** Definitions for the context menu items (which act on augmented roles data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseRole>> = [
 		{
-			disabled: (): true => true,
 			href: (selectedRow: ResponseRole): string => `${selectedRow.name}`,
 			name: "Edit"
 		},
@@ -85,6 +92,11 @@ export class RolesTableComponent implements OnInit {
 			href: (selectedRow: ResponseRole): string => `${selectedRow.name}`,
 			name: "Open in New Tab",
 			newTab: true
+		},
+		{
+			action: "delete",
+			multiRow: false,
+			name: "Delete"
 		},
 		{
 			href: "/core/users",
@@ -107,9 +119,25 @@ export class RolesTableComponent implements OnInit {
 	/**
 	 * Handles a context menu event.
 	 *
-	 * @param a The action selected from the context menu.
+	 * @param evt The action selected from the context menu.
 	 */
-	public handleContextMenu(a: ContextMenuActionEvent<Readonly<ResponseRole>>): void {
-		console.log("action:", a);
+	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseRole>): Promise<void> {
+		if (Array.isArray(evt.data)) {
+			console.error("cannot delete multiple roles at once:", evt.data);
+			return;
+		}
+		const data = evt.data;
+		switch(evt.action) {
+			case "delete":
+				const ref = this.dialog.open(DecisionDialogComponent, {
+					data: {message: `Are you sure you want to delete '${data.name}' role?`, title: "Confirm Delete"}
+				});
+				ref.afterClosed().subscribe(result => {
+					if(result) {
+						this.api.deleteRole(data.name).then(async () => this.roles = this.api.getRoles());
+					}
+				});
+				break;
+		}
 	}
 }

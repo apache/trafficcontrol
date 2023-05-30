@@ -11,47 +11,49 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { MatDialog, MatDialogModule, type MatDialogRef } from "@angular/material/dialog";
+import { MatDialog, MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
-import { of } from "rxjs";
+import { of, ReplaySubject } from "rxjs";
 
-import { ServerService } from "src/app/api";
+import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
+import { RoleDetailComponent } from "src/app/core/users/roles/detail/role-detail.component";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
-import { CapabilityDetailsComponent } from "./capability-details.component";
-
-describe("CapabilityDetailsComponent", () => {
-	let component: CapabilityDetailsComponent;
-	let fixture: ComponentFixture<CapabilityDetailsComponent>;
-	let paramMap: jasmine.Spy;
+describe("RoleDetailComponent", () => {
+	let component: RoleDetailComponent;
+	let fixture: ComponentFixture<RoleDetailComponent>;
 	let route: ActivatedRoute;
-	const name = "test";
+	let paramMap: jasmine.Spy;
 
+	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ CapabilityDetailsComponent ],
+			declarations: [ RoleDetailComponent ],
 			imports: [
 				APITestingModule,
 				RouterTestingModule.withRoutes([
-					{component: CapabilityDetailsComponent, path: "core/capabilities/:name"},
+					{component: RoleDetailComponent, path: "core/roles/:name"},
 					// This route is never actually loaded, but the tests
 					// complain that it can't be routed to, so it doesn't matter
 					// that it's loading the wrong component, only that it has a
 					// route definition.
-					{component: CapabilityDetailsComponent, path: "core/capabilities"}
+					{component: RoleDetailComponent, path: "core/roles"}
 				]),
 				MatDialogModule
 			],
-		}).compileComponents();
+			providers: [ { provide: NavigationService, useValue: headerSvc } ]
+		})
+			.compileComponents();
 
 		route = TestBed.inject(ActivatedRoute);
 		paramMap = spyOn(route.snapshot.paramMap, "get");
-		paramMap.and.returnValue(name);
-		fixture = TestBed.createComponent(CapabilityDetailsComponent);
+		fixture = TestBed.createComponent(RoleDetailComponent);
 		component = fixture.componentInstance;
-		component.capability = {...await TestBed.inject(ServerService).createCapability({name})};
+		component.role = {...await TestBed.inject(UserService).createRole(component.role)};
 		fixture.detectChanges();
 	});
 
@@ -59,29 +61,35 @@ describe("CapabilityDetailsComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it("sets up the form for a new Capability", async () => {
+	it("new role", async () => {
 		paramMap.and.returnValue(null);
 
-		fixture = TestBed.createComponent(CapabilityDetailsComponent);
+		fixture = TestBed.createComponent(RoleDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
-		expect(component.capability).not.toBeNull();
-		expect(component.capability.name).toBe("");
+		expect(component.role).not.toBeNull();
+		expect(component.role.name).toBe("");
 		expect(component.new).toBeTrue();
 	});
 
-	it("existing Capability", async () => {
+	it("existing role", async () => {
+		paramMap.and.returnValue("admin");
+
+		fixture = TestBed.createComponent(RoleDetailComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
-		expect(component.capability).not.toBeNull();
-		expect(component.capability.name).toBe(name);
+		expect(component.role).not.toBeNull();
+		expect(component.role.name).toBe("admin");
 		expect(component.new).toBeFalse();
 	});
 
-	it("opens a dialog for Capability deletion", async () => {
-		const api = TestBed.inject(ServerService);
-		const spy = spyOn(api, "deleteCapability").and.callThrough();
+	it("opens a dialog for role deletion", async () => {
+		const api = TestBed.inject(UserService);
+		const spy = spyOn(api, "deleteRole").and.callThrough();
 		await expect(spy).not.toHaveBeenCalled();
 
 		const dialogService = TestBed.inject(MatDialog);
@@ -91,7 +99,7 @@ describe("CapabilityDetailsComponent", () => {
 
 		await expect(openSpy).not.toHaveBeenCalled();
 
-		const asyncExpectation = expectAsync(component.deleteCapability()).toBeResolvedTo(undefined);
+		const asyncExpectation = expectAsync(component.deleteRole()).toBeResolvedTo(undefined);
 
 		await expect(openSpy).toHaveBeenCalled();
 		await expect(spy).toHaveBeenCalled();
@@ -99,12 +107,12 @@ describe("CapabilityDetailsComponent", () => {
 		await asyncExpectation;
 	});
 
-	it("submits requests to create new Capabilities", async () => {
-		const api = TestBed.inject(ServerService);
-		const spy = spyOn(api, "createCapability").and.callThrough();
+	it("submits requests to create new role", async () => {
+		const api = TestBed.inject(UserService);
+		const spy = spyOn(api, "createRole").and.callThrough();
 		paramMap.and.returnValue(null);
 
-		fixture = TestBed.createComponent(CapabilityDetailsComponent);
+		fixture = TestBed.createComponent(RoleDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
@@ -115,14 +123,14 @@ describe("CapabilityDetailsComponent", () => {
 		expect(component.new).toBeFalse();
 	});
 
-	it("submits requests to update Capabilities", async () => {
-		const api = TestBed.inject(ServerService);
-		const spy = spyOn(api, "updateCapability").and.callThrough();
+	it("submits requests to update role", async () => {
+		const api = TestBed.inject(UserService);
+		const spy = spyOn(api, "updateRole").and.callThrough();
 		expect(spy).not.toHaveBeenCalled();
 
-		component.capability = {
-			...component.capability,
-			name: `${component.capability.name}quest`
+		component.role = {
+			...component.role,
+			name: `${component.role.name}quest`
 		};
 
 		await expectAsync(component.submit(new Event("submit"))).toBeResolvedTo(undefined);
