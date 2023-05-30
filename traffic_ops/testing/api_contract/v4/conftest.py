@@ -24,6 +24,7 @@ import os
 from random import randint
 from typing import Any, NamedTuple, Union, Optional, TypeAlias
 from urllib.parse import urlparse
+import munch
 
 import pytest
 import requests
@@ -362,7 +363,7 @@ def response_template_data(pytestconfig: pytest.Config
 
 def api_response_data(api_response: tuple[Union[Primitive, dict[str, object], list[
 	Union[Primitive, dict[str, object], list[
-		object]]]], requests.Response]) -> dict[str, object]:
+		object]]]], requests.Response], create_check: bool) -> dict[str, object]:
 	"""
 	Checks API get/post response.
 	:param api_response: Raw api response.
@@ -371,14 +372,18 @@ def api_response_data(api_response: tuple[Union[Primitive, dict[str, object], li
 	api_data = None
 	if isinstance(api_response, tuple):
 		api_response = api_response[0]
-		if not isinstance(api_response, list):
-			raise ValueError("Malformed API response; 'response' property not an array")
+		if create_check and not isinstance(api_response, munch.Munch):
+			raise ValueError("Malformed API response; 'response' property not an munch")
+		if not create_check and not isinstance(api_response, list):
+			raise ValueError("Malformed API response; 'response' property not an list")
 	else:
 		raise ValueError("Invalid API response format")
 
 	if api_response:
 		try:
-			api_data = api_response[0]
+			api_data = api_response
+			if not create_check:
+				api_data = api_response[0]
 			if not isinstance(api_data, dict):
 				raise ValueError("Malformed API response; 'response' property not a dict")
 		except IndexError as e:
@@ -399,7 +404,7 @@ def get_existing_object(to_session: TOSession, object_type: str, query_params: O
 	api_get_response: tuple[Union[dict[str, object], list[
 		Union[dict[str, object], list[object], Primitive]], Primitive], requests.Response] = getattr(
 		to_session, f"get_{object_type}")(query_params=query_params)
-	return api_response_data(api_get_response)
+	return api_response_data(api_get_response, create_check = False)
 
 
 def create_if_not_exists(to_session: TOSession, object_type: str,
@@ -414,7 +419,7 @@ def create_if_not_exists(to_session: TOSession, object_type: str,
 	api_post_response: tuple[Union[dict[str, object], list[
 		Union[dict[str, object], list[object], Primitive]], Primitive], requests.Response] = getattr(
 		to_session, f"create_{object_type}")(data=data)
-	return api_response_data(api_post_response)
+	return api_response_data(api_post_response, create_check = True)
 
 
 def create_or_get_existing(to_session: TOSession, get_object_type: str, post_object_type: str, data:
@@ -451,8 +456,8 @@ def check_template_data(template_data: Union[list[JSONData], tuple[JSONData, req
 	return endpoint
 
 
-@pytest.fixture()
-def cdn_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="cdn_post_data")
+def cdn_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for cdns endpoint.
@@ -681,8 +686,8 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 	return resp_obj
 
 
-@pytest.fixture()
-def division_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="division_post_data")
+def division_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for divisions endpoint.
@@ -712,8 +717,8 @@ def division_post_data(to_session: TOSession, request_template_data: list[JSONDa
 
 
 @pytest.fixture(name="region_post_data")
-def region_data_post(to_session: TOSession, request_template_data: list[JSONData]
-			  ) -> dict[str, object]:
+def region_data_post(to_session: TOSession, request_template_data: list[JSONData],
+			  division_post_data: dict[str, object]) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for region endpoint.
 
@@ -735,10 +740,8 @@ def region_data_post(to_session: TOSession, request_template_data: list[JSONData
 		raise TypeError(f"missing Region property '{e.args[0]}'") from e
 
 	# Check if division already exists, otherwise create it
-	division_data = check_template_data(request_template_data["divisions"], "divisions")
-	division_object = create_or_get_existing(to_session, "divisions", "division", division_data)
-	region["division"] = division_object["id"]
-	region["divisionName"] = division_object["name"]
+	region["division"] = division_post_data["id"]
+	region["divisionName"] = division_post_data["name"]
 
 	logger.info("New region data to hit POST method %s", request_template_data)
 	# Hitting region POST method
@@ -791,7 +794,8 @@ def phys_locations_data_post(to_session: TOSession, request_template_data: list[
 
 @pytest.fixture()
 def server_post_data(to_session: TOSession, request_template_data: list[JSONData],
-		      phys_locations_post_data: dict[str, object]) -> dict[str, object]:
+		cdn_post_data: dict[str, object],
+		phys_locations_post_data: dict[str, object])-> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for server endpoint.
 
@@ -801,6 +805,7 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	:returns: Sample POST data and the actual API response.
 	"""
 	server = check_template_data(request_template_data["servers"], "servers")
+	randstr = str(randint(0, 1000))
 
 	# Check if type already exists, otherwise create it
 	type_data = check_template_data(request_template_data["types"], "types")
@@ -816,15 +821,15 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	server["cachegroupId"]= cache_group_object["id"]
 
 	# Check if cdn already exists, otherwise create it
-	cdn_data = check_template_data(request_template_data["cdns"], "cdns")
-	cdn_object = create_or_get_existing(to_session, "cdns", "cdn", cdn_data, {"name": "CDN-in-a-Box"})
-	server["cdnId"] = cdn_object["id"]
-	server["domainName"] = cdn_object["domainName"]
+	server["cdnId"] = cdn_post_data["id"]
+	server["domainName"] = cdn_post_data["domainName"]
 
 	# Check if profile with cdn already exists, otherwise create it
 	profile_data = check_template_data(request_template_data["profiles"], "profiles")
-	profile_object = create_or_get_existing(to_session, "profiles", "profile", profile_data,
-					 {"name": "test"})
+	profile_data["cdn"] = cdn_post_data["id"]
+	name = profile_data["name"]
+	profile_data["name"] = name[:4] + randstr
+	profile_object = create_if_not_exists(to_session, "profile", profile_data)
 	server["profileNames"] = [profile_object["name"]]
 
 	# Check if status already exists, otherwise create it
@@ -938,6 +943,7 @@ def origin_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting origins POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_origins(data=origin)
 	resp_obj = check_template_data(response, "origins")
+	return resp_obj
 
 
 @pytest.fixture()
