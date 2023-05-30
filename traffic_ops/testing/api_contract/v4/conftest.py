@@ -884,13 +884,13 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 					 {"cdn": cdn_object["id"]})
 	delivery_services["profileId"] = profile_object["id"]
 
-	# Check if status already exists, otherwise create it
+	# Check if tenant already exists, otherwise create it
 	tenant_data = check_template_data(request_template_data["tenants"], "tenants")
 	tenant_object = create_or_get_existing(to_session, "tenants", "tenant",
 					tenant_data, {"name": "root"})
 	delivery_services["tenantId"] = tenant_object["id"]
 
-	# Check if status already exists, otherwise create it
+	# Check if type already exists, otherwise create it
 	type_data = {"name": "HTTP", "useInTable":"deliveryservice"}
 	type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"name": "HTTP", "useInTable":"deliveryservice"})
