@@ -27,6 +27,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -81,6 +82,7 @@ type Cfg struct {
 	SvcManagement       SvcManagement
 	Retries             int
 	ReverseProxyDisable bool
+	RpmDBOk             bool
 	SkipOSCheck         bool
 	UseStrategies       t3cutil.UseStrategiesFlag
 	TOInsecure          bool
@@ -187,13 +189,26 @@ func directoryExists(dir string) (bool, os.FileInfo) {
 	}
 	return info.IsDir(), info
 }
-// verifies the rpm database if there is any database corruption
+
+const RpmDir = "/var/lib/rpm"
+
+// verifies the rpm database files. if there is any database corruption
 // it will return false
-func RpmDBisOk() bool {
-	cmd := exec.Command("/bin/rpm", "--verifydb")
-	err := cmd.Run()
-	if err != nil || cmd.ProcessState.ExitCode() > 0 {
+func VerifyRpmDB() bool {
+	exclude := regexp.MustCompile(`(^\.|^__)`)
+	dbFiles, err := os.ReadDir(RpmDir)
+	if err != nil {
 		return false
+	}
+	for _, file := range dbFiles {
+		if exclude.Match([]byte(file.Name())) {
+			continue
+		}
+		cmd := exec.Command("/usr/lib/rpm/rpmdb_verify", RpmDir+"/"+file.Name())
+		err := cmd.Run()
+		if err != nil || cmd.ProcessState.ExitCode() > 0 {
+			return false
+		}
 	}
 	return true
 }
@@ -481,7 +496,8 @@ If any of the related flags are also set, they override the mode's default behav
 		os.Setenv("TO_PASS", toPass)
 	}
 
-	rpmDBisOk := RpmDBisOk()
+	rpmDBisOk := VerifyRpmDB()
+	rpmDBisOk = false
 	toInfoLog = append(toInfoLog, fmt.Sprintf("rpm database is ok: %v", rpmDBisOk))
 	// set TSHome
 	var tsHome = ""
@@ -493,13 +509,13 @@ If any of the related flags are also set, they override the mode's default behav
 		tsHome = os.Getenv("TS_HOME") // check for the environment variable.
 		if tsHome != "" {
 			toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from TS_HOME environment variable '%s'\n", TSHome))
-		} else { // finally check using the config file listing from the rpm package.
+		} else if rpmDBisOk { // check using the config file listing from the rpm package if rpmdb is ok.
 			tsHome = GetTSPackageHome()
 			if tsHome != "" {
 				toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from the RPM config file  list '%s'\n", TSHome))
-			} else {
-				toInfoLog = append(toInfoLog, fmt.Sprintf("no override for TSHome was found, using the configured default: '%s'\n", TSHome))
 			}
+		} else if tsHome == "" {
+			toInfoLog = append(toInfoLog, fmt.Sprintf("no override for TSHome was found, using the configured default: '%s'\n", TSHome))
 		}
 	}
 
@@ -552,6 +568,7 @@ If any of the related flags are also set, they override the mode's default behav
 		CacheHostName:               cacheHostName,
 		SvcManagement:               svcManagement,
 		Retries:                     retries,
+		RpmDBOk:                     rpmDBisOk,
 		ReverseProxyDisable:         reverseProxyDisable,
 		SkipOSCheck:                 skipOsCheck,
 		UseStrategies:               useStrategies,
