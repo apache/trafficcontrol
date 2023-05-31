@@ -129,5 +129,7 @@ func TestParseAndDecode(t *testing.T) {
 		if valString != "1684784878894" {
 			t.Errorf("unable to read `current_time_epoch_ms`")
 		}
+	} else {
+		t.Errorf("current_time_epoch_ms field was not found in the json file")
 	}
 }

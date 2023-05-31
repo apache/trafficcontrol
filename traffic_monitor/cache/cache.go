@@ -310,7 +310,7 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 	if val, ok := miscStats["current_time_epoch_ms"]; ok {
 		valString := fmt.Sprintf("%s", val)
 		valInt, valErr := strconv.ParseInt(valString, 10, 64)
-		if err != nil {
+		if valErr != nil {
 			log.Errorf("parse error '%v'", valErr)
 			result.Error = valErr
 			handler.resultChan <- result
