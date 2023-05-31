@@ -91,7 +91,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 	if prevResult != nil {
 		elapsedTimeInSecs = float64(newResult.Time.UnixMilli()-prevResult.Time.UnixMilli()) / 1000
 		if elapsedTimeInSecs <= 0 {
-			newResult = prevResult
+			*newResult = *prevResult
 			return
 		}
 	}
