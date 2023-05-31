@@ -419,7 +419,7 @@ describe("ServerService", () => {
 					name: "eth0"
 				}],
 				physLocationId: -1,
-				profileId: -1,
+				profileNames: [],
 				statusId: -1,
 				typeId: -1,
 			})).toThrow();
