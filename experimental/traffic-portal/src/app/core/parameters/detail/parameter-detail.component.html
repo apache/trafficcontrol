@@ -30,7 +30,7 @@ limitations under the License.
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Value</mat-label>
-				<input matInput type="text" name="value" required [(ngModel)]="parameter.value" />
+				<textarea matInput name="value" required [(ngModel)]="parameter.value" />
 			</mat-form-field>
 			<mat-slide-toggle required [(ngModel)]="parameter.secure" name="secure">Secure</mat-slide-toggle>
 			<mat-form-field *ngIf="!new">
