@@ -62,8 +62,8 @@ fi
 
 cd "$tc_dir"
 if [ -d "${tc_volume}/.git" ]; then
-  # Change the owner of the repository folder to the user which is running the git command.
-  git config --add safe.directory '*'
+	# Change the owner of the repository folder to the user which is running the git command.
+	git config --global --add safe.directory '*'
 	# In case the mirrored repo already exists, remove gitignored files
 	git clean -fdX
 fi
