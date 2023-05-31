@@ -592,9 +592,9 @@ def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	return resp_obj
 
 
-@pytest.fixture()
-def profile_post_data(to_session: TOSession, request_template_data: list[JSONData]
-		      ) -> dict[str, object]:
+@pytest.fixture(name="profile_post_data")
+def profile_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		      cdn_post_data:dict[str, object]) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for profile endpoint.
 
@@ -614,9 +614,7 @@ def profile_post_data(to_session: TOSession, request_template_data: list[JSONDat
 		raise TypeError(f"missing Profile property '{e.args[0]}'") from e
 
 	# Check if cdn already exists, otherwise create it
-	cdn_data = check_template_data(request_template_data["cdns"], "cdns")
-	cdn_object = create_or_get_existing(to_session, "cdns", "cdn", cdn_data)
-	profile["cdn"] = cdn_object["id"]
+	profile["cdn"] = cdn_post_data["id"]
 	logger.info("New profile data to hit POST method %s", profile)
 
 	# Hitting profile POST method
@@ -848,11 +846,12 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting server POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_server(data=server)
 	resp_obj = check_template_data(response, "server")
-	return resp_obj
+	return [resp_obj, profile_object["id"]]
 
 
 @pytest.fixture(name="delivery_services_post_data")
-def delivery_services_data_post(to_session: TOSession, request_template_data: list[JSONData]
+def delivery_services_data_post(to_session: TOSession, request_template_data: list[JSONData],
+				profile_post_data: dict[str, object]
 		      ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for server endpoint.
@@ -872,17 +871,11 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 	except KeyError as e:
 		raise TypeError(f"missing delivery_services property '{e.args[0]}'") from e
 
-	# Check if cdn already exists, otherwise create it
-	cdn_data = check_template_data(request_template_data["cdns"], "cdns")
-	cdn_object = create_or_get_existing(to_session, "cdns", "cdn", cdn_data)
-	delivery_services["cdnId"] = cdn_object["id"]
-
 	# Check if profile with cdn already exists, otherwise create it
-	profile_data = check_template_data(request_template_data["profiles"], "profiles")
-	profile_data["cdn"] = cdn_object["id"]
-	profile_object = create_or_get_existing(to_session, "profiles", "profile", profile_data,
-					 {"cdn": cdn_object["id"]})
-	delivery_services["profileId"] = profile_object["id"]
+	delivery_services["profileId"] = profile_post_data["id"]
+
+	# Check if cdn already exists, otherwise create it
+	delivery_services["cdnId"] = profile_post_data["cdn"]
 
 	# Check if tenant already exists, otherwise create it
 	tenant_data = check_template_data(request_template_data["tenants"], "tenants")

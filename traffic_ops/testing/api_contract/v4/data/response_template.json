@@ -432,7 +432,10 @@
                 "type": "string"
             },
             "guid": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "hostName": {
                 "type": "string"
@@ -444,34 +447,61 @@
                 "type": "integer"
             },
             "iloIpAddress": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "iloIpGateway": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "iloIpNetmask": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "iloPassword": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "iloUsername": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "lastUpdated": {
                 "type": "string"
             },
             "mgmtIpAddress": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "mgmtIpGateway": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "mgmtIpNetmask": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "offlineReason": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "physLocation": {
                 "type": "string"
@@ -486,7 +516,10 @@
                 }
             },
             "rack": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "revalPending": {
                 "type": "boolean"
@@ -513,7 +546,10 @@
                 "type": "string"
             },
             "xmppPasswd": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "interfaces": {
                 "type": "array",
@@ -552,7 +588,10 @@
                             }
                         },
                         "maxBandwidth": {
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "integer"
+                            ]
                         },
                         "monitor": {
                             "type": "boolean"
@@ -573,7 +612,10 @@
                 }
             },
             "statusLastUpdated": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "configUpdateTime": {
                 "type": "string"
@@ -619,13 +661,22 @@
                 "type": "integer"
             },
             "firstHeaderRewrite": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "innerHeaderRewrite": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "lastHeaderRewrite": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "serviceCategory": {
                 "type": [
@@ -636,7 +687,7 @@
             "topology": {
                 "type": [
                     "null",
-                    "object"
+                    "string"
                 ]
             },
             "ecsEnabled": {
@@ -710,28 +761,46 @@
                 "type": "string"
             },
             "checkPath": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "displayName": {
                 "type": "string"
             },
             "dnsBypassCname": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "dnsBypassIp": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "dnsBypassIp6": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "dnsBypassTtl": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "integer"
+                ]
             },
             "dscp": {
                 "type": "integer"
             },
             "edgeHeaderRewrite": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "exampleURLs": {
                 "type": "array",
@@ -743,25 +812,40 @@
                 "type": "integer"
             },
             "geoLimitRedirectURL": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "geoProvider": {
                 "type": "integer"
             },
             "globalMaxMbps": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "integer"
+                ]
             },
             "globalMaxTps": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "integer"
+                ]
             },
             "httpBypassFqdn": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "id": {
                 "type": "integer"
             },
             "infoUrl": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "initialDispersion": {
                 "type": "integer"
@@ -796,10 +880,16 @@
                 }
             },
             "maxDnsAnswers": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "integer"
+                ]
             },
             "midHeaderRewrite": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "missLat": {
                 "type": "integer"
@@ -936,7 +1026,10 @@
                 ]
             },
             "coordinate": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "coordinateId": {
                 "type": [
@@ -957,10 +1050,16 @@
                 "type": "integer"
             },
             "ip6Address": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "ipAddress": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "isPrimary": {
                 "type": "boolean"

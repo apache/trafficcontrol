@@ -79,3 +79,8 @@ def test_profile_contract(to_session: TOSession,
 		if to_session.delete_profile_by_id(profile_id=profile_id) is None:
 			logger.error("Profile returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_profile_contract")
+
+		cdn_id = profile_post_data.get("cdn")
+		if to_session.delete_cdn_by_id(cdn_id=cdn_id) is None:
+			logger.error("Cdn returned by Traffic Ops is missing an 'id' property")
+			pytest.fail("Response from delete request is empty, Failing test_profile_contract")

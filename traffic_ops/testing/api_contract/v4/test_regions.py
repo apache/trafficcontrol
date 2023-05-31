@@ -29,7 +29,7 @@ Primitive = Union[bool, int, float, str, None]
 
 
 def test_region_contract(to_session: TOSession,
-	response_template_data: dict[str, Union[Primitive, list[Union[Primitive, 
+	response_template_data: dict[str, Union[Primitive, list[Union[Primitive,
 	dict[str, object], list[object]]], dict[object, object]]],
 	region_post_data: dict[str, object]
 	) -> None:
@@ -81,4 +81,9 @@ def test_region_contract(to_session: TOSession,
 		region_name = region_post_data.get("name")
 		if to_session.delete_region(query_params={"name": region_name}) is None:
 			logger.error("region returned by Traffic Ops is missing a 'name' property")
+			pytest.fail("Response from delete request is empty, Failing test_region_contract")
+
+		division_id = region_post_data.get("division")
+		if to_session.delete_division(division_id=division_id) is None:
+			logger.error("division returned by Traffic Ops is missing a 'name' property")
 			pytest.fail("Response from delete request is empty, Failing test_region_contract")

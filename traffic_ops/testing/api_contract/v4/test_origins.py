@@ -78,7 +78,11 @@ def test_origin_contract(
 	finally:
 		# Delete origin after test execution to avoid redundancy.
 		origin_id = origin_post_data.get("id")
-
 		if to_session.delete_origins(query_params={"id": origin_id}) is None:
 			logger.error("Origin returned by Traffic Ops is missing an 'id' property")
+			pytest.fail("Response from delete request is empty, Failing test_origin_contract")
+
+		delivery_service_id = origin_post_data.get("deliveryServiceId")
+		if to_session.delete_deliveryservice_by_id(delivery_service_id=delivery_service_id) is None:
+			logger.error("Delivery service returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_origin_contract")

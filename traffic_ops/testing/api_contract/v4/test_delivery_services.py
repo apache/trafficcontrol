@@ -77,7 +77,16 @@ def test_delivery_services_contract(to_session: TOSession,
 	finally:
 		# Delete delivery_services after test execution to avoid redundancy.
 		delivery_service_id = delivery_services_post_data.get("id")
-
 		if to_session.delete_deliveryservice_by_id(delivery_service_id=delivery_service_id) is None:
 			logger.error("delivery_services returned by Traffic Ops is missing an 'id' property")
+			pytest.fail("Response from delete request is empty, Failing test_delivery_services_contract")
+
+		profile_id = delivery_services_post_data.get("profileId")
+		if to_session.delete_profile_by_id(profile_id=profile_id) is None:
+			logger.error("profile returned by Traffic Ops is missing an 'id' property")
+			pytest.fail("Response from delete request is empty, Failing test_delivery_services_contract")
+
+		cdn_id = delivery_services_post_data.get("cdnId")
+		if to_session.delete_cdn_by_id(cdn_id=cdn_id) is None:
+			logger.error("cdn returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_delivery_services_contract")
