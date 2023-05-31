@@ -89,7 +89,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 	}
 
 	if prevResult != nil {
-		elapsedTimeInSecs := float64(newResult.Time.UnixMilli()-prevResult.Time.UnixMilli()) / 1000
+		elapsedTimeInSecs = float64(newResult.Time.UnixMilli()-prevResult.Time.UnixMilli()) / 1000
 		if elapsedTimeInSecs <= 0 {
 			newResult = prevResult
 			return
@@ -123,7 +123,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 			MaxKbpsOut: iface.Speed * 1000,
 		}
 
-		if prevResult.InterfaceVitals != nil && prevResult.InterfaceVitals[ifaceName].BytesOut != 0 {
+		if prevResult != nil && prevResult.InterfaceVitals != nil && prevResult.InterfaceVitals[ifaceName].BytesOut != 0 {
 			ifaceVitals.KbpsOut = int64(float64((ifaceVitals.BytesOut-prevResult.InterfaceVitals[ifaceName].BytesOut)*8/1000) / elapsedTimeInSecs)
 		}
 		newResult.InterfaceVitals[ifaceName] = ifaceVitals
@@ -135,7 +135,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 		newResult.Vitals.MaxKbpsOut += iface.Speed * 1000
 	}
 
-	if prevResult.Vitals.BytesOut != 0 {
+	if prevResult != nil && prevResult.Vitals.BytesOut != 0 {
 		newResult.Vitals.KbpsOut = int64(float64((newResult.Vitals.BytesOut-prevResult.Vitals.BytesOut)*8/1000) / elapsedTimeInSecs)
 	}
 
