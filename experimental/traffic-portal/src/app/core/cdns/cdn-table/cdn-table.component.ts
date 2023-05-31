@@ -200,7 +200,6 @@ export class CDNTableComponent implements OnInit {
 		}
 		const readableAction = queue ? "Queue" : "Clear";
 		const title = `${readableAction} Updates on ${cdn.name}?`;
-		const action = queue ? "queue" : "dequeue";
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(DecisionDialogComponent, {
 			data: {
 				message: `Are you sure you want to ${readableAction.toLowerCase()} server updates for all of the ${cdn.name} servers?`,
@@ -210,7 +209,11 @@ export class CDNTableComponent implements OnInit {
 		if (!await ref.afterClosed().toPromise()) {
 			return;
 		}
-		await this.api.queueCDNUpdates(cdn, action);
+		if (queue) {
+			await this.api.queueServerUpdates(cdn);
+		} else {
+			await this.api.dequeueServerUpdates(cdn);
+		}
 		this.alerts.newAlert(
 			AlertLevel.SUCCESS,
 			`${readableAction}d CDN server updates`,

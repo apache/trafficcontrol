@@ -175,21 +175,4 @@ export class CDNService {
 		this.cdns[idx] = cdn;
 		return cdn;
 	}
-
-	/**
-	 * Queues or dequeues updates on a CDN's servers.
-	 *
-	 * @param cdn The CDN to queue or dequeue updates on.
-	 * @param action The action to perform on the CDN, either "queue" or "dequeue".
-	 */
-	public async queueCDNUpdates(cdn: ResponseCDN | number, action: "queue" | "dequeue"): Promise<CDNQueueResponse> {
-		const cdnId = typeof cdn === "number"
-			? cdn
-			: cdn.id;
-
-		return {
-			action,
-			cdnId,
-		};
-	}
 }
