@@ -123,6 +123,10 @@ export class NavigationService {
 				name: "Statuses"
 			},
 			{
+				href: "/core/capabilities",
+				name: "Capabilities",
+			},
+			{
 				children: [{
 					href: "/core/cache-groups",
 					name: "Cache Groups"
@@ -159,6 +163,9 @@ export class NavigationService {
 			}, {
 				href: "/core/me",
 				name: "My Profile"
+			}, {
+				href: "/core/roles",
+				name: "Roles"
 			}, {
 				href: "/core/tenants",
 				name: "Tenants"

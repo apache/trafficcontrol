@@ -21,18 +21,10 @@ export type TenantDetailPageObject = EnhancedPageObject<{}, typeof tenantDetailP
 
 const tenantDetailPageObject = {
 	elements: {
-		active: {
-			selector: "input[name='active']",
-		},
-		name: {
-			selector: "input[name='name']"
-		},
-		parent: {
-			selector: "input[name='parentTenant-tree-select']"
-		},
-		saveBtn: {
-			selector: "button[type='submit']"
-		}
+		active: "input[name='active']",
+		name: "input[name='name']",
+		parent: "input[name='parentTenant-tree-select']",
+		saveBtn: "button[type='submit']",
 	},
 };
 

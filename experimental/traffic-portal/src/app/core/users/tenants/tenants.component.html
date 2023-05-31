@@ -13,7 +13,7 @@ limitations under the License.
 -->
 <mat-card appearance="outlined" class="table-page-content">
 	<div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Tenants" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()"/>
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Tenants" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()"/>
 	</div>
 	<tp-generic-table
 		[data]="tenants"

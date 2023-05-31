@@ -69,7 +69,8 @@ RETURNING (
 	SELECT tenant.name
 	FROM tenant
 	WHERE tenant.id=tm_user.tenant_id
-) AS tenant
+) AS tenant,
+username
 `
 
 const renewRegistrationQuery = `
@@ -246,6 +247,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	var role string
 	var tenant string
+	var username string
 	user, exists, err := dbhelpers.GetUserByEmail(email.Address.Address, inf.Tx.Tx)
 	if err != nil {
 		errCode = http.StatusInternalServerError
@@ -260,10 +262,9 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, errCode, userErr, nil)
 			return
 		}
-
 		role, tenant, err = renewRegistration(tx, req, t, user)
 	} else {
-		role, tenant, err = newRegistration(tx, req, t)
+		role, tenant, username, err = newRegistration(tx, req, t)
 	}
 
 	if err != nil {
@@ -272,10 +273,13 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
+	if user.Username != nil {
+		username = *user.Username
+	}
 
 	msg, err := createRegistrationMsg(email, t, tx, inf.Config.ConfigPortal)
 	if err != nil {
-		sysErr = fmt.Errorf("Failed to create email message: %v", err)
+		sysErr = fmt.Errorf("failed to create email message: %v", err)
 		errCode = http.StatusInternalServerError
 		api.HandleErr(w, r, tx, errCode, nil, sysErr)
 		return
@@ -287,13 +291,12 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
-
 	var alert = "Sent user registration to %s with the following permissions [ role: %s | tenant: %s ]"
 	alert = fmt.Sprintf(alert, email, role, tenant)
 	api.WriteRespAlert(w, r, tc.SuccessLevel, alert)
 
 	var changeLog = "USER: %s, EMAIL: %s, ACTION: registration sent with role %s and tenant %s"
-	changeLog = fmt.Sprintf(changeLog, email, email, role, tenant)
+	changeLog = fmt.Sprintf(changeLog, username, email, role, tenant)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLog, inf.User, tx)
 }
 
@@ -309,14 +312,14 @@ func renewRegistration(tx *sql.Tx, req tc.UserRegistrationRequest, t string, u t
 	return role, tenant, nil
 }
 
-func newRegistration(tx *sql.Tx, req tc.UserRegistrationRequest, t string) (string, string, error) {
+func newRegistration(tx *sql.Tx, req tc.UserRegistrationRequest, t string) (string, string, string, error) {
 	var role string
 	var tenant string
-
+	var username string
 	var row = tx.QueryRow(registerUserQuery, req.Email.Address.Address, req.Role, req.TenantID, t)
-	if err := row.Scan(&role, &tenant); err != nil {
-		return "", "", err
+	if err := row.Scan(&role, &tenant, &username); err != nil {
+		return "", "", "", err
 	}
 
-	return role, tenant, nil
+	return role, tenant, username, nil
 }

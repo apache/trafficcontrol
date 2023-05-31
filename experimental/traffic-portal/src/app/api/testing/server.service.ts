@@ -13,7 +13,16 @@
 */
 
 import { Injectable } from "@angular/core";
-import type { RequestServer, RequestStatus, ResponseServer, ResponseStatus, Servercheck } from "trafficops-types";
+import type {
+	RequestServer,
+	RequestServerCapability,
+	RequestStatus,
+	ResponseServer,
+	ResponseServerCapability,
+	ResponseStatus,
+	ServerCapability,
+	Servercheck
+} from "trafficops-types";
 
 import { CDNService, PhysicalLocationService, ProfileService, TypeService } from "..";
 
@@ -32,7 +41,7 @@ function serverCheck(server: ResponseServer): Servercheck {
 		cacheGroup: server.cachegroup ?? "SERVER HAD NO CACHE GROUP",
 		hostName: server.hostName ?? "SERVER HAD NO HOST NAME",
 		id: server.id,
-		profile: server.profile ?? "SERVER HAD NO PROFILE",
+		profile: server.profileNames[0] ?? "SERVER HAD NO PROFILE",
 		revalPending: server.revalPending,
 		type: server.type ?? "SERVER HAD NO TYPE",
 		updPending: server.updPending
@@ -86,6 +95,8 @@ export class ServerService {
 		}
 	];
 
+	private readonly capabilities = new Array<ResponseServerCapability>();
+
 	private idCounter = 1;
 	private statusIdCounter = 6;
 
@@ -135,7 +146,7 @@ export class ServerService {
 	public async createServer(server: RequestServer): Promise<ResponseServer> {
 		const cdn = await this.cdnService.getCDNs(server.cdnId);
 		const physLoc = await this.physLocService.getPhysicalLocations(server.physLocationId);
-		const profile = await this.profileService.getProfiles(server.profileId);
+		const profile = await this.profileService.getProfiles(server.profileNames[0]);
 		const type = await this.typeService.getTypes(server.typeId);
 		const status = await this.getStatuses(server.statusId);
 		const newServer = {
@@ -172,6 +183,33 @@ export class ServerService {
 		};
 		this.servers.push(newServer);
 		return newServer;
+	}
+
+	/**
+	 * Updates a server by the given payload
+	 *
+	 * @param serverOrID The server object or id to be deleted
+	 * @param payload The server payload to update with.
+	 */
+	public async updateServer(serverOrID: ResponseServer | number, payload?: RequestServer): Promise<ResponseServer> {
+		let id: number;
+		let body: ResponseServer;
+		if (typeof(serverOrID) === "number") {
+			if(!payload) {
+				throw new TypeError("invalid call signature - missing request paylaod");
+			}
+			id = +serverOrID;
+			body = payload as ResponseServer;
+		} else {
+			id = serverOrID.id;
+			body = serverOrID;
+		}
+		const index = this.servers.findIndex(s => s.id === id);
+		if (index < 0) {
+			throw new Error(`Unknown server ${id}`);
+		}
+		this.servers[index] = body;
+		return this.servers[index];
 	}
 
 	public async getServerChecks(): Promise<Servercheck[]>;
@@ -353,5 +391,117 @@ export class ServerService {
 			throw new Error(`no such status: #${id}`);
 		}
 		return this.statuses.splice(idx, 1)[0];
+	}
+
+	/**
+	 * Retrieves Server Capabilities from Traffic Ops.
+	 *
+	 * @returns All requested Capabilities.
+	 */
+	public async getCapabilities(): Promise<Array<ResponseServerCapability>>;
+	/**
+	 * Retrieves a specific Server Capability from Traffic Ops.
+	 *
+	 * @param name The name of the requested Server Capability.
+	 * @returns The requested Capability.
+	 * @throws {Error} if Traffic Ops responds with any number of Capabilities
+	 * besides exactly one.
+	 */
+	public async getCapabilities(name: string): Promise<ResponseServerCapability>;
+	/**
+	 * Retrieves one or more Server Capabilities from Traffic Ops.
+	 *
+	 * @param name If given, only the Capability with this name will be
+	 * returned.
+	 * @returns Any and all requested Capabilities.
+	 * @throws {Error} if a Capability is requested by name, but Traffic Ops
+	 * responds with any number of Capabilities besides exactly one.
+	 */
+	public async getCapabilities(name?: string): Promise<Array<ResponseServerCapability> | ResponseServerCapability> {
+		if (name) {
+			const cap = this.capabilities.find(c => c.name === name);
+			if (!cap) {
+				throw new Error(`no such Capability with name '${name}'`);
+			}
+			return cap;
+		}
+		return this.capabilities;
+	}
+
+	/**
+	 * Deletes a Server Capability.
+	 *
+	 * @param cap The Capability to be deleted, or just its name.
+	 */
+	public async deleteCapability(cap: string | ServerCapability): Promise<void> {
+		const name = typeof(cap) === "string" ? cap : cap.name;
+		const idx = this.capabilities.findIndex(c => c.name === name);
+		if (idx < 0) {
+			throw new Error(`no such Capability with name '${name}'`);
+		}
+		this.capabilities.splice(idx, 1);
+	}
+
+	/**
+	 * Replaces an existing Server Capability definition with a new one.
+	 *
+	 * @param name The Capability's current Name.
+	 * @param cap The Capability with desired modifications made.
+	 * @returns The modified Capability.
+	 */
+	public async updateCapability(name: string, cap: ServerCapability): Promise<ResponseServerCapability> {
+		const idx = this.capabilities.findIndex(c => c.name === name);
+		if (idx < 0) {
+			throw new Error(`no such Capability with name '${name}'`);
+		}
+
+		if (this.capabilities.some(c => c.name === cap.name)) {
+			throw new Error(`Capability with name '${cap.name}' already exists`);
+		}
+
+		const updated = {
+			...cap,
+			lastUpdated: new Date(),
+		};
+
+		this.capabilities[idx] = updated;
+		return updated;
+	}
+
+	/**
+	 * Creates a new Server Capability.
+	 *
+	 * @param cap The new Capability.
+	 * @returns The created Capability.
+	 */
+	public async createCapability(cap: RequestServerCapability): Promise<ResponseServerCapability> {
+		if (this.capabilities.some(c => c.name === cap.name)) {
+			throw new Error(`Capability with name '${cap.name}' already exists`);
+		}
+
+		const created = {
+			...cap,
+			lastUpdated: new Date()
+		};
+
+		this.capabilities.push(created);
+		return created;
+	}
+
+	/**
+	 * Deletes an existing server.
+	 *
+	 * @param server The Server to be deleted, or just its ID.
+	 * @returns The deleted server.
+	 */
+	public async deleteServer(server: number | ResponseServer): Promise<ResponseServer> {
+		const id =  typeof(server) === "number" ? server : server.id;
+		const index = this.servers.findIndex(s => s.id === id);
+		if(index < 0) {
+			throw new Error(`no such Server ${id}`);
+		}
+		const ret = this.servers[index];
+		this.servers.splice(index, 1);
+		return ret;
 	}
 }

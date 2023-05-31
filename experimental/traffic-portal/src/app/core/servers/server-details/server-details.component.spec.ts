@@ -15,6 +15,7 @@
 import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatDialog, MatDialogRef } from "@angular/material/dialog";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
@@ -43,7 +44,7 @@ describe("ServerDetailsComponent", () => {
 				HttpClientModule,
 				RouterTestingModule.withRoutes([
 					{component: ServerDetailsComponent, path: "server/:id"},
-					{component: ServerDetailsComponent, path: "server/new"}
+					{component: ServerDetailsComponent, path: "server/new"},
 				]),
 				FormsModule,
 				ReactiveFormsModule,
@@ -78,7 +79,7 @@ describe("ServerDetailsComponent", () => {
 			mgmtIpNetmask: null,
 			offlineReason: null,
 			physLocationId: 1,
-			profileId: 1,
+			profileNames: ["GLOBAL"],
 			statusId: 1,
 			typeId: 1
 		});
@@ -106,22 +107,22 @@ describe("ServerDetailsComponent", () => {
 		expect(component.server.interfaces.length).toBe(1);
 		component.addInterface(new MouseEvent("click"));
 		expect(component.server.interfaces.length).toBe(2);
-		component.deleteInterface(1);
+		component.deleteInterface(new MouseEvent("click"), 1);
 		expect(component.server.interfaces.length).toBe(1);
-		component.deleteInterface(0);
+		component.deleteInterface(new MouseEvent("click"), 0);
 		expect(component.server.interfaces.length).toBe(0);
 	});
 
 	it("adds and removes IP addresses to/from an interface", () => {
 		component.addInterface(new MouseEvent("click"));
 		expect(component.server.interfaces[0].ipAddresses.length).toBe(0);
-		component.addIP(component.server.interfaces[0]);
+		component.addIP(new MouseEvent("click"), component.server.interfaces[0]);
 		expect(component.server.interfaces[0].ipAddresses.length).toBe(1);
-		component.addIP(component.server.interfaces[0]);
+		component.addIP(new MouseEvent("click"), component.server.interfaces[0]);
 		expect(component.server.interfaces[0].ipAddresses.length).toBe(2);
-		component.deleteIP(component.server.interfaces[0], 1);
+		component.deleteIP(new MouseEvent("click"), component.server.interfaces[0], 1);
 		expect(component.server.interfaces[0].ipAddresses.length).toBe(1);
-		component.deleteIP(component.server.interfaces[0], 0);
+		component.deleteIP(new MouseEvent("click"), component.server.interfaces[0], 0);
 		expect(component.server.interfaces[0].ipAddresses.length).toBe(0);
 	});
 
@@ -157,16 +158,15 @@ describe("ServerDetailsComponent", () => {
 	}));
 
 	it("opens the 'change status' dialog", () => {
-		expect(component.changeStatusDialogOpen).toBeFalse();
-		component.changeStatus(new MouseEvent("click"));
-		expect(component.changeStatusDialogOpen).toBeTrue();
+		const mockMatDialog = TestBed.inject(MatDialog);
+		const openSpy = spyOn(mockMatDialog, "open").and.returnValue({
+			afterClosed: () => of(true)
+		} as MatDialogRef<unknown>);
 		component.isNew = true;
 		expect(() => component.changeStatus(new MouseEvent("click"))).toThrow();
-	});
-
-	it("closes the 'change status' dialog when done", () => {
-		component.changeStatusDialogOpen = true;
-		component.doneUpdatingStatus(true);
-		expect(component.changeStatusDialogOpen).toBeFalse();
+		expect(openSpy).not.toHaveBeenCalled();
+		component.isNew = false;
+		component.changeStatus(new MouseEvent("click"));
+		expect(openSpy).toHaveBeenCalled();
 	});
 });

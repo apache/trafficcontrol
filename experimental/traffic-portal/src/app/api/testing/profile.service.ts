@@ -192,12 +192,27 @@ export class ProfileService {
 	}
 
 	/**
+	 * Updates an existing profile.
+	 *
+	 * @param profile the profile to update.
+	 * @returns The success message.
+	 */
+	public async updateProfile(profile: ResponseProfile): Promise<ResponseProfile> {
+		const id = this.profiles.findIndex(d => d.id === profile.id);
+		if (id === -1) {
+			throw new Error(`no such profile: ${profile.id}`);
+		}
+		this.profiles[id] = profile;
+		return profile;
+	}
+
+	/**
 	 * Deletes an existing profile.
 	 *
 	 * @param id Id of the profile to delete.
 	 * @returns The success message.
 	 */
-	public async deleteProfile(id: number): Promise<ResponseProfile> {
+	public async deleteProfile(id: number | ResponseProfile): Promise<ResponseProfile> {
 		const index = this.profiles.findIndex(t => t.id === id);
 		if (index === -1) {
 			throw new Error(`no such Type: ${id}`);

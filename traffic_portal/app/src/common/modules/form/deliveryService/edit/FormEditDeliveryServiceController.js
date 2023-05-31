@@ -46,6 +46,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 	this.$onInit = function() {
 		$scope.originalRoutingName = deliveryService.routingName;
 		$scope.originalCDN = deliveryService.cdnId;
+		$scope.loadGeoLimitCountriesRaw(deliveryService);
 	};
 
 	/**
@@ -266,6 +267,7 @@ var FormEditDeliveryServiceController = function(deliveryService, origin, topolo
 	 */
 	$scope.save = async function(deliveryService) {
 		deliveryService.requiredCapabilities = Object.entries($scope.selectedCapabilities).filter(sc => (sc[1])).map(sc => sc[0])
+		$scope.loadGeoLimitCountries(deliveryService);
 
 		if (
 			deliveryService.sslKeyVersion !== null &&

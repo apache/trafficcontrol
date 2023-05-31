@@ -141,12 +141,12 @@ export class CacheGroupTableComponent implements OnInit {
 	 */
 	public contextMenuItems: Array<ContextMenuItem<ResponseCacheGroup>> = [
 		{
-			href: (selectedRow): string => `core/cache-groups/${selectedRow.id}`,
+			href: (selectedRow): string => String(selectedRow.id),
 			name: "Open in New Tab",
 			newTab: true
 		},
 		{
-			href: (selectedRow): string => `core/cache-groups/${selectedRow.id}` ,
+			href: (selectedRow): string => String(selectedRow.id),
 			name: "Edit"
 		},
 		{
@@ -165,18 +165,13 @@ export class CacheGroupTableComponent implements OnInit {
 		},
 		{
 			href: "/core/asns",
-			name: "Manage ASNs",
+			name: "View ASNs",
 			queryParams: (selectedRow):  Params => ({cachegroup: selectedRow.name})
 		},
 		{
-			action: "parameters",
-			disabled: (): true => true,
-			name: "Manage Parameters"
-		},
-		{
-			action: "servers",
-			disabled: (): true => true,
-			name: "Manage Servers"
+			href: "/core/servers",
+			name: "View Servers",
+			queryParams: (selectedRow): Params => ({cachegroup: selectedRow.name})
 		}
 	];
 

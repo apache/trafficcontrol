@@ -14,7 +14,17 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import type { RequestServer, RequestStatus, ResponseServer, ResponseStatus, Servercheck, ServerQueueResponse } from "trafficops-types";
+import type {
+	RequestServer,
+	RequestServerCapability,
+	RequestStatus,
+	ResponseServer,
+	ResponseServerCapability,
+	ResponseStatus,
+	ServerCapability,
+	Servercheck,
+	ServerQueueResponse,
+} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -89,6 +99,29 @@ export class ServerService extends APIService {
 	 */
 	public async createServer(s: RequestServer): Promise<ResponseServer> {
 		return this.post<ResponseServer>("servers", s).toPromise();
+	}
+
+	/**
+	 * Updates a server by the given payload
+	 *
+	 * @param serverOrID The server object or id to be deleted
+	 * @param payload The server payload to update with.
+	 */
+	public async updateServer(serverOrID: ResponseServer | number, payload?: RequestServer): Promise<ResponseServer> {
+		let id;
+		let body;
+		if (typeof(serverOrID) === "number") {
+			if(!payload) {
+				throw new TypeError("invalid call signature - missing request paylaod");
+			}
+			body = payload;
+			id = +serverOrID;
+		} else {
+			body = serverOrID;
+			id = serverOrID.id;
+		}
+
+		return this.put<ResponseServer>(`servers/${id}`, body).toPromise();
 	}
 
 	public async getServerChecks(): Promise<Servercheck[]>;
@@ -223,5 +256,85 @@ export class ServerService extends APIService {
 	public async deleteStatus(statusId: number | ResponseStatus): Promise<ResponseStatus> {
 		const id = typeof (statusId) === "number" ? statusId : statusId.id;
 		return this.delete<ResponseStatus>(`statuses/${id}`).toPromise();
+	}
+
+	/**
+	 * Deletes an existing server.
+	 *
+	 * @param server The Server to be deleted, or just its ID.
+	 * @returns The deleted server.
+	 */
+	public async deleteServer(server: number | ResponseServer): Promise<ResponseServer> {
+		const id =  typeof(server) === "number" ? server : server.id;
+		const path = `servers/${id}`;
+		return this.delete<ResponseServer>(path).toPromise();
+
+	}
+
+	/**
+	 * Retrieves Server Capabilities from Traffic Ops.
+	 *
+	 * @returns All requested Capabilities.
+	 */
+	public async getCapabilities(): Promise<Array<ResponseServerCapability>>;
+	/**
+	 * Retrieves a specific Server Capability from Traffic Ops.
+	 *
+	 * @param name The name of the requested Server Capability.
+	 * @returns The requested Capability.
+	 * @throws {Error} if Traffic Ops responds with any number of Capabilities
+	 * besides exactly one.
+	 */
+	public async getCapabilities(name: string): Promise<ResponseServerCapability>;
+	/**
+	 * Retrieves one or more Server Capabilities from Traffic Ops.
+	 *
+	 * @param name If given, only the Capability with this name will be
+	 * returned.
+	 * @returns Any and all requested Capabilities.
+	 * @throws {Error} if a Capability is requested by name, but Traffic Ops
+	 * responds with any number of Capabilities besides exactly one.
+	 */
+	public async getCapabilities(name?: string): Promise<Array<ResponseServerCapability> | ResponseServerCapability> {
+		const path = "server_capabilities";
+		if (name) {
+			const resp = await this.get<[ResponseServerCapability]>(path, undefined, {name}).toPromise();
+			if (resp.length !== 1) {
+				throw new Error(`Traffic Ops responded with ${resp.length} Capabilities with name '${name}'`);
+			}
+			return resp[0];
+		}
+		return this.get<Array<ResponseServerCapability>>(path).toPromise();
+	}
+
+	/**
+	 * Deletes a Server Capability.
+	 *
+	 * @param cap The Capability to be deleted, or just its name.
+	 */
+	public async deleteCapability(cap: string | ServerCapability): Promise<void> {
+		const name = typeof(cap) === "string" ? cap : cap.name;
+		return this.delete("server_capabilities", undefined, {name}).toPromise();
+	}
+
+	/**
+	 * Replaces an existing Server Capability definition with a new one.
+	 *
+	 * @param name The Capability's current Name.
+	 * @param cap The Capability with desired modifications made.
+	 * @returns The modified Capability.
+	 */
+	public async updateCapability(name: string, cap: ServerCapability): Promise<ResponseServerCapability> {
+		return this.put<ResponseServerCapability>("server_capabilities", cap, {name}).toPromise();
+	}
+
+	/**
+	 * Creates a new Server Capability.
+	 *
+	 * @param cap The new Capability.
+	 * @returns The created Capability.
+	 */
+	public async createCapability(cap: RequestServerCapability): Promise<ResponseServerCapability> {
+		return this.post<ResponseServerCapability>("server_capabilities", cap).toPromise();
 	}
 }

@@ -1,0 +1,615 @@
+{
+    "type": "object",
+    "cdns": {
+        "type": "object",
+        "required": [
+            "dnssecEnabled",
+            "domainName",
+            "id",
+            "lastUpdated",
+            "name"
+        ],
+        "properties": {
+            "dnssecEnabled": {
+                "type": "boolean"
+            },
+            "domainName": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            }
+        }
+    },
+    "cachegroup": {
+        "type": "object",
+        "required": [
+            "id",
+            "name",
+            "shortName",
+            "latitude",
+            "longitude",
+            "parentCachegroupName",
+            "parentCachegroupId",
+            "secondaryParentCachegroupName",
+            "secondaryParentCachegroupId",
+            "fallbackToClosest",
+            "localizationMethods",
+            "typeName",
+            "typeId",
+            "lastUpdated",
+            "fallbacks"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "name": {
+                "type": "string"
+            },
+            "shortName": {
+                "type": "string"
+            },
+            "latitude": {
+                "type": "number"
+            },
+            "longitude": {
+                "type": "number"
+            },
+            "parentCachegroupName": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "parentCachegroupId": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "secondaryParentCachegroupName": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "secondaryParentCachegroupId": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "fallbackToClosest": {
+                "type": "boolean"
+            },
+            "localizationMethods": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "typeName": {
+                "type": "string"
+            },
+            "typeId": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "fallbacks": {
+                "type": "array",
+                "items": {}
+            }
+        }
+    },
+    "parameters": {
+        "type": "object",
+        "required": [
+            "configFile",
+            "id",
+            "lastUpdated",
+            "name",
+            "profiles",
+            "secure",
+            "value"
+        ],
+        "properties": {
+            "configFile": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "profiles": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "secure": {
+                "type": "boolean"
+            },
+            "value": {
+                "type": "string"
+            }
+        }
+    },
+    "roles": {
+        "type": "object",
+        "required": [
+            "name",
+            "permissions",
+            "description",
+            "lastUpdated"
+        ],
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "permissions": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "description": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
+    },
+    "profiles": {
+        "type": "object",
+        "required": [
+            "id",
+            "lastUpdated",
+            "name",
+            "description",
+            "cdnName",
+            "cdn",
+            "routingDisabled",
+            "type"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            },
+            "cdnName": {
+                "type": "string"
+            },
+            "cdn": {
+                "type": "integer"
+            },
+            "routingDisabled": {
+                "type": "boolean"
+            },
+            "type": {
+                "type": "string"
+            }
+        }
+    },
+    "server_capabilities": {
+        "type": "object",
+        "required": [
+            "name",
+            "lastUpdated"
+        ],
+        "properties": {
+            "name": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
+    },
+    "tenants": {
+        "type": "object",
+        "required": [
+            "id",
+            "name",
+            "active",
+            "lastUpdated",
+            "parentId"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "name": {
+                "type": "string"
+            },
+            "active": {
+                "type": "boolean"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "parentId": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "parentName": {
+                "type": "string"
+            }
+        }
+    },
+    "divisions": {
+        "type": "object",
+        "required": [
+            "id",
+            "lastUpdated",
+            "name"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            }
+        }
+    },
+    "regions": {
+        "type": "object",
+        "required": [
+            "divisionName",
+            "division",
+            "id",
+            "lastUpdated",
+            "name"
+        ],
+        "properties": {
+            "divisionName": {
+                "type": "string"
+            },
+            "division": {
+                "type": "integer"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            }
+        }
+    },
+    "phys_locations": {
+        "type": "object",
+        "required": [
+            "address",
+            "city",
+            "comments",
+            "email",
+            "id",
+            "lastUpdated",
+            "name",
+            "phone",
+            "poc",
+            "regionId",
+            "region",
+            "shortName",
+            "state",
+            "zip"
+        ],
+        "properties": {
+            "address": {
+                "type": "string"
+            },
+            "city": {
+                "type": "string"
+            },
+            "comments": {
+                "type": "string"
+            },
+            "email": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "phone": {
+                "type": "string"
+            },
+            "poc": {
+                "type": "string"
+            },
+            "regionId": {
+                "type": "integer"
+            },
+            "region": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "shortName": {
+                "type": "string"
+            },
+            "state": {
+                "type": "string"
+            },
+            "zip": {
+                "type": "string"
+            }
+        }
+    },
+    "servers": {
+        "type": "object",
+        "required": [
+            "cachegroup",
+            "cachegroupId",
+            "cdnId",
+            "cdnName",
+            "domainName",
+            "guid",
+            "hostName",
+            "httpsPort",
+            "id",
+            "iloIpAddress",
+            "iloIpGateway",
+            "iloIpNetmask",
+            "iloPassword",
+            "iloUsername",
+            "lastUpdated",
+            "mgmtIpAddress",
+            "mgmtIpGateway",
+            "mgmtIpNetmask",
+            "offlineReason",
+            "physLocation",
+            "physLocationId",
+            "profileNames",
+            "rack",
+            "revalPending",
+            "status",
+            "statusId",
+            "tcpPort",
+            "type",
+            "typeId",
+            "updPending",
+            "xmppId",
+            "xmppPasswd",
+            "interfaces",
+            "statusLastUpdated",
+            "configUpdateTime",
+            "configApplyTime",
+            "revalUpdateTime",
+            "revalApplyTime"
+        ],
+        "properties": {
+            "cachegroup": {
+                "type": "string"
+            },
+            "cachegroupId": {
+                "type": "integer"
+            },
+            "cdnId": {
+                "type": "integer"
+            },
+            "cdnName": {
+                "type": "string"
+            },
+            "domainName": {
+                "type": "string"
+            },
+            "guid": {
+                "type": "null"
+            },
+            "hostName": {
+                "type": "string"
+            },
+            "httpsPort": {
+                "type": "integer"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "iloIpAddress": {
+                "type": "null"
+            },
+            "iloIpGateway": {
+                "type": "null"
+            },
+            "iloIpNetmask": {
+                "type": "null"
+            },
+            "iloPassword": {
+                "type": "null"
+            },
+            "iloUsername": {
+                "type": "null"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "mgmtIpAddress": {
+                "type": "null"
+            },
+            "mgmtIpGateway": {
+                "type": "null"
+            },
+            "mgmtIpNetmask": {
+                "type": "null"
+            },
+            "offlineReason": {
+                "type": "null"
+            },
+            "physLocation": {
+                "type": "string"
+            },
+            "physLocationId": {
+                "type": "integer"
+            },
+            "profileNames": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "rack": {
+                "type": "null"
+            },
+            "revalPending": {
+                "type": "boolean"
+            },
+            "status": {
+                "type": "string"
+            },
+            "statusId": {
+                "type": "integer"
+            },
+            "tcpPort": {
+                "type": "integer"
+            },
+            "type": {
+                "type": "string"
+            },
+            "typeId": {
+                "type": "integer"
+            },
+            "updPending": {
+                "type": "boolean"
+            },
+            "xmppId": {
+                "type": "string"
+            },
+            "xmppPasswd": {
+                "type": "null"
+            },
+            "interfaces": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "ipAddresses",
+                        "maxBandwidth",
+                        "monitor",
+                        "mtu",
+                        "name",
+                        "routerHostName",
+                        "routerPortName"
+                    ],
+                    "properties": {
+                        "ipAddresses": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "required": [
+                                    "address",
+                                    "gateway",
+                                    "serviceAddress"
+                                ],
+                                "properties": {
+                                    "address": {
+                                        "type": "string"
+                                    },
+                                    "gateway": {
+                                        "type": "string"
+                                    },
+                                    "serviceAddress": {
+                                        "type": "boolean"
+                                    }
+                                }
+                            }
+                        },
+                        "maxBandwidth": {
+                            "type": "null"
+                        },
+                        "monitor": {
+                            "type": "boolean"
+                        },
+                        "mtu": {
+                            "type": "integer"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "routerHostName": {
+                            "type": "string"
+                        },
+                        "routerPortName": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "statusLastUpdated": {
+                "type": "null"
+            },
+            "configUpdateTime": {
+                "type": "string"
+            },
+            "configApplyTime": {
+                "type": "string"
+            },
+            "revalUpdateTime": {
+                "type": "string"
+            },
+            "revalApplyTime": {
+                "type": "string"
+            }
+        }
+    },
+    "statuses": {
+        "type": "object",
+        "required": [
+            "description",
+            "name",
+            "id",
+            "lastUpdated"
+        ],
+        "properties": {
+            "description": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
+    }
+}

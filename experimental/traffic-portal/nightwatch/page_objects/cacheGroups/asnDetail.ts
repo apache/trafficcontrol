@@ -21,22 +21,11 @@ export type AsnDetailPageObject = EnhancedPageObject<{}, typeof asnDetailPageObj
 
 const asnDetailPageObject = {
 	elements: {
-		asn: {
-			selector: "input[name='asn']"
-		},
-		cachegroup: {
-			selector: "mat-select[name='cachegroup']"
-		},
-		id: {
-			selector: "input[name='id']"
-		},
-		lastUpdated: {
-			selector: "input[name='lastUpdated']"
-		},
-
-		saveBtn: {
-			selector: "button[type='submit']"
-		}
+		asn: "input[name='asn']",
+		cachegroup: "mat-select[name='cachegroup']",
+		id: "input[name='id']",
+		lastUpdated: "input[name='lastUpdated']",
+		saveBtn: "button[type='submit']",
 	},
 };
 

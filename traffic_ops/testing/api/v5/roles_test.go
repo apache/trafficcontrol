@@ -46,7 +46,7 @@ func TestRoles(t *testing.T) {
 				},
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRoleSort()),
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateRoleSort(), validateRolePermissionSort()),
 				},
 				"OK when VALID NAME parameter": {
 					ClientSession: TOSession,
@@ -291,6 +291,20 @@ func validateRoleSort() utils.CkReqFunc {
 			roleNames = append(roleNames, role.Name)
 		}
 		assert.Equal(t, true, sort.StringsAreSorted(roleNames), "List is not sorted by their names: %v", roleNames)
+	}
+}
+
+func validateRolePermissionSort() utils.CkReqFunc {
+	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
+		assert.RequireNotNil(t, resp, "Expected Role response to not be nil.")
+		roles := resp.([]tc.RoleV4)
+		for _, role := range roles {
+			assert.Equal(t,
+				true,
+				sort.StringsAreSorted(role.Permissions),
+				"Permissions for role %s are not sorted: %v", role.Name, role.Permissions,
+			)
+		}
 	}
 }
 

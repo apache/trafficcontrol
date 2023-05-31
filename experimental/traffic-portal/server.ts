@@ -244,14 +244,18 @@ function run(): number {
 /* eslint-disable no-underscore-dangle */
 // eslint-disable-next-line @typescript-eslint/naming-convention
 declare const __non_webpack_require__: NodeRequire;
-/* eslint-enable no-underscore-dangle */
-const mainModule = __non_webpack_require__.main;
-const moduleFilename = mainModule && mainModule.filename || "";
-if (moduleFilename === __filename || moduleFilename.includes("iisnode")) {
-	const code = run();
-	if (code) {
-		process.exit(code);
+try {
+	/* eslint-enable no-underscore-dangle */
+	const mainModule = __non_webpack_require__.main;
+	const moduleFilename = mainModule && mainModule.filename || "";
+	if (moduleFilename === __filename || moduleFilename.includes("iisnode")) {
+		const code = run();
+		if (code) {
+			process.exit(code);
+		}
 	}
+} catch(e) {
+	console.error("Encountered error while running server:", e);
+	process.exit(1);
 }
-
 export * from "./src/main.server";

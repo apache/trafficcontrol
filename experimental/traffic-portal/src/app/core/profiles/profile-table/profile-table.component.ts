@@ -67,9 +67,36 @@ export class ProfileTableComponent implements OnInit {
 	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseProfile>> = [
 		{
+			href: (profile: ResponseProfile): string => `${profile.id}`,
+			name: "Open in New Tab",
+			newTab: true
+		},
+		{
+			href: (type: ResponseProfile): string => `${type.id}`,
+			name: "Edit"
+		},
+		{
 			action: "delete",
 			multiRow: false,
 			name: "Delete"
+		},
+		{
+			action: "import-profile",
+			disabled: (): true => true,
+			multiRow: false,
+			name: "Import Profile",
+		},
+		{
+			action: "export-profile",
+			disabled: (): true => true,
+			multiRow: false,
+			name: "Export Profile",
+		},
+		{
+			action: "manage-parameters",
+			disabled: (): true => true,
+			multiRow: false,
+			name: "Manage Parameters",
 		},
 		{
 			href: "/core/servers",

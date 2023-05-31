@@ -25,6 +25,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -417,6 +418,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was updated.")
+	// to return empty array instead of null
+	if roleV4.Permissions == nil {
+		roleV4.Permissions = []string{}
+	}
 	var roleResponse interface{}
 	roleResponse = tc.RoleV4{
 		Name:        roleV4.Name,
@@ -575,6 +580,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "role was created.")
+	// to return empty array instead of null
+	if roleCapabilities == nil {
+		roleCapabilities = []string{}
+	}
 	var roleResponse interface{}
 	capabilities := roleCapabilities
 	roleResponse = tc.RoleV4{
@@ -644,6 +653,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning RoleV4 row: %w", err))
 			return
 		}
+		sort.Strings(roleV4.Permissions)
 		rolesV4 = append(rolesV4, roleV4)
 	}
 	api.WriteResp(w, r, rolesV4)

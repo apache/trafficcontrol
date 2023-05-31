@@ -35,8 +35,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7367](https://github.com/apache/trafficcontrol/pull/7367) *Traffic Ops* Adds ACME:CREATE, ACME:DELETE, ACME:DELETE, and ACME:READ permissions to operations role.
 - [#7380](https://github.com/apache/trafficcontrol/pull/7380) *Traffic Portal* Adds strikethrough (expired), red (7 days until expiration) and yellow (30 days until expiration) visuals to delivery service cert expiration grid rows.
 - [#7388](https://github.com/apache/trafficcontrol/pull/7388) *TC go Client* Adds sslkey_expiration methodology in v4 and v5 clients
+- [#7543](https://github.com/apache/trafficcontrol/pull/7543) *Traffic Portal* New Ansible Role to use Traffic Portal v2
+
 
 ### Changed
+- [#7521](https://github.com/apache/trafficcontrol/pull/7521) *Traffic Ops* Returns empty array instead of null when no permissions are given for roles endpoint using POST or PUT request.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Adds better labels to routing methods widget on the TP dashboard.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Simplifies DS button bar by moving DS changes / DSRs under More menu and renaming to 'View Change Requests'.
 - [#7224](https://github.com/apache/trafficcontrol/pull/7224) *Traffic Ops* Required Capabilities are now a part of the `DeliveryService` structure.
@@ -50,8 +53,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7044](https://github.com/apache/trafficcontrol/issues/7044) *CDN in a Box* [CDN in a Box, the t3c integration tests, and the tc health client integration tests now use Apache Traffic Server 9.1.
 - [#7366](https://github.com/apache/trafficcontrol/pull/7366) *t3c* Removed timestamp from metadata file since it's changing every minute and causing excessive commits to git repo.
 - [#7386](https://github.com/apache/trafficcontrol/pull/7386) *Traffic Portal* Increased the number of events that are logged to the TP access log.
+- [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 
 ### Fixed
+- [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
+- [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
+- [#7511](https://github.com/apache/trafficcontrol/pull/7511) *Traffic Ops* Fixed the changelog registration message to include the username instead of duplicate email entry.
+- [#7465](https://github.com/apache/trafficcontrol/issues/7465) *Traffic Ops* Fixes server_capabilities v5 apis to respond with RFC3339 date/time Format
 - [#7441](https://github.com/apache/trafficcontrol/pull/7441) *Traffic Ops* Fixed the invalidation jobs endpoint to respect CDN locks.
 - [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixes service_category apis to respond with RFC3339 date/time Format
 - [#7414](https://github.com/apache/trafficcontrol/pull/7414) * Traffic Portal* Fixed DSR difference for DS required capability.
