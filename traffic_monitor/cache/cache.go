@@ -301,19 +301,22 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 	}
 
 	stats, miscStats, err := decoder.Parse(result.ID, rdr, pollCtx)
-	if val, ok := miscStats["current_time_epoch_ms"]; ok {
-		valString := fmt.Sprintf("%s", val)
-		valInt, err := strconv.ParseInt(valString, 10, 64)
-		if err != nil {
-			log.Errorf("parse error '%v'", err)
-		}
-		result.Time = time.UnixMilli(valInt)
-	}
 	if err != nil {
 		log.Warnf("%s decode error '%v'", id, err)
 		result.Error = err
 		handler.resultChan <- result
 		return
+	}
+	if val, ok := miscStats["current_time_epoch_ms"]; ok {
+		valString := fmt.Sprintf("%s", val)
+		valInt, valErr := strconv.ParseInt(valString, 10, 64)
+		if err != nil {
+			log.Errorf("parse error '%v'", valErr)
+			result.Error = valErr
+			handler.resultChan <- result
+			return
+		}
+		result.Time = time.UnixMilli(valInt)
 	}
 	if value, ok := miscStats[rfc.Via]; ok {
 		result.ID = fmt.Sprintf("%v", value)
