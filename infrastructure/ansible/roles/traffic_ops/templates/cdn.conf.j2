@@ -15,17 +15,6 @@
    "cors" : {
       "access_control_allow_origin" : "{{ to_cors_access_control_allow_origin }}"
    },
-   "hypnotoad" : {
-      "accept_interval" : {{ to_hypnotoad_accept_interval }},
-      "group" : "{{ to_group }}",
-      "heartbeat_timeout" : {{ to_hypnotoad_heartbeat_timeout }},
-      "listen" : [
-         "https://[::]:{{ to_hypnotoad_port }}?cert={{ to_certs_cert }}&key={{ to_certs_key }}&ca={{ to_certs_ca }}&verify={{ to_certs_verify}}&ciphers={{ to_hypnotoad_ciphers | join(":") }}"
-      ],
-      "pid_file" : "{{ to_hypnotoad_pidfile }}",
-      "user" : "{{ to_user }}",
-      "workers" : {{ to_hypnotoad_number_of_workers }}
-   },
    "inactivity_timeout" : {{ to_inactivity_timeout }},
    "influxdb_conf_path" : "{{ to_influxdb_conf_path }}",
    "portal" : {
@@ -55,6 +44,8 @@
    "use_ims": {{ to_use_ims | bool | lower }},
    "role_based_permissions": {{ to_use_rbp | bool | lower }},
    "traffic_ops_golang" : {
+      "cert" : {{ to_certs_cert }},
+      "key" : {{ to_certs_key }},
       "idle_timeout" : {{ to_go_inactive_timeout }},
       "log_location_debug" : "{{ to_go_logging_file_debug }}",
       "log_location_error" : "{{ to_go_logging_file_error }}",

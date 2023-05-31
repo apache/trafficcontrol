@@ -19,12 +19,10 @@
 # chkconfig: 2345 55 25
 # description: Traffic Ops is the administrative web UI for IPCDN.
 #
-# processname: hypnotoad
 # pidfile:
 #
 
 ### BEGIN INIT INFO
-# Provides: hypnotoad
 # Required-Start: $local_fs $network $syslog
 # Required-Stop: $local_fs $syslog
 # Should-Start: $syslog

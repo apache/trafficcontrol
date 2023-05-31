@@ -102,11 +102,10 @@ mkdir "$ROOT_DIR/opt/traffic_ops/app/db/trafficvault";
 mkdir -p "$ROOT_DIR/opt/traffic_ops/app/conf/production";
 cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 {
-	"hypnotoad": {
-		"listen": [
-			"https://[::]:60443?cert=$ROOT_DIR/etc/pki/tls/certs/localhost.crt&key=$ROOT_DIR/etc/pki/tls/private/localhost.key"
-		]
-	}
+	"traffic_ops_golang": {
+    "cert" : "$ROOT_DIR/etc/pki/tls/certs/localhost.crt",
+    "key"  : "$ROOT_DIR/etc/pki/tls/private/localhost.key"
+  }
 }
 EOF
 
@@ -446,17 +445,8 @@ except Exception as e:
 	print('Error loading cdn.conf file:', e, file=sys.stderr)
 	exit(1)
 
-if not isinstance(conf, dict) or len(conf) != 4 or 'hypnotoad' not in conf or 'secrets' not in conf or 'to' not in conf or 'traffic_ops_golang' not in conf:
+if not isinstance(conf, dict) or len(conf) != 3 or 'secrets' not in conf or 'to' not in conf or 'traffic_ops_golang' not in conf:
 	print('Malformed cdn.conf file - not an object or missing keys', file=sys.stderr)
-	exit(1)
-
-if not isinstance(conf['hypnotoad'], dict) or len(conf['hypnotoad']) != 1 or 'listen' not in conf['hypnotoad'] or not isinstance(conf['hypnotoad']['listen'], list) or len(conf['hypnotoad']['listen']) != 1 or not isinstance(conf['hypnotoad']['listen'][0], str):
-	print('Malformed hypnotoad object in cdn.conf:', conf['hypnotoad'], file=sys.stderr)
-	exit(1)
-
-listen = 'https://[::]:60443?cert=$ROOT_DIR/etc/pki/tls/certs/localhost.crt&key=$ROOT_DIR/etc/pki/tls/private/localhost.key'
-if conf['hypnotoad']['listen'][0] != listen:
-	print('Incorrect hypnotoad.listen[0] in cdn.conf, expected:', listen, 'got:', conf['hypnotoad']['listen'][0], file=sys.stderr)
 	exit(1)
 
 if not isinstance(conf['secrets'], list) or len(conf['secrets']) != 1 or not isinstance(conf['secrets'][0], str):
@@ -475,8 +465,18 @@ if conf['to']['base_url'] != 'http://localhost:3000':
 	print('Incorrect to.base_url in cdn.conf, expected: http://localhost:3000, got:', conf['to']['base_url'], file=sys.stderr)
 	exit(1)
 
-if not isinstance(conf['traffic_ops_golang'], dict) or len(conf['traffic_ops_golang']) != 3 or 'port' not in conf['traffic_ops_golang'] or 'log_location_error' not in conf['traffic_ops_golang'] or 'log_location_event' not in conf['traffic_ops_golang']:
+if not isinstance(conf['traffic_ops_golang'], dict) or len(conf['traffic_ops_golang']) != 5 or 'cert' not in conf['traffic_ops_golang'] or 'key' not in conf['traffic_ops_golang'] or 'port' not in conf['traffic_ops_golang'] or 'log_location_error' not in conf['traffic_ops_golang'] or 'log_location_event' not in conf['traffic_ops_golang']:
 	print('Malformed traffic_ops_golang object in cdn.conf:', conf['traffic_ops_golang'], sys.stderr)
+	exit(1)
+
+cert='$ROOT_DIR/etc/pki/tls/certs/localhost.crt'
+if conf['traffic_ops_golang']['cert']!= cert:
+	print('Incorrect cert in cdn.conf, expected:', cert, 'got:', conf['traffic_ops_golang']['cert'], file=sys.stderr)
+	exit(1)
+
+key='$ROOT_DIR/etc/pki/tls/private/localhost.key'
+if conf['traffic_ops_golang']['key']!= key:
+	print('Incorrect key in cdn.conf, expected:', key, 'got:', conf['traffic_ops_golang']['key'], file=sys.stderr)
 	exit(1)
 
 if conf['traffic_ops_golang']['port'] != '443':
