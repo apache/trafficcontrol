@@ -40,7 +40,7 @@ const parameterDetailPageObject = {
 			selector: "input[name='secure']"
 		},
 		value: {
-			selector: "input[name='value']"
+			selector: "textarea[name='value']"
 		}
 	},
 };
