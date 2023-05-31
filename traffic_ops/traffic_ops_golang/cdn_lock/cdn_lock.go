@@ -26,6 +26,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -102,6 +103,14 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		if err = rows.Scan(&cLock.UserName, &cLock.CDN, &cLock.Message, &cLock.Soft, &cLock.LastUpdated, pq.Array(&cLock.SharedUserNames)); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn locks: "+err.Error()))
 			return
+		}
+		if inf.Version != nil && inf.Version.Major >= 5 && inf.Version.Minor >= 0 {
+			t, err := util.ConvertTimeFormat(cLock.LastUpdated, time.RFC3339)
+			if err != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("converting time formats: "+err.Error()))
+				return
+			}
+			cLock.LastUpdated = *t
 		}
 		cdnLock = append(cdnLock, cLock)
 	}
@@ -184,6 +193,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("cdn lock create: lock couldn't be acquired"))
 		return
 	}
+	if inf.Version != nil && inf.Version.Major >= 5 && inf.Version.Minor >= 0 {
+		t, err := util.ConvertTimeFormat(cdnLock.LastUpdated, time.RFC3339)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("converting time formats: "+err.Error()))
+			return
+		}
+		cdnLock.LastUpdated = *t
+	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, fmt.Sprintf("%s CDN lock acquired!", soft))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cdnLock)
 
@@ -233,6 +250,14 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		}
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting cdn lock with cdn name %s : %w", cdn, err))
 		return
+	}
+	if inf.Version != nil && inf.Version.Major >= 5 && inf.Version.Minor >= 0 {
+		t, err := util.ConvertTimeFormat(result.LastUpdated, time.RFC3339)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("converting time formats: "+err.Error()))
+			return
+		}
+		result.LastUpdated = *t
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn lock deleted")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, result)
