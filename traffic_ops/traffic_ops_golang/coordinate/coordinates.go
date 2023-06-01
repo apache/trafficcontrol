@@ -1,3 +1,5 @@
+// Package coordinate contains API handlers and associated logic for servicing
+// the `/coordinates` API endpoint.
 package coordinate
 
 /*
@@ -34,16 +36,25 @@ import (
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-// we need a type alias to define functions on
+// TOCoordinate is a "CRUDer"-based API wrapper for Coordinate objects.
 type TOCoordinate struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CoordinateNullable
 }
 
+// SetLastUpdated implements a "CRUDer" interface.
 func (v *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOCoordinate) InsertQuery() string           { return insertQuery() }
-func (v *TOCoordinate) NewReadObj() interface{}       { return &tc.CoordinateNullable{} }
-func (v *TOCoordinate) SelectQuery() string           { return selectQuery() }
+
+// InsertQuery implements a "CRUDer" interface.
+func (v *TOCoordinate) InsertQuery() string { return insertQuery() }
+
+// NewReadObj implements a "CRUDer" interface.
+func (v *TOCoordinate) NewReadObj() interface{} { return &tc.CoordinateNullable{} }
+
+// SelectQuery implements a "CRUDer" interface.
+func (v *TOCoordinate) SelectQuery() string { return selectQuery() }
+
+// ParamColumns implements a "CRUDer" interface.
 func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":   dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
@@ -51,17 +62,23 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	}
 }
 
+// GetLastUpdated implements a "CRUDer" interface.
 func (v *TOCoordinate) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "coordinate")
 }
 
+// UpdateQuery implements a "CRUD"er interface.
 func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
+
+// DeleteQuery implements a "CRUD"er interface.
 func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
+
+// GetKeyFieldsInfo implements a "CRUD"er interface.
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-// Implementation of the Identifier, Validator interface functions
+// GetKeys implements the Identifier and Validator interfaces.
 func (coordinate TOCoordinate) GetKeys() (map[string]interface{}, bool) {
 	if coordinate.ID == nil {
 		return map[string]interface{}{"id": 0}, false
@@ -69,6 +86,7 @@ func (coordinate TOCoordinate) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"id": *coordinate.ID}, true
 }
 
+// GetAuditName implements a "CRUD"er interface.
 func (coordinate TOCoordinate) GetAuditName() string {
 	if coordinate.Name != nil {
 		return *coordinate.Name
@@ -79,10 +97,12 @@ func (coordinate TOCoordinate) GetAuditName() string {
 	return "0"
 }
 
+// GetType implements a "CRUDer" interface.
 func (coordinate TOCoordinate) GetType() string {
 	return "coordinate"
 }
 
+// SetKeys implements a "CRUDer" interface.
 func (coordinate *TOCoordinate) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
 	coordinate.ID = &i
@@ -104,7 +124,8 @@ func isValidCoordinateChar(r rune) bool {
 	return false
 }
 
-// IsValidCoordinateName returns true if the name contains only characters valid for a Coordinate name
+// IsValidCoordinateName returns true if the name contains only characters valid
+// for a Coordinate name.
 func IsValidCoordinateName(str string) bool {
 	i := strings.IndexFunc(str, func(r rune) bool { return !isValidCoordinateChar(r) })
 	return i == -1
@@ -123,11 +144,16 @@ func (coordinate TOCoordinate) Validate() (error, error) {
 	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
+// Create implements a "CRUDer" interface.
 func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
+
+// Read implements a "CRUDer" interface.
 func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(coord.APIInfo(), "name")
 	return api.GenericRead(h, coord, useIMS)
 }
+
+// SelectMaxLastUpdatedQuery implements a "CRUDer" interface.
 func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
@@ -135,9 +161,12 @@ func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tab
 	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
+// Update implements a "CRUDer" interface.
 func (coord *TOCoordinate) Update(h http.Header) (error, error, int) {
 	return api.GenericUpdate(h, coord)
 }
+
+// Delete implements a "CRUDer" interface.
 func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 
 func selectQuery() string {
