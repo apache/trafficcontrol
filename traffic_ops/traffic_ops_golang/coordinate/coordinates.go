@@ -57,8 +57,8 @@ func (v *TOCoordinate) SelectQuery() string { return selectQuery() }
 // ParamColumns implements a "CRUDer" interface.
 func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{Column: "name"},
+		"id":   {Column: "id", Checker: api.IsInt},
+		"name": {Column: "name"},
 	}
 }
 
