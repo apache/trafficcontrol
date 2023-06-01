@@ -57,7 +57,7 @@ def test_parameter_contract(to_session: TOSession,
 
 		first_parameter = parameter_data[0]
 		if not isinstance(first_parameter, dict):
-			raise TypeError("malformed API response; first Parameter in response is not an object")
+			raise TypeError("malformed API response; first Parameter in response is not an dict")
 		logger.info("Parameter Api get response %s", first_parameter)
 
 		parameter_response_template = response_template_data.get("parameters")
@@ -78,9 +78,7 @@ def test_parameter_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for cdn endpoint: API response was malformed")
 	finally:
 		# Delete Parameter after test execution to avoid redundancy.
-		try:
-			parameter_id = parameter_post_data["id"]
-			to_session.delete_parameter(parameter_id=parameter_id)
-		except IndexError:
+		parameter_id = parameter_post_data.get("id")
+		if to_session.delete_parameter(parameter_id=parameter_id) is None:
 			logger.error("Parameter returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_parameter_contract")

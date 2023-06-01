@@ -56,7 +56,7 @@ def test_profile_contract(to_session: TOSession,
 
 		first_profile = profile_data[0]
 		if not isinstance(first_profile, dict):
-			raise TypeError("malformed API response; first Profile in response is not an object")
+			raise TypeError("malformed API response; first Profile in response is not an dict")
 		logger.info("Profile Api get response %s", first_profile)
 
 		profile_response_template = response_template_data.get("profiles")
@@ -75,9 +75,12 @@ def test_profile_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for cdn endpoint: API response was malformed")
 	finally:
 		# Delete Profile after test execution to avoid redundancy.
-		try:
-			profile_id = profile_post_data["id"]
-			to_session.delete_profile_by_id(profile_id=profile_id)
-		except IndexError:
+		profile_id = profile_post_data.get("id")
+		if to_session.delete_profile_by_id(profile_id=profile_id) is None:
 			logger.error("Profile returned by Traffic Ops is missing an 'id' property")
+			pytest.fail("Response from delete request is empty, Failing test_profile_contract")
+
+		cdn_id = profile_post_data.get("cdn")
+		if to_session.delete_cdn_by_id(cdn_id=cdn_id) is None:
+			logger.error("Cdn returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_profile_contract")
