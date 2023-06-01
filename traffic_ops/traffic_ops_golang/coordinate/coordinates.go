@@ -43,19 +43,19 @@ type TOCoordinate struct {
 }
 
 // SetLastUpdated implements a "CRUDer" interface.
-func (v *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (coordinate *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { coordinate.LastUpdated = &t }
 
 // InsertQuery implements a "CRUDer" interface.
-func (v *TOCoordinate) InsertQuery() string { return insertQuery() }
+func (*TOCoordinate) InsertQuery() string { return insertQuery() }
 
 // NewReadObj implements a "CRUDer" interface.
-func (v *TOCoordinate) NewReadObj() interface{} { return &tc.CoordinateNullable{} }
+func (*TOCoordinate) NewReadObj() interface{} { return &tc.CoordinateNullable{} }
 
 // SelectQuery implements a "CRUDer" interface.
-func (v *TOCoordinate) SelectQuery() string { return selectQuery() }
+func (*TOCoordinate) SelectQuery() string { return selectQuery() }
 
 // ParamColumns implements a "CRUDer" interface.
-func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+func (*TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
 		"id":   {Column: "id", Checker: api.IsInt},
 		"name": {Column: "name"},
@@ -63,15 +63,15 @@ func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 }
 
 // GetLastUpdated implements a "CRUDer" interface.
-func (v *TOCoordinate) GetLastUpdated() (*time.Time, bool, error) {
-	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "coordinate")
+func (coordinate *TOCoordinate) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(coordinate.APIInfo().Tx, *coordinate.ID, "coordinate")
 }
 
 // UpdateQuery implements a "CRUD"er interface.
-func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
+func (*TOCoordinate) UpdateQuery() string { return updateQuery() }
 
 // DeleteQuery implements a "CRUD"er interface.
-func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
+func (*TOCoordinate) DeleteQuery() string { return deleteQuery() }
 
 // GetKeyFieldsInfo implements a "CRUD"er interface.
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -104,7 +104,7 @@ func (coordinate TOCoordinate) GetType() string {
 
 // SetKeys implements a "CRUDer" interface.
 func (coordinate *TOCoordinate) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	i, _ := keys["id"].(int)
 	coordinate.ID = &i
 }
 
@@ -154,7 +154,7 @@ func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, erro
 }
 
 // SelectMaxLastUpdatedQuery implements a "CRUDer" interface.
-func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+func (*TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
 		` UNION ALL
