@@ -22,11 +22,13 @@ package coordinate
  */
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -148,6 +150,8 @@ func (coordinate TOCoordinate) Validate() (error, error) {
 func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
 
 // Read implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer" Read
+// function.
 func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(coord.APIInfo(), "name")
 	return api.GenericRead(h, coord, useIMS)
@@ -169,8 +173,7 @@ func (coord *TOCoordinate) Update(h http.Header) (error, error, int) {
 // Delete implements a "CRUDer" interface.
 func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 
-func selectQuery() string {
-	query := `SELECT
+const readQuery = `SELECT
 id,
 latitude,
 longitude,
@@ -178,7 +181,9 @@ last_updated,
 name
 
 FROM coordinate c`
-	return query
+
+func selectQuery() string {
+	return readQuery
 }
 
 func updateQuery() string {
@@ -204,4 +209,51 @@ name) VALUES (
 
 func deleteQuery() string {
 	return `DELETE FROM coordinate WHERE id = :id`
+}
+
+// Read is the handler for GET requests made to the /coordinates API (in APIv5
+// and later).
+func Read(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	cols := map[string]dbhelpers.WhereColumnInfo{
+		"id":   {Column: "c.id", Checker: api.IsInt},
+		"name": {Column: "c.name", Checker: nil},
+	}
+	api.DefaultSort(inf, "name")
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	if len(errs) > 0 {
+		errCode = http.StatusBadRequest
+		userErr = util.JoinErrs(errs)
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
+	}
+
+	query := readQuery + where + orderBy + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("querying coordinates: %w", err))
+		return
+	}
+	defer log.Close(rows, "closing coordinate query rows")
+
+	cs := []tc.CoordinateV5{}
+	for rows.Next() {
+		var c tc.CoordinateV5
+		err := rows.Scan(&c.ID, &c.Latitude, &c.Longitude, &c.LastUpdated, &c.Name)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning a coordinate: %w", err))
+			return
+		}
+		cs = append(cs, c)
+	}
+
+	api.WriteResp(w, r, cs)
 }
