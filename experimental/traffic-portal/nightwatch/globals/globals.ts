@@ -30,6 +30,7 @@ import type { DeliveryServiceCardPageObject } from "nightwatch/page_objects/deli
 import type { DeliveryServiceDetailPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceDetail";
 import type { DeliveryServiceInvalidPageObject } from "nightwatch/page_objects/deliveryServices/deliveryServiceInvalidationJobs";
 import type { LoginPageObject } from "nightwatch/page_objects/login";
+import type { ParametersPageObject } from "nightwatch/page_objects/parameters/parametersTable";
 import type { ProfileDetailPageObject } from "nightwatch/page_objects/profiles/profileDetail";
 import type { ProfilePageObject } from "nightwatch/page_objects/profiles/profilesTable";
 import type { PhysLocDetailPageObject } from "nightwatch/page_objects/servers/physLocDetail";
@@ -57,11 +58,12 @@ import {
 	ResponseCoordinate,
 	ResponseStatus,
 	ResponseProfile,
-	ResponseServer, ResponseServerCapability, ResponseRole,
+	ResponseServer, ResponseServerCapability, ResponseRole, ResponseParameter,
 } from "trafficops-types";
 
 import * as config from "../config.json";
 import { DataClient, generateUniqueString } from "../dataClient";
+import {ParameterDetailPageObject} from "../page_objects/parameters/parameterDetail";
 import type { CapabilitiesPageObject } from "../page_objects/servers/capabilities/capabilitiesTable";
 import type { CapabilityDetailsPageObject } from "../page_objects/servers/capabilities/capabilityDetails";
 import type { TypeDetailPageObject } from "../page_objects/types/typeDetail";
@@ -95,6 +97,8 @@ declare module "nightwatch" {
 		};
 		login: () => LoginPageObject;
 		profiles: {
+			parametersTable: () => ParametersPageObject;
+			parameterDetail: () => ParameterDetailPageObject;
 			profileTable: () => ProfilePageObject;
 			profileDetail: () => ProfileDetailPageObject;
 		};
@@ -152,6 +156,7 @@ export interface CreatedData {
 	ds: ResponseDeliveryService;
 	ds2: ResponseDeliveryService;
 	edgeServer: ResponseServer;
+	parameter: ResponseParameter;
 	physLoc: ResponsePhysicalLocation;
 	region: ResponseRegion;
 	role: ResponseRole;

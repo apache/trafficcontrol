@@ -12,15 +12,15 @@
  * limitations under the License.
  */
 
-describe("Profiles Spec", () => {
+describe("Parameters Spec", () => {
 	it("Loads elements", async () => {
 		await browser.page.common()
 			.section.sidebar
-			.navigateToNode("profiles", ["configurationContainer", "profilesContainer"]);
+			.navigateToNode("parameters", ["configurationContainer", "profilesContainer"]);
 		await browser.waitForElementPresent("input[name=fuzzControl]");
 		await browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);
-			browser.assert.ok((rows.value as []).length >= 1);
+			browser.assert.ok((rows.value as []).length >= 2);
 		});
 	});
 });
