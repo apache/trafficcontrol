@@ -794,9 +794,18 @@ func (val APIInfoImpl) APIInfo() *APIInfo {
 	return val.ReqInfo
 }
 
+// Version represents an API version.
 type Version struct {
 	Major uint64
 	Minor uint64
+}
+
+// String implements the fmt.Stringer interface.
+func (v *Version) String() string {
+	if v == nil {
+		return "{{null}}"
+	}
+	return strconv.FormatUint(v.Major, 10) + "." + strconv.FormatUint(v.Minor, 10)
 }
 
 func (v *Version) LessThan(otherVersion *Version) bool {
