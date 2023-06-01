@@ -40,7 +40,7 @@ func TestCDNs(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.CDN]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.CDNV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -113,7 +113,7 @@ func TestCDNs(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when CDN ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: tc.CDN{
+					RequestBody: tc.CDNV5{
 						Name:          "cdn3",
 						DNSSECEnabled: false,
 						DomainName:    "test.cdn3.net",
@@ -122,7 +122,7 @@ func TestCDNs(t *testing.T) {
 				},
 				"BAD REQUEST when EMPTY NAME": {
 					ClientSession: TOSession,
-					RequestBody: tc.CDN{
+					RequestBody: tc.CDNV5{
 						Name:          "",
 						DNSSECEnabled: false,
 						DomainName:    "test.noname.net",
@@ -131,7 +131,7 @@ func TestCDNs(t *testing.T) {
 				},
 				"BAD REQUEST when EMPTY DOMAIN NAME": {
 					ClientSession: TOSession,
-					RequestBody: tc.CDN{
+					RequestBody: tc.CDNV5{
 						Name:          "nodomain",
 						DNSSECEnabled: false,
 						DomainName:    "",
@@ -140,7 +140,7 @@ func TestCDNs(t *testing.T) {
 				},
 				"FORBIDDEN when READ ONLY USER": {
 					ClientSession: readOnlyUserSession,
-					RequestBody: tc.CDN{
+					RequestBody: tc.CDNV5{
 						Name:          "readOnlyTest",
 						DNSSECEnabled: false,
 						DomainName:    "test.ro",
@@ -152,7 +152,7 @@ func TestCDNs(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
-					RequestBody: tc.CDN{
+					RequestBody: tc.CDNV5{
 						DNSSECEnabled: false,
 						DomainName:    "domain2",
 						Name:          "cdn1",
@@ -164,7 +164,7 @@ func TestCDNs(t *testing.T) {
 					EndpointID:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.CDN{
+					RequestBody: tc.CDNV5{
 						DNSSECEnabled: false,
 						DomainName:    "newDomain",
 						Name:          "cdn1",
@@ -175,7 +175,7 @@ func TestCDNs(t *testing.T) {
 					EndpointID:    GetCDNID(t, "cdn1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-					RequestBody: tc.CDN{
+					RequestBody: tc.CDNV5{
 						DNSSECEnabled: false,
 						DomainName:    "newDomain",
 						Name:          "cdn1",
@@ -233,7 +233,7 @@ func TestCDNs(t *testing.T) {
 func validateCDNFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
-		cdnResp := resp.([]tc.CDN)
+		cdnResp := resp.([]tc.CDNV5)
 		for field, expected := range expectedResp {
 			for _, cdn := range cdnResp {
 				switch field {
@@ -265,7 +265,7 @@ func validateCDNUpdateFields(name string, expectedResp map[string]interface{}) u
 func validateCDNPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
-		paginationResp := resp.([]tc.CDN)
+		paginationResp := resp.([]tc.CDNV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
@@ -289,7 +289,7 @@ func validateCDNSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
 		var cdnNames []string
-		cdnResp := resp.([]tc.CDN)
+		cdnResp := resp.([]tc.CDNV5)
 		for _, cdn := range cdnResp {
 			cdnNames = append(cdnNames, cdn.Name)
 		}
@@ -300,7 +300,7 @@ func validateCDNSort() utils.CkReqFunc {
 func validateCDNDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected CDN response to not be nil.")
-		cdnDescResp := resp.([]tc.CDN)
+		cdnDescResp := resp.([]tc.CDNV5)
 		var descSortedList []string
 		var ascSortedList []string
 		assert.RequireGreaterOrEqual(t, len(cdnDescResp), 2, "Need at least 2 CDNs in Traffic Ops to test desc sort, found: %d", len(cdnDescResp))
