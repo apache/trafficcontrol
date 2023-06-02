@@ -60,7 +60,7 @@ def test_cache_group_contract(to_session: TOSession,
 
 		first_cache_group = cache_group_data[0]
 		if not isinstance(first_cache_group, dict):
-			raise TypeError("malformed API response; first Cache group in response is not an object")
+			raise TypeError("malformed API response; first Cache group in response is not an dict")
 		logger.info("Cachegroup API get response %s", first_cache_group)
 		cache_group_response_template = response_template_data.get("cachegroup")
 
@@ -77,9 +77,7 @@ def test_cache_group_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for cachegroup endpoint: API response was malformed")
 	finally:
 		# Delete Cache group after test execution to avoid redundancy.
-		try:
-			cache_group_id = cache_group_post_data["id"]
-			to_session.delete_cachegroups(cache_group_id=cache_group_id)
-		except IndexError:
+		cache_group_id = cache_group_post_data.get("id")
+		if to_session.delete_cachegroups(cache_group_id=cache_group_id) is None:
 			logger.error("Cachegroup returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_cachegroup_contract")

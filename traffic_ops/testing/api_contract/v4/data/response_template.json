@@ -432,7 +432,10 @@
                 "type": "string"
             },
             "guid": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "hostName": {
                 "type": "string"
@@ -444,34 +447,61 @@
                 "type": "integer"
             },
             "iloIpAddress": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "iloIpGateway": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "iloIpNetmask": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "iloPassword": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "iloUsername": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "lastUpdated": {
                 "type": "string"
             },
             "mgmtIpAddress": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "mgmtIpGateway": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "mgmtIpNetmask": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "offlineReason": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "physLocation": {
                 "type": "string"
@@ -486,7 +516,10 @@
                 }
             },
             "rack": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "revalPending": {
                 "type": "boolean"
@@ -513,7 +546,10 @@
                 "type": "string"
             },
             "xmppPasswd": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "interfaces": {
                 "type": "array",
@@ -552,7 +588,10 @@
                             }
                         },
                         "maxBandwidth": {
-                            "type": "null"
+                            "type": [
+                                "null",
+                                "integer"
+                            ]
                         },
                         "monitor": {
                             "type": "boolean"
@@ -573,7 +612,10 @@
                 }
             },
             "statusLastUpdated": {
-                "type": "null"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "configUpdateTime": {
                 "type": "string"
@@ -609,6 +651,448 @@
             },
             "lastUpdated": {
                 "type": "string"
+            }
+        }
+    },
+    "delivery_services": {
+        "type": "object",
+        "properties": {
+            "maxRequestHeaderBytes": {
+                "type": "integer"
+            },
+            "firstHeaderRewrite": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "innerHeaderRewrite": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "lastHeaderRewrite": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "serviceCategory": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "topology": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "ecsEnabled": {
+                "type": "boolean"
+            },
+            "rangeSliceBlockSize": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "consistentHashRegex": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "consistentHashQueryParams": {
+                "type": "array",
+                "items": {}
+            },
+            "maxOriginConnections": {
+                "type": "integer"
+            },
+            "deepCachingType": {
+                "type": "string"
+            },
+            "fqPacingRate": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "signingAlgorithm": {
+                "type": [
+                    "null",
+                    "boolean"
+                ]
+            },
+            "tenant": {
+                "type": "string"
+            },
+            "trResponseHeaders": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "trRequestHeaders": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "active": {
+                "type": "boolean"
+            },
+            "anonymousBlockingEnabled": {
+                "type": "boolean"
+            },
+            "ccrDnsTtl": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "cdnId": {
+                "type": "integer"
+            },
+            "cdnName": {
+                "type": "string"
+            },
+            "checkPath": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "displayName": {
+                "type": "string"
+            },
+            "dnsBypassCname": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "dnsBypassIp": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "dnsBypassIp6": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "dnsBypassTtl": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "dscp": {
+                "type": "integer"
+            },
+            "edgeHeaderRewrite": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "exampleURLs": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "geoLimit": {
+                "type": "integer"
+            },
+            "geoLimitRedirectURL": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "geoProvider": {
+                "type": "integer"
+            },
+            "globalMaxMbps": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "globalMaxTps": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "httpBypassFqdn": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "id": {
+                "type": "integer"
+            },
+            "infoUrl": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "initialDispersion": {
+                "type": "integer"
+            },
+            "ipv6RoutingEnabled": {
+                "type": "boolean"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "logsEnabled": {
+                "type": "boolean"
+            },
+            "longDesc": {
+                "type": "string"
+            },
+            "matchList": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "type": "string"
+                        },
+                        "setNumber": {
+                            "type": "integer"
+                        },
+                        "pattern": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "maxDnsAnswers": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "midHeaderRewrite": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "missLat": {
+                "type": "integer"
+            },
+            "missLong": {
+                "type": "integer"
+            },
+            "multiSiteOrigin": {
+                "type": "boolean"
+            },
+            "originShield": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "orgServerFqdn": {
+                "type": "string"
+            },
+            "profileDescription": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "profileId": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "profileName": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "protocol": {
+                "type": "integer"
+            },
+            "qstringIgnore": {
+                "type": "integer"
+            },
+            "rangeRequestHandling": {
+                "type": "integer"
+            },
+            "regexRemap": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "regionalGeoBlocking": {
+                "type": "boolean"
+            },
+            "remapText": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "routingName": {
+                "type": "string"
+            },
+            "signed": {
+                "type": "boolean"
+            },
+            "sslKeyVersion": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "tenantId": {
+                "type": "integer"
+            },
+            "type": {
+                "type": "string"
+            },
+            "typeId": {
+                "type": "integer"
+            },
+            "xmlId": {
+                "type": "string"
+            },
+            "tlsVersions": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "geoLimitCountries": {
+                "type": [
+                    "null",
+                    "array"
+                ]
+            }
+        }
+    },
+    "origins": {
+        "type": "object",
+        "required": [
+            "cachegroup",
+            "cachegroupId",
+            "coordinate",
+            "coordinateId",
+            "deliveryService",
+            "deliveryServiceId",
+            "fqdn",
+            "id",
+            "ip6Address",
+            "ipAddress",
+            "isPrimary",
+            "lastUpdated",
+            "name",
+            "port",
+            "profile",
+            "profileId",
+            "protocol",
+            "tenant",
+            "tenantId"
+        ],
+        "properties": {
+            "cachegroup": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "cachegroupId": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "coordinate": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "coordinateId": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "deliveryService": {
+                "type": "string"
+            },
+            "deliveryServiceId": {
+                "type": "integer"
+            },
+            "fqdn": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "ip6Address": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "ipAddress": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "isPrimary": {
+                "type": "boolean"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "port": {
+                "type": "integer"
+            },
+            "profile": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "profileId": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "protocol": {
+                "type": "string"
+            },
+            "tenant": {
+                "type": "string"
+            },
+            "tenantId": {
+                "type": "integer"
             }
         }
     }

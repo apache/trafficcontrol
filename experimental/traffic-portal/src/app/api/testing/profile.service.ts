@@ -13,7 +13,7 @@
 */
 
 import { Injectable } from "@angular/core";
-import { ProfileExport, ProfileImport, ProfileImportResponse, ProfileType, RequestProfile, type ResponseProfile } from "trafficops-types";
+import { ProfileExport, ProfileImport, ProfileImportResponse, ProfileType, RequestProfile, ResponseProfile, RequestParameter, ResponseParameter } from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
@@ -256,5 +256,111 @@ export class ProfileService {
 			id: ++this.lastID,
 		};
 		return t;
+	}
+	
+	private lastParamID = 20;
+	private readonly parameters:  ResponseParameter[] = [
+		{
+			configFile: "cfg.txt",
+			id: 1,
+			lastUpdated: new Date(),
+			name: "param1",
+			profiles: [],
+			secure: false,
+			value: "10"
+		}
+	];
+
+	public async getParameters(id: number): Promise<ResponseParameter>;
+	public async getParameters(): Promise<Array<ResponseParameter>>;
+	/**
+	 * Gets one or all Parameters from Traffic Ops
+	 *
+	 * @param id The integral, unique identifier (number) of a single parameter to be returned.
+	 * @returns The requested parameter(s).
+	 */
+	public async getParameters(id?: number): Promise<ResponseParameter | Array<ResponseParameter>> {
+		if (id !== undefined) {
+			const parameter = this.parameters.filter(t=>t.id === id)[0];
+			if (!parameter) {
+				throw new Error(`no such Parameter: ${id}`);
+			}
+			return parameter;
+		}
+		return this.parameters;
+	}
+
+	/**
+	 * Deletes a Parameter.
+	 *
+	 * @param typeOrId The Parameter to be deleted, or just its ID.
+	 */
+	public async deleteParameter(typeOrId: number | ResponseParameter): Promise<void> {
+		const id = typeof typeOrId === "number" ? typeOrId : typeOrId.id;
+		const idx = this.parameters.findIndex(p => p.id === id);
+		if (idx < 0) {
+			throw new Error(`no such Parameter: #${id}`);
+		}
+		this.parameters.splice(idx, 1);
+	}
+
+	/**
+	 * Creates a new parameter.
+	 *
+	 * @param parameter The parameter to create.
+	 * @returns The created parameter.
+	 */
+	public async createParameter(parameter: RequestParameter): Promise<ResponseParameter> {
+		const t = {
+			...parameter,
+			id: ++this.lastParamID,
+			lastUpdated: new Date(),
+			profiles: [],
+			value: parameter.value ?? ""
+		};
+		this.parameters.push(t);
+		return t;
+	}
+
+	/**
+	 * Replaces an existing Parameter with the provided new definition of a
+	 * Parameter.
+	 *
+	 * @param parameter The full new definition of the Parameter being
+	 * updated.
+	 * @returns The updated Parameter
+	 */
+	public async updateParameter(parameter: ResponseParameter): Promise<ResponseParameter> {
+		const id = this.parameters.findIndex(d => d.id === parameter.id);
+		if (id === -1) {
+			throw new Error(`no such parameter: ${parameter.id}`);
+		}
+		this.parameters[id] = parameter;
+		return parameter;
+	}
+
+	/**
+	 * Retrieves Profiles associated with a Parameter from the API.
+	 *
+	 * @param parameter Either a {@link ResponseParameter} or an integral, unique identifier of a Parameter, for which the
+	 * Profiles are to be retrieved.
+	 * @returns The requested Profile(s).
+	 */
+	public async getProfilesByParam(parameter: number| ResponseParameter): Promise<Array<ResponseProfile>> {
+		const id = typeof parameter === "number" ? parameter : parameter.id;
+		if (id === -1) {
+			throw new Error(`no such parameter: ${id}`);
+		}
+		const index = this.parameters.findIndex(d => d.id === id);
+		const profiles = this.parameters[index].profiles;
+		if (profiles === null) {
+			return new Array<ResponseProfile>();
+		}
+		const returnedProfiles = new Array<ResponseProfile>();
+		for (const val of profiles) {
+			const p = this.getProfiles(val);
+			returnedProfiles.push(await p);
+		}
+		return returnedProfiles;
 	}
 }

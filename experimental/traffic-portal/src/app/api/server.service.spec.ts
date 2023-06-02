@@ -338,6 +338,105 @@ describe("ServerService", () => {
 		});
 	});
 
+	describe("static methods", () => {
+		it("finds a service address", () => {
+			const infs = [
+				{
+					ipAddresses: [
+						{
+							address: "",
+							gateway: "",
+							serviceAddress: false
+						}
+					],
+					maxBandwidth: null,
+					monitor: false,
+					mtu: null,
+					name: "eth0"
+				},
+				{
+					ipAddresses: [
+						{
+							address: "",
+							gateway: "",
+							serviceAddress: false
+						},
+						{
+							address: "",
+							gateway: "",
+							serviceAddress: false
+						}
+					],
+					maxBandwidth: null,
+					monitor: false,
+					mtu: null,
+					name: "eth1"
+				},
+				{
+					ipAddresses: [
+						{
+							address: "",
+							gateway: "",
+							serviceAddress: false
+						},
+						{
+							address: "",
+							gateway: "",
+							serviceAddress: true
+						},
+					],
+					maxBandwidth: null,
+					monitor: false,
+					mtu: null,
+					name: "eth2"
+				}
+			];
+			const serviceInf = ServerService.getServiceInterface(infs);
+			expect(serviceInf).toBe(infs[2]);
+		});
+		it("throws an error when a server has no service addresses", () => {
+			expect(()=>ServerService.getServiceInterface({
+				cachegroupId: -1,
+				cdnId: -1,
+				domainName: "",
+				hostName: "",
+				interfaces: [{
+					ipAddresses: [
+						{
+							address: "",
+							gateway: "",
+							serviceAddress: false
+						},
+						{
+							address: "",
+							gateway: "",
+							serviceAddress: false
+						}
+					],
+					maxBandwidth: null,
+					monitor: false,
+					mtu: null,
+					name: "eth0"
+				}],
+				physLocationId: -1,
+				profileNames: [],
+				statusId: -1,
+				typeId: -1,
+			})).toThrow();
+		});
+		it("extracts netmasks", () => {
+			const [addr, netmask] = ServerService.extractNetmask("192.168.0.1/16");
+			expect(addr).toBe("192.168.0.1");
+			expect(netmask).toBe("255.255.0.0");
+		});
+		it("doesn't break when a plain address (no CIDR suffix) is passed", () => {
+			const raw = "192.168.0.1";
+			const [addr, netmask] = ServerService.extractNetmask(raw);
+			expect(addr).toBe(raw);
+			expect(netmask).toBeUndefined();
+		});
+	});
+
 	afterEach(() => {
 		httpTestingController.verify();
 	});

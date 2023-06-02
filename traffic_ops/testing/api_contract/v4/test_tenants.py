@@ -57,7 +57,7 @@ def test_tenant_contract(to_session: TOSession,
 
 		first_tenant = tenant_data[0]
 		if not isinstance(first_tenant, dict):
-			raise TypeError("malformed API response; first tenant in response is not an object")
+			raise TypeError("malformed API response; first tenant in response is not an dict")
 		logger.info("Tenant Api get response %s", first_tenant)
 
 		tenant_response_template = response_template_data.get("tenants")
@@ -78,9 +78,7 @@ def test_tenant_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for tenants endpoint: API response was malformed")
 	finally:
 		# Delete tenant after test execution to avoid redundancy.
-		try:
-			tenant_id = tenant_post_data["id"]
-			to_session.delete_tenant(tenant_id=tenant_id)
-		except IndexError:
+		tenant_id = tenant_post_data.get("id")
+		if to_session.delete_tenant(tenant_id=tenant_id) is None:
 			logger.error("Tenant returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_tenant_contract")

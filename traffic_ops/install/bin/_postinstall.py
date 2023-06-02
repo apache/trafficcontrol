@@ -888,30 +888,28 @@ def setup_certificates(conf, root, ops_user, ops_group): # type: (SSLConfig, str
 
 	if (
 		not isinstance(cdn_conf, dict) or
-		"hypnotoad" not in cdn_conf or
-		not isinstance(cdn_conf["hypnotoad"], dict)
+		"traffic_ops_golang" not in cdn_conf or
+		not isinstance(cdn_conf["traffic_ops_golang"], dict)
 	):
-		logging.critical("Malformed %s; improper object and/or missing 'hypnotoad' key", cdn_conf_path)
+		logging.critical("Malformed %s; improper object and/or missing 'traffic_ops_golang' key", cdn_conf_path)
 		return 1
 
-	hypnotoad = cdn_conf["hypnotoad"]
+	to_golang = cdn_conf["traffic_ops_golang"]
 	if (
-		"listen" not in hypnotoad or
-		not isinstance(hypnotoad["listen"], list) or
-		not hypnotoad["listen"] or
-		not isinstance(hypnotoad["listen"][0], str)
+		"cert" not in to_golang or
+		not isinstance(to_golang["cert"], str)
 	):
-		log_msg = """	The "listen" portion of %s is missing from %s
+		log_msg = """	The "cert" portion of %s is missing from %s
 	Please ensure it contains the same structure as the one originally installed"""
 		logging.error(log_msg, cdn_conf_path, cdn_conf_path)
 		return 1
 
-	listen = hypnotoad["listen"][0]
-
-	if "cert={certpath}".format(certpath=certpath) not in listen or "key={keypath}".format(keypath=keypath) not in listen:
-		log_msg = """	The "listen" portion of %s does not reference the same "cert=" and "key=" values as are created here.
-	Please modify %s to add the following as parameters:
-	?cert=/path/to/SSL/certificate&key=/path/to/SSL/key"""
+	if (
+		"key" not in to_golang or
+		not isinstance(to_golang["key"], str)
+	):
+		log_msg = """	The "key" portion of %s is missing from %s
+	Please ensure it contains the same structure as the one originally installed"""
 		logging.error(log_msg, cdn_conf_path, cdn_conf_path)
 		return 1
 
@@ -1019,9 +1017,6 @@ def generate_cdn_conf(questions, fname, automatic, root): # type: (list[Question
 	existing_conf["traffic_ops_golang"]["log_location_event"] = access_log
 	traffic_vault_backend = "postgres"
 	tv_aes_key_location = os.path.join(root, TRAFFIC_VAULT_AES_KEY_FILE.lstrip('/'))
-
-	if "hypnotoad" not in existing_conf or not isinstance(existing_conf["hypnotoad"], dict):
-		existing_conf["hypnotoad"]["workers"] = conf.num_workers
 
 	with open(path, "w+") as conf_file:
 		json.dump(existing_conf, conf_file, indent=indent)

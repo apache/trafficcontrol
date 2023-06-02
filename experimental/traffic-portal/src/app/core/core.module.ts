@@ -48,6 +48,8 @@ import {
 } from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
 import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
+import { ParameterDetailComponent } from "./parameters/detail/parameter-detail.component";
+import { ParametersTableComponent } from "./parameters/table/parameters-table.component";
 import { ProfileDetailComponent } from "./profiles/profile-detail/profile-detail.component";
 import { ProfileTableComponent } from "./profiles/profile-table/profile-table.component";
 import { CapabilitiesComponent } from "./servers/capabilities/capabilities.component";
@@ -103,6 +105,8 @@ export const ROUTES: Routes = [
 	{ component: CoordinatesTableComponent, path: "coordinates" },
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
+	{ component: ParametersTableComponent, path: "parameters" },
+	{ component: ParameterDetailComponent, path: "parameters/:id" },
 	{ component: StatusesTableComponent, path: "statuses" },
 	{ component: StatusDetailsComponent, path: "statuses/:id" },
 	{ component: ISOGenerationFormComponent, path: "iso-gen"},
@@ -153,9 +157,11 @@ export const ROUTES: Routes = [
 		StatusesTableComponent,
 		StatusDetailsComponent,
 		ISOGenerationFormComponent,
-  		ProfileTableComponent,
 		CDNDetailComponent,
-  		ProfileDetailComponent,
+		ParametersTableComponent,
+		ParameterDetailComponent,
+		ProfileTableComponent,
+		ProfileDetailComponent,
 		CapabilitiesComponent,
 		CapabilityDetailsComponent,
 	],

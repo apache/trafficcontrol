@@ -225,7 +225,6 @@ sub generateCdnConf {
     $cdnConf->{"traffic_ops_golang"}{"log_location_error"} = "/var/log/traffic_ops/error.log";
     $cdnConf->{"traffic_ops_golang"}{"log_location_event"} = "/var/log/traffic_ops/access.log";
 
-    $cdnConf->{hypnotoad}{workers} = $cdnConfiguration{workers};
     #InstallUtils::logger("cdnConf: " . Dumper($cdnConf), "info" );
     InstallUtils::writeJson( $fileName, $cdnConf );
     InstallUtils::logger( "CDN configuration has been saved", "info" );

@@ -46,7 +46,6 @@ to_use_ims: true
 to_use_rbp: true
 to_user_cache_refresh_interval_sec: 0
 to_server_update_status_cache_refresh_interval_sec: 0
-to_heartbeat_timeout: 20
 to_hypnotoad_number_of_workers: 12
 to_cors_access_control_allow_origin: "http://localhost:8080"
 to_base_url: https://localhost
@@ -63,19 +62,6 @@ to_inactivity_timeout: 120
 to_influxdb_conf_path: "{{ to_conf_installdir }}/influxdb.conf"
 to_gen_new_secret: "yes"
 to_no_of_secrets_to_keep: "2"
-
-to_hypnotoad_accept_interval: 0.1
-to_hypnotoad_heartbeat_timeout: 120
-to_hypnotoad_port: 60443
-to_hypnotoad_pidfile: /var/run/traffic_ops.pid
-to_hypnotoad_ciphers:
-  - AES128-GCM-SHA256
-  - HIGH
-  - "!RC4"
-  - "!MD5"
-  - "!aNULL"
-  - "!EDH"
-  - "!ED"
 
 to_portal_base_url: "http://localhost:8080"
 to_portal_docs_url: "https://traffic-control-cdn.readthedocs.io/en/latest/admin/traffic_portal/usingtrafficportal.html#usingtrafficportal"

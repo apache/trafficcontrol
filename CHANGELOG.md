@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops* Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
 - [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
 - [#7291](https://github.com/apache/trafficcontrol/pull/7291) *Traffic Ops* Extended Layered Profile feature to aggregate parameters for all server profiles.
 - [#7314](https://github.com/apache/trafficcontrol/pull/7314) *Traffic Portal* Added capability feature to Delivery Service Form (HTTP, DNS).
@@ -56,6 +57,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 
 ### Fixed
+- [#7539](https://github.com/apache/trafficcontrol/pull/7539) *Traffic Monitor* Use stats_over_http timestamp to calculate bandwidth for TM's health. 
 - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
 - [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
 - [#7511](https://github.com/apache/trafficcontrol/pull/7511) *Traffic Ops* Fixed the changelog registration message to include the username instead of duplicate email entry.

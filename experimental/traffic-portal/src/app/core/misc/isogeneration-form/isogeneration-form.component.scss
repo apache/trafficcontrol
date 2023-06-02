@@ -22,3 +22,12 @@
 		row-gap: 2em;
 	}
 }
+
+div.form-header {
+	display: flex;
+	margin: 16px;
+	justify-content: space-between;
+	mat-slide-toggle {
+		margin-left: 16px;
+	}
+}

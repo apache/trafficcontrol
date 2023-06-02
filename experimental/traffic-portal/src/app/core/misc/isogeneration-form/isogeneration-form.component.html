@@ -13,9 +13,10 @@ limitations under the License.
 -->
 <mat-card appearance="outlined">
 	<form [formGroup]="form" (ngSubmit)="submit($event)">
-		<mat-card-header>
+		<div class="form-header">
 			<mat-slide-toggle name="useDHCP" formControlName="useDHCP">Use DHCP?</mat-slide-toggle>
-		</mat-card-header>
+			<button mat-raised-button type="button" (click)="openCopyDialog()">Copy Info From Server</button>
+		</div>
 		<mat-card-content>
 			<mat-form-field>
 				<mat-label>Operating System</mat-label>

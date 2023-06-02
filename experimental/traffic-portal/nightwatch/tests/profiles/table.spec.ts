@@ -16,7 +16,7 @@ describe("Profiles Spec", () => {
 	it("Loads elements", async () => {
 		await browser.page.common()
 			.section.sidebar
-			.navigateToNode("profiles", ["configurationContainer"]);
+			.navigateToNode("profiles", ["configurationContainer", "profilesContainer"]);
 		await browser.waitForElementPresent("input[name=fuzzControl]");
 		await browser.elements("css selector", "div.ag-row", rows => {
 			browser.assert.ok(rows.status === 0);

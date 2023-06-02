@@ -21,6 +21,7 @@ package util
 
 import (
 	"runtime"
+	"time"
 )
 
 // Stacktrace is a helper function which returns the current stacktrace.
@@ -45,4 +46,10 @@ func SliceToSet[T comparable](sl []T) map[T]struct{} {
 		st[val] = struct{}{}
 	}
 	return st
+}
+
+// ConvertTimeFormat converts the input time to the supplied format.
+func ConvertTimeFormat(t time.Time, format string) (*time.Time, error) {
+	formattedTime, err := time.Parse(format, t.Format(format))
+	return &formattedTime, err
 }

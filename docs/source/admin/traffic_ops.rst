@@ -343,15 +343,6 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 	.. seealso:: :ref:`tp-tools-generate-iso`
 
-:hypnotoad: This is a group of options that mainly no longer have any meaning..
-
-	:group:             Serves no known purpose anymore.
-	:heartbeat_timeout: Serves no known purpose anymore.
-	:listen:            This must always be an array containing a single string. This very odd string is apparently a URL. The scheme of the URL doesn't matter, as `traffic_ops_golang`_ ignores that and always uses HTTPS. The host (and optionally port) of the URL used to have a purpose, but no longer does. The "cert" query parameter sets the location of the SSL certificate to use for encrypting connections, while the "key" query parameter is the certificate's corresponding private key. The default configuration file also has the "verify" query parameter which serves no known purpose anymore.
-	:pid_file:          Serves no known purpose anymore.
-	:user:              Serves no known purpose anymore.
-	:workers:           Serves no known purpose anymore.
-
 :inactivity_timeout: Serves no known purpose anymore.
 :influxdb_conf_path: An optional field which gives `traffic_ops_golang`_ the absolute or relative path to an `influxdb.conf`_ file. Default if not specified is to first check if the :envvar:`MOJO_MODE` environment variable is set. If it is, then Traffic Ops will look in the current working directory for a subdirectory named ``conf/``, then inside that for a subdirectory with the name that is the value of the :envvar:`MOJO_MODE` variable, and inside that directory for a file named ``influxdb.conf``. If :envvar:`MOJO_MODE` is *not* set, then Traffic Ops will look for a file named ``influxdb.conf`` in the same directory as this ``cdn.conf`` file.
 
@@ -409,6 +400,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :traffic_ops_golang: This group configuration options is used exclusively by `traffic_ops_golang`_.
 
+	:cert: The "cert" field sets the location of the SSL certificate to use for encrypting connections.
 	:crconfig_emulate_old_path: An optional boolean that controls the value of a part of :term:`Snapshots` that report what :ref:`to-api` endpoint is used to generate :term:`Snapshots`. If this is ``true``, it forces Traffic Ops to report that a legacy, deprecated endpoint is used, whereas if it's ``false`` Traffic Ops will report the actual, current endpoint. Default if not specified is ``false``.
 
 		.. deprecated:: 3.0
@@ -428,6 +420,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 		.. deprecated:: 5.0
 			Future versions of Traffic Ops will not support this legacy configuration option, see tls_config: { InsecureSkipVerify: <bool> } instead
 
+	:key: The "key" field is the certificate's corresponding private key.
 	:log_location_debug: This optional field, if specified, should either be the location of a file to which debug-level output will be logged, or one of the special strings ``"stdout"`` which indicates that STDOUT should be used, ``"stderr"`` which indicates that STDERR should be used or ``"null"`` which indicates that no output of this level should be generated. An empty string (``""``) and literally ``null`` are equivalent to ``"null"``. Default if not specified is ``"null"``.
 	:log_location_error: This optional field, if specified, should either be the location of a file to which error-level output will be logged, or one of the special strings ``"stdout"`` which indicates that STDOUT should be used, ``"stderr"`` which indicates that STDERR should be used or ``"null"`` which indicates that no output of this level should be generated. An empty string (``""``) and literally ``null`` are equivalent to ``"null"``. Default if not specified is ``"null"``. This field is also used to determine where server profiling statistics are written. Assuming ``profiling_enabled`` is ``true`` and ``profiling_location`` is unset, if this field's value is given as a path to a regular file, a file named :file:`profiling` will be written to the same directory containing the profiling information - overwriting any existing files by that name.
 	:log_location_event: This optional field, if specified, should either be the location of a file to which event-level output will be logged, or one of the special strings ``"stdout"`` which indicates that STDOUT should be used, ``"stderr"`` which indicates that STDERR should be used or ``"null"`` which indicates that no output of this level should be generated. An empty string (``""``) and literally ``null`` are equivalent to ``"null"``. Default if not specified is ``"null"``.
@@ -728,10 +721,11 @@ If necessary, install the :abbr:`CA (Certificate Authority)` certificate's ``.pe
 You will need to update `cdn.conf`_ with any necessary changes.
 
 .. code-block:: text
-	:caption: Sample 'listen' Line When Path to ``trafficops.crt`` and ``trafficops.key`` are Known
+	:caption: Sample 'cert' and 'key' Line When Path to ``trafficops.crt`` and ``trafficops.key`` are Known
 
-	'hypnotoad' => ...
-		'listen' => 'https://[::]:443?cert=/etc/pki/tls/certs/trafficops.crt&key=/etc/pki/tls/private/trafficops.key&ca=/etc/pki/tls/certs/localhost.ca&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED'
+	'traffic_ops_golang' => ...
+		'cert' => '/etc/pki/tls/certs/trafficops.crt'
+		'key' => '/etc/pki/tls/private/trafficops.key'
 		...
 
 .. _admin-to-ext-script:

@@ -58,7 +58,7 @@ def test_server_capabilities_contract(to_session: TOSession,
 
 		first_server_capabilities = server_capabilities_data[0]
 		if not isinstance(first_server_capabilities, dict):
-			raise TypeError("malformed API response; first server_capabilities in response is not an object")
+			raise TypeError("malformed API response; first server_capabilities in response is not an dict")
 		logger.info("Server capabilities Api get response %s", first_server_capabilities)
 
 		response_template = response_template_data.get("server_capabilities")
@@ -75,9 +75,7 @@ def test_server_capabilities_contract(to_session: TOSession,
 		pytest.fail("API contract test failed for server_capabilities: API response was malformed")
 	finally:
 		# Delete server_capabilities after test execution to avoid redundancy.
-		try:
-			server_capability_name = server_capabilities_post_data["name"]
-			to_session.delete_server_capabilities(query_params={"name": server_capability_name})
-		except IndexError:
+		server_capability_name = server_capabilities_post_data.get("name")
+		if to_session.delete_server_capabilities(query_params={"name": server_capability_name}) is None:
 			logger.error("server_capabilities returned by Traffic Ops is missing an 'id' property")
 			pytest.fail("Response from delete request is empty, Failing test_server_capabilities_contract")

@@ -151,6 +151,11 @@ export class ProfileTableComponent implements OnInit {
 				}
 			}
 		);
+		const hasParameter = this.route.snapshot.queryParamMap.get("hasParameter");
+		if (hasParameter == null) {
+			return;
+		}
+		this.profiles = this.api.getProfilesByParam(+hasParameter);
 	}
 
 	/** Update the URL's 'search' query parameter for the user's search input. */

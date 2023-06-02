@@ -1,11 +1,8 @@
 {
-	"hypnotoad" : {
-		"listen" : [
-			"https://[::]:60443?cert=/server.crt&key=/server.key&verify=0x00&ciphers=AES128-GCM-SHA256:HIGH:!RC4:!MD5:!aNULL:!EDH:!ED"
-		]
-	},
 	"traffic_ops_golang" : {
-		"port" : "443",
+		"cert": "/server.crt",
+		"key": "/server.key",
+		"port": "443",
 		"log_location_error": "stderr",
 		"log_location_warning": "stderr",
 		"log_location_info": "stdout",

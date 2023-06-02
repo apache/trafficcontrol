@@ -28,6 +28,7 @@ import {
 	RequestCoordinate,
 	RequestDeliveryService,
 	RequestDivision,
+	RequestParameter,
 	RequestPhysicalLocation,
 	RequestProfile,
 	RequestRegion,
@@ -41,6 +42,7 @@ import {
 	ResponseCacheGroup,
 	ResponseDeliveryService,
 	ResponseDivision,
+	ResponseParameter,
 	ResponsePhysicalLocation,
 	ResponseProfile,
 	ResponseRegion,
@@ -318,6 +320,18 @@ export class DataClient {
 			resp = await this.client.post(url, JSON.stringify(profile));
 			const respProfile: ResponseProfile = resp.data.response;
 			data.profile = respProfile;
+
+			const parameter: RequestParameter = {
+				configFile: "cfg.txt",
+				name: `param${id}`,
+				secure: false,
+				value: "10",
+			};
+			url = `${apiUrl}/parameters`;
+			resp = await this.client.post(url, JSON.stringify(parameter));
+			const responseParameter: ResponseParameter = resp.data.response;
+			console.log(`Successfully created Parameter ${responseParameter.name}`);
+			data.parameter = responseParameter;
 
 			const server: RequestServer = {
 				cachegroupId: responseCG.id,
