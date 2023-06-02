@@ -270,32 +270,32 @@ func (ss StatsSummaryV5) MarshalJSON() ([]byte, error) {
 }
 
 // StatsSummaryResponseV5 is an alias for the latest minor version for the major version 5.
-type StatsSummaryResponseV5 StatsSummaryResponseV51
+type StatsSummaryResponseV5 StatsSummaryResponseV50
 
-// StatsSummaryResponseV51 is the structure of a response from Traffic Ops to
+// StatsSummaryResponseV50 is the structure of a response from Traffic Ops to
 // GET requests made to its /stats_summary V5 API endpoint.
-type StatsSummaryResponseV51 struct {
+type StatsSummaryResponseV50 struct {
 	Response []StatsSummaryV5 `json:"response"`
 	Alerts
 }
 
 // StatsSummaryLastUpdatedV5 is an alias for the latest minor version for the major version 5.
-type StatsSummaryLastUpdatedV5 StatsSummaryLastUpdatedV51
+type StatsSummaryLastUpdatedV5 StatsSummaryLastUpdatedV50
 
-// StatsSummaryLastUpdatedV51 is the type of the `response` property of a response
+// StatsSummaryLastUpdatedV50 is the type of the `response` property of a response
 // from Traffic Ops to a GET request made to its /stats_summary endpoint when
 // the 'lastSummaryDate' query string parameter is passed as 'true'.
-type StatsSummaryLastUpdatedV51 struct {
+type StatsSummaryLastUpdatedV50 struct {
 	SummaryTime *time.Time `json:"summaryTime"  db:"summary_time"`
 }
 
 // StatsSummaryLastUpdatedAPIResponseV5 is an alias for the latest minor version for the major version 5.
-type StatsSummaryLastUpdatedAPIResponseV5 StatsSummaryLastUpdatedAPIResponseV51
+type StatsSummaryLastUpdatedAPIResponseV5 StatsSummaryLastUpdatedAPIResponseV50
 
-// StatsSummaryLastUpdatedAPIResponseV51 is the type of a response from Traffic
+// StatsSummaryLastUpdatedAPIResponseV50 is the type of a response from Traffic
 // Ops to a request to its /stats_summary endpoint with the 'lastSummaryDate'
 // query string parameter set to 'true'.
-type StatsSummaryLastUpdatedAPIResponseV51 struct {
+type StatsSummaryLastUpdatedAPIResponseV50 struct {
 	Response StatsSummaryLastUpdatedV5 `json:"response"`
 	Alerts
 }
