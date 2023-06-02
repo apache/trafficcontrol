@@ -1095,5 +1095,32 @@
                 "type": "integer"
             }
         }
+    },
+    "asns": {
+        "type": "object",
+        "required": [
+            "asn",
+            "cachegroup",
+            "cachegroupId",
+            "id",
+            "lastUpdated"
+        ],
+        "properties": {
+            "asn": {
+                "type": "integer"
+            },
+            "cachegroup": {
+                "type": "string"
+            },
+            "cachegroupId": {
+                "type": "integer"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
     }
 }
