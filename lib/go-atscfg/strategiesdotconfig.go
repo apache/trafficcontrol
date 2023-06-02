@@ -39,7 +39,7 @@ type StrategiesYAMLOpts struct {
 
 	// GoDirect is set with a command line argument default is true.
 	// This value can be overridden by a delivery serivce parameter go_direct [true|false]
-	GoDirect bool
+	GoDirect string
 
 	// ParentIsProxy A boolean value which indicates if the groups of hosts are proxy caches or origins.
 	// true (default) means all the hosts used are Traffic Server caches.
@@ -98,6 +98,7 @@ func MakeStrategiesDotYAML(
 			HdrComment:      opt.HdrComment,
 			ATSMajorVersion: opt.ATSMajorVersion,
 			GoDirect:        opt.GoDirect,
+			ParentIsProxy:   opt.ParentIsProxy,
 		}, // TODO change makeParentDotConfigData to its own opt?
 		atsMajorVersion,
 	)

@@ -1189,7 +1189,7 @@ func TestMakeStrategiesPeeringRingNonTopology(t *testing.T) {
 }
 
 func TestMakeStrategiesDotYAMLFirstLastNoTopoParams(t *testing.T) {
-	opt := &StrategiesYAMLOpts{VerboseComments: false, HdrComment: "myHeaderComment", GoDirect: true}
+	opt := &StrategiesYAMLOpts{VerboseComments: false, HdrComment: "myHeaderComment", GoDirect: "true"}
 
 	// Non Toplogy
 	ds0 := makeParentDS()
@@ -1718,7 +1718,7 @@ func TestMakeStrategiesDotYamlMSONoTopoMultiCG(t *testing.T) {
 }
 
 func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
-	opt := &StrategiesYAMLOpts{VerboseComments: false, HdrComment: "myHeaderComment", GoDirect: true}
+	opt := &StrategiesYAMLOpts{VerboseComments: false, HdrComment: "myHeaderComment", GoDirect: "true"}
 
 	// Toplogy ds, MSO
 	ds0 := makeParentDS()

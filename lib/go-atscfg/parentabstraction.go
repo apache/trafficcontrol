@@ -80,7 +80,7 @@ type ParentAbstractionService struct {
 
 	// GoDirect is whether to go direct to parents via normal HTTP requests.
 	// False means to make proxy requests to the parents.
-	// Becomes parent.config go_direct directive.
+	// Becomes parent.config go_direct and parent_is_proxy directives
 	// Becomes strategies.yaml TODO
 	GoDirect bool
 

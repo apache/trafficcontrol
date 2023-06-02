@@ -1501,7 +1501,7 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 }
 
 func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
-	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment", GoDirect: true}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment", GoDirect: "true"}
 
 	ds1 := makeParentDS()
 	ds1.ID = util.IntPtr(43)
@@ -3318,7 +3318,7 @@ func TestMakeParentDotConfigHTTPSOriginTopology(t *testing.T) {
 }
 
 func TestMakeParentDotConfigNoParentNoTopology(t *testing.T) {
-	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment", GoDirect: true}
+	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment", GoDirect: "true"}
 
 	ds0 := makeParentDS()
 	ds0Type := tc.DSTypeHTTPLive
@@ -3980,7 +3980,7 @@ func TestMakeParentDotConfigTopologiesServerMultipleProfileParams(t *testing.T) 
 }
 
 func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
-	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment", GoDirect: true}
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment", GoDirect: "true"}
 
 	// Non Toplogy ds
 	ds0 := makeParentDS()
@@ -4315,7 +4315,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 }
 
 func TestMakeParentDotConfigFirstInnerLastTopology(t *testing.T) {
-	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment", GoDirect: true}
+	hdr := &ParentConfigOpts{AddComments: true, HdrComment: "myHeaderComment", GoDirect: "true"}
 
 	// Toplogy ds, MSO
 	ds0 := makeParentDS()

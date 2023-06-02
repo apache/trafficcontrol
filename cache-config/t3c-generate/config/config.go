@@ -52,7 +52,7 @@ type Cfg struct {
 	RevalOnly          bool
 	Dir                string
 	UseStrategies      t3cutil.UseStrategiesFlag
-	SetGoDirect        bool
+	GoDirect           string
 	ViaRelease         bool
 	SetDNSLocalBind    bool
 	NoOutgoingIP       bool
@@ -93,8 +93,8 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	const defaultUseStrategies = t3cutil.UseStrategiesFlagFalse
 	useStrategiesPtr := getopt.EnumLong(useStrategiesFlagName, 0, []string{string(t3cutil.UseStrategiesFlagTrue), string(t3cutil.UseStrategiesFlagCore), string(t3cutil.UseStrategiesFlagFalse), string(t3cutil.UseStrategiesFlagCore), ""}, "", "[true | core| false] whether to generate config using strategies.yaml instead of parent.config. If true use the parent_select plugin, if 'core' use ATS core strategies, if false use parent.config.")
 
-	const setGoDirectFlagName = "set-go-direct"
-	setGoDirectPtr := getopt.BoolLong(setGoDirectFlagName, 'G', "[true | false] seting go_direct= in parent.config. Default is true")
+	const goDirectFlagName = "go-direct"
+	goDirectPtr := getopt.StringLong(goDirectFlagName, 'G', "false", "[true|false|old] default will set go_direct to false, you can set go_direct true, or old will be based on opposite of parent_is_proxy directive.")
 
 	getopt.Parse()
 
@@ -159,8 +159,11 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	if !getopt.IsSet(useStrategiesFlagName) {
 		*useStrategiesPtr = defaultUseStrategies.String()
 	}
-	if !getopt.IsSet(setGoDirectFlagName) {
-		*setGoDirectPtr = true
+
+	switch *goDirectPtr {
+	case "false", "true", "old":
+	default:
+		return Cfg{}, errors.New(goDirectFlagName+" should be false, true, or old")
 	}
 
 	cfg := Cfg{
@@ -181,7 +184,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		Version:            appVersion,
 		GitRevision:        gitRevision,
 		UseStrategies:      t3cutil.UseStrategiesFlag(*useStrategiesPtr),
-		SetGoDirect:        *setGoDirectPtr,
+		GoDirect:           *goDirectPtr,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
