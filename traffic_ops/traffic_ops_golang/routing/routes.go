@@ -357,7 +357,7 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 
 		//Coordinates
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `coordinates/?$`, Handler: coordinate.Read, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"COORDINATE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 49670074531},
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPut, Path: `coordinates/?$`, Handler: api.UpdateHandler(&coordinate.TOCoordinate{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"COORDINATE:UPDATE", "COORDINATE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 46892617431},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPut, Path: `coordinates/?$`, Handler: coordinate.Update, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"COORDINATE:UPDATE", "COORDINATE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 46892617431},
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `coordinates/?$`, Handler: coordinate.Create, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"COORDINATE:CREATE", "COORDINATE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 442811215731},
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodDelete, Path: `coordinates/?$`, Handler: api.DeleteHandler(&coordinate.TOCoordinate{}), RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"COORDINATE:DELETE", "COORDINATE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 430384988931},
 

@@ -22,7 +22,9 @@ package coordinate
  */
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -172,6 +174,8 @@ func (*TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, table
 }
 
 // Update implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer" Update
+// function.
 func (coord *TOCoordinate) Update(h http.Header) (error, error, int) {
 	return api.GenericUpdate(h, coord)
 }
@@ -191,6 +195,16 @@ FROM coordinate c`
 func selectQuery() string {
 	return readQuery
 }
+
+const putQuery = `
+UPDATE coordinate
+SET
+	latitude=$1,
+	longitude=$2,
+	name=$3
+WHERE id=$4
+RETURNING
+	last_updated`
 
 func updateQuery() string {
 	query := `UPDATE
@@ -323,4 +337,52 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/coordinates?id=%d", inf.Version, *c.ID))
 	w.WriteHeader(http.StatusCreated)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) created", c.Name, *c.ID), c)
+}
+
+// Update is the handler for PUT requests made to the /coordinates API (in API
+// v5 and later).
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var c tc.CoordinateV5
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	id := inf.IntParams["id"]
+	if c.ID != nil {
+		if *c.ID != id {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("ID mismatch; URI specifies %d but payload is for Coordinate #%d", id, *c.ID), nil)
+			return
+		}
+	} else {
+		c.ID = util.Ptr(id)
+	}
+
+	if err = isValid(c); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err = tx.QueryRow(putQuery, c.Latitude, c.Longitude, c.Name, id).Scan(&c.LastUpdated); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			userErr = fmt.Errorf("no such Coordinate: #%d", id)
+			errCode = http.StatusBadRequest
+			sysErr = nil
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate #%d updated", id), c)
 }
