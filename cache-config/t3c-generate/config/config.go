@@ -163,7 +163,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	switch *goDirectPtr {
 	case "false", "true", "old":
 	default:
-		return Cfg{}, errors.New(goDirectFlagName+" should be false, true, or old")
+		return Cfg{}, errors.New(goDirectFlagName + " should be false, true, or old")
 	}
 
 	cfg := Cfg{

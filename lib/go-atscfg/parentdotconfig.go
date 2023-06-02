@@ -1097,7 +1097,7 @@ func getTopologyParentConfigLine(
 	pasvc.RetryPolicy = getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 	// txt += ` round_robin=` + getTopologyRoundRobin(ds, serverParams, serverPlacement.IsLastCacheTier, dsParams.Algorithm)
 
-	if goDirect == "old"{
+	if goDirect == "old" {
 		pasvc.GoDirect = getTopologyGoDirectOld(ds, serverPlacement)
 		pasvc.ParentIsProxy = !pasvc.GoDirect
 	} else {
@@ -1306,7 +1306,6 @@ func getTopologyGoDirect(ds *DeliveryService, goDirectParam *string, cmdArgGoDir
 	}
 	return goDirect, nil
 }
-
 
 func getTopologyQueryStringIgnore(
 	ds *DeliveryService,
