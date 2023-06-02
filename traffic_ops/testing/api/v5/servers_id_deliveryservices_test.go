@@ -56,7 +56,13 @@ func TestServersIDDeliveryServices(t *testing.T) {
 						"replace": true,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServersDeliveryServicesPost(GetServerID(t, "atlanta-edge-01")(), GetDeliveryServiceId(t, "ds1")())),
+						validateServersDeliveryServicesPost(
+							GetServerID(t, "atlanta-edge-01")(),
+							[]int{
+								GetDeliveryServiceId(t, "ds1")(),
+								GetDeliveryServiceId(t, "ds-based-top-with-no-mids")(),
+							},
+							2)),
 				},
 				"OK when ASSIGNING EDGE to TOPOLOGY BASED DELIVERY SERVICE": {
 					EndpointID:    GetServerID(t, "atlanta-edge-03"),
@@ -66,7 +72,12 @@ func TestServersIDDeliveryServices(t *testing.T) {
 						"replace": true,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServersDeliveryServicesPost(GetServerID(t, "atlanta-edge-03")(), GetDeliveryServiceId(t, "top-ds-in-cdn1")())),
+						validateServersDeliveryServicesPost(
+							GetServerID(t, "atlanta-edge-03")(),
+							[]int{
+								GetDeliveryServiceId(t, "top-ds-in-cdn1")(),
+							},
+							1)),
 				},
 				"OK when ASSIGNING ORIGIN to TOPOLOGY BASED DELIVERY SERVICE": {
 					EndpointID:    GetServerID(t, "denver-mso-org-01"),
@@ -76,7 +87,14 @@ func TestServersIDDeliveryServices(t *testing.T) {
 						"replace": true,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServersDeliveryServicesPost(GetServerID(t, "denver-mso-org-01")(), GetDeliveryServiceId(t, "ds-top")())),
+						validateServersDeliveryServicesPost(
+							GetServerID(t, "denver-mso-org-01")(),
+							[]int{
+								GetDeliveryServiceId(t, "ds-top")(),
+								GetDeliveryServiceId(t, "ds-top-req-cap2")(),
+								GetDeliveryServiceId(t, "ds-forked-topology")(),
+							},
+							3)),
 				},
 				"CONFLICT when SERVER NOT IN SAME CDN as DELIVERY SERVICE": {
 					EndpointID:    GetServerID(t, "cdn2-test-edge"),
@@ -170,11 +188,14 @@ func validateServersDeliveryServices(expectedDSID int) utils.CkReqFunc {
 	}
 }
 
-func validateServersDeliveryServicesPost(serverID int, expectedDSID int) utils.CkReqFunc {
+func validateServersDeliveryServicesPost(serverID int, expectedDSID []int, expectedDSCount int) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		serverDeliveryServices, _, err := TOSession.GetServerIDDeliveryServices(serverID, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Error getting Server Delivery Services: %v - alerts: %+v", err, serverDeliveryServices.Alerts)
-		assert.RequireEqual(t, 1, len(serverDeliveryServices.Response), "Expected one Delivery Service returned Got: %d", len(serverDeliveryServices.Response))
-		validateServersDeliveryServices(expectedDSID)(t, toclientlib.ReqInf{}, serverDeliveryServices.Response, tc.Alerts{}, nil)
+		assert.RequireEqual(t, expectedDSCount, len(serverDeliveryServices.Response), "Expected Two Delivery Service returned Got: %d", len(serverDeliveryServices.Response))
+		for i := 0; i < len(expectedDSID); i++ {
+			validateServersDeliveryServices(expectedDSID[i])(t, toclientlib.ReqInf{}, serverDeliveryServices.Response, tc.Alerts{}, nil)
+
+		}
 	}
 }

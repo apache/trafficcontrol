@@ -21,7 +21,7 @@
 
 ``GET``
 =======
-Retrieves all :term:`Delivery Services` assigned to a specific server.
+Retrieves all :term:`Delivery Services` assigned to a specific server either directly or inherited from topology.
 
 :Auth. Required: Yes
 :Roles Required: None\ [#tenancy]_
