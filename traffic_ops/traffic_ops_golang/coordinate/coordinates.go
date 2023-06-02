@@ -22,6 +22,7 @@ package coordinate
  */
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -29,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -134,6 +136,8 @@ func IsValidCoordinateName(str string) bool {
 }
 
 // Validate fulfills the api.Validator interface.
+// Deprecated: All future Coordinate versions should use non-"CRUDer"
+// validation.
 func (coordinate TOCoordinate) Validate() (error, error) {
 	validName := validation.NewStringRule(IsValidCoordinateName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"
@@ -147,6 +151,8 @@ func (coordinate TOCoordinate) Validate() (error, error) {
 }
 
 // Create implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer" Create
+// function.
 func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
 
 // Read implements a "CRUDer" interface.
@@ -173,13 +179,13 @@ func (coord *TOCoordinate) Update(h http.Header) (error, error, int) {
 // Delete implements a "CRUDer" interface.
 func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 
-const readQuery = `SELECT
-id,
-latitude,
-longitude,
-last_updated,
-name
-
+const readQuery = `
+SELECT
+	id,
+	latitude,
+	longitude,
+	last_updated,
+	name
 FROM coordinate c`
 
 func selectQuery() string {
@@ -195,6 +201,19 @@ name=:name
 WHERE id=:id RETURNING last_updated`
 	return query
 }
+
+const createQuery = `
+INSERT INTO coordinate (
+	latitude,
+	longitude,
+	name
+) VALUES (
+	$1,
+	$2,
+	$3
+) RETURNING
+	id,
+	last_updated`
 
 func insertQuery() string {
 	query := `INSERT INTO coordinate (
@@ -256,4 +275,52 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteResp(w, r, cs)
+}
+
+// isValid returns an error describing why c isn't a valid Coordinate, or nil if
+// it's actually valid.
+func isValid(c tc.CoordinateV5) error {
+	validName := validation.NewStringRule(IsValidCoordinateName, "invalid characters found - Use alphanumeric . or - or _ .")
+	latitudeErr := "Must be a floating point number within the range +-90"
+	longitudeErr := "Must be a floating point number within the range +-180"
+	errs := validation.Errors{
+		"name":      validation.Validate(c.Name, validation.Required, validName),
+		"latitude":  validation.Validate(c.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
+		"longitude": validation.Validate(c.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
+	}
+	return util.JoinErrs(tovalidate.ToErrors(errs))
+}
+
+// Create is the handler for POST requests made to the /coordinates API (in
+// APIv5 and later).
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var c tc.CoordinateV5
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err = isValid(c); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err = tx.QueryRow(createQuery, c.Latitude, c.Longitude, c.Name).Scan(&c.ID, &c.LastUpdated); err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/coordinates?id=%d", inf.Version, *c.ID))
+	w.WriteHeader(http.StatusCreated)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) created", c.Name, *c.ID), c)
 }
