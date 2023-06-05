@@ -1,0 +1,10 @@
+
+.tab-content {
+	margin-top: 5px;
+	display: grid;
+
+	&:is(form), .mat-accordion {
+		width: 98%;
+		margin: auto auto 15px;
+	}
+}

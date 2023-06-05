@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 import { CommonModule } from "@angular/common";
-import { NgModule } from "@angular/core";
+import { NgModule, Type } from "@angular/core";
 import { RouterModule, type Routes } from "@angular/router";
+
+import { type CertsModule } from "src/app/core/certs/certs.module";
 
 import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
@@ -73,6 +75,14 @@ import { UserRegistrationDialogComponent } from "./users/user-registration-dialo
 import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
+	{
+		children: [{
+			loadChildren: async (): Promise<Type<CertsModule>> => import("./certs/certs.module")
+				.then(mod => mod.CertsModule),
+			path: ""
+		}],
+		path: "certs"
+	},
 	{ component: DashboardComponent, path: "" },
 	{ component: AsnDetailComponent, path: "asns/:id"},
 	{ component: AsnsTableComponent, path: "asns" },
