@@ -98,7 +98,6 @@ export class ImportJsonTxtComponent {
 	 * Hosts listener for drop
 	 *
 	 * @param evt Drag events data
-	 * @returns on when there is no file attachment is there
 	 */
 	@HostListener("drop", ["$event"]) public onDrop(evt: DragEvent): void {
 		evt.preventDefault();
@@ -108,6 +107,7 @@ export class ImportJsonTxtComponent {
 
 		const file = evt.dataTransfer?.files[0];
 
+		// returns on when there is no file attachment is there
 		if (!file) {
 			return;
 		}
@@ -118,12 +118,12 @@ export class ImportJsonTxtComponent {
 	/**
 	 * Uploads file
 	 *
-	 * @param event
-	 * @returns on when there is no file attachment is there
+	 * @param event Event object for upload file
 	 */
-	uploadFile(event: Event):void {
+	public uploadFile(event: Event): void {
 		const file = (event.target as HTMLInputElement).files?.[0];
 
+		// returns on when there is no file attachment is there
 		if (!file) {
 			return;
 		}
@@ -132,12 +132,15 @@ export class ImportJsonTxtComponent {
 
 	/**
 	 * Docs reader
+	 *
 	 * @param file that is uploaded
-	 * @returns on file wrong file type is uploaded
 	 */
-	docReader(file: File):void {
+	public docReader(file: File): void {
 
-		/** Check whether expected file is being uploaded  */
+		/**
+		 * Check whether expected file is being uploaded
+		 * returns on file wrong file type is uploaded
+		 */
 		if (!this.allowedType.find(type => type === file.type)) {
 			this.alertService.newAlert({ level: AlertLevel.ERROR, text: "Only JSON or text file is allowed." });
 			return;
