@@ -24,7 +24,7 @@ import { CurrentUserService } from "src/app/shared/current-user/current-user.ser
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { FileUtilsService } from "src/app/shared/file-utils.service";
 import { ContextMenuActionEvent, ContextMenuItem, TableTitleButton } from "src/app/shared/generic-table/generic-table.component";
-import { ImportJsonEditTxtComponent } from "src/app/shared/import-json-edit-txt/import-json-edit-txt.component";
+import { ImportJsonTxtComponent } from "src/app/shared/import-json-txt/import-json-txt.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -186,7 +186,7 @@ export class ProfileTableComponent implements OnInit {
 				break;
 			case "export-profile":
 				const response = await this.api.exportProfile(data.id);
-				this.fileUtil.exportFile(response,data.name, "json");
+				this.fileUtil.download(response,data.name);
 				break;
 		}
 	}
@@ -199,7 +199,8 @@ export class ProfileTableComponent implements OnInit {
 	public async handleTitleButton(action: string): Promise<void> {
 		switch(action){
 			case "import":
-				const ref = this.dialog.open(ImportJsonEditTxtComponent,{
+				const ref = this.dialog.open(ImportJsonTxtComponent,{
+					data: { title: "Import Profile" },
 					width: "70vw"
 				});
 

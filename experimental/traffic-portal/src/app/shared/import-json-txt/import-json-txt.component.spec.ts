@@ -16,15 +16,15 @@ import { DatePipe } from "@angular/common";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 
-import { ImportJsonEditTxtComponent } from "./import-json-edit-txt.component";
+import { ImportJsonTxtComponent } from "./import-json-txt.component";
 
-describe("ImportJsonEditTxtComponent", () => {
-	let component: ImportJsonEditTxtComponent;
-	let fixture: ComponentFixture<ImportJsonEditTxtComponent>;
+describe("ImportJsonTxtComponent", () => {
+	let component: ImportJsonTxtComponent;
+	let fixture: ComponentFixture<ImportJsonTxtComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ ImportJsonEditTxtComponent ],
+			declarations: [ ImportJsonTxtComponent ],
 			imports: [
 				MatDialogModule
 			],
@@ -34,7 +34,7 @@ describe("ImportJsonEditTxtComponent", () => {
 			]
 		}).compileComponents();
 
-		fixture = TestBed.createComponent(ImportJsonEditTxtComponent);
+		fixture = TestBed.createComponent(ImportJsonTxtComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});

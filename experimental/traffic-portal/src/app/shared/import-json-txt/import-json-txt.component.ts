@@ -13,26 +13,28 @@
 */
 
 import { DatePipe } from "@angular/common";
-import { Component, HostListener } from "@angular/core";
-import { MatDialogRef } from "@angular/material/dialog";
+import { Component, HostListener, Inject } from "@angular/core";
+import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
 import { AlertLevel } from "trafficops-types";
 
 import { AlertService } from "../alert/alert.service";
 
 /**
- * Component
+ * Contains the structure of the data that DecisionDialogComponent accepts.
+ */
+export interface ImportJsonTxtComponentModel {
+	title: string;
+}
+
+/**
+ * Component for import of json or text 
  */
 @Component({
-	selector: "tp-import-json-edit-txt",
-	styleUrls: ["./import-json-edit-txt.component.scss"],
-	templateUrl: "./import-json-edit-txt.component.html",
+	selector: "tp-import-json-txt",
+	styleUrls: ["./import-json-txt.component.scss"],
+	templateUrl: "./import-json-txt.component.html",
 })
-export class ImportJsonEditTxtComponent {
-
-	/**
-	 * Title for the dialog window
-	 */
-	public title = "Import Profile";
+export class ImportJsonTxtComponent {
 
 	/**
 	 * Allowed import file types
@@ -56,7 +58,8 @@ export class ImportJsonEditTxtComponent {
 	 * @param datePipe Default angular date pipe for formating date
 	 */
 	constructor(
-		private readonly dialogRef: MatDialogRef<ImportJsonEditTxtComponent>,
+		@Inject(MAT_DIALOG_DATA) public readonly data: ImportJsonTxtComponentModel,
+		private readonly dialogRef: MatDialogRef<ImportJsonTxtComponent>,
 		private readonly alertService: AlertService,
 		private readonly datePipe: DatePipe) { }
 
@@ -108,15 +111,36 @@ export class ImportJsonEditTxtComponent {
 			return;
 		}
 
+		this.docReader(file);
+	}
+
+	/**
+	 * Uploads file
+	 * @param event 
+	 * @returns  
+	 */
+	uploadFile(event:Event) {
+		const file = (event.target as HTMLInputElement).files?.[0];
+		
+		if (!file) {
+			return;
+		}
+		this.docReader(file);
+	  }
+
+	docReader(file:File) {
+
 		/** Check whether expected file is being uploaded  */
 		if (!this.allowedType.find(type => type === file.type)) {
-			this.alertService.newAlert({ level: AlertLevel.ERROR, text: "Only JSON, text files are allowed to upload." });
+			this.alertService.newAlert({ level: AlertLevel.ERROR, text: "Only JSON or text file is allowed." });
 			return;
 		}
 
 		/** Format text with data from file data and formated date with date pipe */
 		this.fileData = `${file.name} - ${file.size} bytes, last modified: ${this.datePipe.transform(file.lastModified, "MM-dd-yyyy")}`;
+
 		const reader = new FileReader();
+
 		reader.onload = (event): void => {
 			this.inputTxt = event.target?.result as string;
 		};

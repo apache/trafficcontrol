@@ -12,25 +12,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<h2 mat-dialog-title>{{title}}</h2>
+<h2 mat-dialog-title>{{data.title}}</h2>
 <mat-dialog-content [ngClass]="{'active':dragOn}">
-	<div class="dropzone" >
+	<input type='file' id="imageUpload" accept=".json, .txt" #fileInput (change)="uploadFile($event)" hidden/>
+	<a type="button" class="dropzone" (click)="fileInput.click()">
 		<div class="text-wrapper">
 			<div class="label">
 				Drop your file here!<br>
 				<small class="hint">*only json and text files are allowed to upload.</small>
 			</div>
 		</div>
-	</div>
+	</a>
 
-	<li *ngIf="fileData">{{fileData}}</li>
+	<ul>
+		<li *ngIf="fileData">{{fileData}}</li>
+	</ul>
 
-	<mat-form-field class="w-100" appearance="outline">
-		<textarea matInput id="json-txt-editor"
-				[value]="inputTxt" required readonly></textarea>
+	<mat-form-field class="json-txt-editor" appearance="outline">
+		<textarea matInput [value]="inputTxt" required readonly></textarea>
 	</mat-form-field>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
 	<button mat-raised-button color="warn" type="button" mat-dialog-close>Cancel</button>
-	<button mat-raised-button type="submit" [mat-dialog-close]="true" (click)="submit()">Submit</button>
+	<button mat-raised-button type="button" [mat-dialog-close]="true" (click)="submit()" [disabled]="!fileData">Submit</button>
 </mat-dialog-actions>

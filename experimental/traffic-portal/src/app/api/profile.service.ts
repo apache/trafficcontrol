@@ -130,9 +130,8 @@ export class ProfileService extends APIService {
 	 * @param profileId Id of the profile to export.
 	 * @returns profile export object.
 	 */
-	public async exportProfile(profileId: number | ResponseProfile): Promise<ProfileExport>{
-		const id = typeof (profileId) === "number" ? profileId : profileId.id;
-		return this.http.get<ProfileExport>(`/api/${this.apiVersion}/profiles/${id}/export`).toPromise();
+	public async exportProfile(profileId: number): Promise<ProfileExport>{
+		return this.http.get<ProfileExport>(`/api/${this.apiVersion}/profiles/${profileId}/export`).toPromise();
 	}
 
 	/**

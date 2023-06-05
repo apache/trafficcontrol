@@ -27,6 +27,7 @@ $backgroundColor: #fafaec;
     border-image: initial;
     border-radius: 5px;
     box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+    cursor: pointer;
 
     .text-wrapper {
         display: table-cell;
@@ -38,16 +39,18 @@ $backgroundColor: #fafaec;
     }
 }
 
-.mat-mdc-dialog-content {
+.mdc-dialog__content{
     &.active {
         background: $backgroundColor;
     }
 
 }
 
-.mat-mdc-form-field {
-    #json-txt-editor {
-        max-height: 42vh !important;
-        height: 42vh !important;
+.mat-mdc-form-field.json-txt-editor {
+    width: 100%;
+
+    textarea {
+        max-height: 42vh;
+        height: 42vh;
     }
 }

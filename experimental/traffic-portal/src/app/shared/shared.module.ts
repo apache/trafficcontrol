@@ -27,7 +27,7 @@ import { DecisionDialogComponent } from "./dialogs/decision-dialog/decision-dial
 import { TextDialogComponent } from "./dialogs/text-dialog/text-dialog.component";
 import { FileUtilsService } from "./file-utils.service";
 import { GenericTableComponent } from "./generic-table/generic-table.component";
-import { ImportJsonEditTxtComponent } from "./import-json-edit-txt/import-json-edit-txt.component";
+import { ImportJsonTxtComponent } from "./import-json-txt/import-json-txt.component";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { DateReviverInterceptor } from "./interceptor/date-reviver.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
@@ -63,7 +63,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		TextDialogComponent,
 		DecisionDialogComponent,
 		CollectionChoiceDialogComponent,
-  		ImportJsonEditTxtComponent
+  		ImportJsonTxtComponent
 	],
 	exports: [
 		AlertComponent,
