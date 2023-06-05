@@ -307,7 +307,7 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		handler.resultChan <- result
 		return
 	}
-	if val, ok := miscStats["current_time_epoch_ms"]; ok {
+	if val, ok := miscStats["plugin.system_stats.timestamp_ms"]; ok {
 		valString := fmt.Sprintf("%s", val)
 		valInt, valErr := strconv.ParseInt(valString, 10, 64)
 		if valErr != nil {

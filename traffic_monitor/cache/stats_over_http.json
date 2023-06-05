@@ -1,5 +1,6 @@
 {
 	"global": {
+		"plugin.system_stats.timestamp_ms": "1684784877939",
 		"proxy.process.http.completed_requests": 26220072200,
 		"proxy.process.http.total_incoming_connections": 770802777,
 		"proxy.process.http.total_client_connections": 770802777,
@@ -533,7 +534,6 @@
 		"plugin.system_stats.net.docker0.rx_length_errors": "0",
 		"proxy.process.cache.volume_0.span.offline": "0",
 		"proxy.process.cache.volume_0.span.online": "0",
-		"current_time_epoch_ms": "1684784878894",
 		"server": "10.0.0"
 	}
 }
