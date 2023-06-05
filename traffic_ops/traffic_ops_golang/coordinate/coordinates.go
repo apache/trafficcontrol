@@ -240,6 +240,16 @@ name) VALUES (
 	return query
 }
 
+const delQuery = `
+DELETE FROM coordinate
+WHERE id = $1
+RETURNING
+	latitude,
+	longitude,
+	name,
+	last_updated
+`
+
 func deleteQuery() string {
 	return `DELETE FROM coordinate WHERE id = :id`
 }
@@ -385,4 +395,35 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate #%d updated", id), c)
+}
+
+// Delete is the handler for PUT requests made to the /coordinates API (in API
+// v5 and later).
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+
+	c := tc.CoordinateV5{
+		ID: util.Ptr(id),
+	}
+	if err := tx.QueryRow(delQuery, id).Scan(&c.Latitude, &c.Longitude, &c.Name, &c.LastUpdated); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			userErr = fmt.Errorf("no such Coordinate: #%d", id)
+			errCode = http.StatusBadRequest
+			sysErr = nil
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate #%d deleted", id), c)
 }
