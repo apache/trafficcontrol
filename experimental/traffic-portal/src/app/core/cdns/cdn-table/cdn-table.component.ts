@@ -216,7 +216,7 @@ export class CDNTableComponent implements OnInit {
 		}
 		this.alerts.newAlert(
 			AlertLevel.SUCCESS,
-			`${readableAction}d CDN server updates`,
+			`${readableAction.replace(/(?<!e)$/, "e")}d CDN server updates`,
 		);
 	}
 
