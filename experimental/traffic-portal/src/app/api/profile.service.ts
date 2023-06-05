@@ -143,7 +143,7 @@ export class ProfileService extends APIService {
 	public async importProfile(importJSON: ProfileImport): Promise<ProfileImportResponse>{
 		return this.post<ProfileImportResponse>("profiles/import", importJSON).toPromise();
 	}
-	
+
 	public async getParameters(id: number): Promise<ResponseParameter>;
 	public async getParameters(): Promise<Array<ResponseParameter>>;
 	/**
