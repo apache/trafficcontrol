@@ -120,6 +120,14 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
     are yes, no, and auto. If yes, create and use. If auto, use
     if it exist. Default is auto. [auto]
 
+-G, -\-go-direct=value
+
+    [true|false|old] if omitted go_direct is set to 'false', you
+    can set go_direct 'true' which is not recommended, or 'old' which
+    will be based on opposite of parent_is_proxy directive. Can also be
+    overridden on a per delivery service and tier basis with a parameter.
+    Default is [false]
+
 -H, -\-cache-host-name=value
 
     Host name of the cache to generate config for. Must be the
