@@ -98,9 +98,9 @@ export const testDS = {
 
 /** A dummy DS SSL Key for testing */
 export const testDSSSLKeys: ResponseDeliveryServiceSSLKey = {
-	cdn: "",
+	cdn: testDS.cdnName,
 	certificate: {crt: "", csr: "", key: ""},
-	deliveryservice: "",
+	deliveryservice: testDS.xmlId,
 	expiration: new Date(),
 	version: ""
 };
@@ -585,9 +585,10 @@ describe("DeliveryServiceService", () => {
 		const resp = service.getSSLKeys(testDS.xmlId);
 		const req = httpTestingController.expectOne(r => r.url ===
 			`/api/${service.apiVersion}/deliveryservices/xmlId/${testDS.xmlId}/sslkeys`);
-		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("decode")).toBe("true");
 		expect(req.request.method).toBe("GET");
-		req.flush({testDSSSLKeys});
+		req.flush({response: testDSSSLKeys});
 
 		await expectAsync(resp).toBeResolvedTo(testDSSSLKeys);
 	});

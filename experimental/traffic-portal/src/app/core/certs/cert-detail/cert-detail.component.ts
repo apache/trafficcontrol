@@ -44,7 +44,7 @@ function createDateValidator(before: boolean, now: Date): ValidatorFn {
 }
 
 /**
- *
+ * Controller for the Cert Detail component
  */
 @Component({
 	selector: "tp-cert-detail",

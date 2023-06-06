@@ -2,10 +2,11 @@ import { HarnessLoader } from "@angular/cdk/testing";
 import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatFormFieldHarness } from "@angular/material/form-field/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
+
+import { AppUIModule } from "src/app/app.ui.module";
 
 import { CertAuthorComponent } from "./cert-author.component";
-import { AppUIModule } from "src/app/app.ui.module";
-import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 
 describe("CertAuthorComponent", () => {
 	let component: CertAuthorComponent;

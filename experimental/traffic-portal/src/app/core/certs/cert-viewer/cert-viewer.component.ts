@@ -7,24 +7,29 @@ import { ResponseDeliveryServiceSSLKey } from "trafficops-types";
 import { DeliveryServiceService } from "src/app/api";
 
 /**
- *
+ * What type of cert is it
  */
 type CertType = "Root" | "Client" | "Intermediate" | "Unknown" | "Error";
 
 /**
- *
+ * Detected order of the cert chain
+ */
+type CertOrder = "Client -> Root" | "Root -> Client" | "Unknown" | "Single";
+
+/**
+ * Wrapper around Certificate that contains additional fields
  */
 export interface AugmentedCertificate extends forge.pki.Certificate {
 	type: CertType;
 	parseError: boolean;
 }
 
-const NULL_CERT = forge.pki.createCertificate() as AugmentedCertificate;
+export const NULL_CERT = forge.pki.createCertificate() as AugmentedCertificate;
 NULL_CERT.type = "Error";
 NULL_CERT.parseError = true;
 
 /**
- *
+ * Controller for the Cert Viewer component.
  */
 @Component({
 	selector: "tp-cert-viewer",
@@ -34,10 +39,10 @@ NULL_CERT.parseError = true;
 export class CertViewerComponent implements OnInit {
 	public cert!: ResponseDeliveryServiceSSLKey;
 	public inputCert = "";
-	public dsCert: boolean | undefined;
+	public dsCert = false;
 
 	public certChain: Array<AugmentedCertificate> = [];
-	public certOrder: string | undefined;
+	public certOrder: CertOrder | undefined;
 
 	@ViewChild("matTab") public matTab!: MatTabGroup;
 	constructor(
@@ -67,6 +72,7 @@ export class CertViewerComponent implements OnInit {
 	 * @param uploaded if the certificate was uploaded by the client.
 	 */
 	public process(uploaded: boolean = false): void {
+		this.inputCert = this.inputCert.replace(/\r\n/g, "\n");
 		const parts = this.inputCert.split("-\n-");
 		const certs = new Array<AugmentedCertificate>(parts.length);
 		for(let i = 1; i < parts.length; ++i) {
@@ -76,11 +82,14 @@ export class CertViewerComponent implements OnInit {
 		}
 		certs[certs.length-1] = this.newCert(parts[parts.length - 1]);
 		const assignType = (c: AugmentedCertificate, i: number): void => {
+			if(c.parseError) {
+				return;
+			}
 			if (i === 0) {
 				c.type = "Root";
 			} else if (i === certs.length - 1) {
 				c.type = "Client";
-			} else if (!c.parseError) {
+			} else {
 				c.type = "Intermediate";
 			}
 		};
@@ -122,6 +131,14 @@ export class CertViewerComponent implements OnInit {
 			}
 		}
 
+		if (certs.length === 1) {
+			if (certs[0].parseError) {
+				invalid = true;
+			} else {
+				this.certOrder = "Single";
+				return certs;
+			}
+		}
 		if (invalid) {
 			this.certOrder = "Unknown";
 			return certs;

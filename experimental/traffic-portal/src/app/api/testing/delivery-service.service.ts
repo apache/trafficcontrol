@@ -172,9 +172,9 @@ export class DeliveryServiceService {
 		}
 	];
 	private readonly dsSSLKeys: Array<ResponseDeliveryServiceSSLKey> = [{
-		cdn: this.deliveryServices[0].cdnName ?? "'",
+		cdn: "'",
 		certificate: {crt: "", csr: "", key: ""},
-		deliveryservice: this.deliveryServices[0].xmlId,
+		deliveryservice: "xml",
 		expiration: new Date(),
 		version: ""
 	}];
@@ -557,6 +557,6 @@ export class DeliveryServiceService {
 			throw new Error(`no such Delivery Service: ${ds}`);
 		}
 
-		return Promise.resolve(key);
+		return key;
 	}
 }
