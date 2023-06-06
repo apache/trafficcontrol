@@ -20,7 +20,6 @@ name: Traffic Ops API Contract Tests
 env:
   # alpine:3.13
   ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
-  GOPATH: ${HOME}/go
 
 on:
   push:
@@ -66,19 +65,19 @@ jobs:
     steps:
     - name: Set up Go environment
       run: |
-        sudo mkdir -p "${{ env.GOPATH }}/src/github.com/apache"
-        echo "export GOPATH='${{ env.GOPATH }}'" >> $GITHUB_ENV
+        sudo mkdir -p "${HOME}/go/src/github.com/apache"
+        echo "export GOPATH='${HOME}/go'" >> $GITHUB_ENV
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        path: ${{ env.GOPATH }}/src/github.com/apache/trafficcontrol
+        path: ${HOME}/go/src/github.com/apache/trafficcontrol
     - name: Build
       run: |
-        cd ${{ env.GOPATH }}/src/github.com/apache/trafficcontrol
+        cd ${HOME}/go/src/github.com/apache/trafficcontrol
     - name: Cache Alpine Docker image
       uses: actions/cache@v2
       with:
-        path: ${{ env.GOPATH }}/src/github.com/apache/trafficcontrol/docker-images
+        path: ${HOME}/go/src/github.com/apache/trafficcontrol/docker-images
         key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
     - name: Import cached Alpine Docker image
       run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
