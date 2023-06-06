@@ -1507,7 +1507,7 @@
       "params": [
         {
           "configFile": "parent.config",
-          "name": "go_direct_edge",
+          "name": "go_direct.edge",
           "secure": false,
           "value": "false"
         }
@@ -1522,7 +1522,7 @@
       "params": [
         {
           "configFile": "parent.config",
-          "name": "go_direct_edge",
+          "name": "go_direct.edge",
           "secure": false,
           "value": "false"
         }
