@@ -148,7 +148,7 @@ Response Structure
 	}}
 
 ``DELETE``
-----------
+==========
 Deletes an existing ``CDN Lock``.
 
 :Auth. Required: Yes
@@ -180,6 +180,12 @@ Request Structure
 
 Response Structure
 ------------------
+:userName:         The username for which the lock was created.
+:cdn:              The name of the CDN for which the lock was created.
+:message:          The message or reason that the user specified while acquiring the lock.
+:soft:             Whether or not this is a soft(shared) lock.
+:sharedUserNames:  An array of the usernames that the creator of the lock has shared their lock with.
+:lastUpdated:      Time that this lock was last updated(created).
 
 .. code-block:: http
 	:caption: Response Example
