@@ -16,20 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -o errexit
-
-gray_bg="$(printf '%s%s' $'\x1B' '[100m')";
-red_bg="$(printf '%s%s' $'\x1B' '[41m')";
-yellow_bg="$(printf '%s%s' $'\x1B' '[43m')";
-black_fg="$(printf '%s%s' $'\x1B' '[30m')";
-color_and_prefix() {
-	color="$1";
-	shift;
-	prefix="$1";
-	normal_bg="$(printf '%s%s' $'\x1B' '[49m')";
-	normal_fg="$(printf '%s%s' $'\x1B' '[39m')";
-	sed "s/^/${color}${black_fg}${prefix}: /" | sed "s/$/${normal_bg}${normal_fg}/";
-}
+set -o errexit -o nounset -o pipefail
 
 export PGUSER="traffic_ops"
 export PGPASSWORD="twelve"
@@ -66,17 +53,7 @@ openssl rand 32 | base64 | sudo tee /aes.key
 
 sudo apt-get install -y --no-install-recommends gettext
 
-export GOPATH="${HOME}/go"
-org_dir="$GOPATH/src/github.com/apache"
-repo_dir="${org_dir}/trafficcontrol"
-if [[ ! -e "$repo_dir" ]]; then
-	mkdir -p "$org_dir"
-	cd
-	mv "${GITHUB_WORKSPACE}" "${repo_dir}/"
-	ln -s "$repo_dir" "${GITHUB_WORKSPACE}"
-fi
-
-cd "${repo_dir}/traffic_ops/traffic_ops_golang"
+cd "${GITHUB_WORKSPACE}/traffic_ops/traffic_ops_golang"
 
 if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
 	go mod vendor

@@ -28,10 +28,10 @@ on:
       - .github/actions/to-api-contract-tests/**
       - .github/workflows/to.api.contract.tests.yml
       - traffic_ops/testing/api_contract/**
-      - traffic_ops/*client/**.go
-      - traffic_ops/testing/api/**.go
-      - traffic_ops/traffic_ops_golang/**.go
-      - traffic_control/clients/python/*
+      - lib/go-tc/**.go
+      - traffic_ops/**.go
+      - '!**_test.go'
+      - traffic_control/clients/python/**.py
   create:
   pull_request:
     paths:
@@ -39,10 +39,10 @@ on:
       - .github/actions/to-api-contract-tests/**
       - .github/workflows/to.api.contract.tests.yml
       - traffic_ops/testing/api_contract/**
-      - traffic_ops/*client/**.go
-      - traffic_ops/testing/api/**.go
-      - traffic_ops/traffic_ops_golang/**.go
-      - traffic_control/clients/python/*
+      - lib/go-tc/**.go
+      - traffic_ops/**.go
+      - '!**_test.go'
+      - traffic_control/clients/python/**.py
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
@@ -63,8 +63,15 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
+    - name: Set up Go environment
+      run: |
+        export GOPATH="${HOME}/go"
+        export PATH="${GOPATH}/bin:${PATH}"
+        mkdir -p "${GOPATH}/src/github.com/apache"
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        path: ${{ env.GOPATH }}/src/github.com/apache/trafficcontrol
     - name: Cache Alpine Docker image
       uses: actions/cache@v2
       with:
