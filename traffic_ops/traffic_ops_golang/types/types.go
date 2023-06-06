@@ -29,6 +29,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -37,6 +38,147 @@ import (
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
+
+// TOTypeV5 is a needed type alias to define functions on.
+type TOTypeV5 struct {
+	api.APIInfoImpl `json:"-"`
+	tc.TypeNullableV5
+}
+
+func (v *TOTypeV5) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "type")
+}
+
+func (v *TOTypeV5) SetLastUpdated(t tc.TimeNoMod) {
+	newTime, err := util.ConvertTimeFormat(t.Time, time.RFC3339)
+	if err != nil {
+		log.Errorf("Unable to convert Type last update time: %s\n", t.Time)
+		v.LastUpdated = &t.Time
+	}
+	v.LastUpdated = newTime
+}
+func (v *TOTypeV5) InsertQuery() string     { return insertQuery() }
+func (v *TOTypeV5) NewReadObj() interface{} { return &tc.TypeNullableV5{} }
+func (v *TOTypeV5) SelectQuery() string     { return selectQuery() }
+func (v *TOTypeV5) SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName)
+}
+func (v *TOTypeV5) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"name":       dbhelpers.WhereColumnInfo{Column: "typ.name"},
+		"id":         dbhelpers.WhereColumnInfo{Column: "typ.id", Checker: api.IsInt},
+		"useInTable": dbhelpers.WhereColumnInfo{Column: "typ.use_in_table"},
+	}
+}
+func (v *TOTypeV5) UpdateQuery() string { return updateQuery() }
+func (v *TOTypeV5) DeleteQuery() string { return deleteQuery() }
+
+func (typ TOTypeV5) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
+}
+
+// Implementation of the Identifier, Validator interface functions
+func (typ TOTypeV5) GetKeys() (map[string]interface{}, bool) {
+	if typ.ID == nil {
+		return map[string]interface{}{"id": 0}, false
+	}
+	return map[string]interface{}{"id": *typ.ID}, true
+}
+
+func (typ *TOTypeV5) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	typ.ID = &i
+}
+
+func (typ *TOTypeV5) GetAuditName() string {
+	if typ.Name != nil {
+		return *typ.Name
+	}
+	if typ.ID != nil {
+		return strconv.Itoa(*typ.ID)
+	}
+	return "unknown"
+}
+
+func (typ *TOTypeV5) GetType() string {
+	return "type"
+}
+
+func (typ *TOTypeV5) Validate() (error, error) {
+	errs := validation.Errors{
+		"name":         validation.Validate(typ.Name, validation.Required),
+		"description":  validation.Validate(typ.Description, validation.Required),
+		"use_in_table": validation.Validate(typ.UseInTable, validation.Required),
+	}
+	if errs != nil {
+		return util.JoinErrs(tovalidate.ToErrors(errs)), nil
+	}
+	return nil, nil
+}
+
+func (tp *TOTypeV5) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(tp.APIInfo(), "name")
+	return api.GenericRead(h, tp, useIMS)
+}
+
+func (tp *TOTypeV5) Update(h http.Header) (error, error, int) {
+	if !tp.AllowMutation(false) {
+		return errors.New("can not update type"), nil, http.StatusBadRequest
+	}
+	return api.GenericUpdate(h, tp)
+}
+
+func (tp *TOTypeV5) Delete() (error, error, int) {
+	if !tp.AllowMutation(false) {
+		return errors.New(fmt.Sprintf("can not delete type")), nil, http.StatusBadRequest
+	}
+	return api.GenericDelete(tp)
+}
+
+func (tp *TOTypeV5) Create() (error, error, int) {
+	if !tp.AllowMutation(true) {
+		return errors.New("can not create type"), nil, http.StatusBadRequest
+	}
+	return api.GenericCreate(tp)
+}
+
+func (tp *TOTypeV5) AllowMutation(forCreation bool) bool {
+	if !forCreation {
+		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
+		if userErr != nil || sysErr != nil {
+			return false
+		} else if actualUseInTable != "server" {
+			return false
+		}
+	} else if *tp.UseInTable != "server" { // Only allow creating of types with UseInTable being "server"
+		return false
+	}
+	return true
+}
+
+func (tp *TOTypeV5) loadUseInTable() (error, error, string) {
+	var useInTable string
+	// ID is only nil on creation, should not call this method in that case
+	if tp.ID != nil {
+		query := `SELECT use_in_table from type where id=$1`
+		err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&useInTable)
+		if err == sql.ErrNoRows {
+			if tp.UseInTable == nil {
+				return nil, nil, ""
+			}
+			return nil, nil, *tp.UseInTable
+		}
+		if err != nil {
+			return nil, err, ""
+		}
+	} else {
+		return errors.New("no type with that key found"), nil, ""
+	}
+
+	return nil, nil, useInTable
+}
+
+// V5 version ends here ---xxx---
 
 // TOType is a needed type alias to define functions on.
 type TOType struct {
