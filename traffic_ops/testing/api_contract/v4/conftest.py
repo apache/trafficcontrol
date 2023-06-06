@@ -978,7 +978,7 @@ def asn_data_post(to_session: TOSession, request_template_data: list[JSONData],
 	:returns: Sample POST data and the actual API response.
 	"""
 	asn = check_template_data(request_template_data["asns"], "asns")
-	# Return new post data and post response from profiles POST request
+	# Return new post data and post response from asns POST request
 	randstr = randint(0, 1000)
 	asn["asn"] = randstr
 
@@ -986,7 +986,7 @@ def asn_data_post(to_session: TOSession, request_template_data: list[JSONData],
 	asn["cachegroupId"] = cache_group_post_data["id"]
 	logger.info("New profile data to hit POST method %s", asn)
 
-	# Hitting profile POST method
+	# Hitting asns POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_asn(data=asn)
 	resp_obj = check_template_data(response, "asn")
 	return resp_obj
