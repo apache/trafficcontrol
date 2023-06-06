@@ -193,6 +193,10 @@ export class NavigationService {
 				{
 					href: "/core/iso-gen",
 					name: "Generate System ISO"
+				},
+				{
+					href: "/core/certs/ssl",
+					name: "Inspect Cert"
 				}
 			],
 			name: "Other"
