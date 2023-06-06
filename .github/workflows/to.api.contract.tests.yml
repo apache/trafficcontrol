@@ -69,7 +69,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        path: ${{GOPATH}}/src/github.com/apache/trafficcontrol
+        path: ${GOPATH}/src/github.com/apache/trafficcontrol
     - name: Cache Alpine Docker image
       uses: actions/cache@v2
       with:
