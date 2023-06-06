@@ -23,6 +23,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"time"
@@ -210,4 +212,95 @@ func deleteQuery() string {
 	query := `DELETE FROM type
 WHERE id=:id`
 	return query
+}
+
+// [V5]
+
+func Get(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	code := http.StatusOK
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+
+	var maxTime time.Time
+	var usrErr error
+	var syErr error
+
+	var typeList []tc.TypeV5
+
+	tx := inf.Tx
+
+	typeList, maxTime, code, usrErr, syErr = GetTypes(tx, inf.Params, useIMS, r.Header)
+	if code == http.StatusNotModified {
+		w.WriteHeader(code)
+		api.WriteResp(w, r, []tc.TypeV5{})
+		return
+	}
+
+	if code == http.StatusBadRequest {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, usrErr, nil)
+		return
+	}
+
+	if sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, syErr)
+		return
+	}
+
+	if maxTime != (time.Time{}) && api.SetLastModifiedHeader(r, useIMS) {
+		api.AddLastModifiedHdr(w, maxTime)
+	}
+
+	api.WriteResp(w, r, typeList)
+}
+
+// GetTypes [Version : V5] returns types.
+func GetTypes(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.TypeV5, time.Time, int, error, error) {
+	var maxTime time.Time
+	typeList := []tc.TypeV5{}
+
+	selectQuery := `SELECT id, name, description, use_in_table, last_updated FROM type as typ`
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"name":       {Column: "typ.name"},
+		"id":         {Column: "typ.id", Checker: api.IsInt},
+		"useInTable": {Column: "typ.use_in_table"},
+	}
+	if _, ok := params["orderby"]; !ok {
+		params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+	}
+
+	query := selectQuery + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, time.Time{}, http.StatusInternalServerError, nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		typ := tc.TypeV5{}
+
+		if err = rows.Scan(&typ.ID, &typ.LastUpdated, &typ.Name, &typ.Description, &typ.UseInTable); err != nil {
+			return nil, time.Time{}, http.StatusInternalServerError, nil, err
+		}
+		typeList = append(typeList, typ)
+	}
+
+	return typeList, maxTime, http.StatusOK, nil, nil
 }
