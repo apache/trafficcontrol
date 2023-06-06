@@ -55,7 +55,7 @@ Response Structure
 ------------------
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this type was last updated, in :rfc:`3339`
 :name:        The name of this type
 :useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
 
@@ -77,7 +77,7 @@ Response Structure
 	{ "response": [
 		{
 			"id": 48,
-			"lastUpdated": "2018-12-12 16:26:41+00",
+			"lastUpdated": "2018-12-14T20:49:28.111111Z"",
 			"name": "TC_LOC",
 			"description": "Location for Traffic Control Component Servers",
 			"useInTable": "cachegroup"
@@ -124,7 +124,7 @@ Response Structure
 
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this type was last updated, in :rfc:`3339`
 :name:        The name of this type
 :useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
 
@@ -152,7 +152,7 @@ Response Structure
 		"response": [
 		{
 			"id": 3004,
-			"lastUpdated": "2020-02-26 18:58:41+00",
+			"lastUpdated": "2020-02-26T20:49:28.111111Z"",
 			"name": "Example01",
 			"description": "Example"
 			"useInTable": "server"
