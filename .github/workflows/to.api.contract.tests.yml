@@ -28,13 +28,21 @@ on:
       - .github/actions/to-api-contract-tests/**
       - .github/workflows/to.api.contract.tests.yml
       - traffic_ops/testing/api_contract/**
+      - traffic_ops/*client/**.go
+      - traffic_ops/testing/api/**.go
+      - traffic_ops/traffic_ops_golang/**.go
+      - traffic_control/clients/python/*
   create:
   pull_request:
     paths:
       - .github/actions/todb-init/**
       - .github/actions/to-api-contract-tests/**
       - .github/workflows/to.api.contract.tests.yml
-      - traffic_ops/testing/api_contract/test_**.py
+      - traffic_ops/testing/api_contract/**
+      - traffic_ops/*client/**.go
+      - traffic_ops/testing/api/**.go
+      - traffic_ops/traffic_ops_golang/**.go
+      - traffic_control/clients/python/*
     types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
