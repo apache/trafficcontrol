@@ -20,7 +20,7 @@ name: Traffic Ops API Contract Tests
 env:
   # alpine:3.13
   ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
-  GOPATH: ${{ runner.home }}/go
+  GOPATH: ${{ github.workspace }}/go
 
 on:
   push:
@@ -66,8 +66,8 @@ jobs:
     steps:
     - name: Set up Go environment
       run: |
-        sudo mkdir -p "${{ runner.home }}/go/src/github.com/apache"
-        echo "export GOPATH='${{ runner.home }}/go'" >> $GITHUB_ENV
+        sudo mkdir -p "${{ github.workspace }}/go/src/github.com/apache"
+        echo "export GOPATH='${{ github.workspace }}/go'" >> $GITHUB_ENV
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
