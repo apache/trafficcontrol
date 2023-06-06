@@ -65,7 +65,7 @@ jobs:
     steps:
     - name: Set up Go environment
       run: |
-        mkdir -p "${GOPATH}/src/github.com/apache"
+        sudo mkdir -p "${GOPATH}/src/github.com/apache"
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
