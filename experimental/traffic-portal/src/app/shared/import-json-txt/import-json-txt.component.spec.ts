@@ -14,7 +14,7 @@
 
 import { DatePipe } from "@angular/common";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { MatDialogModule, MatDialogRef } from "@angular/material/dialog";
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from "@angular/material/dialog";
 
 import { ImportJsonTxtComponent } from "./import-json-txt.component";
 
@@ -30,7 +30,8 @@ describe("ImportJsonTxtComponent", () => {
 			],
 			providers: [
 				DatePipe,
-				{provide: MatDialogRef, useValue: {}}
+				{provide: MatDialogRef, useValue: {}},
+				{provide: MAT_DIALOG_DATA, useValue: { title: ""}}
 			]
 		}).compileComponents();
 
@@ -43,28 +44,28 @@ describe("ImportJsonTxtComponent", () => {
 		expect(component).toBeTruthy();
 	});
 
-	it('should set dragOn to true when dragover event occurs', () => {
-		const event = new DragEvent('dragover');
-		const preventDefaultSpy = spyOn(event, 'preventDefault');
-		const stopPropagationSpy = spyOn(event, 'stopPropagation');
-	  
+	it("should set dragOn to true when dragover event occurs", () => {
+		const event = new DragEvent("dragover");
+		const preventDefaultSpy = spyOn(event, "preventDefault");
+		const stopPropagationSpy = spyOn(event, "stopPropagation");
+
 		fixture.nativeElement.dispatchEvent(event);
 		fixture.detectChanges();
-		
+
 		expect(preventDefaultSpy).toHaveBeenCalled();
 		expect(stopPropagationSpy).toHaveBeenCalled();
 		expect(component.dragOn).toBeTrue();
 	  });
-	  
-	  it('should set dragOn to true when dragover event occurs', () => {
 
-		const event = new DragEvent('dragleave');
-		const preventDefaultSpy = spyOn(event, 'preventDefault');
-		const stopPropagationSpy = spyOn(event, 'stopPropagation');
+	  it("should set dragOn to true when dragover event occurs", () => {
+
+		const event = new DragEvent("dragleave");
+		const preventDefaultSpy = spyOn(event, "preventDefault");
+		const stopPropagationSpy = spyOn(event, "stopPropagation");
 
 		fixture.nativeElement.dispatchEvent(event);
 		fixture.detectChanges();
-	  
+
 		expect(preventDefaultSpy).toHaveBeenCalled();
 		expect(stopPropagationSpy).toHaveBeenCalled();
 		expect(component.dragOn).toBeFalse();

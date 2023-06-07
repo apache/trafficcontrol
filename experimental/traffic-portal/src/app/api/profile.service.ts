@@ -14,7 +14,10 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { ProfileExport, ProfileImport, ProfileImportResponse, RequestParameter, RequestProfile, ResponseParameter, ResponseProfile } from "trafficops-types";
+import {
+	ProfileExport, ProfileImport, ProfileImportResponse, RequestParameter,
+	RequestProfile, ResponseParameter, ResponseProfile
+} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 

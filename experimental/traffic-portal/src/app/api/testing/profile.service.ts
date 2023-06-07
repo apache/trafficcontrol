@@ -13,7 +13,10 @@
 */
 
 import { Injectable } from "@angular/core";
-import { ProfileExport, ProfileImport, ProfileImportResponse, ProfileType, RequestProfile, ResponseProfile, RequestParameter, ResponseParameter } from "trafficops-types";
+import {
+	ProfileExport, ProfileImport, ProfileImportResponse, ProfileType,
+	RequestProfile, ResponseProfile, RequestParameter, ResponseParameter
+} from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
@@ -225,7 +228,7 @@ export class ProfileService {
 	public async deleteProfile(id: number | ResponseProfile): Promise<ResponseProfile> {
 		const index = this.profiles.findIndex(t => t.id === id);
 		if (index === -1) {
-			throw new Error(`no such Type: ${id}`);
+			throw new Error(`no such profile: ${id}`);
 		}
 		return this.profiles.splice(index, 1)[0];
 	}
@@ -237,9 +240,9 @@ export class ProfileService {
 	 * @returns The requested Profile as attachment.
 	 */
 	public async exportProfile(id: number | ResponseProfile): Promise<ProfileExport> {
-		if( id !== undefined){
-			const exportProfile = this.profileExport;
-			return exportProfile;
+		const index = this.profiles.findIndex(t => t.id === id);
+		if (index === -1) {
+			throw new Error(`no such Profile: ${id}`);
 		}
 		return this.profileExport;
 	}

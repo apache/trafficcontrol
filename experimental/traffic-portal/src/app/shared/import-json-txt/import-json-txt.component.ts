@@ -42,7 +42,7 @@ export class ImportJsonTxtComponent {
 	public allowedType: string[] = ["application/json", "text/plain"];
 
 	/** Text editor value */
-	public inputTxt = "";
+	public inputTxt = null;
 
 	/**  File data imported */
 	public fileData = "";
@@ -155,7 +155,7 @@ export class ImportJsonTxtComponent {
 
 		reader.onload = (event): void => {
 			if(typeof(event.target?.result)==="string"){
-				this.inputTxt = event.target?.result;
+				this.inputTxt = JSON.parse(event.target?.result);
 			}
 		};
 		reader.readAsText(file);

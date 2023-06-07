@@ -18,39 +18,23 @@ $backgroundColor: #fafaec;
     min-height: 75px;
     min-width: 400px;
     margin: 1rem auto;
-    display: table;
     width: 99%;
     background-color: $backgroundColor;
     border: solid 1px rgb(231, 230, 230);
     text-align: center;
     color: rgb(133, 132, 132);
-    border-image: initial;
     border-radius: 5px;
     box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
-    cursor: pointer;
 
     .text-wrapper {
-        display: table-cell;
-        vertical-align: middle;
-
         .hint {
             color: rgb(251, 192, 82);
         }
     }
 }
 
-#import-content{
+#import-content {
     &.active {
         background: $backgroundColor;
-    }
-
-}
-
-.mat-mdc-form-field.json-txt {
-    width: 100%;
-
-    textarea {
-        max-height: 42vh;
-        height: 42vh;
     }
 }
