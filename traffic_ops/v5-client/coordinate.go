@@ -27,38 +27,38 @@ import (
 const apiCoordinates = "/coordinates"
 
 // CreateCoordinate creates the given Coordinate.
-func (to *Session) CreateCoordinate(coordinate tc.Coordinate, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
-	var alerts tc.Alerts
-	reqInf, err := to.post(apiCoordinates, opts, coordinate, &alerts)
-	return alerts, reqInf, err
+func (to *Session) CreateCoordinate(coordinate tc.CoordinateV5, opts RequestOptions) (tc.CoordinateResponseV5, toclientlib.ReqInf, error) {
+	var resp tc.CoordinateResponseV5
+	reqInf, err := to.post(apiCoordinates, opts, coordinate, &resp)
+	return resp, reqInf, err
 }
 
 // UpdateCoordinate replaces the Coordinate with the given ID with the one
 // provided.
-func (to *Session) UpdateCoordinate(id int, coordinate tc.Coordinate, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateCoordinate(id int, coordinate tc.CoordinateV5, opts RequestOptions) (tc.CoordinateResponseV5, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("id", strconv.Itoa(id))
-	var alerts tc.Alerts
-	reqInf, err := to.put(apiCoordinates, opts, coordinate, &alerts)
-	return alerts, reqInf, err
+	var resp tc.CoordinateResponseV5
+	reqInf, err := to.put(apiCoordinates, opts, coordinate, &resp)
+	return resp, reqInf, err
 }
 
 // GetCoordinates returns all Coordinates in Traffic Ops.
-func (to *Session) GetCoordinates(opts RequestOptions) (tc.CoordinatesResponse, toclientlib.ReqInf, error) {
-	var data tc.CoordinatesResponse
+func (to *Session) GetCoordinates(opts RequestOptions) (tc.CoordinatesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.CoordinatesResponseV5
 	reqInf, err := to.get(apiCoordinates, opts, &data)
 	return data, reqInf, err
 }
 
 // DeleteCoordinate deletes the Coordinate with the given ID.
-func (to *Session) DeleteCoordinate(id int, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) DeleteCoordinate(id int, opts RequestOptions) (tc.CoordinateResponseV5, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("id", strconv.Itoa(id))
-	var alerts tc.Alerts
-	reqInf, err := to.del(apiCoordinates, opts, &alerts)
-	return alerts, reqInf, err
+	var resp tc.CoordinateResponseV5
+	reqInf, err := to.del(apiCoordinates, opts, &resp)
+	return resp, reqInf, err
 }
