@@ -422,7 +422,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if err = tx.QueryRow(putQuery, c.Latitude, c.Longitude, c.Name, id).Scan(&c.LastUpdated); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			userErr = fmt.Errorf("no such Coordinate: #%d", id)
-			errCode = http.StatusBadRequest
+			errCode = http.StatusNotFound
 			sysErr = nil
 		} else {
 			userErr, sysErr, errCode = api.ParseDBError(err)
@@ -456,7 +456,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	if err := tx.QueryRow(delQuery, id).Scan(&c.Latitude, &c.Longitude, &c.Name, &c.LastUpdated); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			userErr = fmt.Errorf("no such Coordinate: #%d", id)
-			errCode = http.StatusBadRequest
+			errCode = http.StatusNotFound
 			sysErr = nil
 		} else {
 			userErr, sysErr, errCode = api.ParseDBError(err)
