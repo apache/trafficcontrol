@@ -23,7 +23,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
@@ -356,8 +355,7 @@ WHERE id=:id`
 	return query
 }
 
-// [V5]
-
+// Get [V5]
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -438,7 +436,7 @@ func GetTypes(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.He
 	for rows.Next() {
 		typ := tc.TypeV5{}
 
-		if err = rows.Scan(&typ.ID, &typ.LastUpdated, &typ.Name, &typ.Description, &typ.UseInTable); err != nil {
+		if err = rows.Scan(&typ.ID, &typ.Name, &typ.Description, &typ.UseInTable, &typ.LastUpdated); err != nil {
 			return nil, time.Time{}, http.StatusInternalServerError, nil, err
 		}
 		typeList = append(typeList, typ)
