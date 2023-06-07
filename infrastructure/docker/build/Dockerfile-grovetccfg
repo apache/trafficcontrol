@@ -35,7 +35,9 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 		rpm-build \
 		rsync \
 		epel-release && \
-	yum -y clean all
+	yum -y clean all && \
+	# Add skip git's safe.directory check
+	git config --global --add safe.directory '*'
 
 ### grovetccfg specific requirements
 FROM common-dependencies AS grovetccfg

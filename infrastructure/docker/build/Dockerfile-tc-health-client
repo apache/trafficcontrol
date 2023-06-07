@@ -36,7 +36,9 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 		rsync \
 		gzip \
 		epel-release && \
-	yum -y clean all
+	yum -y clean all && \
+	# Add skip git's safe.directory check
+	git config --global --add safe.directory '*'
 
 # CentOS 7 has pandoc in epel (which we installed above), 8 has it in [pP]ower[tT]ools
 RUN if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
