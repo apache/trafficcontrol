@@ -38,6 +38,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -195,14 +196,25 @@ func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, erro
 	return api.GenericRead(h, coord, useIMS)
 }
 
+func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+	return `
+SELECT max(t) from (
+	SELECT max(last_updated) AS t
+	FROM coordinate c
+	` + where + orderBy + pagination +
+		`
+	UNION ALL
+	SELECT max(last_updated) AS t
+	FROM last_deleted l
+	WHERE l.table_name='coordinate'
+) AS res`
+}
+
 // SelectMaxLastUpdatedQuery implements a "CRUDer" interface.
 // Deprecated: All future Coordinate versions should use the non-"CRUDer"
 // methodology.
-func (*TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
-	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
-		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+func (*TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, _ string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination)
 }
 
 // Update implements a "CRUDer" interface.
@@ -311,6 +323,20 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		userErr = util.JoinErrs(errs)
 		api.HandleErr(w, r, tx, errCode, userErr, nil)
 		return
+	}
+
+	var maxTime time.Time
+	if inf.UseIMS() {
+		var runSecond bool
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.WriteNotModifiedResponse(maxTime, w, r)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 
 	query := readQuery + where + orderBy + pagination
