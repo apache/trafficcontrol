@@ -19,7 +19,9 @@
 ARG BASE_IMAGE=rockylinux \
     RHEL_VERSION=8
 FROM ${BASE_IMAGE}:${RHEL_VERSION} as tsb-build
-RUN yum clean all && yum -y install git
+RUN yum clean all && yum -y install git && \
+	# Add skip git's safe.directory check
+	git config --global --add safe.directory '*'
 COPY GO_VERSION /
 RUN curl -L https://dl.google.com/go/go$(cat /GO_VERSION).linux-amd64.tar.gz | tar -C /usr/local -xz && ln -s /usr/local/go/bin/go /usr/bin/go
 # Fetch tested version of tsb:
