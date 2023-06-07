@@ -440,6 +440,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		c.ID = util.Ptr(id)
 	}
 
+	userErr, sysErr, statusCode := api.CheckIfUnModified(r.Header, inf.Tx, id, "coordinate")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+
 	if err = isValid(c); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
