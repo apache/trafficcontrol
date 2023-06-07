@@ -21,6 +21,7 @@
  * @param {*} deliveryService
  * @param {*} sslKeys
  * @param {*} $scope
+ * @param {*} $state
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../api/DeliveryServiceSslKeysService")} deliveryServiceSslKeysService
  * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
@@ -28,7 +29,11 @@
  * @param {import("../../../service/utils/FormUtils")} formUtils
  * @param {import("angular").IFilterService} $filter
  */
-var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $scope, locationUtils, deliveryServiceSslKeysService, $uibModal, $anchorScroll, formUtils, $filter) {
+var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $scope, $state, locationUtils, deliveryServiceSslKeysService, $uibModal, $anchorScroll, formUtils, $filter) {
+
+	$scope.refresh = function() {
+		$state.reload(); // reloads all the resolves for the view
+	};
 
 	var setSSLKeys = function(sslKeys) {
 		if (!sslKeys.hostname) {
@@ -100,6 +105,7 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 			deliveryServiceSslKeysService.renewCert(deliveryService).then(
 				function() {
 					$anchorScroll();
+					$scope.refresh();
 					if ($scope.dsSslKeyForm) $scope.dsSslKeyForm.$setPristine();
 				});
 		});
@@ -123,6 +129,7 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 			deliveryServiceSslKeysService.addSslKeys(sslKeys, deliveryService).then(
                 function() {
                     $anchorScroll();
+                    $scope.refresh();
                     if ($scope.dsSslKeyForm) $scope.dsSslKeyForm.$setPristine();
                 });
 		});
@@ -140,5 +147,5 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 
 };
 
-FormDeliveryServiceSslKeysController.$inject = ['deliveryService', 'sslKeys', '$scope', 'locationUtils', 'deliveryServiceSslKeysService', '$uibModal', '$anchorScroll', 'formUtils', '$filter'];
+FormDeliveryServiceSslKeysController.$inject = ['deliveryService', 'sslKeys', '$scope', '$state', 'locationUtils', 'deliveryServiceSslKeysService', '$uibModal', '$anchorScroll', 'formUtils', '$filter'];
 module.exports = FormDeliveryServiceSslKeysController;
