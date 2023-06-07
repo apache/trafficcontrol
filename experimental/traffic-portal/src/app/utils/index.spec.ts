@@ -99,7 +99,7 @@ describe("Typing utility functions", () => {
 	it("should check homogenous array types correctly", () => {
 		const a = {};
 		expect(isArray(a)).toBeFalse();
-		const b = [];
+		const b: unknown[] = [];
 		expect(isArray(b)).toBeTrue();
 		b.push(5);
 		expect(isArray(b)).toBeTrue();
