@@ -84,6 +84,14 @@ The output is a JSON array of objects containing the file and its metadata.
     and any required config file location parameter is missing
     or relative, will error.
 
+-G, -\-go-direct=value
+
+    [true|false|old] if omitted go_direct is set to 'false', you
+    can set go_direct 'true' which is not recommended, or 'old' which
+    will be based on opposite of parent_is_proxy directive. Can also be
+    overridden on a per delivery service and tier basis with a parameter.
+    Default is [false]
+
 -h, -\-help
 
     Print usage information and exit

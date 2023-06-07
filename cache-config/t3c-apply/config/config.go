@@ -112,6 +112,7 @@ type Cfg struct {
 	NoConfirmServiceAction bool
 
 	ReportOnly        bool
+	GoDirect          string
 	Files             t3cutil.ApplyFilesFlag
 	InstallPackages   bool
 	IgnoreUpdateFlag  bool
@@ -254,6 +255,9 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	const silentFlagName = "silent"
 	silentPtr := getopt.BoolLong(silentFlagName, 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
+	const goDirectFlagName = "go-direct"
+	goDirectPtr := getopt.StringLong(goDirectFlagName, 'G', "false", "[true|false|old] default will set go_direct to false, you can set go_direct true, or old will be based on opposite of parent_is_proxy directive.")
+
 	const waitForParentsFlagName = "wait-for-parents"
 	waitForParentsPtr := getopt.BoolLong(waitForParentsFlagName, 'W', "[true | false] do not update if parent_pending = 1 in the update json. Default is false")
 
@@ -367,6 +371,16 @@ If any of the related flags are also set, they override the mode's default behav
 				*silentPtr = true
 			}
 		}
+	}
+
+	switch *goDirectPtr {
+	case "false", "true", "old":
+		if !getopt.IsSet(goDirectFlagName) {
+			modeLogStrs = append(modeLogStrs, goDirectFlagName+" not set using default 'false")
+		}
+	default:
+		modeLogStrs = append(modeLogStrs, *goDirectPtr+" is not a valid go-direct option setting default 'false'")
+		*goDirectPtr = "false"
 	}
 
 	if *serviceActionPtr == "" {
@@ -549,6 +563,7 @@ If any of the related flags are also set, they override the mode's default behav
 		MaxMindLocation:             maxmindLocation,
 		TsHome:                      TSHome,
 		TsConfigDir:                 tsConfigDir,
+		GoDirect:                    *goDirectPtr,
 		ServiceAction:               t3cutil.ApplyServiceActionFlag(*serviceActionPtr),
 		NoConfirmServiceAction:      *noConfirmServiceAction,
 		ReportOnly:                  *reportOnlyPtr,
@@ -648,6 +663,7 @@ func printConfig(cfg Cfg) {
 	log.Debugf("LogLocationWarn: %s\n", cfg.LogLocationWarn)
 	log.Debugf("CacheHostName: %s\n", cfg.CacheHostName)
 	log.Debugf("SvcManagement: %s\n", cfg.SvcManagement)
+	log.Debugf("GoDirect: %s\n", cfg.GoDirect)
 	log.Debugf("Retries: %d\n", cfg.Retries)
 	log.Debugf("ReverseProxyDisable: %t\n", cfg.ReverseProxyDisable)
 	log.Debugf("SkipOSCheck: %t\n", cfg.SkipOSCheck)
