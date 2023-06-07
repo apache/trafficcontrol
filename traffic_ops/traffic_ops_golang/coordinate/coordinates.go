@@ -381,6 +381,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/coordinates?id=%d", inf.Version, *c.ID))
 	w.WriteHeader(http.StatusCreated)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) created", c.Name, *c.ID), c)
+
+	changeLogMsg := fmt.Sprintf("USER: %s, COORDINATE: %s (#%d), ACTION: %s", inf.User.UserName, c.Name, *c.ID, api.Created)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
 // Update is the handler for PUT requests made to the /coordinates API (in API
@@ -429,6 +432,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) updated", c.Name, id), c)
+
+	changeLogMsg := fmt.Sprintf("USER: %s, COORDINATE: %s (#%d), ACTION: %s", inf.User.UserName, c.Name, id, api.Updated)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
 // Delete is the handler for PUT requests made to the /coordinates API (in API
@@ -460,4 +466,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) deleted", c.Name, id), c)
+
+	changeLogMsg := fmt.Sprintf("USER: %s, COORDINATE: %s (#%d), ACTION: %s", inf.User.UserName, c.Name, id, api.Deleted)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
