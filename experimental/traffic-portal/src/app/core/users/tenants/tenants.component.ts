@@ -79,8 +79,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 		}
 	];
 
-	public contextMenuItems: ContextMenuItem<Readonly<ResponseTenant>>[] = [
-	];
+	public contextMenuItems: ContextMenuItem<Readonly<ResponseTenant>>[] = [];
 
 	public loading = true;
 	private readonly subscription: Subscription;
@@ -117,7 +116,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 			});
 			this.contextMenuItems.push({
 				action: "disable",
-				disabled: (ts): boolean => ts.some(t=>t.name === "root" || t.id === this.auth.currentUser?.tenantId),
+				disabled: (ts): boolean => ts.some(t => t.name === "root" || t.id === this.auth.currentUser?.tenantId),
 				multiRow: true,
 				name: "Disable"
 			});
@@ -173,7 +172,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 *
 	 * @param a The action selected from the context menu.
 	 */
-	 public handleContextMenu(a: ContextMenuActionEvent<Readonly<ResponseTenant>>): void {
+	public handleContextMenu(a: ContextMenuActionEvent<Readonly<ResponseTenant>>): void {
 		console.log("action:", a);
 	}
 

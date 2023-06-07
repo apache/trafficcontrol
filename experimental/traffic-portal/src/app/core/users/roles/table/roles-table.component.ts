@@ -128,7 +128,7 @@ export class RolesTableComponent implements OnInit {
 		}
 		const data = evt.data;
 		switch(evt.action) {
-			case "delete":
+			case "delete": {
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {message: `Are you sure you want to delete '${data.name}' role?`, title: "Confirm Delete"}
 				});
@@ -138,6 +138,7 @@ export class RolesTableComponent implements OnInit {
 					}
 				});
 				break;
+			}
 		}
 	}
 }

@@ -118,7 +118,7 @@ export class TypesTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<TypeFromResponse>): Promise<void> {
 		const data = evt.data as TypeFromResponse;
 		switch(evt.action) {
-			case "delete":
+			case "delete": {
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {message: `Are you sure you want to delete type ${data.name} with id ${data.id} ?`, title: "Confirm Delete"}
 				});
@@ -128,6 +128,7 @@ export class TypesTableComponent implements OnInit {
 					}
 				});
 				break;
+			}
 		}
 	}
 }

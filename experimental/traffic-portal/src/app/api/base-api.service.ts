@@ -189,8 +189,8 @@ export abstract class APIService {
 		// This is part of the HTTP spec. I can't - and shouldn't - change it.
 		// eslint-disable-next-line @typescript-eslint/naming-convention
 		headers: new HttpHeaders({"Content-Type": "application/json"}),
-		observe: "response" as "response",
-		responseType: "json" as "json",
+		observe: "response" as const,
+		responseType: "json" as const,
 	};
 
 	/**

@@ -37,9 +37,15 @@
 				"createDefaultProgram": true
 			},
 			"extends": [
-				"plugin:@angular-eslint/ng-cli-compat",
-				"plugin:@angular-eslint/ng-cli-compat--formatting-add-on",
+				"eslint:recommended",
+				"plugin:@typescript-eslint/recommended",
+				"plugin:@angular-eslint/recommended",
 				"plugin:@angular-eslint/template/process-inline-templates"
+			],
+			"plugins": [
+				"eslint-plugin-import",
+				"eslint-plugin-jsdoc",
+				"eslint-plugin-prefer-arrow"
 			],
 			"rules": {
 				"@angular-eslint/component-selector": [
@@ -168,7 +174,9 @@
 						"allowWithDecorator": true
 					}
 				],
-				"@typescript-eslint/no-duplicate-imports": ["error"],
+				"@typescript-eslint/no-duplicate-imports": [
+					"error"
+				],
 				"@typescript-eslint/no-dynamic-delete": "error",
 				"@typescript-eslint/no-floating-promises": "off",
 				"@typescript-eslint/no-inferrable-types": [
@@ -269,7 +277,9 @@
 				"import/order": [
 					"error",
 					{
-						"alphabetize": {"order": "asc"},
+						"alphabetize": {
+							"order": "asc"
+						},
 						"groups": [
 							"builtin",
 							"external",
@@ -332,7 +342,9 @@
 						"patterns": [
 							{
 								"message": "Going up more than one directory for an import is overly complex; use an import path that starts with 'src/' instead",
-								"group": ["../../*"]
+								"group": [
+									"../../*"
+								]
 							}
 						]
 					}
@@ -376,13 +388,13 @@
 			// until Angular 15, and should be un-commented once that upgrade is
 			// done.
 			"rules": {
-				"@angular-eslint/template/accessibility-alt-text": "error",
-				"@angular-eslint/template/accessibility-elements-content": "error",
+				"@angular-eslint/template/alt-text": "error",
+				"@angular-eslint/template/elements-content": "error",
 				// "@angular-eslint/template/accessibility-interactive-supports-focus": "error",
-				"@angular-eslint/template/accessibility-label-has-associated-control": "error",
+				"@angular-eslint/template/label-has-associated-control": "error",
 				// "@angular-eslint/template/accessibility-role-has-required-aria": "error",
-				"@angular-eslint/template/accessibility-table-scope": "error",
-				"@angular-eslint/template/accessibility-valid-aria": "error",
+				"@angular-eslint/template/table-scope": "error",
+				"@angular-eslint/template/valid-aria": "error",
 				// I want to see the results of this before committing to it,
 				// which is difficult to do until I can actually use it.
 				// "@angular-eslint/template/attributes-order": "warn",

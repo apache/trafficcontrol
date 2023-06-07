@@ -38,7 +38,7 @@ export class ProfileTableComponent implements OnInit {
 	/** All the physical locations which should appear in the table. */
 	public profiles: Promise<Array<ResponseProfile>>;
 
-  	/** Definitions of the table's columns according to the ag-grid API */
+	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [{
 		field: "cdnName",
 		headerName: "CDN"
@@ -162,7 +162,7 @@ export class ProfileTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseProfile>): Promise<void> {
 		const data = evt.data as ResponseProfile;
 		switch (evt.action) {
-			case "delete":
+			case "delete": {
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {
 						message: `Are you sure to delete Profile ${data.name} with id ${data.id}?`,
@@ -175,6 +175,7 @@ export class ProfileTableComponent implements OnInit {
 					}
 				});
 				break;
+			}
 		}
 	}
 }

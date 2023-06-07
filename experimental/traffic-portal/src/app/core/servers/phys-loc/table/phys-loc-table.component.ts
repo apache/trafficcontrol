@@ -135,7 +135,7 @@ export class PhysLocTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponsePhysicalLocation>): Promise<void> {
 		const data = evt.data as ResponsePhysicalLocation;
 		switch(evt.action) {
-			case "delete":
+			case "delete": {
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {
 						message: `Are you sure you want to delete Physical Location ${data.name} with id ${data.id}?`,
@@ -150,6 +150,7 @@ export class PhysLocTableComponent implements OnInit {
 					}
 				});
 				break;
+			}
 		}
 	}
 

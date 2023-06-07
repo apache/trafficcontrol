@@ -28,7 +28,8 @@ export class AlertInterceptor implements HttpInterceptor {
 	/**
 	 * Constructor.
 	 */
-	constructor(private readonly alertService: AlertService) {}
+	constructor(private readonly alertService: AlertService) {
+	}
 
 	/**
 	 * Intercepts HTTP responses and checks for any alerts.
@@ -41,8 +42,8 @@ export class AlertInterceptor implements HttpInterceptor {
 		return next.handle(request).pipe(tap(
 			r => {
 				if (Object.prototype.hasOwnProperty.call(r, "body") &&
-				    Object.prototype.hasOwnProperty.call((r as {body: unknown}).body, "alerts")) {
-					for (const a of (r as {body: {alerts: Array<unknown>}}).body.alerts) {
+					Object.prototype.hasOwnProperty.call((r as { body: unknown }).body, "alerts")) {
+					for (const a of (r as { body: { alerts: Array<unknown> } }).body.alerts) {
 						this.alertService.newAlert(a as Alert);
 					}
 				}

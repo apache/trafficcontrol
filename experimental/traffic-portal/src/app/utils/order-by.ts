@@ -71,7 +71,7 @@ function cmpr(a: unknown, b: unknown): number {
  * @param property Either a single property name or an array of property names to sort by - in descending order of importance.
  * @returns The sorted array
  */
-export function orderBy<T extends any>(value: Array<T>, property: string | Array<string>): Array<T> {
+export function orderBy<T>(value: Array<T>, property: string | Array<string>): Array<T> {
 	return value.sort((a: any, b: any) => {
 		/* eslint-enable @typescript-eslint/no-explicit-any */
 

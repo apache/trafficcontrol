@@ -122,7 +122,7 @@ export class AsnsTableComponent implements OnInit {
 		}
 		const data = evt.data;
 		switch(evt.action) {
-			case "delete":
+			case "delete": {
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {message: `Are you sure you want to delete ASN ${data.asn}?`, title: "Confirm Delete"}
 				});
@@ -132,6 +132,7 @@ export class AsnsTableComponent implements OnInit {
 					}
 				});
 				break;
+			}
 		}
 	}
 }

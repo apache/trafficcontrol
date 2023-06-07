@@ -397,7 +397,7 @@ export class ServersTableComponent implements OnInit {
 		switch(action) {
 			case "dequeue":
 				data.title = "Clear Server Updates";
-			case "queue":
+			case "queue": {
 				const ref = this.dialog.open<CollectionChoiceDialogComponent, CollectionChoiceDialogData<number>, number | false>(
 					CollectionChoiceDialogComponent,
 					{data}
@@ -411,6 +411,7 @@ export class ServersTableComponent implements OnInit {
 					}
 				}
 				break;
+			}
 		}
 	}
 
@@ -421,7 +422,7 @@ export class ServersTableComponent implements OnInit {
 	 */
 	public async handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): Promise<void> {
 		switch (action.action) {
-			case "updateStatus":
+			case "updateStatus": {
 				const dialogRef = this.dialog.open(UpdateStatusComponent, {
 					data: action.data instanceof Array ? action.data : [action.data]
 				});
@@ -431,16 +432,19 @@ export class ServersTableComponent implements OnInit {
 					}
 				});
 				break;
-			case "queue":
+			}
+			case "queue": {
 				const queueServers = action.data instanceof Array ? action.data : [action.data];
 				await Promise.all(queueServers.map(async s => this.api.queueUpdates(s)));
 				await this.reloadServers();
 				break;
-			case "dequeue":
+			}
+			case "dequeue": {
 				const dequeueServers = action.data instanceof Array ? action.data : [action.data];
 				await Promise.all(dequeueServers.map(async s => this.api.clearUpdates(s)));
 				await this.reloadServers();
 				break;
+			}
 			default:
 				throw new Error(`unknown context menu item clicked: ${action.action}`);
 		}

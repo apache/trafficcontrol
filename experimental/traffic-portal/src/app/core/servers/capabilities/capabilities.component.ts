@@ -36,7 +36,7 @@ export class CapabilitiesComponent implements OnInit {
 	/** All the physical locations which should appear in the table. */
 	public capabilities: Promise<Array<ResponseServerCapability>>;
 
-  	/** Definitions of the table's columns according to the ag-grid API */
+	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
 		{
 			field: "name",
@@ -148,7 +148,7 @@ export class CapabilitiesComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseServerCapability>): Promise<void> {
 		const data = evt.data;
 		switch (evt.action) {
-			case "delete":
+			case "delete": {
 				if (Array.isArray(data)) {
 					throw new Error("cannot delete multiple Capabilities");
 				}
@@ -163,6 +163,7 @@ export class CapabilitiesComponent implements OnInit {
 					this.api.deleteCapability(data).then(async () => this.capabilities = this.api.getCapabilities());
 				}
 				break;
+			}
 			default:
 				console.warn("unrecognized context menu action:", evt.action);
 		}
