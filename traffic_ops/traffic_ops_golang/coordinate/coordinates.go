@@ -428,7 +428,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate #%d updated", id), c)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) updated", c.Name, id), c)
 }
 
 // Delete is the handler for PUT requests made to the /coordinates API (in API
@@ -459,5 +459,5 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate #%d deleted", id), c)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) deleted", c.Name, id), c)
 }
