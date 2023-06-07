@@ -14,7 +14,7 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import {  ProfileExport, ProfileImport, ProfileImportResponse, RequestProfile, ResponseProfile, RequestParameter, ResponseParameter } from "trafficops-types";
+import { ProfileExport, ProfileImport, ProfileImportResponse, RequestParameter, RequestProfile, ResponseParameter, ResponseProfile } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -130,8 +130,9 @@ export class ProfileService extends APIService {
 	 * @param profileId Id of the profile to export.
 	 * @returns profile export object.
 	 */
-	public async exportProfile(profileId: number): Promise<ProfileExport>{
-		return this.http.get<ProfileExport>(`/api/${this.apiVersion}/profiles/${profileId}/export`).toPromise();
+	public async exportProfile(profileId: number | ResponseProfile): Promise<ProfileExport>{
+		const id = typeof (profileId) === "number" ? profileId : profileId.id;
+		return this.http.get<ProfileExport>(`/api/${this.apiVersion}/profiles/${id}/export`).toPromise();
 	}
 
 	/**

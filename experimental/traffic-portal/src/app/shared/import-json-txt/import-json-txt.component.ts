@@ -20,7 +20,7 @@ import { AlertLevel } from "trafficops-types";
 import { AlertService } from "../alert/alert.service";
 
 /**
- * Contains the structure of the data that DecisionDialogComponent accepts.
+ * Contains the structure of the data that ImportJsonTxtComponent accepts.
  */
 export interface ImportJsonTxtComponentModel {
 	title: string;
@@ -49,6 +49,8 @@ export class ImportJsonTxtComponent {
 
 	/** Monitor whether any file is being drag over the dialog */
 	public dragOn = false;
+
+	public mimeAlertMsg = "Only JSON or text file is allowed.";
 
 	/**
 	 * Creates an instance of import json edit txt component.
@@ -141,8 +143,8 @@ export class ImportJsonTxtComponent {
 		 * Check whether expected file is being uploaded
 		 * returns on file wrong file type is uploaded
 		 */
-		if (!this.allowedType.find(type => type === file.type)) {
-			this.alertService.newAlert({ level: AlertLevel.ERROR, text: "Only JSON or text file is allowed." });
+		if (!this.allowedType.includes(file.type)) {
+			this.alertService.newAlert({ level: AlertLevel.ERROR, text: this.mimeAlertMsg });
 			return;
 		}
 
@@ -152,7 +154,9 @@ export class ImportJsonTxtComponent {
 		const reader = new FileReader();
 
 		reader.onload = (event): void => {
-			this.inputTxt = event.target?.result as string;
+			if(typeof(event.target?.result)==="string"){
+				this.inputTxt = event.target?.result;
+			}
 		};
 		reader.readAsText(file);
 	}

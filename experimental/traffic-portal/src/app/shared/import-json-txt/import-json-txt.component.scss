@@ -39,14 +39,14 @@ $backgroundColor: #fafaec;
     }
 }
 
-.mdc-dialog__content{
+#import-content{
     &.active {
         background: $backgroundColor;
     }
 
 }
 
-.mat-mdc-form-field.json-txt-editor {
+.mat-mdc-form-field.json-txt {
     width: 100%;
 
     textarea {

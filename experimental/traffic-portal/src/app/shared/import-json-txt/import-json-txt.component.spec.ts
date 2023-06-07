@@ -42,4 +42,31 @@ describe("ImportJsonTxtComponent", () => {
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it('should set dragOn to true when dragover event occurs', () => {
+		const event = new DragEvent('dragover');
+		const preventDefaultSpy = spyOn(event, 'preventDefault');
+		const stopPropagationSpy = spyOn(event, 'stopPropagation');
+	  
+		fixture.nativeElement.dispatchEvent(event);
+		fixture.detectChanges();
+		
+		expect(preventDefaultSpy).toHaveBeenCalled();
+		expect(stopPropagationSpy).toHaveBeenCalled();
+		expect(component.dragOn).toBeTrue();
+	  });
+	  
+	  it('should set dragOn to true when dragover event occurs', () => {
+
+		const event = new DragEvent('dragleave');
+		const preventDefaultSpy = spyOn(event, 'preventDefault');
+		const stopPropagationSpy = spyOn(event, 'stopPropagation');
+
+		fixture.nativeElement.dispatchEvent(event);
+		fixture.detectChanges();
+	  
+		expect(preventDefaultSpy).toHaveBeenCalled();
+		expect(stopPropagationSpy).toHaveBeenCalled();
+		expect(component.dragOn).toBeFalse();
+	  });
 });

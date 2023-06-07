@@ -236,7 +236,7 @@ export class ProfileService {
 	 * @param id Specify unique identifier (number) of a specific Profile to retrieve the export object.
 	 * @returns The requested Profile as attachment.
 	 */
-	public async exportProfile(id?: number): Promise<ProfileExport> {
+	public async exportProfile(id: number | ResponseProfile): Promise<ProfileExport> {
 		if( id !== undefined){
 			const exportProfile = this.profileExport;
 			return exportProfile;
