@@ -1,0 +1,116 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+name: Traffic Ops API Contract Tests
+
+env:
+  # alpine:3.13
+  ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
+
+on:
+  push:
+    paths:
+      - .github/actions/todb-init/**
+      - .github/actions/to-api-contract-tests/**
+      - .github/workflows/to.api.contract.tests.yml
+      - traffic_ops/testing/api_contract/**
+      - lib/go-tc/**.go
+      - traffic_ops/**.go
+      - '!**_test.go'
+      - traffic_control/clients/python/**.py
+  create:
+  pull_request:
+    paths:
+      - .github/actions/todb-init/**
+      - .github/actions/to-api-contract-tests/**
+      - .github/workflows/to.api.contract.tests.yml
+      - traffic_ops/testing/api_contract/**
+      - lib/go-tc/**.go
+      - traffic_ops/**.go
+      - '!**_test.go'
+      - traffic_control/clients/python/**.py
+    types: [opened, reopened, ready_for_review, synchronize]
+
+jobs:
+
+  APIv4ContractTests:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: traffic_ops
+          POSTGRES_PASSWORD: twelve
+          POSTGRES_DB: traffic_ops
+        ports:
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Cache Alpine Docker image
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/docker-images
+        key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+    - name: Import cached Alpine Docker image
+      run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+    - name: Initialize Traffic Ops Database
+      id: todb
+      uses: ./.github/actions/todb-init
+    - name: Check Go Version
+      run: echo "::set-output name=value::$(cat GO_VERSION)"
+      id: go-version
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ steps.go-version.outputs.value }}
+    - name: Install Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.10.11
+    - name: Install Python dependencies
+      run: |
+        pip install -r "${{ github.workspace }}/traffic_ops/testing/api_contract/v4/requirements.txt"
+    - name: Install Apache Traffic Control
+      run: |
+        python -m pip install --upgrade pip
+        pip install ${{ github.workspace }}/traffic_control/clients/python
+        pip install typing-extensions --upgrade
+    - name: Run API v4 contract tests
+      id: v4Tests
+      if: ${{ steps.todb.outcome == 'success' && always() }}
+      uses: ./.github/actions/to-api-contract-tests
+      with:
+        version: 4
+    - name: Upload Vault logs
+      if: ${{ steps.v4Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v4 Traffic Vault logs
+        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
+    - name: Upload Ops logs
+      if: ${{ steps.v4Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v4 Traffic Ops logs
+        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
+    - name: Save Alpine Docker image
+      run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}

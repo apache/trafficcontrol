@@ -1,3 +1,5 @@
+// Package coordinate contains API handlers and associated logic for servicing
+// the `/coordinates` API endpoint.
 package coordinate
 
 /*
@@ -20,48 +22,92 @@ package coordinate
  */
 
 import (
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-// we need a type alias to define functions on
+// TOCoordinate is a "CRUDer"-based API wrapper for Coordinate objects.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
 type TOCoordinate struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CoordinateNullable
 }
 
-func (v *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOCoordinate) InsertQuery() string           { return insertQuery() }
-func (v *TOCoordinate) NewReadObj() interface{}       { return &tc.CoordinateNullable{} }
-func (v *TOCoordinate) SelectQuery() string           { return selectQuery() }
-func (v *TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+// SetLastUpdated implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (coordinate *TOCoordinate) SetLastUpdated(t tc.TimeNoMod) { coordinate.LastUpdated = &t }
+
+// InsertQuery implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (*TOCoordinate) InsertQuery() string { return insertQuery() }
+
+// NewReadObj implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (*TOCoordinate) NewReadObj() interface{} { return &tc.CoordinateNullable{} }
+
+// SelectQuery implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (*TOCoordinate) SelectQuery() string { return selectQuery() }
+
+// ParamColumns implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (*TOCoordinate) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return map[string]dbhelpers.WhereColumnInfo{
-		"id":   dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
-		"name": dbhelpers.WhereColumnInfo{Column: "name"},
+		"id":   {Column: "id", Checker: api.IsInt},
+		"name": {Column: "name"},
 	}
 }
 
-func (v *TOCoordinate) GetLastUpdated() (*time.Time, bool, error) {
-	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "coordinate")
+// GetLastUpdated implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (coordinate *TOCoordinate) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(coordinate.APIInfo().Tx, *coordinate.ID, "coordinate")
 }
 
-func (v *TOCoordinate) UpdateQuery() string { return updateQuery() }
-func (v *TOCoordinate) DeleteQuery() string { return deleteQuery() }
+// UpdateQuery implements a "CRUD"er interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (*TOCoordinate) UpdateQuery() string { return updateQuery() }
+
+// DeleteQuery implements a "CRUD"er interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (*TOCoordinate) DeleteQuery() string { return deleteQuery() }
+
+// GetKeyFieldsInfo implements a "CRUD"er interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
 func (coordinate TOCoordinate) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
-// Implementation of the Identifier, Validator interface functions
+// GetKeys implements the Identifier and Validator interfaces.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
 func (coordinate TOCoordinate) GetKeys() (map[string]interface{}, bool) {
 	if coordinate.ID == nil {
 		return map[string]interface{}{"id": 0}, false
@@ -69,6 +115,9 @@ func (coordinate TOCoordinate) GetKeys() (map[string]interface{}, bool) {
 	return map[string]interface{}{"id": *coordinate.ID}, true
 }
 
+// GetAuditName implements a "CRUD"er interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
 func (coordinate TOCoordinate) GetAuditName() string {
 	if coordinate.Name != nil {
 		return *coordinate.Name
@@ -79,12 +128,18 @@ func (coordinate TOCoordinate) GetAuditName() string {
 	return "0"
 }
 
+// GetType implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
 func (coordinate TOCoordinate) GetType() string {
 	return "coordinate"
 }
 
+// SetKeys implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
 func (coordinate *TOCoordinate) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	i, _ := keys["id"].(int)
 	coordinate.ID = &i
 }
 
@@ -104,13 +159,18 @@ func isValidCoordinateChar(r rune) bool {
 	return false
 }
 
-// IsValidCoordinateName returns true if the name contains only characters valid for a Coordinate name
+// IsValidCoordinateName returns true if the name contains only characters valid
+// for a Coordinate name.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
 func IsValidCoordinateName(str string) bool {
 	i := strings.IndexFunc(str, func(r rune) bool { return !isValidCoordinateChar(r) })
 	return i == -1
 }
 
 // Validate fulfills the api.Validator interface.
+// Deprecated: All future Coordinate versions should use non-"CRUDer"
+// validation.
 func (coordinate TOCoordinate) Validate() (error, error) {
 	validName := validation.NewStringRule(IsValidCoordinateName, "invalid characters found - Use alphanumeric . or - or _ .")
 	latitudeErr := "Must be a floating point number within the range +-90"
@@ -123,34 +183,76 @@ func (coordinate TOCoordinate) Validate() (error, error) {
 	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
+// Create implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer" Create
+// function.
 func (coord *TOCoordinate) Create() (error, error, int) { return api.GenericCreate(coord) }
+
+// Read implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer" Read
+// function.
 func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	api.DefaultSort(coord.APIInfo(), "name")
 	return api.GenericRead(h, coord, useIMS)
 }
-func (v *TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
-	return `SELECT max(t) from (
-		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
-		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+
+func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+	return `
+SELECT max(t) FROM (
+	SELECT max(last_updated) AS t
+	FROM (
+		SELECT *
+		FROM coordinate c
+		` + where + orderBy + pagination +
+		`	) AS coords
+	UNION ALL
+	SELECT max(last_updated) AS t
+	FROM last_deleted l
+	WHERE l.table_name='coordinate'
+) AS res`
 }
 
+// SelectMaxLastUpdatedQuery implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
+func (*TOCoordinate) SelectMaxLastUpdatedQuery(where, orderBy, pagination, _ string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination)
+}
+
+// Update implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer" Update
+// function.
 func (coord *TOCoordinate) Update(h http.Header) (error, error, int) {
 	return api.GenericUpdate(h, coord)
 }
+
+// Delete implements a "CRUDer" interface.
+// Deprecated: All future Coordinate versions should use the non-"CRUDer"
+// methodology.
 func (coord *TOCoordinate) Delete() (error, error, int) { return api.GenericDelete(coord) }
 
-func selectQuery() string {
-	query := `SELECT
-id,
-latitude,
-longitude,
-last_updated,
-name
-
+const readQuery = `
+SELECT
+	id,
+	latitude,
+	longitude,
+	last_updated,
+	name
 FROM coordinate c`
-	return query
+
+func selectQuery() string {
+	return readQuery
 }
+
+const putQuery = `
+UPDATE coordinate
+SET
+	latitude=$1,
+	longitude=$2,
+	name=$3
+WHERE id=$4
+RETURNING
+	last_updated`
 
 func updateQuery() string {
 	query := `UPDATE
@@ -161,6 +263,19 @@ name=:name
 WHERE id=:id RETURNING last_updated`
 	return query
 }
+
+const createQuery = `
+INSERT INTO coordinate (
+	latitude,
+	longitude,
+	name
+) VALUES (
+	$1,
+	$2,
+	$3
+) RETURNING
+	id,
+	last_updated`
 
 func insertQuery() string {
 	query := `INSERT INTO coordinate (
@@ -173,6 +288,219 @@ name) VALUES (
 	return query
 }
 
+const delQuery = `
+DELETE FROM coordinate
+WHERE id = $1
+RETURNING
+	latitude,
+	longitude,
+	name,
+	last_updated
+`
+
 func deleteQuery() string {
 	return `DELETE FROM coordinate WHERE id = :id`
+}
+
+// Read is the handler for GET requests made to the /coordinates API (in APIv5
+// and later).
+func Read(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	cols := map[string]dbhelpers.WhereColumnInfo{
+		"id":   {Column: "c.id", Checker: api.IsInt},
+		"name": {Column: "c.name", Checker: nil},
+	}
+	api.DefaultSort(inf, "name")
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	if len(errs) > 0 {
+		errCode = http.StatusBadRequest
+		userErr = util.JoinErrs(errs)
+		api.HandleErr(w, r, tx, errCode, userErr, nil)
+		return
+	}
+
+	var maxTime time.Time
+	if inf.UseIMS() {
+		var runSecond bool
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where, orderBy, pagination))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.WriteNotModifiedResponse(maxTime, w, r)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	query := readQuery + where + orderBy + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("querying coordinates: %w", err))
+		return
+	}
+	defer log.Close(rows, "closing coordinate query rows")
+
+	cs := []tc.CoordinateV5{}
+	for rows.Next() {
+		var c tc.CoordinateV5
+		err := rows.Scan(&c.ID, &c.Latitude, &c.Longitude, &c.LastUpdated, &c.Name)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("scanning a coordinate: %w", err))
+			return
+		}
+		cs = append(cs, c)
+	}
+
+	api.WriteResp(w, r, cs)
+}
+
+// isValid returns an error describing why c isn't a valid Coordinate, or nil if
+// it's actually valid.
+func isValid(c tc.CoordinateV5) error {
+	validName := validation.NewStringRule(IsValidCoordinateName, "invalid characters found - Use alphanumeric . or - or _ .")
+	latitudeErr := "Must be a floating point number within the range +-90"
+	longitudeErr := "Must be a floating point number within the range +-180"
+	errs := validation.Errors{
+		"name":      validation.Validate(c.Name, validation.Required, validName),
+		"latitude":  validation.Validate(c.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
+		"longitude": validation.Validate(c.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
+	}
+	return util.JoinErrs(tovalidate.ToErrors(errs))
+}
+
+// Create is the handler for POST requests made to the /coordinates API (in
+// APIv5 and later).
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var c tc.CoordinateV5
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err = isValid(c); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err = tx.QueryRow(createQuery, c.Latitude, c.Longitude, c.Name).Scan(&c.ID, &c.LastUpdated); err != nil {
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/coordinates?id=%d", inf.Version, *c.ID))
+	w.WriteHeader(http.StatusCreated)
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) created", c.Name, *c.ID), c)
+
+	changeLogMsg := fmt.Sprintf("USER: %s, COORDINATE: %s (#%d), ACTION: %s", inf.User.UserName, c.Name, *c.ID, api.Created)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
+// Update is the handler for PUT requests made to the /coordinates API (in API
+// v5 and later).
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	var c tc.CoordinateV5
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	id := inf.IntParams["id"]
+	if c.ID != nil {
+		if *c.ID != id {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("ID mismatch; URI specifies %d but payload is for Coordinate #%d", id, *c.ID), nil)
+			return
+		}
+	} else {
+		c.ID = util.Ptr(id)
+	}
+
+	userErr, sysErr, statusCode := api.CheckIfUnModified(r.Header, inf.Tx, id, "coordinate")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+
+	if err = isValid(c); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err = tx.QueryRow(putQuery, c.Latitude, c.Longitude, c.Name, id).Scan(&c.LastUpdated); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			userErr = fmt.Errorf("no such Coordinate: #%d", id)
+			errCode = http.StatusNotFound
+			sysErr = nil
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) updated", c.Name, id), c)
+
+	changeLogMsg := fmt.Sprintf("USER: %s, COORDINATE: %s (#%d), ACTION: %s", inf.User.UserName, c.Name, id, api.Updated)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
+// Delete is the handler for PUT requests made to the /coordinates API (in API
+// v5 and later).
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+
+	c := tc.CoordinateV5{
+		ID: util.Ptr(id),
+	}
+	if err := tx.QueryRow(delQuery, id).Scan(&c.Latitude, &c.Longitude, &c.Name, &c.LastUpdated); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			userErr = fmt.Errorf("no such Coordinate: #%d", id)
+			errCode = http.StatusNotFound
+			sysErr = nil
+		} else {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+		}
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	api.WriteRespAlertObj(w, r, tc.SuccessLevel, fmt.Sprintf("Coordinate '%s' (#%d) deleted", c.Name, id), c)
+
+	changeLogMsg := fmt.Sprintf("USER: %s, COORDINATE: %s (#%d), ACTION: %s", inf.User.UserName, c.Name, id, api.Deleted)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
