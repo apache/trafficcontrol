@@ -1,0 +1,59 @@
+{
+	"disable_auto_cert_deletion": false,
+	"use_ims": true,
+	"role_based_permissions": true,
+	"traffic_ops_golang": {
+		"cert": "$PWD/localhost.crt",
+		"key": "$PWD/localhost.key",
+		"insecure": true,
+		"port": "6443",
+		"log_location_error": "traffic.ops.log",
+		"log_location_warning": "traffic.ops.log",
+		"log_location_info": null,
+		"log_location_debug": null,
+		"log_location_event": null,
+		"max_db_connections": 20,
+		"db_conn_max_lifetime_seconds": 60,
+		"db_query_timeout_seconds": 20,
+		"traffic_vault_backend": "postgres",
+		"traffic_vault_config": {
+			"dbname": "traffic_vault",
+			"hostname": "localhost",
+			"user": "traffic_vault",
+			"password": "twelve",
+			"port": 5432,
+			"ssl": false,
+			"conn_max_lifetime_seconds": 60,
+			"max_connections": 500,
+			"max_idle_connections": 30,
+			"query_timeout_seconds": 10,
+			"aes_key_location": "/aes.key"
+		},
+		"supported_ds_metrics": [ "kbps", "tps_total", "tps_2xx", "tps_3xx", "tps_4xx", "tps_5xx" ]
+	},
+	"cors": {
+		"access_control_allow_origin": "*"
+	},
+	"to": {
+		"base_url": "https://localhost",
+		"email_from": "no-reply@traffic-ops.test",
+		"no_account_found_msg": "A Traffic Ops user account is required for access. Please contact your Traffic Ops user administrator."
+	},
+	"portal": {
+		"base_url": "https://not-a-real-host.test/#!/",
+		"email_from": "no-reply@traffic-portal.test",
+		"pass_reset_path": "user",
+		"user_register_path": "user"
+	},
+	"secrets": [
+		"blahblah"
+	],
+	"inactivity_timeout": 60,
+	"smtp": {
+		"enabled": true,
+		"user": "$INPUT_SMTP_USER",
+		"password": "$INPUT_SMTP_PASSWORD",
+		"address": "${INPUT_SMTP_ADDRESS}:${INPUT_SMTP_PORT}"
+	},
+	"InfluxEnabled": false
+}
