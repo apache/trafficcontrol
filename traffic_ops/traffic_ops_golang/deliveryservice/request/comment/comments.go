@@ -200,6 +200,7 @@ func deleteQuery() string {
 	return `DELETE FROM deliveryservice_request_comment WHERE id = :id`
 }
 
+// Get is used to read the DeliveryServiceRequestCommentV5 entities from the database.
 func Get(w http.ResponseWriter, r *http.Request) {
 	var maxTime time.Time
 	var runSecond bool
@@ -211,6 +212,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	api.DefaultSort(inf, "xmlId")
 	cols := map[string]dbhelpers.WhereColumnInfo{
 		"authorId":                 dbhelpers.WhereColumnInfo{Column: "dsrc.author_id"},
 		"author":                   dbhelpers.WhereColumnInfo{Column: "a.username"},
@@ -249,21 +251,17 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var deliveryServiceRequestComment tc.DeliveryServiceRequestCommentNullable
-		if err = rows.StructScan(&deliveryServiceRequestComment); err != nil {
+		var deliveryServiceRequestComment tc.DeliveryServiceRequestCommentV5
+		if err = rows.Scan(&deliveryServiceRequestComment.Author, &deliveryServiceRequestComment.AuthorID, &deliveryServiceRequestComment.DeliveryServiceRequestID, &deliveryServiceRequestComment.XMLID, &deliveryServiceRequestComment.ID, &deliveryServiceRequestComment.LastUpdated, &deliveryServiceRequestComment.Value); err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning delivery service request comments: "+err.Error()))
 			return
 		}
-		dsrcV5, err := deliveryServiceRequestComment.UpgradeFromNullable()
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("converting to deliveryServiceRequestCommentV5: "+err.Error()))
-			return
-		}
-		deliveryServiceRequestComments = append(deliveryServiceRequestComments, dsrcV5)
+		deliveryServiceRequestComments = append(deliveryServiceRequestComments, deliveryServiceRequestComment)
 	}
 	api.WriteResp(w, r, deliveryServiceRequestComments)
 }
 
+// Validate is used to ensure that the DeliveryServiceRequestCommentV5 struct passed in to the function is valid.
 func Validate(dsrc tc.DeliveryServiceRequestCommentV5) error {
 	errs := validation.Errors{
 		"deliveryServiceRequestId": validation.Validate(dsrc.DeliveryServiceRequestID, validation.NotNil),
@@ -272,6 +270,7 @@ func Validate(dsrc tc.DeliveryServiceRequestCommentV5) error {
 	return util.JoinErrs(tovalidate.ToErrors(errs))
 }
 
+// Update is used to modify an existing DeliveryServiceRequestCommentV5 in the database.
 func Update(w http.ResponseWriter, r *http.Request) {
 	var deliveryServiceRequestComment tc.DeliveryServiceRequestCommentV5
 
@@ -305,7 +304,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("comments can only be updated by the author"), nil)
 		return
 	}
-
+	deliveryServiceRequestComment.AuthorID = *current.AuthorID
 	idParam := inf.Params["id"]
 	id, parseErr := strconv.Atoi(idParam)
 	if parseErr != nil {
@@ -357,10 +356,63 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
+// Create is used to add a new DeliveryServiceRequestCommentV5 to the database.
 func Create(w http.ResponseWriter, r *http.Request) {
+	var deliveryServiceRequestComment tc.DeliveryServiceRequestCommentV5
 
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+
+	if err := json.NewDecoder(r.Body).Decode(&deliveryServiceRequestComment); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	if err := Validate(deliveryServiceRequestComment); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	au := tc.IDNoMod(inf.User.ID)
+	deliveryServiceRequestComment.AuthorID = au
+
+	resultRows, err := inf.Tx.NamedQuery(insertQuery(), deliveryServiceRequestComment)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&deliveryServiceRequestComment.ID, &deliveryServiceRequestComment.LastUpdated); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_request_comment create: scanning comment: "+err.Error()))
+			return
+		}
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_request_comment create: comment couldn't be created"))
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_request_comment create: comment couldn't be created: too many ids returned from insert"))
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "deliveryservice_request_comment was created.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, deliveryServiceRequestComment)
+	changeLogMsg := fmt.Sprintf("DELIVERYSERVICE_REQUEST_COMMENT: %d, ID: %d, ACTION: Created deliveryservice_request_comment", deliveryServiceRequestComment.ID, deliveryServiceRequestComment.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
+// Delete is used to remove an existing DeliveryServiceRequestCommentV5 from the database.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -377,7 +429,20 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer"), nil)
 		return
 	}
-	rows, err := tx.Query(deleteQuery(), id)
+
+	var current TODeliveryServiceRequestComment
+	err := inf.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + idParam).StructScan(&current)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryservice_request_comment: "+err.Error()))
+		return
+	}
+
+	if userID := tc.IDNoMod(inf.User.ID); *current.AuthorID != userID {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("comments can only be deleted by the author"), nil)
+		return
+	}
+
+	rows, err := inf.Tx.NamedQuery(deleteQuery(), current)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("deleting deliveryservice_request_comment: %w", err))
 		return
