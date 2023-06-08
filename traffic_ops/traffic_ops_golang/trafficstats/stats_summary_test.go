@@ -29,7 +29,7 @@ import (
  * under the License.
  */
 
-func TestQueryStatsSummaryV5(t *testing.T) {
+func TestQueryStatsSummary(t *testing.T) {
 
 	query := "SELECT cdn_name, deliveryservice_name, stat_name, stat_value, summary_time, stat_date FROM stats_summary"
 	queryValues := map[string]interface{}{
