@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+
 // this is the config that is consumed by /server.js on traffic portal startup (sudo service traffic_portal start)
 module.exports = {
     timeout: '120s',
