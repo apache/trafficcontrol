@@ -511,8 +511,8 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodDelete, Path: `steering/{deliveryservice}/targets/{target}/?$`, Handler: api.DeleteHandler(&steeringtargets.TOSteeringTargetV11{}), RequiredPrivLevel: auth.PrivLevelSteering, RequiredPermissions: []string{"STEERING:DELETE", "STEERING:READ", "DELIVERY-SERVICE:READ", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 428802151531},
 
 		// Stats Summary
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `stats_summary/?$`, Handler: trafficstats.GetStatsSummaryV5, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"STAT:READ", "CDN:READ", "DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 48049859831},
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `stats_summary/?$`, Handler: trafficstats.CreateStatsSummaryV5, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"STAT:CREATE", "STAT:READ", "CDN:READ", "DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 48049159831},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `stats_summary/?$`, Handler: trafficstats.GetStatsSummary, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"STAT:READ", "CDN:READ", "DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 48049859831},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `stats_summary/?$`, Handler: trafficstats.CreateStatsSummary, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"STAT:CREATE", "STAT:READ", "CDN:READ", "DELIVERY-SERVICE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 48049159831},
 
 		//Pattern based consistent hashing endpoint
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `consistenthash/?$`, Handler: consistenthash.Post, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"CDN:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 46075507631},

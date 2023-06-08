@@ -60,7 +60,7 @@ func TestQueryStatsSummaryV5(t *testing.T) {
 
 	mock.ExpectQuery("SELECT cdn_name, deliveryservice_name, stat_name, stat_value, summary_time, stat_date FROM stats_summary").WithArgs().WillReturnRows(rows)
 
-	statsSummaries1, err1 := QueryStatsSummaryV5(db.MustBegin(), query, queryValues)
+	statsSummaries1, err1 := queryStatsSummary(db.MustBegin(), query, queryValues)
 
 	assert.NoError(t, err1)
 	assert.Equal(t, len(statsSummaries1), 2)

@@ -189,11 +189,11 @@ type StatsSummaryLastUpdatedAPIResponse struct {
 }
 
 // StatsSummaryV5 is an alias for the latest minor version for the major version 5.
-type StatsSummaryV5 StatsSummaryV51
+type StatsSummaryV5 StatsSummaryV50
 
-// StatsSummaryV51 is a summary of some kind of statistic for a CDN and/or
+// StatsSummaryV50 is a summary of some kind of statistic for a CDN and/or
 // Delivery Service.
-type StatsSummaryV51 struct {
+type StatsSummaryV50 struct {
 	CDNName         *string    `json:"cdnName"  db:"cdn_name"`
 	DeliveryService *string    `json:"deliveryServiceName"  db:"deliveryservice_name"`
 	StatName        *string    `json:"statName"  db:"stat_name"`
@@ -287,6 +287,39 @@ type StatsSummaryLastUpdatedV5 StatsSummaryLastUpdatedV50
 // the 'lastSummaryDate' query string parameter is passed as 'true'.
 type StatsSummaryLastUpdatedV50 struct {
 	SummaryTime *time.Time `json:"summaryTime"  db:"summary_time"`
+}
+
+// MarshalJSON implements the encoding/json.Marshaler interface with a
+// customized encoding to force the date format on SummaryTime.
+func (ss StatsSummaryLastUpdatedV5) MarshalJSON() ([]byte, error) {
+	resp := struct {
+		SummaryTime *string `json:"summaryTime"`
+	}{}
+	if ss.SummaryTime != nil {
+		resp.SummaryTime = util.Ptr(ss.SummaryTime.Format(time.RFC3339))
+	}
+	return json.Marshal(&resp)
+}
+
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface with a
+// customized decoding to force the SummaryTime format.
+func (ss *StatsSummaryLastUpdatedV5) UnmarshalJSON(data []byte) error {
+	resp := struct {
+		SummaryTime *string `json:"summaryTime"`
+	}{}
+	err := json.Unmarshal(data, &resp)
+	if err != nil {
+		return err
+	}
+	if resp.SummaryTime != nil {
+		var summaryTime time.Time
+		summaryTime, err = time.Parse(time.RFC3339, *resp.SummaryTime)
+		if err == nil {
+			ss.SummaryTime = &summaryTime
+			return nil
+		}
+	}
+	return nil
 }
 
 // StatsSummaryLastUpdatedAPIResponseV5 is an alias for the latest minor version for the major version 5.
