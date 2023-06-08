@@ -100,16 +100,18 @@ func TestReadCoordinates(t *testing.T) {
 }
 
 func TestFuncs(t *testing.T) {
-	if strings.Index(selectQuery(), "SELECT") != 0 {
+	trim := func(s string) string { return strings.TrimSpace((s)) }
+
+	if !strings.HasPrefix(trim(selectQuery()), "SELECT") {
 		t.Errorf("expected selectQuery to start with SELECT")
 	}
-	if strings.Index(insertQuery(), "INSERT") != 0 {
+	if !strings.HasPrefix(trim(insertQuery()), "INSERT") {
 		t.Errorf("expected insertQuery to start with INSERT")
 	}
-	if strings.Index(updateQuery(), "UPDATE") != 0 {
+	if !strings.HasPrefix(trim(updateQuery()), "UPDATE") {
 		t.Errorf("expected updateQuery to start with UPDATE")
 	}
-	if strings.Index(deleteQuery(), "DELETE") != 0 {
+	if !strings.HasPrefix(trim(deleteQuery()), "DELETE") {
 		t.Errorf("expected deleteQuery to start with DELETE")
 	}
 }
