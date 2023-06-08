@@ -198,11 +198,13 @@ func (coord *TOCoordinate) Read(h http.Header, useIMS bool) ([]interface{}, erro
 
 func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
 	return `
-SELECT max(t) from (
+SELECT max(t) FROM (
 	SELECT max(last_updated) AS t
-	FROM coordinate c
-	` + where + orderBy + pagination +
-		`
+	FROM (
+		SELECT *
+		FROM coordinate c
+		` + where + orderBy + pagination +
+		`	) AS coords
 	UNION ALL
 	SELECT max(last_updated) AS t
 	FROM last_deleted l
