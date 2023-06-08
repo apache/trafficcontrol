@@ -63,21 +63,12 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-    - name: Set up Go environment
-      run: |
-        sudo mkdir -p "${HOME}/go/src/github.com/apache"
-        echo "export GOPATH='${HOME}/go'" >> $GITHUB_ENV
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        path: ${HOME}/go/src/github.com/apache/trafficcontrol
-    - name: Build
-      run: |
-        cd ${HOME}/go/src/github.com/apache/trafficcontrol
+    - name: Checkout
+      uses: actions/checkout@master
     - name: Cache Alpine Docker image
       uses: actions/cache@v2
       with:
-        path: ${HOME}/go/src/github.com/apache/trafficcontrol/docker-images
+        path: ${{ github.workspace }}/docker-images
         key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
     - name: Import cached Alpine Docker image
       run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}

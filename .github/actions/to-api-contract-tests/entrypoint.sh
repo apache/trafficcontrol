@@ -48,12 +48,11 @@ QUERY
 
 sudo useradd trafops
 
-ciab_dir="${GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box";
 openssl rand 32 | base64 | sudo tee /aes.key
 
 sudo apt-get install -y --no-install-recommends gettext
 
-cd "${GITHUB_WORKSPACE}/traffic_ops/traffic_ops_golang"
+cd "traffic_ops/traffic_ops_golang"
 
 if  [[ ! -d "${GITHUB_WORKSPACE}/vendor/golang.org" ]]; then
 	go mod vendor
