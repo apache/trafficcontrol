@@ -967,6 +967,7 @@ def status_post_data(to_session: TOSession, request_template_data: list[JSONData
 	resp_obj = check_template_data(response, "statuses")
 	return resp_obj
 
+
 @pytest.fixture(name="asn_post_data")
 def asn_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		      cache_group_post_data:dict[str, object]) -> dict[str, object]:
@@ -990,3 +991,28 @@ def asn_data_post(to_session: TOSession, request_template_data: list[JSONData],
 	response: tuple[JSONData, requests.Response] = to_session.create_asn(data=asn)
 	resp_obj = check_template_data(response, "asn")
 	return resp_obj
+
+
+@pytest.fixture()
+def job_post_data(to_session: TOSession, request_template_data: list[JSONData],
+		     delivery_services_post_data: dict[str, object],
+		      ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for jobss endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get job data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	job = check_template_data(request_template_data["jobs"], "jobs")
+
+	# Check if delivery_service already exists, otherwise create it
+	delivery_services_name = delivery_services_post_data["displayName"]
+	if not isinstance(delivery_services_name, str):
+		raise TypeError("malformed API response; 'displayName' property not a string")
+	job["deliveryService"] = delivery_services_name
+
+	logger.info("New job data to hit POST method %s", job)
+	# Hitting jobs POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_job(data=job)
+	resp_obj = check_template_data(response, "jobs")
+	return [resp_obj, delivery_services_post_data["id"]]

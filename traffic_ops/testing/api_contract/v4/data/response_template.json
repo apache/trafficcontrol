@@ -1122,5 +1122,40 @@
                 "type": "string"
             }
         }
+    },
+    "jobs": {
+        "type": "object",
+        "required": [
+            "id",
+            "assetUrl",
+            "createdBy",
+            "deliveryService",
+            "ttlHours",
+            "invalidationType",
+            "startTime"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "assetUrl": {
+                "type": "string"
+            },
+            "createdBy": {
+                "type": "string"
+            },
+            "deliveryService": {
+                "type": "string"
+            },
+            "ttlHours": {
+                "type": "integer"
+            },
+            "invalidationType": {
+                "type": "string"
+            },
+            "startTime": {
+                "type": "string"
+            }
+        }
     }
 }
