@@ -587,10 +587,14 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
 	for k, v := range r.Pkgs {
 		if strings.HasPrefix(k, name) {
+			log.Infof("Found in cache for '%v'", k)
 			return v
 		}
 	}
-
+	if !r.Cfg.RpmDBOk {
+		log.Warnf("RPM DB is corrupted cannot run IsPackageInstalled for '%v'", name)
+		return false
+	}
 	log.Infof("IsPackageInstalled '%v' not found in cache, querying rpm", name)
 	pkgArr, err := util.PackageInfo("pkg-query", name)
 	if err != nil {

@@ -497,7 +497,7 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	rpmDBisOk := VerifyRpmDB()
-	rpmDBisOk = false
+	
 	toInfoLog = append(toInfoLog, fmt.Sprintf("rpm database is ok: %v", rpmDBisOk))
 	// set TSHome
 	var tsHome = ""

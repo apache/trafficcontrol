@@ -261,6 +261,8 @@ func Main() int {
 		// make sure we got the data necessary to check packages
 		log.Infoln("======== Didn't get all files, no package processing needed or possible ========")
 		metaData.InstalledPackages = oldMetaData.InstalledPackages
+	} else if !cfg.RpmDBOk {
+		log.Infoln("======== RPM DB checks failed, package processing not possible ========")
 	} else {
 		log.Infoln("======== Start processing packages  ========")
 		err = trops.ProcessPackages()
