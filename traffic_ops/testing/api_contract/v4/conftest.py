@@ -1006,7 +1006,7 @@ def job_post_data(to_session: TOSession, request_template_data: list[JSONData],
 	job = check_template_data(request_template_data["jobs"], "jobs")
 
 	# Check if delivery_service already exists, otherwise create it
-	delivery_services_name = delivery_services_post_data["displayName"]
+	delivery_services_name = delivery_services_post_data["xmlId"]
 	if not isinstance(delivery_services_name, str):
 		raise TypeError("malformed API response; 'displayName' property not a string")
 	job["deliveryService"] = delivery_services_name
