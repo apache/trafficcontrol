@@ -38,12 +38,12 @@ def test_asn_contract(to_session: TOSession,
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
 	:param asn_post_data: Fixture to get sample asn data and actual asn response.
 	"""
-	# validate Profile keys from profiles get response
+	# validate asn keys from asns get response
 	logger.info("Accessing /asns endpoint through Traffic ops session.")
 
 	asn_id = asn_post_data.get("id")
 	if not isinstance(asn_id, int):
-		raise TypeError("malformed profile in prerequisite data; 'asn_id' not a integer")
+		raise TypeError("malformed asn in prerequisite data; 'asn_id' not a integer")
 
 	asn_get_response: tuple[
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
