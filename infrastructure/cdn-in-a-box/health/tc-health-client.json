@@ -1,9 +1,10 @@
 {
-    "cdn-name": "over-the-top",
+    "cdn-name": "mycdn",
     "enable-active-markdowns": true,
     "reason-code": "active",
     "to-credential-file": "/etc/to-creds",
-    "to-url": "https://localhost:443", 
+    "to-url": "https://localhost:443",
+    "tm-proxy-url": "http://localhost:80", 
     "to-request-timeout-seconds": "6s",
     "tm-poll-interval-seconds": "10s",
     "to-login-dispersion-factor": 90,

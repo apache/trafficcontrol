@@ -228,7 +228,7 @@ to-enroll() {
 			;;
 		"tm" )
 			export MY_TYPE="RASCAL"
-			export MY_PROFILE="RASCAL-Traffic_Monitor"
+			export MY_PROFILE="RASCAL_Traffic_Monitor"
 			export MY_STATUS="ONLINE"
 			;;
 		"tchealthclient" )

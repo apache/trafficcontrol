@@ -17,9 +17,7 @@
 # under the License.
 ############################################################
 # This file is controlled by ansible role /opt/ansible/local/playbooks/roles/crontab
-# path in cdn-in-a-box: infrastructure/ansible/roles/traffic_ops/tasks/main.yml, might need to update main
-# These are staging to-creds!
 
-export TO_URL="[url]"
-export TO_USER="[user]"
-export TO_PASS="[pass]"
+export TO_URL="https://trafficops.infra.ciab.test:443"
+export TO_USER="admin"
+export TO_PASS="twelve12"
