@@ -94,196 +94,114 @@ The response is an array of representations of :term:`Delivery Service Requests`
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 23:10:56 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 23:10:56 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Fri, 09 Jun 2023 06:32:57 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 29 Sep 2022 22:10:56 GMT
+	Date: Fri, 09 Jun 2023 05:32:57 GMT
 	Content-Length: 988
 
-	{ "response": [{
-		"assignee": null,
-		"author": "admin",
-		"changeType": "update",
-		"createdAt": "2022-09-29T22:07:15.008503Z",
-		"id": 1,
-		"lastEditedBy": "admin",
-		"lastUpdated": "2022-09-29T22:07:15.008503Z",
-		"original": {
-			"active": "ACTIVE",
-			"anonymousBlockingEnabled": false,
-			"ccrDnsTtl": null,
-			"cdnId": 2,
-			"cdnName": "CDN-in-a-Box",
-			"checkPath": null,
-			"consistentHashQueryParams": [
-				"abc",
-				"pdq",
-				"xxx",
-				"zyx"
-			],
-			"consistentHashRegex": null,
-			"deepCachingType": "NEVER",
-			"displayName": "Demo 1",
-			"dnsBypassCname": null,
-			"dnsBypassIp": null,
-			"dnsBypassIp6": null,
-			"dnsBypassTtl": null,
-			"dscp": 0,
-			"ecsEnabled": false,
-			"edgeHeaderRewrite": null,
-			"exampleURLs": [
-				"http://video.demo1.mycdn.ciab.test",
-				"https://video.demo1.mycdn.ciab.test"
-			],
-			"firstHeaderRewrite": null,
-			"fqPacingRate": null,
-			"geoLimit": 0,
-			"geoLimitCountries": null,
-			"geoLimitRedirectURL": null,
-			"geoProvider": 0,
-			"globalMaxMbps": null,
-			"globalMaxTps": null,
-			"httpBypassFqdn": null,
-			"id": 1,
-			"infoUrl": null,
-			"initialDispersion": 1,
-			"innerHeaderRewrite": null,
-			"ipv6RoutingEnabled": true,
-			"lastHeaderRewrite": null,
-			"lastUpdated": "2022-09-29T20:58:53.07251Z",
-			"logsEnabled": true,
-			"longDesc": "Apachecon North America 2018",
-			"matchList": [
-				{
-					"type": "HOST_REGEXP",
-					"setNumber": 0,
-					"pattern": ".*\\.demo1\\..*"
-				}
-			],
-			"maxDnsAnswers": null,
-			"maxOriginConnections": 0,
-			"maxRequestHeaderBytes": 0,
-			"midHeaderRewrite": null,
-			"missLat": 42,
-			"missLong": -88,
-			"multiSiteOrigin": true,
-			"originShield": null,
-			"orgServerFqdn": "http://origin.infra.ciab.test",
-			"profileDescription": null,
-			"profileId": null,
-			"profileName": null,
-			"protocol": 2,
-			"qstringIgnore": 0,
-			"rangeRequestHandling": 0,
-			"rangeSliceBlockSize": null,
-			"regexRemap": null,
-			"regional": false,
-			"regionalGeoBlocking": false,
-			"remapText": null,
-			"routingName": "video",
-			"serviceCategory": null,
-			"signed": false,
-			"signingAlgorithm": null,
-			"sslKeyVersion": 1,
-			"tenant": "root",
-			"tenantId": 1,
-			"tlsVersions": null,
-			"topology": "demo1-top",
-			"trResponseHeaders": null,
-			"trRequestHeaders": null,
-			"type": "HTTP",
-			"typeId": 1,
-			"xmlId": "demo1"
-		},
-		"requested": {
-			"active": "INACTIVE",
-			"anonymousBlockingEnabled": false,
-			"ccrDnsTtl": null,
-			"cdnId": 2,
-			"cdnName": "CDN-in-a-Box",
-			"checkPath": null,
-			"consistentHashQueryParams": [
-				"abc",
-				"pdq",
-				"xxx",
-				"zyx"
-			],
-			"consistentHashRegex": null,
-			"deepCachingType": "NEVER",
-			"displayName": "Demo 1",
-			"dnsBypassCname": null,
-			"dnsBypassIp": null,
-			"dnsBypassIp6": null,
-			"dnsBypassTtl": null,
-			"dscp": 0,
-			"ecsEnabled": false,
-			"edgeHeaderRewrite": null,
-			"exampleURLs": [
-				"http://video.demo1.mycdn.ciab.test",
-				"https://video.demo1.mycdn.ciab.test"
-			],
-			"firstHeaderRewrite": null,
-			"fqPacingRate": null,
-			"geoLimit": 0,
-			"geoLimitCountries": null,
-			"geoLimitRedirectURL": null,
-			"geoProvider": 0,
-			"globalMaxMbps": null,
-			"globalMaxTps": null,
-			"httpBypassFqdn": null,
-			"id": 1,
-			"infoUrl": null,
-			"initialDispersion": 1,
-			"innerHeaderRewrite": null,
-			"ipv6RoutingEnabled": true,
-			"lastHeaderRewrite": null,
-			"lastUpdated": "2020-02-13T16:43:54Z",
-			"logsEnabled": true,
-			"longDesc": "Apachecon North America 2018",
-			"matchList": [
-				{
-					"type": "HOST_REGEXP",
-					"setNumber": 0,
-					"pattern": ".*\\.demo1\\..*"
-				}
-			],
-			"maxDnsAnswers": null,
-			"maxOriginConnections": 0,
-			"maxRequestHeaderBytes": 0,
-			"midHeaderRewrite": null,
-			"missLat": 42,
-			"missLong": -88,
-			"multiSiteOrigin": false,
-			"originShield": null,
-			"orgServerFqdn": "http://origin.infra.ciab.test",
-			"profileDescription": null,
-			"profileId": null,
-			"profileName": null,
-			"protocol": 2,
-			"qstringIgnore": 0,
-			"rangeRequestHandling": 0,
-			"rangeSliceBlockSize": null,
-			"regexRemap": null,
-			"regional": false,
-			"regionalGeoBlocking": false,
-			"remapText": null,
-			"routingName": "video",
-			"serviceCategory": null,
-			"signed": false,
-			"signingAlgorithm": null,
-			"sslKeyVersion": 1,
-			"tenant": "root",
-			"tenantId": 1,
-			"tlsVersions": null,
-			"topology": null,
-			"trResponseHeaders": null,
-			"trRequestHeaders": null,
-			"type": "HTTP",
-			"typeId": 1,
-			"xmlId": "demo1"
-		},
-		"status": "draft"
-	}]}
+	{
+    	"response": [
+    		{
+    			"assignee": null,
+    			"author": "admin",
+    			"changeType": "update",
+    			"createdAt": "2023-06-09T10:55:00.918782+05:30",
+    			"id": 5,
+    			"lastEditedBy": "admin",
+    			"lastUpdated": "2023-06-09T10:55:00.918782+05:30",
+    			"requested": {
+    				"active": "INACTIVE",
+    				"anonymousBlockingEnabled": false,
+    				"ccrDnsTtl": null,
+    				"cdnId": 2,
+    				"cdnName": "CDN-in-a-Box",
+    				"checkPath": null,
+    				"consistentHashQueryParams": [
+    					"abc",
+    					"pdq",
+    					"xxx",
+    					"zyx"
+    				],
+    				"consistentHashRegex": null,
+    				"deepCachingType": "NEVER",
+    				"displayName": "Demo 1",
+    				"dnsBypassCname": null,
+    				"dnsBypassIp": null,
+    				"dnsBypassIp6": null,
+    				"dnsBypassTtl": null,
+    				"dscp": 0,
+    				"ecsEnabled": false,
+    				"edgeHeaderRewrite": null,
+    				"exampleURLs": [
+    					"http://video.demo1.mycdn.ciab.test",
+    					"https://video.demo1.mycdn.ciab.test"
+    				],
+    				"firstHeaderRewrite": null,
+    				"fqPacingRate": null,
+    				"geoLimit": 0,
+    				"geoLimitCountries": null,
+    				"geoLimitRedirectURL": null,
+    				"geoProvider": 0,
+    				"globalMaxMbps": null,
+    				"globalMaxTps": null,
+    				"httpBypassFqdn": null,
+    				"id": 1,
+    				"infoUrl": null,
+    				"initialDispersion": 1,
+    				"innerHeaderRewrite": null,
+    				"ipv6RoutingEnabled": true,
+    				"lastHeaderRewrite": null,
+    				"lastUpdated": "2023-06-09T10:51:00+05:30",
+    				"logsEnabled": true,
+    				"longDesc": "Apachecon North America 2018",
+    				"matchList": [
+    					{
+    						"type": "HOST_REGEXP",
+    						"setNumber": 0,
+    						"pattern": ".*\\.demo1\\..*"
+    					}
+    				],
+    				"maxDnsAnswers": null,
+    				"maxOriginConnections": 0,
+    				"maxRequestHeaderBytes": 0,
+    				"midHeaderRewrite": null,
+    				"missLat": 42,
+    				"missLong": -88,
+    				"multiSiteOrigin": false,
+    				"originShield": null,
+    				"orgServerFqdn": "http://origin.infra.ciab.test",
+    				"profileDescription": null,
+    				"profileId": null,
+    				"profileName": null,
+    				"protocol": 2,
+    				"qstringIgnore": 0,
+    				"rangeRequestHandling": 0,
+    				"rangeSliceBlockSize": null,
+    				"regexRemap": null,
+    				"regional": false,
+    				"regionalGeoBlocking": false,
+    				"remapText": null,
+    				"requiredCapabilities": null,
+    				"routingName": "video",
+    				"serviceCategory": null,
+    				"signed": false,
+    				"signingAlgorithm": null,
+    				"sslKeyVersion": 1,
+    				"tenant": "root",
+    				"tenantId": 1,
+    				"tlsVersions": null,
+    				"topology": "demo1-top",
+    				"trResponseHeaders": null,
+    				"trRequestHeaders": null,
+    				"type": "HTTP",
+    				"typeId": 1,
+    				"xmlId": "demo1"
+    			},
+    			"status": "draft"
+    		}
+    	]
+    }
 
 .. _to-api-deliveryservice-requests-post:
 
@@ -344,7 +262,7 @@ The request must be a well-formed representation of a :term:`Delivery Service Re
 			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
 			"lastHeaderRewrite": null,
-			"lastUpdated": "2020-02-13T16:43:54Z",
+			"lastUpdated": "2023-06-09T10:51:00+05:30",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
 			"matchList": [
@@ -420,10 +338,10 @@ The response will be a representation of the created :term:`Delivery Service Req
 	Content-Type: application/json
 	Location: /api/5.0/deliveryservice_requests/1
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 23:07:15 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 23:07:15 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Fri, 09 Jun 2023 06:25:00 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 29 Sep 2022 22:07:15 GMT
+	Date: Fri, 09 Jun 2023 05:25:00 GMT
 	Content-Length: 1027
 
 	{ "alerts": [{
@@ -434,10 +352,10 @@ The response will be a representation of the created :term:`Delivery Service Req
 		"assignee": null,
 		"author": "admin",
 		"changeType": "update",
-		"createdAt": "2022-09-29T22:07:15.008503Z",
+		"createdAt": "2023-06-09T10:55:00.918782+05:30",
 		"id": 1,
 		"lastEditedBy": "admin",
-		"lastUpdated": "2022-09-29T22:07:15.008503Z",
+		"lastUpdated": "2023-06-09T10:55:00.918782+05:30",
 		"original": {
 			"active": "ACTIVE",
 			"anonymousBlockingEnabled": false,
@@ -480,7 +398,7 @@ The response will be a representation of the created :term:`Delivery Service Req
 			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
 			"lastHeaderRewrite": null,
-			"lastUpdated": "2022-09-29T20:58:53.07251Z",
+			"lastUpdated": "2023-05-19T09:52:13.3131+05:30",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
 			"matchList": [
@@ -567,7 +485,7 @@ The response will be a representation of the created :term:`Delivery Service Req
 			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
 			"lastHeaderRewrite": null,
-			"lastUpdated": "2020-02-13T16:43:54Z",
+			"lastUpdated": "2023-06-09T10:51:00+05:30",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
 			"matchList": [
@@ -688,10 +606,10 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 23:16:06 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 23:16:06 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Fri, 09 Jun 2023 06:24:20 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 29 Sep 2022 22:16:06 GMT
+	Date: Fri, 09 Jun 2023 05:24:20 GMT
 	Content-Length: 1142
 
 	{ "alerts": [{
@@ -702,10 +620,10 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 		"assignee": null,
 		"author": "",
 		"changeType": "update",
-		"createdAt": "2022-09-29T22:16:06.971122Z",
+		"createdAt": "2023-06-09T10:54:20.435475+05:30",
 		"id": null,
 		"lastEditedBy": "admin",
-		"lastUpdated": "2022-09-29T22:07:15.008503Z",
+		"lastUpdated": "2023-06-09T10:51:39.552061+05:30",
 		"original": {
 			"active": "ACTIVE",
 			"anonymousBlockingEnabled": false,
@@ -748,7 +666,7 @@ The response is a full representation of the edited :term:`Delivery Service Requ
 			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
 			"lastHeaderRewrite": null,
-			"lastUpdated": "2022-09-29T20:58:53.07251Z",
+			"lastUpdated": "2023-05-19T09:52:13.3131+05:30",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
 			"matchList": [
@@ -915,10 +833,10 @@ The response is a full representation of the deleted :term:`Delivery Service Req
 	Content-Encoding: gzip
 	Content-Type: application/json
 	Permissions-Policy: interest-cohort=()
-	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 29 Sep 2022 23:26:31 GMT; Max-Age=3600; HttpOnly, access_token=...; Path=/; Expires=Thu, 29 Sep 2022 23:26:31 GMT; Max-Age=3600; HttpOnly
+	Set-Cookie: mojolicious=...; Path=/; Expires=Fri, 09 Jun 2023 06:24:53 GMT; Max-Age=3600; HttpOnly
 	Vary: Accept-Encoding
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 29 Sep 2022 22:26:31 GMT
+	Date: Fri, 09 Jun 2023 05:24:53 GMT
 	Content-Length: 1147
 
 	{ "alerts": [{
@@ -929,10 +847,10 @@ The response is a full representation of the deleted :term:`Delivery Service Req
 		"assignee": "admin",
 		"author": "admin",
 		"changeType": "update",
-		"createdAt": "2022-09-29T22:07:15.008503Z",
+		"createdAt": "2023-06-09T10:51:39.552061+05:3",
 		"id": 1,
 		"lastEditedBy": "admin",
-		"lastUpdated": "2022-09-29T22:23:28.034845Z",
+		"lastUpdated": "2023-06-09T10:54:20.435475+05:30",
 		"original": {
 			"active": "ACTIVE",
 			"anonymousBlockingEnabled": false,
@@ -975,7 +893,7 @@ The response is a full representation of the deleted :term:`Delivery Service Req
 			"innerHeaderRewrite": null,
 			"ipv6RoutingEnabled": true,
 			"lastHeaderRewrite": null,
-			"lastUpdated": "2022-09-29T20:58:53.07251Z",
+			"lastUpdated": "2023-05-19T09:52:13.3131+05:30",
 			"logsEnabled": true,
 			"longDesc": "Apachecon North America 2018",
 			"matchList": [
