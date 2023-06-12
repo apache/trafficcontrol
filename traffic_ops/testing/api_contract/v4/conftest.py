@@ -489,8 +489,8 @@ def cdn_data_post(to_session: TOSession, request_template_data: list[JSONData]
 	return resp_obj
 
 
-@pytest.fixture()
-def cache_group_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="cache_group_post_data")
+def cache_group_data_post(to_session: TOSession, request_template_data: list[JSONData]
 			 ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for cachegroup endpoint.
@@ -965,4 +965,28 @@ def status_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting statuses POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_statuses(data=status)
 	resp_obj = check_template_data(response, "statuses")
+	return resp_obj
+
+@pytest.fixture(name="asn_post_data")
+def asn_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		      cache_group_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for asn endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get asn data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	asn = check_template_data(request_template_data["asns"], "asns")
+	# Return new post data and post response from asns POST request
+	randstr = randint(0, 1000)
+	asn["asn"] = randstr
+
+	# Check if cachegroup already exists, otherwise create it
+	asn["cachegroupId"] = cache_group_post_data["id"]
+	logger.info("New profile data to hit POST method %s", asn)
+
+	# Hitting asns POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_asn(data=asn)
+	resp_obj = check_template_data(response, "asn")
 	return resp_obj

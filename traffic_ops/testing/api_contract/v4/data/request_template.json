@@ -213,5 +213,11 @@
 			"protocol": "http",
 			"tenantId": 1
 		}
+	],
+	"asns": [
+		{
+			"asn": 1,
+			"cachegroupId": 10
+		}
 	]
 }

@@ -84,6 +84,13 @@ type ParentAbstractionService struct {
 	// Becomes strategies.yaml TODO
 	GoDirect bool
 
+	// ParentIsProxy A boolean value which indicates if the groups of hosts are proxy caches or origins.
+	// true (default) means all the hosts used are Traffic Server caches.
+	// false means the hosts are origins.
+	// Becomes parent_is_proxy directive.
+	// Becomes strategies.yaml TODO
+	ParentIsProxy bool
+
 	// IgnoreQueryStringInParentSelection is whether to use the query string of the request
 	// when selecting a parent, e.g. via Consistent Hash.
 	// Becomes parent.config qstring directive
@@ -356,7 +363,7 @@ func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts
 	} else {
 		txt += `ignore`
 	}
-	txt += ` parent_is_proxy=` + strconv.FormatBool(!svc.GoDirect)
+	txt += ` parent_is_proxy=` + strconv.FormatBool(svc.ParentIsProxy)
 
 	if svc.MaxSimpleRetries > 0 && svc.MaxMarkdownRetries > 0 {
 		txt += ` parent_retry=both`

@@ -82,7 +82,7 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 		if len(coordinates.Response) == 0 {
 			return fmt.Errorf("no coordinate with name '%s'", *origin.Coordinate)
 		}
-		origin.CoordinateID = &coordinates.Response[0].ID
+		origin.CoordinateID = coordinates.Response[0].ID
 	}
 
 	if origin.TenantID == nil && origin.Tenant != nil {
