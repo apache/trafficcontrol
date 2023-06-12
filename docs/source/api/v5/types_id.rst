@@ -93,7 +93,7 @@ Response Structure
 		"response": [
 		{
 			"id": 3004,
-			"lastUpdated": "2020-02-26 18:58:41+00",
+			"lastUpdated": "2020-02-26T20:49:28.111111Z",
 			"name": "Example02",
 			"description": "Example"
 			"useInTable": "server"
