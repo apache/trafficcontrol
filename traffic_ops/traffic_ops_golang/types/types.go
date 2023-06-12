@@ -21,9 +21,9 @@ package types
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
 	"time"
@@ -34,150 +34,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/jmoiron/sqlx"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
-
-// TOTypeV5 is a needed type alias to define functions on.
-type TOTypeV5 struct {
-	api.APIInfoImpl `json:"-"`
-	tc.TypeNullableV5
-}
-
-func (v *TOTypeV5) GetLastUpdated() (*time.Time, bool, error) {
-	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "type")
-}
-
-func (v *TOTypeV5) SetLastUpdated(t tc.TimeNoMod) {
-	newTime, err := util.ConvertTimeFormat(t.Time, time.RFC3339)
-	if err != nil {
-		log.Errorf("Unable to convert Type last update time: %s\n", t.Time)
-		v.LastUpdated = &t.Time
-	}
-	v.LastUpdated = newTime
-}
-func (v *TOTypeV5) InsertQuery() string     { return insertQuery() }
-func (v *TOTypeV5) NewReadObj() interface{} { return &tc.TypeNullableV5{} }
-func (v *TOTypeV5) SelectQuery() string     { return selectQuery() }
-func (v *TOTypeV5) SelectMaxLastUpdatedQuery(where string, orderBy string, pagination string, tableName string) string {
-	return selectMaxLastUpdatedQuery(where, orderBy, pagination, tableName)
-}
-func (v *TOTypeV5) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	return map[string]dbhelpers.WhereColumnInfo{
-		"name":       dbhelpers.WhereColumnInfo{Column: "typ.name"},
-		"id":         dbhelpers.WhereColumnInfo{Column: "typ.id", Checker: api.IsInt},
-		"useInTable": dbhelpers.WhereColumnInfo{Column: "typ.use_in_table"},
-	}
-}
-func (v *TOTypeV5) UpdateQuery() string { return updateQuery() }
-func (v *TOTypeV5) DeleteQuery() string { return deleteQuery() }
-
-func (typ TOTypeV5) GetKeyFieldsInfo() []api.KeyFieldInfo {
-	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
-}
-
-// Implementation of the Identifier, Validator interface functions
-func (typ TOTypeV5) GetKeys() (map[string]interface{}, bool) {
-	if typ.ID == nil {
-		return map[string]interface{}{"id": 0}, false
-	}
-	return map[string]interface{}{"id": *typ.ID}, true
-}
-
-func (typ *TOTypeV5) SetKeys(keys map[string]interface{}) {
-	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
-	typ.ID = &i
-}
-
-func (typ *TOTypeV5) GetAuditName() string {
-	if typ.Name != nil {
-		return *typ.Name
-	}
-	if typ.ID != nil {
-		return strconv.Itoa(*typ.ID)
-	}
-	return "unknown"
-}
-
-func (typ *TOTypeV5) GetType() string {
-	return "type"
-}
-
-func (typ *TOTypeV5) Validate() (error, error) {
-	errs := validation.Errors{
-		"name":         validation.Validate(typ.Name, validation.Required),
-		"description":  validation.Validate(typ.Description, validation.Required),
-		"use_in_table": validation.Validate(typ.UseInTable, validation.Required),
-	}
-	if errs != nil {
-		return util.JoinErrs(tovalidate.ToErrors(errs)), nil
-	}
-	return nil, nil
-}
-
-func (tp *TOTypeV5) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
-	api.DefaultSort(tp.APIInfo(), "name")
-	return api.GenericRead(h, tp, useIMS)
-}
-
-func (tp *TOTypeV5) Update(h http.Header) (error, error, int) {
-	if !tp.AllowMutation(false) {
-		return errors.New("can not update type"), nil, http.StatusBadRequest
-	}
-	return api.GenericUpdate(h, tp)
-}
-
-func (tp *TOTypeV5) Delete() (error, error, int) {
-	if !tp.AllowMutation(false) {
-		return errors.New(fmt.Sprintf("can not delete type")), nil, http.StatusBadRequest
-	}
-	return api.GenericDelete(tp)
-}
-
-func (tp *TOTypeV5) Create() (error, error, int) {
-	if !tp.AllowMutation(true) {
-		return errors.New("can not create type"), nil, http.StatusBadRequest
-	}
-	return api.GenericCreate(tp)
-}
-
-func (tp *TOTypeV5) AllowMutation(forCreation bool) bool {
-	if !forCreation {
-		userErr, sysErr, actualUseInTable := tp.loadUseInTable()
-		if userErr != nil || sysErr != nil {
-			return false
-		} else if actualUseInTable != "server" {
-			return false
-		}
-	} else if *tp.UseInTable != "server" { // Only allow creating of types with UseInTable being "server"
-		return false
-	}
-	return true
-}
-
-func (tp *TOTypeV5) loadUseInTable() (error, error, string) {
-	var useInTable string
-	// ID is only nil on creation, should not call this method in that case
-	if tp.ID != nil {
-		query := `SELECT use_in_table from type where id=$1`
-		err := tp.ReqInfo.Tx.Tx.QueryRow(query, tp.ID).Scan(&useInTable)
-		if err == sql.ErrNoRows {
-			if tp.UseInTable == nil {
-				return nil, nil, ""
-			}
-			return nil, nil, *tp.UseInTable
-		}
-		if err != nil {
-			return nil, err, ""
-		}
-	} else {
-		return errors.New("no type with that key found"), nil, ""
-	}
-
-	return nil, nil, useInTable
-}
-
-// V5 version ends here ---xxx---
 
 // TOType is a needed type alias to define functions on.
 type TOType struct {
@@ -355,7 +215,7 @@ WHERE id=:id`
 	return query
 }
 
-// Get [V5]
+// Get [Version :V5]
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -443,4 +303,169 @@ func GetTypes(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.He
 	}
 
 	return typeList, maxTime, http.StatusOK, nil, nil
+}
+
+// CreateType [Version : V5] function creates the type with the passed data.
+func CreateType(w http.ResponseWriter, r *http.Request) {
+	typ := tc.TypeV5{}
+
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	typ, readValErr := readAndValidateJsonStructV5(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	if typ.UseInTable != "server" {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not create type."), nil)
+		return
+	}
+
+	// check if type already exists
+	var exists bool
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * from type where name = $1)`, typ.Name).Scan(&exists)
+
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if type with name %s exists", err, typ.Name))
+		return
+	}
+	if exists {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("type name '%s' already exists.", typ.Name), nil)
+		return
+	}
+
+	// create type
+	query := `INSERT INTO type (name, description, use_in_table) VALUES ($1, $2, $3) RETURNING id,last_updated`
+	err = tx.QueryRow(query, typ.Name, typ.Description, typ.UseInTable).Scan(&typ.ID, &typ.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating type with name: %s", err, typ.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "type was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/type?name=%s", inf.Version.Major, inf.Version.Minor, typ.Name))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, typ)
+	return
+}
+
+// UpdateType [Version : V5] function updates name & description of the type passed.
+func UpdateType(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	typ, readValErr := readAndValidateJsonStructV5(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	requestedId := inf.Params["id"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedId, "type")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if typ.UseInTable != "server" {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not update type."), nil)
+		return
+	}
+
+	//update type query
+	query := `UPDATE type typ SET name= $1, description= $2, use_in_table= $3 WHERE typ.id=$4 RETURNING typ.id, typ.last_updated`
+
+	err := tx.QueryRow(query, typ.Name, typ.Description, typ.UseInTable, requestedId).Scan(&typ.ID, &typ.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("type with id: %s not found", requestedId), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "type was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, typ)
+	return
+}
+
+// DeleteType [Version : V5] function deletes the type passed.
+func DeleteType(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.Params["id"]
+	// check if type already exists
+	var exists bool
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * from type where id = $1)`, id).Scan(&exists)
+
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("can not delete type"), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM type AS typ WHERE typ.id=$1", id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete service_category: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("no rows deleted for type"))
+		return
+	}
+
+	alertMessage := fmt.Sprintf("type was deleted.")
+	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+func readAndValidateJsonStructV5(r *http.Request) (tc.TypeV5, error) {
+	var typ tc.TypeV5
+	if err := json.NewDecoder(r.Body).Decode(&typ); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into ServerCapabilityV5 struct %w", err)
+		return typ, userErr
+	}
+
+	// validate JSON body
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name": validation.Validate(typ.Name, validation.Required, rule),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return typ, userErr
+	}
+	return typ, nil
 }
