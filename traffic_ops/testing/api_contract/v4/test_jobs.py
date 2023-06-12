@@ -40,8 +40,6 @@ def test_job_contract(to_session: TOSession,
 	"""
 	# validate job keys from jobs get response
 	logger.info("Accessing /jobs endpoint through Traffic ops session.")
-	delivery_service_id = job_post_data[1]
-	job_post_data = job_post_data[0]
 
 	job_id = job_post_data.get("id")
 	if not isinstance(job_id, int):
@@ -76,13 +74,3 @@ def test_job_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for cdn endpoint: API response was malformed")
-	finally:
-		# Delete job after test execution to avoid redundancy.
-		job_id = job_post_data.get("id")
-		if to_session.delete_job(query_params={"id": job_id}) is None:
-			logger.error("job returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_job_contract")
-
-		if to_session.delete_deliveryservice_by_id(delivery_service_id=delivery_service_id) is None:
-			logger.error("Delivery service returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_origin_contract")

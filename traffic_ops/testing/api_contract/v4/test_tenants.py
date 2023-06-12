@@ -76,9 +76,3 @@ def test_tenant_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for tenants endpoint: API response was malformed")
-	finally:
-		# Delete tenant after test execution to avoid redundancy.
-		tenant_id = tenant_post_data.get("id")
-		if to_session.delete_tenant(tenant_id=tenant_id) is None:
-			logger.error("Tenant returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_tenant_contract")

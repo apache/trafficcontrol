@@ -73,14 +73,3 @@ def test_asn_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for asns endpoint: API response was malformed")
-	finally:
-		# Delete asn after test execution to avoid redundancy.
-		asn_id = asn_post_data.get("id")
-		if to_session.delete_asn(query_params={"id": asn_id}) is None:
-			logger.error("asn returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_asn_contract")
-
-		cachegroup_id = asn_post_data.get("cachegroupId")
-		if to_session.delete_cachegroups(cache_group_id=cachegroup_id) is None:
-			logger.error("Cachegroup returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_asn_contract")

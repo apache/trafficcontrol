@@ -73,9 +73,3 @@ def test_division_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("Failed due to malformation")
-	finally:
-		# Delete division after test execution to avoid redundancy.
-		division_id = division_post_data.get("id")
-		if to_session.delete_division(division_id=division_id) is None:
-			logger.error("Division returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_get_division")

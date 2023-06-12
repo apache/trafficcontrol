@@ -27,11 +27,10 @@ logger = logging.getLogger()
 
 Primitive = Union[bool, int, float, str, None]
 
-
 def test_server_contract(to_session: TOSession,
 	response_template_data: dict[str, Union[Primitive, list[Union[Primitive,
 							dict[str, object], list[object]]],
-	dict[object, object]]], server_post_data: dict[str, object]) -> None:
+	dict[object, object]]], server_post_data: dict[str, object],request: pytest.FixtureRequest) -> None:
 	"""
 	Test step to validate keys, values and data types from servers endpoint
 	response.
@@ -41,8 +40,8 @@ def test_server_contract(to_session: TOSession,
 	"""
 	# validate server keys from server get response
 	logger.info("Accessing /servers endpoint through Traffic ops session.")
-	profile_id = server_post_data[1]
-	server_post_data = server_post_data[0]
+	# profile_id = server_post_data[1]
+	# server_post_data = server_post_data[0]
 
 	server_id = server_post_data.get("id")
 	if not isinstance(server_id, int):
@@ -76,28 +75,3 @@ def test_server_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for server endpoint: API response was malformed")
-	finally:
-		# Delete Server after test execution to avoid redundancy.
-		server_id = server_post_data.get("id")
-		if to_session.delete_server_by_id(server_id=server_id) is None:
-			logger.error("Server returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_server_contract")
-
-		cachegroup_id = server_post_data.get("cachegroupId")
-		if to_session.delete_cachegroups(cache_group_id=cachegroup_id) is None:
-			logger.error("cachegroup returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_server_contract")
-
-		if to_session.delete_profile_by_id(profile_id=profile_id) is None:
-			logger.error("Profile returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_server_contract")
-
-		cdn_id = server_post_data.get("cdnId")
-		if to_session.delete_cdn_by_id(cdn_id=cdn_id) is None:
-			logger.error("Cdn returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_server_contract")
-
-		phys_loc_id = server_post_data.get("physLocationId")
-		if to_session.delete_physical_location(physical_location_id=phys_loc_id) is None:
-			logger.error("Physical location returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_server_contract")
