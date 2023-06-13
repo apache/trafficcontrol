@@ -511,3 +511,54 @@ func TestServiceCategoryExists(t *testing.T) {
 		})
 	}
 }
+
+func TestGetASNInfo(t *testing.T) {
+	var testCases = []struct {
+		description   string
+		id            string
+		expectedError error
+		exists        bool
+	}{
+		{
+			description:   "Success: Get valid ASN",
+			id:            "1",
+			expectedError: nil,
+			exists:        true,
+		},
+		{
+			description:   "Failure: ASN not in DB",
+			id:            "10",
+			expectedError: sql.ErrNoRows,
+			exists:        false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close()
+
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+
+			mock.ExpectBegin()
+			rows := sqlmock.NewRows([]string{"count"})
+			if testCase.exists {
+				rows = rows.AddRow(1)
+			}
+			mock.ExpectQuery("SELECT").WillReturnRows(rows)
+			mock.ExpectCommit()
+
+			scExists, err := GetSCInfo(db.MustBegin().Tx, testCase.id)
+			if testCase.exists != scExists {
+				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, scExists)
+			}
+
+			if !errors.Is(err, testCase.expectedError) {
+				t.Errorf("getSCInfo expected: %s, actual: %s", testCase.expectedError, err)
+			}
+		})
+	}
+}

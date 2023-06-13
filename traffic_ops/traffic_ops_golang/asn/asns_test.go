@@ -20,6 +20,7 @@ package asn
  */
 
 import (
+	"database/sql"
 	"errors"
 	"reflect"
 	"testing"
@@ -277,5 +278,59 @@ func TestASNExists(t *testing.T) {
 	}
 	if err.Error() != expected {
 		t.Errorf("Expected error detail to be %v, got %v", expected, err.Error())
+	}
+}
+
+func TestGetCGName(t *testing.T) {
+	var testCases = []struct {
+		description   string
+		id            int
+		name          string
+		expectedError error
+		exists        bool
+	}{
+		{
+			description:   "Success: Get Cache Group",
+			id:            1,
+			name:          "test",
+			expectedError: nil,
+			exists:        true,
+		},
+		{
+			description:   "Failure: CG not in DB",
+			id:            10,
+			name:          "",
+			expectedError: sql.ErrNoRows,
+			exists:        false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close()
+
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+
+			mock.ExpectBegin()
+			rows := sqlmock.NewRows([]string{"name"})
+			if testCase.exists {
+				rows = rows.AddRow("test")
+			}
+			mock.ExpectQuery("SELECT").WillReturnRows(rows)
+			mock.ExpectCommit()
+
+			name, err := getCGName(db.MustBegin().Tx, testCase.id)
+			if testCase.name != name {
+				t.Errorf("Expected return name: %s, actual %s", testCase.name, name)
+			}
+
+			if !errors.Is(err, testCase.expectedError) {
+				t.Errorf("getSCInfo expected: %s, actual: %s", testCase.expectedError, err)
+			}
+		})
 	}
 }

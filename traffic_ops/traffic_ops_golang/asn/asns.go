@@ -300,7 +300,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 	}
 
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created.")
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was created.")
 	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/asns?id=%d", inf.Version.Major, inf.Version.Minor, asn.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, asn)
 	return
@@ -316,7 +316,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	tx := inf.Tx.Tx
 	asn, readValErr := readAndValidateJsonStruct(r)
-	fmt.Println(asn)
 	if readValErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
 		return
@@ -335,9 +334,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		asn = $1,
 		cachegroup = $2
 	WHERE id = $3
-	RETURNING last_updated`
+	RETURNING id, last_updated`
 
-	err := tx.QueryRow(query, asn.ASN, asn.CachegroupID, requestedAsnId).Scan(&asn.LastUpdated)
+	err := tx.QueryRow(query, asn.ASN, asn.CachegroupID, requestedAsnId).Scan(&asn.ID, &asn.LastUpdated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn: %d not found", asn.ASN), nil)
@@ -347,11 +346,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
 	}
-	asn.ID, _ = strconv.Atoi(requestedAsnId)
+
 	asn.Cachegroup, err = getCGName(tx, asn.CachegroupID)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 	}
+
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, asn)
 	return
@@ -404,7 +404,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 func readAndValidateJsonStruct(r *http.Request) (tc.ASNV5, error) {
 	var asn tc.ASNV5
 	if err := json.NewDecoder(r.Body).Decode(&asn); err != nil {
-		userErr := fmt.Errorf("error decoding POST request body into ServerCapabilityV41 struct %w", err)
+		userErr := fmt.Errorf("error decoding POST request body into ASNV5 struct %w", err)
 		return asn, userErr
 	}
 
