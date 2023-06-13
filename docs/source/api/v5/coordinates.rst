@@ -56,7 +56,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique, identifier for this coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in a ``ctime``-like format
+:lastUpdated: The time and date at which this entry was last updated, in :rfc:3339 format
 :latitude:    Latitude of the coordinate
 :longitude:   Longitude of the coordinate
 :name:        The name of the coordinate - typically this just reflects the name of the Cache Group for which the coordinate was created
@@ -82,55 +82,55 @@ Response Structure
 			"name": "from_cachegroup_TRAFFIC_ANALYTICS",
 			"latitude": 38.897663,
 			"longitude": -77.036574,
-			"lastUpdated": "2018-10-24 16:07:04+00"
+			"lastUpdated": "2018-10-24T16:07:04.596321Z"
 		},
 		{
 			"id": 2,
 			"name": "from_cachegroup_TRAFFIC_OPS",
 			"latitude": 38.897663,
 			"longitude": -77.036574,
-			"lastUpdated": "2018-10-24 16:07:04+00"
+			"lastUpdated": "2018-10-24T16:07:04.596321Z"
 		},
 		{
 			"id": 3,
 			"name": "from_cachegroup_TRAFFIC_OPS_DB",
 			"latitude": 38.897663,
 			"longitude": -77.036574,
-			"lastUpdated": "2018-10-24 16:07:04+00"
+			"lastUpdated": "2018-10-24T16:07:04.596321Z"
 		},
 		{
 			"id": 4,
 			"name": "from_cachegroup_TRAFFIC_PORTAL",
 			"latitude": 38.897663,
 			"longitude": -77.036574,
-			"lastUpdated": "2018-10-24 16:07:04+00"
+			"lastUpdated": "2018-10-24T16:07:04.596321Z"
 		},
 		{
 			"id": 5,
 			"name": "from_cachegroup_TRAFFIC_STATS",
 			"latitude": 38.897663,
 			"longitude": -77.036574,
-			"lastUpdated": "2018-10-24 16:07:04+00"
+			"lastUpdated": "2018-10-24T16:07:04.596321Z"
 		},
 		{
 			"id": 6,
 			"name": "from_cachegroup_CDN_in_a_Box_Mid",
 			"latitude": 38.897663,
 			"longitude": -77.036574,
-			"lastUpdated": "2018-10-24 16:07:04+00"
+			"lastUpdated": "2018-10-24T16:07:04.596321Z"
 		},
 		{
 			"id": 7,
 			"name": "from_cachegroup_CDN_in_a_Box_Edge",
 			"latitude": 38.897663,
 			"longitude": -77.036574,
-			"lastUpdated": "2018-10-24 16:07:05+00"
+			"lastUpdated": "2018-10-24T16:07:05.596321Z"
 		}
 	]}
 
 ``POST``
 ========
-Creates a new coordinate pair
+Creates a new coordinate pair.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -159,7 +159,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique, identifier for the newly created coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in a ``ctime``-like format
+:lastUpdated: The time and date at which this entry was last updated, in :rfc:3339 format
 :latitude:    Latitude of the newly created coordinate
 :longitude:   Longitude of the newly created coordinate
 :name:        The name of the coordinate
@@ -181,7 +181,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "coordinate was created.",
+			"text": "Coordinate 'test' (#9) created",
 			"level": "success"
 		}
 	],
@@ -190,7 +190,7 @@ Response Structure
 		"name": "test",
 		"latitude": 0,
 		"longitude": 0,
-		"lastUpdated": "2018-11-15 17:48:55+00"
+		"lastUpdated": "2018-11-15T17:48:55.596321Z"
 	}}
 
 
@@ -233,7 +233,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique, identifier for the coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in a ``ctime``-like format
+:lastUpdated: The time and date at which this entry was last updated, in :rfc:3339 format
 :latitude:    Latitude of the coordinate
 :longitude:   Longitude of the coordinate
 :name:        The name of the coordinate
@@ -255,7 +255,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "coordinate was updated.",
+			"text": "Coordinate 'quest' (#9) updated",
 			"level": "success"
 		}
 	],
@@ -264,7 +264,7 @@ Response Structure
 		"name": "quest",
 		"latitude": 0,
 		"longitude": 0,
-		"lastUpdated": "2018-11-15 17:54:30+00"
+		"lastUpdated": "2018-11-15T17:54:30.596321Z"
 	}}
 
 ``DELETE``
@@ -274,10 +274,16 @@ Deletes a coordinate
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Permissions Required: COORDINATE:DELETE, COORDINATE:READ
-:Response Type:  ``undefined``
+:Response Type:  Object
 
 Request Structure
 -----------------
+:id:          Integral, unique, identifier for the coordinate pair
+:lastUpdated: The time and date at which this entry was last updated, in :rfc:3339 format
+:latitude:    Latitude of the coordinate
+:longitude:   Longitude of the coordinate
+:name:        The name of the coordinate
+
 .. table:: Request Query Parameters
 
 	+------+----------+-------------------------------------------------------------+
@@ -305,7 +311,14 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "coordinate was deleted.",
+			"text": "Coordinate 'quest' (#9) deleted",
 			"level": "success"
 		}
-	]}
+	],
+		"response": {
+		"id": 9,
+		"name": "quest",
+		"latitude": 0,
+		"longitude": 0,
+		"lastUpdated": "2018-11-15T17:54:30.596321Z"
+	}}

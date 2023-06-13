@@ -625,6 +625,15 @@ func (inf APIInfo) UseIMS() bool {
 	return inf.Config.UseIMS && inf.request.Header.Get(rfc.IfModifiedSince) != ""
 }
 
+// WriteNotModifiedResponse writes a 304 Not Modified response with the given
+// last modification time to the provided response writer. The request must be
+// provided as well, so that it can be marked as handled.
+func WriteNotModifiedResponse(t time.Time, w http.ResponseWriter, r *http.Request) {
+	AddLastModifiedHdr(w, t)
+	w.WriteHeader(http.StatusNotModified)
+	WriteResp(w, r, nil)
+}
+
 // CheckPrecondition checks a request's "preconditions" - its If-Match and
 // If-Unmodified-Since headers versus the last updated time of the requested
 // object(s), and returns (in order), an HTTP response code appropriate for the
@@ -794,9 +803,18 @@ func (val APIInfoImpl) APIInfo() *APIInfo {
 	return val.ReqInfo
 }
 
+// Version represents an API version.
 type Version struct {
 	Major uint64
 	Minor uint64
+}
+
+// String implements the fmt.Stringer interface.
+func (v *Version) String() string {
+	if v == nil {
+		return "{{null}}"
+	}
+	return strconv.FormatUint(v.Major, 10) + "." + strconv.FormatUint(v.Minor, 10)
 }
 
 func (v *Version) LessThan(otherVersion *Version) bool {

@@ -32,7 +32,9 @@ EXPOSE 80 443
 
 RUN yum install -y epel-release && \
 	yum install -y initscripts git jq gcc lua nmap-ncat && \
-	yum clean all
+	yum clean all && \
+	# Add skip git's safe.directory check
+	git config --global --add safe.directory '*'
 
 # Note that if more than one t3c RPM matches this wildcard, this Dockerfile will
 # break because this will create a directory instead of an RPM file, which it

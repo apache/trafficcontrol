@@ -24,6 +24,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -32,6 +33,17 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
+
+func ExampleVersion_String() {
+	// Because api.Info objects use pointers to Versions, this handles nil
+	// without needing the caller to do it - because that's annoying.
+	var v *Version
+	fmt.Println(v)
+	v = &Version{Major: 4, Minor: 20}
+	fmt.Println(v.String())
+	// Output: {{null}}
+	// 4.20
+}
 
 func TestCamelCase(t *testing.T) {
 	testStrings := []string{"hello_world", "trailing_underscore_", "w_h_a_t____"}
