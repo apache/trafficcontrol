@@ -18,7 +18,7 @@ package v5
 import (
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	tc "github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
