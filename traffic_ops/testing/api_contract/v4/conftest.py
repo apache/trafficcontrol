@@ -1118,3 +1118,32 @@ def job_data_post(to_session: TOSession, request_template_data: list[JSONData],
 	if msg is None:
 		logger.error("job returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="coordinate_post_data")
+def coordinate_data_post(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for coordinates endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get coordinate request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	coordinate = check_template_data(request_template_data["coordinates"], "coordinates")
+
+	# Return new post data and post response from coordinates POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = coordinate["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		coordinate["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing coordinate property '{e.args[0]}'") from e
+
+	logger.info("New coordinate data to hit POST method %s", coordinate)
+	# Hitting coordinates POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_coordinates(data=coordinate)
+	resp_obj = check_template_data(response, "coordinate")
+	return resp_obj
