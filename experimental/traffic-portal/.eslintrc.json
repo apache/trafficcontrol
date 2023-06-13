@@ -37,17 +37,131 @@
 				"createDefaultProgram": true
 			},
 			"extends": [
-				"eslint:recommended",
-				"plugin:@typescript-eslint/recommended",
-				"plugin:@angular-eslint/recommended",
 				"plugin:@angular-eslint/template/process-inline-templates"
 			],
 			"plugins": [
+				"@typescript-eslint",
+				"@angular-eslint",
 				"eslint-plugin-import",
 				"eslint-plugin-jsdoc",
 				"eslint-plugin-prefer-arrow"
 			],
 			"rules": {
+				"@typescript-eslint/interface-name-prefix": "off",
+				"@angular-eslint/component-class-suffix": "error",
+				"@angular-eslint/contextual-lifecycle": "error",
+				"@angular-eslint/directive-class-suffix": "error",
+				"@angular-eslint/no-conflicting-lifecycle": "error",
+				"@angular-eslint/no-host-metadata-property": "error",
+				"@angular-eslint/no-input-rename": "error",
+				"@angular-eslint/no-inputs-metadata-property": "error",
+				"@angular-eslint/no-output-native": "error",
+				"@angular-eslint/no-output-on-prefix": "error",
+				"@angular-eslint/no-output-rename": "error",
+				"@angular-eslint/no-outputs-metadata-property": "error",
+				"@angular-eslint/use-lifecycle-interface": "error",
+				"@angular-eslint/use-pipe-transform-interface": "error",
+				"@typescript-eslint/adjacent-overload-signatures": "error",
+				"@typescript-eslint/no-namespace": "error",
+				"@typescript-eslint/no-parameter-properties": "off",
+				"@typescript-eslint/prefer-namespace-keyword": "error",
+				"@typescript-eslint/unified-signatures": "error",
+				"complexity": "off",
+				"constructor-super": "error",
+				"eqeqeq": [
+					"error",
+					"smart"
+				],
+				"guard-for-in": "error",
+				"id-blacklist": [
+					"error",
+					"any",
+					"Number",
+					"number",
+					"String",
+					"string",
+					"Boolean",
+					"boolean",
+					"Undefined",
+					"undefined"
+				],
+				"id-match": "error",
+				"import/no-deprecated": "warn",
+				"jsdoc/newline-after-description": "error",
+				"max-classes-per-file": "off",
+				"no-caller": "error",
+				"no-cond-assign": "error",
+				"no-console": [
+					"error",
+					{
+						"allow": [
+							"log",
+							"warn",
+							"dir",
+							"timeLog",
+							"assert",
+							"clear",
+							"count",
+							"countReset",
+							"group",
+							"groupEnd",
+							"table",
+							"dirxml",
+							"error",
+							"groupCollapsed",
+							"Console",
+							"profile",
+							"profileEnd",
+							"timeStamp",
+							"context"
+						]
+					}
+				],
+				"no-debugger": "error",
+				"no-eval": "error",
+				"no-new-wrappers": "error",
+				"no-throw-literal": "error",
+				"no-undef-init": "error",
+				"no-underscore-dangle": "error",
+				"no-unsafe-finally": "error",
+				"no-unused-labels": "error",
+				"no-var": "error",
+				"object-shorthand": "error",
+				"one-var": [
+					"error",
+					"never"
+				],
+				"prefer-const": "error",
+				"radix": "error",
+				"use-isnan": "error",
+				"valid-typeof": "off",
+				"arrow-body-style": "error",
+				"comma-dangle": "off",
+				"curly": "error",
+				"eol-last": "error",
+				"jsdoc/check-alignment": "error",
+				"max-len": [
+					"error",
+					{
+						"code": 140
+					}
+				],
+				"new-parens": "error",
+				"no-trailing-spaces": "error",
+				"quote-props": [
+					"error",
+					"as-needed"
+				],
+				"space-before-function-paren": [
+					"error",
+					{
+						"anonymous": "never",
+						"asyncArrow": "always",
+						"named": "never"
+					}
+				],
+				"quotes": "off",
+				"@typescript-eslint/type-annotation-spacing": "error",
 				"@angular-eslint/component-selector": [
 					"error",
 					{

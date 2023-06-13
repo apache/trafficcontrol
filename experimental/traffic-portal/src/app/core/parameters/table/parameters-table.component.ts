@@ -143,7 +143,7 @@ export class ParametersTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseParameter>): Promise<void> {
 		const data = evt.data as ResponseParameter;
 		switch(evt.action) {
-			case "delete": {
+			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {message: `Are you sure you want to delete Parameter ${data.name} with ID ${data.id}?`, title: "Confirm Delete"}
 				});
@@ -153,7 +153,6 @@ export class ParametersTableComponent implements OnInit {
 					}
 				});
 				break;
-			}
 		}
 	}
 }

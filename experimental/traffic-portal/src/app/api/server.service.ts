@@ -113,8 +113,8 @@ export class ServerService extends APIService {
 	public async updateServer(serverOrID: ResponseServer | number, payload?: RequestServer): Promise<ResponseServer> {
 		let id;
 		let body;
-		if (typeof (serverOrID) === "number") {
-			if (!payload) {
+		if (typeof(serverOrID) === "number") {
+			if(!payload) {
 				throw new TypeError("invalid call signature - missing request paylaod");
 			}
 			body = payload;
@@ -175,11 +175,11 @@ export class ServerService extends APIService {
 		const path = "statuses";
 		if (idOrName !== undefined) {
 			let params;
-			if (typeof (idOrName) === "number") {
+			if (typeof(idOrName) === "number") {
 				params = {id: idOrName};
-			} else {
+			 } else {
 				params = {name: idOrName};
-			}
+			 }
 			const ret = await this.get<[ResponseStatus]>(path, undefined, params).toPromise();
 			if (ret.length !== 1) {
 				throw new Error(`Traffic Ops reported ${ret.length} Statuses by identifier '${idOrName}'`);
@@ -198,7 +198,7 @@ export class ServerService extends APIService {
 	 * docs.
 	 */
 	public async queueUpdates(server: number | ResponseServer): Promise<ServerQueueResponse> {
-		const id = typeof (server) === "number" ? server : server.id;
+		const id = typeof(server) === "number" ? server : server.id;
 		return this.post<ServerQueueResponse>(`servers/${id}/queue_update`, {action: "queue"}).toPromise();
 	}
 
@@ -211,7 +211,7 @@ export class ServerService extends APIService {
 	 * docs.
 	 */
 	public async clearUpdates(server: number | ResponseServer): Promise<ServerQueueResponse> {
-		const id = typeof (server) === "number" ? server : server.id;
+		const id = typeof(server) === "number" ? server : server.id;
 		return this.post<ServerQueueResponse>(`servers/${id}/queue_update`, {action: "dequeue"}).toPromise();
 	}
 
@@ -226,8 +226,8 @@ export class ServerService extends APIService {
 	 * non-ONLINE or REPORTED status.
 	 */
 	public async updateStatus(server: number | ResponseServer, newStatus: string | ResponseStatus, offlineReason?: string): Promise<void> {
-		const id = typeof (server) === "number" ? server : server.id;
-		const status = typeof (newStatus) === "string" ? newStatus : newStatus.name;
+		const id = typeof(server) === "number" ? server : server.id;
+		const status = typeof(newStatus) === "string" ? newStatus : newStatus.name;
 		return this.put(`servers/${id}/status`, {offlineReason, status}).toPromise();
 	}
 
@@ -268,7 +268,7 @@ export class ServerService extends APIService {
 	 * @returns The deleted server.
 	 */
 	public async deleteServer(server: number | ResponseServer): Promise<ResponseServer> {
-		const id = typeof (server) === "number" ? server : server.id;
+		const id =  typeof(server) === "number" ? server : server.id;
 		const path = `servers/${id}`;
 		return this.delete<ResponseServer>(path).toPromise();
 
@@ -316,7 +316,7 @@ export class ServerService extends APIService {
 	 * @param cap The Capability to be deleted, or just its name.
 	 */
 	public async deleteCapability(cap: string | ServerCapability): Promise<void> {
-		const name = typeof (cap) === "string" ? cap : cap.name;
+		const name = typeof(cap) === "string" ? cap : cap.name;
 		return this.delete("server_capabilities", undefined, {name}).toPromise();
 	}
 
@@ -372,7 +372,7 @@ export class ServerService extends APIService {
 	 * could be found; otherwise it'll be `undefined`).
 	 */
 	public static extractNetmask(addr: IPAddress | string): [string, string | undefined] {
-		let addrStr = typeof (addr) === "string" ? addr : addr.address;
+		let addrStr = typeof(addr) === "string" ? addr : addr.address;
 		let maskStr;
 		if (addrStr.includes("/")) {
 			const parts = addrStr.split("/");

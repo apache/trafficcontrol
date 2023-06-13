@@ -148,7 +148,7 @@ export class CapabilitiesComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseServerCapability>): Promise<void> {
 		const data = evt.data;
 		switch (evt.action) {
-			case "delete": {
+			case "delete":
 				if (Array.isArray(data)) {
 					throw new Error("cannot delete multiple Capabilities");
 				}
@@ -163,7 +163,6 @@ export class CapabilitiesComponent implements OnInit {
 					this.api.deleteCapability(data).then(async () => this.capabilities = this.api.getCapabilities());
 				}
 				break;
-			}
 			default:
 				console.warn("unrecognized context menu action:", evt.action);
 		}

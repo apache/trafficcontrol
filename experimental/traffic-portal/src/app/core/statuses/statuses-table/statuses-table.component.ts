@@ -134,7 +134,7 @@ export class StatusesTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseStatus>): Promise<void> {
 		const data = evt.data as ResponseStatus;
 		switch(evt.action) {
-			case "delete": {
+			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {message: `Are you sure you want to delete Status ${data.name} with ID ${data.id} ?`, title: "Confirm Delete"}
 				});
@@ -144,7 +144,6 @@ export class StatusesTableComponent implements OnInit {
 					}
 				});
 				break;
-			}
 		}
 	}
 }

@@ -116,7 +116,7 @@ export class DivisionsTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseDivision>): Promise<void> {
 		const data = evt.data as ResponseDivision;
 		switch(evt.action) {
-			case "delete": {
+			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {message: `Are you sure you want to delete division ${data.name} with id ${data.id}`, title: "Confirm Delete"}
 				});
@@ -126,7 +126,6 @@ export class DivisionsTableComponent implements OnInit {
 					}
 				});
 				break;
-			}
 		}
 	}
 }

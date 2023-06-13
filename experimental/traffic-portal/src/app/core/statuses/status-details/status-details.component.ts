@@ -20,10 +20,7 @@ import { ActivatedRoute } from "@angular/router";
 import { RequestStatus, ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
-import {
-	DecisionDialogComponent,
-	DecisionDialogData
-} from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { DecisionDialogComponent, DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**

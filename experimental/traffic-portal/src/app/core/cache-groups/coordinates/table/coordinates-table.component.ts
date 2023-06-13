@@ -119,7 +119,7 @@ export class CoordinatesTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseCoordinate>): Promise<void> {
 		const data = evt.data as ResponseCoordinate;
 		switch(evt.action) {
-			case "delete": {
+			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {message: `Are you sure you want to delete coordinate ${data.name} with id ${data.id}`, title: "Confirm Delete"}
 				});
@@ -129,7 +129,6 @@ export class CoordinatesTableComponent implements OnInit {
 					}
 				});
 				break;
-			}
 		}
 	}
 }

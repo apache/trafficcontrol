@@ -162,7 +162,7 @@ export class ProfileTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseProfile>): Promise<void> {
 		const data = evt.data as ResponseProfile;
 		switch (evt.action) {
-			case "delete": {
+			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {
 						message: `Are you sure to delete Profile ${data.name} with id ${data.id}?`,
@@ -175,7 +175,6 @@ export class ProfileTableComponent implements OnInit {
 					}
 				});
 				break;
-			}
 		}
 	}
 }

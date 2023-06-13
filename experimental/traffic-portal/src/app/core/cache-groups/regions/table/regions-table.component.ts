@@ -128,7 +128,7 @@ export class RegionsTableComponent implements OnInit {
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseRegion>): Promise<void> {
 		const data = evt.data as ResponseRegion;
 		switch(evt.action) {
-			case "delete": {
+			case "delete":
 				const ref = this.dialog.open(DecisionDialogComponent, {
 					data: {message: `Are you sure you want to delete region ${data.name} with id ${data.id}`, title: "Confirm Delete"}
 				});
@@ -138,7 +138,6 @@ export class RegionsTableComponent implements OnInit {
 					}
 				});
 				break;
-			}
 		}
 	}
 }

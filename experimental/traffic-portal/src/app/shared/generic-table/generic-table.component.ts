@@ -284,7 +284,7 @@ export function setUpQueryParamFilter<T>(params: ParamMap, columns: ColDef<T>[],
 					}
 				}
 				break;
-			case "date": {
+			case "date":
 				const date = new Date(values[0]);
 				if (Number.isNaN(date.getTime())) {
 					continue;
@@ -298,7 +298,6 @@ export function setUpQueryParamFilter<T>(params: ParamMap, columns: ColDef<T>[],
 					type: "equals"
 				};
 				break;
-			}
 		}
 		filter.setModel(filterModel);
 	}

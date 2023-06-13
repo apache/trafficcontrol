@@ -152,7 +152,7 @@ export class ChangeLogsComponent implements OnInit {
 	 */
 	public async handleContextMenu(action: ContextMenuActionEvent<AugmentedChangeLog>): Promise<void> {
 		switch (action.action) {
-			case "viewChangeLog": {
+			case "viewChangeLog":
 				let changeLog: AugmentedChangeLog;
 				if (Array.isArray(action.data)) {
 					changeLog = action.data[0];
@@ -163,7 +163,6 @@ export class ChangeLogsComponent implements OnInit {
 					data: {message: changeLog.message, title: `Change Log for ${changeLog.user}`}
 				});
 				break;
-			}
 		}
 	}
 
@@ -174,7 +173,7 @@ export class ChangeLogsComponent implements OnInit {
 	 */
 	public async handleTitleButton(action: string): Promise<void> {
 		switch(action){
-			case "lastDays": {
+			case "lastDays":
 				const ref = this.dialog.open(LastDaysComponent, {
 					data: this.lastDays
 				});
@@ -191,7 +190,6 @@ export class ChangeLogsComponent implements OnInit {
 					}
 				});
 				break;
-			}
 		}
 	}
 
