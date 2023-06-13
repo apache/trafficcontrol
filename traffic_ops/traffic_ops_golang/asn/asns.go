@@ -20,7 +20,11 @@ package asn
  */
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strconv"
 	"time"
@@ -177,6 +181,7 @@ JOIN
 `
 }
 
+// TODO: get cachegroup name, currently returning empty
 func insertQuery() string {
 	return `
 INSERT INTO
@@ -203,4 +208,223 @@ RETURNING
 
 func deleteQuery() string {
 	return `DELETE FROM asn WHERE id=:id`
+}
+
+func Read(w http.ResponseWriter, r *http.Request) {
+	var asn tc.ASNV5
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"asn": {Column: "a.asn", Checker: api.IsInt},
+		"id":  {Column: "a.id", Checker: api.IsInt},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "asn"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	query := selectQuery() + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("asn read: error getting asn(s): %w", err))
+		return
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	asnList := []tc.ASNV5{}
+	for rows.Next() {
+		if err = rows.Scan(&asn.ID, &asn.ASN, &asn.LastUpdated, &asn.CachegroupID, &asn.Cachegroup); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting asn(s): %w", err))
+			return
+		}
+		asnList = append(asnList, asn)
+	}
+
+	api.WriteResp(w, r, asnList)
+	return
+}
+
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	asn, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if asn already exists
+	var count int
+	err := tx.QueryRow("SELECT count(*) from asn where asn=$1", asn.ASN).Scan(&count)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if asn '%d' exists", err, asn.ASN))
+		return
+	}
+	if count == 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn:'%d' already exists", asn.ASN), nil)
+		return
+	}
+
+	// create asn
+	query := `INSERT INTO asn (asn, cachegroup) VALUES ($1, $2) RETURNING id, last_updated`
+	err = tx.QueryRow(query, asn.ASN, asn.CachegroupID).Scan(&asn.ID, &asn.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating asn:%d", err, asn.ASN), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+
+	asn.Cachegroup, err = getCGName(tx, asn.CachegroupID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/asns?id=%d", inf.Version.Major, inf.Version.Minor, asn.ID))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, asn)
+	return
+}
+
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	asn, readValErr := readAndValidateJsonStruct(r)
+	fmt.Println(asn)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	requestedAsnId := inf.Params["id"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedAsnId, "asn")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	//update asn and cachegroup of an asn
+	query := `UPDATE asn SET
+		asn = $1,
+		cachegroup = $2
+	WHERE id = $3
+	RETURNING last_updated`
+
+	err := tx.QueryRow(query, asn.ASN, asn.CachegroupID, requestedAsnId).Scan(&asn.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn: %d not found", asn.ASN), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	asn.ID, _ = strconv.Atoi(requestedAsnId)
+	asn.Cachegroup, err = getCGName(tx, asn.CachegroupID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, asn)
+	return
+}
+
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.Params["id"]
+	exists, err := dbhelpers.GetASNInfo(tx, id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		if id != "" {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no asn exists by id: %s", id), nil)
+			return
+		} else {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no asn exists for empty id"), nil)
+			return
+		}
+	}
+
+	res, err := tx.Exec("DELETE FROM asn WHERE id=$1", id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete asn: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for asn"), nil)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was deleted.")
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+func readAndValidateJsonStruct(r *http.Request) (tc.ASNV5, error) {
+	var asn tc.ASNV5
+	if err := json.NewDecoder(r.Body).Decode(&asn); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into ServerCapabilityV41 struct %w", err)
+		return asn, userErr
+	}
+
+	// validate JSON body
+	errs := tovalidate.ToErrors(validation.Errors{
+		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
+		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return asn, userErr
+	}
+	return asn, nil
+}
+
+// get cachegroup name
+func getCGName(tx *sql.Tx, id int) (name string, err error) {
+	err = tx.QueryRow("SELECT name from cachegroup where id=$1", id).Scan(&name)
+	if err != nil {
+		return "", fmt.Errorf("error: %w reading cachegroup table", err)
+	}
+	return name, nil
 }

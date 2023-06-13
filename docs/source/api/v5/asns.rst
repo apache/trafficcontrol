@@ -98,7 +98,7 @@ Response Structure
 			"cachegroup": "TRAFFIC_ANALYTICS",
 			"cachegroupId": 1,
 			"id": 1,
-			"lastUpdated": "2023-05-25T15:59:33-06:00"
+			"lastUpdated": "2023-05-25T15:59:33.7096-06:00"
 		}
 	]}
 
@@ -173,7 +173,7 @@ Response Structure
 		"cachegroup": null,
 		"cachegroupId": 1,
 		"id": 1,
-		"lastUpdated": "2023-05-25T15:59:33-06:00"
+		"lastUpdated": "2023-05-25T15:59:33.7096-06:00"
 	}}
 
 ``PUT``
@@ -244,12 +244,12 @@ Response Structure
 			"cachegroup": "TRAFFIC_OPS",
 			"cachegroupId": 2,
 			"id": 1,
-			"lastUpdated": 2023-05-25T15:59:33-06:00
+			"lastUpdated": 2023-05-25T15:59:33.7096-06:00
 		}
 	}
 
 ``DELETE``
-----------
+==========
 Deletes an existing :abbr:`ASN (Autonomous System Number)`.
 
 :Auth. Required: Yes

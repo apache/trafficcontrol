@@ -96,7 +96,7 @@ Response Structure
 		"cachegroup": null,
 		"cachegroupId": 1,
 		"id": 1,
-		"lastUpdated": "2023-05-25T15:59:33-06:00"
+		"lastUpdated": "2023-05-25T15:59:33.7096-06:00"
 	}}
 
 ``DELETE``
