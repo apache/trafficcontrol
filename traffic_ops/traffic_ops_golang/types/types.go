@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strconv"
 	"time"
@@ -216,7 +217,7 @@ WHERE id=:id`
 }
 
 // Get [Version :V5]
-func Get(w http.ResponseWriter, r *http.Request) {
+func GetV5(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -241,7 +242,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	tx := inf.Tx
 
-	typeList, maxTime, code, usrErr, syErr = GetTypes(tx, inf.Params, useIMS, r.Header)
+	typeList, maxTime, code, usrErr, syErr = GetTypesV5(tx, inf.Params, useIMS, r.Header)
 	if code == http.StatusNotModified {
 		w.WriteHeader(code)
 		api.WriteResp(w, r, []tc.TypeV5{})
@@ -266,7 +267,8 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetTypes [Version : V5] returns types.
-func GetTypes(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.TypeV5, time.Time, int, error, error) {
+func GetTypesV5(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.TypeV5, time.Time, int, error, error) {
+	var runSecond bool
 	var maxTime time.Time
 	typeList := []tc.TypeV5{}
 
@@ -284,6 +286,17 @@ func GetTypes(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.He
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+	}
+
+	if useIMS {
+		runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return typeList, maxTime, http.StatusNotModified, nil, nil
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 
 	query := selectQuery + where + orderBy + pagination
@@ -305,8 +318,62 @@ func GetTypes(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.He
 	return typeList, maxTime, http.StatusOK, nil, nil
 }
 
+// TryIfModifiedSinceQuery [Version : V5] function receives transactions and header from GetServiceCategory function and returns bool value if status is not modified.
+func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
+	var max time.Time
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
+	runSecond := true
+	dontRunSecond := false
+
+	if header == nil {
+		return runSecond, max
+	}
+
+	imsDateHeader = header[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
+		return runSecond, max
+	}
+
+	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
+		return runSecond, max
+	}
+
+	imsQuery := `SELECT max(last_updated) as t from type typ`
+	query := imsQuery + where
+	rows, err := tx.NamedQuery(query, queryValues)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return dontRunSecond, max
+	}
+
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := time.Time{}
+		if err = rows.Scan(&v); err != nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+			return runSecond, max
+		}
+
+		max = v
+		// The request IMS time is later than the max of (lastUpdated, deleted_time)
+		if imsDate.After(v) {
+			return dontRunSecond, max
+		}
+	}
+	return runSecond, max
+}
+
 // CreateType [Version : V5] function creates the type with the passed data.
-func CreateType(w http.ResponseWriter, r *http.Request) {
+func CreateTypeV5(w http.ResponseWriter, r *http.Request) {
 	typ := tc.TypeV5{}
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -360,7 +427,7 @@ func CreateType(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateType [Version : V5] function updates name & description of the type passed.
-func UpdateType(w http.ResponseWriter, r *http.Request) {
+func UpdateTypeV5(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -407,7 +474,7 @@ func UpdateType(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteType [Version : V5] function deletes the type passed.
-func DeleteType(w http.ResponseWriter, r *http.Request) {
+func DeleteTypeV5(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
