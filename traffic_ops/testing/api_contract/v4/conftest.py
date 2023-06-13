@@ -554,8 +554,8 @@ def cache_group_data_post(to_session: TOSession, request_template_data: list[JSO
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def parameter_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="parameter_post_data")
+def parameter_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for parameters endpoint.
@@ -592,8 +592,8 @@ def parameter_post_data(to_session: TOSession, request_template_data: list[JSOND
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="role_post_data")
+def role_data_post(to_session: TOSession, request_template_data: list[JSONData]
 			) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for roles endpoint.
@@ -707,8 +707,8 @@ def tenant_data_post(to_session: TOSession, request_template_data: list[JSONData
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def server_capabilities_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="server_capabilities_post_data")
+def server_capabilities_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for server_capabilities endpoint.
@@ -869,8 +869,8 @@ def phys_locations_data_post(to_session: TOSession, request_template_data: list[
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def server_post_data(to_session: TOSession, request_template_data: list[JSONData],
+@pytest.fixture(name="server_post_data")
+def server_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		profile_post_data: dict[str, object], cache_group_post_data: dict[str, object],
 		status_post_data: dict[str, object], phys_locations_post_data: dict[str, object],
 		pytestconfig: pytest.Config)-> dict[str, object]:
@@ -977,8 +977,8 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def origin_post_data(to_session: TOSession, request_template_data: list[JSONData],
+@pytest.fixture(name="origin_post_data")
+def origin_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		     delivery_services_post_data: dict[str, object], tenant_post_data: dict[str, object]
 		      ) -> dict[str, object]:
 	"""
@@ -1089,8 +1089,8 @@ def asn_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def job_post_data(to_session: TOSession, request_template_data: list[JSONData],
+@pytest.fixture(name="job_post_data")
+def job_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		     delivery_services_post_data: dict[str, object],
 		      ) -> dict[str, object]:
 	"""
