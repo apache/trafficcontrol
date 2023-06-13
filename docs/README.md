@@ -17,4 +17,18 @@
     under the License.
 -->
 
-# SPHINX Documentation Local Build Steps
+# SPHINX Documentation Local Build Guide
+
+* Build sphinx_builder Docker image from **trafficcontrol** base directory
+
+    ```
+    docker build -t sphinx_image docs/.
+    ```
+
+* Run the docker image with necessary arguments as below.
+
+    ```
+    docker run -v $(pwd):/sphinx_builder sphinx_image html
+    
+    docker run -v $(pwd):/sphinx_builder sphinx_image clean
+    ```
