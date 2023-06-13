@@ -14,7 +14,7 @@ limitations under the License.
 
 <h2 mat-dialog-title>{{data.title}}</h2>
 <mat-dialog-content id="import-content" [ngClass]="{'active':dragOn}">
-	<input type='file' id="imageUpload" accept="application/json,text/plain" #fileInput (change)="uploadFile($event)"/>
+	<input type='file' id="imageUpload" aria-label="Select a file" accept="application/json,text/plain" #fileInput (change)="uploadFile($event)"/>
 	<button type="button" class="dropzone" (click)="fileInput.click()">
 		<div class="text-wrapper">
 			<div class="label">
@@ -34,5 +34,5 @@ limitations under the License.
 </mat-dialog-content>
 <mat-dialog-actions align="end">
 	<button mat-raised-button type="button" mat-dialog-close color="warn">Cancel</button>
-	<button mat-raised-button type="button" [mat-dialog-close]="true" (click)="submit()" [disabled]="!fileData">Submit</button>
+	<button mat-raised-button type="button" (click)="submit()" [disabled]="!fileData">Submit</button>
 </mat-dialog-actions>

@@ -138,7 +138,7 @@ describe("ProfileService", () => {
 
 	it("sends request for Export object by Profile ID", async () => {
 		const profileId = 1;
-		const id = typeof(profileId) === "number" ? profileId : profile.id;
+		const id = typeof(profileId) === "number" ? profile.id : profileId;
 		const response = service.exportProfile(id);
 		const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/profiles/${id}/export`);
 		expect(req.request.method).toBe("GET");
