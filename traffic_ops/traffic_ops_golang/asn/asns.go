@@ -24,16 +24,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -210,8 +211,10 @@ func deleteQuery() string {
 	return `DELETE FROM asn WHERE id=:id`
 }
 
+// Read gets list of ASNs for APIv5
 func Read(w http.ResponseWriter, r *http.Request) {
-	var asn tc.ASNV5
+	var runSecond bool
+	var maxTime time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx
 	if userErr != nil || sysErr != nil {
@@ -231,22 +234,33 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
-		return
+	}
+
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
 	}
 
 	query := selectQuery() + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("asn read: error getting asn(s): %w", err))
-		return
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
+	asn := tc.ASNV5{}
 	asnList := []tc.ASNV5{}
 	for rows.Next() {
 		if err = rows.Scan(&asn.ID, &asn.ASN, &asn.LastUpdated, &asn.CachegroupID, &asn.Cachegroup); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting asn(s): %w", err))
-			return
 		}
 		asnList = append(asnList, asn)
 	}
@@ -255,6 +269,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Create an ASN for APIv5
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -306,6 +321,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Update an ASN for APIv5
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -357,6 +373,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Delete an ASN for APIv5
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -401,6 +418,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// readAndValidateJsonStruct reads json body and validates json fields
 func readAndValidateJsonStruct(r *http.Request) (tc.ASNV5, error) {
 	var asn tc.ASNV5
 	if err := json.NewDecoder(r.Body).Decode(&asn); err != nil {
@@ -420,7 +438,16 @@ func readAndValidateJsonStruct(r *http.Request) (tc.ASNV5, error) {
 	return asn, nil
 }
 
-// get cachegroup name
+// selectMaxLastUpdatedQuery used for TryIfModifiedSinceQuery()
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(a.last_updated) as t from asn a
+		JOIN cachegroup c ON a.cachegroup = c.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='asn') as res`
+}
+
+// getCGName gets cachegroup name for a cachegroup_id
 func getCGName(tx *sql.Tx, id int) (name string, err error) {
 	err = tx.QueryRow("SELECT name from cachegroup where id=$1", id).Scan(&name)
 	if err != nil {
