@@ -81,10 +81,12 @@ func (s *Signature) UnmarshalJSON(data []byte) error {
 		}
 
 		prt := NewHeaders()
+		//nolint:forcetypeassert
 		prt.(*stdHeaders).SetDecodeCtx(s.DecodeCtx())
 		if err := json.Unmarshal(src, prt); err != nil {
 			return errors.Wrap(err, `failed to unmarshal protected headers`)
 		}
+		//nolint:forcetypeassert
 		prt.(*stdHeaders).SetDecodeCtx(nil)
 		s.protected = prt
 	}
@@ -135,12 +137,20 @@ func (s *Signature) Sign(payload []byte, signer Signer, key interface{}) ([]byte
 
 	buf.WriteString(base64.EncodeToString(hdrbuf))
 	buf.WriteByte('.')
-	if getB64Value(hdrs) {
-		buf.WriteString(base64.EncodeToString(payload))
+
+	var plen int
+	b64 := getB64Value(hdrs)
+	if b64 {
+		encoded := base64.EncodeToString(payload)
+		plen = len(encoded)
+		buf.WriteString(encoded)
 	} else {
-		if bytes.ContainsRune(payload, '.') {
-			return nil, nil, errors.New(`payload must not contain a "." when b64 = false`)
+		if !s.detached {
+			if bytes.Contains(payload, []byte{'.'}) {
+				return nil, nil, errors.New(`payload must not contain a "."`)
+			}
 		}
+		plen = len(payload)
 		buf.Write(payload)
 	}
 
@@ -149,6 +159,11 @@ func (s *Signature) Sign(payload []byte, signer Signer, key interface{}) ([]byte
 		return nil, nil, errors.Wrap(err, `failed to sign payload`)
 	}
 	s.signature = signature
+
+	// Detached payload, this should be removed from the end result
+	if s.detached {
+		buf.Truncate(buf.Len() - plen)
+	}
 
 	buf.WriteByte('.')
 	buf.WriteString(base64.EncodeToString(signature))
@@ -292,10 +307,12 @@ func (m *Message) UnmarshalJSON(buf []byte) error {
 				return errors.Wrap(err, `failed to base64 decode flattened protected headers`)
 			}
 			prt := NewHeaders()
+			//nolint:forcetypeassert
 			prt.(*stdHeaders).SetDecodeCtx(m.DecodeCtx())
 			if err := json.Unmarshal(decoded, prt); err != nil {
 				return errors.Wrap(err, `failed to unmarshal flattened protected headers`)
 			}
+			//nolint:forcetypeassert
 			prt.(*stdHeaders).SetDecodeCtx(nil)
 			sig.protected = prt
 		}

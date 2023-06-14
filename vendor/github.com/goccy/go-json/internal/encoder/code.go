@@ -2,6 +2,7 @@ package encoder
 
 import (
 	"fmt"
+	"reflect"
 	"unsafe"
 
 	"github.com/goccy/go-json/internal/runtime"
@@ -10,6 +11,7 @@ import (
 type Code interface {
 	Kind() CodeKind
 	ToOpcode(*compileContext) Opcodes
+	Filter(*FieldQuery) Code
 }
 
 type AnonymousCode interface {
@@ -82,6 +84,10 @@ func (c *IntCode) ToOpcode(ctx *compileContext) Opcodes {
 	return Opcodes{code}
 }
 
+func (c *IntCode) Filter(_ *FieldQuery) Code {
+	return c
+}
+
 type UintCode struct {
 	typ      *runtime.Type
 	bitSize  uint8
@@ -106,6 +112,10 @@ func (c *UintCode) ToOpcode(ctx *compileContext) Opcodes {
 	code.NumBitSize = c.bitSize
 	ctx.incIndex()
 	return Opcodes{code}
+}
+
+func (c *UintCode) Filter(_ *FieldQuery) Code {
+	return c
 }
 
 type FloatCode struct {
@@ -140,6 +150,10 @@ func (c *FloatCode) ToOpcode(ctx *compileContext) Opcodes {
 	return Opcodes{code}
 }
 
+func (c *FloatCode) Filter(_ *FieldQuery) Code {
+	return c
+}
+
 type StringCode struct {
 	typ   *runtime.Type
 	isPtr bool
@@ -169,6 +183,10 @@ func (c *StringCode) ToOpcode(ctx *compileContext) Opcodes {
 	return Opcodes{code}
 }
 
+func (c *StringCode) Filter(_ *FieldQuery) Code {
+	return c
+}
+
 type BoolCode struct {
 	typ   *runtime.Type
 	isPtr bool
@@ -190,6 +208,10 @@ func (c *BoolCode) ToOpcode(ctx *compileContext) Opcodes {
 	return Opcodes{code}
 }
 
+func (c *BoolCode) Filter(_ *FieldQuery) Code {
+	return c
+}
+
 type BytesCode struct {
 	typ   *runtime.Type
 	isPtr bool
@@ -209,6 +231,10 @@ func (c *BytesCode) ToOpcode(ctx *compileContext) Opcodes {
 	}
 	ctx.incIndex()
 	return Opcodes{code}
+}
+
+func (c *BytesCode) Filter(_ *FieldQuery) Code {
+	return c
 }
 
 type SliceCode struct {
@@ -243,6 +269,10 @@ func (c *SliceCode) ToOpcode(ctx *compileContext) Opcodes {
 	elemCode.Next = codes.First()
 	elemCode.End = end
 	return Opcodes{header}.Add(codes...).Add(elemCode).Add(end)
+}
+
+func (c *SliceCode) Filter(_ *FieldQuery) Code {
+	return c
 }
 
 type ArrayCode struct {
@@ -284,6 +314,10 @@ func (c *ArrayCode) ToOpcode(ctx *compileContext) Opcodes {
 	elemCode.End = end
 
 	return Opcodes{header}.Add(codes...).Add(elemCode).Add(end)
+}
+
+func (c *ArrayCode) Filter(_ *FieldQuery) Code {
+	return c
 }
 
 type MapCode struct {
@@ -332,6 +366,10 @@ func (c *MapCode) ToOpcode(ctx *compileContext) Opcodes {
 	return Opcodes{header}.Add(keyCodes...).Add(value).Add(valueCodes...).Add(key).Add(end)
 }
 
+func (c *MapCode) Filter(_ *FieldQuery) Code {
+	return c
+}
+
 type StructCode struct {
 	typ                       *runtime.Type
 	fields                    []*StructFieldCode
@@ -346,7 +384,7 @@ func (c *StructCode) Kind() CodeKind {
 }
 
 func (c *StructCode) lastFieldCode(field *StructFieldCode, firstField *Opcode) *Opcode {
-	if field.isAnonymous {
+	if isEmbeddedStruct(field) {
 		return c.lastAnonymousFieldCode(firstField)
 	}
 	lastField := firstField
@@ -359,7 +397,10 @@ func (c *StructCode) lastFieldCode(field *StructFieldCode, firstField *Opcode) *
 func (c *StructCode) lastAnonymousFieldCode(firstField *Opcode) *Opcode {
 	// firstField is special StructHead operation for anonymous structure.
 	// So, StructHead's next operation is truly struct head operation.
-	lastField := firstField.Next
+	for firstField.Op == OpStructHead || firstField.Op == OpStructField {
+		firstField = firstField.Next
+	}
+	lastField := firstField
 	for lastField.NextField != nil {
 		lastField = lastField.NextField
 	}
@@ -401,10 +442,6 @@ func (c *StructCode) ToOpcode(ctx *compileContext) Opcodes {
 			endField := fieldCodes.Last()
 			if len(codes) > 0 {
 				codes.First().End = endField
-			} else if field.isAnonymous {
-				firstField.End = endField
-				lastField := c.lastAnonymousFieldCode(firstField)
-				lastField.NextField = endField
 			} else {
 				firstField.End = endField
 			}
@@ -520,6 +557,45 @@ func (c *StructCode) enableIndirect() {
 	structCode.enableIndirect()
 }
 
+func (c *StructCode) Filter(query *FieldQuery) Code {
+	fieldMap := map[string]*FieldQuery{}
+	for _, field := range query.Fields {
+		fieldMap[field.Name] = field
+	}
+	fields := make([]*StructFieldCode, 0, len(c.fields))
+	for _, field := range c.fields {
+		query, exists := fieldMap[field.key]
+		if !exists {
+			continue
+		}
+		fieldCode := &StructFieldCode{
+			typ:                field.typ,
+			key:                field.key,
+			tag:                field.tag,
+			value:              field.value,
+			offset:             field.offset,
+			isAnonymous:        field.isAnonymous,
+			isTaggedKey:        field.isTaggedKey,
+			isNilableType:      field.isNilableType,
+			isNilCheck:         field.isNilCheck,
+			isAddrForMarshaler: field.isAddrForMarshaler,
+			isNextOpPtrType:    field.isNextOpPtrType,
+		}
+		if len(query.Fields) > 0 {
+			fieldCode.value = fieldCode.value.Filter(query)
+		}
+		fields = append(fields, fieldCode)
+	}
+	return &StructCode{
+		typ:                       c.typ,
+		fields:                    fields,
+		isPtr:                     c.isPtr,
+		disableIndirectConversion: c.disableIndirectConversion,
+		isIndirect:                c.isIndirect,
+		isRecursive:               c.isRecursive,
+	}
+}
+
 type StructFieldCode struct {
 	typ                *runtime.Type
 	key                string
@@ -532,6 +608,7 @@ type StructFieldCode struct {
 	isNilCheck         bool
 	isAddrForMarshaler bool
 	isNextOpPtrType    bool
+	isMarshalerContext bool
 }
 
 func (c *StructFieldCode) getStruct() *StructCode {
@@ -574,8 +651,12 @@ func (c *StructFieldCode) headerOpcodes(ctx *compileContext, field *Opcode, valu
 	value := valueCodes.First()
 	op := optimizeStructHeader(value, c.tag)
 	field.Op = op
+	if value.Flags&MarshalerContextFlags != 0 {
+		field.Flags |= MarshalerContextFlags
+	}
 	field.NumBitSize = value.NumBitSize
 	field.PtrNum = value.PtrNum
+	field.FieldQuery = value.FieldQuery
 	fieldCodes := Opcodes{field}
 	if op.IsMultipleOpHead() {
 		field.Next = value
@@ -590,8 +671,12 @@ func (c *StructFieldCode) fieldOpcodes(ctx *compileContext, field *Opcode, value
 	value := valueCodes.First()
 	op := optimizeStructField(value, c.tag)
 	field.Op = op
+	if value.Flags&MarshalerContextFlags != 0 {
+		field.Flags |= MarshalerContextFlags
+	}
 	field.NumBitSize = value.NumBitSize
 	field.PtrNum = value.PtrNum
+	field.FieldQuery = value.FieldQuery
 
 	fieldCodes := Opcodes{field}
 	if op.IsMultipleOpField() {
@@ -611,7 +696,15 @@ func (c *StructFieldCode) addStructEndCode(ctx *compileContext, codes Opcodes) O
 		Indent:     ctx.indent,
 	}
 	codes.Last().Next = end
-	codes.First().NextField = end
+	code := codes.First()
+	for code.Op == OpStructField || code.Op == OpStructHead {
+		code = code.Next
+	}
+	for code.NextField != nil {
+		code = code.NextField
+	}
+	code.NextField = end
+
 	codes = codes.Add(end)
 	ctx.incOpcodeIndex()
 	return codes
@@ -644,6 +737,9 @@ func (c *StructFieldCode) flags() OpFlags {
 	}
 	if c.isAnonymous {
 		flags |= AnonymousKeyFlags
+	}
+	if c.isMarshalerContext {
+		flags |= MarshalerContextFlags
 	}
 	return flags
 }
@@ -725,8 +821,9 @@ func isEnableStructEndOptimization(value Code) bool {
 }
 
 type InterfaceCode struct {
-	typ   *runtime.Type
-	isPtr bool
+	typ        *runtime.Type
+	fieldQuery *FieldQuery
+	isPtr      bool
 }
 
 func (c *InterfaceCode) Kind() CodeKind {
@@ -741,6 +838,7 @@ func (c *InterfaceCode) ToOpcode(ctx *compileContext) Opcodes {
 	default:
 		code = newOpCode(ctx, c.typ, OpInterface)
 	}
+	code.FieldQuery = c.fieldQuery
 	if c.typ.NumMethod() > 0 {
 		code.Flags |= NonEmptyInterfaceFlags
 	}
@@ -748,8 +846,17 @@ func (c *InterfaceCode) ToOpcode(ctx *compileContext) Opcodes {
 	return Opcodes{code}
 }
 
+func (c *InterfaceCode) Filter(query *FieldQuery) Code {
+	return &InterfaceCode{
+		typ:        c.typ,
+		fieldQuery: query,
+		isPtr:      c.isPtr,
+	}
+}
+
 type MarshalJSONCode struct {
 	typ                *runtime.Type
+	fieldQuery         *FieldQuery
 	isAddrForMarshaler bool
 	isNilableType      bool
 	isMarshalerContext bool
@@ -761,6 +868,7 @@ func (c *MarshalJSONCode) Kind() CodeKind {
 
 func (c *MarshalJSONCode) ToOpcode(ctx *compileContext) Opcodes {
 	code := newOpCode(ctx, c.typ, OpMarshalJSON)
+	code.FieldQuery = c.fieldQuery
 	if c.isAddrForMarshaler {
 		code.Flags |= AddrForMarshalerFlags
 	}
@@ -776,8 +884,19 @@ func (c *MarshalJSONCode) ToOpcode(ctx *compileContext) Opcodes {
 	return Opcodes{code}
 }
 
+func (c *MarshalJSONCode) Filter(query *FieldQuery) Code {
+	return &MarshalJSONCode{
+		typ:                c.typ,
+		fieldQuery:         query,
+		isAddrForMarshaler: c.isAddrForMarshaler,
+		isNilableType:      c.isNilableType,
+		isMarshalerContext: c.isMarshalerContext,
+	}
+}
+
 type MarshalTextCode struct {
 	typ                *runtime.Type
+	fieldQuery         *FieldQuery
 	isAddrForMarshaler bool
 	isNilableType      bool
 }
@@ -788,6 +907,7 @@ func (c *MarshalTextCode) Kind() CodeKind {
 
 func (c *MarshalTextCode) ToOpcode(ctx *compileContext) Opcodes {
 	code := newOpCode(ctx, c.typ, OpMarshalText)
+	code.FieldQuery = c.fieldQuery
 	if c.isAddrForMarshaler {
 		code.Flags |= AddrForMarshalerFlags
 	}
@@ -798,6 +918,15 @@ func (c *MarshalTextCode) ToOpcode(ctx *compileContext) Opcodes {
 	}
 	ctx.incIndex()
 	return Opcodes{code}
+}
+
+func (c *MarshalTextCode) Filter(query *FieldQuery) Code {
+	return &MarshalTextCode{
+		typ:                c.typ,
+		fieldQuery:         query,
+		isAddrForMarshaler: c.isAddrForMarshaler,
+		isNilableType:      c.isNilableType,
+	}
 }
 
 type PtrCode struct {
@@ -828,6 +957,14 @@ func (c *PtrCode) ToAnonymousOpcode(ctx *compileContext) Opcodes {
 	codes.First().Op = convertPtrOp(codes.First())
 	codes.First().PtrNum = c.ptrNum
 	return codes
+}
+
+func (c *PtrCode) Filter(query *FieldQuery) Code {
+	return &PtrCode{
+		typ:    c.typ,
+		value:  c.value.Filter(query),
+		ptrNum: c.ptrNum,
+	}
 }
 
 func convertPtrOp(code *Opcode) OpType {
@@ -872,4 +1009,15 @@ func convertPtrOp(code *Opcode) OpType {
 		return OpRecursivePtr
 	}
 	return code.Op
+}
+
+func isEmbeddedStruct(field *StructFieldCode) bool {
+	if !field.isAnonymous {
+		return false
+	}
+	t := field.typ
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t.Kind() == reflect.Struct
 }

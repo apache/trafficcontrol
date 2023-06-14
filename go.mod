@@ -40,7 +40,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
-	github.com/lestrrat-go/jwx v1.2.14
+	github.com/lestrrat-go/jwx v1.2.26
 	github.com/lib/pq v1.10.4
 	github.com/miekg/dns v1.1.43
 	github.com/onsi/ginkgo v1.16.5
@@ -48,9 +48,9 @@ require (
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
 	go.etcd.io/bbolt v1.3.6
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
-	golang.org/x/net v0.0.0-20211013171255-e13a2654a71e
-	golang.org/x/sys v0.0.0-20211013075003-97ac67df715c
+	golang.org/x/crypto v0.9.0
+	golang.org/x/net v0.10.0
+	golang.org/x/sys v0.8.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -59,17 +59,17 @@ require (
 	github.com/Azure/go-ntlmssp v0.0.0-20200615164410-66371956d46c // indirect
 	github.com/basho/backoff v0.0.0-20150307023525-2ff7c4694083 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.0-20210816181553-5444fa50b93d // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/go-asn1-ber/asn1-ber v1.5.1 // indirect
-	github.com/goccy/go-json v0.8.1 // indirect
+	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
-	github.com/lestrrat-go/blackmagic v1.0.0 // indirect
-	github.com/lestrrat-go/httpcc v1.0.0 // indirect
-	github.com/lestrrat-go/iter v1.0.1 // indirect
-	github.com/lestrrat-go/option v1.0.0 // indirect
+	github.com/lestrrat-go/blackmagic v1.0.1 // indirect
+	github.com/lestrrat-go/httpcc v1.0.1 // indirect
+	github.com/lestrrat-go/iter v1.0.2 // indirect
+	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxadm/tail v1.4.8
@@ -94,7 +94,7 @@ require (
 	github.com/jcmturner/gofork v1.0.0 // indirect
 	github.com/pierrec/lz4 v2.5.2+incompatible // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
-	golang.org/x/text v0.3.7 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
