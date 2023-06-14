@@ -23,6 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -231,14 +232,14 @@ func (ss *StatsSummaryV5) UnmarshalJSON(data []byte) error {
 	if resp.StatDate != nil {
 		statDate, err := parseTimeV5(*resp.StatDate)
 		if err != nil {
-			return errors.New("invalid timestamp given for statDate")
+			return fmt.Errorf("invalid timestamp given for statDate: %v", err)
 		}
 		ss.StatDate = &statDate
 	}
 
 	ss.SummaryTime, err = parseTimeV5(resp.SummaryTime)
 	if err != nil {
-		return errors.New("invalid timestamp given for summaryTime")
+		return fmt.Errorf("invalid timestamp given for summaryTime: %v", err)
 	}
 	return nil
 }
