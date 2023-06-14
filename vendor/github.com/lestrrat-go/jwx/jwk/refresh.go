@@ -29,6 +29,7 @@ type AutoRefresh struct {
 	errSink      chan AutoRefreshError
 	cache        map[string]Set
 	configureCh  chan struct{}
+	removeCh     chan removeReq
 	fetching     map[string]chan struct{}
 	muErrSink    sync.Mutex
 	muCache      sync.RWMutex
@@ -86,7 +87,8 @@ type target struct {
 	lastRefresh time.Time
 	nextRefresh time.Time
 
-	wl Whitelist
+	wl           Whitelist
+	parseOptions []ParseOption
 }
 
 type resetTimerReq struct {
@@ -114,6 +116,7 @@ func NewAutoRefresh(ctx context.Context) *AutoRefresh {
 	af := &AutoRefresh{
 		cache:        make(map[string]Set),
 		configureCh:  make(chan struct{}),
+		removeCh:     make(chan removeReq),
 		fetching:     make(map[string]chan struct{}),
 		registry:     make(map[string]*target),
 		resetTimerCh: make(chan *resetTimerReq),
@@ -130,6 +133,19 @@ func (af *AutoRefresh) getCached(url string) (Set, bool) {
 		return ks, true
 	}
 	return nil, false
+}
+
+type removeReq struct {
+	replyCh chan error
+	url     string
+}
+
+// Remove removes `url` from the list of urls being watched by jwk.AutoRefresh.
+// If the url is not already registered, returns an error.
+func (af *AutoRefresh) Remove(url string) error {
+	ch := make(chan error)
+	af.removeCh <- removeReq{replyCh: ch, url: url}
+	return <-ch
 }
 
 // Configure registers the url to be controlled by AutoRefresh, and also
@@ -153,9 +169,15 @@ func (af *AutoRefresh) Configure(url string, options ...AutoRefreshOption) {
 	var hasRefreshInterval bool
 	var refreshInterval time.Duration
 	var wl Whitelist
+	var parseOptions []ParseOption
 	minRefreshInterval := time.Hour
 	bo := backoff.Null()
 	for _, option := range options {
+		if v, ok := option.(ParseOption); ok {
+			parseOptions = append(parseOptions, v)
+			continue
+		}
+
 		//nolint:forcetypeassert
 		switch option.Ident() {
 		case identFetchBackoff{}:
@@ -172,39 +194,34 @@ func (af *AutoRefresh) Configure(url string, options ...AutoRefreshOption) {
 		}
 	}
 
-	var doReconfigure bool
 	af.muRegistry.Lock()
 	t, ok := af.registry[url]
 	if ok {
 		if t.httpcl != httpcl {
 			t.httpcl = httpcl
-			doReconfigure = true
 		}
 
 		if t.minRefreshInterval != minRefreshInterval {
 			t.minRefreshInterval = minRefreshInterval
-			doReconfigure = true
 		}
 
 		if t.refreshInterval != nil {
 			if !hasRefreshInterval {
 				t.refreshInterval = nil
-				doReconfigure = true
 			} else if *t.refreshInterval != refreshInterval {
 				*t.refreshInterval = refreshInterval
-				doReconfigure = true
 			}
 		} else {
 			if hasRefreshInterval {
 				t.refreshInterval = &refreshInterval
-				doReconfigure = true
 			}
 		}
 
 		if t.wl != wl {
 			t.wl = wl
-			doReconfigure = true
 		}
+
+		t.parseOptions = parseOptions
 	} else {
 		t = &target{
 			backoff:            bo,
@@ -215,8 +232,9 @@ func (af *AutoRefresh) Configure(url string, options ...AutoRefreshOption) {
 			// This is a placeholder timer so we can call Reset() on it later
 			// Make it sufficiently in the future so that we don't have bogus
 			// events firing
-			timer: time.NewTimer(24 * time.Hour),
-			wl:    wl,
+			timer:        time.NewTimer(24 * time.Hour),
+			wl:           wl,
+			parseOptions: parseOptions,
 		}
 		if hasRefreshInterval {
 			t.refreshInterval = &refreshInterval
@@ -224,14 +242,11 @@ func (af *AutoRefresh) Configure(url string, options ...AutoRefreshOption) {
 
 		// Record this in the registry
 		af.registry[url] = t
-		doReconfigure = true
 	}
 	af.muRegistry.Unlock()
 
-	if doReconfigure {
-		// Tell the backend to reconfigure itself
-		af.configureCh <- struct{}{}
-	}
+	// Tell the backend to reconfigure itself
+	af.configureCh <- struct{}{}
 }
 
 func (af *AutoRefresh) releaseFetching(url string) {
@@ -346,21 +361,32 @@ func (af *AutoRefresh) refreshLoop(ctx context.Context) {
 	// in a very fast iteration, but we assume here that refreshes happen
 	// seldom enough that being able to call one `select{}` with multiple
 	// targets / channels outweighs the speed penalty of using reflect.
-	baseSelcases := []reflect.SelectCase{
-		{
-			Dir:  reflect.SelectRecv,
-			Chan: reflect.ValueOf(ctx.Done()),
-		},
-		{
-			Dir:  reflect.SelectRecv,
-			Chan: reflect.ValueOf(af.configureCh),
-		},
-		{
-			Dir:  reflect.SelectRecv,
-			Chan: reflect.ValueOf(af.resetTimerCh),
-		},
+	//
+	const (
+		ctxDoneIdx = iota
+		configureIdx
+		resetTimerIdx
+		removeIdx
+		baseSelcasesLen
+	)
+
+	baseSelcases := make([]reflect.SelectCase, baseSelcasesLen)
+	baseSelcases[ctxDoneIdx] = reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(ctx.Done()),
 	}
-	baseidx := len(baseSelcases)
+	baseSelcases[configureIdx] = reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(af.configureCh),
+	}
+	baseSelcases[resetTimerIdx] = reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(af.resetTimerCh),
+	}
+	baseSelcases[removeIdx] = reflect.SelectCase{
+		Dir:  reflect.SelectRecv,
+		Chan: reflect.ValueOf(af.removeCh),
+	}
 
 	var targets []*target
 	var selcases []reflect.SelectCase
@@ -376,7 +402,7 @@ func (af *AutoRefresh) refreshLoop(ctx context.Context) {
 		}
 
 		if cap(selcases) < len(af.registry) {
-			selcases = make([]reflect.SelectCase, 0, len(af.registry)+baseidx)
+			selcases = make([]reflect.SelectCase, 0, len(af.registry)+baseSelcasesLen)
 		} else {
 			selcases = selcases[:0]
 		}
@@ -393,15 +419,15 @@ func (af *AutoRefresh) refreshLoop(ctx context.Context) {
 
 		chosen, recv, recvOK := reflect.Select(selcases)
 		switch chosen {
-		case 0:
+		case ctxDoneIdx:
 			// <-ctx.Done(). Just bail out of this loop
 			return
-		case 1:
+		case configureIdx:
 			// <-configureCh. rebuild the select list from the registry.
 			// since we're rebuilding everything for each iteration,
 			// we just need to start the loop all over again
 			continue
-		case 2:
+		case resetTimerIdx:
 			// <-resetTimerCh. interrupt polling, and reset the timer on
 			// a single target. this needs to be handled inside this select
 			if !recvOK {
@@ -418,6 +444,20 @@ func (af *AutoRefresh) refreshLoop(ctx context.Context) {
 				}
 			}
 			t.timer.Reset(d)
+		case removeIdx:
+			// <-removeCh. remove the URL from future fetching
+			//nolint:forcetypeassert
+			req := recv.Interface().(removeReq)
+			replyCh := req.replyCh
+			url := req.url
+			af.muRegistry.Lock()
+			if _, ok := af.registry[url]; !ok {
+				replyCh <- errors.Errorf(`invalid url %q (not registered)`, url)
+			} else {
+				delete(af.registry, url)
+				replyCh <- nil
+			}
+			af.muRegistry.Unlock()
 		default:
 			// Do not fire a refresh in case the channel was closed.
 			if !recvOK {
@@ -425,7 +465,7 @@ func (af *AutoRefresh) refreshLoop(ctx context.Context) {
 			}
 
 			// Time to refresh a target
-			t := targets[chosen-baseidx]
+			t := targets[chosen-baseSelcasesLen]
 
 			// Check if there are other goroutines still doing the refresh asynchronously.
 			// This could happen if the refreshing goroutine is stuck on a backoff
@@ -449,24 +489,25 @@ func (af *AutoRefresh) refreshLoop(ctx context.Context) {
 func (af *AutoRefresh) doRefreshRequest(ctx context.Context, url string, enableBackoff bool) error {
 	af.muRegistry.RLock()
 	t, ok := af.registry[url]
-	af.muRegistry.RUnlock()
 
 	if !ok {
+		af.muRegistry.RUnlock()
 		return errors.Errorf(`url "%s" is not registered`, url)
 	}
 
 	// In case the refresh fails due to errors in fetching/parsing the JWKS,
 	// we want to retry. Create a backoff object,
-
-	options := []FetchOption{WithHTTPClient(t.httpcl)}
+	parseOptions := t.parseOptions
+	fetchOptions := []FetchOption{WithHTTPClient(t.httpcl)}
 	if enableBackoff {
-		options = append(options, WithFetchBackoff(t.backoff))
+		fetchOptions = append(fetchOptions, WithFetchBackoff(t.backoff))
 	}
 	if t.wl != nil {
-		options = append(options, WithFetchWhitelist(t.wl))
+		fetchOptions = append(fetchOptions, WithFetchWhitelist(t.wl))
 	}
+	af.muRegistry.RUnlock()
 
-	res, err := fetch(ctx, url, options...)
+	res, err := fetch(ctx, url, fetchOptions...)
 	if err == nil {
 		if res.StatusCode != http.StatusOK {
 			// now, can there be a remote resource that responds with a status code
@@ -474,13 +515,15 @@ func (af *AutoRefresh) doRefreshRequest(ctx context.Context, url string, enableB
 			err = errors.Errorf(`bad response status code (%d)`, res.StatusCode)
 		} else {
 			defer res.Body.Close()
-			keyset, parseErr := ParseReader(res.Body)
+			keyset, parseErr := ParseReader(res.Body, parseOptions...)
 			if parseErr == nil {
 				// Got a new key set. replace the keyset in the target
 				af.muCache.Lock()
 				af.cache[url] = keyset
 				af.muCache.Unlock()
+				af.muRegistry.RLock()
 				nextInterval := calculateRefreshDuration(res, t.refreshInterval, t.minRefreshInterval)
+				af.muRegistry.RUnlock()
 				rtr := &resetTimerReq{
 					t: t,
 					d: nextInterval,
@@ -492,8 +535,10 @@ func (af *AutoRefresh) doRefreshRequest(ctx context.Context, url string, enableB
 				}
 
 				now := time.Now()
+				af.muRegistry.Lock()
 				t.lastRefresh = now.Local()
 				t.nextRefresh = now.Add(nextInterval).Local()
+				af.muRegistry.Unlock()
 				return nil
 			}
 			err = parseErr
