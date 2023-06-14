@@ -182,7 +182,6 @@ JOIN
 `
 }
 
-// TODO: get cachegroup name, currently returning empty
 func insertQuery() string {
 	return `
 INSERT INTO
@@ -298,8 +297,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create asn
-	query := `INSERT INTO asn (asn, cachegroup) VALUES ($1, $2) RETURNING id, last_updated`
-	err = tx.QueryRow(query, asn.ASN, asn.CachegroupID).Scan(&asn.ID, &asn.LastUpdated)
+	query := `INSERT INTO asn (asn, cachegroup) VALUES ($1, $2) RETURNING id, last_updated, (select name FROM cachegroup where id = $2)`
+	err = tx.QueryRow(query, asn.ASN, asn.CachegroupID).Scan(&asn.ID, &asn.LastUpdated, &asn.Cachegroup)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating asn:%d", err, asn.ASN), nil)
@@ -308,11 +307,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
-	}
-
-	asn.Cachegroup, err = getCGName(tx, asn.CachegroupID)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was created.")
@@ -350,9 +344,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		asn = $1,
 		cachegroup = $2
 	WHERE id = $3
-	RETURNING id, last_updated`
+	RETURNING id, last_updated, (select name FROM cachegroup where id = $2)`
 
-	err := tx.QueryRow(query, asn.ASN, asn.CachegroupID, requestedAsnId).Scan(&asn.ID, &asn.LastUpdated)
+	err := tx.QueryRow(query, asn.ASN, asn.CachegroupID, requestedAsnId).Scan(&asn.ID, &asn.LastUpdated, &asn.Cachegroup)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn: %d not found", asn.ASN), nil)
@@ -361,11 +355,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
-	}
-
-	asn.Cachegroup, err = getCGName(tx, asn.CachegroupID)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was updated")
@@ -445,13 +434,4 @@ func selectMaxLastUpdatedQuery(where string) string {
 		JOIN cachegroup c ON a.cachegroup = c.id ` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='asn') as res`
-}
-
-// getCGName gets cachegroup name for a cachegroup_id
-func getCGName(tx *sql.Tx, id int) (name string, err error) {
-	err = tx.QueryRow("SELECT name from cachegroup where id=$1", id).Scan(&name)
-	if err != nil {
-		return "", fmt.Errorf("error: %w reading cachegroup table", err)
-	}
-	return name, nil
 }
