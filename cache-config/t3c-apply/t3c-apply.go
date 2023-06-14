@@ -400,7 +400,7 @@ func CheckMaxmindUpdate(cfg config.Cfg) bool {
 	result := false
 	if cfg.MaxMindLocation != "" {
 		// Check if the maxmind db needs to be updated before reload
-		result = util.UpdateMaxmind(cfg)
+		result = util.UpdateMaxmind(cfg.MaxMindLocation, cfg.TsConfigDir, cfg.ReportOnly)
 		if result {
 			log.Infoln("maxmind database was updated from " + cfg.MaxMindLocation)
 		} else {
@@ -410,6 +410,16 @@ func CheckMaxmindUpdate(cfg config.Cfg) bool {
 		log.Infoln(("maxmindlocation is empty, not checking for DB update"))
 	}
 
+	if cfg.MaxMindAnonymousLocation != "" {
+		result = util.UpdateMaxmind(cfg.MaxMindAnonymousLocation, cfg.TsConfigDir, cfg.ReportOnly)
+		if result {
+			log.Infoln("maxmind anonymous database was updated from " + cfg.MaxMindAnonymousLocation)
+		} else {
+			log.Infoln("maxmind anonymous database was not updated. Either not needed or curl/gunzip failure")
+		}
+	} else {
+		log.Infoln("maxmindanonymouslocation is empty, not checking for DB update")
+	}
 	return result
 }
 
