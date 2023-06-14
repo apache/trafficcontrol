@@ -40,8 +40,6 @@ def test_server_contract(to_session: TOSession,
 	"""
 	# validate server keys from server get response
 	logger.info("Accessing /servers endpoint through Traffic ops session.")
-	# profile_id = server_post_data[1]
-	# server_post_data = server_post_data[0]
 
 	server_id = server_post_data.get("id")
 	if not isinstance(server_id, int):
