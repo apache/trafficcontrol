@@ -31,6 +31,13 @@ echo "OS_VERSION:${OS_VERSION}"
 echo "ATS_VERSION:${ATS_VERSION}"
 echo "ATS_MAJOR_VERSION:${ATS_MAJOR_VERSION}"
 
+# setup the environment to use the devtoolset-9 tools.
+if [ "${OS_VERSION%%.*}" -le 7 ]; then
+  source scl_source enable devtoolset-9
+else
+  source scl_source enable gcc-toolset-9
+fi
+
 mkdir -p /opt/build
 cd /opt/build
 
@@ -75,13 +82,6 @@ echo "Building a RPM for ATS version: $ATS_VERSION and OS version: $OS_VERSION"
 
 # add the 'ats' user
 id ats &>/dev/null || /usr/sbin/useradd -u 176 -r ats -s /sbin/nologin -d /
-
-# setup the environment to use the devtoolset-9 tools.
-if [ "${OS_VERSION%%.*}" -le 7 ]; then 
-  source scl_source enable devtoolset-9
-else
-  source scl_source enable gcc-toolset-9
-fi
 
 cd /root
 # prep build environment
