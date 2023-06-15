@@ -29,15 +29,15 @@ limitations under the License.
 		<small class="hint">{{mimeAlertMsg}}</small>
 	</div>
 
-	<ul id="file-name">
-		<li *ngIf="fileData">{{fileData}}</li>
+	<ul [hidden]="!fileData">
+		<li id="file-name">{{fileData}}</li>
 	</ul>
 
-	<div id="json-txt" *ngIf="inputTxt">
+	<div id="json-txt" [hidden]="files.length !== 1">
 		<pre>{{inputTxt | json}}</pre>
 	</div>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
 	<button mat-raised-button type="button" mat-dialog-close color="warn">Cancel</button>
-	<button mat-raised-button type="submit" [mat-dialog-close]="inputTxt" [disabled]="!fileData">Submit</button>
+	<button mat-raised-button type="submit" [mat-dialog-close]="inputTxt" [disabled]="!file">Submit</button>
 </mat-dialog-actions>
