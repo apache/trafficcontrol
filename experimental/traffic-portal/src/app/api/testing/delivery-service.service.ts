@@ -326,7 +326,6 @@ export class DeliveryServiceService {
 		if (typeof d === "number") {
 			id = d;
 		} else {
-			d = d;
 			if (!d.id || d.id < 0) {
 				throw new Error("Delivery Service id must be defined!");
 			}

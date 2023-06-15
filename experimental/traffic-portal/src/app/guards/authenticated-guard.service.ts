@@ -12,7 +12,6 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import type { CanActivate, CanLoad } from "@angular/router";
 
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
@@ -20,7 +19,7 @@ import { CurrentUserService } from "src/app/shared/current-user/current-user.ser
  * AuthenticationGuard ensures that the user is logged in.
  */
 @Injectable()
-export class AuthenticatedGuard implements CanActivate, CanLoad {
+export class AuthenticatedGuard  {
 	constructor(private readonly auth: CurrentUserService) {
 	}
 

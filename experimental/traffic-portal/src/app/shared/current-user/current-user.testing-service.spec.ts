@@ -95,7 +95,7 @@ export class CurrentUserTestingService {
 	 * @param p The user's password.
 	 * @returns An observable that emits whether or not login succeeded.
 	 */
-	 public async login(uOrT: string, p?: string): Promise<boolean> {
+	public async login(uOrT: string, p?: string): Promise<boolean> {
 		return uOrT === this.currentUser.username && p === CurrentUserTestingService.PASSWORD;
 	}
 
@@ -107,7 +107,7 @@ export class CurrentUserTestingService {
 	 */
 	public setUser(u: ResponseCurrentUser, caps: Set<string> | Array<Capability>): void {
 		this.currentUser = u;
-		const capabilities = Array.isArray(caps) ? new Set(caps.map(c=>c.name)) : caps;
+		const capabilities = Array.isArray(caps) ? new Set(caps.map(c => c.name)) : caps;
 		this.userChanged.emit(this.currentUser);
 		this.permissions.next(capabilities);
 	}
