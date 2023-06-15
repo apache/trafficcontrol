@@ -41,6 +41,8 @@ export class ImportJsonTxtComponent {
 	 */
 	public allowedType: string[] = ["application/json", "text/plain"];
 
+	public file: File | null = null;
+
 	/** Text editor value */
 	public inputTxt = null;
 
@@ -51,6 +53,23 @@ export class ImportJsonTxtComponent {
 	public dragOn = false;
 
 	public mimeAlertMsg = "Only JSON or text file is allowed.";
+	/**
+	 * The value of the file input is maintained by extracting drag-and-drop
+	 * files and setting the input's value accordingly. Note that when setting
+	 * this property, all but the first file are discarded, as it assumes that
+	 * multiple selection is not allowed.
+	 */
+	public get files(): FileList {
+		const dt = new DataTransfer();
+		if (this.file) {
+			dt.items.add(this.file);
+		}
+		return dt.files;
+	}
+
+	public set files(fl: FileList) {
+		this.file = fl[0] ?? null;
+	}
 
 	/**
 	 * Creates an instance of import json edit txt component.
