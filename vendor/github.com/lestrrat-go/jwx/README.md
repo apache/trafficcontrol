@@ -2,6 +2,8 @@
 
 Various libraries implementing various JWx technologies. Please click on the package names in the table below to find the synopsis/description for each package.
 
+If you are using this module in your product or your company, please add  your product and/or company name in the [Wiki](https://github.com/lestrrat-go/jwx/wiki/Users)! It really helps keeping up our motivation.
+
 | Package name                                              | Notes                                           |
 |-----------------------------------------------------------|-------------------------------------------------|
 | [jwt](https://github.com/lestrrat-go/jwx/tree/main/jwt) | [RFC 7519](https://tools.ietf.org/html/rfc7519) |
@@ -39,11 +41,13 @@ so why should you use this library?
 
 From a purely functional perspective, the only major difference is this:
 Whereas most other projects only deal with what they seem necessary to handle
-JWTs, this module handles the entire spectrum of JWS, JWE, JWK, and JWT.
+JWTs, this module handles the **_entire_** spectrum of JWS, JWE, JWK, and JWT.
 
 That is, if you need to not only parse JWTs, but also to control JWKs, or
 if you need to handle payloads that are NOT JWTs, you should probably consider
-using this module.
+using this module. You should also note that JWT is built _on top_ of those
+other technologies. You simply cannot have a complete JWT package without
+implementing the entirety of JWS/JWS/JWK, which this library does.
 
 Next, from an implementation perspective, this module differs significantly
 from others in that it tries very hard to expose only the APIs, and not the
@@ -107,7 +111,7 @@ For either bug reports or feature requests, failing tests are even better.
 
 Please make sure to include tests that excercise the changes you made.
 
-If you are editing auto-generated files (those files with the `_gen.go` prefix, please make sure that you do the following:
+If you are editing auto-generated files (those files with the `_gen.go` suffix, please make sure that you do the following:
 
 1. Edit the generator, not the generated files (e.g. internal/cmd/genreadfile/main.go)
 2. Run `make generate` (or `go generate`) to generate the new code
@@ -117,9 +121,14 @@ If you are editing auto-generated files (those files with the `_gen.go` prefix, 
 
 Please try [discussions](https://github.com/lestrrat-go/jwx/discussions) first.
 
+# Related Modules
+
+* [github.com/jwx-go/crypto-signer/gcp](https://github.com/jwx-go/crypto-signer/tree/main/gcp) - GCP KMS wrapper that implements [`crypto.Signer`](https://pkg.go.dev/crypto#Signer)
+* [github.com/jwx-go/crypto-signer/aws](https://github.com/jwx-go/crypto-signer/tree/main/aws) - AWS KMS wrapper that implements [`crypto.Signer`](https://pkg.go.dev/crypto#Signer)
+
 # Credits
 
-* Work on this library was generously sponsored by HDE Inc (https://www.hde.co.jp)
+* Initial work on this library was generously sponsored by HDE Inc (https://www.hde.co.jp)
 * Lots of code, especially JWE was taken from go-jose library (https://github.com/square/go-jose)
 * Lots of individual contributors have helped this project over the years. Thank each and everyone of you very much.
 
