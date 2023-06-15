@@ -236,7 +236,7 @@ export class ProfileService {
 	/**
 	 * Export Profile object from the API.
 	 *
-	 * @param id Specify unique identifier (number) of a specific Profile to retrieve the export object.
+	 * @param profile Specify unique identifier (number) of a specific Profile to retrieve the export object.
 	 * @returns The requested Profile as attachment.
 	 */
 	public async exportProfile(profile: number | ResponseProfile): Promise<ProfileExport> {
