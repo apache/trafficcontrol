@@ -15,26 +15,27 @@
 $backgroundColor: #fafaec;
 
 .dropzone {
-    min-height: 75px;
-    min-width: 400px;
-    margin: 1rem auto;
-    width: 99%;
-    background-color: $backgroundColor;
-    border: solid 1px rgb(231, 230, 230);
-    text-align: center;
-    color: rgb(133, 132, 132);
-    border-radius: 5px;
-    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+	max-width: 80vw;
+	padding: 2rem;
+	margin: 1rem auto;
+	background-color: $backgroundColor;
+	border: solid 1px rgb(231, 230, 230);
+	text-align: center;
+	color: black;
+	border-radius: 5px;
+	box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
 
-    .text-wrapper {
-        .hint {
-            color: rgb(251, 192, 82);
-        }
-    }
+    label {
+		display: block;
+	}
+	.hint {
+		opacity: 0.87;
+		display: block;
+	}
 }
 
 #import-content {
-    &.active {
-        background: $backgroundColor;
-    }
+	&.active {
+		background: $backgroundColor;
+	}
 }
