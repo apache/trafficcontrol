@@ -117,15 +117,12 @@ export class ImportJsonTxtComponent {
 		evt.stopPropagation();
 
 		this.dragOn = false;
-
-		const file = evt.dataTransfer?.files[0];
-
-		// returns on when there is no file attachment is there
-		if (!file) {
+		if (!evt.dataTransfer) {
 			return;
 		}
 
-		this.docReader(file);
+		this.files = evt.dataTransfer.files;
+		this.docReader();
 	}
 
 	/**
@@ -134,13 +131,13 @@ export class ImportJsonTxtComponent {
 	 * @param event Event object for upload file
 	 */
 	public uploadFile(event: Event): void {
-		const file = (event.target as HTMLInputElement).files?.[0];
-
-		// returns on when there is no file attachment is there
-		if (!file) {
+		if (!(event.target instanceof HTMLInputElement) || !event.target.files) {
+			console.warn("file uploading triggered on non-file-input element:", event.target);
 			return;
 		}
-		this.docReader(file);
+
+		this.files = event.target.files;
+		this.docReader();
 	  }
 
 	/**
@@ -148,27 +145,32 @@ export class ImportJsonTxtComponent {
 	 *
 	 * @param file that is uploaded
 	 */
-	public docReader(file: File): void {
+	private docReader(): void {
+		if (!this.file) {
+			return;
+		}
 
 		/**
 		 * Check whether expected file is being uploaded
 		 * returns on file wrong file type is uploaded
 		 */
-		if (!this.allowedType.includes(file.type)) {
+		if (!this.allowedType.includes(this.file.type)) {
 			this.alertService.newAlert({ level: AlertLevel.ERROR, text: this.mimeAlertMsg });
 			return;
 		}
 
 		/** Format text with data from file data and formated date with date pipe */
-		this.fileData = `${file.name} - ${file.size} bytes, last modified: ${this.datePipe.transform(file.lastModified, "MM-dd-yyyy")}`;
+		const dateStr = this.datePipe.transform(this.file.lastModified, "MM-dd-yyyy");
+		this.fileData = `${this.file.name} - ${this.file.size} bytes, last modified: ${dateStr}`;
 
 		const reader = new FileReader();
-
-		reader.onload = (event): void => {
-			if(typeof(event.target?.result)==="string"){
-				this.inputTxt = JSON.parse(event.target?.result);
+		reader.addEventListener("load",
+			event => {
+				if(typeof(event.target?.result)==="string"){
+					this.inputTxt = JSON.parse(event.target.result);
+				}
 			}
-		};
-		reader.readAsText(file);
+		);
+		reader.readAsText(this.file);
 	}
 }
