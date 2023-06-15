@@ -20,14 +20,15 @@ import { AlertLevel } from "trafficops-types";
 import { AlertService } from "../alert/alert.service";
 
 /**
- * Contains the structure of the data that ImportJsonTxtComponent accepts.
+ * Contains the structure of the data that {@link ImportJsonTxtComponent}
+ * accepts.
  */
 export interface ImportJsonTxtComponentModel {
 	title: string;
 }
 
 /**
- * Component for import of json or text
+ * Component for import of JSON or text files.
  */
 @Component({
 	selector: "tp-import-json-txt",
@@ -37,14 +38,14 @@ export interface ImportJsonTxtComponentModel {
 export class ImportJsonTxtComponent {
 
 	/**
-	 * Allowed import file types
+	 * Allowed import file types.
 	 */
-	public allowedType: string[] = ["application/json", "text/plain"];
+	public readonly allowedType: readonly string[] = ["application/json", "text/plain"];
 
 	public file: File | null = null;
 
 	/** Text editor value */
-	public inputTxt = null;
+	public inputTxt = "";
 
 	/**  File data imported */
 	public fileData = "";
@@ -52,7 +53,8 @@ export class ImportJsonTxtComponent {
 	/** Monitor whether any file is being drag over the dialog */
 	public dragOn = false;
 
-	public mimeAlertMsg = "Only JSON or text file is allowed.";
+	public readonly mimeAlertMsg = "Only JSON or text files are allowed.";
+
 	/**
 	 * The value of the file input is maintained by extracting drag-and-drop
 	 * files and setting the input's value accordingly. Note that when setting
