@@ -22,6 +22,7 @@ limitations under the License.
 			type="file"
 			id="profile-upload"
 			[accept]="allowedType.join(', ')"
+			[files]="files"
 			(change)="uploadFile($event)"
 			hidden
 		/>
