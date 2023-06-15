@@ -14,8 +14,19 @@ limitations under the License.
 
 <h2 mat-dialog-title>{{data.title}}</h2>
 <mat-dialog-content id="import-content" [ngClass]="{'active':dragOn}">
-	<label for="imageUpload">Click or Drop your file here to upload.</label>
-	<input type='file' id="imageUpload" aria-label="Select a file" accept="application/json,text/plain" #fileInput (change)="uploadFile($event)" hidden/>
+	<div class="dropzone">
+		<label #inputLabel
+			for="profile-upload"
+		>Click or Drop your file here to upload</label>
+		<input
+			type="file"
+			id="profile-upload"
+			[accept]="allowedType.join(', ')"
+			(change)="uploadFile($event)"
+			hidden
+		/>
+		<small class="hint">{{mimeAlertMsg}}</small>
+	</div>
 
 	<ul id="file-name">
 		<li *ngIf="fileData">{{fileData}}</li>
