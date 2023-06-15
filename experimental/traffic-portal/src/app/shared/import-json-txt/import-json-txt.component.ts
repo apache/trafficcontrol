@@ -14,7 +14,7 @@
 
 import { DatePipe } from "@angular/common";
 import { Component, HostListener, Inject } from "@angular/core";
-import { MAT_DIALOG_DATA, MatDialogRef } from "@angular/material/dialog";
+import { MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { AlertLevel } from "trafficops-types";
 
 import { AlertService } from "../alert/alert.service";
@@ -61,16 +61,8 @@ export class ImportJsonTxtComponent {
 	 */
 	constructor(
 		@Inject(MAT_DIALOG_DATA) public readonly data: ImportJsonTxtComponentModel,
-		private readonly dialogRef: MatDialogRef<ImportJsonTxtComponent>,
 		private readonly alertService: AlertService,
 		private readonly datePipe: DatePipe) { }
-
-	/**
-	 * Emits the json value for import as profile data
-	 */
-	public submit(): void {
-		this.dialogRef.close(this.inputTxt);
-	}
 
 	/**
 	 * Hosts listener for drag over

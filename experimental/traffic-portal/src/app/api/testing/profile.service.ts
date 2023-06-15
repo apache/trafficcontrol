@@ -239,7 +239,8 @@ export class ProfileService {
 	 * @param id Specify unique identifier (number) of a specific Profile to retrieve the export object.
 	 * @returns The requested Profile as attachment.
 	 */
-	public async exportProfile(id: number | ResponseProfile): Promise<ProfileExport> {
+	public async exportProfile(profile: number | ResponseProfile): Promise<ProfileExport> {
+		const id = typeof(profile) === "number" ? profile : profile.id;
 		const index = this.profiles.findIndex(t => t.id === id);
 		if (index === -1) {
 			throw new Error(`no such Profile: ${id}`);
