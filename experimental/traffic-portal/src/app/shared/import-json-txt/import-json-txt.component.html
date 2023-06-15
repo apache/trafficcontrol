@@ -17,6 +17,9 @@ limitations under the License.
 	<div class="dropzone">
 		<label #inputLabel
 			for="profile-upload"
+			tabindex="0"
+			(keydown.enter)="inputLabel.click()"
+			(keydown.space)="inputLabel.click()"
 		>Click or Drop your file here to upload</label>
 		<input
 			type="file"
@@ -25,6 +28,7 @@ limitations under the License.
 			[files]="files"
 			(change)="uploadFile($event)"
 			hidden
+			aria-describedby="file-name json-txt"
 		/>
 		<small class="hint">{{mimeAlertMsg}}</small>
 	</div>
