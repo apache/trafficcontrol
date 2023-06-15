@@ -269,6 +269,11 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
     [true | false] do not update if parent_pending = 1 in the
     update json. Default is false
 
+-Y, -\-maxmind-anonymous-location=value
+
+    URL of an anonymous maxmind gzipped database file, to be installed into
+    the trafficserver etc directory.
+
 # MODES
 
 The `t3c-apply` app can be run in a number of modes.
