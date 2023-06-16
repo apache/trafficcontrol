@@ -36,7 +36,7 @@ export class CapabilitiesComponent implements OnInit {
 	/** All the physical locations which should appear in the table. */
 	public capabilities: Promise<Array<ResponseServerCapability>>;
 
-  	/** Definitions of the table's columns according to the ag-grid API */
+	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
 		{
 			field: "name",
