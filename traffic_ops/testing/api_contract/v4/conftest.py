@@ -26,6 +26,7 @@ from random import randint
 from typing import Any, NamedTuple, Union, Optional, TypeAlias
 from urllib.parse import urlparse
 import munch
+import psycopg2
 
 import pytest
 import requests
@@ -309,6 +310,23 @@ def to_login(to_args: ArgsType) -> TOSession:
 	to_session.login(to_args.user, to_args.password)
 	logger.info("Successfully logged into Traffic Ops.")
 	return to_session
+
+
+@pytest.fixture(scope="session", name="db_connection")
+def open_db_connection():
+	"""
+	Creates new traffic ops db connection.
+	:returns: New Traffic ops database connection
+	"""
+	conn = psycopg2.connect(
+            user="traffic_ops",
+            password="twelve",
+            host="127.0.0.1",
+            port=5432,
+            database="traffic_ops",
+            sslmode="disable"
+        )
+	return conn
 
 
 @pytest.fixture(name="request_template_data", scope="session")
@@ -1153,3 +1171,42 @@ def coordinate_data_post(to_session: TOSession, request_template_data: list[JSON
 	if msg is None:
 		logger.error("coordinate returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="user_post_data")
+def user_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  tenant_post_data:dict[str, object], db_connection: psycopg2.connect) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for users endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get users request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	user = check_template_data(request_template_data["users"], "users")
+
+	# Return new post data and post response from users POST request
+	randstr = str(randint(0, 1000))
+	try:
+		username = user["username"]
+		if not isinstance(username, str):
+			raise TypeError(f"username must be str, not '{type(username)}'")
+		user["username"] = username[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing user property '{e.args[0]}'") from e
+	user["tenantId"] = tenant_post_data["id"]
+
+	logger.info("New user data to hit POST method %s", user)
+	# Hitting users POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_user(data=user)
+	resp_obj = check_template_data(response, "user")
+	yield resp_obj
+	coordinate_id = resp_obj.get("id")
+	# Create a cursor object to interact with the database
+	cursor = db_connection.cursor()
+	cursor.execute("DELETE FROM tm_user WHERE id = %s;", (coordinate_id,))
+	# Commit the changes
+	db_connection.commit()
+	# Close the cursor and the connection
+	cursor.close()
+	db_connection.close()
