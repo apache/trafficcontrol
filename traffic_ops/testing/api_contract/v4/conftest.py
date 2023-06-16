@@ -318,12 +318,6 @@ def open_db_connection():
 	Creates new traffic ops db connection.
 	:returns: New Traffic ops database connection
 	"""
-	logger.info(os.getenv("TODB_NAME"))
-	logger.info(os.getenv("TODB_PASSWORD"))
-	logger.info(os.getenv("TODB_HOSTNAME"))
-	logger.info(os.getenv("TODB_USER"))
-	logger.info(os.getenv("TODB_PORT"))
-	logger.info(os.getenv("TODB_SSL"))
 	conn = psycopg2.connect(
             user="traffic_ops",
             password="twelve",
