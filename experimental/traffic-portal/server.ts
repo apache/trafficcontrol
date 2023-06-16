@@ -11,10 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 import "zone.js/node";
 
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { createServer as createRedirectServer } from "http";
 import { createServer, request, RequestOptions } from "https";
 import { join } from "path";
@@ -34,6 +33,52 @@ import {
 
 import { AppServerModule } from "./src/main.server";
 
+/**
+ * StaticFile defines what compression files are available.
+ */
+interface StaticFile {
+	compressions: Array<CompressionType>;
+}
+
+/**
+ * CompressionType defines the different compression algorithms.
+ */
+interface CompressionType {
+	fileExt: string;
+	headerEncoding: string;
+	name: string;
+}
+
+const gzip = {
+	fileExt: "gz",
+	headerEncoding: "gzip",
+	name: "gzip"
+};
+const br = {
+	fileExt: "br",
+	headerEncoding: "br",
+	name: "brotli"
+};
+
+/**
+ * getFiles recursively gets all the files in a directory.
+ *
+ * @param path The path to get files from.
+ * @returns Files found in the directory.
+ */
+function getFiles(path: string): string[] {
+	const all = readdirSync(path)
+		.map(file => join(path, file));
+	const dirs = all
+		.filter(file => statSync(file).isDirectory());
+	let files = all
+		.filter(file => !statSync(file).isDirectory());
+	for (const dir of dirs) {
+		files = files.concat(getFiles(dir));
+	}
+	return files;
+}
+
 let config: ServerConfig;
 
 /**
@@ -45,17 +90,36 @@ let config: ServerConfig;
 export function app(serverConfig: ServerConfig): express.Express {
 	const server = express();
 	const indexHtml = join(serverConfig.browserFolder, "index.html");
-	if(!existsSync(indexHtml)) {
+	if (!existsSync(indexHtml)) {
 		throw new Error(`Unable to start TP server, unable to find browser index.html at: ${indexHtml}`);
 	}
 
 	// Our Universal express-engine (found @ https://github.com/angular/universal/tree/master/modules/express-engine)
 	server.engine("html", ngExpressEngine({
-		bootstrap: AppServerModule,
+		bootstrap: AppServerModule
 	}));
 
 	server.set("view engine", "html");
 	server.set("views", serverConfig.browserFolder);
+
+	const allFiles = getFiles(serverConfig.browserFolder);
+	const compressedFiles = new Map(allFiles
+		.filter(file => file.match(/\.br|gz$/))
+		.map(file => [file, undefined]));
+	const foundFiles = new Map<string, StaticFile>(allFiles
+		.filter(file => file.match(/\.js|css|tff|svg$/))
+		.map(file => {
+			const staticFile = {
+				compressions: []
+			} as StaticFile;
+			if (compressedFiles.has(`${file}.${br.fileExt}`)) {
+				staticFile.compressions.push(br);
+			}
+			if (compressedFiles.has(`${file}.${gzip.fileExt}`)) {
+				staticFile.compressions.push(gzip);
+			}
+			return [file, staticFile];
+		}));
 
 	const typeMap = new Map([
 		["js", "application/javascript"],
@@ -66,28 +130,24 @@ export function app(serverConfig: ServerConfig): express.Express {
 	// Could just use express compression `server.use(compression())` but that is calculated for each request
 	server.get("*.(js|css|ttf|svg)", function(req, res, next) {
 		const type = req.url.split(".").pop();
-		if (type === undefined) {
+		if (type === undefined || !typeMap.has(type)) {
 			return next();
 		}
-		//br first as it's usually better compression
-		const compressionTypes = [["br", "br"], ["gzip", "gz"]];
+		const path = join(serverConfig.browserFolder, req.url.substring(1, req.url.length));
+		const file = foundFiles.get(path);
+		if(!file || file.compressions.length === 0) {
+			return next();
+		}
 		const acceptedEncodings = req.acceptsEncodings();
-		for(const cType of compressionTypes) {
-			if(acceptedEncodings.indexOf(cType[0]) === -1 ) {
+		for(const compression of file.compressions) {
+			if (acceptedEncodings.indexOf(compression.headerEncoding) === -1) {
 				continue;
 			}
-			let newUrl = `${req.url}.${cType[1]}`;
-			newUrl = newUrl.substring(1, newUrl.length);
-			if (existsSync(join(serverConfig.browserFolder, newUrl))) {
-				if (typeMap.has(type)) {
-					req.url = newUrl;
-					res.set("Content-Encoding", cType[0]);
-					res.set("Content-Type", typeMap.get(type));
-					console.log(`Serving ${cType[0]} compressed file ${newUrl}`);
-					return next();
-				}
-				console.log(`Unknown file type: ${type}, known: ${typeMap}`);
-			}
+			req.url = `${req.url}.${compression.fileExt}`;
+			res.set("Content-Encoding", compression.headerEncoding);
+			res.set("Content-Type", typeMap.get(type));
+			console.log(`Serving ${compression.name} compressed file ${req.url}`);
+			return next();
 		}
 		next();
 	});
