@@ -18,11 +18,21 @@
 # under the License.
 #
 
+ifeq ($(OS),Windows_NT)
+    T3C_DIR_SEP := \\
+	RM := del /s /q
+	PY := python
+else
+    T3C_DIR_SEP := /
+	RM := rm -rf
+	PY := python3
+endif
+
 VERSION ?= $(file < ../VERSION)
 
 # You can set these variables from the command line.
 SPHINXOPTS    = -j auto
-SPHINXBUILD   = python3 -m sphinx
+SPHINXBUILD   = $(PY) -m sphinx
 PAPER         = letter
 BUILDDIR      = build
 
@@ -33,9 +43,9 @@ I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
 .PHONY: all help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext apichanges
 
-T3C_SOURCE_DIRS := $(patsubst %/,%,$(dir $(wildcard ../cache-config/**/README.md)))
-T3C_RST_SRC := $(join $(T3C_SOURCE_DIRS), $(T3C_SOURCE_DIRS:../cache-config/%=/%.rst))
-T3C_RST_OUT := $(patsubst %,source/admin/t3c/%,$(notdir $(T3C_RST_SRC)))
+T3C_SOURCE_DIRS := $(patsubst %$(T3C_DIR_SEP),%,$(dir $(wildcard ..$(T3C_DIR_SEP)cache-config$(T3C_DIR_SEP)**$(T3C_DIR_SEP)README.md)))
+T3C_RST_SRC := $(join $(T3C_SOURCE_DIRS), $(T3C_SOURCE_DIRS:..$(T3C_DIR_SEP)cache-config$(T3C_DIR_SEP)%=$(T3C_DIR_SEP)%.rst))
+T3C_RST_OUT := $(patsubst %,source/admin/t3c/$(T3C_DIR_SEP)%,$(notdir $(T3C_RST_SRC)))
 
 
 
@@ -79,7 +89,7 @@ help:
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 
 clean:
-	-rm -rf $(BUILDDIR) $(T3C_RST_OUT)
+	-$(RM) $(BUILDDIR) $(T3C_RST_OUT)
 
 $(BUILDDIR):
 	-mkdir $(BUILDDIR)
