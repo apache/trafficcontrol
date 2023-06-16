@@ -26,7 +26,6 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-divisions-detail",
-	styleUrls: ["../../../styles/form.page.scss"],
 	templateUrl: "./division-detail.component.html"
 })
 export class DivisionDetailComponent implements OnInit {

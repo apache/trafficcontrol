@@ -23,8 +23,13 @@ import { ProfileService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { FileUtilsService } from "src/app/shared/file-utils.service";
-import { ContextMenuActionEvent, ContextMenuItem, TableTitleButton } from "src/app/shared/generic-table/generic-table.component";
 import { ImportJsonTxtComponent } from "src/app/shared/import-json-txt/import-json-txt.component";
+import {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink,
+	TableTitleButton
+} from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -34,7 +39,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 @Component({
 	selector: "tp-profile-table",
 	styleUrls: ["./profile-table.component.scss"],
-	templateUrl: "./profile-table.component.html",
+	templateUrl: "./profile-table.component.html"
 })
 export class ProfileTableComponent implements OnInit {
 	/** All the physical locations which should appear in the table. */
@@ -112,6 +117,11 @@ export class ProfileTableComponent implements OnInit {
 			queryParams: (profile: ResponseProfile): Params => ({profileName: profile.name})
 		}
 	];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseProfile> = {
+		href: (row: ResponseProfile): string => `/core/profiles/${row.id}`
+	};
 
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
 	public fuzzySubject: BehaviorSubject<string>;

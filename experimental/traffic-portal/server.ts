@@ -57,6 +57,36 @@ export function app(serverConfig: ServerConfig): express.Express {
 	server.set("view engine", "html");
 	server.set("views", serverConfig.browserFolder);
 
+	const typeMap = new Map([
+		["js", "application/javascript"],
+		["css", "text/css"],
+		["ttf", "font/ttf"],
+		["svg", "image/svg+xml"]
+	]);
+	// Could just use express compression `server.use(compression())` but that is calculated for each request
+	server.get("*.(js|css|ttf|svg)", function(req, res, next) {
+		const type = req.url.split(".").pop();
+		if (type === undefined) {
+			return next();
+		}
+		//br first as it's usually better compression
+		const compressionTypes = [["br", "br"], ["gzip", "gz"]];
+		for(const cType of compressionTypes) {
+			let newUrl = `${req.url}.${cType[1]}`;
+			newUrl = newUrl.substring(1, newUrl.length);
+			if (existsSync(join(serverConfig.browserFolder, newUrl))) {
+				if (typeMap.has(type)) {
+					req.url = newUrl;
+					res.set("Content-Encoding", cType[0]);
+					res.set("Content-Type", typeMap.get(type));
+					console.log(`Serving ${cType[0]} compressed file ${newUrl}`);
+					return next();
+				}
+				console.log(`Unknown file type: ${type}, known: ${typeMap}`);
+			}
+		}
+		next();
+	});
 	// Example Express Rest API endpoints
 	// server.get('/api/**', (req, res) => { });
 	// Serve static files from /browser

@@ -11,9 +11,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { HarnessLoader } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatMenuModule } from "@angular/material/menu";
+import { MatSidenavModule } from "@angular/material/sidenav";
+import { MatSidenavHarness } from "@angular/material/sidenav/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 import { of, ReplaySubject } from "rxjs";
 
@@ -26,19 +31,29 @@ import { TpSidebarComponent } from "./tp-sidebar.component";
 describe("TpSidebarComponent", () => {
 	let component: TpSidebarComponent;
 	let fixture: ComponentFixture<TpSidebarComponent>;
+	let navSvc: jasmine.SpyObj<NavigationService>;
+	let loader: HarnessLoader;
 
 	beforeEach(async () => {
 		const mockCurrentUserService = jasmine.createSpyObj(
 			["updateCurrentUser", "hasPermission", "login", "logout"], {userChanged: of(null)});
-		const navSvc = jasmine.createSpyObj(["addHorizontalNav", "addVerticalNav"],
-			{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>(),
-				sidebarHidden: new ReplaySubject<boolean>(), sidebarNavs: new ReplaySubject<Array<TreeNavNode>>()});
+		navSvc = jasmine.createSpyObj(["addHorizontalNav", "addVerticalNav"],
+			{
+				headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>(),
+				sidebarHidden: new ReplaySubject<boolean>(), sidebarNavs: new ReplaySubject<Array<TreeNavNode>>()
+			});
 		await TestBed.configureTestingModule({
-			declarations: [ TpSidebarComponent ],
-			imports: [ APITestingModule, HttpClientModule, RouterTestingModule, MatMenuModule ],
+			declarations: [TpSidebarComponent],
+			imports: [APITestingModule,
+				HttpClientModule,
+				RouterTestingModule,
+				MatMenuModule,
+				MatSidenavModule,
+				NoopAnimationsModule
+			],
 			providers: [
-				{ provide: CurrentUserService, useValue: mockCurrentUserService },
-				{ provide: NavigationService, useValue: navSvc}
+				{provide: CurrentUserService, useValue: mockCurrentUserService},
+				{provide: NavigationService, useValue: navSvc}
 			]
 		})
 			.compileComponents();
@@ -46,10 +61,73 @@ describe("TpSidebarComponent", () => {
 		fixture = TestBed.createComponent(TpSidebarComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
+		loader = TestbedHarnessEnvironment.documentRootLoader(fixture);
 	});
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+	});
+
+	it("node handle set correctly", () => {
+		expect(component.nodeHandle({name: "test"})).toBe("test");
+		expect(component.nodeHandle({href: "href", name: "test"})).toBe("testhref");
+	});
+
+	it("handles visibility events", async () => {
+		const sidenavContainer = await loader.getAllHarnesses(MatSidenavHarness);
+		expect(sidenavContainer.length).toBe(1);
+		const sidenav = sidenavContainer[0];
+		const openedSpy = spyOn(component.sidenav, "open");
+		const closedSpy = spyOn(component.sidenav, "close");
+		openedSpy.and.callThrough();
+		closedSpy.and.callThrough();
+		// default state
+		expect(await sidenav.isOpen()).toBeFalse();
+
+		navSvc.sidebarHidden.next(false);
+		await fixture.whenStable();
+		expect(openedSpy).toHaveBeenCalled();
+		expect(await sidenav.isOpen()).toBeTrue();
+
+		navSvc.sidebarHidden.next(false);
+		await fixture.whenStable();
+		expect(openedSpy).toHaveBeenCalledTimes(1);
+		expect(await sidenav.isOpen()).toBeTrue();
+
+		navSvc.sidebarHidden.next(true);
+		await fixture.whenStable();
+		expect(closedSpy).toHaveBeenCalled();
+		expect(await sidenav.isOpen()).toBeFalse();
+
+		navSvc.sidebarHidden.next(true);
+		await fixture.whenStable();
+		expect(closedSpy).toHaveBeenCalledTimes(1);
+		expect(await sidenav.isOpen()).toBeFalse();
+	});
+
+	it("child to parent association", async () => {
+		const navs = [{
+			name: "first"
+		}, {
+			children: [{
+				href: "other",
+				name: "first"
+			}],
+			name: "second"
+		}];
+		navSvc.sidebarNavs.next(navs);
+		expect(component.dataSource.data).toEqual(navs);
+		expect(component.isRoot(navs[0])).toBeTrue();
+		expect(component.isRoot(navs[1])).toBeTrue();
+		expect(component.isRoot((navs[1].children ?? [])[0])).toBeFalse();
+
+		expect(component.isRoot({name: "madeup"})).toBeTrue();
+	});
+
+	it("collapse all nodes", () => {
+		const collapseSpy = spyOn(component.treeCtrl, "collapseAll");
+		component.collapseAll();
+		expect(collapseSpy).toHaveBeenCalled();
 	});
 
 	it("node has children", () => {

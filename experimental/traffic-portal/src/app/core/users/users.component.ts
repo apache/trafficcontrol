@@ -21,7 +21,7 @@ import { ResponseUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
-import type { ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type { ContextMenuItem, DoubleClickLink } from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { orderBy } from "src/app/utils";
 
@@ -103,6 +103,11 @@ export class UsersComponent implements OnInit {
 
 	/** Whether user data is still loading. */
 	public loading = true;
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseUser> = {
+		href: (row: ResponseUser): string => `/core/users/${row.id}`
+	};
 
 	/**
 	 * A map of Role IDs to their names, since the API doesn't provide Role

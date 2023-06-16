@@ -14,7 +14,6 @@
 import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
-import { faPlus, faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
 import { ResponseDeliveryService, ResponseInvalidationJob } from "trafficops-types";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
@@ -47,16 +46,6 @@ export class InvalidationJobsComponent implements OnInit {
 
 	/** The ID of the Delivery Service to which the displayed Jobs belong. */
 	private dsID = -1;
-
-	/** The icon for the "Create a new Job" FAB. */
-	public readonly addIcon = faPlus;
-
-	/** The icon for the Job deletion button. */
-	public readonly deleteIcon = faTrash;
-
-	/** The icon for the Job edit button. */
-	public readonly editIcon = faPencilAlt;
-
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly jobAPI: InvalidationJobService,
