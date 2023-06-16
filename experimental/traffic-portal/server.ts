@@ -71,7 +71,11 @@ export function app(serverConfig: ServerConfig): express.Express {
 		}
 		//br first as it's usually better compression
 		const compressionTypes = [["br", "br"], ["gzip", "gz"]];
+		const acceptedEncodings = req.acceptsEncodings();
 		for(const cType of compressionTypes) {
+			if(acceptedEncodings.indexOf(cType[0]) === -1 ) {
+				continue;
+			}
 			let newUrl = `${req.url}.${cType[1]}`;
 			newUrl = newUrl.substring(1, newUrl.length);
 			if (existsSync(join(serverConfig.browserFolder, newUrl))) {
