@@ -19,6 +19,7 @@ data for endpoints.
 
 import json
 import logging
+import shutil
 import sys
 import os
 from random import randint
@@ -107,6 +108,15 @@ ArgsType.password.__doc__ = """The password used for authentication."""
 ArgsType.url.__doc__ = """The URL of the environment."""
 ArgsType.port.__doc__ = """The port number on which to connect to Traffic Ops."""
 ArgsType.api_version.__doc__ = """The version number of the API to use."""
+
+
+@pytest.fixture(autouse=True, scope='function')
+def delete_pytest_cache():
+	"""
+	Deletes cached data before every test case execution
+	"""
+	shutil.rmtree(".pytest_cache", ignore_errors=True)
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
 	"""
@@ -457,8 +467,8 @@ def check_template_data(template_data: Union[list[JSONData], tuple[JSONData, req
 
 
 @pytest.fixture(name="cdn_post_data")
-def cdn_data_post(to_session: TOSession, request_template_data: list[JSONData]
-		  ) -> dict[str, object]:
+def cdn_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  pytestconfig: pytest.Config) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for cdns endpoint.
 
@@ -486,12 +496,19 @@ def cdn_data_post(to_session: TOSession, request_template_data: list[JSONData]
 	# Hitting cdns POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_cdn(data=cdn)
 	resp_obj = check_template_data(response, "cdns")
-	return resp_obj
+	pytestconfig.cache.set("cdnDomainName",resp_obj.get("domainName"))
+	yield resp_obj
+	cdn_id = resp_obj.get("id")
+	msg = to_session.delete_cdn_by_id(cdn_id=cdn_id)
+	logger.info("Deleting cdn data... %s", msg)
+	if  msg is None:
+		logger.error("Cdn returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="cache_group_post_data")
-def cache_group_data_post(to_session: TOSession, request_template_data: list[JSONData]
-			 ) -> dict[str, object]:
+def cache_group_data_post(to_session: TOSession, request_template_data: list[JSONData],
+			 pytestconfig: pytest.Config) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for cachegroup endpoint.
 
@@ -515,20 +532,30 @@ def cache_group_data_post(to_session: TOSession, request_template_data: list[JSO
 		raise TypeError(f"missing Cache group property '{e.args[0]}'") from e
 
 	# Check if type already exists, otherwise create it
-	type_data = check_template_data(request_template_data["types"], "types")
-	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+	type_id = pytestconfig.cache.get("typeId", default=None)
+	if type_id:
+		cache_group["typeId"] = type_id
+	else:
+		type_data = check_template_data(request_template_data["types"], "types")
+		type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"useInTable": "cachegroup"})
-	cache_group["typeId"] = type_object["id"]
+		cache_group["typeId"] = type_object["id"]
 
 	logger.info("New cachegroup data to hit POST method %s", cache_group)
 	# Hitting cachegroup POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_cachegroups(data=cache_group)
 	resp_obj = check_template_data(response, "cachegroup")
-	return resp_obj
+	yield resp_obj
+	cachegroup_id = resp_obj.get("id")
+	msg = to_session.delete_cachegroups(cache_group_id=cachegroup_id)
+	logger.info("Deleting cachegroup data... %s", msg)
+	if  msg is None:
+		logger.error("Cachegroup returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def parameter_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="parameter_post_data")
+def parameter_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for parameters endpoint.
@@ -556,11 +583,17 @@ def parameter_post_data(to_session: TOSession, request_template_data: list[JSOND
 	# Hitting cdns POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_parameter(data=parameter)
 	resp_obj = check_template_data(response, "parameter")
-	return resp_obj
+	yield resp_obj
+	parameter_id = resp_obj.get("id")
+	msg = to_session.delete_parameter(parameter_id=parameter_id)
+	logger.info("Deleting parameter data... %s", msg)
+	if  msg is None:
+		logger.error("Parameter returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="role_post_data")
+def role_data_post(to_session: TOSession, request_template_data: list[JSONData]
 			) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for roles endpoint.
@@ -589,7 +622,13 @@ def role_post_data(to_session: TOSession, request_template_data: list[JSONData]
 	# Hitting roles POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_role(data=role)
 	resp_obj = check_template_data(response, "role")
-	return resp_obj
+	yield resp_obj
+	role_name = resp_obj.get("name")
+	msg = to_session.delete_role(query_params={"name": role_name})
+	logger.info("Deleting role data... %s", msg)
+	if msg is None:
+		logger.error("Role returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="profile_post_data")
@@ -620,12 +659,18 @@ def profile_data_post(to_session: TOSession, request_template_data: list[JSONDat
 	# Hitting profile POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_profile(data=profile)
 	resp_obj = check_template_data(response, "profile")
-	return resp_obj
+	yield resp_obj
+	profile_id = resp_obj.get("id")
+	msg = to_session.delete_profile_by_id(profile_id=profile_id)
+	logger.info("Deleting profile data... %s", msg)
+	if msg is None:
+		logger.error("Profile returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="tenant_post_data")
-def tenant_data_post(to_session: TOSession, request_template_data: list[JSONData]
-		  ) -> dict[str, object]:
+def tenant_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  pytestconfig: pytest.Config) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for tenants endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
@@ -637,23 +682,33 @@ def tenant_data_post(to_session: TOSession, request_template_data: list[JSONData
 
 	# Return new post data and post response from tenants POST request
 	randstr = str(randint(0, 1000))
-	try:
-		name = tenant["name"]
-		if not isinstance(name, str):
-			raise TypeError(f"name must be str, not '{type(name)}'")
-		tenant["name"] = name[:4] + randstr
-	except KeyError as e:
-		raise TypeError(f"missing tenant property '{e.args[0]}'") from e
+	name = pytestconfig.cache.get("tenantName", default=None)
+	if name:
+		tenant["name"] = name
+	else:
+		try:
+			name = tenant["name"]
+			if not isinstance(name, str):
+				raise TypeError(f"name must be str, not '{type(name)}'")
+			tenant["name"] = name[:4] + randstr
+		except KeyError as e:
+			raise TypeError(f"missing tenant property '{e.args[0]}'") from e
 
 	logger.info("New tenant data to hit POST method %s", tenant)
 	# Hitting tenants POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_tenant(data=tenant)
 	resp_obj = check_template_data(response, "tenant")
-	return resp_obj
+	yield resp_obj
+	tenant_id = resp_obj.get("id")
+	msg = to_session.delete_tenant(tenant_id=tenant_id)
+	logger.info("Deleting tenant data... %s", msg)
+	if msg is None:
+		logger.error("Tenant returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def server_capabilities_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="server_capabilities_post_data")
+def server_capabilities_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for server_capabilities endpoint.
@@ -676,12 +731,18 @@ def server_capabilities_post_data(to_session: TOSession, request_template_data: 
 	except KeyError as e:
 		raise TypeError(f"missing server_capabilities property '{e.args[0]}'") from e
 
-	logger.info("New server_capabilities data to hit POST method %s", request_template_data)
+	logger.info("New server_capabilities data to hit POST method %s", server_capabilities)
 	# Hitting server_capabilities POST method
 	response: tuple[
 		JSONData, requests.Response] = to_session.create_server_capabilities(data=server_capabilities)
 	resp_obj = check_template_data(response, "server_capabilities")
-	return resp_obj
+	yield resp_obj
+	server_capability_name = resp_obj.get("name")
+	msg = to_session.delete_server_capabilities(query_params={"name": server_capability_name})
+	logger.info("Deleting server_capabilities data %s", msg)
+	if  msg is None:
+		logger.error("server_capabilities returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_server_capabilities_contract")
 
 
 @pytest.fixture(name="division_post_data")
@@ -707,11 +768,17 @@ def division_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	except KeyError as e:
 		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
 
-	logger.info("New division data to hit POST method %s", request_template_data)
+	logger.info("New division data to hit POST method %s", division)
 	# Hitting division POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_division(data=division)
 	resp_obj = check_template_data(response, "divisions")
-	return resp_obj
+	yield resp_obj
+	division_id = resp_obj.get("id")
+	msg = to_session.delete_division(division_id=division_id)
+	logger.info("Deleting division data... %s", msg)
+	if msg is None:
+		logger.error("Division returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="region_post_data")
@@ -741,11 +808,17 @@ def region_data_post(to_session: TOSession, request_template_data: list[JSONData
 	region["division"] = division_post_data["id"]
 	region["divisionName"] = division_post_data["name"]
 
-	logger.info("New region data to hit POST method %s", request_template_data)
+	logger.info("New region data to hit POST method %s", region)
 	# Hitting region POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_region(data=region)
 	resp_obj = check_template_data(response, "regions")
-	return resp_obj
+	yield resp_obj
+	region_name = resp_obj.get("name")
+	msg = to_session.delete_region(query_params={"name": region_name})
+	logger.info("Deleting region data... %s", msg)
+	if msg is None:
+		logger.error("Region returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="phys_locations_post_data")
@@ -782,18 +855,25 @@ def phys_locations_data_post(to_session: TOSession, request_template_data: list[
 		raise TypeError("malformed API response; 'id' property not a integer")
 	phys_locations["regionId"] = region_id
 
-	logger.info("New Phys_locations data to hit POST method %s", request_template_data)
+	logger.info("New Phys_locations data to hit POST method %s", phys_locations)
 	# Hitting region POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_physical_locations(
 		data=phys_locations)
 	resp_obj = check_template_data(response, "phys_locations")
-	return resp_obj
+	yield resp_obj
+	phys_location_id = resp_obj.get("id")
+	msg = to_session.delete_physical_location(physical_location_id=phys_location_id)
+	logger.info("Deleting physical locations data... %s", msg)
+	if msg is None:
+		logger.error("Physical location returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def server_post_data(to_session: TOSession, request_template_data: list[JSONData],
-		cdn_post_data: dict[str, object],
-		phys_locations_post_data: dict[str, object])-> dict[str, object]:
+@pytest.fixture(name="server_post_data")
+def server_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		profile_post_data: dict[str, object], cache_group_post_data: dict[str, object],
+		status_post_data: dict[str, object], phys_locations_post_data: dict[str, object],
+		pytestconfig: pytest.Config)-> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for server endpoint.
 
@@ -803,7 +883,6 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	:returns: Sample POST data and the actual API response.
 	"""
 	server = check_template_data(request_template_data["servers"], "servers")
-	randstr = str(randint(0, 1000))
 
 	# Check if type already exists, otherwise create it
 	type_data = check_template_data(request_template_data["types"], "types")
@@ -811,30 +890,19 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 				      {"useInTable": "server"})
 	type_id = type_object["id"]
 	server["typeId"] = type_id
+	pytestconfig.cache.set("typeId", type_id)
 
-	# Check if cachegroup with type already exists, otherwise create it
-	cache_group_data = check_template_data(request_template_data["cachegroup"], "cachegroup")
-	cache_group_object = create_or_get_existing(to_session, "cachegroups", "cachegroups",
-					    cache_group_data, {"typeId": type_id})
-	server["cachegroupId"]= cache_group_object["id"]
+	server["cachegroupId"]= cache_group_post_data["id"]
 
 	# Check if cdn already exists, otherwise create it
-	server["cdnId"] = cdn_post_data["id"]
-	server["domainName"] = cdn_post_data["domainName"]
+	server["cdnId"] = profile_post_data["cdn"]
+	server["domainName"] = pytestconfig.cache.get("cdnDomainName", default=None)
 
 	# Check if profile with cdn already exists, otherwise create it
-	profile_data = check_template_data(request_template_data["profiles"], "profiles")
-	profile_data["cdn"] = cdn_post_data["id"]
-	name = profile_data["name"]
-	profile_data["name"] = name[:4] + randstr
-	profile_object = create_if_not_exists(to_session, "profile", profile_data)
-	server["profileNames"] = [profile_object["name"]]
+	server["profileNames"] = [profile_post_data["name"]]
 
 	# Check if status already exists, otherwise create it
-	status_data = check_template_data(request_template_data["status"], "status")
-	status_object = create_or_get_existing(to_session, "statuses", "statuses",
-					status_data, {"name": "REPORTED"})
-	server["statusId"] = status_object["id"]
+	server["statusId"] = status_post_data["id"]
 
 	# Check if physical location with region already exists, otherwise create it
 	physical_location_id = phys_locations_post_data["id"]
@@ -846,13 +914,19 @@ def server_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting server POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_server(data=server)
 	resp_obj = check_template_data(response, "server")
-	return [resp_obj, profile_object["id"]]
+	yield resp_obj
+	server_id = resp_obj.get("id")
+	msg = to_session.delete_server_by_id(server_id=server_id)
+	logger.info("Deleting servers data... %s", msg)
+	if msg is None:
+		logger.error("Server returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="delivery_services_post_data")
 def delivery_services_data_post(to_session: TOSession, request_template_data: list[JSONData],
-				profile_post_data: dict[str, object]
-		      ) -> dict[str, object]:
+				tenant_post_data: dict[str, object], profile_post_data: dict[str, object],
+		      pytestconfig: pytest.Config) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for server endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
@@ -878,10 +952,8 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 	delivery_services["cdnId"] = profile_post_data["cdn"]
 
 	# Check if tenant already exists, otherwise create it
-	tenant_data = check_template_data(request_template_data["tenants"], "tenants")
-	tenant_object = create_or_get_existing(to_session, "tenants", "tenant",
-					tenant_data, {"name": "root"})
-	delivery_services["tenantId"] = tenant_object["id"]
+	pytestconfig.cache.set("tenantName", "root")
+	delivery_services["tenantId"] = tenant_post_data["id"]
 
 	# Check if type already exists, otherwise create it
 	type_data = {"name": "HTTP", "useInTable":"deliveryservice"}
@@ -896,11 +968,17 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice(
 		data=delivery_services)
 	resp_obj = check_template_data(response[0], "delivery_services")
-	return resp_obj
+	yield resp_obj
+	delivery_service_id = resp_obj.get("id")
+	msg = to_session.delete_deliveryservice_by_id(delivery_service_id=delivery_service_id)
+	logger.info("Deleting delivery service data... %s", msg)
+	if msg is None:
+		logger.error("delivery service returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def origin_post_data(to_session: TOSession, request_template_data: list[JSONData],
+@pytest.fixture(name="origin_post_data")
+def origin_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		     delivery_services_post_data: dict[str, object], tenant_post_data: dict[str, object]
 		      ) -> dict[str, object]:
 	"""
@@ -936,11 +1014,17 @@ def origin_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting origins POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_origins(data=origin)
 	resp_obj = check_template_data(response, "origins")
-	return resp_obj
+	yield resp_obj
+	origin_id = resp_obj.get("id")
+	msg = to_session.delete_origins(query_params={"id": origin_id})
+	logger.info("Deleting origin data... %s", msg)
+	if msg is None:
+		logger.error("Origin returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
-@pytest.fixture()
-def status_post_data(to_session: TOSession, request_template_data: list[JSONData]
+@pytest.fixture(name="status_post_data")
+def status_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for statuses endpoint.
@@ -965,7 +1049,14 @@ def status_post_data(to_session: TOSession, request_template_data: list[JSONData
 	# Hitting statuses POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_statuses(data=status)
 	resp_obj = check_template_data(response, "statuses")
-	return resp_obj
+	yield resp_obj
+	status_id = resp_obj.get("id")
+	msg = to_session.delete_status_by_id(status_id=status_id)
+	logger.info("Deleting status data... %s", msg)
+	if msg is None:
+		logger.error("Status returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
 
 @pytest.fixture(name="asn_post_data")
 def asn_data_post(to_session: TOSession, request_template_data: list[JSONData],
@@ -989,7 +1080,45 @@ def asn_data_post(to_session: TOSession, request_template_data: list[JSONData],
 	# Hitting asns POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_asn(data=asn)
 	resp_obj = check_template_data(response, "asn")
-	return resp_obj
+	yield resp_obj
+	asn_id = resp_obj.get("id")
+	msg = to_session.delete_asn(query_params={"id": asn_id})
+	logger.info("Deleting asn data... %s", msg)
+	if msg is None:
+		logger.error("asn returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="job_post_data")
+def job_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		     delivery_services_post_data: dict[str, object],
+		      ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for jobss endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get job data from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	job = check_template_data(request_template_data["jobs"], "jobs")
+
+	# Check if delivery_service already exists, otherwise create it
+	delivery_services_name = delivery_services_post_data["xmlId"]
+	if not isinstance(delivery_services_name, str):
+		raise TypeError("malformed API response; 'displayName' property not a string")
+	job["deliveryService"] = delivery_services_name
+
+	logger.info("New job data to hit POST method %s", job)
+	# Hitting jobs POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_job(data=job)
+	resp_obj = check_template_data(response, "jobs")
+	yield resp_obj
+	job_id = resp_obj.get("id")
+	msg = to_session.delete_job(query_params={"id": job_id})
+	logger.info("Deleting job data... %s", msg)
+	if msg is None:
+		logger.error("job returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
 
 @pytest.fixture(name="coordinate_post_data")
 def coordinate_data_post(to_session: TOSession, request_template_data: list[JSONData]
@@ -1017,4 +1146,10 @@ def coordinate_data_post(to_session: TOSession, request_template_data: list[JSON
 	# Hitting coordinates POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_coordinates(data=coordinate)
 	resp_obj = check_template_data(response, "coordinate")
-	return resp_obj
+	yield resp_obj
+	coordinate_id = resp_obj.get("id")
+	msg = to_session.delete_coordinates(query_params={"id": coordinate_id})
+	logger.info("Deleting Coordinate data... %s", msg)
+	if msg is None:
+		logger.error("coordinate returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")

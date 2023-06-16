@@ -75,9 +75,3 @@ def test_role_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for roles endpoint: API response was malformed")
-	finally:
-		# Delete Role after test execution to avoid redundancy.
-		role_name = role_post_data.get("name")
-		if to_session.delete_role(query_params={"name": role_name}) is None:
-			logger.error("Role returned by Traffic Ops is missing an 'name' property")
-			pytest.fail("Response from delete request is empty, Failing test_role_contract")

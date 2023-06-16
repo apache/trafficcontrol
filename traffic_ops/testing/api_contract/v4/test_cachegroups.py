@@ -75,9 +75,3 @@ def test_cache_group_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for cachegroup endpoint: API response was malformed")
-	finally:
-		# Delete Cache group after test execution to avoid redundancy.
-		cache_group_id = cache_group_post_data.get("id")
-		if to_session.delete_cachegroups(cache_group_id=cache_group_id) is None:
-			logger.error("Cachegroup returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_cachegroup_contract")
