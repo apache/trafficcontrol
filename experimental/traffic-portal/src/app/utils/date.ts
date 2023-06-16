@@ -37,7 +37,7 @@ export class MalformedDateError extends Error {
  * containing numbers as years, and parse them as 01-01 of that year at
  * 00:00:00.
  */
-const datePattern = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)(?:[\+-]00|Z)$/;
+const datePattern = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2}(?:\.\d+)?)(?:[+-]00|Z)$/;
 
 const knownDateProps: Set<PropertyKey> = new Set([
 	0,
