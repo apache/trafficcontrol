@@ -40,6 +40,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7516](https://github.com/apache/trafficcontrol/pull/7516) *t3c* added command line arg to control go_direct in parent.config
 
 ### Changed
+- [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
 - [#7521](https://github.com/apache/trafficcontrol/pull/7521) *Traffic Ops* Returns empty array instead of null when no permissions are given for roles endpoint using POST or PUT request.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Adds better labels to routing methods widget on the TP dashboard.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Simplifies DS button bar by moving DS changes / DSRs under More menu and renaming to 'View Change Requests'.
