@@ -26,6 +26,10 @@ export interface Environment {
 	 */
 	production?: boolean;
 	/**
+	 * For redirect from tpv2 to tpv1
+	 */
+	tpv1Url: string;
+	/**
 	 * If defined and `true`, the date-reviving HTTP interceptor will attempt to
 	 * convert anything that looks like a date into a `Date`. Otherwise, it uses
 	 * a specific list of property names known to contain Date information.

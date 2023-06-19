@@ -16,6 +16,7 @@ import { ReplaySubject } from "rxjs";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { environment } from "src/environments/environment";
 
 /**
  * Defines the type of the header nav
@@ -149,8 +150,35 @@ export class NavigationService {
 		}, {
 			children: [
 				{
+					href: `${environment.tpv1Url}/cache-checks`,
+					name: "Cache Checks"
+				},
+				{
+					href: `${environment.tpv1Url}/cache-stats`,
+					name: "Cache Stats"
+				}
+			],
+			name: "Monitor"
+		}, {
+			children: [
+				{
+					href: `${environment.tpv1Url}/delivery-services`,
+					name: "Delivery Services"
+				},
+				{
+					href: `${environment.tpv1Url}/delivery-service-requests`,
+					name: "Delivery Service Requests"
+				}
+			],
+			name: "Services"
+		}, {
+			children: [
+				{
 					href: "/core/types",
 					name: "Types"
+				},{
+					href: `${environment.tpv1Url}/origins`,
+					name: "Origins"
 				},
 				{
 					children: [
@@ -191,7 +219,15 @@ export class NavigationService {
 				{
 					href: "/core/iso-gen",
 					name: "Generate System ISO"
-				}
+				},
+				{
+					href:`${environment.tpv1Url}/jobs`,
+					name: "Invalidate Content"
+				},
+				{
+					href:`${environment.tpv1Url}/notifications`,
+					name: "Notifications"
+				},
 			],
 			name: "Other"
 		}]);

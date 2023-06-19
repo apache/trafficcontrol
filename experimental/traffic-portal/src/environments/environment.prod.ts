@@ -21,5 +21,6 @@ import type { Environment } from "./environment.type";
 export const environment: Environment = {
 	apiVersion: "4.0",
 	customModule: false,
-	production: true
+	production: true,
+	tpv1Url: "https://tp.staging.cdnlab.comcast.net/#!",
 };

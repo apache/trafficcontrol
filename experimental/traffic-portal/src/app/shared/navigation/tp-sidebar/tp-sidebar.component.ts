@@ -131,4 +131,15 @@ export class TpSidebarComponent implements OnInit {
 	public nodeHandle(node: TreeNavNode): string {
 		return `${node.name}${node.href ?? ""}`;
 	}
+
+	/**
+	 * Determines whether href is absolute or not - for TPv2 to TPv1 redirect
+	 *
+	 * @param href route string
+	 * @returns true if href absolute
+	 */
+	public isAbsoluteURL(href: string): boolean {
+		const regexPattern = /^(?:[a-z]+:)?\/\//i;
+		return regexPattern.test(href);
+	  }
 }
