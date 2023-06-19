@@ -73,9 +73,3 @@ def test_server_capabilities_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for server_capabilities: API response was malformed")
-	finally:
-		# Delete server_capabilities after test execution to avoid redundancy.
-		server_capability_name = server_capabilities_post_data.get("name")
-		if to_session.delete_server_capabilities(query_params={"name": server_capability_name}) is None:
-			logger.error("server_capabilities returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_server_capabilities_contract")

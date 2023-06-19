@@ -76,9 +76,3 @@ def test_parameter_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for cdn endpoint: API response was malformed")
-	finally:
-		# Delete Parameter after test execution to avoid redundancy.
-		parameter_id = parameter_post_data.get("id")
-		if to_session.delete_parameter(parameter_id=parameter_id) is None:
-			logger.error("Parameter returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_parameter_contract")

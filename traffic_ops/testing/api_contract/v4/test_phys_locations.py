@@ -77,14 +77,3 @@ def test_phys_locations_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for phys_locations endpoint: API response was malformed")
-	finally:
-		# Delete phys_location after test execution to avoid redundancy.
-		physical_location_id = phys_locations_post_data["id"]
-		if to_session.delete_physical_location(physical_location_id=physical_location_id) is None:
-			logger.error("phys_location returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_get_phys_location")
-
-		region_id = phys_locations_post_data["regionId"]
-		if to_session.delete_region(query_params={"id": region_id}) is None:
-			logger.error("Region returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_get_phys_location")
