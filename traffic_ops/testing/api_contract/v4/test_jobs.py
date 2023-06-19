@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 
-"""API Contract Test Case for profiles endpoint."""
+"""API Contract Test Case for jobs endpoint."""
 import logging
 from typing import Union
 
@@ -27,48 +27,49 @@ logger = logging.getLogger()
 
 Primitive = Union[bool, int, float, str, None]
 
-def test_profile_contract(to_session: TOSession,
+def test_job_contract(to_session: TOSession,
 	response_template_data: dict[str, Union[Primitive,
 					 list[Union[Primitive, dict[str, object], list[object]]],
-	dict[object, object]]], profile_post_data: dict[str, object]) -> None:
+	dict[object, object]]], job_post_data: dict[str, object]) -> None:
 	"""
-	Test step to validate keys, values and data types from profiles endpoint
+	Test step to validate keys, values and data types from jobs endpoint
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
-	:param profile_post_data: Fixture to get sample Profile data and actual Profile response.
+	:param job_post_data: Fixture to get sample job data and actual job response.
 	"""
-	# validate Profile keys from profiles get response
-	logger.info("Accessing /profiles endpoint through Traffic ops session.")
+	# validate job keys from jobs get response
+	logger.info("Accessing /jobs endpoint through Traffic ops session.")
 
-	profile_name = profile_post_data.get("name")
-	if not isinstance(profile_name, str):
-		raise TypeError("malformed profile in prerequisite data; 'name' not a string")
+	job_id = job_post_data.get("id")
+	if not isinstance(job_id, int):
+		raise TypeError("malformed job in prerequisite data; 'id' not a integer")
 
-	profile_get_response: tuple[
+	job_get_response: tuple[
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
-	] = to_session.get_profiles(query_params={"name": profile_name})
+	] = to_session.get_jobs(query_params={"id": job_id})
 	try:
-		profile_data = profile_get_response[0]
-		if not isinstance(profile_data, list):
+		job_data = job_get_response[0]
+		if not isinstance(job_data, list):
 			raise TypeError("malformed API response; 'response' property not an array")
 
-		first_profile = profile_data[0]
-		if not isinstance(first_profile, dict):
-			raise TypeError("malformed API response; first Profile in response is not an dict")
-		logger.info("Profile Api get response %s", first_profile)
+		first_job = job_data[0]
+		if not isinstance(first_job, dict):
+			raise TypeError("malformed API response; first job in response is not an dict")
+		logger.info("job Api get response %s", first_job)
 
-		profile_response_template = response_template_data.get("profiles")
-		if not isinstance(profile_response_template, dict):
+		job_response_template = response_template_data.get("jobs")
+		if not isinstance(job_response_template, dict):
 			raise TypeError(
-				f"Profile response template data must be a dict, not '{type(profile_response_template)}'")
+				f"job response template data must be a dict, not '{type(job_response_template)}'")
 
-		# validate profile values from prereq data in profiles get response.
-		prereq_values = [profile_post_data["name"], profile_post_data["cdn"]]
-		get_values = [first_profile["name"], first_profile["cdn"]]
+		# validate job values from prereq data in jobs get response.
+		keys = ["deliveryService", "invalidationType", "startTime", "ttlHours"]
+		prereq_values = [job_post_data[key] for key in keys]
+		get_values = [first_job[key] for key in keys]
 
-		assert validate(instance=first_profile, schema=profile_response_template) is None
+		assert validate(instance=first_job, schema=job_response_template) is None
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")

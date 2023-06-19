@@ -74,11 +74,3 @@ def test_status_contract(
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for status endpoint: API response was malformed")
-	finally:
-		# Delete Status after test execution to avoid redundancy.
-		try:
-			status_id = status_post_data["id"]
-			to_session.delete_status_by_id(status_id=status_id)
-		except IndexError:
-			logger.error("Status returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_get_status")

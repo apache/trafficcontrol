@@ -220,6 +220,15 @@
 			"cachegroupId": 10
 		}
 	],
+	"jobs": [
+		{
+			"deliveryService": "test",
+			"invalidationType": "REFRESH",
+			"regex": "/.+",
+			"startTime": "2030-11-09T01:02:03Z",
+			"ttlHours": 72
+      }
+	],
 	"coordinates": [
 		{
 			"name": "test",

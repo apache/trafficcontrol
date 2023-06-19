@@ -76,9 +76,3 @@ def test_coordinate_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for coordinates endpoint: API response was malformed")
-	finally:
-		# Delete coordinate after test execution to avoid redundancy.
-		coordinate_id = coordinate_post_data.get("id")
-		if to_session.delete_coordinates(query_params={"id": coordinate_id}) is None:
-			logger.error("coordinate returned by Traffic Ops is missing a 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_coordinates_contract")
