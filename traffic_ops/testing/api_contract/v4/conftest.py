@@ -1210,3 +1210,41 @@ def user_data_post(to_session: TOSession, request_template_data: list[JSONData],
 	# Close the cursor and the connection
 	cursor.close()
 	db_connection.close()
+
+
+@pytest.fixture(name="topology_post_data")
+def topology_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  server_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for topologies endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get coordinate request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	topology = check_template_data(request_template_data["topologies"], "topologies")
+
+	# Return new post data and post response from topologies POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = topology["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		topology["name"] = name[:4] + randstr
+	except KeyError as e:
+		raise TypeError(f"missing topology property '{e.args[0]}'") from e
+	
+	cachegroup_name = server_post_data["cachegroup"]
+	topology["nodes"][0]["cachegroup"] = cachegroup_name
+
+	logger.info("New topology data to hit POST method %s", topology)
+	# Hitting topology POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_topology(data=topology)
+	resp_obj = check_template_data(response, "topology")
+	yield resp_obj
+	topology_name = resp_obj.get("name")
+	msg = to_session.delete_topology(name=topology_name)
+	logger.info("Deleting topology data... %s", msg)
+	if msg is None:
+		logger.error("topology returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")

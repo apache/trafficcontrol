@@ -1323,5 +1323,46 @@
                 "type": "string"
             }
         }
+    },
+    "topologies": {
+        "type": "object",
+        "required": [
+            "description",
+            "name",
+            "nodes",
+            "lastUpdated"
+        ],
+        "properties": {
+            "description": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "nodes": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "cachegroup",
+                        "parents"
+                    ],
+                    "properties": {
+                        "cachegroup": {
+                            "type": "string"
+                        },
+                        "parents": {
+                            "type": [
+                                "array",
+                                "null"
+                            ]
+                        }
+                    }
+                }
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
     }
 }

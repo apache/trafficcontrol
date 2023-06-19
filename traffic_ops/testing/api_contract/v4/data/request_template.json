@@ -250,5 +250,16 @@
 			"role": "admin",
 			"tenantId": 1
 		}
+	],
+	"topologies": [
+		{
+			"name": "test",
+			"description": "This is my topology",
+			"nodes": [
+				{
+					"cachegroup": "test1"
+				}
+			]
+		}
 	]
 }
