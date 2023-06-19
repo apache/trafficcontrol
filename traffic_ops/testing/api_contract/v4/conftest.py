@@ -465,6 +465,30 @@ def create_or_get_existing(to_session: TOSession, get_object_type: str, post_obj
 	return existing_object or create_if_not_exists(to_session, post_object_type, data)
 
 
+def generate_unique_data(to_session: TOSession, base_name: str, object_type: str, query_key=None):
+	"""
+	Generate unique data for the given endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param object_type: api call name for get request.
+	:param base_name: Base name for get request.
+	:returns: Unique name for the corresponding api request.
+	@param data: 
+	"""
+	unique_name = base_name
+	if query_key is None:
+		query_key = "name"
+	while True:
+		try:
+			logger.info("Hitting request")
+			response = getattr(to_session, f"get_{object_type}")(query_params={query_key:unique_name})
+			data = response[0][0]
+			logger.info(data)
+		except IndexError:
+			return unique_name
+		unique_name = base_name[:4] + str(randint(0, 1000))
+		logger.info(unique_name)
+
+
 def check_template_data(template_data: Union[list[JSONData], tuple[JSONData, requests.Response]],
 						name: str) -> dict[str, object]:
 	"""
@@ -502,11 +526,14 @@ def cdn_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		name = cdn["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		cdn["name"] = name[:4] + randstr
+		cdn_name = name[:4] + randstr
+		cdn["name"] = generate_unique_data(to_session=to_session, base_name=cdn_name, object_type="cdns")
 		domain_name = cdn["domainName"]
 		if not isinstance(domain_name, str):
 			raise TypeError(f"domainName must be str, not '{type(domain_name)}")
-		cdn["domainName"] = domain_name[:5] + randstr
+		domainname = domain_name[:5] + randstr
+		cdn["domainName"] = generate_unique_data(to_session=to_session, base_name=domainname,
+					   object_type="cdns", query_key="domainName")
 	except KeyError as e:
 		raise TypeError(f"missing CDN property '{e.args[0]}'") from e
 
@@ -541,7 +568,9 @@ def cache_group_data_post(to_session: TOSession, request_template_data: list[JSO
 		name = cache_group["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		cache_group["name"] = name[:4] + randstr
+		cache_group_name = name[:4] + randstr
+		cache_group["name"] = generate_unique_data(to_session=to_session, base_name=cache_group_name,
+					     object_type="cachegroups")
 		short_name = cache_group["shortName"]
 		if not isinstance(short_name, str):
 			raise TypeError(f"shortName must be str, not '{type(short_name)}")
@@ -589,11 +618,15 @@ def parameter_data_post(to_session: TOSession, request_template_data: list[JSOND
 		name = parameter["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		parameter["name"] = name[:4] + randstr
+		parameter_name = name[:4] + randstr
+		parameter["name"] = generate_unique_data(to_session=to_session, base_name=parameter_name,
+					   object_type="parameters")
 		value = parameter["value"]
 		if not isinstance(value, str):
 			raise TypeError(f"value must be str, not '{type(value)}")
-		parameter["value"] = value[:5] + randstr
+		parameter_value = value[:5] + randstr
+		parameter["value"] = generate_unique_data(to_session=to_session, base_name=parameter_value,
+					    object_type="parameters", query_key="value")
 	except KeyError as e:
 		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
 
@@ -628,11 +661,9 @@ def role_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		name = role["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		role["name"] = name[:4] + randstr
-		description = role["description"]
-		if not isinstance(description, str):
-			raise TypeError(f"description must be str, not '{type(description)}")
-		role["description"] = description[:5] + randstr
+		role_name = name[:4] + randstr
+		role["name"] = generate_unique_data(to_session=to_session, base_name=role_name,
+				      object_type="roles")
 	except KeyError as e:
 		raise TypeError(f"missing Role property '{e.args[0]}'") from e
 
@@ -666,7 +697,9 @@ def profile_data_post(to_session: TOSession, request_template_data: list[JSONDat
 		name = profile["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		profile["name"] = name[:4] + randstr
+		profile_name = name[:4] + randstr
+		profile["name"] = generate_unique_data(to_session=to_session, base_name=profile_name,
+					 object_type="profiles")
 	except KeyError as e:
 		raise TypeError(f"missing Profile property '{e.args[0]}'") from e
 
@@ -708,7 +741,9 @@ def tenant_data_post(to_session: TOSession, request_template_data: list[JSONData
 			name = tenant["name"]
 			if not isinstance(name, str):
 				raise TypeError(f"name must be str, not '{type(name)}'")
-			tenant["name"] = name[:4] + randstr
+			tenant_name = name[:4] + randstr
+			tenant["name"] = generate_unique_data(to_session=to_session, base_name=tenant_name,
+					 object_type="tenants")
 		except KeyError as e:
 			raise TypeError(f"missing tenant property '{e.args[0]}'") from e
 
@@ -745,7 +780,9 @@ def server_capabilities_data_post(to_session: TOSession, request_template_data: 
 		name = server_capabilities["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		server_capabilities["name"] = name[:3] + randstr
+		server_capabilities_name = name[:3] + randstr
+		server_capabilities["name"] = generate_unique_data(to_session=to_session,
+						     base_name=server_capabilities_name, object_type="server_capabilities")
 	except KeyError as e:
 		raise TypeError(f"missing server_capabilities property '{e.args[0]}'") from e
 
@@ -782,7 +819,9 @@ def division_data_post(to_session: TOSession, request_template_data: list[JSONDa
 		name = division["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		division["name"] = name[:4] + randstr
+		division_name = name[:4] + randstr
+		division["name"] = generate_unique_data(to_session=to_session, base_name=division_name,
+					  object_type="divisions")
 	except KeyError as e:
 		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
 
@@ -818,7 +857,9 @@ def region_data_post(to_session: TOSession, request_template_data: list[JSONData
 		name = region["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		region["name"] = name[:4] + randstr
+		region_name = name[:4] + randstr
+		region["name"] = generate_unique_data(to_session=to_session, base_name=region_name,
+					object_type="regions")
 	except KeyError as e:
 		raise TypeError(f"missing Region property '{e.args[0]}'") from e
 
@@ -859,7 +900,9 @@ def phys_locations_data_post(to_session: TOSession, request_template_data: list[
 		name = phys_locations["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		phys_locations["name"] = name[:4] + randstr
+		phys_locations_name = name[:4] + randstr
+		phys_locations["name"] = generate_unique_data(to_session=to_session,
+						base_name=phys_locations_name, object_type="physical_locations")
 		short_name = phys_locations["shortName"]
 		if not isinstance(name, str):
 			raise TypeError(f"shortName must be str, not '{type(short_name)}'")
@@ -959,7 +1002,9 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 		xml_id = delivery_services["xmlId"]
 		if not isinstance(xml_id, str):
 			raise TypeError(f"xmlId must be str, not '{type(xml_id)}'")
-		delivery_services["xmlId"] = xml_id[:4] + randstr
+		xmlid= xml_id[:4] + randstr
+		delivery_services["xmlId"] = generate_unique_data(to_session=to_session, base_name=xmlid,
+						    object_type="deliveryservices", query_key="xmlId")
 	except KeyError as e:
 		raise TypeError(f"missing delivery_services property '{e.args[0]}'") from e
 
@@ -1012,7 +1057,9 @@ def origin_data_post(to_session: TOSession, request_template_data: list[JSONData
 		name = origin["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		origin["name"] = name[:4] + randstr
+		origin_name = name[:4] + randstr
+		origin["name"] = generate_unique_data(to_session=to_session, base_name=origin_name,
+					object_type="origins")
 	except KeyError as e:
 		raise TypeError(f"missing origin property '{e.args[0]}'") from e
 
@@ -1059,7 +1106,9 @@ def status_data_post(to_session: TOSession, request_template_data: list[JSONData
 		name = status["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		status["name"] = name[:4] + randstr
+		status_name = name[:4] + randstr
+		status["name"] = generate_unique_data(to_session=to_session, base_name=status_name,
+					object_type="statuses")
 	except KeyError as e:
 		raise TypeError(f"missing Status property '{e.args[0]}'") from e
 
@@ -1156,7 +1205,9 @@ def coordinate_data_post(to_session: TOSession, request_template_data: list[JSON
 		name = coordinate["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		coordinate["name"] = name[:4] + randstr
+		coordinate_name = name[:4] + randstr
+		coordinate["name"] = generate_unique_data(to_session=to_session,
+					    base_name=coordinate_name, object_type="coordinates")
 	except KeyError as e:
 		raise TypeError(f"missing coordinate property '{e.args[0]}'") from e
 
@@ -1191,7 +1242,9 @@ def user_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		username = user["username"]
 		if not isinstance(username, str):
 			raise TypeError(f"username must be str, not '{type(username)}'")
-		user["username"] = username[:4] + randstr
+		unique_name = username[:4] + randstr
+		user["username"] = generate_unique_data(to_session=to_session, base_name=unique_name,
+					  object_type="users", query_key="username")
 	except KeyError as e:
 		raise TypeError(f"missing user property '{e.args[0]}'") from e
 	user["tenantId"] = tenant_post_data["id"]
@@ -1230,10 +1283,12 @@ def topology_data_post(to_session: TOSession, request_template_data: list[JSONDa
 		name = topology["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		topology["name"] = name[:4] + randstr
+		unique_name = name[:4] + randstr
+		topology["name"] = generate_unique_data(to_session=to_session, base_name=unique_name,
+					  object_type="topologies")
 	except KeyError as e:
 		raise TypeError(f"missing topology property '{e.args[0]}'") from e
-	
+
 	cachegroup_name = server_post_data["cachegroup"]
 	topology["nodes"][0]["cachegroup"] = cachegroup_name
 
