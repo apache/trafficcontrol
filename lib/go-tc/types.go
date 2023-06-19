@@ -50,7 +50,7 @@ type TypeNullable struct {
 	UseInTable  *string    `json:"useInTable" db:"use_in_table"`
 }
 
-// TypesResponseV5 is the type of a response from Traffic Ops to a GET request
+// TypesResponseV5 is the type of a response (for RFC3339) from Traffic Ops to a GET Request
 // made to its /types API endpoint.
 type TypesResponseV5 struct {
 	Response []TypeV5 `json:"response"`

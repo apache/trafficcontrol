@@ -77,7 +77,7 @@ Response Structure
 	{ "response": [
 		{
 			"id": 48,
-			"lastUpdated": "2018-12-12T20:49:28.111111Z"",
+			"lastUpdated": "2018-12-12T10:59:07.962423+05:30",
 			"name": "TC_LOC",
 			"description": "Location for Traffic Control Component Servers",
 			"useInTable": "cachegroup"
@@ -152,7 +152,7 @@ Response Structure
 		"response": [
 		{
 			"id": 3004,
-			"lastUpdated": "2020-02-26T20:49:28.111111Z"",
+			"lastUpdated": "2020-02-26T10:59:07.962423+05:30",
 			"name": "Example01",
 			"description": "Example"
 			"useInTable": "server"

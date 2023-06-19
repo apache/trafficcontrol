@@ -216,7 +216,7 @@ WHERE id=:id`
 	return query
 }
 
-// Get [Version :V5]
+// GetV5 [Version :V5] - GetV5 will retrieve a list of types
 func GetV5(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -242,7 +242,57 @@ func GetV5(w http.ResponseWriter, r *http.Request) {
 
 	tx := inf.Tx
 
-	typeList, maxTime, code, usrErr, syErr = GetTypesV5(tx, inf.Params, useIMS, r.Header)
+	typeList, maxTime, code, usrErr, syErr = func(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.TypeV5, time.Time, int, error, error) {
+		var runSecond bool
+		var maxTime time.Time
+		typeList := []tc.TypeV5{}
+
+		selectQuery := `SELECT id, name, description, use_in_table, last_updated FROM type as typ`
+
+		// Query Parameters to Database Query column mappings
+		queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+			"name":       {Column: "typ.name"},
+			"id":         {Column: "typ.id", Checker: api.IsInt},
+			"useInTable": {Column: "typ.use_in_table"},
+		}
+		if _, ok := params["orderby"]; !ok {
+			params["orderby"] = "name"
+		}
+		where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
+		if len(errs) > 0 {
+			return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+		}
+
+		if useIMS {
+			runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
+			if !runSecond {
+				log.Debugln("IMS HIT")
+				return typeList, maxTime, http.StatusNotModified, nil, nil
+			}
+			log.Debugln("IMS MISS")
+		} else {
+			log.Debugln("Non IMS request")
+		}
+
+		query := selectQuery + where + orderBy + pagination
+		rows, err := tx.NamedQuery(query, queryValues)
+		if err != nil {
+			return nil, time.Time{}, http.StatusInternalServerError, nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			typ := tc.TypeV5{}
+
+			if err = rows.Scan(&typ.ID, &typ.Name, &typ.Description, &typ.UseInTable, &typ.LastUpdated); err != nil {
+				return nil, time.Time{}, http.StatusInternalServerError, nil, err
+			}
+			typeList = append(typeList, typ)
+		}
+
+		return typeList, maxTime, http.StatusOK, nil, nil
+	}(tx, inf.Params, useIMS, r.Header)
+
 	if code == http.StatusNotModified {
 		w.WriteHeader(code)
 		api.WriteResp(w, r, []tc.TypeV5{})
@@ -266,59 +316,7 @@ func GetV5(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, typeList)
 }
 
-// GetTypes [Version : V5] returns types.
-func GetTypesV5(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.TypeV5, time.Time, int, error, error) {
-	var runSecond bool
-	var maxTime time.Time
-	typeList := []tc.TypeV5{}
-
-	selectQuery := `SELECT id, name, description, use_in_table, last_updated FROM type as typ`
-
-	// Query Parameters to Database Query column mappings
-	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name":       {Column: "typ.name"},
-		"id":         {Column: "typ.id", Checker: api.IsInt},
-		"useInTable": {Column: "typ.use_in_table"},
-	}
-	if _, ok := params["orderby"]; !ok {
-		params["orderby"] = "name"
-	}
-	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
-	if len(errs) > 0 {
-		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
-	}
-
-	if useIMS {
-		runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
-		if !runSecond {
-			log.Debugln("IMS HIT")
-			return typeList, maxTime, http.StatusNotModified, nil, nil
-		}
-		log.Debugln("IMS MISS")
-	} else {
-		log.Debugln("Non IMS request")
-	}
-
-	query := selectQuery + where + orderBy + pagination
-	rows, err := tx.NamedQuery(query, queryValues)
-	if err != nil {
-		return nil, time.Time{}, http.StatusInternalServerError, nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		typ := tc.TypeV5{}
-
-		if err = rows.Scan(&typ.ID, &typ.Name, &typ.Description, &typ.UseInTable, &typ.LastUpdated); err != nil {
-			return nil, time.Time{}, http.StatusInternalServerError, nil, err
-		}
-		typeList = append(typeList, typ)
-	}
-
-	return typeList, maxTime, http.StatusOK, nil, nil
-}
-
-// TryIfModifiedSinceQuery [Version : V5] function receives transactions and header from GetServiceCategory function and returns bool value if status is not modified.
+// TryIfModifiedSinceQuery [Version : V5] function receives types and header from GetTypesV5 function and returns bool value if status is not modified.
 func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
 	var max time.Time
 	var imsDate time.Time
@@ -372,7 +370,7 @@ func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, quer
 	return runSecond, max
 }
 
-// CreateType [Version : V5] function creates the type with the passed data.
+// CreateType [Version : V5] - CreateTypeV5 function creates the type with the passed data.
 func CreateTypeV5(w http.ResponseWriter, r *http.Request) {
 	typ := tc.TypeV5{}
 
@@ -426,7 +424,7 @@ func CreateTypeV5(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// UpdateType [Version : V5] function updates name & description of the type passed.
+// UpdateType [Version : V5] - UpdateTypeV5 function updates name & description of the type passed.
 func UpdateTypeV5(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -473,7 +471,7 @@ func UpdateTypeV5(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// DeleteType [Version : V5] function deletes the type passed.
+// DeleteType [Version : V5] - DeleteTypeV5 function deletes the type passed.
 func DeleteTypeV5(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -518,6 +516,7 @@ func DeleteTypeV5(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// readAndValidateJsonStructV5 [Version : V5] - readAndValidateJsonStructV5 function validates the JSON object passed.
 func readAndValidateJsonStructV5(r *http.Request) (tc.TypeV5, error) {
 	var typ tc.TypeV5
 	if err := json.NewDecoder(r.Body).Decode(&typ); err != nil {
