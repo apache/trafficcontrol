@@ -15,5 +15,10 @@
  * the License.
  */
 
-INSERT INTO public.role_capability (role_id, cap_name)
-VALUES(2, 'DNS-SEC:READ');
+WITH role_id_query AS (
+    SELECT id FROM public.role WHERE name = 'operations'
+)
+INSERT INTO public.role_capability ("role_id", cap_name)
+SELECT id, 'DNS-SEC:READ'
+FROM role_id_query
+WHERE EXISTS (SELECT 1 FROM role_id_query);

@@ -15,4 +15,14 @@
  * the License.
  */
 
-DELETE FROM public."role_capability" rc WHERE rc.role_id=2 AND rc.cap_name='DNS-SEC:READ';
+WITH role_id_query AS (
+    SELECT id FROM public.role WHERE name = 'operations'
+)
+DELETE FROM public.role_capability
+WHERE role_id IN (
+    SELECT id FROM role_id_query
+)
+  AND cap_name = 'DNS-SEC:READ'
+  AND EXISTS (
+        SELECT 1 FROM role_id_query
+    );
