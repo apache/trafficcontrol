@@ -30,7 +30,6 @@ import psycopg2
 
 import pytest
 import requests
-
 from trafficops.tosession import TOSession
 from trafficops.restapi import OperationError
 
@@ -111,6 +110,33 @@ ArgsType.port.__doc__ = """The port number on which to connect to Traffic Ops.""
 ArgsType.api_version.__doc__ = """The version number of the API to use."""
 
 
+class DbArgsType(NamedTuple):
+	"""Represents the configuration needed to create Traffic Ops Database connection."""
+	db_name: str
+	user: str
+	password: str
+	hostname: str
+	port: int
+	sslmode: str
+
+	def __str__(self) -> str:
+		"""
+		Formats the configuration as a string. Omits password and extraneous
+		properties.
+
+		>>> print(ArgsType("db_name", "user", "password", "hostname", "port", "sslmode"))
+		Dbname: 'db_name', User: 'user'
+		"""
+		return f"User: '{self.db_name}', : '{self.user}'"
+
+DbArgsType.db_name.__doc__ = """The DB name used for authentication."""
+DbArgsType.user.__doc__ = """The DB username used for authentication."""
+DbArgsType.password.__doc__ = """The DB password used for authentication."""
+DbArgsType.hostname.__doc__ = """The DB hostname of the environment."""
+DbArgsType.port.__doc__ = """The DB port number on which to connect to Traffic Ops."""
+DbArgsType.sslmode.__doc__ = """Sslmode to use."""
+
+
 @pytest.fixture(autouse=True, scope='function')
 def delete_pytest_cache():
 	"""
@@ -132,6 +158,24 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 	)
 	parser.addoption(
 		"--to-url", action="store", help="Traffic Ops URL."
+	)
+	parser.addoption(
+		"--to-db-name", action="store", help="Name for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-user", action="store", help="User name for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-password", action="store", help="Password for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-hostname", action="store", help="Hostname for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-port", action="store", help="Port for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-sslmode", action="store", help="Sslmode for Traffic Ops Database."
 	)
 	parser.addoption(
 		"--config",
@@ -219,6 +263,88 @@ def parse_to_url(raw: str) -> tuple[APIVersion, int]:
 
 	return (api_version, port)
 
+
+@pytest.fixture(name="to_db_args", scope="session")
+def to_db_data(pytestconfig: pytest.Config) -> DbArgsType:
+	"""
+	PyTest fixture to store Traffic ops database arguments passed from command line.
+	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object.
+	:returns: Configuration for connecting to Traffic Ops database.
+	"""
+	session_data: JSONData = None
+	cfg_path = pytestconfig.getoption("--config")
+	if isinstance(cfg_path, str):
+		try:
+			with open(cfg_path, encoding="utf-8", mode="r") as session_file:
+				session_data = json.load(session_file)
+		except (FileNotFoundError, PermissionError) as read_err:
+			raise ValueError(f"could not read configuration file at '{cfg_path}'") from read_err
+
+	if session_data is not None and not isinstance(session_data, dict):
+		raise ValueError(
+			f"invalid configuration file; expected top-level object, got: {type(session_data)}"
+		)
+
+	to_db_name = coalesce_config(pytestconfig.getoption("--to-db-name"), "db_name",
+			      session_data, "TO_DB_NAME")
+	if not to_db_name:
+		raise ValueError(
+			"Traffic Ops Database name is not configured - use '--to-db-name', the config file, or an "
+			"environment variable to do so"
+		)
+
+	to_db_user = coalesce_config(pytestconfig.getoption("--to-db-user"), "db_user",
+			      session_data, "TO_DB_USER")
+	if not to_db_user:
+		raise ValueError(
+			"Traffic Ops Database Username is not configured - use '--to-db-user', the config file, or an "
+			"environment variable to do so"
+		)
+
+	to_db_password = coalesce_config(pytestconfig.getoption("--to-db-password"), "db_password",
+				  session_data, "TO_DB_PASSWORD")
+
+	if not to_db_password:
+		raise ValueError(
+			"Traffic Ops Database password is not configured - use '--to-db-password', the config file,"
+			"or an environment variable to do so"
+		)
+
+	to_db_hostname = coalesce_config(pytestconfig.getoption("--to-db-hostname"), "db_hostname",
+				  session_data, "TO_DB_HOSTNAME")
+	if not to_db_hostname:
+		raise ValueError(
+			"Traffic Ops Database Hostname is not configured - use '--to-db-hostname', the config file,"
+			"or an environment variable to do so"
+		)
+
+	to_db_port = coalesce_config(pytestconfig.getoption("--to-db-port"), "db_port",
+			      session_data, "TO_DB_PORT")
+	if not to_db_port:
+		raise ValueError(
+			"Traffic Ops Database Port is not configured - use '--to-db-port', the config file, or an "
+			"environment variable to do so"
+		)
+	port = int(to_db_port)
+
+	to_db_sslmode = coalesce_config(pytestconfig.getoption("--to-db-sslmode"), "db_sslmode",
+				 session_data, "TO_DB_SSLMODE")
+	if not to_db_sslmode:
+		raise ValueError(
+			"Traffic Ops Database Sslmode is not configured - use '--to-db-sslmode', the config file, or an "
+			"environment variable to do so"
+		)
+
+	return DbArgsType(
+		to_db_name,
+		to_db_user,
+		to_db_password,
+		to_db_hostname,
+		port,
+		to_db_sslmode
+	)
+
+
 @pytest.fixture(name="to_args")
 def to_data(pytestconfig: pytest.Config) -> ArgsType:
 	"""
@@ -243,7 +369,7 @@ def to_data(pytestconfig: pytest.Config) -> ArgsType:
 	to_user = coalesce_config(pytestconfig.getoption("--to-user"), "user", session_data, "TO_USER")
 	if not to_user:
 		raise ValueError(
-			"Traffic Ops password is not configured - use '--to-password', the config file, or an "
+			"Traffic Ops user is not configured - use '--to-user', the config file, or an "
 			"environment variable to do so"
 		)
 
@@ -313,20 +439,29 @@ def to_login(to_args: ArgsType) -> TOSession:
 
 
 @pytest.fixture(scope="session", name="db_connection")
-def open_db_connection():
+def to_db_connection(to_db_args: DbArgsType) -> psycopg2.connect:
 	"""
 	Creates new traffic ops db connection.
 	:returns: New Traffic ops database connection
 	"""
-	conn = psycopg2.connect(
-            user="traffic_ops",
-            password="twelve",
-            host="127.0.0.1",
-            port=5432,
-            database="traffic_ops",
-            sslmode="disable"
+	to_db_connection = None
+	try:
+		to_db_connection = psycopg2.connect(
+            user=to_db_args.user,
+            password=to_db_args.password,
+            host=to_db_args.hostname,
+            port=to_db_args.port,
+            database=to_db_args.db_name,
+            sslmode=to_db_args.sslmode
         )
-	return conn
+		print("Successfully connected to the Traffic Ops database.")
+		yield to_db_connection
+	except psycopg2.OperationalError as e:
+		logger.error("Error connecting to the Traffic Ops database : %s", e)
+	finally:
+		if to_db_connection:
+			to_db_connection.close()
+			logger.info("Closed Traffic ops DB connection.")
 
 
 @pytest.fixture(name="request_template_data", scope="session")
@@ -1253,6 +1388,12 @@ def user_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		unique_name = username[:4] + randstr
 		user["username"] = generate_unique_data(to_session=to_session, base_name=unique_name,
 					  object_type="users", query_key="username")
+		user_email = user["email"]
+		if not isinstance(user_email, str):
+			raise TypeError(f"user email must be str, not '{type(user_email)}'")
+		email = randstr + user_email
+		user["email"] = generate_unique_data(to_session=to_session, base_name=email,
+					  object_type="users", query_key="email")
 	except KeyError as e:
 		raise TypeError(f"missing user property '{e.args[0]}'") from e
 	user["tenantId"] = tenant_post_data["id"]
@@ -1262,15 +1403,14 @@ def user_data_post(to_session: TOSession, request_template_data: list[JSONData],
 	response: tuple[JSONData, requests.Response] = to_session.create_user(data=user)
 	resp_obj = check_template_data(response, "user")
 	yield resp_obj
-	coordinate_id = resp_obj.get("id")
+	user_id = resp_obj.get("id")
 	# Create a cursor object to interact with the database
 	cursor = db_connection.cursor()
-	cursor.execute("DELETE FROM tm_user WHERE id = %s;", (coordinate_id,))
+	cursor.execute("DELETE FROM tm_user WHERE id = %s;", (user_id,))
 	# Commit the changes
 	db_connection.commit()
-	# Close the cursor and the connection
+	# Close the cursor
 	cursor.close()
-	db_connection.close()
 
 
 @pytest.fixture(name="topology_post_data")
