@@ -465,12 +465,13 @@ def create_or_get_existing(to_session: TOSession, get_object_type: str, post_obj
 	return existing_object or create_if_not_exists(to_session, post_object_type, data)
 
 
-def generate_unique_data(to_session: TOSession, base_name: str, object_type: str, query_key=None):
+def generate_unique_data(to_session: TOSession, base_name: str, object_type: str, query_key=None)-> str:
 	"""
 	Generate unique data for the given endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param object_type: api call name for get request.
 	:param base_name: Base name for get request.
+	:param query_key: Hitting get request using specific query key.
 	:returns: Unique name for the corresponding api request.
 	@param data: 
 	"""
@@ -479,14 +480,18 @@ def generate_unique_data(to_session: TOSession, base_name: str, object_type: str
 		query_key = "name"
 	while True:
 		try:
-			logger.info("Hitting request")
-			response = getattr(to_session, f"get_{object_type}")(query_params={query_key:unique_name})
-			data = response[0][0]
-			logger.info(data)
-		except IndexError:
+			response = getattr(to_session, f"get_{object_type}")(query_params={
+				query_key:unique_name})
+			# Check if query params works for the corresponding api.
+			check_data = response[0]
+			if len(check_data) > 1:
+				logger.info("API response returns all api data, query params is not working.")
+				return unique_name
+			elif len(check_data) == 0:
+				raise ValueError("No Api response with the unique data")
+		except ValueError:
 			return unique_name
 		unique_name = base_name[:4] + str(randint(0, 1000))
-		logger.info(unique_name)
 
 
 def check_template_data(template_data: Union[list[JSONData], tuple[JSONData, requests.Response]],
@@ -882,7 +887,7 @@ def region_data_post(to_session: TOSession, request_template_data: list[JSONData
 
 @pytest.fixture(name="phys_locations_post_data")
 def phys_locations_data_post(to_session: TOSession, request_template_data: list[JSONData],
-			  region_post_data: dict[str, object]) -> dict[str, object]:
+			 region_post_data: dict[str, object]) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for phys_location endpoint.
 
@@ -904,9 +909,11 @@ def phys_locations_data_post(to_session: TOSession, request_template_data: list[
 		phys_locations["name"] = generate_unique_data(to_session=to_session,
 						base_name=phys_locations_name, object_type="physical_locations")
 		short_name = phys_locations["shortName"]
-		if not isinstance(name, str):
+		if not isinstance(short_name, str):
 			raise TypeError(f"shortName must be str, not '{type(short_name)}'")
-		phys_locations["shortName"] = short_name[:4] + randstr
+		shortname = short_name[:4] + randstr
+		phys_locations["shortName"] = generate_unique_data(to_session=to_session,
+						base_name=shortname, object_type="physical_locations", query_key="shortName")
 	except KeyError as e:
 		raise TypeError(f"missing Phys_location property '{e.args[0]}'") from e
 
@@ -1283,15 +1290,14 @@ def topology_data_post(to_session: TOSession, request_template_data: list[JSONDa
 		name = topology["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		unique_name = name[:4] + randstr
-		topology["name"] = generate_unique_data(to_session=to_session, base_name=unique_name,
+		topology_name = name[:4] + randstr
+		topology["name"] = generate_unique_data(to_session=to_session, base_name=topology_name,
 					  object_type="topologies")
 	except KeyError as e:
 		raise TypeError(f"missing topology property '{e.args[0]}'") from e
 
 	cachegroup_name = server_post_data["cachegroup"]
 	topology["nodes"][0]["cachegroup"] = cachegroup_name
-
 	logger.info("New topology data to hit POST method %s", topology)
 	# Hitting topology POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_topology(data=topology)
