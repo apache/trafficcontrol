@@ -465,7 +465,8 @@ def create_or_get_existing(to_session: TOSession, get_object_type: str, post_obj
 	return existing_object or create_if_not_exists(to_session, post_object_type, data)
 
 
-def generate_unique_data(to_session: TOSession, base_name: str, object_type: str, query_key=None)-> str:
+def generate_unique_data(to_session: TOSession, base_name: str, object_type: str,
+			 query_key=None)-> str:
 	"""
 	Generate unique data for the given endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
@@ -480,13 +481,13 @@ def generate_unique_data(to_session: TOSession, base_name: str, object_type: str
 		query_key = "name"
 	while True:
 		try:
-			response = getattr(to_session, f"get_{object_type}")(query_params={
-				query_key:unique_name})
+			response = getattr(to_session, f"get_{object_type}")(query_params={query_key:unique_name})
 			# Check if query params works for the corresponding api.
 			check_data = response[0]
 			if len(check_data) > 1:
 				logger.info("API response returns all api data, query params is not working.")
-				return unique_name
+				if not any(data.get(query_key) == unique_name for data in check_data):
+					return unique_name
 			elif len(check_data) == 0:
 				raise ValueError("No Api response with the unique data")
 		except ValueError:
