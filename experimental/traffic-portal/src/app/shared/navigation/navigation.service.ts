@@ -111,6 +111,12 @@ export class NavigationService {
 			href: "/core",
 			name: "Dashboard"
 		}, {
+			children: [{
+				href: "/core/cdns",
+				name: "CDNs"
+			}],
+			name: "CDNs",
+		}, {
 			children: [
 				{
 					href: "/core/servers",
