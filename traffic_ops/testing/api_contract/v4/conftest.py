@@ -454,7 +454,7 @@ def to_db_connection(to_db_args: DbArgsType) -> psycopg2.connect:
             database=to_db_args.db_name,
             sslmode=to_db_args.sslmode
         )
-		print("Successfully connected to the Traffic Ops database.")
+		logger.info("Successfully connected to the Traffic Ops database.")
 		yield to_db_connection
 	except psycopg2.OperationalError as e:
 		logger.error("Error connecting to the Traffic Ops database : %s", e)
