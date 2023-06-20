@@ -52,7 +52,7 @@ export class CDNTableComponent implements OnInit {
 			hide: false
 		},
 		{
-			field: "domain",
+			field: "domainName",
 			filter: "agTextColumnFilter",
 			headerName: "Domain",
 			hide: false,
