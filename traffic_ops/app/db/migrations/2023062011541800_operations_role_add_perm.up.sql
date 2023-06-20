@@ -16,4 +16,4 @@
  */
 
 INSERT INTO public.role_capability (role_id, cap_name)
-VALUES(2, 'DNS-SEC:UPDATE');
+VALUES(2, 'DNS-SEC:READ');
