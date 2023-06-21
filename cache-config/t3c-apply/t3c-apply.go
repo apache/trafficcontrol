@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
@@ -397,30 +398,27 @@ func CheckMaxmindUpdate(cfg config.Cfg) bool {
 	// Check if we have a URL for a maxmind db
 	// If we do, test if the file exists, do IMS based on disk time
 	// and download and unpack as needed
-	result := false
+	retresult := false
 	if cfg.MaxMindLocation != "" {
 		// Check if the maxmind db needs to be updated before reload
-		result = util.UpdateMaxmind(cfg.MaxMindLocation, cfg.TsConfigDir, cfg.ReportOnly)
-		if result {
-			log.Infoln("maxmind database was updated from " + cfg.MaxMindLocation)
-		} else {
-			log.Infoln("maxmind database not updated. Either not needed or curl/gunzip failure")
+		MaxMindList := strings.Split(cfg.MaxMindLocation, ",")
+		for _, v := range MaxMindList {
+			result := util.UpdateMaxmind(v, cfg.TsConfigDir, cfg.ReportOnly)
+			if result {
+				log.Infoln("maxmind database was updated from " + v)
+			} else {
+				log.Infoln("maxmind database not updated. Either not needed or curl/gunzip failure")
+			}
+			if result {
+				// If we've seen any database updates then return true to update ATS
+				retresult = true
+			}
 		}
 	} else {
 		log.Infoln(("maxmindlocation is empty, not checking for DB update"))
 	}
 
-	if cfg.MaxMindAnonymousLocation != "" {
-		result = util.UpdateMaxmind(cfg.MaxMindAnonymousLocation, cfg.TsConfigDir, cfg.ReportOnly)
-		if result {
-			log.Infoln("maxmind anonymous database was updated from " + cfg.MaxMindAnonymousLocation)
-		} else {
-			log.Infoln("maxmind anonymous database was not updated. Either not needed or curl/gunzip failure")
-		}
-	} else {
-		log.Infoln("maxmindanonymouslocation is empty, not checking for DB update")
-	}
-	return result
+	return retresult
 }
 
 const MetaDataFileName = `t3c-apply-metadata.json`

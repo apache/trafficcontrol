@@ -104,10 +104,9 @@ type Cfg struct {
 	DefaultClientTLSVersions    *string
 	// MaxMindLocation is a URL string for a download location for a maxmind database
 	// for use with either HeaderRewrite or Maxmind_ACL plugins
-	MaxMindLocation          string
-	MaxMindAnonymousLocation string
-	TsHome                   string
-	TsConfigDir              string
+	MaxMindLocation string
+	TsHome          string
+	TsConfigDir     string
 
 	ServiceAction          t3cutil.ApplyServiceActionFlag
 	NoConfirmServiceAction bool
@@ -252,7 +251,6 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	defaultEnableH2 := getopt.BoolLong("default-client-enable-h2", '2', "Whether to enable HTTP/2 on Delivery Services by default, if they have no explicit Parameter. This is irrelevant if ATS records.config is not serving H2. If omitted, H2 is disabled.")
 	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'V', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
 	maxmindLocationPtr := getopt.StringLong("maxmind-location", 'M', "", "URL of a maxmind gzipped database file, to be installed into the trafficserver etc directory.")
-	maxmindAnonymousLocationPtr := getopt.StringLong("maxmind-anonymous-location", 'Y', "", "Url of a maxmind gzipped database file for anonymous lookups, to be installed into the trafficserver etc directory.")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
 	const silentFlagName = "silent"
 	silentPtr := getopt.BoolLong(silentFlagName, 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
@@ -445,7 +443,6 @@ If any of the related flags are also set, they override the mode's default behav
 	toPass := *toPassPtr
 	dnsLocalBind := *dnsLocalBindPtr
 	maxmindLocation := *maxmindLocationPtr
-	maxmindAnonymousLocation := *maxmindAnonymousLocationPtr
 
 	if *version {
 		cfg := &Cfg{Version: appVersion, GitRevision: gitRevision}
@@ -564,7 +561,6 @@ If any of the related flags are also set, they override the mode's default behav
 		DefaultClientEnableH2:       defaultEnableH2,
 		DefaultClientTLSVersions:    defaultClientTLSVersions,
 		MaxMindLocation:             maxmindLocation,
-		MaxMindAnonymousLocation:    maxmindAnonymousLocation,
 		TsHome:                      TSHome,
 		TsConfigDir:                 tsConfigDir,
 		GoDirect:                    *goDirectPtr,
@@ -683,7 +679,6 @@ func printConfig(cfg Cfg) {
 	log.Debugf("NoConfirmServiceAction: %v\n", cfg.NoConfirmServiceAction)
 	log.Debugf("YumOptions: %s\n", cfg.YumOptions)
 	log.Debugf("MaxmindLocation: %s\n", cfg.MaxMindLocation)
-	log.Debugf("MaxmindAnonymousLocation: %s\n", cfg.MaxMindAnonymousLocation)
 }
 
 func Usage() {
