@@ -1,5 +1,5 @@
 {
-    "cdn-name": "mycdn",
+    "cdn-name": "CDN-in-a-Box",
     "enable-active-markdowns": true,
     "reason-code": "active",
     "to-credential-file": "/etc/to-creds",

@@ -99,7 +99,7 @@ func doPollAndUpdateCacheStatus(pi *ParentInfo, doTrafficOpsReq bool) {
 	} else {
 		// log.Debugf("updated parent info, total number of parents: %d\n", len(pi.Parents))
 		// TODO track map len
-		log.Debugf("updated parent info, total number of parents: x\n")
+		log.Debugf("updated parent info, total number of parents: %v\n", len(pi.GetParents()))
 	}
 
 	// read traffic manager cache statuses.
