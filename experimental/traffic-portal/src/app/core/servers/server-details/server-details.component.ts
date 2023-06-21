@@ -146,7 +146,6 @@ export class ServerDetailsComponent implements OnInit {
 			(e: unknown): void => {
 				console.error(`Failed to get ${obj}:`, e);
 			};
-		;
 
 		this.cacheGroupService.getCacheGroups().then(
 			cgs => {

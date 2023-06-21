@@ -24,21 +24,21 @@ import { CustomvalidityDirective } from "./customvalidity.directive";
  */
 @Component({
 	template: `
-	<input type="checkbox" [customvalidity]="validity"/>
-	<input type="color" [customvalidity]="validity"/>
-	<input type="date" [customvalidity]="validity"/>
-	<input type="datetime-local" [customvalidity]="validity"/>
-	<input type="email" [customvalidity]="validity"/>
-	<input type="month" [customvalidity]="validity"/>
-	<input type="number" [customvalidity]="validity"/>
-	<input type="password" [customvalidity]="validity"/>
-	<input type="range" [customvalidity]="validity"/>
-	<input type="tel" [customvalidity]="validity"/>
-	<input type="text" [customvalidity]="validity"/>
-	<input type="time" [customvalidity]="validity"/>
-	<input type="url" [customvalidity]="validity"/>
-	<input type="week" [customvalidity]="validity"/>
-	<input type="text" id="no-directive-applied"/>
+		<input type="checkbox" [customvalidity]="validity"/>
+		<input type="color" [customvalidity]="validity"/>
+		<input type="date" [customvalidity]="validity"/>
+		<input type="datetime-local" [customvalidity]="validity"/>
+		<input type="email" [customvalidity]="validity"/>
+		<input type="month" [customvalidity]="validity"/>
+		<input type="number" [customvalidity]="validity"/>
+		<input type="password" [customvalidity]="validity"/>
+		<input type="range" [customvalidity]="validity"/>
+		<input type="tel" [customvalidity]="validity"/>
+		<input type="text" [customvalidity]="validity"/>
+		<input type="time" [customvalidity]="validity"/>
+		<input type="url" [customvalidity]="validity"/>
+		<input type="week" [customvalidity]="validity"/>
+		<input type="text" id="no-directive-applied"/>
 	`
 })
 class TestComponent {
@@ -52,14 +52,14 @@ describe("CustomvalidityDirective", () => {
 
 	beforeEach(() => {
 		fixture = TestBed.configureTestingModule({
-			declarations: [ CustomvalidityDirective, TestComponent ]
+			declarations: [CustomvalidityDirective, TestComponent]
 		}).createComponent(TestComponent);
 
 		fixture.detectChanges();
 
 		customInputs = fixture.debugElement.queryAll(By.directive(CustomvalidityDirective));
 		normalInput = fixture.debugElement.query(By.css("#no-directive-applied"));
-	  });
+	});
 
 	it("should create an instance", () => {
 		const directive = new CustomvalidityDirective(new ElementRef(document.createElement("input")));

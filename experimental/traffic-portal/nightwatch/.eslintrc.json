@@ -12,7 +12,9 @@
 * limitations under the License.
 */
 {
-	"extends": ["../.eslintrc.json"],
+	"extends": [
+		"../.eslintrc.json"
+	],
 	"overrides": [
 		{
 			"parserOptions": {
@@ -29,7 +31,9 @@
 					"error",
 					{
 						"selector": "objectLiteralProperty",
-						"format": ["camelCase"],
+						"format": [
+							"camelCase"
+						],
 						"filter": {
 							"regex": "^[a-zA-Z0-9.,!?_: ]+$",
 							"match": false

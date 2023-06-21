@@ -57,6 +57,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 
 ### Fixed
+- [#7312](https://github.com/apache/trafficcontrol/issues/7312) *Docs* Changing docs for CDN locks for DELETE response structure v4 and v5. 
+- [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixes Delivery Service Requests V5 apis docs with RFC3339 date/time Format
 - [#7539](https://github.com/apache/trafficcontrol/pull/7539) *Traffic Monitor* Use stats_over_http timestamp to calculate bandwidth for TM's health. 
 - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
 - [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
