@@ -262,6 +262,7 @@ func Main() int {
 			log.Errorf("Error processing packages: %s\n", err)
 			return GitCommitAndExit(ExitCodePackagingError, FailureExitMsg, cfg, metaData, oldMetaData)
 		}
+		metaData.InstalledPackages = t3cutil.PackagesToMetaData(trops.Pkgs)
 
 		// check and make sure packages are enabled for startup
 		err = trops.CheckSystemServices()
