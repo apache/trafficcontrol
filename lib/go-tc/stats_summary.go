@@ -217,7 +217,7 @@ func (ss StatsSummaryV5) Validate(tx *sql.Tx) error {
 // UnmarshalJSON implements the encoding/json.Unmarshaler interface with a
 // customized decoding to force the date format on StatDate.
 func (ss *StatsSummaryV5) UnmarshalJSON(data []byte) error {
-	type Alias StatsSummary
+	type Alias StatsSummaryV5
 	resp := struct {
 		SummaryTime string  `json:"summaryTime"`
 		StatDate    *string `json:"statDate"`
@@ -319,6 +319,7 @@ func (ss *StatsSummaryLastUpdatedV5) UnmarshalJSON(data []byte) error {
 			ss.SummaryTime = &summaryTime
 			return nil
 		}
+		return err
 	}
 	return nil
 }
