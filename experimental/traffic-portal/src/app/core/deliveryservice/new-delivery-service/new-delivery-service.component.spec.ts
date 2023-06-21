@@ -11,10 +11,32 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+import { type HarnessLoader, parallel } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
+import { HttpClientModule } from "@angular/common/http";
+import { type ComponentFixture, TestBed } from "@angular/core/testing";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { MatButtonModule } from "@angular/material/button";
+import { MatRadioModule } from "@angular/material/radio";
+import { MatStepperModule } from "@angular/material/stepper";
+import { MatStepperHarness } from "@angular/material/stepper/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
+import { RouterTestingModule } from "@angular/router/testing";
+import { ReplaySubject } from "rxjs";
+import { Protocol } from "trafficops-types";
+
+import { APITestingModule } from "src/app/api/testing";
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
+import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
+
+import { NewDeliveryServiceComponent } from "./new-delivery-service.component";
 
 describe("NewDeliveryServiceComponent", () => {
+	let component: NewDeliveryServiceComponent;
+	let fixture: ComponentFixture<NewDeliveryServiceComponent>;
+	let loader: HarnessLoader;
 
-/*
 	beforeEach(async () => {
 		// mock the API
 		const mockCurrentUserService = jasmine.createSpyObj(["updateCurrentUser", "hasPermission", "login", "logout"], {currentUser: {
@@ -190,5 +212,4 @@ describe("NewDeliveryServiceComponent", () => {
 		expect(await steps[0].isSelected()).toBeTrue();
 		expect(await steps[1].isSelected()).toBeFalse();
 	});
-*/
 });

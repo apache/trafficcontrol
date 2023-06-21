@@ -51,7 +51,7 @@ export class StatusDetailsComponent {
 
 	constructor(
 		private readonly api: ServerService,
-		public readonly route: ActivatedRoute,
+		private readonly route: ActivatedRoute,
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
 		private readonly location: Location,

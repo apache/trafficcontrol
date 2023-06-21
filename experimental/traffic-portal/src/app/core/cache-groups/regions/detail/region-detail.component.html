@@ -16,7 +16,7 @@ limitations under the License.
 	<tp-loading *ngIf="!region"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="region">
 		<mat-card-header class="headers-container" *ngIf="!new">
-			<a mat-raised-button color="primary" [routerLink]="'/core/phys-locs'" [queryParams]="{region: region.name}">View Phys Locations</a>
+			<a mat-raised-button color="primary" [routerLink]="'/core/phys-locs'" [queryParams]="{region: region.name}">View Physical Locations</a>
 		</mat-card-header>
 		<mat-card-content class="container">
 			<mat-form-field>
