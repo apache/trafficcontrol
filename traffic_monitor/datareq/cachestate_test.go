@@ -163,3 +163,61 @@ func TestCreateCacheStatusesForKbps(t *testing.T) {
 		}
 	}
 }
+
+func TestResultSpanMS(t *testing.T) {
+	cacheResult := []cache.Result{
+		{
+			Available:       true,
+			Error:           nil,
+			ID:              "1",
+			Miscellaneous:   nil,
+			PollFinished:    nil,
+			PollID:          0,
+			PrecomputedData: cache.PrecomputedData{},
+			RequestTime:     0,
+			Statistics:      cache.Statistics{},
+			Time:            time.Now().Add(2 * time.Second),
+			UsingIPv4:       true,
+			Vitals:          cache.Vitals{},
+			InterfaceVitals: map[string]cache.Vitals{"interface1": cache.Vitals{
+				LoadAvg:    23.2,
+				BytesOut:   200,
+				BytesIn:    140,
+				KbpsOut:    300,
+				MaxKbpsOut: 1000,
+			}},
+		},
+		{
+			Available:       true,
+			Error:           nil,
+			ID:              "1",
+			Miscellaneous:   nil,
+			PollFinished:    nil,
+			PollID:          0,
+			PrecomputedData: cache.PrecomputedData{},
+			RequestTime:     0,
+			Statistics:      cache.Statistics{},
+			Time:            time.Now(),
+			UsingIPv4:       true,
+			Vitals:          cache.Vitals{},
+			InterfaceVitals: map[string]cache.Vitals{"interface1": cache.Vitals{
+				LoadAvg:    23.2,
+				BytesOut:   200,
+				BytesIn:    140,
+				KbpsOut:    300,
+				MaxKbpsOut: 1000,
+			}},
+		},
+	}
+
+	history := map[tc.CacheName][]cache.Result{}
+	history["edgeserver"] = cacheResult
+
+	val, err := resultSpanMS("edgeserver", history)
+	if err != nil {
+		t.Errorf("error while calculating span time: %s", err.Error())
+	}
+	if val != 1999 {
+		t.Errorf("expected spamn: ~2 seconds, got:%d", val)
+	}
+}
