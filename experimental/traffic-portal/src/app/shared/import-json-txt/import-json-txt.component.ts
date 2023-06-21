@@ -20,14 +20,15 @@ import { AlertLevel } from "trafficops-types";
 import { AlertService } from "../alert/alert.service";
 
 /**
- * Contains the structure of the data that ImportJsonTxtComponent accepts.
+ * Contains the structure of the data that {@link ImportJsonTxtComponent}
+ * accepts.
  */
 export interface ImportJsonTxtComponentModel {
 	title: string;
 }
 
 /**
- * Component for import of json or text
+ * Component for import of JSON or text files.
  */
 @Component({
 	selector: "tp-import-json-txt",
@@ -37,12 +38,14 @@ export interface ImportJsonTxtComponentModel {
 export class ImportJsonTxtComponent {
 
 	/**
-	 * Allowed import file types
+	 * Allowed import file types.
 	 */
-	public allowedType: string[] = ["application/json", "text/plain"];
+	public readonly allowedType: readonly string[] = ["application/json", "text/plain"];
+
+	public file: File | null = null;
 
 	/** Text editor value */
-	public inputTxt = null;
+	public inputTxt = "";
 
 	/**  File data imported */
 	public fileData = "";
@@ -50,7 +53,25 @@ export class ImportJsonTxtComponent {
 	/** Monitor whether any file is being drag over the dialog */
 	public dragOn = false;
 
-	public mimeAlertMsg = "Only JSON or text file is allowed.";
+	public readonly mimeAlertMsg = "Only JSON or text files are allowed.";
+
+	/**
+	 * The value of the file input is maintained by extracting drag-and-drop
+	 * files and setting the input's value accordingly. Note that when setting
+	 * this property, all but the first file are discarded, as it assumes that
+	 * multiple selection is not allowed.
+	 */
+	public get files(): FileList {
+		const dt = new DataTransfer();
+		if (this.file) {
+			dt.items.add(this.file);
+		}
+		return dt.files;
+	}
+
+	public set files(fl: FileList) {
+		this.file = fl[0] ?? null;
+	}
 
 	/**
 	 * Creates an instance of import json edit txt component.
@@ -98,15 +119,12 @@ export class ImportJsonTxtComponent {
 		evt.stopPropagation();
 
 		this.dragOn = false;
-
-		const file = evt.dataTransfer?.files[0];
-
-		// returns on when there is no file attachment is there
-		if (!file) {
+		if (!evt.dataTransfer) {
 			return;
 		}
 
-		this.docReader(file);
+		this.files = evt.dataTransfer.files;
+		this.docReader();
 	}
 
 	/**
@@ -115,13 +133,13 @@ export class ImportJsonTxtComponent {
 	 * @param event Event object for upload file
 	 */
 	public uploadFile(event: Event): void {
-		const file = (event.target as HTMLInputElement).files?.[0];
-
-		// returns on when there is no file attachment is there
-		if (!file) {
+		if (!(event.target instanceof HTMLInputElement) || !event.target.files) {
+			console.warn("file uploading triggered on non-file-input element:", event.target);
 			return;
 		}
-		this.docReader(file);
+
+		this.files = event.target.files;
+		this.docReader();
 	  }
 
 	/**
@@ -129,27 +147,32 @@ export class ImportJsonTxtComponent {
 	 *
 	 * @param file that is uploaded
 	 */
-	public docReader(file: File): void {
+	private docReader(): void {
+		if (!this.file) {
+			return;
+		}
 
 		/**
 		 * Check whether expected file is being uploaded
 		 * returns on file wrong file type is uploaded
 		 */
-		if (!this.allowedType.includes(file.type)) {
+		if (!this.allowedType.includes(this.file.type)) {
 			this.alertService.newAlert({ level: AlertLevel.ERROR, text: this.mimeAlertMsg });
 			return;
 		}
 
 		/** Format text with data from file data and formated date with date pipe */
-		this.fileData = `${file.name} - ${file.size} bytes, last modified: ${this.datePipe.transform(file.lastModified, "MM-dd-yyyy")}`;
+		const dateStr = this.datePipe.transform(this.file.lastModified, "MM-dd-yyyy");
+		this.fileData = `${this.file.name} - ${this.file.size} bytes, last modified: ${dateStr}`;
 
 		const reader = new FileReader();
-
-		reader.onload = (event): void => {
-			if(typeof(event.target?.result)==="string"){
-				this.inputTxt = JSON.parse(event.target?.result);
+		reader.addEventListener("load",
+			event => {
+				if(typeof(event.target?.result)==="string"){
+					this.inputTxt = JSON.parse(event.target.result);
+				}
 			}
-		};
-		reader.readAsText(file);
+		);
+		reader.readAsText(this.file);
 	}
 }
