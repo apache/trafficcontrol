@@ -84,7 +84,7 @@ Response Structure
 :fallbacks:                     An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in :ref:`non-rfc-datetime`
+:lastUpdated:                   The time and date at which this entry was last updated in :rfc:`3339`
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
@@ -109,7 +109,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: t1W65/2kj25QyHt0Ib0xpBaAR2sXu2kOsRZ49WjKZp/AK5S1YWhX7VNWCuUGiN1VNM4QRNqODC/7ewhYDFUncA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 14 Nov 2018 19:14:28 GMT
+	Date: Tue, 30 May 2023 20:41:58 GMT
 	Content-Length: 385
 
 	{ "alerts": [
@@ -135,7 +135,7 @@ Response Structure
 		],
 		"typeName": "EDGE_LOC",
 		"typeId": 23,
-		"lastUpdated": "2018-11-14 19:14:28+00"
+		"lastUpdated": "2023-05-30T19:52:58.183642+00:00"
 	}}
 
 
@@ -181,7 +181,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 5jZBgO7h1eNF70J/cmlbi3Hf9KJPx+WLMblH/pSKF3FWb/10GUHIN35ZOB+lN5LZYCkmk3izGbTFkiruG8I41Q==
 	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 14 Nov 2018 20:31:04 GMT
+	Date: Tue, 30 May 2023 20:41:58 GMT
 	Content-Length: 57
 
 	{ "alerts": [
