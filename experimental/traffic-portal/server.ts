@@ -126,13 +126,14 @@ export function app(serverConfig: ServerConfig): express.Express {
 		["ttf", "font/ttf"],
 		["svg", "image/svg+xml"]
 	]);
+
 	// Could just use express compression `server.use(compression())` but that is calculated for each request
 	server.get("*.(js|css|ttf|svg)", function(req, res, next) {
 		const type = req.path.split(".").pop();
 		if (type === undefined || !typeMap.has(type)) {
 			return next();
 		}
-		const path = join(serverConfig.browserFolder, req.url.substring(1, req.url.length));
+		const path = join(serverConfig.browserFolder, req.path.substring(1, req.path.length));
 		const file = foundFiles.get(path);
 		if(!file || file.compressions.length === 0) {
 			return next();
@@ -142,7 +143,7 @@ export function app(serverConfig: ServerConfig): express.Express {
 			if (acceptedEncodings.indexOf(compression.headerEncoding) === -1) {
 				continue;
 			}
-			req.path = `${req.path}.${compression.fileExt}`;
+			req.url = req.url.replace(`${req.path}`, `${req.path}.${compression.fileExt}`);
 			res.set("Content-Encoding", compression.headerEncoding);
 			res.set("Content-Type", typeMap.get(type));
 			console.log(`Serving ${compression.name} compressed file ${req.path}`);
