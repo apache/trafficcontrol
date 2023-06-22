@@ -261,5 +261,11 @@
 				}
 			]
 		}
+	],
+	"cdn_notifications": [
+		{
+			"cdn": "cdn1",
+			"notification": "the content of the notification"
+		}
 	]
 }

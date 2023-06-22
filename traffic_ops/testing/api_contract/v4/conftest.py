@@ -1450,3 +1450,32 @@ def topology_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	if msg is None:
 		logger.error("topology returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="cdn_notification_post_data")
+def cdn_notification_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  cdn_post_data:dict[str, object], db_connection: psycopg2.connect) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for cdn_notifications endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get cdn_notification request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	cdn_notification = check_template_data(request_template_data["cdn_notifications"], "cdn_notifications")
+
+	# Return new post data and post response from cdn_notifications POST request
+	cdn_notification["cdn"] = cdn_post_data["name"]
+	logger.info("New cdn_notification data to hit POST method %s", cdn_notification)
+	# Hitting cdn_notification POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_cdn_notification(data=cdn_notification)
+	resp_obj = check_template_data(response, "cdn_notification")
+	yield resp_obj
+	notification_id = resp_obj.get("id")
+	# Create a cursor object to interact with the database
+	cursor = db_connection.cursor()
+	cursor.execute("DELETE FROM cdn_notification WHERE id = %s;", (notification_id,))
+	# Commit the changes
+	db_connection.commit()
+	# Close the cursor
+	cursor.close()

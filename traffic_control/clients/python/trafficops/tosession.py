@@ -559,6 +559,31 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+	#
+	# CDN Notifications
+	#
+	@api_request('get', 'cdn_notifications', ('3.0', '4.0', '4.1', '5.0'))
+	def get_cdn_notifications(self, query_params=None):
+		"""
+		Get all CDN notifications.
+		:ref:`to-api-cdn-notifications`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'cdn_notifications', ('3.0', '4.0', '4.1', '5.0'))
+	def create_cdn_notification(self, data=None):
+		"""
+		Create a new CDN notification.
+		:ref:`to-api-cdn-notifications`
+		:param data: The parameter data to use for cdn creation.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 	#
 	# CDN Topology
