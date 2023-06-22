@@ -407,7 +407,7 @@ func CheckMaxmindUpdate(cfg config.Cfg) bool {
 			if result {
 				log.Infoln("maxmind database was updated from " + v)
 			} else {
-				log.Infoln("maxmind database not updated. Either not needed or curl/gunzip failure")
+				log.Infoln("maxmind database not updated. Either not needed or curl/gunzip failure: " + v)
 			}
 			if result {
 				// If we've seen any database updates then return true to update ATS
