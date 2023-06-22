@@ -22,7 +22,6 @@ import { ProfileImport, ResponseProfile } from "trafficops-types";
 import { ProfileService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { FileUtilsService } from "src/app/shared/file-utils.service";
 import {
 	ContextMenuActionEvent,
 	ContextMenuItem,
@@ -101,9 +100,9 @@ export class ProfileTableComponent implements OnInit {
 			name: "Clone Profile",
 		},
 		{
-			action: "export-profile",
-			multiRow: false,
+			href: (profile: ResponseProfile): string => `/api/${this.api.apiVersion}/profiles/${profile.id}/export`,
 			name: "Export Profile",
+			newTab: true
 		},
 		{
 			action: "manage-parameters",
@@ -144,7 +143,7 @@ export class ProfileTableComponent implements OnInit {
 		private readonly navSvc: NavigationService,
 		private readonly dialog: MatDialog,
 		public readonly auth: CurrentUserService,
-		private readonly fileUtil: FileUtilsService) {
+	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.profiles = this.api.getProfiles();
 		this.navSvc.headerTitle.next("Profiles");
@@ -193,10 +192,6 @@ export class ProfileTableComponent implements OnInit {
 						this.api.deleteProfile(data.id).then(async () => this.profiles = this.api.getProfiles());
 					}
 				});
-				break;
-			case "export-profile":
-				const response = await this.api.exportProfile(data.id);
-				this.fileUtil.download(response,data.name);
 				break;
 		}
 	}
