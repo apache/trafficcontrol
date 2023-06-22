@@ -261,5 +261,12 @@
 				}
 			]
 		}
+	],
+	"steering": [
+		{
+			"targetId": 61,
+			"value": 100,
+			"typeId": 43
+		}
 	]
 }
