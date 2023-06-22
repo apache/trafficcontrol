@@ -117,13 +117,13 @@ export class ProfileService extends APIService {
 	}
 
 	/**
-	 * Deletes an existing profile.
+	 * Deletes an existing Profile.
 	 *
-	 * @param profileId Id of the profile to delete.
-	 * @returns The success message.
+	 * @param profile The Profile to delete, or just its ID.
+	 * @returns The deleted Profile.
 	 */
-	public async deleteProfile(profileId: number | ResponseProfile): Promise<ResponseProfile> {
-		const id = typeof (profileId) === "number" ? profileId : profileId.id;
+	public async deleteProfile(profile: number | ResponseProfile): Promise<ResponseProfile> {
+		const id = typeof (profile) === "number" ? profile : profile.id;
 		return this.delete<ResponseProfile>(`profiles/${id}`).toPromise();
 	}
 

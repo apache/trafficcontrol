@@ -220,15 +220,16 @@ export class ProfileService {
 	}
 
 	/**
-	 * Deletes an existing profile.
+	 * Deletes an existing Profile.
 	 *
-	 * @param id Id of the profile to delete.
-	 * @returns The success message.
+	 * @param profile The Profile to delete, or just its ID.
+	 * @returns The deleted Profile.
 	 */
-	public async deleteProfile(id: number | ResponseProfile): Promise<ResponseProfile> {
+	public async deleteProfile(profile: number | ResponseProfile): Promise<ResponseProfile> {
+		const id = typeof(profile) === "number" ? profile : profile.id;
 		const index = this.profiles.findIndex(t => t.id === id);
 		if (index === -1) {
-			throw new Error(`no such profile: ${id}`);
+			throw new Error(`no such Profile #${id}`);
 		}
 		return this.profiles.splice(index, 1)[0];
 	}
