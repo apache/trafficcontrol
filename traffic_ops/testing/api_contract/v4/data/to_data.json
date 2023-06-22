@@ -1,6 +1,12 @@
 {
     "user": "admin",
-    "password": "twelve",
+    "password": "twelve12",
     "url": "https://localhost/api/4.0",
-    "port": 443
+    "port": 443,
+    "db_name":"traffic_ops",
+    "db_user":"traffic_ops",
+    "db_password":"twelve",
+    "db_hostname":"127.0.0.1",
+    "db_port": "5432",
+    "db_sslmode": "disable"
 }

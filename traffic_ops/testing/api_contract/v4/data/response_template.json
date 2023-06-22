@@ -1095,5 +1095,274 @@
                 "type": "integer"
             }
         }
+    },
+    "asns": {
+        "type": "object",
+        "required": [
+            "asn",
+            "cachegroup",
+            "cachegroupId",
+            "id",
+            "lastUpdated"
+        ],
+        "properties": {
+            "asn": {
+                "type": "integer"
+            },
+            "cachegroup": {
+                "type": "string"
+            },
+            "cachegroupId": {
+                "type": "integer"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
+    },
+    "jobs": {
+        "type": "object",
+        "required": [
+            "id",
+            "assetUrl",
+            "createdBy",
+            "deliveryService",
+            "ttlHours",
+            "invalidationType",
+            "startTime"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "assetUrl": {
+                "type": "string"
+            },
+            "createdBy": {
+                "type": "string"
+            },
+            "deliveryService": {
+                "type": "string"
+            },
+            "ttlHours": {
+                "type": "integer"
+            },
+            "invalidationType": {
+                "type": "string"
+            },
+            "startTime": {
+                "type": "string"
+            }
+        }
+    },
+    "coordinates": {
+        "type": "object",
+        "required": [
+            "id",
+            "name",
+            "latitude",
+            "longitude",
+            "lastUpdated"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "name": {
+                "type": "string"
+            },
+            "latitude": {
+                "type": "number"
+            },
+            "longitude": {
+                "type": "number"
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
+    },
+    "users": {
+        "type": "object",
+        "required": [
+            "addressLine1",
+            "addressLine2",
+            "changeLogCount",
+            "city",
+            "company",
+            "country",
+            "email",
+            "fullName",
+            "gid",
+            "id",
+            "lastAuthenticated",
+            "lastUpdated",
+            "newUser",
+            "phoneNumber",
+            "postalCode",
+            "publicSshKey",
+            "registrationSent",
+            "role",
+            "stateOrProvince",
+            "tenant",
+            "tenantId",
+            "ucdn",
+            "uid",
+            "username"
+        ],
+        "properties": {
+            "addressLine1": {
+                "type": "string"
+            },
+            "addressLine2": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "changeLogCount": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "city": {
+                "type": "string"
+            },
+            "company": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "country": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "email": {
+                "type": "string"
+            },
+            "fullName": {
+                "type": "string"
+            },
+            "gid": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastAuthenticated": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "newUser": {
+                "type": "boolean"
+            },
+            "phoneNumber": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "postalCode": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "publicSshKey": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "registrationSent": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "role": {
+                "type": "string"
+            },
+            "stateOrProvince": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "tenant": {
+                "type": "string"
+            },
+            "tenantId": {
+                "type": "integer"
+            },
+            "ucdn": {
+                "type": "string"
+            },
+            "uid": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "username": {
+                "type": "string"
+            }
+        }
+    },
+    "topologies": {
+        "type": "object",
+        "required": [
+            "description",
+            "name",
+            "nodes",
+            "lastUpdated"
+        ],
+        "properties": {
+            "description": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "nodes": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "cachegroup",
+                        "parents"
+                    ],
+                    "properties": {
+                        "cachegroup": {
+                            "type": "string"
+                        },
+                        "parents": {
+                            "type": [
+                                "array",
+                                "null"
+                            ]
+                        }
+                    }
+                }
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
     }
 }

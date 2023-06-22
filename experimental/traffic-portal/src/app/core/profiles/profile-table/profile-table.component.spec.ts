@@ -21,6 +21,7 @@ import { ProfileType } from "trafficops-types";
 
 import { ProfileService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
+import { FileUtilsService } from "src/app/shared/file-utils.service";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
 
 import { ProfileTableComponent } from "./profile-table.component";
@@ -36,6 +37,9 @@ describe("ProfileTableComponent", () => {
 				APITestingModule,
 				RouterTestingModule,
 				MatDialogModule
+			],
+			providers:[
+				FileUtilsService
 			]
 		})
 			.compileComponents();

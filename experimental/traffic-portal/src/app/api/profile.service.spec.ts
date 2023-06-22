@@ -14,7 +14,7 @@
  */
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
-import {ProfileType, ResponseProfile} from "trafficops-types";
+import { ProfileExport, ProfileType , ResponseProfile} from "trafficops-types";
 
 import { ProfileService } from "./profile.service";
 
@@ -30,6 +30,26 @@ describe("ProfileService", () => {
 		name: "TestQuest",
 		routingDisabled: false,
 		type: ProfileType.ATS_PROFILE
+	};
+	const importProfile = {
+		parameters:[],
+		profile: {
+			cdn: "CDN",
+			description: "",
+			id: 1,
+			name: "TestQuest",
+			type: ProfileType.ATS_PROFILE,
+		}
+	};
+	const exportProfile: ProfileExport = {
+		alerts: null,
+		parameters:[],
+		profile: {
+			cdn: "ALL",
+			description: "test",
+			name: "TRAFFIC_ANALYTICS",
+			type: ProfileType.TS_PROFILE
+		}
 	};
 
 	const parameter = {
@@ -114,6 +134,25 @@ describe("ProfileService", () => {
 		expect(req.request.body).toBeNull();
 		req.flush({response: profile});
 		await expectAsync(responseP).toBeResolvedTo(profile);
+	});
+
+	it("sends request for Export object by Profile ID", async () => {
+		const response = service.exportProfile(profile.id);
+		const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/profiles/${profile.id}/export`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(0);
+		req.flush(exportProfile);
+		await expectAsync(response).toBeResolvedTo(exportProfile);
+	});
+
+	it("send request for import profile", async () => {
+		const responseP = service.importProfile(importProfile);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles/import`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBe(importProfile);
+		req.flush({response: importProfile.profile});
+		await expectAsync(responseP).toBeResolvedTo(importProfile.profile);
 	});
 
 	it("sends requests multiple Parameters", async () => {

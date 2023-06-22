@@ -31,12 +31,15 @@ describe("ProfileDetailComponent", () => {
 	let paramMap: jasmine.Spy;
 	let service: ProfileService;
 
-	const navSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
+	const navSvc = jasmine.createSpyObj([], {
+		headerHidden: new ReplaySubject<boolean>(),
+		headerTitle: new ReplaySubject<string>()
+	});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ ProfileDetailComponent ],
-			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
-			providers: [ { provide: NavigationService, useValue: navSvc } ]
+			declarations: [ProfileDetailComponent],
+			imports: [APITestingModule, RouterTestingModule, MatDialogModule],
+			providers: [{provide: NavigationService, useValue: navSvc}]
 		})
 			.compileComponents();
 
@@ -66,9 +69,9 @@ describe("ProfileDetailComponent", () => {
 	});
 
 	it("existing profile", async () => {
-    	const id = 1;
+		const id = 1;
 		paramMap.and.returnValue(id);
-    	const profile = await service.getProfiles(id);
+		const profile = await service.getProfiles(id);
 		fixture = TestBed.createComponent(ProfileDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
