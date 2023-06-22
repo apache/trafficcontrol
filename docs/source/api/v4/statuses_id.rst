@@ -156,3 +156,62 @@ Response Structure
 			"lastUpdated": "2018-12-10 19:11:17+00",
 		}
 	]}
+
+``DELETE``
+==========
+Deletes a :term:`Status`.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Permissions Required: STATUS:DELETE, STATUS:READ
+:Response Type:  ``undefined``
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+----------+--------------------------------------------------------------------------------------------------------------------------+
+	| Name | Required | Description                                                                                                              |
+	+======+==========+==========================================================================================================================+
+	| id   | yes      | The integral, unique identifier of the desired :abbr:`Status`-to-:term:`Server` association |
+	+------+----------+--------------------------------------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/4.0/statuses/18 HTTP/1.1
+	User-Agent: curl/8.1.2
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+	Content-Length: 0
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 15 Jun 2023 22:37:37 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: T8wtKKwyOKKVwDwoNCNvETllsByDiEe4CrpeS7Zdox+rXMgPb3FBlKmmgu4CpxbWdhpiODKqKn+gsSq5K4yvIQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Jun 2023 21:41:18 GMT
+	Content-Length: 62
+
+	{
+		"alerts": [
+			{
+				"text": "status was deleted.",
+				"level": "success"
+			}
+		]
+	}
+
+
