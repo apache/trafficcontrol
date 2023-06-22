@@ -502,7 +502,7 @@ func DeleteTypeV5(w http.ResponseWriter, r *http.Request) {
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete service_category: %w", err))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete type: %w", err))
 		return
 	}
 	if rowsAffected == 0 {
@@ -520,7 +520,7 @@ func DeleteTypeV5(w http.ResponseWriter, r *http.Request) {
 func readAndValidateJsonStructV5(r *http.Request) (tc.TypeV5, error) {
 	var typ tc.TypeV5
 	if err := json.NewDecoder(r.Body).Decode(&typ); err != nil {
-		userErr := fmt.Errorf("error decoding POST request body into ServerCapabilityV5 struct %w", err)
+		userErr := fmt.Errorf("error decoding POST request body into TypeV5 struct %w", err)
 		return typ, userErr
 	}
 
