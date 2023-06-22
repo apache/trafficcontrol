@@ -20,11 +20,11 @@
 
 ifeq ($(OS),Windows_NT)
     T3C_DIR_SEP := \\
-	RM := del /s /q
+	REM := del /s /q
 	PY := python
 else
     T3C_DIR_SEP := /
-	RM := rm -rf
+	REM := rm -rf
 	PY := python3
 endif
 
@@ -89,7 +89,7 @@ help:
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 
 clean:
-	-$(RM) $(BUILDDIR) $(T3C_RST_OUT)
+	-$(REM) $(BUILDDIR) $(T3C_RST_OUT)
 
 $(BUILDDIR):
 	-mkdir $(BUILDDIR)
