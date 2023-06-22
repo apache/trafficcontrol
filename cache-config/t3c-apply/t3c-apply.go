@@ -164,6 +164,10 @@ func Main() int {
 				log.Errorf("couldn't remove git lock file: %v", err.Error())
 			}
 		}
+		log.Infoln("Checking git for safe directory config")
+		if err := util.GetGitConfigSafeDir(cfg); err != nil {
+			log.Warnln("error checking git for safe directory config: " + err.Error() )
+		}
 		// commit anything someone else changed when we weren't looking,
 		// with a keyword indicating it wasn't our change
 		if err := util.MakeGitCommitAll(cfg, util.GitChangeNotSelf, true); err != nil {
