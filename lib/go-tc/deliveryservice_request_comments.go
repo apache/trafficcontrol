@@ -1,9 +1,5 @@
 package tc
 
-import (
-	"time"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -22,6 +18,10 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"time"
+)
 
 // DeliveryServiceRequestCommentV5 is a Delivery Service Request Comment as it appears in version 5 of the
 // Traffic Ops API - it always points to the highest minor version in APIv5.

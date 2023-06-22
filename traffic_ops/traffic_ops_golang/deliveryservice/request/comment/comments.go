@@ -292,7 +292,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var current TODeliveryServiceRequestComment
+	var current tc.DeliveryServiceRequestCommentV5
 	err := inf.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + inf.Params["id"]).StructScan(&current)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryservice_request_comment: "+err.Error()))
@@ -300,11 +300,11 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := tc.IDNoMod(inf.User.ID)
-	if *current.AuthorID != userID {
+	if current.AuthorID != userID {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("comments can only be updated by the author"), nil)
 		return
 	}
-	deliveryServiceRequestComment.AuthorID = *current.AuthorID
+	deliveryServiceRequestComment.AuthorID = current.AuthorID
 	idParam := inf.Params["id"]
 	id, parseErr := strconv.Atoi(idParam)
 	if parseErr != nil {
@@ -330,15 +330,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no deliveryservice_request_comment found with this id"), nil)
 		return
 	}
-	lastUpdated := tc.TimeNoMod{}
+	lastUpdated := time.Time{}
 	if err := rows.Scan(&lastUpdated); err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning lastUpdated from deliveryservice_request_comment insert: "+err.Error()))
 		return
 	}
 	deliveryServiceRequestComment.LastUpdated = time.Now()
 
-	t := lastUpdated.Time
-	updatedTime, err := util.ConvertTimeFormat(t, time.RFC3339)
+	updatedTime, err := util.ConvertTimeFormat(lastUpdated, time.RFC3339)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("converting last_updated to RFC3339 format: "+err.Error()))
 		return
@@ -426,18 +425,18 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	idParam := inf.Params["id"]
 	id, parseErr := strconv.Atoi(idParam)
 	if parseErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer"), nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer "+parseErr.Error()), nil)
 		return
 	}
 
-	var current TODeliveryServiceRequestComment
+	var current tc.DeliveryServiceRequestCommentV5
 	err := inf.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + idParam).StructScan(&current)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryservice_request_comment: "+err.Error()))
 		return
 	}
 
-	if userID := tc.IDNoMod(inf.User.ID); *current.AuthorID != userID {
+	if userID := tc.IDNoMod(inf.User.ID); current.AuthorID != userID {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("comments can only be deleted by the author"), nil)
 		return
 	}

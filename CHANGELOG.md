@@ -37,7 +37,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7380](https://github.com/apache/trafficcontrol/pull/7380) *Traffic Portal* Adds strikethrough (expired), red (7 days until expiration) and yellow (30 days until expiration) visuals to delivery service cert expiration grid rows.
 - [#7388](https://github.com/apache/trafficcontrol/pull/7388) *TC go Client* Adds sslkey_expiration methodology in v4 and v5 clients
 - [#7543](https://github.com/apache/trafficcontrol/pull/7543) *Traffic Portal* New Ansible Role to use Traffic Portal v2
-- [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixes `deliveryservice_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7516](https://github.com/apache/trafficcontrol/pull/7516) *t3c* added command line arg to control go_direct in parent.config
 
 ### Changed
@@ -58,6 +57,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 
 ### Fixed
+- [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixes `deliveryservice_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7539](https://github.com/apache/trafficcontrol/pull/7539) *Traffic Monitor* Use stats_over_http timestamp to calculate bandwidth for TM's health. 
 - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
 - [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
