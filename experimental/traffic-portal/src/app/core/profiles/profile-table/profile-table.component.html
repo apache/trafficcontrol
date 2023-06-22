@@ -21,6 +21,8 @@ limitations under the License.
 		[cols]="columnDefs"
 		[fuzzySearch]="fuzzySubject"
 		context="profiles"
+		[tableTitleButtons]="titleBtns"
+		(tableTitleButtonAction)="handleTitleButton($event)"
 		[contextMenuItems]="contextMenuItems"
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
