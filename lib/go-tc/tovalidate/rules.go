@@ -217,3 +217,13 @@ func StringIsValidFloat() *validation.StringRule {
 		return err == nil && !math.IsNaN(validated)
 	}, "must be a valid float")
 }
+
+func IsValidIPorCIDR(input string) bool {
+	ip := net.ParseIP(input)
+	if ip != nil {
+		return true // Valid IP address
+	}
+
+	_, _, err := net.ParseCIDR(input)
+	return err == nil // Valid CIDR notation subnet
+}

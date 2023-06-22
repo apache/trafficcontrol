@@ -22,9 +22,9 @@ package tc
 import (
 	"database/sql"
 	"errors"
-	"net"
-
 	validation "github.com/go-ozzo/ozzo-validation"
+	"net"
+	"time"
 )
 
 // FederationResolversResponse represents a Traffic Ops API response to a
@@ -46,6 +46,29 @@ type FederationResolver struct {
 	ID          *uint      `json:"id" db:"id"`
 	IPAddress   *string    `json:"ipAddress" db:"ip_address"`
 	LastUpdated *TimeNoMod `json:"lastUpdated,omitempty" db:"last_updated"`
+	Type        *string    `json:"type"`
+	TypeID      *uint      `json:"typeId,omitempty" db:"type"`
+}
+
+// [Version: 5] FederationResolversResponse represents a Traffic Ops API response to a
+// [Version: 5] GET request to its /federation_resolvers endpoint.
+type FederationResolversV5Response struct {
+	Alerts
+	Response []FederationResolver `json:"response"`
+}
+
+// [Version: 5] FederationResolverResponse represents a Traffic Ops API response to a
+// [Version: 5] POST or DELETE request to its /federation_resolvers endpoint.
+type FederationResolverV5Response struct {
+	Alerts
+	Response FederationResolver `json:"response"`
+}
+
+// [Version: 5] FederationResolver represents a resolver record for a CDN Federation.
+type FederationResolverV5 struct {
+	ID          *uint      `json:"id" db:"id"`
+	IPAddress   *string    `json:"ipAddress" db:"ip_address"`
+	LastUpdated *time.Time `json:"lastUpdated,omitempty" db:"last_updated"`
 	Type        *string    `json:"type"`
 	TypeID      *uint      `json:"typeId,omitempty" db:"type"`
 }
