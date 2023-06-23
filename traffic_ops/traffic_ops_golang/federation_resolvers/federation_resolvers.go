@@ -26,10 +26,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	validation "github.com/go-ozzo/ozzo-validation"
 	"net/http"
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	validation "github.com/go-ozzo/ozzo-validation"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -307,7 +308,7 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 }
 
 // [Version - 5] - We fixed time to respond with RFC3339-format date strings.
-// [Version - 5] GetFederationResolvers
+// [Version - 5] GetFederationResolvers get all federation resolver or requested id or ipAddress or type
 func GetFederationResolversV5(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -349,14 +350,14 @@ LEFT OUTER JOIN type ON type.id = federation_resolver.type
 
 		// Query Parameters to Database Query column mappings
 		queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-			"id":        {Column: "type.id", Checker: api.IsInt},
-			"ipAddress": {Column: "type.ip_address"},
-			"type":      {Column: "type.type"},
+			"id":        dbhelpers.WhereColumnInfo{Column: "federation_resolver.id", Checker: api.IsInt},
+			"ipAddress": dbhelpers.WhereColumnInfo{Column: "federation_resolver.ip_address"},
+			"type":      dbhelpers.WhereColumnInfo{Column: "type.name"},
 		}
 		if _, ok := params["orderby"]; !ok {
 			params["orderby"] = "id"
 		}
-		where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
+		where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 		if len(errs) > 0 {
 			return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
 		}
@@ -508,14 +509,14 @@ func CreateFederationResolverV5(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
 	}
-	message := fmt.Sprintf("Federation Resolver created [ IP = %s ] with id: %d", fr.IPAddress, fr.ID)
+	message := fmt.Sprintf("Federation Resolver created [ IP = %s ] with id: %d", *fr.IPAddress, *fr.ID)
 	alerts := tc.CreateAlerts(tc.SuccessLevel, message)
 	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/federation_resolvers?id=%s", inf.Version.Major, inf.Version.Minor, fr.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, fr)
 	return
 }
 
-// readAndValidateJsonStructV5 [Version : V5] - readAndValidateJsonStructV5 function validates the JSON object passed.
+// [Version : V5] - readAndValidateJsonStructV5 function validates the JSON object passed.
 func readAndValidateJsonStructV5(r *http.Request) (tc.FederationResolverV5, error) {
 	var fr tc.FederationResolverV5
 	if err := json.NewDecoder(r.Body).Decode(&fr); err != nil {

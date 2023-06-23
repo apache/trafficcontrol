@@ -38,7 +38,7 @@ func TestFederationResolvers(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.FederationResolver]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.FederationResolverV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -111,12 +111,12 @@ func TestFederationResolvers(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when MISSING IPADDRESS and TYPE FIELDS": {
 					ClientSession: TOSession,
-					RequestBody:   tc.FederationResolver{},
+					RequestBody:   tc.FederationResolverV5{},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IP ADDRESS": {
 					ClientSession: TOSession,
-					RequestBody: tc.FederationResolver{
+					RequestBody: tc.FederationResolverV5{
 						IPAddress: util.Ptr("not a valid IP address"),
 						TypeID:    util.Ptr((uint)(GetTypeId(t, "RESOLVE4"))),
 					},
@@ -167,7 +167,7 @@ func TestFederationResolvers(t *testing.T) {
 func validateFederationResolverFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Federation Resolver response to not be nil.")
-		frResp := resp.([]tc.FederationResolver)
+		frResp := resp.([]tc.FederationResolverV5)
 		for field, expected := range expectedResp {
 			for _, fr := range frResp {
 				switch field {
@@ -190,7 +190,7 @@ func validateFederationResolverFields(expectedResp map[string]interface{}) utils
 
 func validateFederationResolverPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.FederationResolver)
+		paginationResp := resp.([]tc.FederationResolverV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
@@ -214,7 +214,7 @@ func validateFederationResolverIDSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Federation Resolver response to not be nil.")
 		var frIDs []int
-		frResp := resp.([]tc.FederationResolver)
+		frResp := resp.([]tc.FederationResolverV5)
 		for _, fr := range frResp {
 			frIDs = append(frIDs, int(*fr.ID))
 		}
@@ -225,7 +225,7 @@ func validateFederationResolverIDSort() utils.CkReqFunc {
 func validateFederationResolverDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected FederationResolver response to not be nil.")
-		frDescResp := resp.([]tc.FederationResolver)
+		frDescResp := resp.([]tc.FederationResolverV5)
 		var descSortedList []uint
 		var ascSortedList []uint
 		assert.RequireGreaterOrEqual(t, len(frDescResp), 2, "Need at least 2 Federation Resolvers in Traffic Ops to test desc sort, found: %d", len(frDescResp))
