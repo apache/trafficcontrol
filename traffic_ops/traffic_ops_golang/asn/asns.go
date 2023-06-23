@@ -373,7 +373,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	id := inf.Params["id"]
-	exists, err := dbhelpers.GetASNInfo(tx, id)
+	exists, err := dbhelpers.ASNExists(tx, id)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return

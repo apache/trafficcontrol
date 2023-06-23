@@ -2203,8 +2203,8 @@ func ServiceCategoryExists(tx *sql.Tx, name string) (bool, error) {
 	return true, nil
 }
 
-// GetASNInfo confirms whether the asn exists, and an error (if one occurs).
-func GetASNInfo(tx *sql.Tx, id string) (bool, error) {
+// ASNExists confirms whether the asn exists, and an error (if one occurs).
+func ASNExists(tx *sql.Tx, id string) (bool, error) {
 	var count int
 	if err := tx.QueryRow("SELECT count(asn) FROM asn WHERE id=$1", id).Scan(&count); err != nil {
 		return false, fmt.Errorf("error getting asn info: %w", err)

@@ -1,7 +1,5 @@
 package tc
 
-import "time"
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +18,8 @@ import "time"
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import "time"
 
 // ASNsResponse is a list of ASNs (Autonomous System Numbers) as a response.
 // swagger:response ASNsResponse
@@ -40,20 +40,26 @@ type ASNResponse struct {
 	Alerts
 }
 
-// ASNsResponseV5 is a list of ASNs (Autonomous System Numbers) as a response.
+// ASNsResponseV5 is an alias for the list of ASN struct response used for the latest minor version associated with api major version 5.
+type ASNsResponseV5 = ASNsResponseV50
+
+// ASNsResponseV50 is a list of ASNs (Autonomous System Numbers) as a response.
 // swagger:response ASNsResponse
 // in: body
-type ASNsResponseV5 struct {
+type ASNsResponseV50 struct {
 	// in: body
 	Response []ASNV5 `json:"response"`
 	Alerts
 }
 
-// ASNResponseV5 is a single ASN response for Update and Create to depict what
+// ASNResponseV5 is an alias for the ASN struct response used for the latest minor version associated with api major version 5.
+type ASNResponseV5 = ASNResponseV50
+
+// ASNResponseV50 is a single ASN response for Update and Create to depict what
 // changed.
 // swagger:response ASNResponse
 // in: body
-type ASNResponseV5 struct {
+type ASNResponseV50 struct {
 	// in: body
 	Response ASNV5 `json:"response"`
 	Alerts
@@ -121,8 +127,11 @@ type ASNsV11 struct {
 	ASNs []interface{} `json:"asns"`
 }
 
-// ASNsV5 is used for RFC3339 format timestamp
-type ASNV5 struct {
+// ASNV5 is an alias for the ASN struct response used for the latest minor version associated with api major version 5.
+type ASNV5 = ASNV50
+
+// ASNV50 is used for RFC3339 format timestamp
+type ASNV50 struct {
 	// The ASN to retrieve
 	//
 	// Autonomous System Numbers per APNIC for identifying a service provider
