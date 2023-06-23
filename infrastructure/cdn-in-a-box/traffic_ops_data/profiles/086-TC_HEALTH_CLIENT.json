@@ -1,0 +1,7 @@
+{
+    "cdnName": "ALL",
+    "description": "TC Health Client - Provides parent health status",
+    "name": "TC_HEALTH_CLIENT",
+    "routingDisabled": false,
+    "type": "UNK_PROFILE"
+}

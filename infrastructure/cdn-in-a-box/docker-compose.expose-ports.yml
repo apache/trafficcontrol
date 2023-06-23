@@ -62,6 +62,9 @@ services:
   origin:
     ports:
       - "9300:80"
+  tchealthclient:
+    ports:
+      - "9400:80"
   dns:
     ports:
       - "9353:53/tcp"

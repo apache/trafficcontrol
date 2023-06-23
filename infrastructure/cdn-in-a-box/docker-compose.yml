@@ -138,6 +138,26 @@ services:
     hostname: trafficmonitor
     image: trafficmonitor
 
+  # tchealthclient
+  tchealthclient:
+    build:
+      context: .
+      dockerfile: health/Dockerfile
+      args:
+        # Change BASE_IMAGE to centos when RHEL_VERSION=7
+        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
+        RHEL_VERSION: ${RHEL_VERSION:-8}
+        TCH_RPM: health/trafficcontrol-health-client.rpm
+    depends_on:
+      - enroller
+    volumes:
+      - shared:/shared
+    domainname: infra.ciab.test
+    env_file:
+      - variables.env
+    hostname: tchealthclient
+    image: tchealthclient
+
   # trafficrouter routes clients to the most optimal cache
   trafficrouter:
     build:
