@@ -203,6 +203,7 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if logAlert {
+			fmt.Println("SSLkeys error is ", userError)
 			alerts.AddNewAlert(tc.ErrorLevel, userError.Error())
 			api.WriteAlerts(w, r, sc, alerts)
 			return
