@@ -14,7 +14,6 @@ package v5
 
 import (
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -367,7 +366,6 @@ func DeliveryServiceSSLKeys(t *testing.T) {
 
 func VerifySSLKeysOnDsCreationTest(t *testing.T) {
 	for _, ds := range testData.DeliveryServices {
-		fmt.Println("DS Protocol is ", *ds.Protocol)
 		if !(*ds.Protocol == tc.DSProtocolHTTPS || *ds.Protocol == tc.DSProtocolHTTPAndHTTPS || *ds.Protocol == tc.DSProtocolHTTPToHTTPS) {
 			continue
 		}
@@ -382,7 +380,6 @@ func VerifySSLKeysOnDsCreationTest(t *testing.T) {
 				break
 			}
 		}
-		fmt.Println("DS Protocol here is ", *ds.Protocol)
 		if err != nil || dsSSLKey == nil {
 			t.Fatalf("unable to get DS %s SSL key: %v", ds.XMLID, err)
 		}
