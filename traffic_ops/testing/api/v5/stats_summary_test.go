@@ -16,6 +16,7 @@ package v5
 */
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -89,6 +90,13 @@ func TestStatsSummary(t *testing.T) {
 					t.Run(name, func(t *testing.T) {
 						if name == "OK when VALID LASTSUMMARYDATE parameter" {
 							resp, reqInf, err := testCase.ClientSession.GetSummaryStatsLastUpdated(testCase.RequestOpts)
+
+							fmt.Println("reqInf", reqInf)
+							fmt.Println("resp", resp)
+							fmt.Println("resp.Alerts", resp.Alerts)
+							fmt.Println("Expected SummaryTime", resp.Response.SummaryTime)
+							fmt.Println("Actual SummaryTime:", latestTime)
+
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
