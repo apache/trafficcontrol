@@ -29,7 +29,7 @@ type TrafficControl struct {
 	Coordinates                                       []tc.CoordinateV5                       `json:"coordinates"`
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
 	DeliveryServiceRequests                           []tc.DeliveryServiceRequestV5           `json:"deliveryServiceRequests"`
-	DeliveryServiceRequestComments                    []tc.DeliveryServiceRequestComment      `json:"deliveryServiceRequestComments"`
+	DeliveryServiceRequestComments                    []tc.DeliveryServiceRequestCommentV5    `json:"deliveryServiceRequestComments"`
 	DeliveryServices                                  []tc.DeliveryServiceV5                  `json:"deliveryservices"`
 	DeliveryServicesRequiredCapabilities              []tc.DeliveryServicesRequiredCapability `json:"deliveryservicesRequiredCapabilities"`
 	DeliveryServiceServerAssignments                  []tc.DeliveryServiceServers             `json:"deliveryServiceServerAssignments"`
