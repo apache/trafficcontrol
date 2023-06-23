@@ -337,13 +337,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	deliveryServiceRequestComment.LastUpdated = time.Now()
 
-	updatedTime, err := util.ConvertTimeFormat(lastUpdated, time.RFC3339)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("converting last_updated to RFC3339 format: "+err.Error()))
-		return
-	}
-	deliveryServiceRequestComment.LastUpdated = *updatedTime
-
 	if rows.Next() {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("deliveryservice_request_comment update affected too many rows: >1"))
 		return

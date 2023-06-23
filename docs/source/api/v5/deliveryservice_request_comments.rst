@@ -88,7 +88,7 @@ Response Structure
 				"author": "admin",
 				"deliveryServiceRequestId": 2,
 				"id": 3,
-				"lastUpdated": "2020-02-24T19:59:46-06:00",
+				"lastUpdated": "2020-02-24T19:59:46.682939-06:00",
 				"value": "Changing to a different origin for now.",
 				"xmlId": "demo1"
 			},
@@ -97,7 +97,7 @@ Response Structure
 				"author": "admin",
 				"deliveryServiceRequestId": 2,
 				"id": 4,
-				"lastUpdated": "2020-02-24T19:59:55-06:00",
+				"lastUpdated": "2020-02-24T19:59:55.782431-06:00",
 				"value": "Using HTTPS.",
 				"xmlId": "demo1"
 			}
@@ -173,7 +173,7 @@ Response Structure
 			"author": null,
 			"deliveryServiceRequestId": 2,
 			"id": 6,
-			"lastUpdated": "2020-02-24T20:02:20-06:00",
+			"lastUpdated": "2020-02-24T20:02:20.583524-06:00",
 			"value": "Does anyone have time to review my delivery service request?",
 			"xmlId": null
 		}
@@ -258,7 +258,7 @@ Response Structure
 			"author": null,
 			"deliveryServiceRequestId": 2,
 			"id": 6,
-			"lastUpdated": "2020-02-24T20:05:46-06:00",
+			"lastUpdated": "2020-02-24T20:05:46.124229-06:00",
 			"value": "Update: We no longer need this, feel free to reject.\n\nDoes anyone have time to review my delivery service request?",
 			"xmlId": null
 		}
