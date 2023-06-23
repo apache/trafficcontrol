@@ -213,7 +213,9 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	if inf.Version.Major < 4 {
 		keyObj = keyObjV4.DeliveryServiceSSLKeysV15
 	} else {
-		keyObj = keyObjV4
+		if inf.Version.LessThan(&api.Version{Major: 5, Minor: 0}) {
+			keyObj = keyObjV4
+		}
 	}
 
 	if len(alerts.Alerts) == 0 {
