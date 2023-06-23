@@ -189,17 +189,24 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 
 	var userError error
 	sc := http.StatusInternalServerError
+	logAlert := true
 	keyObjV4, err := getSslKeys(inf, r.Context())
 	if err != nil {
+		userError = api.LogErr(r, sc, nil, err)
 		if err == sql.ErrNoRows {
-			sc = http.StatusNotFound
-			userError = api.LogErr(r, sc, errors.New("no ssl keys for XML ID "+xmlID), nil)
-		} else {
-			userError = api.LogErr(r, sc, nil, err)
+			if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
+				sc = http.StatusNotFound
+				userError = api.LogErr(r, sc, errors.New("no ssl keys for XML ID "+xmlID), nil)
+			} else {
+				// For versions lesser than 5.0, don't log an alert if the error is ErrNoRows. This is for backward compatibility reasons.
+				logAlert = false
+			}
 		}
-		alerts.AddNewAlert(tc.ErrorLevel, userError.Error())
-		api.WriteAlerts(w, r, sc, alerts)
-		return
+		if logAlert {
+			alerts.AddNewAlert(tc.ErrorLevel, userError.Error())
+			api.WriteAlerts(w, r, sc, alerts)
+			return
+		}
 	}
 
 	var keyObj interface{}
