@@ -166,7 +166,7 @@ func Main() int {
 		}
 		log.Infoln("Checking git for safe directory config")
 		if err := util.GetGitConfigSafeDir(cfg); err != nil {
-			log.Warnln("error checking git for safe directory config: " + err.Error() )
+			log.Warnln("error checking git for safe directory config: " + err.Error())
 		}
 		// commit anything someone else changed when we weren't looking,
 		// with a keyword indicating it wasn't our change
