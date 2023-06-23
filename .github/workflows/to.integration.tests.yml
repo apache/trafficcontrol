@@ -57,161 +57,161 @@ on:
 
 jobs:
 
-#  APIv3Tests:
-#    if: github.event.pull_request.draft == false
-#    runs-on: ubuntu-latest
-#
-#    services:
-#      postgres:
-#        image: postgres:13
-#        env:
-#          POSTGRES_USER: traffic_ops
-#          POSTGRES_PASSWORD: twelve
-#          POSTGRES_DB: traffic_ops
-#        ports:
-#        - 5432:5432
-#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-#
-#      smtp:
-#        image: maildev/maildev:2.0.0-beta3
-#        ports:
-#          - 25:25
-#        options: >-
-#          --entrypoint=bin/maildev
-#          --user=root
-#          --health-cmd="sh -c \"[[ \$(wget -qO- http://smtp/healthz) == true ]]\""
-#          --
-#          maildev/maildev:2.0.0-beta3
-#          --smtp=25
-#          --hide-extensions=STARTTLS
-#          --web=80
-#
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@master
-#    - name: Cache Alpine Docker image
-#      uses: actions/cache@v2
-#      with:
-#        path: ${{ github.workspace }}/docker-images
-#        key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-#    - name: Import cached Alpine Docker image
-#      run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-#    - name: Initialize Traffic Ops Database
-#      id: todb
-#      uses: ./.github/actions/todb-init
-#    - name: Initialize Traffic Vault Database
-#      id: tvdb
-#      uses: ./.github/actions/tvdb-init
-#    - name: Check Go Version
-#      run: echo "::set-output name=value::$(cat GO_VERSION)"
-#      id: go-version
-#    - name: Install Go
-#      uses: actions/setup-go@v2
-#      with:
-#        go-version: ${{ steps.go-version.outputs.value }}
-#    - name: Run API v3 tests
-#      id: v3Tests
-#      if: ${{ steps.todb.outcome == 'success' && always() }}
-#      uses: ./.github/actions/to-integration-tests
-#      with:
-#        version: 3
-#        smtp_address: 172.17.0.1
-#    - name: Upload coverage to Codecov
-#      uses: codecov/codecov-action@v3
-#      with:
-#        files: v3-coverage.out
-#        flags: traffic_ops_integration,v3
-#    - name: Upload v3 Vault logs
-#      if: ${{ steps.v3Tests.outcome != 'success' && always() }}
-#      uses: actions/upload-artifact@v2
-#      with:
-#        name: v3 Traffic Vault logs
-#        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
-#    - name: Upload v3 Ops logs
-#      if: ${{ steps.v3Tests.outcome != 'success' && always() }}
-#      uses: actions/upload-artifact@v2
-#      with:
-#        name: v3 Traffic Ops logs
-#        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
-#
-#  APIv4Tests:
-#    if: github.event.pull_request.draft == false
-#    runs-on: ubuntu-latest
-#
-#    services:
-#      postgres:
-#        image: postgres:13
-#        env:
-#          POSTGRES_USER: traffic_ops
-#          POSTGRES_PASSWORD: twelve
-#          POSTGRES_DB: traffic_ops
-#        ports:
-#        - 5432:5432
-#        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-#
-#      smtp:
-#        image: maildev/maildev:2.0.0-beta3
-#        ports:
-#          - 25:25
-#        options: >-
-#          --entrypoint=bin/maildev
-#          --user=root
-#          --health-cmd="sh -c \"[[ \$(wget -qO- http://smtp/healthz) == true ]]\""
-#          --
-#          maildev/maildev:2.0.0-beta3
-#          --smtp=25
-#          --hide-extensions=STARTTLS
-#          --web=80
-#
-#    steps:
-#    - name: Checkout
-#      uses: actions/checkout@master
-#    - name: Cache Alpine Docker image
-#      uses: actions/cache@v2
-#      with:
-#        path: ${{ github.workspace }}/docker-images
-#        key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
-#    - name: Import cached Alpine Docker image
-#      run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
-#    - name: Initialize Traffic Ops Database
-#      id: todb
-#      uses: ./.github/actions/todb-init
-#    - name: Initialize Traffic Vault Database
-#      id: tvdb
-#      uses: ./.github/actions/tvdb-init
-#    - name: Check Go Version
-#      run: echo "::set-output name=value::$(cat GO_VERSION)"
-#      id: go-version
-#    - name: Install Go
-#      uses: actions/setup-go@v2
-#      with:
-#        go-version: ${{ steps.go-version.outputs.value }}
-#    - name: Run API v4 tests
-#      id: v4Tests
-#      if: ${{ steps.todb.outcome == 'success' && always() }}
-#      uses: ./.github/actions/to-integration-tests
-#      with:
-#        version: 4
-#        smtp_address: 172.17.0.1
-#    - name: Upload coverage to Codecov
-#      uses: codecov/codecov-action@v3
-#      with:
-#        files: v4-coverage.out
-#        flags: traffic_ops_integration,v4
-#    - name: Upload v4 Vault logs
-#      if: ${{ steps.v4Tests.outcome != 'success' && always() }}
-#      uses: actions/upload-artifact@v2
-#      with:
-#        name: v4 Traffic Vault logs
-#        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
-#    - name: Upload v4 Ops logs
-#      if: ${{ steps.v4Tests.outcome != 'success' && always() }}
-#      uses: actions/upload-artifact@v2
-#      with:
-#        name: v4 Traffic Ops logs
-#        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
-#    - name: Save Alpine Docker image
-#      run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
+  APIv3Tests:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: traffic_ops
+          POSTGRES_PASSWORD: twelve
+          POSTGRES_DB: traffic_ops
+        ports:
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+      smtp:
+        image: maildev/maildev:2.0.0-beta3
+        ports:
+          - 25:25
+        options: >-
+          --entrypoint=bin/maildev
+          --user=root
+          --health-cmd="sh -c \"[[ \$(wget -qO- http://smtp/healthz) == true ]]\""
+          --
+          maildev/maildev:2.0.0-beta3
+          --smtp=25
+          --hide-extensions=STARTTLS
+          --web=80
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Cache Alpine Docker image
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/docker-images
+        key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+    - name: Import cached Alpine Docker image
+      run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+    - name: Initialize Traffic Ops Database
+      id: todb
+      uses: ./.github/actions/todb-init
+    - name: Initialize Traffic Vault Database
+      id: tvdb
+      uses: ./.github/actions/tvdb-init
+    - name: Check Go Version
+      run: echo "::set-output name=value::$(cat GO_VERSION)"
+      id: go-version
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ steps.go-version.outputs.value }}
+    - name: Run API v3 tests
+      id: v3Tests
+      if: ${{ steps.todb.outcome == 'success' && always() }}
+      uses: ./.github/actions/to-integration-tests
+      with:
+        version: 3
+        smtp_address: 172.17.0.1
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: v3-coverage.out
+        flags: traffic_ops_integration,v3
+    - name: Upload v3 Vault logs
+      if: ${{ steps.v3Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v3 Traffic Vault logs
+        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
+    - name: Upload v3 Ops logs
+      if: ${{ steps.v3Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v3 Traffic Ops logs
+        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
+
+  APIv4Tests:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_USER: traffic_ops
+          POSTGRES_PASSWORD: twelve
+          POSTGRES_DB: traffic_ops
+        ports:
+        - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+      smtp:
+        image: maildev/maildev:2.0.0-beta3
+        ports:
+          - 25:25
+        options: >-
+          --entrypoint=bin/maildev
+          --user=root
+          --health-cmd="sh -c \"[[ \$(wget -qO- http://smtp/healthz) == true ]]\""
+          --
+          maildev/maildev:2.0.0-beta3
+          --smtp=25
+          --hide-extensions=STARTTLS
+          --web=80
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Cache Alpine Docker image
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/docker-images
+        key: docker-images/alpine@${{ env.ALPINE_VERSION }}.tar.gz
+    - name: Import cached Alpine Docker image
+      run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
+    - name: Initialize Traffic Ops Database
+      id: todb
+      uses: ./.github/actions/todb-init
+    - name: Initialize Traffic Vault Database
+      id: tvdb
+      uses: ./.github/actions/tvdb-init
+    - name: Check Go Version
+      run: echo "::set-output name=value::$(cat GO_VERSION)"
+      id: go-version
+    - name: Install Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ steps.go-version.outputs.value }}
+    - name: Run API v4 tests
+      id: v4Tests
+      if: ${{ steps.todb.outcome == 'success' && always() }}
+      uses: ./.github/actions/to-integration-tests
+      with:
+        version: 4
+        smtp_address: 172.17.0.1
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        files: v4-coverage.out
+        flags: traffic_ops_integration,v4
+    - name: Upload v4 Vault logs
+      if: ${{ steps.v4Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v4 Traffic Vault logs
+        path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
+    - name: Upload v4 Ops logs
+      if: ${{ steps.v4Tests.outcome != 'success' && always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: v4 Traffic Ops logs
+        path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
+    - name: Save Alpine Docker image
+      run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
 
   APIv5Tests:
     if: github.event.pull_request.draft == false
