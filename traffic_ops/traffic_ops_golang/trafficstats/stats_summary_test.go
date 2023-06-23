@@ -1,15 +1,5 @@
 package trafficstats
 
-import (
-	"testing"
-	"time"
-
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-
-	"github.com/jmoiron/sqlx"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -29,40 +19,60 @@ import (
  * under the License.
  */
 
+import (
+	"testing"
+	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util/assert"
+
+	"github.com/jmoiron/sqlx"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+)
+
 func TestQueryStatsSummary(t *testing.T) {
+	type testStruct struct {
+		version uint64
+	}
+
+	var testData = []testStruct{
+		{4},
+		{5},
+	}
 
 	query := "SELECT cdn_name, deliveryservice_name, stat_name, stat_value, summary_time, stat_date FROM stats_summary"
 	queryValues := map[string]interface{}{
 		"lastSummaryDate": "true",
 	}
 
-	mockDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
+	for i, _ := range testData {
+		mockDB, mock, err := sqlmock.New()
+		if err != nil {
+			t.Fatalf("an error '%v' was not expected when opening a stub database connection", err)
+		}
+		defer mockDB.Close()
+
+		db := sqlx.NewDb(mockDB, "sqlmock")
+		defer db.Close()
+
+		mock.ExpectBegin()
+		rows := sqlmock.NewRows([]string{
+			"cdn_name",
+			"deliveryservice_name",
+			"stat_name",
+			"stat_value",
+			"summary_time",
+			"stat_date",
+		})
+
+		rows.AddRow("cdn1", "all", "daily_maxgbps", 5, time.Now().AddDate(0, 0, -5), time.Now().AddDate(0, 0, -5).Truncate(24*time.Hour))
+		rows.AddRow("cdn2", "all", "daily_byteserved", 1000, time.Now().AddDate(0, 0, -10), time.Now().AddDate(0, 0, -10).Truncate(24*time.Hour))
+
+		mock.ExpectQuery("SELECT cdn_name, deliveryservice_name, stat_name, stat_value, summary_time, stat_date FROM stats_summary").WithArgs().WillReturnRows(rows)
+
+		statsSummaries1, err1 := queryStatsSummary(db.MustBegin(), testData[i].version, query, queryValues)
+
+		assert.NoError(t, err1)
+		assert.Equal(t, len(statsSummaries1), 2)
 	}
-	defer mockDB.Close()
-
-	db := sqlx.NewDb(mockDB, "sqlmock")
-	defer db.Close()
-
-	mock.ExpectBegin()
-	rows := sqlmock.NewRows([]string{
-		"cdn_name",
-		"deliveryservice_name",
-		"stat_name",
-		"stat_value",
-		"summary_time",
-		"stat_date",
-	})
-
-	rows.AddRow("cdn1", "all", "daily_maxgbps", 5, time.Now().AddDate(0, 0, -5), time.Now().AddDate(0, 0, -5).Truncate(24*time.Hour))
-	rows.AddRow("cdn2", "all", "daily_byteserved", 1000, time.Now().AddDate(0, 0, -10), time.Now().AddDate(0, 0, -10).Truncate(24*time.Hour))
-
-	mock.ExpectQuery("SELECT cdn_name, deliveryservice_name, stat_name, stat_value, summary_time, stat_date FROM stats_summary").WithArgs().WillReturnRows(rows)
-
-	statsSummaries1, err1 := queryStatsSummary(db.MustBegin(), 5, query, queryValues)
-
-	assert.NoError(t, err1)
-	assert.Equal(t, len(statsSummaries1), 2)
 
 }
