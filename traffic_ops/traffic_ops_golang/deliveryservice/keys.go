@@ -187,11 +187,18 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var userError error
+	sc := http.StatusInternalServerError
 	keyObjV4, err := getSslKeys(inf, r.Context())
 	if err != nil {
-		userErr := api.LogErr(r, http.StatusInternalServerError, nil, err)
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
+		if err == sql.ErrNoRows {
+			sc = http.StatusNotFound
+			userError = api.LogErr(r, sc, errors.New("no ssl keys for XML ID "+xmlID), nil)
+		} else {
+			userError = api.LogErr(r, sc, nil, err)
+		}
+		alerts.AddNewAlert(tc.ErrorLevel, userError.Error())
+		api.WriteAlerts(w, r, sc, alerts)
 		return
 	}
 
@@ -216,6 +223,9 @@ func getSslKeys(inf *api.APIInfo, ctx context.Context) (tc.DeliveryServiceSSLKey
 
 	keyObjFromTv, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, ctx)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceSSLKeysV4{}, err
+		}
 		return tc.DeliveryServiceSSLKeysV4{}, errors.New("getting ssl keys: " + err.Error())
 	}
 	keyObj := tc.DeliveryServiceSSLKeysV4{}
