@@ -59,7 +59,7 @@ func getLastSummaryDate(w http.ResponseWriter, r *http.Request, inf *api.APIInfo
 		return
 	}
 	query := selectQuery() + where + " ORDER BY summary_time DESC"
-	statsSummaries, err := queryStatsSummary(inf.Tx, query, queryValues)
+	statsSummaries, err := queryStatsSummary(inf.Tx, inf.Version.Major, query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
@@ -68,14 +68,18 @@ func getLastSummaryDate(w http.ResponseWriter, r *http.Request, inf *api.APIInfo
 	if inf.Version.Major >= 5 {
 		resp := tc.StatsSummaryLastUpdatedV5{}
 		if len(statsSummaries) >= 1 {
-			resp.SummaryTime = &statsSummaries[0].SummaryTime
+			if summary, ok := statsSummaries[0].(tc.StatsSummaryV5); ok {
+				resp.SummaryTime = &summary.SummaryTime
+			}
 		}
 		api.WriteResp(w, r, resp)
 
 	} else {
 		resp := tc.StatsSummaryLastUpdated{}
 		if len(statsSummaries) >= 1 {
-			resp.SummaryTime = &statsSummaries[0].SummaryTime
+			if summary, ok := statsSummaries[0].(tc.StatsSummary); ok {
+				resp.SummaryTime = &summary.SummaryTime
+			}
 		}
 		api.WriteResp(w, r, resp)
 	}
@@ -94,50 +98,90 @@ func getStatsSummary(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) {
 		return
 	}
 	query := selectQuery() + where + orderBy + pagination
-	statsSummaries, err := queryStatsSummary(inf.Tx, query, queryValues)
+	queryStatsSummaries, err := queryStatsSummary(inf.Tx, inf.Version.Major, query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 
+	//api.WriteResp(w, r, statsSummaries)
+
 	if inf.Version.Major >= 5 {
-		statsSummariesV5 := make([]tc.StatsSummaryV5, len(statsSummaries))
-		for i, oldStat := range statsSummaries {
-			newStat := tc.StatsSummaryV5{
-				CDNName:         oldStat.CDNName,
-				DeliveryService: oldStat.DeliveryService,
-				StatName:        oldStat.StatName,
-				StatValue:       oldStat.StatValue,
-				SummaryTime:     oldStat.SummaryTime,
-				StatDate:        oldStat.StatDate,
+		statsSummariesV5 := make([]tc.StatsSummaryV5, len(queryStatsSummaries))
+		for i, oldStat := range queryStatsSummaries {
+			if summary, ok := oldStat.(tc.StatsSummaryV5); ok {
+				newStat := tc.StatsSummaryV5{
+					CDNName:         summary.CDNName,
+					DeliveryService: summary.DeliveryService,
+					StatName:        summary.StatName,
+					StatValue:       summary.StatValue,
+					SummaryTime:     summary.SummaryTime,
+					StatDate:        summary.StatDate,
+				}
+				statsSummariesV5[i] = newStat
 			}
-			statsSummariesV5[i] = newStat
 		}
-
 		api.WriteResp(w, r, statsSummariesV5)
-
 	} else {
+		statsSummaries := make([]tc.StatsSummary, len(queryStatsSummaries))
+		for i, oldStat := range queryStatsSummaries {
+			if summary, ok := oldStat.(tc.StatsSummary); ok {
+				newStat := tc.StatsSummary{
+					CDNName:         summary.CDNName,
+					DeliveryService: summary.DeliveryService,
+					StatName:        summary.StatName,
+					StatValue:       summary.StatValue,
+					SummaryTime:     summary.SummaryTime,
+					StatDate:        summary.StatDate,
+				}
+				statsSummaries[i] = newStat
+			}
+		}
 		api.WriteResp(w, r, statsSummaries)
 	}
 
 }
 
-func queryStatsSummary(tx *sqlx.Tx, q string, queryValues map[string]interface{}) ([]tc.StatsSummary, error) {
+func queryStatsSummary(tx *sqlx.Tx, version uint64, q string, queryValues map[string]interface{}) ([]interface{}, error) {
 	rows, err := tx.NamedQuery(q, queryValues)
 	if err != nil {
 		return nil, fmt.Errorf("querying stats summary: %v", err)
 	}
 	defer rows.Close()
 
-	statsSummaries := []tc.StatsSummary{}
-	for rows.Next() {
-		s := tc.StatsSummary{}
-		if err = rows.StructScan(&s); err != nil {
-			return nil, fmt.Errorf("scanning stats summary: %v", err)
+	var returnStatsSummaries []interface{}
+
+	if version >= 5 {
+		var statsSummariesV5 []tc.StatsSummaryV5
+		for rows.Next() {
+			s := tc.StatsSummaryV5{}
+			if err = rows.StructScan(&s); err != nil {
+				return nil, fmt.Errorf("scanning stats summary: %v", err)
+			}
+			statsSummariesV5 = append(statsSummariesV5, s)
 		}
-		statsSummaries = append(statsSummaries, s)
+		returnStatsSummaries = make([]interface{}, len(statsSummariesV5))
+		for i, v := range statsSummariesV5 {
+			returnStatsSummaries[i] = v
+		}
+
+	} else {
+		var statsSummaries []tc.StatsSummary
+		for rows.Next() {
+			s := tc.StatsSummary{}
+			if err = rows.StructScan(&s); err != nil {
+				return nil, fmt.Errorf("scanning stats summary: %v", err)
+			}
+			statsSummaries = append(statsSummaries, s)
+		}
+
+		returnStatsSummaries = make([]interface{}, len(statsSummaries))
+		for i, v := range statsSummaries {
+			returnStatsSummaries[i] = v
+		}
 	}
-	return statsSummaries, nil
+	return returnStatsSummaries, nil
+
 }
 
 // CreateStatsSummary handler for creating stats summaries
