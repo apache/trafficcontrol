@@ -76,14 +76,3 @@ def test_region_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for regions endpoint: API response was malformed")
-	finally:
-		# Delete region after test execution to avoid redundancy.
-		region_name = region_post_data.get("name")
-		if to_session.delete_region(query_params={"name": region_name}) is None:
-			logger.error("region returned by Traffic Ops is missing a 'name' property")
-			pytest.fail("Response from delete request is empty, Failing test_region_contract")
-
-		division_id = region_post_data.get("division")
-		if to_session.delete_division(division_id=division_id) is None:
-			logger.error("division returned by Traffic Ops is missing a 'name' property")
-			pytest.fail("Response from delete request is empty, Failing test_region_contract")

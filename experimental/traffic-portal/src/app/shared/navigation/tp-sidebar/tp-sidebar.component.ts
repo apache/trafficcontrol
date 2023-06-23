@@ -15,7 +15,7 @@ import { NestedTreeControl } from "@angular/cdk/tree";
 import { Component, OnInit, ViewChild } from "@angular/core";
 import { MatSidenav } from "@angular/material/sidenav";
 import { MatTreeNestedDataSource } from "@angular/material/tree";
-import { Router, RouterEvent, Event } from "@angular/router";
+import { Router, RouterEvent, Event, NavigationEnd } from "@angular/router";
 import { filter } from "rxjs/operators";
 
 import { NavigationService, TreeNavNode } from "src/app/shared/navigation/navigation.service";
@@ -99,8 +99,8 @@ export class TpSidebarComponent implements OnInit {
 		});
 
 		this.route.events.pipe(
-			filter((e: Event): e is RouterEvent => e instanceof RouterEvent)
-		).subscribe((e: RouterEvent) => {
+			filter((e: Event): e is NavigationEnd => e instanceof RouterEvent)
+		).subscribe((e: NavigationEnd) => {
 			const path = e.url.split("?")[0];
 			if(path !== this.lastRoute) {
 				this.lastRoute = path;

@@ -198,7 +198,7 @@ export class ServerService {
 	public async updateServer(serverOrID: ResponseServer | number, payload?: RequestServer): Promise<ResponseServer> {
 		let id: number;
 		let body: ResponseServer;
-		if (typeof(serverOrID) === "number") {
+		if (typeof (serverOrID) === "number") {
 			if(!payload) {
 				throw new TypeError("invalid call signature - missing request paylaod");
 			}
