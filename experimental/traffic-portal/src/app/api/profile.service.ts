@@ -14,7 +14,10 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import {RequestParameter, RequestProfile, ResponseParameter, ResponseProfile} from "trafficops-types";
+import {
+	ProfileExport, ProfileImport, ProfileImportResponse, RequestParameter,
+	RequestProfile, ResponseParameter, ResponseProfile
+} from "trafficops-types";
 
 import { APIService } from "./base-api.service";
 
@@ -122,6 +125,27 @@ export class ProfileService extends APIService {
 	public async deleteProfile(profileId: number | ResponseProfile): Promise<ResponseProfile> {
 		const id = typeof (profileId) === "number" ? profileId : profileId.id;
 		return this.delete<ResponseProfile>(`profiles/${id}`).toPromise();
+	}
+
+	/**
+	 * Exports profile
+	 *
+	 * @param profileId Id of the profile to export.
+	 * @returns profile export object.
+	 */
+	public async exportProfile(profileId: number | ResponseProfile): Promise<ProfileExport>{
+		const id = typeof (profileId) === "number" ? profileId : profileId.id;
+		return this.http.get<ProfileExport>(`/api/${this.apiVersion}/profiles/${id}/export`).toPromise();
+	}
+
+	/**
+	 * Import profile
+	 *
+	 * @param importJSON JSON object for import.
+	 * @returns profile response for imported object.
+	 */
+	public async importProfile(importJSON: ProfileImport): Promise<ProfileImportResponse>{
+		return this.post<ProfileImportResponse>("profiles/import", importJSON).toPromise();
 	}
 
 	public async getParameters(id: number): Promise<ResponseParameter>;
