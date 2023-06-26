@@ -261,5 +261,15 @@
 				}
 			]
 		}
+	],
+	"cdn_locks": [
+		{
+			"cdn": "test",
+			"message": "acquiring lock to snap CDN",
+			"sharedUserNames": [
+				"test"
+			],
+			"soft": true
+		}
 	]
 }

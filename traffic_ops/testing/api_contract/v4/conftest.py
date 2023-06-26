@@ -1419,7 +1419,7 @@ def topology_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	"""
 	PyTest Fixture to create POST data for topologies endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get coordinate request template from a prerequisites file.
+	:param request_template_data: Fixture to get topology request template from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
 
@@ -1448,5 +1448,33 @@ def topology_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	msg = to_session.delete_topology(name=topology_name)
 	logger.info("Deleting topology data... %s", msg)
 	if msg is None:
-		logger.error("topology returned by Traffic Ops is missing an 'id' property")
+		logger.error("topology returned by Traffic Ops is missing an 'name' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="cdn_lock_post_data")
+def cdn_lock_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		user_post_data:dict[str, object], cdn_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for cdn_locks endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get cdn_locks request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	cdn_lock = check_template_data(request_template_data["cdn_locks"], "cdn_locks")
+
+	# Return new post data and post response from cdn_locks POST request
+	cdn_lock["cdn"] = cdn_post_data["name"]
+	cdn_lock["sharedUserNames"][0] = user_post_data["username"]
+	logger.info("New cdn_lock data to hit POST method %s", cdn_lock)
+	# Hitting cdn_locks POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_cdn_lock(data=cdn_lock)
+	resp_obj = check_template_data(response, "cdn_lock")
+	yield resp_obj
+	cdn_name = resp_obj.get("cdn")
+	msg = to_session.delete_cdn_lock(query_params={"cdn":cdn_name})
+	logger.info("Deleting cdn_lock data... %s", msg)
+	if msg is None:
+		logger.error("cdn_lock returned by Traffic Ops is missing an 'cdn' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")

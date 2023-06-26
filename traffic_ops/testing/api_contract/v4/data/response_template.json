@@ -1364,5 +1364,39 @@
                 "type": "string"
             }
         }
+    },
+    "cdn_locks": {
+        "type": "object",
+        "required": [
+            "userName",
+            "cdn",
+            "message",
+            "soft",
+            "sharedUserNames",
+            "lastUpdated"
+        ],
+        "properties": {
+            "userName": {
+                "type": "string"
+            },
+            "cdn": {
+                "type": "string"
+            },
+            "message": {
+                "type": "string"
+            },
+            "soft": {
+                "type": "boolean"
+            },
+            "sharedUserNames": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
     }
 }
