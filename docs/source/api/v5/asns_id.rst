@@ -82,7 +82,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: /83P4LJVsrQx9BKHFxo5pbhQMlB4o3a9v3PpkspyOJcpNx1S/GJhCPpiANBki547sbY+0vTq76IriHZ4GYp8bA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Thu, 08 Nov 2018 14:37:39 GMT
+	Date: Thu, 25 May 2023 21:59:33 GMT
 	Content-Length: 160
 
 	{ "alerts": [
@@ -96,7 +96,7 @@ Response Structure
 		"cachegroup": null,
 		"cachegroupId": 1,
 		"id": 1,
-		"lastUpdated": "2018-11-08 14:37:39+00"
+		"lastUpdated": "2023-05-25T15:59:33.7096-06:00"
 	}}
 
 ``DELETE``

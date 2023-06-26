@@ -27,7 +27,7 @@ import (
 const apiASNs = "/asns"
 
 // CreateASN creates the passed ASN.
-func (to *Session) CreateASN(asn tc.ASN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateASN(asn tc.ASNV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiASNs, opts, asn, &alerts)
 	return alerts, reqInf, err
@@ -35,7 +35,7 @@ func (to *Session) CreateASN(asn tc.ASN, opts RequestOptions) (tc.Alerts, toclie
 
 // UpdateASN updates the ASN identified by id by replacing it with the passed
 // ASN.
-func (to *Session) UpdateASN(id int, entity tc.ASN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateASN(id int, entity tc.ASNV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
@@ -46,8 +46,8 @@ func (to *Session) UpdateASN(id int, entity tc.ASN, opts RequestOptions) (tc.Ale
 }
 
 // GetASNs retrieves ASNs from Traffic Ops.
-func (to *Session) GetASNs(opts RequestOptions) (tc.ASNsResponse, toclientlib.ReqInf, error) {
-	var data tc.ASNsResponse
+func (to *Session) GetASNs(opts RequestOptions) (tc.ASNsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.ASNsResponseV5
 	reqInf, err := to.get(apiASNs, opts, &data)
 	return data, reqInf, err
 }
