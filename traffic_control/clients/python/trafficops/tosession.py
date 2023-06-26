@@ -649,6 +649,38 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+	#
+	# CDN Lock
+	#
+	@api_request('get', 'cdn_locks', ('3.0', '4.0', '4.1', '5.0'))
+	def get_cdn_locks(self, query_params=None):
+		"""
+		Returns information for all CDN locks.
+		:ref:`to-api-cdn-locks`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('post', 'cdn_locks', ('3.0', '4.0', '4.1', '5.0'))
+	def create_cdn_lock(self, data=None):
+		"""
+		Create a new CDN lock.
+		:ref:`to-api-cdn-locks`
+		:param data: The parameter data to use for cdn_lock creation.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'cdn_locks', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_cdn_lock(self, query_params=None):
+		"""
+		Deletes an existing CDN Lock.
+		:ref:`to-api-cdn-locks`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 	#
 	# Change Logs
