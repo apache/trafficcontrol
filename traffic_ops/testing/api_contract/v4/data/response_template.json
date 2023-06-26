@@ -1399,5 +1399,66 @@
                 "type": "integer"
             }
         }
+    },
+    "cdn_locks": {
+        "type": "object",
+        "required": [
+            "userName",
+            "cdn",
+            "message",
+            "soft",
+            "sharedUserNames",
+            "lastUpdated"
+        ],
+        "properties": {
+            "userName": {
+                "type": "string"
+            },
+            "cdn": {
+                "type": "string"
+            },
+            "message": {
+                "type": "string"
+            },
+            "soft": {
+                "type": "boolean"
+            },
+            "sharedUserNames": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
+    },
+    "cdn_notifications": {
+        "type": "object",
+        "required": [
+            "id",
+            "cdn",
+            "lastUpdated",
+            "notification",
+            "user"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "cdn": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "notification": {
+                "type": "string"
+            },
+            "user": {
+                "type": "string"
+            }
+        }
     }
 }

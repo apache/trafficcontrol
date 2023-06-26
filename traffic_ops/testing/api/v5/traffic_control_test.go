@@ -21,7 +21,7 @@ import (
 
 // TrafficControl - maps to the tc-fixtures.json file
 type TrafficControl struct {
-	ASNs                                              []tc.ASN                                `json:"asns"`
+	ASNs                                              []tc.ASNV5                              `json:"asns"`
 	CDNs                                              []tc.CDN                                `json:"cdns"`
 	CDNLocks                                          []tc.CDNLock                            `json:"cdnlocks"`
 	CacheGroups                                       []tc.CacheGroupNullable                 `json:"cachegroups"`
@@ -29,7 +29,7 @@ type TrafficControl struct {
 	Coordinates                                       []tc.CoordinateV5                       `json:"coordinates"`
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
 	DeliveryServiceRequests                           []tc.DeliveryServiceRequestV5           `json:"deliveryServiceRequests"`
-	DeliveryServiceRequestComments                    []tc.DeliveryServiceRequestComment      `json:"deliveryServiceRequestComments"`
+	DeliveryServiceRequestComments                    []tc.DeliveryServiceRequestCommentV5    `json:"deliveryServiceRequestComments"`
 	DeliveryServices                                  []tc.DeliveryServiceV5                  `json:"deliveryservices"`
 	DeliveryServicesRequiredCapabilities              []tc.DeliveryServicesRequiredCapability `json:"deliveryservicesRequiredCapabilities"`
 	DeliveryServiceServerAssignments                  []tc.DeliveryServiceServers             `json:"deliveryServiceServerAssignments"`

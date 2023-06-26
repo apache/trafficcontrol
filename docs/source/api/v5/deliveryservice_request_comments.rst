@@ -61,7 +61,7 @@ Response Structure
 :authorId:                      The integral, unique identifier of the user who created the comment.
 :deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
 :id:                            The integral, unique identifier of the :term:`DSR` comment.
-:lastUpdated:                   The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated:                   The date and time at which the user was last modified, in :rfc:`3339`
 :value:                         The text of the comment that was posted.
 :xmlId:                         This is the ``xmlId`` value that you provided in the request.
 
@@ -88,7 +88,7 @@ Response Structure
 				"author": "admin",
 				"deliveryServiceRequestId": 2,
 				"id": 3,
-				"lastUpdated": "2020-02-24 19:59:46+00",
+				"lastUpdated": "2020-02-24T19:59:46.682939-06:00",
 				"value": "Changing to a different origin for now.",
 				"xmlId": "demo1"
 			},
@@ -97,7 +97,7 @@ Response Structure
 				"author": "admin",
 				"deliveryServiceRequestId": 2,
 				"id": 4,
-				"lastUpdated": "2020-02-24 19:59:55+00",
+				"lastUpdated": "2020-02-24T19:59:55.782431-06:00",
 				"value": "Using HTTPS.",
 				"xmlId": "demo1"
 			}
@@ -141,7 +141,7 @@ Response Structure
 :authorId:                      The integral, unique identifier of the user who created the comment.
 :deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
 :id:                            The integral, unique identifier of the :term:`DSR` comment.
-:lastUpdated:                   The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated:                   The date and time at which the user was last modified, in :rfc:`3339`
 :value:                         The text of the comment that was posted.
 :xmlId:                         This is the ``xmlId`` value that you provided in the request.
 
@@ -173,7 +173,7 @@ Response Structure
 			"author": null,
 			"deliveryServiceRequestId": 2,
 			"id": 6,
-			"lastUpdated": "2020-02-24 20:02:20+00",
+			"lastUpdated": "2020-02-24T20:02:20.583524-06:00",
 			"value": "Does anyone have time to review my delivery service request?",
 			"xmlId": null
 		}
@@ -226,7 +226,7 @@ Response Structure
 :authorId:                      The integral, unique identifier of the user who created the comment.
 :deliveryServiceRequestId:      The integral, unique identifier of the :term:`Delivery Service Request` that the comment was posted on.
 :id:                            The integral, unique identifier of the :term:`DSR` comment.
-:lastUpdated:                   The date and time at which the user was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated:                   The date and time at which the user was last modified, in :rfc:`3339`
 :value:                         The text of the comment that was posted.
 :xmlId:                         This is the ``xmlId`` value that you provided in the request.
 
@@ -258,7 +258,7 @@ Response Structure
 			"author": null,
 			"deliveryServiceRequestId": 2,
 			"id": 6,
-			"lastUpdated": "2020-02-24 20:05:46+00",
+			"lastUpdated": "2020-02-24T20:05:46.124229-06:00",
 			"value": "Update: We no longer need this, feel free to reject.\n\nDoes anyone have time to review my delivery service request?",
 			"xmlId": null
 		}

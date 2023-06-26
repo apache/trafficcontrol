@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { CommonModule } from "@angular/common";
+import { CommonModule, DatePipe } from "@angular/common";
 import { HTTP_INTERCEPTORS } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { RouterModule } from "@angular/router";
@@ -27,6 +27,7 @@ import { DecisionDialogComponent } from "./dialogs/decision-dialog/decision-dial
 import { TextDialogComponent } from "./dialogs/text-dialog/text-dialog.component";
 import { FileUtilsService } from "./file-utils.service";
 import { GenericTableComponent } from "./generic-table/generic-table.component";
+import { ImportJsonTxtComponent } from "./import-json-txt/import-json-txt.component";
 import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { DateReviverInterceptor } from "./interceptor/date-reviver.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
@@ -61,7 +62,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		TreeSelectComponent,
 		TextDialogComponent,
 		DecisionDialogComponent,
-		CollectionChoiceDialogComponent
+		CollectionChoiceDialogComponent,
+  		ImportJsonTxtComponent
 	],
 	exports: [
 		AlertComponent,
@@ -86,6 +88,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: DateReviverInterceptor },
 		FileUtilsService,
+		DatePipe
 	]
 })
 export class SharedModule { }

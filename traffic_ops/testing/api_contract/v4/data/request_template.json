@@ -267,6 +267,22 @@
 			"targetId": 61,
 			"value": 100,
 			"typeId": 43
+    }
+  ],
+	"cdn_notifications": [
+		{
+			"cdn": "cdn1",
+			"notification": "the content of the notification"
+		}
+	],
+	"cdn_locks": [
+		{
+			"cdn": "test",
+			"message": "acquiring lock to snap CDN",
+			"sharedUserNames": [
+				"test"
+			],
+			"soft": true
 		}
 	]
 }

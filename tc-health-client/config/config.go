@@ -163,13 +163,14 @@ type LogCfg struct {
 	LogLocationDebug string
 	LogLocationInfo  string
 	LogLocationWarn  string
+	LogLocationEvent string
 }
 
 func (lcfg LogCfg) ErrorLog() log.LogLocation   { return log.LogLocation(lcfg.LogLocationErr) }
 func (lcfg LogCfg) WarningLog() log.LogLocation { return log.LogLocation(lcfg.LogLocationWarn) }
 func (lcfg LogCfg) InfoLog() log.LogLocation    { return log.LogLocation(lcfg.LogLocationInfo) }
 func (lcfg LogCfg) DebugLog() log.LogLocation   { return log.LogLocation(lcfg.LogLocationDebug) }
-func (lcfg LogCfg) EventLog() log.LogLocation   { return log.LogLocation(log.LogLocationNull) } // not used
+func (lcfg LogCfg) EventLog() log.LogLocation   { return log.LogLocation(lcfg.LogLocationEvent) }
 
 /**
  * ReadCredentials
@@ -225,9 +226,10 @@ func GetConfig() (*Cfg, error, bool) {
 	var err error
 	var configFile string
 	var logLocationErr = log.LogLocationStderr
-	var logLocationDebug = log.LogLocationNull
-	var logLocationInfo = log.LogLocationNull
-	var logLocationWarn = log.LogLocationNull
+	var logLocationDebug = log.LogLocationFile
+	var logLocationInfo = log.LogLocationFile
+	var logLocationWarn = log.LogLocationFile
+	var logLocationEvent = log.LogLocationFile
 
 	configFilePtr := getopt.StringLong("config-file", 'f', DefaultConfigFile, "full path to the json config file")
 	logdirPtr := getopt.StringLong("logging-dir", 'l', DefaultLogDirectory, "directory location for log files")
@@ -256,6 +258,7 @@ func GetConfig() (*Cfg, error, bool) {
 	} else if *verbosePtr == 3 {
 		logLocationInfo = logfile
 		logLocationWarn = logfile
+		logLocationEvent = logfile
 		logLocationDebug = logfile
 	}
 
@@ -269,6 +272,7 @@ func GetConfig() (*Cfg, error, bool) {
 		LogLocationErr:   logLocationErr,
 		LogLocationInfo:  logLocationInfo,
 		LogLocationWarn:  logLocationWarn,
+		LogLocationEvent: logLocationEvent,
 	}
 
 	if err := log.InitCfg(&lcfg); err != nil {
