@@ -32,7 +32,7 @@ import { IPV4, IPV6, IPV6_WITH_CIDR } from "src/app/utils";
  */
 @Component({
 	selector: "tp-isogeneration-form",
-	styleUrls: ["../../styles/form.page.scss", "./isogeneration-form.component.scss"],
+	styleUrls: ["./isogeneration-form.component.scss"],
 	templateUrl: "./isogeneration-form.component.html",
 })
 export class ISOGenerationFormComponent implements OnInit {

@@ -12,10 +12,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card appearance="outlined">
+<mat-card appearance="outlined" class="page-content single-column">
 	<tp-loading *ngIf="!asn"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="asn">
-		<mat-card-content>
+		<mat-card-content class="container">
 			<mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
 				<input matInput type="text" name="id" disabled readonly [defaultValue]="asn.id" />
@@ -29,6 +29,11 @@ limitations under the License.
 				<mat-select name="cachegroup" [(ngModel)]="asn.cachegroupId" required>
 					<mat-option *ngFor="let cachegroup of cachegroups" [value]="cachegroup.id">{{cachegroup.name}}</mat-option>
 				</mat-select>
+				<mat-hint>
+					<a mat-icon-button [disabled]="!asn.cachegroupId" class="small-icon-button" matTooltip="View Cache Group Details" aria-label="View Cache Group Details" color="primary" [routerLink]="'/core/cache-groups/' + asn.cachegroupId" target="_blank">
+						<mat-icon>link</mat-icon>
+					</a>
+				</mat-hint>
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>

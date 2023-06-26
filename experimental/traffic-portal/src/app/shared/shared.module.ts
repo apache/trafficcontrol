@@ -63,7 +63,7 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		TextDialogComponent,
 		DecisionDialogComponent,
 		CollectionChoiceDialogComponent,
-  		ImportJsonTxtComponent
+		ImportJsonTxtComponent
 	],
 	exports: [
 		AlertComponent,

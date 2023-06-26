@@ -11,10 +11,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card appearance="outlined">
+<mat-card appearance="outlined" class="page-content triple-column-responsive">
 	<tp-loading *ngIf="!cacheGroup"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="cacheGroup">
-		<mat-card-content>
+		<mat-card-header class="headers-container" *ngIf="!new">
+			<a disabled mat-raised-button>Queue Updates</a>
+			<a mat-raised-button color="primary" [routerLink]="'/core/asns'" [queryParams]="{cacheGroup: cacheGroup.id}">View ASNs</a>
+			<a mat-raised-button color="primary" [routerLink]="'/core/servers'" [queryParams]="{cacheGroup: cacheGroup.id}">View Servers</a>
+		</mat-card-header>
+		<mat-card-content class="container">
 			<mat-form-field>
 				<mat-label>Name</mat-label>
 				<input matInput type="text" name="name" [(ngModel)]="cacheGroup.name" required/>
@@ -24,8 +29,11 @@ limitations under the License.
 				<mat-select name="type" [formControl]="typeCtrl" required (selectionChange)="showErrors = false">
 					<mat-option *ngFor="let type of types" [value]="type.id">{{type.name}}</mat-option>
 				</mat-select>
-				<mat-hint *ngIf="selectedTypeDescription">{{selectedTypeDescription}}</mat-hint>
-				<mat-error *ngIf="showErrors && typeCtrl.invalid">Required</mat-error>
+				<mat-hint>
+					<a mat-icon-button [disabled]="!cacheGroup.typeId" class="small-icon-button" matTooltip="View Type Details" aria-label="View Type Details" color="primary" [routerLink]="'/core/types/' + cacheGroup.typeId" target="_blank">
+						<mat-icon>link</mat-icon>
+					</a>
+				</mat-hint>
 			</mat-form-field>
 			<mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
@@ -79,7 +87,7 @@ limitations under the License.
 				<mat-checkbox name="fallbackToClosest" [(ngModel)]="cacheGroup.fallbackToClosest">Fall back to closest on localization failure</mat-checkbox>
 			</div>
 		</mat-card-content>
-		<mat-card-actions align="end">
+		<mat-card-actions align="end" class="actions-container">
 			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="delete()">Delete</button>
 			<button mat-raised-button type="submit" color="primary">Save</button>
 		</mat-card-actions>

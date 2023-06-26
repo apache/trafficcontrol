@@ -177,9 +177,9 @@ export class ServerService extends APIService {
 			let params;
 			if (typeof(idOrName) === "number") {
 				params = {id: idOrName};
-			 } else {
+			} else {
 				params = {name: idOrName};
-			 }
+			}
 			const ret = await this.get<[ResponseStatus]>(path, undefined, params).toPromise();
 			if (ret.length !== 1) {
 				throw new Error(`Traffic Ops reported ${ret.length} Statuses by identifier '${idOrName}'`);

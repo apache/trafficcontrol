@@ -11,29 +11,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { animate, state, style, transition, trigger } from "@angular/animations";
 import { NestedTreeControl } from "@angular/cdk/tree";
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { AfterViewInit, Component, OnInit, ViewChild } from "@angular/core";
 import { MatSidenav } from "@angular/material/sidenav";
 import { MatTreeNestedDataSource } from "@angular/material/tree";
-import { Router, RouterEvent, Event, NavigationEnd } from "@angular/router";
+import { Router, RouterEvent, Event, NavigationEnd, IsActiveMatchOptions } from "@angular/router";
 import { filter } from "rxjs/operators";
 
+import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService, TreeNavNode } from "src/app/shared/navigation/navigation.service";
 
 /**
  * TpSidebarComponent is the controller for the sidebar.
  */
 @Component({
+	animations: [
+		trigger("slide", [
+			state(
+				"hide",
+				style({
+					height: 0,
+					visibility: "hidden"
+				})
+			),
+			state(
+				"show",
+				style({
+					height: "*"
+				})
+			),
+			transition("hide <=> show", [
+				animate("125ms linear")
+			])
+		])
+	],
 	selector: "tp-sidebar",
 	styleUrls: ["./tp-sidebar.component.scss"],
 	templateUrl: "./tp-sidebar.component.html",
 })
-export class TpSidebarComponent implements OnInit {
+export class TpSidebarComponent implements OnInit, AfterViewInit {
 	public dataSource = new MatTreeNestedDataSource<TreeNavNode>();
 	public treeCtrl = new NestedTreeControl<TreeNavNode>(node => node.children);
 
-	public hidden = false;
 	private lastRoute = "";
+	public readonly routeOptions: IsActiveMatchOptions = {
+		fragment: "exact",
+		matrixParams: "ignored",
+		paths: "exact",
+		queryParams: "ignored"
+	};
 
 	/**
 	 * Used in the sidebar to ensure the active page is visible.1
@@ -55,7 +82,19 @@ export class TpSidebarComponent implements OnInit {
 		return node.children !== undefined && node.children.length > 0;
 	}
 
-	constructor(private readonly navService: NavigationService, private readonly route: Router) {
+	/**
+	 * Determines if the node is a root node (no parents)
+	 *
+	 * @param node The node to check
+	 * @returns If the node is root
+	 */
+	public isRoot(node: TreeNavNode): boolean {
+		return !this.childToParent.has(this.nodeHandle(node));
+	}
+
+	constructor(private readonly navService: NavigationService,
+		private readonly route: Router,
+		public readonly user: CurrentUserService) {
 	}
 
 	/**
@@ -74,23 +113,26 @@ export class TpSidebarComponent implements OnInit {
 	}
 
 	/**
+	 * Not done in OnInit because we are dependent on the sidenav
+	 */
+	public ngAfterViewInit(): void {
+		this.navService.sidebarHidden.subscribe(hidden => {
+			if(hidden && this.sidenav.opened) {
+				this.sidenav.close().catch(err => {
+					console.error(`Unable to close sidebar: ${err}`);
+				});
+			} else if (!hidden && !this.sidenav.opened) {
+				this.sidenav.open().catch(err => {
+					console.error(`Unable to open sidebar: ${err}`);
+				});
+			}
+		});
+	}
+
+	/**
 	 * Angular lifecycle hook.
 	 */
 	public ngOnInit(): void {
-		this.navService.sidebarHidden.subscribe(hidden => {
-			if(this.sidenav) {
-				this.hidden = hidden;
-				if(hidden && this.sidenav.opened) {
-					this.sidenav.close().catch(err => {
-						console.error(`Unable to close sidebar: ${err}`);
-					});
-				} else if (!this.sidenav.opened) {
-					this.sidenav.open().catch(err => {
-						console.error(`Unable to open sidebar: ${err}`);
-					});
-				}
-			}
-		});
 		this.navService.sidebarNavs.subscribe(navs => {
 			this.dataSource.data = navs;
 
@@ -109,10 +151,15 @@ export class TpSidebarComponent implements OnInit {
 						if(child.href === path) {
 							this.treeCtrl.expand(node);
 							let parent = this.childToParent.get(this.nodeHandle(child));
+							// Prevent infinite loops
 							let depth = 0;
-							while(parent !== undefined && depth++ < 5) {
+							while(parent !== undefined) {
 								this.treeCtrl.expand(parent);
 								parent = this.childToParent.get(this.nodeHandle(parent));
+								if(depth++ > 5) {
+									console.error(`Maximum depth ${depth} reached, aborting expand on ${parent?.name ?? "unknown"}`);
+									break;
+								}
 							}
 							return;
 						}
@@ -120,6 +167,15 @@ export class TpSidebarComponent implements OnInit {
 				}
 			}
 		});
+	}
+
+	/**
+	 * Collapse all tree entries
+	 *
+	 * @private
+	 */
+	public collapseAll(): void {
+		this.treeCtrl.collapseAll();
 	}
 
 	/**

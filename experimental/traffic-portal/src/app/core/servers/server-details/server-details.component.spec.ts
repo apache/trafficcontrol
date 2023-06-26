@@ -21,7 +21,6 @@ import { MatInputModule } from "@angular/material/input";
 import { MatSelectModule } from "@angular/material/select";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
-import { faToggleOff, faToggleOn } from "@fortawesome/free-solid-svg-icons";
 import { of } from "rxjs";
 
 import { ServerService } from "src/app/api";
@@ -92,13 +91,13 @@ describe("ServerDetailsComponent", () => {
 
 	it("gets the right status icon", () => {
 		component.server.status = "ONLINE";
-		expect(component.statusChangeIcon).toBe(faToggleOn);
+		expect(component.statusChangeIcon()).toBe("toggle_on");
 		component.server.status = "OFFLINE";
-		expect(component.statusChangeIcon).toBe(faToggleOff);
+		expect(component.statusChangeIcon()).toBe("toggle_off");
 		component.server.status = "REPORTED";
-		expect(component.statusChangeIcon).toBe(faToggleOn);
+		expect(component.statusChangeIcon()).toBe("toggle_on");
 		component.server.status = "Anything else";
-		expect(component.statusChangeIcon).toBe(faToggleOff);
+		expect(component.statusChangeIcon()).toBe("toggle_off");
 	});
 
 	it("adds and removes interfaces", () => {

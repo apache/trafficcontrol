@@ -20,7 +20,7 @@
 
 import { HttpClientModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
-import { BrowserModule } from "@angular/platform-browser";
+import { BrowserModule, provideClientHydration } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import * as Chart from "chart.js";
 
@@ -74,7 +74,8 @@ Chart.plugins.register({
 		APIModule
 	],
 	providers: [
-		AuthenticatedGuard
+		AuthenticatedGuard,
+		provideClientHydration()
 	]
 })
 export class AppModule { }

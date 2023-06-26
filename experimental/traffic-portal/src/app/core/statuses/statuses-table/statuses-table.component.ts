@@ -21,7 +21,11 @@ import { ResponseStatus } from "trafficops-types";
 import { ServerService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink
+} from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -125,6 +129,11 @@ export class StatusesTableComponent implements OnInit {
 	public updateURL(): void {
 		this.fuzzySubject.next(this.searchText);
 	}
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseStatus> = {
+		href: (row: ResponseStatus): string => `/core/statuses/${row.id}`
+	};
 
 	/**
 	 * Handles a context menu event.

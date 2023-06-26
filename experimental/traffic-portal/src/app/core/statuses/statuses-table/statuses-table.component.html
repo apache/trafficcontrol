@@ -11,18 +11,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card class="table-page-content">
-    <div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Search Statuses" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
+<mat-card class="page-content" appearance="outlined">
+	<div class="search-container">
+		<input type="search" name="fuzzControl" aria-label="Search Statuses" inputmode="search" role="search" accesskey="/"
+					 placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
 	</div>
-    <tp-generic-table
+	<tp-generic-table
 		[data]="statuses | async"
 		[cols]="columnDefs"
 		[fuzzySearch]="fuzzySubject"
 		context="statuses"
 		[contextMenuItems]="contextMenuItems"
+		[doubleClickLink]="doubleClickLink"
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </mat-card>
 
-<a class="page-fab" mat-fab title="Create a new Status" *ngIf="auth.hasPermission('STATUS:CREATE')" routerLink="new"><mat-icon>add</mat-icon></a>
+<a class="page-fab" mat-fab title="Create a new Status" *ngIf="auth.hasPermission('STATUS:CREATE')" routerLink="new">
+	<mat-icon>add</mat-icon>
+</a>
