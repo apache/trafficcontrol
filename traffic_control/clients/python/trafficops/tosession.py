@@ -672,7 +672,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('post', 'cdn_locks', ('4.0', '4.1', '5.0'))
 	def create_cdn_lock(self, data=None):
 		"""

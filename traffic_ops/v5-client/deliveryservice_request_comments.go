@@ -29,7 +29,7 @@ const apiDeliveryServiceRequestComments = "/deliveryservice_request_comments"
 
 // CreateDeliveryServiceRequestComment creates the given Delivery Service
 // Request comment.
-func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServiceRequestComment, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServiceRequestCommentV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiDeliveryServiceRequestComments, opts, comment, &alerts)
 	return alerts, reqInf, err
@@ -37,7 +37,7 @@ func (to *Session) CreateDeliveryServiceRequestComment(comment tc.DeliveryServic
 
 // UpdateDeliveryServiceRequestComment replaces the Delivery Service Request
 // comment identified by 'id' with the one provided.
-func (to *Session) UpdateDeliveryServiceRequestComment(id int, comment tc.DeliveryServiceRequestComment, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateDeliveryServiceRequestComment(id int, comment tc.DeliveryServiceRequestCommentV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
@@ -49,8 +49,8 @@ func (to *Session) UpdateDeliveryServiceRequestComment(id int, comment tc.Delive
 
 // GetDeliveryServiceRequestComments retrieves all comments on all Delivery
 // Service Requests.
-func (to *Session) GetDeliveryServiceRequestComments(opts RequestOptions) (tc.DeliveryServiceRequestCommentsResponse, toclientlib.ReqInf, error) {
-	var data tc.DeliveryServiceRequestCommentsResponse
+func (to *Session) GetDeliveryServiceRequestComments(opts RequestOptions) (tc.DeliveryServiceRequestCommentsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.DeliveryServiceRequestCommentsResponseV5
 	reqInf, err := to.get(apiDeliveryServiceRequestComments, opts, &data)
 	return data, reqInf, err
 }
