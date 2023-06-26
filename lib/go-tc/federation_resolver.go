@@ -54,14 +54,14 @@ type FederationResolver struct {
 // [Version: 5] GET request to its /federation_resolvers endpoint.
 type FederationResolversV5Response struct {
 	Alerts
-	Response []FederationResolver `json:"response"`
+	Response []FederationResolverV5 `json:"response"`
 }
 
 // [Version: 5] FederationResolverResponse represents a Traffic Ops API response to a
 // [Version: 5] POST or DELETE request to its /federation_resolvers endpoint.
 type FederationResolverV5Response struct {
 	Alerts
-	Response FederationResolver `json:"response"`
+	Response FederationResolverV5 `json:"response"`
 }
 
 // [Version: 5] FederationResolver represents a resolver record for a CDN Federation.
