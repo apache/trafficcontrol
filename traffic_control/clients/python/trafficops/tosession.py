@@ -563,7 +563,7 @@ class TOSession(RestApiSession):
 	#
 	# CDN Notifications
 	#
-	@api_request('get', 'cdn_notifications', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('get', 'cdn_notifications', ('4.0', '4.1', '5.0'))
 	def get_cdn_notifications(self, query_params=None):
 		"""
 		Get all CDN notifications.
@@ -574,7 +574,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'cdn_notifications', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('post', 'cdn_notifications', ('4.0', '4.1', '5.0'))
 	def create_cdn_notification(self, data=None):
 		"""
 		Create a new CDN notification.
@@ -582,6 +582,17 @@ class TOSession(RestApiSession):
 		:param data: The parameter data to use for cdn creation.
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('delete', 'cdn_notifications', ('4.0', '4.1', '5.0'))
+	def delete_cdn_notification(self, query_params=None):
+		"""
+		Deletes an existing CDN notification.
+		:ref:`to-api-cdn-notifications`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
@@ -653,7 +664,7 @@ class TOSession(RestApiSession):
 	#
 	# CDN Lock
 	#
-	@api_request('get', 'cdn_locks', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('get', 'cdn_locks', ('4.0', '4.1', '5.0'))
 	def get_cdn_locks(self, query_params=None):
 		"""
 		Returns information for all CDN locks.
@@ -662,7 +673,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 	
-	@api_request('post', 'cdn_locks', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('post', 'cdn_locks', ('4.0', '4.1', '5.0'))
 	def create_cdn_lock(self, data=None):
 		"""
 		Create a new CDN lock.
@@ -673,7 +684,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'cdn_locks', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('delete', 'cdn_locks', ('4.0', '4.1', '5.0'))
 	def delete_cdn_lock(self, query_params=None):
 		"""
 		Deletes an existing CDN Lock.

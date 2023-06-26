@@ -1500,10 +1500,8 @@ def cdn_notification_data_post(to_session: TOSession, request_template_data: lis
 	resp_obj = check_template_data(response, "cdn_notification")
 	yield resp_obj
 	notification_id = resp_obj.get("id")
-	# Create a cursor object to interact with the database
-	cursor = db_connection.cursor()
-	cursor.execute("DELETE FROM cdn_notification WHERE id = %s;", (notification_id,))
-	# Commit the changes
-	db_connection.commit()
-	# Close the cursor
-	cursor.close()
+	msg = to_session.delete_cdn_notification(query_params={"id":notification_id})
+	logger.info("Deleting cdn_notification data... %s", msg)
+	if msg is None:
+		logger.error("cdn_notfication returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
