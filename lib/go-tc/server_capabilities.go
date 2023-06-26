@@ -61,29 +61,29 @@ type ServerCapabilityDetailResponseV41 struct {
 }
 
 // ServerCapabilityV5 is an alias for the latest minor version for the major version 5.
-type ServerCapabilityV5 ServerCapabilityV51
+type ServerCapabilityV5 ServerCapabilityV50
 
-// ServerCapabilityV51 contains information about a given serverCapability in Traffic Ops V5.
-type ServerCapabilityV51 struct {
+// ServerCapabilityV50 contains information about a given serverCapability in Traffic Ops V5.
+type ServerCapabilityV50 struct {
 	Name        string    `json:"name" db:"name"`
 	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
 	Description string    `json:"description" db:"description"`
 }
 
 // ServerCapabilitiesResponseV5 is an alias for the latest minor version for the major version 5.
-type ServerCapabilitiesResponseV5 ServerCapabilitiesResponseV51
+type ServerCapabilitiesResponseV5 ServerCapabilitiesResponseV50
 
-// ServerCapabilitiesResponseV51 contains the result data from a GET(v5.1 and above) /server_capabilities request.
-type ServerCapabilitiesResponseV51 struct {
+// ServerCapabilitiesResponseV50 contains the result data from a GET(v5.1 and above) /server_capabilities request.
+type ServerCapabilitiesResponseV50 struct {
 	Response []ServerCapabilityV5 `json:"response"`
 	Alerts
 }
 
 // ServerCapabilityDetailResponseV5 is an alias for the latest minor version for the major version 5.
-type ServerCapabilityDetailResponseV5 ServerCapabilityDetailResponseV51
+type ServerCapabilityDetailResponseV5 ServerCapabilityDetailResponseV50
 
-// ServerCapabilityDetailResponseV51 contains the result data from a POST(v5.1 and above) /server_capabilities request.
-type ServerCapabilityDetailResponseV51 struct {
+// ServerCapabilityDetailResponseV50 contains the result data from a POST(v5.1 and above) /server_capabilities request.
+type ServerCapabilityDetailResponseV50 struct {
 	Response ServerCapabilityV5 `json:"response"`
 	Alerts
 }

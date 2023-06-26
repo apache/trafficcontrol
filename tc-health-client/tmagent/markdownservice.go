@@ -396,8 +396,7 @@ func doMarkdown(pi *ParentInfo) {
 func markParent(cfg *config.Cfg, pv ParentStatus, cacheStatus string, available bool) (ParentStatus, error) {
 	var hostAvailable bool
 
-	hostName := parseFqdn(pv.Fqdn)
-
+	hostName := pv.Fqdn
 	activeReason := pv.ActiveReason
 	localReason := pv.LocalReason
 	unavailablePollCount := pv.UnavailablePollCount

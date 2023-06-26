@@ -328,7 +328,7 @@ func NewParentInfo(cfgPtr *util.AtomicPtr[config.Cfg]) (*ParentInfo, error) {
 
 	// log.Infof("startup loaded %d parent records\n", len(parentStatus))
 	// TODO track how many elements are in the map?
-	log.Infof("startup loaded x parent records\n")
+	log.Infof("startup loaded %v parent records\n", len(parentInfo.GetParents()))
 
 	parentInfo.Cfg = cfgPtr
 	parentInfo.ParentHealthL4 = NewParentHealthPtr()
@@ -370,7 +370,7 @@ func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
 		} else {
 			// log.Infof("updated parents from new %s, total parents: %d\n", ParentsFile, len(pi.Parents))
 			// TODO track map len
-			log.Infof("updated parents from new %s, total parents: %v\n", ParentsFile, "x")
+			log.Infof("updated parents from new %s, total parents: %v\n", ParentsFile, len(pi.GetParents()))
 		}
 	}
 
@@ -381,7 +381,7 @@ func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
 		} else {
 			// log.Infof("updated parents from new %s total parents: %d\n", StrategiesFile, len(pi.Parents))
 			// TODO track map len
-			log.Infof("updated parents from new %s total parents: %v\n", StrategiesFile, "x")
+			log.Infof("updated parents from new %s, total parents: %v\n", StrategiesFile, len(pi.GetParents()))
 		}
 	}
 
@@ -785,7 +785,7 @@ func (pi *ParentInfo) readHostStatus(cfg *config.Cfg) error {
 		}
 		// log.Debugf("processed trafficserver host status results, total parents: %d\n", len(parentStatus))
 		// TODO count parentStatus len?
-		log.Debugf("processed trafficserver host status results, total parents: %v\n", "x")
+		log.Debugf("processed trafficserver host status results, total parents: %v\n", len(pi.GetParents()))
 	}
 	return nil
 }

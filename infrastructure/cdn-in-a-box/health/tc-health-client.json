@@ -1,0 +1,15 @@
+{
+    "cdn-name": "CDN-in-a-Box",
+    "enable-active-markdowns": true,
+    "reason-code": "active",
+    "to-credential-file": "/etc/to-creds",
+    "to-url": "https://localhost:443",
+    "tm-proxy-url": "http://localhost:80", 
+    "to-request-timeout-seconds": "6s",
+    "tm-poll-interval-seconds": "10s",
+    "to-login-dispersion-factor": 90,
+    "markup-poll-threshold": 1,
+    "unavailable-poll-threshold": 2,
+    "trafficserver-config-dir": "/opt/trafficserver/etc/trafficserver",
+    "trafficserver-bin-dir": "/opt/trafficserver/bin"
+  }
