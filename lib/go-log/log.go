@@ -215,7 +215,9 @@ const (
 	LogLocationStderr = "stderr"
 	// LogLocationNull indicates the null IO stream (/dev/null)
 	LogLocationNull = "null"
-	//StaticFileDir is the directory that contains static html and js files.
+	// LogLocationFile specify where health client logs should go.
+	LogLocationFile = "/var/log/trafficcontrol/tc-health-client.log"
+	// StaticFileDir is the directory that contains static html and js files.
 	StaticFileDir = "/opt/traffic_monitor/static/"
 )
 
