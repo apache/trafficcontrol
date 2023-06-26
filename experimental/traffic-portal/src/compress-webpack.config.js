@@ -1,9 +1,9 @@
-/**
+/*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,19 +12,20 @@
  * limitations under the License.
  */
 
-form mat-card fieldset {
-	border: none;
-	display: grid;
-	grid-template-columns: 1fr;
-	row-gap: 2em;
-}
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const COMPRESS = require("compression-webpack-plugin");
 
-div.form-header {
-	display: flex;
-	margin: 16px;
-	justify-content: space-between;
-
-	mat-slide-toggle {
-		margin-left: 16px;
-	}
-}
+module.exports = {
+	plugins: [
+		new COMPRESS({
+			algorithm: "gzip",
+			test: /\.js|css|ttf|svg$/
+		}),
+		new COMPRESS({
+			algorithm: "brotliCompress",
+			minRatio: 0.8,
+			test: /\.js|css|ttf|svg$/,
+			threshold: 10240
+		}),
+	]
+};

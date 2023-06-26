@@ -20,7 +20,10 @@ import { ActivatedRoute } from "@angular/router";
 import { RequestStatus, ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
-import { DecisionDialogComponent, DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import {
+	DecisionDialogComponent,
+	DecisionDialogData
+} from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -46,21 +49,12 @@ export class StatusDetailsComponent {
 		name: new FormControl("", {nonNullable: true}),
 	});
 
-	/**
-	 * Constructor.
-	 *
-	 * @param api The Servers API which is used to provide row data.
-	 * @param route A reference to the route of this view which is used to get the 'id' query parameter of status.
-	 * @param router Angular router
-	 * @param dialog Dialog manager
-	 * @param fb Form builder
-	 * @param navSvc Manages the header
-	 */
 	constructor(
 		private readonly api: ServerService,
 		private readonly route: ActivatedRoute,
 		private readonly dialog: MatDialog,
-		private readonly navSvc: NavigationService, private readonly location: Location,
+		private readonly navSvc: NavigationService,
+		private readonly location: Location,
 	) {
 		// Getting id from the route
 		const id = this.route.snapshot.paramMap.get("id");

@@ -55,9 +55,9 @@ describe("ImportJsonTxtComponent", () => {
 		expect(preventDefaultSpy).toHaveBeenCalled();
 		expect(stopPropagationSpy).toHaveBeenCalled();
 		expect(component.dragOn).toBeTrue();
-	  });
+	});
 
-	  it("should set dragOn to true when dragover event occurs", () => {
+	it("should set dragOn to true when dragover event occurs", () => {
 
 		const event = new DragEvent("dragleave");
 		const preventDefaultSpy = spyOn(event, "preventDefault");
@@ -69,5 +69,5 @@ describe("ImportJsonTxtComponent", () => {
 		expect(preventDefaultSpy).toHaveBeenCalled();
 		expect(stopPropagationSpy).toHaveBeenCalled();
 		expect(component.dragOn).toBeFalse();
-	  });
+	});
 });

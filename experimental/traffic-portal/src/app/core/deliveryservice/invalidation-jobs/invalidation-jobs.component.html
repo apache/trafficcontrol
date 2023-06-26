@@ -27,7 +27,7 @@ limitations under the License.
 						aria-label="Edit this content invalidation job"
 						[disabled]="j.startTime <= now"
 						(click)="editJob(j)">
-						<fa-icon [icon]="editIcon"></fa-icon>
+						<mat-icon>edit</mat-icon>
 					</button>
 					<button
 						mat-icon-button
@@ -37,12 +37,12 @@ limitations under the License.
 						aria-label="Delete this content invalidation job"
 						[disabled]="isInProgress(j)"
 						(click)="deleteJob(j.id)">
-						<fa-icon [icon]="deleteIcon"></fa-icon>
+						<mat-icon>delete</mat-icon>
 					</button>
 				</div>
 			</div>
 		</mat-list-item>
 	</mat-list>
 	<span *ngIf="jobs.length === 0">No invalidation jobs for {{deliveryservice.displayName}}</span>
-	<button mat-fab type="button" id="new" title="Create a new content invalidation job for this Delivery Service" (click)="newJob()"><fa-icon [icon]="addIcon"></fa-icon></button>
+	<button mat-fab type="button" id="new" title="Create a new content invalidation job for this Delivery Service" (click)="newJob()"><mat-icon>add</mat-icon></button>
 </mat-card>

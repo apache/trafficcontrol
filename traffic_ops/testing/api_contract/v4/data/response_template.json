@@ -1398,5 +1398,32 @@
                 "type": "string"
             }
         }
+    },
+    "cdn_notifications": {
+        "type": "object",
+        "required": [
+            "id",
+            "cdn",
+            "lastUpdated",
+            "notification",
+            "user"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "cdn": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "notification": {
+                "type": "string"
+            },
+            "user": {
+                "type": "string"
+            }
+        }
     }
 }
