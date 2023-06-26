@@ -20,11 +20,16 @@ package division
  */
 
 import (
+	"database/sql"
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -136,4 +141,210 @@ WHERE id=:id RETURNING last_updated`
 
 func deleteQuery() string {
 	return `DELETE FROM division WHERE id=:id`
+}
+
+func GetDivisions(w http.ResponseWriter, r *http.Request) {
+	var div tc.DivisionV5
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"name": {Column: "d.name", Checker: nil},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	selectQuery := "SELECT id, name, last_updated FROM division d"
+	query := selectQuery + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Divisions read: error getting divison(s): %w", err))
+		return
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	var divList []tc.DivisionV5
+	for rows.Next() {
+		if err = rows.Scan(&div.ID, &div.Name, &div.LastUpdated); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting division(s): %w", err))
+			return
+		}
+		divList = append(divList, div)
+	}
+
+	api.WriteResp(w, r, divList)
+	return
+}
+
+func readAndValidateJsonStruct(r *http.Request) (tc.DivisionV5, error) {
+	var div tc.DivisionV5
+	if err := json.NewDecoder(r.Body).Decode(&div); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into DivisionV5 struct %w", err)
+		return div, userErr
+	}
+
+	// validate JSON body
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name": validation.Validate(div.Name, validation.Required, rule),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return div, userErr
+	}
+	return div, nil
+}
+
+func CreateDivision(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	div, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if division already exists
+	var count int
+	err := tx.QueryRow("SELECT count(*) from division where name = $1", div.Name).Scan(&count)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if division with name %s exists", err, div.Name))
+		return
+	}
+	if count == 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("division name '%s' already exists", div.Name), nil)
+		return
+	}
+
+	// create division
+	query := `INSERT INTO division (name) VALUES ($1) RETURNING id, last_updated`
+	err = tx.QueryRow(query, div.Name).Scan(&div.ID, &div.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating division with name: %s", err, div.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "division was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/divisons?name=%s", inf.Version.Major, inf.Version.Minor, div.Name))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, div)
+	return
+}
+
+func UpdateDivision(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	div, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	requestedID := inf.Params["id"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedID, "division")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	//update name and description of a division
+	query := `UPDATE division div SET
+		name = $2
+	WHERE div.id = $1
+	RETURNING div.id, div.last_updated`
+
+	err := tx.QueryRow(query, requestedID, div.Name).Scan(&div.ID, &div.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("division with ID: %s not found", div.ID), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "division was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, div)
+	return
+}
+
+func DeleteDivision(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.Params["id"]
+	exists, err := dbhelpers.DivisionExists(tx, id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		if id != "" {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no divisions exists by id: %s", id), nil)
+			return
+		} else {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no divisions exists for empty id: %s", id), nil)
+			return
+		}
+	}
+
+	assignedRegions := 0
+	if err := inf.Tx.Get(&assignedRegions, "SELECT count(id) FROM region reg WHERE reg.division=$1", id); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("Divisions delete, counting assigned Regions: %w", err))
+		return
+	} else if assignedRegions != 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a division with %d assigned region", assignedRegions), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM division AS div WHERE div.id=$1", id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete division: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for division"), nil)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "division was deleted.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, inf.Params)
+	return
 }
