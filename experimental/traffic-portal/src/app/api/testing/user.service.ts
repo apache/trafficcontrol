@@ -42,9 +42,9 @@ export class UserService extends APITestingService implements ConcreteUserServic
 
 	private lastID = 0;
 
-	private testAdminUsername = "test-admin";
-	private readonly testAdminPassword = "twelve12!";
-	private readonly users: Array<ResponseUser> = [
+	public testAdminUsername = "test-admin";
+	public readonly testAdminPassword = "twelve12!";
+	public readonly users: Array<ResponseUser> = [
 		{
 			addressLine1: null,
 			addressLine2: null,
@@ -72,16 +72,25 @@ export class UserService extends APITestingService implements ConcreteUserServic
 			username: "test-admin"
 		}
 	];
-	private readonly roleDetail: Array<ResponseRole> = [{
-		description: "Has access to everything - cannot be modified or deleted",
-		lastUpdated: new Date(),
-		name: "admin",
-		permissions: [
-			"ALL"
-		],
-	}];
 
-	private readonly tenants: Array<ResponseTenant> = [
+	public readonly roles: Array<ResponseRole> = [
+		{
+			description: "Has access to everything - cannot be modified or deleted",
+			lastUpdated: new Date(),
+			name: "admin",
+			permissions: [
+				"ALL"
+			],
+		},
+		{
+			description: "operator role",
+			lastUpdated: new Date(),
+			name: "operator",
+			permissions: []
+		}
+	];
+
+	public readonly tenants: Array<ResponseTenant> = [
 		{
 			active: true,
 			id: 1,
@@ -98,7 +107,7 @@ export class UserService extends APITestingService implements ConcreteUserServic
 		}
 	];
 
-	private readonly tokens = new Map<string, string>();
+	public readonly tokens = new Map<string, string>();
 
 	constructor(private readonly log: LoggingService) {
 		super();
@@ -162,28 +171,9 @@ export class UserService extends APITestingService implements ConcreteUserServic
 		let user = this.users.filter(u=>u.username === this.testAdminUsername)[0];
 		const transformUser = (u: ResponseUser): ResponseCurrentUser => ({
 			...u,
-			addressLine1: u.addressLine1,
-			addressLine2: u.addressLine2,
-			city: u.city,
-			company: u.company,
-			country: u.country,
-			email: u.email,
-			fullName: u.fullName,
-			gid: u.gid,
-			id: u.id,
-			lastUpdated: u.lastUpdated,
 			localUser: true,
-			newUser: u.newUser ?? false,
-			phoneNumber: u.phoneNumber,
-			postalCode: u.postalCode,
-			publicSshKey: u.publicSshKey,
+			newUser: false,
 			registrationSent: u.registrationSent ?? null,
-			role: u.role,
-			stateOrProvince: u.stateOrProvince,
-			tenant: u.tenant,
-			tenantId: u.tenantId,
-			uid: u.uid,
-			username: u.username
 		});
 		if (user) {
 			return transformUser(user);
@@ -225,14 +215,14 @@ export class UserService extends APITestingService implements ConcreteUserServic
 	 * @returns An Array of User objects - or a single User object if 'nameOrID' was given.
 	 */
 	public async getUsers(nameOrID?: string | number): Promise<Array<ResponseUser> | ResponseUser> {
-		if (nameOrID) {
+		if (nameOrID !== undefined) {
 			let user;
 			switch (typeof nameOrID) {
 				case "string":
-					user = this.users.filter(u=>u.username === nameOrID)[0];
+					user = this.users.find(u=>u.username === nameOrID);
 					break;
 				case "number":
-					user = this.users.filter(u=>u.id === nameOrID)[0];
+					user = this.users.find(u=>u.id === nameOrID);
 			}
 			if (!user) {
 				throw new Error(`no such User: ${nameOrID}`);
@@ -305,7 +295,7 @@ export class UserService extends APITestingService implements ConcreteUserServic
 			registrationSent: null,
 			stateOrProvince: payload.stateOrProvince ?? null,
 			tenant: tenant.name,
-			ucdn: payload.ucdn ?? "",
+			ucdn: "",
 			uid: payload.uid ?? null,
 		};
 		this.users[index] = updated;
@@ -319,7 +309,7 @@ export class UserService extends APITestingService implements ConcreteUserServic
 	 * @returns The created user.
 	 */
 	public async createUser(user: PostRequestUser): Promise<ResponseUser> {
-		const role = this.roleDetail.find(r=>r.name === user.role);
+		const role = this.roles.find(r=>r.name === user.role);
 		if (!role) {
 			throw new Error(`no such Role: #${user.role}`);
 		}
@@ -411,13 +401,13 @@ export class UserService extends APITestingService implements ConcreteUserServic
 	 */
 	public async getRoles(name?: string): Promise<Array<ResponseRole> | ResponseRole> {
 		if (name !== undefined) {
-			const role = this.roleDetail.find(r=>r.name === name);
+			const role = this.roles.find(r=>r.name === name);
 			if (!role) {
 				throw new Error(`no such Role: ${name}`);
 			}
 			return role;
 		}
-		return this.roleDetail;
+		return this.roles;
 	}
 
 	/**
@@ -431,7 +421,7 @@ export class UserService extends APITestingService implements ConcreteUserServic
 			lastUpdated: new Date(),
 			...role
 		};
-		this.roleDetail.push(resp);
+		this.roles.push(resp);
 		return resp;
 	}
 
@@ -443,11 +433,11 @@ export class UserService extends APITestingService implements ConcreteUserServic
 	 * @returns The updated role without lastUpdated field.
 	 */
 	public async updateRole(name: string, role: ResponseRole): Promise<PutResponseRole> {
-		const roleName = this.roleDetail.findIndex(r => r.name === name);
+		const roleName = this.roles.findIndex(r => r.name === name);
 		if (roleName < 0 ) {
 			throw new Error(`no such Role: ${name}`);
 		}
-		this.roleDetail[roleName] = role;
+		this.roles[roleName] = role;
 		return role;
 	}
 
@@ -459,11 +449,11 @@ export class UserService extends APITestingService implements ConcreteUserServic
 	 */
 	public async deleteRole(role: string | ResponseRole): Promise<void> {
 		const roleName = typeof(role) === "string" ? role : role.name;
-		const index = this.roleDetail.findIndex(r => r.name === roleName);
+		const index = this.roles.findIndex(r => r.name === roleName);
 		if (index === -1) {
 			throw new Error(`no such role: ${role}`);
 		}
-		this.roleDetail.splice(index, 1);
+		this.roles.splice(index, 1);
 	}
 
 	/**
