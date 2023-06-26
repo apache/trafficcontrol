@@ -23,13 +23,13 @@ import { ProfileService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { FileUtilsService } from "src/app/shared/file-utils.service";
-import { ImportJsonTxtComponent } from "src/app/shared/import-json-txt/import-json-txt.component";
 import {
 	ContextMenuActionEvent,
 	ContextMenuItem,
 	DoubleClickLink,
 	TableTitleButton
 } from "src/app/shared/generic-table/generic-table.component";
+import { ImportJsonTxtComponent } from "src/app/shared/import-json-txt/import-json-txt.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
