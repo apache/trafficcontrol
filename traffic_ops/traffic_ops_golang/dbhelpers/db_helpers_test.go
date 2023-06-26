@@ -512,7 +512,7 @@ func TestServiceCategoryExists(t *testing.T) {
 	}
 }
 
-func TestGetASNInfo(t *testing.T) {
+func TestASNExists(t *testing.T) {
 	var testCases = []struct {
 		description   string
 		id            string
@@ -551,9 +551,9 @@ func TestGetASNInfo(t *testing.T) {
 			mock.ExpectQuery("SELECT").WillReturnRows(rows)
 			mock.ExpectCommit()
 
-			scExists, err := GetSCInfo(db.MustBegin().Tx, testCase.id)
-			if testCase.exists != scExists {
-				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, scExists)
+			asnExists, err := ASNExists(db.MustBegin().Tx, testCase.id)
+			if testCase.exists != asnExists {
+				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, asnExists)
 			}
 
 			if !errors.Is(err, testCase.expectedError) {
