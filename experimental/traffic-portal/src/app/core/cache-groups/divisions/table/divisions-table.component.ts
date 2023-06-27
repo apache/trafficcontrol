@@ -22,7 +22,11 @@ import { ResponseDivision } from "trafficops-types";
 import { CacheGroupService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink
+} from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -76,6 +80,11 @@ export class DivisionsTableComponent implements OnInit {
 			queryParams: (div: ResponseDivision): Params => ({divisionName: div.name})
 		}
 	];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseDivision> = {
+		href: (row: ResponseDivision): string => `/core/divisions/${row.id}`
+	};
 
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
 	public fuzzySubject: BehaviorSubject<string>;

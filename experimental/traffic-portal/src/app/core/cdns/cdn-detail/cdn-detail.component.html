@@ -11,10 +11,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card appearance="outlined">
+<mat-card appearance="outlined" class="page-content single-column">
 	<tp-loading *ngIf="!cdn"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="cdn">
-		<mat-card-content>
+		<mat-card-header class="headers-container" *ngIf="!new">
+			<a mat-raised-button disabled>View Notifications</a>
+			<a mat-raised-button color="primary" routerLink="/core/profiles" [queryParams]="{cdn: cdn.name}">View Profiles</a>
+			<a mat-raised-button color="primary" routerLink="/core/servers" [queryParams]="{cdnName: cdn.name}">View Servers</a>
+		</mat-card-header>
+		<mat-card-content class="container">
 			<mat-form-field>
 				<mat-label>Name</mat-label>
 				<input matInput type="text" name="name" required [(ngModel)]="cdn.name" pattern="(?!-)[A-Za-z0-9.\-]+(?<!-)">
@@ -33,7 +38,7 @@ limitations under the License.
 			</mat-form-field>
 			<mat-checkbox [labelPosition]="'before'" name="dnssecEnabled" [(ngModel)]="cdn.dnssecEnabled">DNSSEC Enabled</mat-checkbox>
 		</mat-card-content>
-		<mat-card-actions align="end">
+		<mat-card-actions align="end" class="actions-container">
 			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="delete()">Delete</button>
 			<button mat-raised-button color="primary" type="submit">Save</button>
 		</mat-card-actions>

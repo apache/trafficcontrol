@@ -11,12 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 .mat-toolbar {
 	display: inline-flex;
 	width: 100%;
 	height: var(--toolbar-height);
-	padding: 5px;
+	padding: var(--toolbar-padding);
 	position: sticky;
 	top: 0;
 	z-index: 1;
@@ -49,7 +48,7 @@
 nav {
 	display: flex;
 
-	& >ul {
+	ul {
 		display: flex;
 
 		& > li > a {

@@ -12,50 +12,59 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card>
-    <tp-loading *ngIf="loading"></tp-loading>
-    <form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="profile">
-        <mat-card-content>
-            <mat-form-field *ngIf="!new">
+<mat-card appearance="outlined" class="page-content double-column-responsive">
+	<tp-loading *ngIf="loading"></tp-loading>
+	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="profile">
+		<mat-card-header class="headers-container" *ngIf="!new">
+			<a mat-raised-button color="primary" disabled>Queue Updates</a>
+			<a mat-raised-button color="primary" [routerLink]="'/core/parameters'" [queryParams]="{profile: profile.id}">View Parameters</a>
+			<a mat-raised-button color="primary" [routerLink]="'/core/servers'" [queryParams]="{profileName: profile.name}">View Servers</a>
+		</mat-card-header>
+		<mat-card-content class="container">
+			<mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
-				<input matInput type="text" name="id" disabled readonly [defaultValue]="profile['id']" />
+				<input matInput type="text" name="id" disabled readonly [defaultValue]="profile['id']"/>
 			</mat-form-field>
-            <mat-form-field>
-                <mat-label>Name</mat-label>
-                <input matInput type="text" name="name" [(ngModel)]="profile['name']" required />
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>CDN</mat-label>
-                <mat-select name="cdn" [(ngModel)]="profile['cdn']" required>
-                    <mat-option [value]="cdn.id" *ngFor="let cdn of cdns">{{cdn.name}}</mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Type</mat-label>
-                <mat-select name="type" [(ngModel)]="profile['type']" required>
-                    <mat-option [value]="type.value" *ngFor="let type of types">{{type.value}}</mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Routing Disabled</mat-label>
-                <mat-select name="routingDisabled" [(ngModel)]="profile['routingDisabled']" required>
-                    <mat-option [value]="true">True</mat-option>
-                    <mat-option [value]="false">False</mat-option>
-                </mat-select>
-            </mat-form-field>
-            <mat-form-field>
-                <mat-label>Description</mat-label>
-                <textarea matInput name="description" [(ngModel)]="profile['description']" required></textarea>
-            </mat-form-field>
-            <mat-form-field *ngIf="!new">
+			<mat-form-field>
+				<mat-label>Name</mat-label>
+				<input matInput type="text" name="name" [(ngModel)]="profile['name']" required/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>CDN</mat-label>
+				<mat-select name="cdn" [(ngModel)]="profile['cdn']" required>
+					<mat-option [value]="cdn.id" *ngFor="let cdn of cdns">{{cdn.name}}</mat-option>
+				</mat-select>
+				<mat-hint>
+					<a mat-icon-button [disabled]="!profile.cdn" class="small-icon-button" matTooltip="View CDN Details" aria-label="View CDN Details" color="primary" [routerLink]="'/core/cdns/' + profile.cdn" target="_blank">
+						<mat-icon>link</mat-icon>
+					</a>
+				</mat-hint>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Type</mat-label>
+				<mat-select name="type" [(ngModel)]="profile['type']" required>
+					<mat-option [value]="type.value" *ngFor="let type of types">{{type.value}}</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Routing Disabled</mat-label>
+				<mat-select name="routingDisabled" [(ngModel)]="profile['routingDisabled']" required>
+					<mat-option [value]="true">True</mat-option>
+					<mat-option [value]="false">False</mat-option>
+				</mat-select>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Description</mat-label>
+				<textarea matInput name="description" [(ngModel)]="profile['description']" required></textarea>
+			</mat-form-field>
+			<mat-form-field *ngIf="!new">
 				<mat-label>Last Updated</mat-label>
-				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="profile['lastUpdated']" />
+				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="profile['lastUpdated']"/>
 			</mat-form-field>
-        </mat-card-content>
-
-        <mat-card-actions align="end">
+		</mat-card-content>
+		<mat-card-actions align="end" class="actions-container">
 			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="deleteProfile()">Delete</button>
-            <button mat-raised-button color="primary" type="submit">Save</button>
-        </mat-card-actions>
-    </form>
+			<button mat-raised-button color="primary" type="submit">Save</button>
+		</mat-card-actions>
+	</form>
 </mat-card>

@@ -13,7 +13,6 @@
 */
 import { trigger, style, animate, transition } from "@angular/animations";
 import { Component, Input, type OnInit } from "@angular/core";
-import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
 import { Subject } from "rxjs";
 import { protocolToString, type ResponseDeliveryService } from "trafficops-types";
 
@@ -104,9 +103,6 @@ export class DsCardComponent implements OnInit {
 
 	/** Describes whether or not the card's data has been loaded. */
 	private loaded: boolean;
-
-	/** The icon for the Delivery Service InfoURL button. */
-	public readonly infoIcon = faInfoCircle;
 
 	/**
 	 * Describes whether or not the card's data specific to charts has been
