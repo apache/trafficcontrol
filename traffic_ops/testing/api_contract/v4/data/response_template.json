@@ -656,9 +656,81 @@
     },
     "delivery_services": {
         "type": "object",
+        "required": [
+            "maxRequestHeaderBytes",
+            "firstHeaderRewrite",
+            "innerHeaderRewrite",
+            "lastHeaderRewrite",
+            "serviceCategory",
+            "topology",
+            "ecsEnabled",
+            "rangeSliceBlockSize",
+            "consistentHashRegex",
+            "consistentHashQueryParams",
+            "maxOriginConnections",
+            "deepCachingType",
+            "fqPacingRate",
+            "signingAlgorithm",
+            "tenant",
+            "trResponseHeaders",
+            "trRequestHeaders",
+            "active",
+            "anonymousBlockingEnabled",
+            "ccrDnsTtl",
+            "cdnId",
+            "cdnName",
+            "checkPath",
+            "displayName",
+            "dnsBypassCname",
+            "dnsBypassIp",
+            "dnsBypassIp6",
+            "dnsBypassTtl",
+            "dscp",
+            "edgeHeaderRewrite",
+            "exampleURLs",
+            "geoLimit",
+            "geoLimitRedirectURL",
+            "geoProvider",
+            "globalMaxMbps",
+            "globalMaxTps",
+            "httpBypassFqdn",
+            "id",
+            "infoUrl",
+            "initialDispersion",
+            "ipv6RoutingEnabled",
+            "lastUpdated",
+            "logsEnabled",
+            "longDesc",
+            "matchList",
+            "maxDnsAnswers",
+            "midHeaderRewrite",
+            "missLat",
+            "missLong",
+            "multiSiteOrigin",
+            "originShield",
+            "orgServerFqdn",
+            "profileDescription",
+            "profileId",
+            "profileName",
+            "protocol",
+            "qstringIgnore",
+            "rangeRequestHandling",
+            "regexRemap",
+            "regionalGeoBlocking",
+            "remapText",
+            "routingName",
+            "signed",
+            "sslKeyVersion",
+            "tenantId",
+            "type",
+            "typeId",
+            "xmlId",
+            "tlsVersions",
+            "geoLimitCountries"
+        ],
         "properties": {
             "maxRequestHeaderBytes": {
-                "type": "integer"
+                "type": ["null","integer"]
             },
             "firstHeaderRewrite": {
                 "type": [
@@ -1422,6 +1494,56 @@
                 "type": "string"
             },
             "user": {
+                "type": "string"
+            }
+        }
+    },
+    "deliveryservice_requests": {
+        "type": "object",
+        "required": [
+            "assignee",
+            "author",
+            "changeType",
+            "createdAt",
+            "id",
+            "lastEditedBy",
+            "lastUpdated",
+            "original",
+            "requested",
+            "status"
+        ],
+        "properties": {
+            "assignee": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "author": {
+                "type": "string"
+            },
+            "changeType": {
+                "type": "string"
+            },
+            "createdAt": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastEditedBy": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "original": {
+                "$ref": "#/delivery_services"
+            },
+            "requested": {
+                "$ref": "#/delivery_services"
+            },
+            "status": {
                 "type": "string"
             }
         }

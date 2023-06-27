@@ -775,6 +775,50 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+
+    #
+	# Delivery Service Requests
+	#
+	@api_request('get', 'deliveryservice_requests', ('3.0', '4.0', '4.1', '5.0'))
+	def get_deliveryservice_requests(self, query_params=None):
+		"""
+		Retrieves all delivery service reuests.
+		:ref:`to-api-deliveryservice-requests`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'deliveryservice_requests', ('3.0', '4.0', '4.1', '5.0'))
+	def create_deliveryservice_request(self, data=None):
+		"""
+		Creates a new delivery service request.
+		:ref:`to-api-deliveryservice-requests`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('put', 'deliveryservice_requests', ('3.0', '4.0', '4.1', '5.0'))
+	def update_deliveryservice_request(self, query_params=None, data=None):
+		"""
+		Updates an existing Delivery Service Request.
+		:ref:`to-api-deliveryservice-requests`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'deliveryservice_requests', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_deliveryservice_request(self, query_params=None):
+		"""
+		Deletes a Delivery Service Request.
+		:ref:`to-api-deliveryservice-requests`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	#
 	# Delivery Service Health
 	#
