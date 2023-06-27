@@ -1533,9 +1533,9 @@ def steering_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	steering["typeId"]= type_object["id"]
 
 	logger.info("New steering data to hit POST method %s", steering)
-	# Hitting topology POST methed
+	# Hitting steering POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_steering_targets(delivery_service_id=delivery_service_id, data=steering)
-	resp_obj = check_template_data(response, "topology")
+	resp_obj = check_template_data(response, "steering")
 	yield resp_obj
 	deliveryservice_id = resp_obj.get("deliveryServiceId")
 	target_id = resp_obj.get("targetId")
