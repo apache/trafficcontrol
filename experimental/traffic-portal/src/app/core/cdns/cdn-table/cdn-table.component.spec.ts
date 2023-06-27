@@ -21,14 +21,29 @@ import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
+import { CDNService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { CDNTableComponent } from "./cdn-table.component";
+import { ResponseCDN } from 'trafficops-types';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { HarnessLoader } from '@angular/cdk/testing';
+import { MatDialogHarness } from '@angular/material/dialog/testing';
+import { MatButtonHarness } from '@angular/material/button/testing';
+
+const sampleCDN: ResponseCDN = {
+	dnssecEnabled: false,
+	domainName: "*",
+	id: 2,
+	lastUpdated: new Date(),
+	name: "*",
+};
 
 describe("CDNTableComponent", () => {
 	let component: CDNTableComponent;
 	let fixture: ComponentFixture<CDNTableComponent>;
+	let loader: HarnessLoader;
 
 	const navService = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 
@@ -53,9 +68,33 @@ describe("CDNTableComponent", () => {
 		fixture = TestBed.createComponent(CDNTableComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
+		loader = TestbedHarnessEnvironment.documentRootLoader(fixture);
 	});
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
 	});
+
+	it("queues CDN updates", async () => {
+		component = fixture.componentInstance;
+		const service = TestBed.inject(CDNService);
+		const queueSpy = spyOn(service, "queueServerUpdates");
+		expect(queueSpy).not.toHaveBeenCalled();
+
+		let dialogs = await loader.getAllHarnesses(MatDialogHarness);
+		expect(dialogs.length).toBe(0);
+
+		component.handleContextMenu({action: "queue", data: sampleCDN});
+		dialogs = await loader.getAllHarnesses(MatDialogHarness);
+		expect(dialogs.length).toBe(1);
+		let dialog = dialogs[0];
+		const buttons = await dialog.getAllHarnesses(MatButtonHarness);
+		expect(buttons.length).toBe(2);
+		const button = buttons[0];
+		await button.click();
+
+		expect(queueSpy).toHaveBeenCalledTimes(1);
+	});
+
+
 });
