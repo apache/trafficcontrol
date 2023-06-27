@@ -250,21 +250,21 @@ export class CDNTableComponent implements OnInit {
 		switch (a.action) {
 			case "queue":
 				if (Array.isArray(a.data)) {
-					console.error("cannot queue multiple cache groups at once:", a.data);
+					console.error("cannot queue multiple cdns at once:", a.data);
 					return;
 				}
 				this.queueUpdates(a.data);
 				break;
 			case "dequeue":
 				if (Array.isArray(a.data)) {
-					console.error("cannot dequeue multiple cache groups at once:", a.data);
+					console.error("cannot dequeue multiple cdns at once:", a.data);
 					return;
 				}
 				this.queueUpdates(a.data, false);
 				break;
 			case "delete":
 				if (Array.isArray(a.data)) {
-					console.error("cannot delete multiple cache groups at once:", a.data);
+					console.error("cannot delete multiple cdns at once:", a.data);
 					return;
 				}
 				this.delete(a.data);
