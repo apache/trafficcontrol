@@ -1533,4 +1533,41 @@ def deliveryservice_request_data_post(to_session: TOSession, request_template_da
 	logger.info("Deleting deliveryservice_request data... %s", msg)
 	if msg is None:
 		logger.error("deliveryservice_request returned by Traffic Ops is missing an 'id' property")
+
+
+@pytest.fixture(name="steering_post_data")
+def steering_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  delivery_services_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for steering endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get steering request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	steering = check_template_data(request_template_data["steering"], "steering")
+
+	# Return new post data and post response from steering POST request
+	ds_get_response = to_session.get_deliveryservices()
+	ds_data = ds_get_response[0][0]
+	delivery_service_id = ds_data.get("id")
+
+	steering["targetId"] = delivery_services_post_data["id"]
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "steering_target"})
+	steering["typeId"]= type_object["id"]
+
+	logger.info("New steering data to hit POST method %s", steering)
+	# Hitting steering POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_steering_targets(delivery_service_id=delivery_service_id, data=steering)
+	resp_obj = check_template_data(response, "steering")
+	yield resp_obj
+	deliveryservice_id = resp_obj.get("deliveryServiceId")
+	target_id = resp_obj.get("targetId")
+	msg = to_session.delete_steering_targets(delivery_service_id=deliveryservice_id, target_id=target_id)
+	logger.info("Deleting Steering data... %s", msg)
+	if msg is None:
+		logger.error("Steering returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")

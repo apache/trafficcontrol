@@ -1981,6 +1981,46 @@ class TOSession(RestApiSession):
 		"""
 
 	#
+	# steering_id_targets
+	#
+	@api_request('get', 'steering/{delivery_service_id:d}/targets', ('3.0', '4.0', '4.1', '5.0'))
+	def get_steering_targets(self, delivery_service_id=None, query_params=None):
+		"""
+		Get all targets for a steering Delivery Service.
+		:ref:`to-api-steering-id-targets`
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'steering/{delivery_service_id:d}/targets', ('3.0', '4.0', '4.1', '5.0'))
+	def create_steering_targets(self, delivery_service_id=None, data=None):
+		"""
+		Create a steering target.
+		:ref:`to-api-steering-id-targets`
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:param data: The steering(s) data to use for steering creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'steering/{delivery_service_id:d}/targets/{target_id:d}', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_steering_targets(self, delivery_service_id=None, target_id=None):
+		"""
+		Removes a specific target mapping from a specific Delivery Service.
+		:ref:`to-api-steering-id-targets`
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:param target_id: The target Id
+		:type target_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	#
 	# System
 	#
 	@api_request('get', 'system/info', ('3.0', '4.0', '4.1', '5.0'))
@@ -1991,7 +2031,6 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-
 
 	#
 	# Tenants

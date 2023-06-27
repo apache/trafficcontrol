@@ -1437,6 +1437,41 @@
             }
         }
     },
+    "steering": {
+        "type": "object",
+        "required": [
+            "deliveryService",
+            "deliveryServiceId",
+            "target",
+            "targetId",
+            "type",
+            "typeId",
+            "value"
+        ],
+        "properties": {
+            "deliveryService": {
+                "type": "string"
+            },
+            "deliveryServiceId": {
+                "type": "integer"
+            },
+            "target": {
+                "type": "string"
+            },
+            "targetId": {
+                "type": "integer"
+            },
+            "type": {
+                "type": "string"
+            },
+            "typeId": {
+                "type": "integer"
+            },
+            "value": {
+                "type": "integer"
+            }
+        }
+    },
     "cdn_locks": {
         "type": "object",
         "required": [
