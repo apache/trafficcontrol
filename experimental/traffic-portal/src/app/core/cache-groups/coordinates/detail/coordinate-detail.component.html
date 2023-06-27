@@ -12,10 +12,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card appearance="outlined">
+<mat-card appearance="outlined" class="page-content single-column">
 	<tp-loading *ngIf="!coordinate"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="coordinate">
-		<mat-card-content>
+		<mat-card-content class="container">
 			<mat-form-field>
 				<mat-label>Name</mat-label>
 				<input matInput type="text" name="name" required [(ngModel)]="coordinate.name" />
@@ -36,7 +36,7 @@ limitations under the License.
 				<mat-label>Last Updated</mat-label>
 				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="coordinate.lastUpdated" /> </mat-form-field>
 		</mat-card-content>
-		<mat-card-actions align="end">
+		<mat-card-actions align="end" class="actions-container">
 			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="deleteCoordinate()">Delete</button>
 			<button mat-raised-button type="submit" color="primary">Save</button>
 		</mat-card-actions>

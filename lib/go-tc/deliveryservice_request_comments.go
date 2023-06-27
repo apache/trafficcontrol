@@ -19,6 +19,37 @@ package tc
  * under the License.
  */
 
+import (
+	"time"
+)
+
+// DeliveryServiceRequestCommentV5 is a Delivery Service Request Comment as it appears in version 5 of the
+// Traffic Ops API - it always points to the highest minor version in APIv5.
+type DeliveryServiceRequestCommentV5 DeliveryServiceRequestCommentV50
+
+// DeliveryServiceRequestCommentV50 is a struct containing the fields for a delivery
+// service request comment, for API version 5.0.
+type DeliveryServiceRequestCommentV50 struct {
+	AuthorID                 IDNoMod   `json:"authorId" db:"author_id"`
+	Author                   string    `json:"author"`
+	DeliveryServiceRequestID int       `json:"deliveryServiceRequestId" db:"deliveryservice_request_id"`
+	ID                       int       `json:"id" db:"id"`
+	LastUpdated              time.Time `json:"lastUpdated" db:"last_updated"`
+	Value                    string    `json:"value" db:"value"`
+	XMLID                    string    `json:"xmlId" db:"xml_id"`
+}
+
+// DeliveryServiceRequestCommentsResponseV5 is a Delivery Service Request Comment Response as it appears in version 5
+// of the Traffic Ops API - it always points to the highest minor version in APIv5.
+type DeliveryServiceRequestCommentsResponseV5 DeliveryServiceRequestCommentsResponseV50
+
+// DeliveryServiceRequestCommentsResponseV50 is a list of
+// DeliveryServiceRequestCommentsV5 as a response, for API version 5.0.
+type DeliveryServiceRequestCommentsResponseV50 struct {
+	Response []DeliveryServiceRequestCommentV5 `json:"response"`
+	Alerts
+}
+
 // DeliveryServiceRequestCommentsResponse is a list of
 // DeliveryServiceRequestComments as a response.
 type DeliveryServiceRequestCommentsResponse struct {

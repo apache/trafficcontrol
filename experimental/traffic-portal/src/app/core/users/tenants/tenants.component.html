@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card appearance="outlined" class="table-page-content">
+<mat-card class="page-content">
 	<div class="search-container">
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Tenants" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [(ngModel)]="searchText" (input)="updateURL()"/>
 	</div>
@@ -20,6 +20,7 @@ limitations under the License.
 		[cols]="columnDefs"
 		[fuzzySearch]="searchSubject"
 		context="tenants"
+		[doubleClickLink]="doubleClickLink"
 		[contextMenuItems]="contextMenuItems"
 		(contextMenuAction)="handleContextMenu($event)"
 	>

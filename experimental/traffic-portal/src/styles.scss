@@ -104,7 +104,9 @@ body {
 
 :root {
 	--toolbar-height: 3em;
+	--toolbar-padding: 5px;
 	--sidebar-max-width: 25vw;
+	--sidebar-min-width: 10em;
 	--content-padding: 8vw;
 }
 
@@ -119,7 +121,7 @@ body {
 .page-content {
 	min-width: 640px;
 	width: calc(100% - var(--content-padding));
-	max-width: 1080px;
+	max-width: 1440px;
 	margin: 1em auto;
 
 	& > div.search-container {
@@ -142,26 +144,38 @@ body {
 		}
 
 	}
+
+	.headers-container {
+		display: flex;
+		justify-content: end;
+	}
+
+	.actions-container, .headers-container {
+		.mdc-button {
+			margin: 0 8px;
+		}
+	}
+}
+
+.single-column, .double-column-responsive, .triple-column-responsive {
+	.container {
+		display: grid;
+		width: calc(100% - var(--content-padding) / 2);
+		margin: 1em auto 2em;
+		grid-column-gap: 15px;
+		grid-row-gap: 1em;
+	}
 }
 
 .single-column {
 	.container {
-		display: grid;
 		grid-template-columns: 1fr;
-		grid-row-gap: 2em;
-		width: 100%;
-		margin: 1em auto 2em;
 	}
 }
 
 .double-column-responsive {
 	.container {
-		display: grid;
 		grid-template-columns: 1fr 1fr;
-		grid-column-gap: 15px;
-		grid-row-gap: 1em;
-		width: 100%;
-		margin: 1em auto 2em;
 
 		@media(max-width: 840px) {
 			& {
@@ -173,11 +187,7 @@ body {
 
 .triple-column-responsive {
 	.container {
-		display: grid;
 		grid-template-columns: 1fr 1fr 1fr;
-		grid-column-gap: 15px;
-		grid-row-gap: 1em;
-		margin: 1em auto 2em;
 
 		@media(max-width: 1230px) {
 			& {
@@ -224,28 +234,6 @@ body {
 button {
 	cursor: pointer;
 	text-transform: uppercase;
-}
-
-.table-page-content {
-	width: fit-content;
-	min-width: 50%;
-	margin: 1em auto;
-
-	& > div.search-container {
-		width: 50%;
-		margin: auto;
-		padding-right: 10px;
-		position: sticky;
-		top: 0;
-		z-index: 2;
-
-		input[type="search"] {
-			width: 100%;
-			margin: 0 0 15px;
-		}
-
-	}
-
 }
 
 .page-fab, .page-fab.mat-mdc-fab {

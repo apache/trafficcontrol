@@ -12,15 +12,7 @@
 * limitations under the License.
 */
 
-ag-grid-angular {
-	width: 80vw;
-	margin: 10px auto 0;
-	height: 85vh;
-}
-
 .mat-mdc-card {
-	width: fit-content;
-	margin: 1em auto;
 
 	div:first-of-type {
 		width: 50%;
@@ -36,33 +28,3 @@ ag-grid-angular {
 	}
 }
 
-@media(max-width: 1230px) {
-	.mat-mdc-card > div {
-		width: 75%
-	}
-}
-
-@media(max-width: 630px) {
-	.mat-mdc-card > div {
-		width: 75%;
-		margin: auto;
-		position: fixed;
-		left: 12.5%;
-	}
-
-	ag-grid-angular {
-		margin: 25px auto 0;
-		width: 95%;
-	}
-}
-
-@media(max-width: 480px) {
-	.mat-mdc-card > div {
-		left: 7px;
-		width: calc(100vw - 4em);
-	}
-
-	ag-grid-angular {
-		width: 100%;
-	}
-}

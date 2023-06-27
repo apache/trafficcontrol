@@ -27,7 +27,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-parameters-detail",
-	styleUrls: ["../../styles/form.page.scss"],
+	styleUrls: ["./parameter-detail.component.scss"],
 	templateUrl: "./parameter-detail.component.html"
 })
 export class ParameterDetailComponent implements OnInit {

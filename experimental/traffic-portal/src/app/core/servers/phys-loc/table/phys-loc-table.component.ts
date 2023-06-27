@@ -21,7 +21,11 @@ import type { ResponsePhysicalLocation } from "trafficops-types";
 import { PhysicalLocationService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink
+} from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -64,6 +68,11 @@ export class PhysLocTableComponent implements OnInit {
 		field: "lastUpdated",
 		headerName: "Last Updated"
 	}];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponsePhysicalLocation> = {
+		href: (row: ResponsePhysicalLocation): string => `/core/phys-locs/${row.id}`
+	};
 
 	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponsePhysicalLocation>> = [

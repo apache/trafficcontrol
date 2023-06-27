@@ -11,7 +11,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 import { type HarnessLoader, parallel } from "@angular/cdk/testing";
 import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { HttpClientModule } from "@angular/common/http";

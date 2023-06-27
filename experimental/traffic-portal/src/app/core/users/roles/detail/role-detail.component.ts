@@ -26,7 +26,6 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-role-detail",
-	styleUrls: ["../../../styles/form.page.scss"],
 	templateUrl: "./role-detail.component.html"
 })
 export class RoleDetailComponent implements OnInit {
