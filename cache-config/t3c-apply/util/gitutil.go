@@ -79,6 +79,37 @@ func EnsureConfigDirIsGitRepo(cfg config.Cfg) (bool, error) {
 	return true, nil
 }
 
+const GitSafeDir = "safe.directory"
+
+// GetGitConfigSafeDir checks that TsConfigDir has been configured as
+// a safe directory. if not it will be added to the git config
+// this will prevent the fatal: detected dubious ownership error
+func GetGitConfigSafeDir(cfg config.Cfg) error {
+	safeDir := GitSafeDir + "=" + cfg.TsConfigDir
+	cmd := exec.Command("/usr/bin/git", "config", "-l")
+	cmd.Dir = cfg.TsConfigDir
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git config returned err %v", string(output))
+	}
+	if !bytes.Contains(output, []byte(safeDir)) {
+		if err := addGitSafeDir(GitSafeDir, cfg.TsConfigDir); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func addGitSafeDir(safeDir string, path string) error {
+	cmd := exec.Command("/usr/bin/git", "config", "--global", "--add", GitSafeDir, path)
+	cmd.Dir = path
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git config add '%v' returned err %v", safeDir, string(output))
+	}
+	return nil
+}
+
 func makeConfigDirGitRepo(cfg config.Cfg) error {
 	cmd := exec.Command("git", "init")
 	cmd.Dir = cfg.TsConfigDir
