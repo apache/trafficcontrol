@@ -161,7 +161,8 @@ Typical usage is to install t3c on the cache machine, and then run it periodical
 -M, -\-maxmind-location=value
 
     URL of a maxmind gzipped database file, to be installed into
-    the trafficserver etc directory.
+    the trafficserver etc directory. Can also be a comma separated
+    list of URLs to get and un-gzip.
 
 -m, -\-run-mode=value
 
