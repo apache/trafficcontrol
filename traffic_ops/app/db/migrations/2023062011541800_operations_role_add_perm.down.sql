@@ -22,7 +22,4 @@ DELETE FROM public.role_capability
 WHERE role_id IN (
     SELECT id FROM role_id_query
 )
-  AND cap_name = 'DNS-SEC:READ'
-  AND EXISTS (
-        SELECT 1 FROM role_id_query
-    );
+  AND cap_name = 'DNS-SEC:READ';
