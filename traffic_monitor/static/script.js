@@ -217,7 +217,6 @@ function getCacheStates() {
 			cacheRowChildren[7].textContent = server.query_time_ms || "";
 			cacheRowChildren[8].textContent = server.health_time_ms || "";
 			cacheRowChildren[9].textContent = server.stat_time_ms || "";
-			cacheRowChildren[10].textContent = server.health_span_ms || "";
 			cacheRowChildren[11].textContent = server.stat_span_ms || "";
 			cacheRowChildren[12].textContent = parseBandwidth(server);
 			cacheRowChildren[13].textContent = server.connection_count || "N/A";
