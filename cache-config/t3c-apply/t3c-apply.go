@@ -255,6 +255,7 @@ func Main() int {
 	if cfg.Files != t3cutil.ApplyFilesFlagAll {
 		// make sure we got the data necessary to check packages
 		log.Infoln("======== Didn't get all files, no package processing needed or possible ========")
+		metaData.InstalledPackages = oldMetaData.InstalledPackages
 	} else {
 		log.Infoln("======== Start processing packages  ========")
 		err = trops.ProcessPackages()
@@ -365,6 +366,9 @@ func GitCommitAndExit(exitCode int, exitMsg string, cfg config.Cfg, metaData *t3
 	// so add the old files to the new metadata.
 	// This is especially important for reval runs, which don't add all files.
 	metaData.OwnedFilePaths = t3cutil.CombineOwnedFilePaths(metaData, oldMetaData)
+	if len(metaData.InstalledPackages) == 0 {
+		metaData.InstalledPackages = oldMetaData.InstalledPackages
+	}
 	WriteMetaData(cfg, metaData)
 	success := exitCode == ExitCodeSuccess
 	if cfg.UseGit == config.UseGitYes || cfg.UseGit == config.UseGitAuto {
