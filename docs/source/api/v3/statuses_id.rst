@@ -166,10 +166,17 @@ Deletes a :term:`Status`.
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Permissions Required: STATUS:DELETE, STATUS:READ
-:Response Type:  ``undefined``
+:Response Type:  Object
 
 Request Structure
 -----------------
+.. table:: Request Path Parameters
+
+	+------+----------+---------------------------------------------------------------------------------------------+
+	| Name | Required | Description                                                                                 |
+	+======+==========+=============================================================================================+
+	| id   | yes      | The integral, unique identifier of the desired :abbr:`Status`-to-:term:`Server` association |
+	+------+----------+---------------------------------------------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

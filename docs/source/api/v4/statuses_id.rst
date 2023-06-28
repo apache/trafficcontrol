@@ -164,7 +164,7 @@ Deletes a :term:`Status`.
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Permissions Required: STATUS:DELETE, STATUS:READ
-:Response Type:  ``undefined``
+:Response Type:  Object
 
 Request Structure
 -----------------
