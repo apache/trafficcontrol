@@ -32,7 +32,7 @@ import { CertViewerComponent } from "./cert-viewer.component";
  * @returns The cert
  */
 export function createCert(validStart: Date, validEnd: Date, issuer: forge.pki.CertificateField[],
-						   subject: forge.pki.CertificateField[], extensions: unknown[]): forge.pki.Certificate {
+	subject: forge.pki.CertificateField[], extensions: unknown[]): forge.pki.Certificate {
 	const kp = forge.pki.rsa.generateKeyPair(2048);
 	const cert = forge.pki.createCertificate();
 	cert.publicKey = kp.publicKey;
