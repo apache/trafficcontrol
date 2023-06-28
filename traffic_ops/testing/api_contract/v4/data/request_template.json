@@ -262,6 +262,13 @@
 			]
 		}
 	],
+	"steering": [
+		{
+			"targetId": 61,
+			"value": 100,
+			"typeId": 43
+    }
+  ],
 	"cdn_notifications": [
 		{
 			"cdn": "cdn1",

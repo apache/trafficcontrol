@@ -12,7 +12,6 @@
 * limitations under the License.
 */
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import { faCheck, faClock } from "@fortawesome/free-solid-svg-icons";
 import type { ICellRendererParams } from "ag-grid-community";
 
 import { UpdateCellRendererComponent } from "./update-cell-renderer.component";
@@ -50,11 +49,9 @@ describe("UpdateCellRendererComponent", () => {
 		let ret = component.refresh({value: true} as ICellRendererParams);
 		expect(ret).toBeTrue();
 		expect(component.value).toBeTrue();
-		expect(component.icon).toBe(faClock);
 
 		ret = component.refresh({value: false} as ICellRendererParams);
 		expect(ret).toBeTrue();
 		expect(component.value).toBeFalse();
-		expect(component.icon).toBe(faCheck);
 	});
 });

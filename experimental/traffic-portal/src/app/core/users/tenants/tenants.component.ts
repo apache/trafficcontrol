@@ -20,7 +20,11 @@ import { ResponseTenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink
+} from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -78,6 +82,11 @@ export class TenantsComponent implements OnInit, OnDestroy {
 			valueFormatter: (params: ValueFormatterParams): string => this.getParentString(params.data)
 		}
 	];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseTenant> = {
+		href: (row: ResponseTenant): string => `/core/tenants/${row.id}`
+	};
 
 	public contextMenuItems: ContextMenuItem<Readonly<ResponseTenant>>[] = [];
 

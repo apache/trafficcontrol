@@ -24,7 +24,6 @@ import {
 	ViewChild
 } from "@angular/core";
 import { ActivatedRoute, type ParamMap, type Params, Router } from "@angular/router";
-import { faCaretDown, faColumns, faDownload } from "@fortawesome/free-solid-svg-icons";
 import type {
 	CellContextMenuEvent,
 	ColDef,
@@ -366,15 +365,6 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	public gridAPI!: GridApi;
 	/** Holds a reference to the AG-Grid Column API (once it has been initialized)  */
 	public columnAPI: ColumnApi | undefined;
-
-	/** Icon used for the 'columns' dropdown item. */
-	public readonly columnsIcon = faColumns;
-	/** Icon used for the caret/chevron indicating menu direction on button press. */
-	public readonly caretIcon = faCaretDown;
-	/**
-	 * Icon for the "export to CSZ" button.
-	 */
-	public readonly downloadIcon = faDownload;
 
 	/** Used to handle the case that Angular loads faster than AG-Grid (as it usually does) */
 	private initialize = true;

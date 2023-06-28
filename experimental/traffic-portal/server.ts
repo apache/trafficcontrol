@@ -11,10 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 import "zone.js/node";
 
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "fs";
 import { createServer as createRedirectServer } from "http";
 import { createServer, request, RequestOptions } from "https";
 import { join } from "path";
@@ -34,8 +33,53 @@ import {
 
 import { AppServerModule } from "./src/main.server";
 
-let config: ServerConfig;
+/**
+ * StaticFile defines what compression files are available.
+ */
+interface StaticFile {
+	compressions: Array<CompressionType>;
+}
 
+/**
+ * CompressionType defines the different compression algorithms.
+ */
+interface CompressionType {
+	fileExt: string;
+	headerEncoding: string;
+	name: string;
+}
+
+const gzip = {
+	fileExt: "gz",
+	headerEncoding: "gzip",
+	name: "gzip"
+};
+const br = {
+	fileExt: "br",
+	headerEncoding: "br",
+	name: "brotli"
+};
+
+/**
+ * getFiles recursively gets all the files in a directory.
+ *
+ * @param path The path to get files from.
+ * @returns Files found in the directory.
+ */
+function getFiles(path: string): string[] {
+	const all = readdirSync(path)
+		.map(file => join(path, file));
+	const dirs = all
+		.filter(file => statSync(file).isDirectory());
+	let files = all
+		.filter(file => !statSync(file).isDirectory());
+	for (const dir of dirs) {
+		files = files.concat(getFiles(dir));
+	}
+	return files;
+}
+
+let config: ServerConfig;
 /**
  * The Express app is exported so that it can be used by serverless Functions.
  *
@@ -45,18 +89,68 @@ let config: ServerConfig;
 export function app(serverConfig: ServerConfig): express.Express {
 	const server = express();
 	const indexHtml = join(serverConfig.browserFolder, "index.html");
-	if(!existsSync(indexHtml)) {
+	if (!existsSync(indexHtml)) {
 		throw new Error(`Unable to start TP server, unable to find browser index.html at: ${indexHtml}`);
 	}
 
 	// Our Universal express-engine (found @ https://github.com/angular/universal/tree/master/modules/express-engine)
 	server.engine("html", ngExpressEngine({
-		bootstrap: AppServerModule,
+		bootstrap: AppServerModule
 	}));
 
 	server.set("view engine", "html");
-	server.set("views", serverConfig.browserFolder);
+	server.set("views", "./");
 
+	const allFiles = getFiles(serverConfig.browserFolder);
+	const compressedFiles = new Map(allFiles
+		.filter(file => file.match(/\.(br|gz)$/))
+		.map(file => [file, undefined]));
+	const foundFiles = new Map<string, StaticFile>(allFiles
+		.filter(file => file.match(/\.(js|css|tff|svg)$/))
+		.map(file => {
+			const staticFile: StaticFile = {
+				compressions: []
+			};
+			if (compressedFiles.has(`${file}.${br.fileExt}`)) {
+				staticFile.compressions.push(br);
+			}
+			if (compressedFiles.has(`${file}.${gzip.fileExt}`)) {
+				staticFile.compressions.push(gzip);
+			}
+			return [file, staticFile];
+		}));
+
+	const typeMap = new Map([
+		["js", "application/javascript"],
+		["css", "text/css"],
+		["ttf", "font/ttf"],
+		["svg", "image/svg+xml"]
+	]);
+
+	// Could just use express compression `server.use(compression())` but that is calculated for each request
+	server.get("*.(js|css|ttf|svg)", function(req, res, next) {
+		const type = req.path.split(".").pop();
+		if (type === undefined || !typeMap.has(type)) {
+			return next();
+		}
+		const path = join(serverConfig.browserFolder, req.path.substring(1, req.path.length));
+		const file = foundFiles.get(path);
+		if(!file || file.compressions.length === 0) {
+			return next();
+		}
+		const acceptedEncodings = req.acceptsEncodings();
+		for(const compression of file.compressions) {
+			if (acceptedEncodings.indexOf(compression.headerEncoding) === -1) {
+				continue;
+			}
+			req.url = req.url.replace(`${req.path}`, `${req.path}.${compression.fileExt}`);
+			res.set("Content-Encoding", compression.headerEncoding);
+			res.set("Content-Type", typeMap.get(type));
+			console.log(`Serving ${compression.name} compressed file ${req.path}`);
+			return next();
+		}
+		next();
+	});
 	// Example Express Rest API endpoints
 	// server.get('/api/**', (req, res) => { });
 	// Serve static files from /browser
@@ -74,11 +168,11 @@ export function app(serverConfig: ServerConfig): express.Express {
 		console.log(`Making TO API request to \`${req.originalUrl}\``);
 
 		const fwdRequest: RequestOptions = {
-			headers:            req.headers,
-			host:               config.trafficOps.hostname,
-			method:             req.method,
-			path:               req.originalUrl,
-			port:               config.trafficOps.port,
+			headers: req.headers,
+			host: config.trafficOps.hostname,
+			method: req.method,
+			path: req.originalUrl,
+			port: config.trafficOps.port,
 			rejectUnauthorized: !config.insecure,
 		};
 
@@ -98,7 +192,7 @@ export function app(serverConfig: ServerConfig): express.Express {
 
 	// All regular routes use the Universal engine
 	server.get("*", (req, res) => {
-		res.render(indexHtml, { providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }], req });
+		res.render(indexHtml, {providers: [{provide: APP_BASE_HREF, useValue: req.baseUrl}], req});
 	});
 
 	server.enable("trust proxy");
@@ -202,7 +296,7 @@ function run(): number {
 				rejectUnauthorized: !config.insecure,
 			},
 			server
-		).listen(config.port, ()=> {
+		).listen(config.port, () => {
 			console.log(`Node Express server listening on port ${config.port}`);
 		});
 		try {
@@ -222,7 +316,9 @@ function run(): number {
 			redirectServer.listen(80);
 			redirectServer.on("error", e => {
 				console.error(`redirect server encountered error: ${e}`);
-				if (Object.prototype.hasOwnProperty.call(e, "code") && (e as typeof e & {code: unknown}).code === "EACCES") {
+				if (Object.prototype.hasOwnProperty.call(e, "code") && (e as typeof e & {
+					code: unknown;
+				}).code === "EACCES") {
 					console.warn("access to port 80 not allowed; closing redirect server");
 					redirectServer.close();
 				}
@@ -254,7 +350,7 @@ try {
 			process.exit(code);
 		}
 	}
-} catch(e) {
+} catch (e) {
 	console.error("Encountered error while running server:", e);
 	process.exit(1);
 }

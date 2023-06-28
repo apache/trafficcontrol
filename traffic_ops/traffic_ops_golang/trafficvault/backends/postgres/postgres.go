@@ -138,7 +138,7 @@ func (p *Postgres) GetDeliveryServiceSSLKeys(xmlID string, version string, tx *s
 	err = tvTx.QueryRow(query, xmlID, version).Scan(&encryptedSslKeys)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return tc.DeliveryServiceSSLKeysV15{}, false, nil
+			return tc.DeliveryServiceSSLKeysV15{}, false, err
 		}
 		e := checkErrWithContext("Traffic Vault PostgreSQL: executing SELECT SSL Keys query", err, ctx.Err())
 		return tc.DeliveryServiceSSLKeysV15{}, false, e
