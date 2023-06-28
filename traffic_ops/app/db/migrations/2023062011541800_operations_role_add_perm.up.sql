@@ -20,5 +20,4 @@ WITH role_id_query AS (
 )
 INSERT INTO public.role_capability ("role_id", cap_name)
 SELECT id, 'DNS-SEC:READ'
-FROM role_id_query
-WHERE EXISTS (SELECT 1 FROM role_id_query);
+FROM role_id_query;
