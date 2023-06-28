@@ -56,7 +56,7 @@ export function createCert(validStart: Date, validEnd: Date, issuer: forge.pki.C
  * @returns The cert
  */
 export function createCertAndSign(validStart: Date, validEnd: Date, subject: forge.pki.CertificateField[],
-								  ca: forge.pki.Certificate): forge.pki.Certificate {
+	ca: forge.pki.Certificate): forge.pki.Certificate {
 	const cert = createCert(validStart, validEnd, ca.issuer.attributes, subject, []);
 	cert.sign(ca.privateKey, forge.md.sha256.create());
 	return cert;
