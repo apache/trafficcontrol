@@ -109,7 +109,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: t1W65/2kj25QyHt0Ib0xpBaAR2sXu2kOsRZ49WjKZp/AK5S1YWhX7VNWCuUGiN1VNM4QRNqODC/7ewhYDFUncA==
 	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 30 May 2023 20:41:58 GMT
+	Date: Wed, 14 Nov 2018 19:14:28 GMT
 	Content-Length: 385
 
 	{ "alerts": [
@@ -181,7 +181,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: 5jZBgO7h1eNF70J/cmlbi3Hf9KJPx+WLMblH/pSKF3FWb/10GUHIN35ZOB+lN5LZYCkmk3izGbTFkiruG8I41Q==
 	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 30 May 2023 20:41:58 GMT
+	Date: Wed, 14 Nov 2018 19:14:28 GMT
 	Content-Length: 57
 
 	{ "alerts": [

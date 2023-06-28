@@ -76,7 +76,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: UAcP7LrflU1RnfR4UqbQrJczlk5rkrcLOtTXJTFvIUXxK1EklZkHkE4vewjDaVIhJJ6YQg8jmPGQpr+x1RHabw==
 	X-Server-Name: traffic_ops_golang/
-	Date: Tue, 30 May 2023 20:41:58 GMT
+	Date: Wed, 14 Nov 2018 20:19:46 GMT
 	Content-Length: 115
 
 	{ "response": {
