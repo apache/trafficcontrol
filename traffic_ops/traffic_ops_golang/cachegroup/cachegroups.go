@@ -21,8 +21,10 @@ package cachegroup
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strconv"
 	"strings"
@@ -896,4 +898,318 @@ last_updated`
 
 func DeleteQuery() string {
 	return `DELETE FROM cachegroup WHERE id=$1`
+}
+
+// Get [Version : V5] function Process the *http.Request and writes the response. It uses GetCacheGroup function.
+func Get(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	code := http.StatusOK
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+
+	var maxTime time.Time
+	var usrErr error
+	var syErr error
+
+	var cgList []tc.CacheGroupV5
+
+	tx := inf.Tx
+
+	cgList, maxTime, code, usrErr, syErr = GetCacheGroup(tx, inf.Params, useIMS, r.Header)
+	if code == http.StatusNotModified {
+		w.WriteHeader(code)
+		api.WriteResp(w, r, []tc.CacheGroupV5{})
+		return
+	}
+
+	if code == http.StatusBadRequest {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, usrErr, nil)
+		return
+	}
+
+	if sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, syErr)
+		return
+	}
+
+	if maxTime != (time.Time{}) && api.SetLastModifiedHeader(r, useIMS) {
+		api.AddLastModifiedHdr(w, maxTime)
+	}
+
+	api.WriteResp(w, r, cgList)
+}
+
+// GetCacheGroup [Version : V5] receives transactions from Get function and returns cachegroups list.
+func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
+	var runSecond bool
+	var maxTime time.Time
+	cgList := []tc.CacheGroupV5{}
+
+	selectQuery := `SELECT name, last_updated FROM cachegroup as cg`
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"name": {Column: "cg.name", Checker: nil},
+	}
+	if _, ok := params["orderby"]; !ok {
+		params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+	}
+
+	if useIMS {
+		runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return cgList, maxTime, http.StatusNotModified, nil, nil
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+	query := selectQuery + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, time.Time{}, http.StatusInternalServerError, nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		cg := tc.CacheGroupV5{}
+		if err = rows.Scan(&cg.Name, &cg.LastUpdated); err != nil {
+			return nil, time.Time{}, http.StatusInternalServerError, nil, err
+		}
+		cgList = append(cgList, cg)
+	}
+
+	return cgList, maxTime, http.StatusOK, nil, nil
+}
+
+// TryIfModifiedSinceQuery [Version : V5] function receives transactions and header from GetCacheGroup function and returns bool value if status is not modified.
+func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
+	var max time.Time
+	var imsDate time.Time
+	var ok bool
+	imsDateHeader := []string{}
+	runSecond := true
+	dontRunSecond := false
+
+	if header == nil {
+		return runSecond, max
+	}
+
+	imsDateHeader = header[rfc.IfModifiedSince]
+	if len(imsDateHeader) == 0 {
+		return runSecond, max
+	}
+
+	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
+		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
+		return runSecond, max
+	}
+
+	imsQuery := `SELECT max(last_updated) as t from cachegroup cg`
+	query := imsQuery + where
+	rows, err := tx.NamedQuery(query, queryValues)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return dontRunSecond, max
+	}
+
+	if err != nil {
+		log.Warnf("Couldn't get the max last updated time: %v", err)
+		return runSecond, max
+	}
+
+	defer rows.Close()
+	// This should only ever contain one row
+	if rows.Next() {
+		v := time.Time{}
+		if err = rows.Scan(&v); err != nil {
+			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
+			return runSecond, max
+		}
+
+		max = v
+		// The request IMS time is later than the max of (lastUpdated, deleted_time)
+		if imsDate.After(v) {
+			return dontRunSecond, max
+		}
+	}
+	return runSecond, max
+}
+
+// CreateCacheGroup [Version : V5] function creates the cache group with the passed name.
+func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	cg, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if cache group already exists
+	var exists bool
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * from cachegroup where name = $1)`, cg.Name).Scan(&exists)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if cache group with name %s exists", err, cg.Name))
+		return
+	}
+	if exists {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cache group name '%s' already exists.", cg.Name), nil)
+		return
+	}
+
+	// create cache group
+	query := `INSERT INTO cachegroup (name) VALUES ($1) RETURNING name, last_updated`
+	err = tx.QueryRow(query, cg.Name).Scan(&cg.Name, &cg.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating cache group with name: %s", err, cg.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/cachegroups?name=%s", inf.Version.Major, inf.Version.Minor, cg.Name))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cg)
+	return
+}
+
+// UpdateCacheGroup [Version : V5] function updates the name of the cache group passed.
+func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	cg, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	requestedName := inf.Params["name"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedName, "cachegroup")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	//update name of a cache group
+	query := `UPDATE cachegroup cg SET
+		name = $1
+	WHERE cg.name = $2
+	RETURNING cg.name, cg.last_updated`
+
+	err := tx.QueryRow(query, cg.Name, requestedName).Scan(&cg.Name, &cg.LastUpdated)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cache group with name: %s not found", requestedName), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, cg)
+	return
+}
+
+// DeleteCacheGroup [Version : V5] function deletes the cache group passed.
+func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	name := inf.Params["name"]
+	exists, err := dbhelpers.CacheGroupExists(tx, name)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no cache group exists for name: %s", name), nil)
+		return
+
+	}
+
+	assignedDeliveryService := 0
+	if err := inf.Tx.Get(&assignedDeliveryService, "SELECT count(cachegroup) FROM deliveryservice d WHERE d.cachegroup=$1", name); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("cache group delete, counting assigned Delivery Service(s): %w", err))
+		return
+	} else if assignedDeliveryService != 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a cache group with %d assigned Delivery Service(s)", assignedDeliveryService), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM cachegroup AS cg WHERE cg.name=$1", name)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete cachegroup: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("no rows deleted for cachegroup"))
+		return
+	}
+
+	alertMessage := fmt.Sprintf("%s was deleted.", name)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+func readAndValidateJsonStruct(r *http.Request) (tc.CacheGroupV5, error) {
+	var cg tc.CacheGroupV5
+	if err := json.NewDecoder(r.Body).Decode(&cg); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into CacheGroupV5 struct %w", err)
+		return cg, userErr
+	}
+
+	// validate JSON body
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name": validation.Validate(cg.Name, validation.Required, rule),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return cg, userErr
+	}
+	return cg, nil
 }
