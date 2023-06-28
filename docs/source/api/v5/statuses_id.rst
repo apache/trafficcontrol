@@ -113,7 +113,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/5.0/statuses/3 HTTP/1.1
+	PUT /api/5.0/statuses/3 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*

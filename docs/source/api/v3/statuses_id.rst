@@ -13,11 +13,12 @@
 .. limitations under the License.
 ..
 
-.. _to-api-v3-statuses:
 
-************
-``statuses``
-************
+.. _to-api-v3-statuses-id:
+
+*********************
+``statuses/{{ID}}``
+*********************
 
 ``GET``
 =======
@@ -25,6 +26,7 @@ Retrieves a list of all server :term:`Statuses`.
 
 :Auth. Required: Yes
 :Roles Required: None
+:Permissions Required: STATUS:READ
 :Response Type:  Array
 
 Request Structure
@@ -58,7 +60,7 @@ Request Structure
 .. code-block:: http
 	:caption: Request Example
 
-	GET /api/3.0/statuses?name=REPORTED HTTP/1.1
+	GET /api/3.0/statuses/3 HTTP/1.1
 	Host: trafficops.infra.ciab.test
 	User-Agent: curl/7.47.0
 	Accept: */*
@@ -95,26 +97,26 @@ Response Structure
 		}
 	]}
 
-``POST``
-==========
-Creates a Server :term:`Status`.
+``PUT``
+=======
+Updates a :term:`Status`.
 
 :Auth. Required: Yes
-:Roles Required: None
-:Permissions Required: STATUS:CREATE, STATUS:READ
-:Response Type:  Array
+:Roles Required: "admin" or "operations"
+:Permissions Required: STATUS:UPDATE, STATUS:READ
+:Response Type: Array
 
 Request Structure
 -----------------
-:description:	Create a :term:`Status` with this description
-:name:			Create a :term:`Status` with this name
+:description:	The description of the updated :term:`Status`
+:name:			The name of the updated :term:`Status`
 
 .. code-block:: http
 	:caption: Request Example
 
-	POST /api/3.0/statuses HTTP/1.1
+	PUT /api/3.0/statuses/29 HTTP/1.1
 	Host: trafficops.infra.ciab.test
-	User-Agent: curl/7.47.0
+	User-Agent: curl/8.1.2
 	Accept: */*
 	Cookie: mojolicious=...
 
@@ -123,8 +125,8 @@ Request Structure
 Response Structure
 ------------------
 :description: A short description of the status
-:id:          The integral, unique identifier of this status
-:lastUpdated: The date and time at which this status was last modified, in :ref:`non-rfc-datetime`
+:id:           The integral, unique identifier of the desired :abbr:`Status`-to-:term:`Cache Group` association
+:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
 :name:        The name of the status
 
 .. code-block:: http
@@ -136,22 +138,73 @@ Response Structure
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
 	Access-Control-Allow-Origin: *
 	Content-Type: application/json
-	Set-Cookie: mojolicious=...; Path=/; Expires=Wed, 21 Jun 2023 19:25:41 GMT; Max-Age=3600; HttpOnly
-	Whole-Content-Sha512: 49FsWlQoEywA+MwYHFXcYmnLokUI4CWeDJLh8BGRB8V4ju9DckzvUUkFNGa7oXvDgEBpsxI4HoPuk8TCluvLTw==
+	Set-Cookie: mojolicious=...; Path=/; Expires=Tue, 20 Jun 2023 23:00:16 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: FuS3TkVosxHtpxRGMJ2on+WnFdYTNSPjxz/Gh1iT4UCJ2/P0twUbAGQ3tTx9EfGiAzg9CNQiVUFGnYjJZ6NCpg==
 	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 21 Jun 2023 18:25:41 GMT
-	Content-Length: 78
+	Date: Tue, 20 Feb 2023 21:51:55 GMT
+	Content-Length: 46
 
-	{ "alerts": [
-		{
-			"text": "status was created.",
-			"level": "success"
-		}
-	],"response": [
-		{
+	{
+		"alerts": [
+			{
+				"text": "status was updated.",
+				"level": "success"
+			}
+		],
+		"response": {
 			"description": "test",
-			"id": 31,
-			"lastUpdated": "2023-06-21 12:21:52-06",
+			"id": 29,
+			"lastUpdated": "2023-06-20 16:05:16-06"
 			"name": "example"
 		}
-	]}
+	}
+
+``DELETE``
+==========
+Deletes a :term:`Status`.
+
+:Auth. Required: Yes
+:Roles Required: "admin" or "operations"
+:Permissions Required: STATUS:DELETE, STATUS:READ
+:Response Type:  ``undefined``
+
+Request Structure
+-----------------
+
+.. code-block:: http
+	:caption: Request Example
+
+	DELETE /api/3.0/statuses/18 HTTP/1.1
+	User-Agent: curl/8.1.2
+	Accept-Encoding: gzip, deflate
+	Accept: */*
+	Connection: keep-alive
+	Cookie: mojolicious=...
+	Content-Length: 0
+
+Response Structure
+------------------
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Encoding: gzip
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Thu, 15 Jun 2023 22:37:37 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: T8wtKKwyOKKVwDwoNCNvETllsByDiEe4CrpeS7Zdox+rXMgPb3FBlKmmgu4CpxbWdhpiODKqKn+gsSq5K4yvIQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Thu, 15 Jun 2023 21:41:18 GMT
+	Content-Length: 62
+
+	{
+		"alerts": [
+			{
+				"text": "status was deleted.",
+				"level": "success"
+			}
+		]
+	}
