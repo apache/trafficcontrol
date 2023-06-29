@@ -332,7 +332,7 @@ func infoResultSpanMS(cacheName tc.CacheName, history cache.ResultInfoHistory) (
 }
 
 // resultSpanMS returns the length of time between the most recent two results. That is, how long could the cache have been down before we would have noticed it? Note this returns the time between the most recent two results, irrespective if they errored.
-// Note this is unrelated to the Stat Span field.
+// Note this is unrelated to the Stat Span field. 6/29/23: For now, not using this function (neither deleting it), as it is intermittently (based on poll rate) resulting in 0 value
 func resultSpanMS(cacheName tc.CacheName, history map[tc.CacheName][]cache.Result) (int64, error) {
 	results, ok := history[cacheName]
 	if !ok {
