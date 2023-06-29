@@ -1017,14 +1017,8 @@ def coordinate_data_post(to_session: TOSession, request_template_data: list[JSON
 	# Hitting coordinates POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_coordinates(data=coordinate)
 	resp_obj = check_template_data(response, "coordinate")
-	yield resp_obj
-	coordinate_id = resp_obj.get("id")
-	msg = to_session.delete_coordinates(query_params={"id": coordinate_id})
-	logger.info("Deleting Coordinate data... %s", msg)
-	if msg is None:
-		logger.error("coordinate returned by Traffic Ops is missing an 'id' property")
-		pytest.fail("Response from delete request is empty, Failing test_case")
-
+	return resp_obj
+	
 @pytest.fixture(name="profile_parameters_post_data")
 def profile_parameters_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		  ) -> dict[str, object]:
