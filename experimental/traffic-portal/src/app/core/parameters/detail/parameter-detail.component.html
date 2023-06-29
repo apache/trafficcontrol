@@ -12,10 +12,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card>
+<mat-card appearance="outlined" class="page-content single-column">
 	<tp-loading *ngIf="!parameter"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="parameter">
-		<mat-card-content>
+		<mat-card-header class="headers-container" *ngIf="!new">
+			<a mat-raised-button color="primary" [routerLink]="'/core/profiles'" [queryParams]="{parameter: parameter.name}">View Profiles</a>
+		</mat-card-header>
+		<mat-card-content class="container">
 			<mat-form-field *ngIf="!new">
 				<mat-label>ID</mat-label>
 				<input matInput type="text" name="id" disabled readonly [defaultValue]="parameter.id" />

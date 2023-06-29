@@ -122,7 +122,9 @@ func GeneratePlaceholderSelfSignedCert(ds tc.DeliveryServiceV5, inf *api.APIInfo
 	tv := inf.Vault
 	_, ok, err := tv.GetDeliveryServiceSSLKeys(ds.XMLID, "", tx, context)
 	if err != nil {
-		return fmt.Errorf("getting latest ssl keys for XMLID '%s': %w", ds.XMLID, err), http.StatusInternalServerError
+		if err != sql.ErrNoRows {
+			return fmt.Errorf("getting latest ssl keys for XMLID '%s': %w", ds.XMLID, err), http.StatusInternalServerError
+		}
 	}
 	if ok {
 		return nil, http.StatusOK

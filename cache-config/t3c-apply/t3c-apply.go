@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
@@ -163,6 +164,10 @@ func Main() int {
 			if err != nil {
 				log.Errorf("couldn't remove git lock file: %v", err.Error())
 			}
+		}
+		log.Infoln("Checking git for safe directory config")
+		if err := util.GetGitConfigSafeDir(cfg); err != nil {
+			log.Warnln("error checking git for safe directory config: " + err.Error())
 		}
 		// commit anything someone else changed when we weren't looking,
 		// with a keyword indicating it wasn't our change
@@ -397,20 +402,27 @@ func CheckMaxmindUpdate(cfg config.Cfg) bool {
 	// Check if we have a URL for a maxmind db
 	// If we do, test if the file exists, do IMS based on disk time
 	// and download and unpack as needed
-	result := false
+	retresult := false
 	if cfg.MaxMindLocation != "" {
 		// Check if the maxmind db needs to be updated before reload
-		result = util.UpdateMaxmind(cfg)
-		if result {
-			log.Infoln("maxmind database was updated from " + cfg.MaxMindLocation)
-		} else {
-			log.Infoln("maxmind database not updated. Either not needed or curl/gunzip failure")
+		MaxMindList := strings.Split(cfg.MaxMindLocation, ",")
+		for _, v := range MaxMindList {
+			result := util.UpdateMaxmind(v, cfg.TsConfigDir, cfg.ReportOnly)
+			if result {
+				log.Infoln("maxmind database was updated from " + v)
+			} else {
+				log.Infoln("maxmind database not updated. Either not needed or curl/gunzip failure: " + v)
+			}
+			if result {
+				// If we've seen any database updates then return true to update ATS
+				retresult = true
+			}
 		}
 	} else {
 		log.Infoln(("maxmindlocation is empty, not checking for DB update"))
 	}
 
-	return result
+	return retresult
 }
 
 const MetaDataFileName = `t3c-apply-metadata.json`

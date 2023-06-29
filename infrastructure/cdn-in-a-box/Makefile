@@ -59,13 +59,14 @@ SPECIAL_SYRUP := $(ATS_VERSION).el$(RHEL_VERSION).$(BUILD_ARCH).rpm
 ATS_SOURCE := $(wildcard $(TC_DIR)/cache-config/testing/docker/trafficserver/**)
 TO_SOURCE := $(wildcard $(TC_DIR)/traffic_ops/**)
 TO_SOURCE += $(wildcard $(TC_DIR)/traffic_ops_db/**)
-ORT_SOURCE:= $(wildcard $(TC_DIR)/cache-config/**)
-ORT_SOURCE+= $(wildcard $(TC_DIR)/lib/**.go)
+ORT_SOURCE := $(wildcard $(TC_DIR)/cache-config/**)
+ORT_SOURCE += $(wildcard $(TC_DIR)/lib/**.go)
 TM_SOURCE := $(wildcard $(TC_DIR)/traffic_monitor/**)
 TP_SOURCE := $(wildcard $(TC_DIR)/traffic_portal/**)
 TP2_SOURCE := $(wildcard $(TC_DIR)/experimental/traffic-portal/**)
 TR_SOURCE := $(wildcard $(TC_DIR)/traffic_router/**)
 TS_SOURCE := $(wildcard $(TC_DIR)/traffic_stats/**)
+TCH_SOURCE := $(wildcard $(TC_DIR)/tc-health-client/**)
 
 ATS_RPM := cache/trafficserver.rpm
 TM_RPM := traffic_monitor/traffic_monitor.rpm
@@ -76,6 +77,7 @@ TR_RPM := traffic_router/traffic_router.rpm
 TOMCAT_RPM := traffic_router/tomcat.rpm
 TS_RPM := traffic_stats/traffic_stats.rpm
 ORT_RPM := cache/trafficcontrol-cache-config.rpm
+TCH_RPM := health/trafficcontrol-health-client.rpm
 
 ATS_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(ATS_RPM)
 TM_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TM_RPM)
@@ -86,6 +88,7 @@ TR_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TR_RPM)
 TOMCAT_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TOMCAT_RPM)
 TS_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TS_RPM)
 ORT_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(ORT_RPM)
+TCH_RPM_RELATIVE := $(CIAB_DIR_RELATIVE)$(TCH_RPM)
 
 ATS_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(ATS_RPM)
 TM_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TM_RPM)
@@ -96,6 +99,7 @@ TR_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TR_RPM)
 TOMCAT_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TOMCAT_RPM)
 TS_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TS_RPM)
 ORT_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(ORT_RPM)
+TCH_RPM_ABSOLUTE := $(CIAB_DIR_ABSOLUTE)/$(TCH_RPM)
 
 ATS_DIST_RPM := $(TC_DIR)/dist/trafficserver-$(SPECIAL_SYRUP)
 TM_DIST_RPM := $(TC_DIR)/dist/traffic_monitor-$(SPECIAL_SAUCE)
@@ -106,11 +110,12 @@ TR_DIST_RPM := $(TC_DIR)/dist/traffic_router-$(SPECIAL_SAUCE_NOARCH)
 TOMCAT_DIST_RPM := $(TC_DIR)/dist/tomcat-$(SPECIAL_SEASONING)
 TS_DIST_RPM := $(TC_DIR)/dist/traffic_stats-$(SPECIAL_SAUCE)
 ORT_DIST_RPM := $(TC_DIR)/dist/trafficcontrol-cache-config-$(SPECIAL_SAUCE)
+TCH_DIST_RPM := $(TC_DIR)/dist/trafficcontrol-health-client-$(SPECIAL_SAUCE)
 
 .PHONY: all build-builders clean debug native nearly-all pull-builders very-clean
 
 # Default target; builds all pre-requisite rpms from source trees
-all: $(ATS_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TM_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TP2_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(TS_RPM_RELATIVE)
+all: $(ATS_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TM_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TP2_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(TS_RPM_RELATIVE) $(TCH_RPM_RELATIVE)
 
 ifneq ($(filter build-builders,$(MAKECMDGOALS)),)
 PKG_FLAGS += -b
@@ -174,6 +179,8 @@ $(TS_RPM_RELATIVE): $(TS_DIST_RPM)
 	cp -f "$?" "$@"
 $(ORT_RPM_RELATIVE): $(ORT_DIST_RPM)
 	cp -f "$?" "$@"
+$(TCH_RPM_RELATIVE): $(TCH_DIST_RPM)
+	cp -f "$?" "$@"
 
 # Absolute path output RPM recipies
 $(ATS_RPM_ABSOLUTE): $(ATS_DIST_RPM)
@@ -193,6 +200,8 @@ $(TOMCAT_RPM_ABSOLUTE): $(TOMCAT_DIST_RPM)
 $(TS_RPM_ABSOLUTE): $(TS_DIST_RPM)
 	cp -f "$?" "$@"
 $(ORT_RPM_ABSOLUTE): $(ORT_DIST_RPM)
+	cp -f "$?" "$@"
+$(TCH_RPM_ABSOLUTE): $(TCH_DIST_RPM)
 	cp -f "$?" "$@"
 
 # Dist rpms
@@ -220,9 +229,12 @@ $(TS_DIST_RPM): $(TS_SOURCE)
 $(ORT_DIST_RPM): $(ORT_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) cache-config$(BUILD_SUFFIX)
 
+$(TCH_DIST_RPM): $(TCH_SOURCE)
+	"$(PKG_COMMAND)" $(PKG_FLAGS) tc-health-client$(BUILD_SUFFIX)
+
 clean:
 	cd "$(CIAB_DIR_RELATIVE)"
-	$(RM) $(TM_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TP2_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TS_RPM_RELATIVE)
+	$(RM) $(TM_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TP2_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TS_RPM_RELATIVE) $(TCH_RPM_RELATIVE)
 
 very-clean: clean
 	$(warning This will destroy ALL OUTPUT RPMS IN 'dist'. Please be sure this is what you want)

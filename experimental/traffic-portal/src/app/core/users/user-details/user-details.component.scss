@@ -11,22 +11,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import "src/styles/vars";
 
-.mat-mdc-card {
-	width: fit-content;
-	margin: 15px auto auto;
-	min-width: 685px;
-}
-
-
-.mat-mdc-card-content {
-	display: grid;
-	grid-template-columns: 1fr 1fr 1fr;
-	grid-column-gap: 15px;
-	grid-row-gap: 1em;
-	width: 85vw;
-	margin: 1em auto 50px;
-}
+@include small-icon-button();
 
 #ssh-container {
 	width: 98%;
@@ -41,20 +28,3 @@
 	}
 }
 
-@media(max-width: 1230px) {
-	form {
-		grid-template-columns: 1fr 1fr;
-	}
-}
-
-@media(max-width: 840px) {
-	form {
-		grid-template-columns: 1fr;
-	}
-}
-
-input[type="checkbox"] {
-	justify-self: start;
-	align-self: center;
-	cursor: pointer;
-}

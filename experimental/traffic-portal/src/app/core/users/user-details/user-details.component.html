@@ -11,10 +11,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card appearance="outlined">
+<mat-card appearance="outlined" class="page-content triple-column-responsive">
 	<tp-loading *ngIf="!user"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="user">
-		<mat-card-content>
+		<mat-card-header class="headers-container" *ngIf="!new">
+			<a mat-raised-button color="primary" [routerLink]="'/core/change-logs'" [queryParams]="{username: user.username}">View Change Logs</a>
+			<a mat-raised-button disabled>View Delivery Services</a>
+		</mat-card-header>
+		<mat-card-content class="container">
 			<mat-form-field>
 				<mat-label>Username</mat-label>
 				<input matInput type="text" name="username" required [(ngModel)]="user.username"/>
@@ -28,12 +32,22 @@ limitations under the License.
 				<mat-select name="role" [value]="role()" (selectionChange)="updateRole($event)">
 					<mat-option *ngFor="let role of roles" [value]="role">{{role.name}}</mat-option>
 				</mat-select>
+				<mat-hint>
+					<a mat-icon-button [disabled]="!user.role" class="small-icon-button" matTooltip="View Role Details" aria-label="View Role Details" color="primary" [routerLink]="'/core/roles/' + user.role" target="_blank">
+						<mat-icon>link</mat-icon>
+					</a>
+				</mat-hint>
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Tenant</mat-label>
 				<mat-select name="tenant" [value]="tenant()" (selectionChange)="updateTenant($event)">
 					<mat-option *ngFor="let tenant of tenants" [value]="tenant">{{tenant.name}} (#{{tenant.id}})</mat-option>
 				</mat-select>
+				<mat-hint>
+					<a mat-icon-button [disabled]="!user.tenantId" class="small-icon-button" matTooltip="View Tenant Details" aria-label="View Tenant Details" color="primary" [routerLink]="'/core/tenants/' + user.tenantId" target="_blank">
+						<mat-icon>link</mat-icon>
+					</a>
+				</mat-hint>
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Email</mat-label>
@@ -105,7 +119,7 @@ limitations under the License.
 				<input required matInput [(ngModel)]="user.confirmLocalPasswd" name="confirmLocalPasswd" type="password"/>
 			</mat-form-field>
 		</mat-card-content>
-		<mat-card-actions align="end">
+		<mat-card-actions align="end" class="actions-container">
 			<button mat-raised-button color="primary" type="submit">Save</button>
 		</mat-card-actions>
 	</form>

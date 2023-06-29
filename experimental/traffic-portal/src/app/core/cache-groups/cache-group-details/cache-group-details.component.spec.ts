@@ -282,18 +282,4 @@ describe("CacheGroupDetailsComponent", () => {
 		expect(updateSpy).not.toHaveBeenCalled();
 		expect(createSpy).not.toHaveBeenCalled();
 	});
-
-	it("gets Type descriptions", async () => {
-		const typeSrv = TestBed.inject(TypeService);
-		const types = await typeSrv.getTypesInTable("cachegroup");
-		if (types.length < 1) {
-			return fail("no cg Types");
-		}
-		// Unsure why this is necessary
-		component.types = types;
-		component.typeCtrl.setValue(types[0].id);
-		expect(component.selectedTypeDescription).toBe(types[0].description);
-		component.typeCtrl.setValue(null);
-		expect(component.selectedTypeDescription).toBeNull();
-	});
 });

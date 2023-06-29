@@ -38,7 +38,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.DeliveryServiceRequestComment]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.DeliveryServiceRequestCommentV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -68,7 +68,7 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
-					RequestBody: tc.DeliveryServiceRequestComment{
+					RequestBody: tc.DeliveryServiceRequestCommentV5{
 						DeliveryServiceRequestID: GetDSRequestId(t, "test-ds1")(),
 						Value:                    "updated comment",
 					},
@@ -78,13 +78,13 @@ func TestDeliveryServiceRequestComments(t *testing.T) {
 					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody:   tc.DeliveryServiceRequestComment{},
+					RequestBody:   tc.DeliveryServiceRequestCommentV5{},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetDSRequestCommentId(t, "admin"),
 					ClientSession: TOSession,
-					RequestBody:   tc.DeliveryServiceRequestComment{},
+					RequestBody:   tc.DeliveryServiceRequestCommentV5{},
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -147,7 +147,7 @@ func GetDSRequestId(t *testing.T, xmlId string) func() int {
 func validateSortedDSRequestComments() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, err error) {
 		var sortedList []string
-		dsReqComments := resp.([]tc.DeliveryServiceRequestComment)
+		dsReqComments := resp.([]tc.DeliveryServiceRequestCommentV5)
 
 		for _, comment := range dsReqComments {
 			sortedList = append(sortedList, comment.XMLID)
