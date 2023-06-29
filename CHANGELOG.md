@@ -56,6 +56,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7366](https://github.com/apache/trafficcontrol/pull/7366) *t3c* Removed timestamp from metadata file since it's changing every minute and causing excessive commits to git repo.
 - [#7386](https://github.com/apache/trafficcontrol/pull/7386) *Traffic Portal* Increased the number of events that are logged to the TP access log.
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
+- [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
 
 ### Fixed
 - [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}
@@ -120,6 +121,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6385](https://github.com/apache/trafficcontrol/issues/6385) *Traffic Ops* Reserved consistentHashQueryParameters cause internal server error
 - [#7471](https://github.com/apache/trafficcontrol/pull/7471) *Traffic Control Cache Config (t3c)* Fixed issue with MSO non topo origins from multiple cache groups.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
+- [#7590](https://github.com/apache/trafficcontrol/issues/7590) *Traffic Control Cache Config (t3c)* Fixed issue with git detected dubious ownership in repository.
 
 ### Removed
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
