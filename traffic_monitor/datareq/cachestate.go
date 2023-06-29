@@ -56,10 +56,6 @@ type CacheStatus struct {
 	// recent two stat queries. This can be used as a rough gauge of the
 	// end-to-end query processing time.
 	StatSpanMilliseconds *int64 `json:"stat_span_ms,omitempty"`
-	// HealthSpanMilliseconds is the length of time between completing the most
-	// recent two health queries. This can be used as a rough gauge of the
-	// end-to-end query processing time.
-	HealthSpanMilliseconds *int64 `json:"health_span_ms,omitempty"`
 
 	Status                *string  `json:"status,omitempty"`
 	StatusPoller          *string  `json:"status_poller,omitempty"`
@@ -232,11 +228,6 @@ func createCacheStatuses(
 			log.Infof("Error getting cache %v stat span: %v\n", cacheName, err)
 		}
 
-		healthSpan, err := resultSpanMS(tc.CacheName(cacheName), healthHistory)
-		if err != nil {
-			log.Infof("Error getting cache %v health span: %v\n", cacheName, err)
-		}
-
 		if serverInfo.ServerStatus == tc.CacheStatusOnline.String() {
 			cacheStatus.Why = "ONLINE - available"
 			cacheStatus.Available.IPv4 = serverInfo.IPv4() != ""
@@ -251,7 +242,6 @@ func createCacheStatuses(
 			StatTimeMilliseconds:   &statTime,
 			HealthTimeMilliseconds: &healthTime,
 			StatSpanMilliseconds:   &statSpan,
-			HealthSpanMilliseconds: &healthSpan,
 			BandwidthKbps:          &totalKbps,
 			BandwidthCapacityKbps:  &totalMaxKbps,
 			ConnectionCount:        &connections,
