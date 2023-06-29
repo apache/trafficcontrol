@@ -156,4 +156,3 @@ Response Structure
 			"lastUpdated": "2018-12-10 19:11:17+00",
 		}
 	]}
-
