@@ -1149,5 +1149,34 @@
                 "type": "string"
             }
         }
+    },
+    "profile_parameters": {
+        "type": "object",
+        "required":[
+            "profile",
+            "profileId",
+            "parameter",
+            "parameterId"
+        ],
+        "properties":{
+            "profile":{
+                "type": "string"
+            },
+            "profileId":{
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "parameter":{
+                "type": "string"
+            },
+            "parameterId": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            }
+        }
     }
 }

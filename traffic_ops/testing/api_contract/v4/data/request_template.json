@@ -226,5 +226,13 @@
         	"latitude": 38.897663,
         	"longitude": -77.036574
 		}
+	],
+	"profile_parameters": [
+		{
+			"profile": "test profile",
+			"profileId": 25,
+			"parameter": "test parameter",
+			"parameterId": 60
+		}
 	]
 }

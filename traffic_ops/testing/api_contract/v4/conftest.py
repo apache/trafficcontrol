@@ -1017,4 +1017,40 @@ def coordinate_data_post(to_session: TOSession, request_template_data: list[JSON
 	# Hitting coordinates POST methed
 	response: tuple[JSONData, requests.Response] = to_session.create_coordinates(data=coordinate)
 	resp_obj = check_template_data(response, "coordinate")
-	return resp_obj
+	yield resp_obj
+	coordinate_id = resp_obj.get("id")
+	msg = to_session.delete_coordinates(query_params={"id": coordinate_id})
+	logger.info("Deleting Coordinate data... %s", msg)
+	if msg is None:
+		logger.error("coordinate returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+@pytest.fixture(name="profile_parameters_post_data")
+def profile_parameters_data_post(to_session: TOSession, request_template_data: list[JSONData]
+		  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for profile parameters endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get profile parameters request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	profile_parameters = check_template_data(request_template_data["profile_parameters"], "profile_parameters")
+
+	# Return new post data and post response from profile parameters POST request
+	profileId = profile_parameters["profileId"]
+	parameterId = profile_parameters["parameterId"]
+	
+	logger.info("New profile_parameter data to hit POST method %s", profile_parameters)
+	
+	# Hitting profile parameters POST methed
+	response: tuple[JSONData, requests.Response] = to_session.associate_paramater_to_profile(data=profile_parameters)
+	resp_obj = check_template_data(response, "profile_parameters")
+	yield resp_obj
+	profile_id = resp_obj.get("profileId")
+	parameter_id = resp_obj.get("parameterId")
+	msg = to_session.delete_profile_parameter_association_by_id(profile_id=profile_id, parameter_id=parameter_id)
+	logger.info("Deleting Profile Parameters data... %s", msg)
+	if msg is None:
+		logger.error("Profile Parameter returned by Traffic Ops is missing a 'profile_id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
