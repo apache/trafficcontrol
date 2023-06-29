@@ -96,7 +96,7 @@ Response Structure
 	]}
 
 ``POST``
-==========
+========
 Creates a Server :term:`Status`.
 
 :Auth. Required: Yes
