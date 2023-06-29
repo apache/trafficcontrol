@@ -124,12 +124,12 @@ func TestParseAndDecode(t *testing.T) {
 		t.Errorf("empty miscStats structure")
 	}
 
-	if val, ok := miscStats["plugin.system_stats.timestamp_ms"]; ok {
+	if val, ok := miscStats["current_time_epoch_ms"]; ok {
 		valString := fmt.Sprintf("%s", val)
-		if valString != "1684784877939" {
-			t.Errorf("unable to read `plugin.system_stats.timestamp_ms`")
+		if valString != "1684784878894" {
+			t.Errorf("unable to read `current_time_epoch_ms`")
 		}
 	} else {
-		t.Errorf("plugin.system_stats.timestamp_ms field was not found in the json file")
+		t.Errorf("current_time_epoch_ms field was not found in the json file")
 	}
 }
