@@ -533,7 +533,6 @@
 		"plugin.system_stats.net.docker0.rx_length_errors": "0",
 		"proxy.process.cache.volume_0.span.offline": "0",
 		"proxy.process.cache.volume_0.span.online": "0",
-		"current_time_epoch_ms": "1684784878894",
 		"server": "10.0.0"
 	}
 }

@@ -20,15 +20,11 @@ package cache
  */
 
 import (
-	"bytes"
-	"fmt"
+	"testing"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/traffic_monitor/todata"
-	"io/ioutil"
-	"net/http"
-	"testing"
 )
 
 func TestHandlerPrecompute(t *testing.T) {
@@ -97,39 +93,5 @@ func TestComputeStatGbps(t *testing.T) {
 		if numGot, ok := util.ToNumeric(got); ok && numGot != want {
 			t.Errorf("ComputedStats[\"%v\"] return %v instead of %v", stat, got, want)
 		}
-	}
-}
-
-func TestParseAndDecode(t *testing.T) {
-	file, err := ioutil.ReadFile("stats_over_http.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
-	ctx := interface{}(pl)
-	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
-
-	decoder, err := GetDecoder("stats_over_http")
-	if err != nil {
-		t.Errorf("decoder error, expected: nil, got: %v", err)
-	}
-
-	_, miscStats, err := decoder.Parse("1", bytes.NewReader(file), ctx)
-	if err != nil {
-		t.Errorf("decoder parse error, expected: nil, got: %v", err)
-	}
-
-	if len(miscStats) < 1 {
-		t.Errorf("empty miscStats structure")
-	}
-
-	if val, ok := miscStats["current_time_epoch_ms"]; ok {
-		valString := fmt.Sprintf("%s", val)
-		if valString != "1684784878894" {
-			t.Errorf("unable to read `current_time_epoch_ms`")
-		}
-	} else {
-		t.Errorf("current_time_epoch_ms field was not found in the json file")
 	}
 }
