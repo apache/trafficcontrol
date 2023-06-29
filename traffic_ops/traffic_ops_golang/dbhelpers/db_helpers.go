@@ -2218,6 +2218,21 @@ func ASNExists(tx *sql.Tx, id string) (bool, error) {
 	return true, nil
 }
 
+// CacheGroupExists confirms whether the cache group exists, and an error (if one occurs).
+func CacheGroupExists(tx *sql.Tx, name string) (bool, error) {
+	var count int
+	if err := tx.QueryRow("SELECT count(name) FROM cachegroup AS cg WHERE cg.name=$1", name).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting cache group info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting cache group info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
+}
+
 // DivisionExists confirms whether the division exists, and an error (if one occurs).
 func DivisionExists(tx *sql.Tx, id string) (bool, error) {
 	var count int
