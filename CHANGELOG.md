@@ -38,6 +38,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7388](https://github.com/apache/trafficcontrol/pull/7388) *TC go Client* Adds sslkey_expiration methodology in v4 and v5 clients
 - [#7543](https://github.com/apache/trafficcontrol/pull/7543) *Traffic Portal* New Ansible Role to use Traffic Portal v2
 - [#7516](https://github.com/apache/trafficcontrol/pull/7516) *t3c* added command line arg to control go_direct in parent.config
+- [#7602](https://github.com/apache/trafficcontrol/pull/7602) *t3c* added installed package data to t3c-apply-metadata.json
 
 ### Changed
 - [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
