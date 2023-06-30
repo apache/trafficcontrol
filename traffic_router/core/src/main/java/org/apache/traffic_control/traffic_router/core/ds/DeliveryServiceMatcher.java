@@ -52,8 +52,12 @@ public class DeliveryServiceMatcher implements Comparable<DeliveryServiceMatcher
 		return new ArrayList<>(this.requestMatchers);
 	}
 
+	// srijeet
 	public boolean matches(final Request request) {
+//		System.out.println("SRIJEET--------------------------------");
+//		System.out.println(requestMatchers);
 		for (final RequestMatcher matcher : requestMatchers) {
+//			System.out.println(matcher.toString());
 			if (!matcher.matches(request)) {
 				return false;
 			}

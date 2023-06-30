@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
+import org.apache.traffic_control.traffic_router.core.request.DNSRequest;
+import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
 import org.apache.traffic_control.traffic_router.core.request.Request;
 
 @SuppressWarnings("PMD.LooseCoupling")
@@ -32,6 +34,7 @@ public class CacheRegister {
 	private Map<String,Cache> allCaches;
 	private TreeSet<DeliveryServiceMatcher> deliveryServiceMatchers;
 	private Map<String, DeliveryService> dsMap;
+	private Map<String, DeliveryService> fqdnToDeliveryServiceMap;
 	private JsonNode config;
 	private JsonNode stats;
 	private int edgeTrafficRouterCount;
@@ -148,11 +151,29 @@ public class CacheRegister {
 	 * @return the DeliveryService that matches the request
 	 */
 	public DeliveryService getDeliveryService(final Request request) {
+		String requestName = "";
+		if (request.getType().equals("http")) {
+			requestName = ((HTTPRequest)request).getPath();
+		} else {
+			requestName = ((DNSRequest)request).getName().toString();
+		}
+		if (requestName.endsWith(".")) {
+			requestName = requestName.substring(0, requestName.length()-1);
+		}
+		if (getFQDNToDeliveryServiceMap() != null && getFQDNToDeliveryServiceMap().get(requestName) != null) {
+			System.out.println("SRIJEET this time from within getDeliveryService HOLY SHIT!!!!!!! I'm HERE---------------------------------------------------------------");
+			return getFQDNToDeliveryServiceMap().get(requestName);
+		}
+		// srijeet get ds here
 		if (deliveryServiceMatchers == null) {
 			return null;
 		}
 
+		// srijeet get the request target here
 		for (final DeliveryServiceMatcher m : deliveryServiceMatchers) {
+//			System.out.println("SRIJEET!!!!!!!!!!!!!!!!!!!!!");
+//			System.out.println(m.getDeliveryService().getId());
+//			System.out.println(m.getRequestMatchers());
 			if (m.matches(request)) {
 				return m.getDeliveryService();
 			}
@@ -177,6 +198,14 @@ public class CacheRegister {
 
 	public void setDeliveryServiceMap(final Map<String, DeliveryService> dsMap) {
 		this.dsMap = dsMap;
+	}
+
+	public Map<String, DeliveryService> getFQDNToDeliveryServiceMap() {
+		return fqdnToDeliveryServiceMap;
+	}
+
+	public void setFQDNToDeliveryServiceMap(final Map<String, DeliveryService> fqdnToDeliveryServiceMap) {
+		this.fqdnToDeliveryServiceMap = fqdnToDeliveryServiceMap;
 	}
 
 	public JsonNode getTrafficRouters() {
