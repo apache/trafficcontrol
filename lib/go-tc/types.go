@@ -50,15 +50,21 @@ type TypeNullable struct {
 	UseInTable  *string    `json:"useInTable" db:"use_in_table"`
 }
 
-// TypesResponseV5 is the type of a response (for RFC3339) from Traffic Ops to a GET Request
+// TypesResponseV5 is type struct response used for the latest minor version associated with api major version 5.
+type TypesResponseV5 = TypesResponseV50
+
+// TypesResponseV50 is the type of response (for RFC3339) from Traffic Ops to a GET Request
 // made to its /types API endpoint.
-type TypesResponseV5 struct {
-	Response []TypeV5 `json:"response"`
+type TypesResponseV50 struct {
+	Response []TypeV50 `json:"response"`
 	Alerts
 }
 
-// TypeV5 contains information about a given Type in Traffic Ops.
-type TypeV5 struct {
+// TypeV5 contains information about a given Type in Traffic Ops used for the latest minor version associated with api major version 5.
+type TypeV5 = TypeV50
+
+// TypeV50 contains information about a given Type in Traffic Ops.
+type TypeV50 struct {
 	ID          int       `json:"id"`
 	LastUpdated time.Time `json:"lastUpdated"`
 	Name        string    `json:"name"`
@@ -66,8 +72,11 @@ type TypeV5 struct {
 	UseInTable  string    `json:"useInTable"`
 }
 
-// TypeNullableV5 contains information about a given Type in Traffic Ops.
-type TypeNullableV5 struct {
+// TypeNullableV5 contains information about a given Type in Traffic Ops used for the latest minor version associated with api major version 5.
+type TypeNullableV5 = TypeNullableV50
+
+// TypeNullableV50 contains information about a given Type in Traffic Ops.
+type TypeNullableV50 struct {
 	ID          *int       `json:"id" db:"id"`
 	LastUpdated *time.Time `json:"lastUpdated" db:"last_updated"`
 	Name        *string    `json:"name" db:"name"`
