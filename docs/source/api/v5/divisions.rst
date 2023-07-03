@@ -53,10 +53,19 @@ Request Structure
 	|           | defined to make use of ``page``.                                                                              |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
 
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/5.0/divisions HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.47.0
+	Accept: */*
+	Cookie: mojolicious=...
+
 Response Structure
 ------------------
 :id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this Division was last modified, in :rfc:`3339`
 :name:        The Division name
 
 .. code-block:: http
@@ -77,12 +86,12 @@ Response Structure
 	{ "response": [
 		{
 			"id": 1,
-			"lastUpdated": "2018-11-29 18:38:28+00",
+			"lastUpdated": "2018-11-29T09:39:09.761097+05:30",
 			"name": "Quebec"
 		},
 		{
 			"id": 2,
-			"lastUpdated": "2018-11-29 18:38:28+00",
+			"lastUpdated": "2018-11-29T15:29:31.872822+05:30",
 			"name": "USA"
 		}
 	]}
@@ -117,7 +126,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this Division was last modified, in :rfc:`3339`
 :name:        The Division name
 
 .. code-block:: http
@@ -143,6 +152,6 @@ Response Structure
 	],
 	"response": {
 		"id": 3,
-		"lastUpdated": "2018-11-29 19:52:06+00",
+		"lastUpdated": "2018-11-29T19:52:06.872822+05:30",
 		"name": "test"
 	}}
