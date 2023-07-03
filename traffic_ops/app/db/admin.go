@@ -250,6 +250,7 @@ func createDB() {
 	if err != nil {
 		die("Can't create db " + dbName + ": " + err.Error())
 	}
+	seed()
 }
 
 func dropDB() {
@@ -353,7 +354,6 @@ func reset() {
 func upgrade() {
 	runMigrations()
 	if !trafficVault {
-		seed()
 		patch()
 	}
 }
@@ -459,7 +459,7 @@ func seed() {
 	if trafficVault {
 		die("seed not supported for trafficvault environment")
 	}
-	fmt.Println("Seeding database w/ required data.")
+	fmt.Println("Seeding database with required data.")
 	seedsBytes, err := ioutil.ReadFile(dbSeedsPath)
 	if err != nil {
 		die("unable to read '" + dbSeedsPath + "': " + err.Error())
@@ -507,9 +507,9 @@ func patch() {
 	cmd.Stdin = bytes.NewBuffer(patchesBytes)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+dbPassword)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf(string(out))
+	fmt.Println(string(out))
 	if err != nil {
-		die("Can't patch database w/ required data")
+		die("Can't patch database with required data")
 	}
 }
 
