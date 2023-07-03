@@ -26,10 +26,10 @@ from random import randint
 from typing import Any, NamedTuple, Union, Optional, TypeAlias
 from urllib.parse import urlparse
 import munch
+import psycopg2
 
 import pytest
 import requests
-
 from trafficops.tosession import TOSession
 from trafficops.restapi import OperationError
 
@@ -110,6 +110,33 @@ ArgsType.port.__doc__ = """The port number on which to connect to Traffic Ops.""
 ArgsType.api_version.__doc__ = """The version number of the API to use."""
 
 
+class DbArgsType(NamedTuple):
+	"""Represents the configuration needed to create Traffic Ops Database connection."""
+	db_name: str
+	user: str
+	password: str
+	hostname: str
+	port: int
+	sslmode: str
+
+	def __str__(self) -> str:
+		"""
+		Formats the configuration as a string. Omits password and extraneous
+		properties.
+
+		>>> print(ArgsType("db_name", "user", "password", "hostname", "port", "sslmode"))
+		Dbname: 'db_name', User: 'user'
+		"""
+		return f"User: '{self.db_name}', : '{self.user}'"
+
+DbArgsType.db_name.__doc__ = """The DB name used for authentication."""
+DbArgsType.user.__doc__ = """The DB username used for authentication."""
+DbArgsType.password.__doc__ = """The DB password used for authentication."""
+DbArgsType.hostname.__doc__ = """The DB hostname of the environment."""
+DbArgsType.port.__doc__ = """The DB port number on which to connect to Traffic Ops."""
+DbArgsType.sslmode.__doc__ = """Sslmode to use."""
+
+
 @pytest.fixture(autouse=True, scope='function')
 def delete_pytest_cache():
 	"""
@@ -131,6 +158,24 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 	)
 	parser.addoption(
 		"--to-url", action="store", help="Traffic Ops URL."
+	)
+	parser.addoption(
+		"--to-db-name", action="store", help="Name for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-user", action="store", help="User name for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-password", action="store", help="Password for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-hostname", action="store", help="Hostname for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-port", action="store", help="Port for Traffic Ops Database."
+	)
+	parser.addoption(
+		"--to-db-sslmode", action="store", help="Sslmode for Traffic Ops Database."
 	)
 	parser.addoption(
 		"--config",
@@ -218,6 +263,88 @@ def parse_to_url(raw: str) -> tuple[APIVersion, int]:
 
 	return (api_version, port)
 
+
+@pytest.fixture(name="to_db_args", scope="session")
+def to_db_data(pytestconfig: pytest.Config) -> DbArgsType:
+	"""
+	PyTest fixture to store Traffic ops database arguments passed from command line.
+	:param pytestconfig: Session-scoped fixture that returns the session's pytest.Config object.
+	:returns: Configuration for connecting to Traffic Ops database.
+	"""
+	session_data: JSONData = None
+	cfg_path = pytestconfig.getoption("--config")
+	if isinstance(cfg_path, str):
+		try:
+			with open(cfg_path, encoding="utf-8", mode="r") as session_file:
+				session_data = json.load(session_file)
+		except (FileNotFoundError, PermissionError) as read_err:
+			raise ValueError(f"could not read configuration file at '{cfg_path}'") from read_err
+
+	if session_data is not None and not isinstance(session_data, dict):
+		raise ValueError(
+			f"invalid configuration file; expected top-level object, got: {type(session_data)}"
+		)
+
+	to_db_name = coalesce_config(pytestconfig.getoption("--to-db-name"), "db_name",
+			      session_data, "TO_DB_NAME")
+	if not to_db_name:
+		raise ValueError(
+			"Traffic Ops Database name is not configured - use '--to-db-name', the config file, or an "
+			"environment variable to do so"
+		)
+
+	to_db_user = coalesce_config(pytestconfig.getoption("--to-db-user"), "db_user",
+			      session_data, "TO_DB_USER")
+	if not to_db_user:
+		raise ValueError(
+			"Traffic Ops Database Username is not configured - use '--to-db-user', the config file, or an "
+			"environment variable to do so"
+		)
+
+	to_db_password = coalesce_config(pytestconfig.getoption("--to-db-password"), "db_password",
+				  session_data, "TO_DB_PASSWORD")
+
+	if not to_db_password:
+		raise ValueError(
+			"Traffic Ops Database password is not configured - use '--to-db-password', the config file,"
+			"or an environment variable to do so"
+		)
+
+	to_db_hostname = coalesce_config(pytestconfig.getoption("--to-db-hostname"), "db_hostname",
+				  session_data, "TO_DB_HOSTNAME")
+	if not to_db_hostname:
+		raise ValueError(
+			"Traffic Ops Database Hostname is not configured - use '--to-db-hostname', the config file,"
+			"or an environment variable to do so"
+		)
+
+	to_db_port = coalesce_config(pytestconfig.getoption("--to-db-port"), "db_port",
+			      session_data, "TO_DB_PORT")
+	if not to_db_port:
+		raise ValueError(
+			"Traffic Ops Database Port is not configured - use '--to-db-port', the config file, or an "
+			"environment variable to do so"
+		)
+	port = int(to_db_port)
+
+	to_db_sslmode = coalesce_config(pytestconfig.getoption("--to-db-sslmode"), "db_sslmode",
+				 session_data, "TO_DB_SSLMODE")
+	if not to_db_sslmode:
+		raise ValueError(
+			"Traffic Ops Database Sslmode is not configured - use '--to-db-sslmode', the config file, or an "
+			"environment variable to do so"
+		)
+
+	return DbArgsType(
+		to_db_name,
+		to_db_user,
+		to_db_password,
+		to_db_hostname,
+		port,
+		to_db_sslmode
+	)
+
+
 @pytest.fixture(name="to_args")
 def to_data(pytestconfig: pytest.Config) -> ArgsType:
 	"""
@@ -242,7 +369,7 @@ def to_data(pytestconfig: pytest.Config) -> ArgsType:
 	to_user = coalesce_config(pytestconfig.getoption("--to-user"), "user", session_data, "TO_USER")
 	if not to_user:
 		raise ValueError(
-			"Traffic Ops password is not configured - use '--to-password', the config file, or an "
+			"Traffic Ops user is not configured - use '--to-user', the config file, or an "
 			"environment variable to do so"
 		)
 
@@ -309,6 +436,32 @@ def to_login(to_args: ArgsType) -> TOSession:
 	to_session.login(to_args.user, to_args.password)
 	logger.info("Successfully logged into Traffic Ops.")
 	return to_session
+
+
+@pytest.fixture(scope="session", name="db_connection")
+def to_db_connection(to_db_args: DbArgsType) -> psycopg2.connect:
+	"""
+	Creates new traffic ops db connection.
+	:returns: New Traffic ops database connection
+	"""
+	to_db_connection = None
+	try:
+		to_db_connection = psycopg2.connect(
+            user=to_db_args.user,
+            password=to_db_args.password,
+            host=to_db_args.hostname,
+            port=to_db_args.port,
+            database=to_db_args.db_name,
+            sslmode=to_db_args.sslmode
+        )
+		logger.info("Successfully connected to the Traffic Ops database.")
+		yield to_db_connection
+	except psycopg2.OperationalError as e:
+		logger.error("Error connecting to the Traffic Ops database : %s", e)
+	finally:
+		if to_db_connection:
+			to_db_connection.close()
+			logger.info("Closed Traffic ops DB connection.")
 
 
 @pytest.fixture(name="request_template_data", scope="session")
@@ -447,6 +600,36 @@ def create_or_get_existing(to_session: TOSession, get_object_type: str, post_obj
 	return existing_object or create_if_not_exists(to_session, post_object_type, data)
 
 
+def generate_unique_data(to_session: TOSession, base_name: str, object_type: str,
+			 query_key=None)-> str:
+	"""
+	Generate unique data for the given endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param object_type: api call name for get request.
+	:param base_name: Base name for get request.
+	:param query_key: Hitting get request using specific query key.
+	:returns: Unique name for the corresponding api request.
+	@param data: 
+	"""
+	unique_name = base_name
+	if query_key is None:
+		query_key = "name"
+	while True:
+		try:
+			response = getattr(to_session, f"get_{object_type}")(query_params={query_key:unique_name})
+			# Check if query params works for the corresponding api.
+			check_data = response[0]
+			if len(check_data) > 1:
+				logger.info("API response returns all api data, query params is not working.")
+				if not any(data.get(query_key) == unique_name for data in check_data):
+					return unique_name
+			elif len(check_data) == 0:
+				raise ValueError("No Api response with the unique data")
+		except ValueError:
+			return unique_name
+		unique_name = base_name[:4] + str(randint(0, 1000))
+
+
 def check_template_data(template_data: Union[list[JSONData], tuple[JSONData, requests.Response]],
 						name: str) -> dict[str, object]:
 	"""
@@ -484,11 +667,14 @@ def cdn_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		name = cdn["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		cdn["name"] = name[:4] + randstr
+		cdn_name = name[:4] + randstr
+		cdn["name"] = generate_unique_data(to_session=to_session, base_name=cdn_name, object_type="cdns")
 		domain_name = cdn["domainName"]
 		if not isinstance(domain_name, str):
 			raise TypeError(f"domainName must be str, not '{type(domain_name)}")
-		cdn["domainName"] = domain_name[:5] + randstr
+		domainname = domain_name[:5] + randstr
+		cdn["domainName"] = generate_unique_data(to_session=to_session, base_name=domainname,
+					   object_type="cdns", query_key="domainName")
 	except KeyError as e:
 		raise TypeError(f"missing CDN property '{e.args[0]}'") from e
 
@@ -523,7 +709,9 @@ def cache_group_data_post(to_session: TOSession, request_template_data: list[JSO
 		name = cache_group["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		cache_group["name"] = name[:4] + randstr
+		cache_group_name = name[:4] + randstr
+		cache_group["name"] = generate_unique_data(to_session=to_session, base_name=cache_group_name,
+					     object_type="cachegroups")
 		short_name = cache_group["shortName"]
 		if not isinstance(short_name, str):
 			raise TypeError(f"shortName must be str, not '{type(short_name)}")
@@ -571,11 +759,15 @@ def parameter_data_post(to_session: TOSession, request_template_data: list[JSOND
 		name = parameter["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		parameter["name"] = name[:4] + randstr
+		parameter_name = name[:4] + randstr
+		parameter["name"] = generate_unique_data(to_session=to_session, base_name=parameter_name,
+					   object_type="parameters")
 		value = parameter["value"]
 		if not isinstance(value, str):
 			raise TypeError(f"value must be str, not '{type(value)}")
-		parameter["value"] = value[:5] + randstr
+		parameter_value = value[:5] + randstr
+		parameter["value"] = generate_unique_data(to_session=to_session, base_name=parameter_value,
+					    object_type="parameters", query_key="value")
 	except KeyError as e:
 		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
 
@@ -610,11 +802,9 @@ def role_data_post(to_session: TOSession, request_template_data: list[JSONData]
 		name = role["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		role["name"] = name[:4] + randstr
-		description = role["description"]
-		if not isinstance(description, str):
-			raise TypeError(f"description must be str, not '{type(description)}")
-		role["description"] = description[:5] + randstr
+		role_name = name[:4] + randstr
+		role["name"] = generate_unique_data(to_session=to_session, base_name=role_name,
+				      object_type="roles")
 	except KeyError as e:
 		raise TypeError(f"missing Role property '{e.args[0]}'") from e
 
@@ -648,7 +838,9 @@ def profile_data_post(to_session: TOSession, request_template_data: list[JSONDat
 		name = profile["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		profile["name"] = name[:4] + randstr
+		profile_name = name[:4] + randstr
+		profile["name"] = generate_unique_data(to_session=to_session, base_name=profile_name,
+					 object_type="profiles")
 	except KeyError as e:
 		raise TypeError(f"missing Profile property '{e.args[0]}'") from e
 
@@ -690,7 +882,9 @@ def tenant_data_post(to_session: TOSession, request_template_data: list[JSONData
 			name = tenant["name"]
 			if not isinstance(name, str):
 				raise TypeError(f"name must be str, not '{type(name)}'")
-			tenant["name"] = name[:4] + randstr
+			tenant_name = name[:4] + randstr
+			tenant["name"] = generate_unique_data(to_session=to_session, base_name=tenant_name,
+					 object_type="tenants")
 		except KeyError as e:
 			raise TypeError(f"missing tenant property '{e.args[0]}'") from e
 
@@ -727,7 +921,9 @@ def server_capabilities_data_post(to_session: TOSession, request_template_data: 
 		name = server_capabilities["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		server_capabilities["name"] = name[:3] + randstr
+		server_capabilities_name = name[:3] + randstr
+		server_capabilities["name"] = generate_unique_data(to_session=to_session,
+						     base_name=server_capabilities_name, object_type="server_capabilities")
 	except KeyError as e:
 		raise TypeError(f"missing server_capabilities property '{e.args[0]}'") from e
 
@@ -764,7 +960,9 @@ def division_data_post(to_session: TOSession, request_template_data: list[JSONDa
 		name = division["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		division["name"] = name[:4] + randstr
+		division_name = name[:4] + randstr
+		division["name"] = generate_unique_data(to_session=to_session, base_name=division_name,
+					  object_type="divisions")
 	except KeyError as e:
 		raise TypeError(f"missing Parameter property '{e.args[0]}'") from e
 
@@ -800,7 +998,9 @@ def region_data_post(to_session: TOSession, request_template_data: list[JSONData
 		name = region["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		region["name"] = name[:4] + randstr
+		region_name = name[:4] + randstr
+		region["name"] = generate_unique_data(to_session=to_session, base_name=region_name,
+					object_type="regions")
 	except KeyError as e:
 		raise TypeError(f"missing Region property '{e.args[0]}'") from e
 
@@ -823,7 +1023,7 @@ def region_data_post(to_session: TOSession, request_template_data: list[JSONData
 
 @pytest.fixture(name="phys_locations_post_data")
 def phys_locations_data_post(to_session: TOSession, request_template_data: list[JSONData],
-			  region_post_data: dict[str, object]) -> dict[str, object]:
+			 region_post_data: dict[str, object]) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for phys_location endpoint.
 
@@ -841,11 +1041,15 @@ def phys_locations_data_post(to_session: TOSession, request_template_data: list[
 		name = phys_locations["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		phys_locations["name"] = name[:4] + randstr
+		phys_locations_name = name[:4] + randstr
+		phys_locations["name"] = generate_unique_data(to_session=to_session,
+						base_name=phys_locations_name, object_type="physical_locations")
 		short_name = phys_locations["shortName"]
-		if not isinstance(name, str):
+		if not isinstance(short_name, str):
 			raise TypeError(f"shortName must be str, not '{type(short_name)}'")
-		phys_locations["shortName"] = short_name[:4] + randstr
+		shortname = short_name[:4] + randstr
+		phys_locations["shortName"] = generate_unique_data(to_session=to_session,
+						base_name=shortname, object_type="physical_locations", query_key="shortName")
 	except KeyError as e:
 		raise TypeError(f"missing Phys_location property '{e.args[0]}'") from e
 
@@ -941,7 +1145,9 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 		xml_id = delivery_services["xmlId"]
 		if not isinstance(xml_id, str):
 			raise TypeError(f"xmlId must be str, not '{type(xml_id)}'")
-		delivery_services["xmlId"] = xml_id[:4] + randstr
+		xmlid= xml_id[:4] + randstr
+		delivery_services["xmlId"] = generate_unique_data(to_session=to_session, base_name=xmlid,
+						    object_type="deliveryservices", query_key="xmlId")
 	except KeyError as e:
 		raise TypeError(f"missing delivery_services property '{e.args[0]}'") from e
 
@@ -994,7 +1200,9 @@ def origin_data_post(to_session: TOSession, request_template_data: list[JSONData
 		name = origin["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		origin["name"] = name[:4] + randstr
+		origin_name = name[:4] + randstr
+		origin["name"] = generate_unique_data(to_session=to_session, base_name=origin_name,
+					object_type="origins")
 	except KeyError as e:
 		raise TypeError(f"missing origin property '{e.args[0]}'") from e
 
@@ -1041,7 +1249,9 @@ def status_data_post(to_session: TOSession, request_template_data: list[JSONData
 		name = status["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		status["name"] = name[:4] + randstr
+		status_name = name[:4] + randstr
+		status["name"] = generate_unique_data(to_session=to_session, base_name=status_name,
+					object_type="statuses")
 	except KeyError as e:
 		raise TypeError(f"missing Status property '{e.args[0]}'") from e
 
@@ -1138,7 +1348,9 @@ def coordinate_data_post(to_session: TOSession, request_template_data: list[JSON
 		name = coordinate["name"]
 		if not isinstance(name, str):
 			raise TypeError(f"name must be str, not '{type(name)}'")
-		coordinate["name"] = name[:4] + randstr
+		coordinate_name = name[:4] + randstr
+		coordinate["name"] = generate_unique_data(to_session=to_session,
+					    base_name=coordinate_name, object_type="coordinates")
 	except KeyError as e:
 		raise TypeError(f"missing coordinate property '{e.args[0]}'") from e
 
@@ -1152,4 +1364,183 @@ def coordinate_data_post(to_session: TOSession, request_template_data: list[JSON
 	logger.info("Deleting Coordinate data... %s", msg)
 	if msg is None:
 		logger.error("coordinate returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="user_post_data")
+def user_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  tenant_post_data:dict[str, object], db_connection: psycopg2.connect) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for users endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get users request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	user = check_template_data(request_template_data["users"], "users")
+
+	# Return new post data and post response from users POST request
+	randstr = str(randint(0, 1000))
+	try:
+		username = user["username"]
+		if not isinstance(username, str):
+			raise TypeError(f"username must be str, not '{type(username)}'")
+		unique_name = username[:4] + randstr
+		user["username"] = generate_unique_data(to_session=to_session, base_name=unique_name,
+					  object_type="users", query_key="username")
+		user_email = user["email"]
+		if not isinstance(user_email, str):
+			raise TypeError(f"user email must be str, not '{type(user_email)}'")
+		email = randstr + user_email
+		user["email"] = generate_unique_data(to_session=to_session, base_name=email,
+					  object_type="users", query_key="email")
+	except KeyError as e:
+		raise TypeError(f"missing user property '{e.args[0]}'") from e
+	user["tenantId"] = tenant_post_data["id"]
+
+	logger.info("New user data to hit POST method %s", user)
+	# Hitting users POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_user(data=user)
+	resp_obj = check_template_data(response, "user")
+	yield resp_obj
+	user_id = resp_obj.get("id")
+	# Create a cursor object to interact with the database
+	cursor = db_connection.cursor()
+	cursor.execute("DELETE FROM tm_user WHERE id = %s;", (user_id,))
+	# Commit the changes
+	db_connection.commit()
+	# Close the cursor
+	cursor.close()
+
+
+@pytest.fixture(name="topology_post_data")
+def topology_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  server_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for topologies endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get topology request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	topology = check_template_data(request_template_data["topologies"], "topologies")
+
+	# Return new post data and post response from topologies POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = topology["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		topology_name = name[:4] + randstr
+		topology["name"] = generate_unique_data(to_session=to_session, base_name=topology_name,
+					  object_type="topologies")
+	except KeyError as e:
+		raise TypeError(f"missing topology property '{e.args[0]}'") from e
+
+	cachegroup_name = server_post_data["cachegroup"]
+	topology["nodes"][0]["cachegroup"] = cachegroup_name
+	logger.info("New topology data to hit POST method %s", topology)
+	# Hitting topology POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_topology(data=topology)
+	resp_obj = check_template_data(response, "topology")
+	yield resp_obj
+	topology_name = resp_obj.get("name")
+	msg = to_session.delete_topology(name=topology_name)
+	logger.info("Deleting topology data... %s", msg)
+	if msg is None:
+		logger.error("topology returned by Traffic Ops is missing an 'name' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="cdn_lock_post_data")
+def cdn_lock_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		user_post_data:dict[str, object], cdn_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for cdn_locks endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get cdn_locks request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	cdn_lock = check_template_data(request_template_data["cdn_locks"], "cdn_locks")
+
+	# Return new post data and post response from cdn_locks POST request
+	cdn_lock["cdn"] = cdn_post_data["name"]
+	cdn_lock["sharedUserNames"][0] = user_post_data["username"]
+	logger.info("New cdn_lock data to hit POST method %s", cdn_lock)
+	# Hitting cdn_locks POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_cdn_lock(data=cdn_lock)
+	resp_obj = check_template_data(response, "cdn_lock")
+	yield resp_obj
+	cdn_name = resp_obj.get("cdn")
+	msg = to_session.delete_cdn_lock(query_params={"cdn":cdn_name})
+	logger.info("Deleting cdn_lock data... %s", msg)
+	if msg is None:
+		logger.error("cdn_lock returned by Traffic Ops is missing an 'cdn' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="cdn_notification_post_data")
+def cdn_notification_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  cdn_post_data:dict[str, object], db_connection: psycopg2.connect) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for cdn_notifications endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get cdn_notification request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	cdn_notification = check_template_data(request_template_data["cdn_notifications"], "cdn_notifications")
+
+	# Return new post data and post response from cdn_notifications POST request
+	cdn_notification["cdn"] = cdn_post_data["name"]
+	logger.info("New cdn_notification data to hit POST method %s", cdn_notification)
+	# Hitting cdn_notification POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_cdn_notification(data=cdn_notification)
+	resp_obj = check_template_data(response, "cdn_notification")
+	yield resp_obj
+	notification_id = resp_obj.get("id")
+	msg = to_session.delete_cdn_notification(query_params={"id":notification_id})
+	logger.info("Deleting cdn_notification data... %s", msg)
+	if msg is None:
+		logger.error("cdn_notfication returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+
+@pytest.fixture(name="steering_post_data")
+def steering_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  delivery_services_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for steering endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get steering request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	steering = check_template_data(request_template_data["steering"], "steering")
+
+	# Return new post data and post response from steering POST request
+	ds_get_response = to_session.get_deliveryservices()
+	ds_data = ds_get_response[0][0]
+	delivery_service_id = ds_data.get("id")
+
+	steering["targetId"] = delivery_services_post_data["id"]
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "steering_target"})
+	steering["typeId"]= type_object["id"]
+
+	logger.info("New steering data to hit POST method %s", steering)
+	# Hitting steering POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_steering_targets(delivery_service_id=delivery_service_id, data=steering)
+	resp_obj = check_template_data(response, "steering")
+	yield resp_obj
+	deliveryservice_id = resp_obj.get("deliveryServiceId")
+	target_id = resp_obj.get("targetId")
+	msg = to_session.delete_steering_targets(delivery_service_id=deliveryservice_id, target_id=target_id)
+	logger.info("Deleting Steering data... %s", msg)
+	if msg is None:
+		logger.error("Steering returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")

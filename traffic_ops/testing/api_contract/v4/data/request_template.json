@@ -227,13 +227,62 @@
 			"regex": "/.+",
 			"startTime": "2030-11-09T01:02:03Z",
 			"ttlHours": 72
-      }
+		}
 	],
 	"coordinates": [
 		{
 			"name": "test",
-        	"latitude": 38.897663,
-        	"longitude": -77.036574
+			"latitude": 38.897663,
+			"longitude": -77.036574
+		}
+	],
+	"users": [
+		{
+			"username": "mike",
+			"addressLine1": "22 Mike Wazowski You've Got Your Life Back Lane",
+			"city": "Monstropolis",
+			"compary": "Monsters Inc.",
+			"email": "mwazowski@minc.biz",
+			"fullName": "Mike Wazowski",
+			"localPasswd": "BFFsully",
+			"confirmLocalPasswd": "BFFsully",
+			"newUser": true,
+			"role": "admin",
+			"tenantId": 1
+		}
+	],
+	"topologies": [
+		{
+			"name": "test",
+			"description": "This is my topology",
+			"nodes": [
+				{
+					"cachegroup": "test1"
+				}
+			]
+		}
+	],
+	"steering": [
+		{
+			"targetId": 61,
+			"value": 100,
+			"typeId": 43
+    }
+  ],
+	"cdn_notifications": [
+		{
+			"cdn": "cdn1",
+			"notification": "the content of the notification"
+		}
+	],
+	"cdn_locks": [
+		{
+			"cdn": "test",
+			"message": "acquiring lock to snap CDN",
+			"sharedUserNames": [
+				"test"
+			],
+			"soft": true
 		}
 	]
 }

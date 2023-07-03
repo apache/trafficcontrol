@@ -12,48 +12,62 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-sidenav-container [autosize]="true">
-	<mat-sidenav #sidenav mode="side" opened [hidden]="hidden">
-		<mat-tree [dataSource]="dataSource" [treeControl]="treeCtrl" id="sidebar-nav-tree">
-			<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
-				<div *ngIf="isAbsoluteURL(node.href); then obsoluteHrefBlock else relativeHrefBlock"></div>
-
-				<!-- Checking whether href is relative URL -->
-				<ng-template #relativeHrefBlock>
-					<a class="mat-tree-node" mat-menu-item [attr.aria-label]="'Navigate to ' + node.name" [routerLink]="node.href"  [routerLinkActive]="['boldNode']">
+<mat-sidenav-container id="sidenav-root" [autosize]="true">
+	<mat-sidenav id="sidenav" #sidenav mode="side">
+		<div id="sidenav-container">
+			<mat-tree [dataSource]="dataSource" [treeControl]="treeCtrl" id="sidebar-nav-tree">
+				<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
+					<!-- load either redirect or relative path href -->
+					<div *ngIf="isAbsoluteURL(node.href); then obsoluteHrefBlock else relativeHrefBlock"></div>
+				
+					<!-- Checking whether href is relative URL -->
+					<ng-template #relativeHrefBlock>
+						<a class="mat-tree-node" mat-menu-item [attr.aria-label]="'Navigate to ' + node.name" [routerLink]="node.href"
+							[routerLinkActive]="['boldNode']" [routerLinkActiveOptions]="routeOptions">
+							{{node.name}}
+						</a>
+					</ng-template>
+				
+					<!-- Checking whether href is absolute URL - For TPv1 redirect purpose -->
+					<ng-template #obsoluteHrefBlock>
+						<a class="mat-tree-node" mat-menu-item [attr.aria-label]="'Navigate to ' + node.name" [href]="node.href"
+							target="_blank">
+							{{node.name}}
+						</a>
+					</ng-template>
+				</mat-tree-node>
+				<mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+					<div class="mat-tree-node" matTreeNodeToggle mat-menu-item [attr.aria-label]="'Toggle ' + node.name" >
+						<mat-icon class="node-icon" [ngClass]="{expanded: treeCtrl.isExpanded(node)}">
+							chevron_right
+						</mat-icon>
 						{{node.name}}
-					</a>
-				</ng-template>
-
-				<!-- Checking whether href is absolute URL - For TPv1 redirect purpose -->
-				<ng-template #obsoluteHrefBlock>
-					<a class="mat-tree-node" mat-menu-item [attr.aria-label]="'Navigate to ' + node.name" [href]="node.href" target="_blank">
-						{{node.name}}
-					</a>
-				</ng-template>
-			</mat-tree-node>
-			<mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
-				<div class="mat-tree-node" matTreeNodeToggle mat-menu-item [attr.aria-label]="'Toggle ' + node.name" >
-					<mat-icon class="mat-icon-rt1-mirror">
-						{{treeCtrl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
-					</mat-icon>
-					{{node.name}}
+					</div>
+					<div class="expand-node" [@slide]="treeCtrl.isExpanded(node) ? 'show' : 'hide'" role="group">
+						<ng-container matTreeNodeOutlet></ng-container>
+					</div>
+					<mat-divider *ngIf="isRoot(node)"></mat-divider>
+				</mat-nested-tree-node>
+			</mat-tree>
+			<div id="actions-container" class="mat-tree">
+				<mat-divider></mat-divider>
+				<div id="actions">
+					<button type="button" (click)="collapseAll()" matTooltip="Collapse all sidebar entries" aria-label="Collapse all sidebar entries" mat-flat-button><mat-icon>unfold_less</mat-icon></button>
+					<div></div>
 				</div>
-				<div [hidden]="!treeCtrl.isExpanded(node)" role="group">
-					<ng-container matTreeNodeOutlet></ng-container>
-				</div>
-			</mat-nested-tree-node>
-		</mat-tree>
-		<div class="bottom">
-			<button type="button" mat-menu-item (click)="sidenav.toggle()">collapse</button>
+			</div>
 		</div>
 	</mat-sidenav>
-	<mat-sidenav-content>
+	<mat-sidenav-content id="sidenav-content">
 		<div>
 			<router-outlet style="height:100%"></router-outlet>
 		</div>
 	</mat-sidenav-content>
 </mat-sidenav-container>
-<div class="expander" *ngIf="!sidenav.opened && !hidden">
-	<button type="button" mat-flat-button (click)="sidenav.toggle()" aria-label="Open the sidebar"><mat-icon>arrow_right_alt</mat-icon></button>
+<div class="expander" [ngClass]="{closed: !sidenav.opened}" *ngIf="user.loggedIn">
+	<button mat-flat-button type="button" (click)="sidenav.toggle()">
+		<mat-icon class="animate">
+			chevron_left
+		</mat-icon>
+	</button>
 </div>

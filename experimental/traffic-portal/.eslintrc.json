@@ -68,6 +68,7 @@
 				"@typescript-eslint/unified-signatures": "error",
 				"complexity": "off",
 				"constructor-super": "error",
+				"no-mixed-spaces-and-tabs": "error",
 				"eqeqeq": [
 					"error",
 					"smart"

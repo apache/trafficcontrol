@@ -14,7 +14,6 @@
 import { Component, type OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
 import { ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
@@ -42,8 +41,6 @@ export class CurrentuserComponent implements OnInit {
 	public get editMode(): boolean {
 		return this.editing;
 	}
-	/** The icon for the 'edit' button. */
-	public editIcon = faEdit;
 	/**
 	 * The editing copy of the current user - used so that you don't need to
 	 * reload the page to see accurate information when the edits are cancelled.

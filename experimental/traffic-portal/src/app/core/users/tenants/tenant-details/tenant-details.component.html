@@ -11,10 +11,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<mat-card appearance="outlined">
+<mat-card appearance="outlined" class="page-content single-column">
 	<tp-loading *ngIf="!tenant"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="tenant">
-		<mat-card-content>
+		<mat-card-header class="headers-container" *ngIf="!new">
+			<a mat-raised-button disabled>View Delivery Services</a>
+			<a mat-raised-button color="primary" routerLink="/core/users" [queryParams]="{tenant: tenant.name}">View Users</a>
+		</mat-card-header>
+		<mat-card-content class="container">
 			<mat-form-field>
 				<mat-label>Name</mat-label>
 				<input [disabled]="disabled" matInput type="text" name="name" required [(ngModel)]="tenant.name" />
@@ -24,7 +28,7 @@ limitations under the License.
 			</mat-checkbox>
 			<tp-tree-select [handle]="'parentTenant'" [disabled]="disabled" (nodeSelected)="update($event)" [initialValue]="tenant.parentId" [label]="'Parent Tenant'" [treeData]="[displayTenant]"></tp-tree-select>
 		</mat-card-content>
-		<mat-card-actions align="end">
+		<mat-card-actions align="end" class="actions-container">
 			<button mat-raised-button type="button" *ngIf="!new" [disabled]="disabled" color="warn" (click)="deleteTenant()">Delete</button>
 			<button mat-raised-button [disabled]="disabled" color="primary" type="submit">Save</button>
 		</mat-card-actions>

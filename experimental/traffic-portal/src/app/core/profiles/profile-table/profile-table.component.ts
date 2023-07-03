@@ -17,12 +17,19 @@ import { FormControl, UntypedFormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
-import { ResponseProfile } from "trafficops-types";
+import { ProfileImport, ResponseProfile } from "trafficops-types";
 
 import { ProfileService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import { FileUtilsService } from "src/app/shared/file-utils.service";
+import {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink,
+	TableTitleButton
+} from "src/app/shared/generic-table/generic-table.component";
+import { ImportJsonTxtComponent } from "src/app/shared/import-json-txt/import-json-txt.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -64,6 +71,13 @@ export class ProfileTableComponent implements OnInit {
 		headerName: "Type"
 	}];
 
+	public titleBtns: Array<TableTitleButton> = [
+		{
+			action: "import",
+			text: "Import Profile",
+		}
+	];
+
 	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseProfile>> = [
 		{
@@ -81,14 +95,13 @@ export class ProfileTableComponent implements OnInit {
 			name: "Delete"
 		},
 		{
-			action: "import-profile",
+			action: "clone-profile",
 			disabled: (): true => true,
 			multiRow: false,
-			name: "Import Profile",
+			name: "Clone Profile",
 		},
 		{
 			action: "export-profile",
-			disabled: (): true => true,
 			multiRow: false,
 			name: "Export Profile",
 		},
@@ -104,6 +117,11 @@ export class ProfileTableComponent implements OnInit {
 			queryParams: (profile: ResponseProfile): Params => ({profileName: profile.name})
 		}
 	];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseProfile> = {
+		href: (row: ResponseProfile): string => `/core/profiles/${row.id}`
+	};
 
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
 	public fuzzySubject: BehaviorSubject<string>;
@@ -125,7 +143,8 @@ export class ProfileTableComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly navSvc: NavigationService,
 		private readonly dialog: MatDialog,
-		public readonly auth: CurrentUserService) {
+		public readonly auth: CurrentUserService,
+		private readonly fileUtil: FileUtilsService) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.profiles = this.api.getProfiles();
 		this.navSvc.headerTitle.next("Profiles");
@@ -172,6 +191,37 @@ export class ProfileTableComponent implements OnInit {
 				ref.afterClosed().subscribe(result => {
 					if (result) {
 						this.api.deleteProfile(data.id).then(async () => this.profiles = this.api.getProfiles());
+					}
+				});
+				break;
+			case "export-profile":
+				const response = await this.api.exportProfile(data.id);
+				this.fileUtil.download(response,data.name);
+				break;
+		}
+	}
+
+	/**
+	 * handles when a title button is event is emitted
+	 *
+	 * @param action which button was pressed
+	 */
+	public async handleTitleButton(action: string): Promise<void> {
+		switch(action){
+			case "import":
+				const ref = this.dialog.open(ImportJsonTxtComponent,{
+					data: { title: "Import Profile" },
+					width: "70vw"
+				});
+
+				/** After submission from Import JSON dialog component */
+				ref.afterClosed().subscribe( (result: ProfileImport) => {
+					if (result) {
+						this.api.importProfile(result).then(response => {
+							if (response) {
+								this.profiles = this.api.getProfiles();
+							}
+						});
 					}
 				});
 				break;

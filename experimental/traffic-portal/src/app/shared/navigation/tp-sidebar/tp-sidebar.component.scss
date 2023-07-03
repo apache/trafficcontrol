@@ -12,23 +12,50 @@
  * limitations under the License.
  */
 
-.mat-sidenav-container {
-	height: calc(100% - (var(--toolbar-height) + .9em));
+$actions-height: 38px;
 
-	.mat-sidenav {
-		min-width: 10em;
+#sidenav-root {
+	max-height: calc(100% - var(--toolbar-height) - (2 * var(--toolbar-padding)) - 2px);
+	height: calc(100% - var(--toolbar-height) - (2 * var(--toolbar-padding)) - 2px);
+
+	#sidenav {
+		min-width: var(--sidebar-min-width);
 		max-width: var(--sidebar-max-width);
+		height: 100%;
 
-		.mat-icon {
-			margin-right: 0;
+		#sidenav-container {
+			margin-bottom: $actions-height;
+			padding-bottom: 10px;
+
+			#sidebar-nav-tree {
+			}
+
+			#actions-container {
+				z-index: 10;
+				position: absolute;
+				bottom: 6px;
+				left: 0;
+				width: 100%;
+				height: $actions-height;
+
+				#actions {
+					display: grid;
+					grid-template-columns: 1fr 1fr;
+				}
+			}
 		}
 
+		.node-icon {
+			margin-right: 0;
+			display: inline-block;
+			transition: 0.3s;
+			&.expanded {
+				transform: rotate(90deg);
+			}
+		}
 
-		div.bottom {
-			position: absolute;
-			bottom: 0;
-			left: 0;
-			width: 100%;
+		.expand-node {
+			overflow: hidden;
 		}
 
 		.mat-mdc-menu-item {
@@ -45,23 +72,33 @@
 			padding-left: calc(.5em + 29px);
 		}
 	}
+
+	#sidenav-content {
+		height: 100%;
+	}
 }
 
 div.expander {
 	position: absolute;
 	z-index: 10;
-	bottom: 50px;
-	left: 0;
+	bottom: 6px;
+	left: calc(var(--sidebar-min-width) / 2 + 1em);
+	transition: 0.3s;
+	width: calc(var(--sidebar-min-width) / 2);
 
-	animation: slide 0.75s forwards;
-}
+	button {
 
-
-@keyframes slide {
-	from {
-		left: -50px;
+		.animate {
+			display: inline-block;
+			transition-duration: 400ms;
+			transition-timing-function: cubic-bezier(0.25, 0.8, 0.25, 1);
+		}
 	}
-	to {
+
+	&.closed {
 		left: 0;
+		.animate {
+			transform: rotate(180deg);
+		}
 	}
 }

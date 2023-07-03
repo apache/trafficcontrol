@@ -187,12 +187,26 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var userError error
+	sc := http.StatusInternalServerError
+	logAlert := true
 	keyObjV4, err := getSslKeys(inf, r.Context())
 	if err != nil {
-		userErr := api.LogErr(r, http.StatusInternalServerError, nil, err)
-		alerts.AddNewAlert(tc.ErrorLevel, userErr.Error())
-		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
-		return
+		userError = api.LogErr(r, sc, nil, err)
+		if err == sql.ErrNoRows {
+			if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
+				sc = http.StatusNotFound
+				userError = api.LogErr(r, sc, errors.New("no ssl keys for XML ID "+xmlID), nil)
+			} else {
+				// For versions lesser than 5.0, don't log an alert if the error is ErrNoRows. This is for backward compatibility reasons.
+				logAlert = false
+			}
+		}
+		if logAlert {
+			alerts.AddNewAlert(tc.ErrorLevel, userError.Error())
+			api.WriteAlerts(w, r, sc, alerts)
+			return
+		}
 	}
 
 	var keyObj interface{}
@@ -216,6 +230,9 @@ func getSslKeys(inf *api.APIInfo, ctx context.Context) (tc.DeliveryServiceSSLKey
 
 	keyObjFromTv, ok, err := inf.Vault.GetDeliveryServiceSSLKeys(xmlID, version, inf.Tx.Tx, ctx)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return tc.DeliveryServiceSSLKeysV4{}, err
+		}
 		return tc.DeliveryServiceSSLKeysV4{}, errors.New("getting ssl keys: " + err.Error())
 	}
 	keyObj := tc.DeliveryServiceSSLKeysV4{}

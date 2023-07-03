@@ -11,18 +11,32 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-mat-card {
-	margin: 1em auto;
-	box-sizing: border-box;
-	width: 80%;
-	min-width: 350px;
-	mat-card-content {
-		display: grid;
-		grid-template-columns: 1fr;
-		row-gap: 2em;
-		margin: 1em auto 50px;
+
+$backgroundColor: #fafaec;
+
+.dropzone {
+	max-width: 80vw;
+	padding: 2rem;
+	margin: 1rem auto;
+	background-color: $backgroundColor;
+	border: solid 1px rgb(231, 230, 230);
+	text-align: center;
+	color: black;
+	border-radius: 5px;
+	box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+	cursor: pointer;
+	
+    label {
+		display: block;
 	}
-	mat-card-actions mat-button {
-		margin: 0 8px;
+	.hint {
+		opacity: 0.87;
+		display: block;
+	}
+}
+
+#import-content {
+	&.active {
+		background: $backgroundColor;
 	}
 }

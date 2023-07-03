@@ -181,16 +181,11 @@ export class NavigationService {
 					name: "Origins"
 				},
 				{
-					children: [
-						{
-							href: "/core/parameters",
-							name: "Parameters"
-						},
-						{
-							href: "/core/profiles",
-							name: "Profiles"
-						}
-					],
+					href: "/core/parameters",
+					name: "Parameters"
+				},
+				{
+					href: "/core/profiles",
 					name: "Profiles"
 				}
 			],

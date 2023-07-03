@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-<main class="table-page-content">
+<main class="page-content">
 	<div class="search-container"><input type="search" role="search" aria-label="Fuzzy Search Delivery Service(s)" inputmode="search" name="fuzzControl" [formControl]="fuzzControl" (input)="updateURL($event)" accesskey="/" placeholder="Fuzzy Search"/></div>
 	<article id="deliveryservices" [hidden]="loading">
 		<ds-card *ngFor="let ds of filteredDSes; trackBy: tracker; let first=first; let last=last;" [deliveryService]="ds" [now]="now" [today]="today" [first]=first [last]=last></ds-card>

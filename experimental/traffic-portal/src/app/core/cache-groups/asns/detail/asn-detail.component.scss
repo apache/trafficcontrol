@@ -12,17 +12,6 @@
 * limitations under the License.
 */
 
-.mat-mdc-card {
-	margin: 1em auto;
-	width: 80%;
-	min-width: 350px;
-	.mat-mdc-card-content {
-		display: grid;
-		grid-template-columns: 1fr;
-		row-gap: 2em;
-		margin: 1em auto 50px;
-	}
-	.mat-mdc-card-actions .mdc-button {
-		margin: 0 8px;
-	}
-}
+@import "/src/styles/vars";
+
+@include small-icon-button();
