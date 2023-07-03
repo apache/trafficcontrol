@@ -143,7 +143,8 @@ func validateStatsSummaryLastUpdatedField(expectedTime time.Time) utils.CkReqFun
 		assert.RequireNotNil(t, resp, "Expected StatsSummaryLastUpdated response to not be nil.")
 		statsSummaryLastUpdated := resp.(tc.StatsSummaryLastUpdatedV5)
 		assert.RequireNotNil(t, statsSummaryLastUpdated.SummaryTime, "Expected SummaryTime to not be nil.")
-		assert.Equal(t, expectedTime, *statsSummaryLastUpdated.SummaryTime, "Expected SummaryTime to be %v, but got %v", expectedTime, *statsSummaryLastUpdated.SummaryTime)
+		equality := expectedTime.Equal(*statsSummaryLastUpdated.SummaryTime)
+		assert.Equal(t, equality, true, "Expected SummaryTime to be %v, but got %v", expectedTime, *statsSummaryLastUpdated.SummaryTime)
 	}
 }
 
