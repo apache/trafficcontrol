@@ -35,6 +35,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -144,7 +145,8 @@ func deleteQuery() string {
 }
 
 func GetDivisions(w http.ResponseWriter, r *http.Request) {
-	var div tc.DivisionV5
+	var runSecond bool
+	var maxTime time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx
 	if userErr != nil || sysErr != nil {
@@ -155,6 +157,7 @@ func GetDivisions(w http.ResponseWriter, r *http.Request) {
 
 	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":   {Column: "d.id", Checker: nil},
 		"name": {Column: "d.name", Checker: nil},
 	}
 	if _, ok := inf.Params["orderby"]; !ok {
@@ -166,6 +169,19 @@ func GetDivisions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
 	selectQuery := "SELECT id, name, last_updated FROM division d"
 	query := selectQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
@@ -175,7 +191,8 @@ func GetDivisions(w http.ResponseWriter, r *http.Request) {
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
-	var divList []tc.DivisionV5
+	div := tc.DivisionV5{}
+	divList := []tc.DivisionV5{}
 	for rows.Next() {
 		if err = rows.Scan(&div.ID, &div.Name, &div.LastUpdated); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting division(s): %w", err))
@@ -268,8 +285,13 @@ func UpdateDivision(w http.ResponseWriter, r *http.Request) {
 	}
 
 	requestedID := inf.Params["id"]
+
+	intRequestId, convErr := strconv.Atoi(requestedID)
+	if convErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, convErr, nil)
+	}
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedID, "division")
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, intRequestId, "division")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -347,4 +369,12 @@ func DeleteDivision(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "division was deleted.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, inf.Params)
 	return
+}
+
+// selectMaxLastUpdatedQuery used for TryIfModifiedSinceQuery()
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(a.last_updated) as t from division a` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='division') as res`
 }
