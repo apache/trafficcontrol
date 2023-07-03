@@ -13,7 +13,7 @@ limitations under the License.
 -->
 <mat-card appearance="outlined" class="page-content">
 	<mat-card-header class="actions-container" *ngIf="!isNew && server">
-		<button [disabled]="!isCache() || true" mat-button type="button">Manage Capabilities</button>
+		<button [disabled]="!isCache()" mat-button type="button">Manage Capabilities</button>
 		<button [disabled]="!isCache() || true" mat-button type="button">Manage Delivery Services</button>
 		<button [disabled]="!isCache()" mat-icon-button type="button" title="queue server updates" *ngIf="!server.updPending" (click)="queue()"><mat-icon>check</mat-icon></button>
 		<button [disabled]="!isCache()" mat-icon-button type="button" title="clear server updates" *ngIf="server.updPending" (click)="dequeue()"><mat-icon>schedule</mat-icon></button>
