@@ -205,25 +205,6 @@ func GetDivisions(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func readAndValidateJsonStruct(r *http.Request) (tc.DivisionV5, error) {
-	var div tc.DivisionV5
-	if err := json.NewDecoder(r.Body).Decode(&div); err != nil {
-		userErr := fmt.Errorf("error decoding POST request body into DivisionV5 struct %w", err)
-		return div, userErr
-	}
-
-	// validate JSON body
-	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
-	errs := tovalidate.ToErrors(validation.Errors{
-		"name": validation.Validate(div.Name, validation.Required, rule),
-	})
-	if len(errs) > 0 {
-		userErr := util.JoinErrs(errs)
-		return div, userErr
-	}
-	return div, nil
-}
-
 func CreateDivision(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -306,7 +287,7 @@ func UpdateDivision(w http.ResponseWriter, r *http.Request) {
 	err := tx.QueryRow(query, requestedID, div.Name).Scan(&div.ID, &div.LastUpdated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("division with ID: %s not found", div.ID), nil)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("division with ID: %v not found", div.ID), nil)
 			return
 		}
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -377,4 +358,23 @@ func selectMaxLastUpdatedQuery(where string) string {
 		SELECT max(a.last_updated) as t from division a` + where +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='division') as res`
+}
+
+func readAndValidateJsonStruct(r *http.Request) (tc.DivisionV5, error) {
+	var div tc.DivisionV5
+	if err := json.NewDecoder(r.Body).Decode(&div); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into DivisionV5 struct %w", err)
+		return div, userErr
+	}
+
+	// validate JSON body
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name": validation.Validate(div.Name, validation.Required, rule),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return div, userErr
+	}
+	return div, nil
 }
