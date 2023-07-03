@@ -12,25 +12,25 @@
 * limitations under the License.
 */
 
+import { HarnessLoader } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { HttpClientModule } from "@angular/common/http";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
+import { MatButtonHarness } from "@angular/material/button/testing";
 import { MatDialogModule } from "@angular/material/dialog";
+import { MatDialogHarness } from "@angular/material/dialog/testing";
 import { MatSelectModule } from "@angular/material/select";
 import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
+import { ResponseCDN } from "trafficops-types";
 
 import { CDNService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import { CDNTableComponent } from "./cdn-table.component";
-import { ResponseCDN } from 'trafficops-types';
-import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
-import { HarnessLoader } from '@angular/cdk/testing';
-import { MatDialogHarness } from '@angular/material/dialog/testing';
-import { MatButtonHarness } from '@angular/material/button/testing';
 
 const sampleCDN: ResponseCDN = {
 	dnssecEnabled: false,
@@ -87,7 +87,7 @@ describe("CDNTableComponent", () => {
 		component.handleContextMenu({action: "queue", data: sampleCDN});
 		dialogs = await loader.getAllHarnesses(MatDialogHarness);
 		expect(dialogs.length).toBe(1);
-		let dialog = dialogs[0];
+		const dialog = dialogs[0];
 		const buttons = await dialog.getAllHarnesses(MatButtonHarness);
 		expect(buttons.length).toBe(2);
 		const button = buttons[0];
@@ -95,6 +95,5 @@ describe("CDNTableComponent", () => {
 
 		expect(queueSpy).toHaveBeenCalledTimes(1);
 	});
-
 
 });
