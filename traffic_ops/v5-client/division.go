@@ -26,7 +26,7 @@ import (
 const apiDivisions = "/divisions"
 
 // CreateDivision creates the given Division.
-func (to *Session) CreateDivision(division tc.Division, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateDivision(division tc.DivisionV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiDivisions, opts, division, &alerts)
 	return alerts, reqInf, err
@@ -34,7 +34,7 @@ func (to *Session) CreateDivision(division tc.Division, opts RequestOptions) (tc
 
 // UpdateDivision replaces the Division identified by 'id' with the one
 // provided.
-func (to *Session) UpdateDivision(id int, division tc.Division, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateDivision(id int, division tc.DivisionV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiDivisions, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, division, &alerts)
@@ -42,8 +42,8 @@ func (to *Session) UpdateDivision(id int, division tc.Division, opts RequestOpti
 }
 
 // GetDivisions returns Divisions from Traffic Ops.
-func (to *Session) GetDivisions(opts RequestOptions) (tc.DivisionsResponse, toclientlib.ReqInf, error) {
-	var data tc.DivisionsResponse
+func (to *Session) GetDivisions(opts RequestOptions) (tc.DivisionsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.DivisionsResponseV5
 	reqInf, err := to.get(apiDivisions, opts, &data)
 	return data, reqInf, err
 }
