@@ -309,17 +309,16 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 
 // [V5] GetFederationResolvers get list of federation resolver or requested id or ipAddress or type for APIv5
 func GetFederationResolversV5(w http.ResponseWriter, r *http.Request) {
-	var runSecond bool
 	var maxTime time.Time
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	var runSecond bool
+	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx
-	if userErr != nil || sysErr != nil {
+	if sysErr != nil || userErr != nil {
 		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
 		"id":        dbhelpers.WhereColumnInfo{Column: "federation_resolver.id", Checker: api.IsInt},
 		"ipAddress": dbhelpers.WhereColumnInfo{Column: "federation_resolver.ip_address"},
@@ -328,17 +327,30 @@ func GetFederationResolversV5(w http.ResponseWriter, r *http.Request) {
 	if _, ok := inf.Params["orderby"]; !ok {
 		inf.Params["orderby"] = "id"
 	}
+
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		sysErr = util.JoinErrs(errs)
+		errCode = http.StatusBadRequest
+		api.HandleErr(w, r, tx.Tx, errCode, nil, sysErr)
+		return
 	}
 
-	if inf.Config.UseIMS {
+	query := readQuery + where + orderBy + pagination
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where, "federation_resolver"))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			api.AddLastModifiedHdr(w, maxTime)
 			w.WriteHeader(http.StatusNotModified)
+			api.WriteResp(w, r, []tc.FederationResolverV5{})
 			return
 		}
 		log.Debugln("IMS MISS")
@@ -346,24 +358,34 @@ func GetFederationResolversV5(w http.ResponseWriter, r *http.Request) {
 		log.Debugln("Non IMS request")
 	}
 
-	query := readQuery + where + orderBy + pagination
-	rows, err := tx.NamedQuery(query, queryValues)
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("federation_resolver scanning: %w", err))
-	}
-	defer log.Close(rows, "unable to close DB connection")
-
-	fr := tc.FederationResolverV5{}
-	frList := []tc.FederationResolverV5{}
-	for rows.Next() {
-		if err = rows.Scan(&fr.ID, &fr.IPAddress, &fr.LastUpdated, &fr.Type); err != nil {
-			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("federation_resolver scanning: %w", err))
+		userErr, sysErr, errCode = api.ParseDBError(err)
+		if sysErr != nil {
+			sysErr = fmt.Errorf("federation_resolver read query: %v", sysErr)
 		}
-		frList = append(frList, fr)
+
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer rows.Close()
+
+	var resolvers = []tc.FederationResolverV5{}
+	for rows.Next() {
+		var resolver tc.FederationResolverV5
+		if err := rows.Scan(&resolver.ID, &resolver.IPAddress, &resolver.LastUpdated, &resolver.Type); err != nil {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+			if sysErr != nil {
+				sysErr = fmt.Errorf("federation_resolver scanning: %v", sysErr)
+			}
+			api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+			return
+		}
+
+		resolvers = append(resolvers, resolver)
 	}
 
-	api.WriteResp(w, r, frList)
-	return
+	api.WriteResp(w, r, resolvers)
 }
 
 // [V5] CreateFederationResolverV5 function creates the federation resolver with given data for APIv5
