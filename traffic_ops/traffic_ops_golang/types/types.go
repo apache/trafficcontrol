@@ -29,14 +29,12 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-
-	"github.com/jmoiron/sqlx"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -217,158 +215,63 @@ WHERE id=:id`
 	return query
 }
 
-// GetV5 [Version :V5] - GetV5 will retrieve a list of types
+// GetV5 [Version :V5] - GetV5 will retrieve a list of types for APIv5
 func GetV5(w http.ResponseWriter, r *http.Request) {
+	var runSecond bool
+	var maxTime time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	code := http.StatusOK
-	useIMS := false
-	config, e := api.GetConfig(r.Context())
-	if e == nil && config != nil {
-		useIMS = config.UseIMS
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"name":       {Column: "typ.name"},
+		"id":         {Column: "typ.id", Checker: api.IsInt},
+		"useInTable": {Column: "typ.use_in_table"},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	}
+
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
 	} else {
-		log.Warnf("Couldn't get config %v", e)
+		log.Debugln("Non IMS request")
 	}
 
-	var maxTime time.Time
-	var usrErr error
-	var syErr error
-
-	var typeList []tc.TypeV5
-
-	tx := inf.Tx
-
-	typeList, maxTime, code, usrErr, syErr = func(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.TypeV5, time.Time, int, error, error) {
-		var runSecond bool
-		var maxTime time.Time
-		typeList := []tc.TypeV5{}
-
-		selectQuery := `SELECT id, name, description, use_in_table, last_updated FROM type as typ`
-
-		// Query Parameters to Database Query column mappings
-		queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-			"name":       {Column: "typ.name"},
-			"id":         {Column: "typ.id", Checker: api.IsInt},
-			"useInTable": {Column: "typ.use_in_table"},
-		}
-		if _, ok := params["orderby"]; !ok {
-			params["orderby"] = "name"
-		}
-		where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
-		if len(errs) > 0 {
-			return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
-		}
-
-		if useIMS {
-			runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
-			if !runSecond {
-				log.Debugln("IMS HIT")
-				return typeList, maxTime, http.StatusNotModified, nil, nil
-			}
-			log.Debugln("IMS MISS")
-		} else {
-			log.Debugln("Non IMS request")
-		}
-
-		query := selectQuery + where + orderBy + pagination
-		rows, err := tx.NamedQuery(query, queryValues)
-		if err != nil {
-			return nil, time.Time{}, http.StatusInternalServerError, nil, err
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			typ := tc.TypeV5{}
-
-			if err = rows.Scan(&typ.ID, &typ.Name, &typ.Description, &typ.UseInTable, &typ.LastUpdated); err != nil {
-				return nil, time.Time{}, http.StatusInternalServerError, nil, err
-			}
-			typeList = append(typeList, typ)
-		}
-
-		return typeList, maxTime, http.StatusOK, nil, nil
-	}(tx, inf.Params, useIMS, r.Header)
-
-	if code == http.StatusNotModified {
-		w.WriteHeader(code)
-		api.WriteResp(w, r, []tc.TypeV5{})
-		return
+	query := selectQuery() + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("type get: error getting type(s): %w", err))
 	}
+	defer log.Close(rows, "unable to close DB connection")
 
-	if code == http.StatusBadRequest {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, usrErr, nil)
-		return
-	}
-
-	if sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, syErr)
-		return
-	}
-
-	if maxTime != (time.Time{}) && api.SetLastModifiedHeader(r, useIMS) {
-		api.AddLastModifiedHdr(w, maxTime)
+	typ := tc.TypeV5{}
+	typeList := []tc.TypeV5{}
+	for rows.Next() {
+		if err = rows.Scan(&typ.ID, &typ.Name, &typ.Description, &typ.UseInTable, &typ.LastUpdated); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting type(s): %w", err))
+		}
+		typeList = append(typeList, typ)
 	}
 
 	api.WriteResp(w, r, typeList)
-}
-
-// TryIfModifiedSinceQuery [Version : V5] function receives types and header from GetTypesV5 function and returns bool value if status is not modified.
-func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
-	var max time.Time
-	var imsDate time.Time
-	var ok bool
-	imsDateHeader := []string{}
-	runSecond := true
-	dontRunSecond := false
-
-	if header == nil {
-		return runSecond, max
-	}
-
-	imsDateHeader = header[rfc.IfModifiedSince]
-	if len(imsDateHeader) == 0 {
-		return runSecond, max
-	}
-
-	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
-		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
-		return runSecond, max
-	}
-
-	imsQuery := `SELECT max(last_updated) as t from type typ`
-	query := imsQuery + where
-	rows, err := tx.NamedQuery(query, queryValues)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return dontRunSecond, max
-	}
-
-	if err != nil {
-		log.Warnf("Couldn't get the max last updated time: %v", err)
-		return runSecond, max
-	}
-
-	defer rows.Close()
-	// This should only ever contain one row
-	if rows.Next() {
-		v := time.Time{}
-		if err = rows.Scan(&v); err != nil {
-			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
-			return runSecond, max
-		}
-
-		max = v
-		// The request IMS time is later than the max of (lastUpdated, deleted_time)
-		if imsDate.After(v) {
-			return dontRunSecond, max
-		}
-	}
-	return runSecond, max
+	return
 }
 
 // CreateType [Version : V5] - CreateTypeV5 function creates the type with the passed data.
@@ -528,11 +431,21 @@ func readAndValidateJsonStructV5(r *http.Request) (tc.TypeV5, error) {
 	// validate JSON body
 	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
 	errs := tovalidate.ToErrors(validation.Errors{
-		"name": validation.Validate(typ.Name, validation.Required, rule),
+		"name":         validation.Validate(typ.Name, validation.Required, rule),
+		"description":  validation.Validate(typ.Description, validation.Required),
+		"use_in_table": validation.Validate(typ.UseInTable, validation.Required),
 	})
 	if len(errs) > 0 {
 		userErr := util.JoinErrs(errs)
 		return typ, userErr
 	}
 	return typ, nil
+}
+
+// SelectMaxLastUpdatedQuery used for TryIfModifiedSinceQuery()
+func SelectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from type typ ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='type') as res`
 }
