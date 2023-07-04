@@ -439,20 +439,20 @@ func Touch(fn string) error {
 	return nil
 }
 
-func UpdateMaxmind(cfg config.Cfg) bool {
+func UpdateMaxmind(maxmindlocation string, tsconfigdir string, reportonly bool) bool {
 
-	if cfg.MaxMindLocation == "" {
+	if maxmindlocation == "" {
 		return false
 	}
 
 	// Dont update for report mode
-	if cfg.ReportOnly {
-		log.Infof("Reporting: maxmind location '%v', reporting only and not modifying file\n", cfg.MaxMindLocation)
+	if reportonly {
+		log.Infof("Reporting: maxmind location '%v', reporting only and not modifying file\n", maxmindlocation)
 		return false
 	}
 
 	// Split url, get filename
-	url, err := url.Parse(cfg.MaxMindLocation)
+	url, err := url.Parse(maxmindlocation)
 	if err != nil {
 		log.Errorf("error parsing maxmind url: %v", err)
 		return false
@@ -466,7 +466,7 @@ func UpdateMaxmind(cfg config.Cfg) bool {
 	}
 
 	// Check if filename exists in ats etc
-	filePath := filepath.Join(cfg.TsConfigDir, "/", fileName)
+	filePath := filepath.Join(tsconfigdir, "/", fileName)
 	stdOut, _, code := t3cutil.Do(`date`,
 		"+%a, %d %b %Y %T %Z",
 		"-u",
@@ -476,7 +476,7 @@ func UpdateMaxmind(cfg config.Cfg) bool {
 	// Do a HEAD request to check for 200 or 304 depending on if we
 	// have an existing file or not.
 	client := &http.Client{}
-	req, err := http.NewRequest("HEAD", cfg.MaxMindLocation, nil)
+	req, err := http.NewRequest("HEAD", maxmindlocation, nil)
 	if err != nil {
 		log.Errorf("error creating head request %v", err)
 		return false
@@ -492,7 +492,7 @@ func UpdateMaxmind(cfg config.Cfg) bool {
 	}
 
 	if resp.StatusCode != 304 && resp.StatusCode != 200 {
-		log.Errorf("error requesting %s, code: %d", cfg.MaxMindLocation, resp.StatusCode)
+		log.Errorf("error requesting %s, code: %d", maxmindlocation, resp.StatusCode)
 		return false
 	}
 
@@ -519,7 +519,7 @@ func UpdateMaxmind(cfg config.Cfg) bool {
 	_, _, code = t3cutil.Do(`curl`,
 		"-so",
 		filePath,
-		cfg.MaxMindLocation)
+		maxmindlocation)
 
 	if code != 0 {
 		log.Errorf("Error downloading maxmind database")
@@ -539,6 +539,6 @@ func UpdateMaxmind(cfg config.Cfg) bool {
 		return false
 	}
 
-	log.Infof("Maxmind DB at %s successfully updated from %s", filePath, cfg.MaxMindLocation)
+	log.Infof("Maxmind DB at %s successfully updated from %s", filePath, maxmindlocation)
 	return true
 }

@@ -63,7 +63,7 @@ type Package struct {
 
 type TrafficOpsReq struct {
 	Cfg     config.Cfg
-	pkgs    map[string]bool // map of packages which are installed, either already installed or newly installed by this run.
+	Pkgs    map[string]bool // map of packages which are installed, either already installed or newly installed by this run.
 	plugins map[string]bool // map of verified plugins
 
 	installedPkgs map[string]struct{} // map of packages which were installed by us.
@@ -192,7 +192,7 @@ func (r *TrafficOpsReq) DumpConfigFiles() {
 func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 	return &TrafficOpsReq{
 		Cfg:           cfg,
-		pkgs:          map[string]bool{},
+		Pkgs:          map[string]bool{},
 		plugins:       map[string]bool{},
 		configFiles:   map[string]*ConfigFile{},
 		installedPkgs: map[string]struct{}{},
@@ -585,7 +585,7 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 // IsPackageInstalled returns true/false if the named rpm package is installed.
 // the prefix before the version is matched.
 func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
-	for k, v := range r.pkgs {
+	for k, v := range r.Pkgs {
 		if strings.HasPrefix(k, name) {
 			return v
 		}
@@ -595,17 +595,17 @@ func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
 	pkgArr, err := util.PackageInfo("pkg-query", name)
 	if err != nil {
 		log.Errorf(`IsPackageInstalled PackageInfo(pkg-query, %v) failed, caching as not installed and returning false! Error: %v\n`, name, err.Error())
-		r.pkgs[name] = false
+		r.Pkgs[name] = false
 		return false
 	}
 	if len(pkgArr) > 0 {
 		pkgAndVersion := pkgArr[0]
 		log.Infof("IsPackageInstalled '%v' found in rpm, adding '%v' to cache", name, pkgAndVersion)
-		r.pkgs[pkgAndVersion] = true
+		r.Pkgs[pkgAndVersion] = true
 		return true
 	}
 	log.Infof("IsPackageInstalled '%v' not found in rpm, adding '%v'=false to cache", name, name)
-	r.pkgs[name] = false
+	r.Pkgs[name] = false
 	return false
 }
 
@@ -923,7 +923,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 		if r.Cfg.InstallPackages {
 			if instpkg == fullPackage {
 				log.Infof("%s Currently installed and not marked for removal\n", reqpkg)
-				r.pkgs[fullPackage] = true
+				r.Pkgs[fullPackage] = true
 				continue
 			} else if instpkg != "" { // the installed package needs upgrading.
 				log.Infof("%s Currently installed and marked for removal\n", instpkg)
@@ -953,11 +953,11 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 			// Only check if packages exist and complain if they are wrong.
 			if instpkg == fullPackage {
 				log.Infof("%s Currently installed.\n", reqpkg)
-				r.pkgs[fullPackage] = true
+				r.Pkgs[fullPackage] = true
 				continue
 			} else if instpkg != "" { // the installed package needs upgrading.
 				log.Errorf("%s Wrong version currently installed.\n", instpkg)
-				r.pkgs[instpkg] = true
+				r.Pkgs[instpkg] = true
 			} else {
 				// the required package needs installing.
 				log.Errorf("%s is Not installed.\n", fullPackage)
@@ -1013,7 +1013,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 					if err != nil {
 						return errors.New("Unable to install " + pkg + " : " + err.Error())
 					} else if result == true {
-						r.pkgs[pkg] = true
+						r.Pkgs[pkg] = true
 						r.installedPkgs[pkg] = struct{}{}
 						log.Infof("Package %s was installed\n", pkg)
 					}
