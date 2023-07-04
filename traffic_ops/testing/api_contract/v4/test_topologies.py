@@ -72,4 +72,4 @@ def test_topology_contract(to_session: TOSession,
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
-		pytest.fail("API contract test failed for cdn endpoint: API response was malformed")
+		pytest.fail("API contract test failed for topologies endpoint: API response was malformed")

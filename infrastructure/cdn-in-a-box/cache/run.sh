@@ -56,7 +56,7 @@ set_trafficserver_parameters() {
 
 set_trafficserver_parameters
 
-mkdir /tmp/ort
+mkdir -p /tmp/ort
 
 set-dns.sh
 insert-self-into-dns.sh
@@ -110,7 +110,7 @@ until [[ $(to-get "api/4.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length
 done
 
 # If /tmp/trafficcontrol-cache-config does not already exist when running t3c-apply, t3c-apply will create it and fail silently
-mkdir /tmp/trafficcontrol-cache-config
+mkdir -p /tmp/trafficcontrol-cache-config
 
 # hostname is already defined in /etc/init.d/99-run.sh
 hostname="${hostname//-/_}" # replace - with _

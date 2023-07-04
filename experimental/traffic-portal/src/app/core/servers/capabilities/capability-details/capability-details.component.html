@@ -12,10 +12,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card>
+<mat-card appearance="outlined" class="page-content single-column">
 	<tp-loading *ngIf="!capability"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="capability">
-		<mat-card-content>
+		<mat-card-header class="headers-container" *ngIf="!new">
+			<a disabled mat-raised-button color="primary">View Delivery Services</a>
+			<a disabled mat-raised-button color="primary">Manage Servers</a>
+		</mat-card-header>
+		<mat-card-content class="container">
 			<mat-form-field>
 				<mat-label>Name</mat-label>
 				<input matInput type="text" name="name" required [(ngModel)]="capability.name" />
@@ -25,7 +29,7 @@ limitations under the License.
 				<input matInput type="text" name="lastUpdated" disabled readonly [defaultValue]="capability.lastUpdated" />
 			</mat-form-field>
 		</mat-card-content>
-		<mat-card-actions align="end">
+		<mat-card-actions align="end" class="actions-container">
 			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="deleteCapability()">Delete</button>
 			<button mat-raised-button type="submit" color="primary">Save</button>
 		</mat-card-actions>

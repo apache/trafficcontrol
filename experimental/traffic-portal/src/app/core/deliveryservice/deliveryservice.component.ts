@@ -14,7 +14,6 @@
 import { Component, type OnInit } from "@angular/core";
 import { UntypedFormControl } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
-import { faBroom } from "@fortawesome/free-solid-svg-icons";
 import { Subject } from "rxjs";
 import { AlertLevel, ResponseDeliveryService } from "trafficops-types";
 
@@ -42,9 +41,6 @@ export class DeliveryserviceComponent implements OnInit {
 
 	/** Data for the transactions per second chart. */
 	public tpsChartData: Subject<Array<DataSet>>;
-
-	/** Icon for the content invalidation FAB. */
-	public readonly invalidateIcon=faBroom;
 
 	/** End date for charts. */
 	private to: Date = new Date();

@@ -90,7 +90,8 @@ export class ImportJsonTxtComponent {
 	 *
 	 * @param evt Drag events data
 	 */
-	@HostListener("dragover", ["$event"]) public onDragOver(evt: DragEvent): void {
+	@HostListener("dragover", ["$event"])
+	public onDragOver(evt: DragEvent): void {
 		evt.preventDefault();
 		evt.stopPropagation();
 
@@ -102,7 +103,8 @@ export class ImportJsonTxtComponent {
 	 *
 	 * @param evt Drag events data
 	 */
-	@HostListener("dragleave", ["$event"]) public onDragLeave(evt: DragEvent): void {
+	@HostListener("dragleave", ["$event"])
+	public onDragLeave(evt: DragEvent): void {
 		evt.preventDefault();
 		evt.stopPropagation();
 
@@ -114,7 +116,8 @@ export class ImportJsonTxtComponent {
 	 *
 	 * @param evt Drag events data
 	 */
-	@HostListener("drop", ["$event"]) public onDrop(evt: DragEvent): void {
+	@HostListener("drop", ["$event"])
+	public onDrop(evt: DragEvent): void {
 		evt.preventDefault();
 		evt.stopPropagation();
 
@@ -140,7 +143,7 @@ export class ImportJsonTxtComponent {
 
 		this.files = event.target.files;
 		this.docReader();
-	  }
+	}
 
 	/**
 	 * Docs reader

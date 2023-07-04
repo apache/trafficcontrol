@@ -11,44 +11,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+@import "/src/styles/vars";
 
-form {
-	max-width: calc(100% - 32px);
-}
+@include small-icon-button();
 
-.mat-mdc-card .mat-mdc-card-content .pair {
+.pair {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
 	column-gap: 48px;
 	align-items: center;
 	justify-content: space-between;
-}
-
-.mat-mdc-card-actions .mdc-button {
-	margin: 0 8px;
-}
-
-/* Chosen more or less arbitrarily. */
-@media(max-width:1200px) {
-	mat-card form mat-card-content .pair {
-		column-gap: 8px;
-	}
-}
-
-/* This is roughly the point where 350px is 80% of the viewport. */
-@media(max-width:440px) {
-	.mat-mdc-card {
-		min-width: unset;
-		width: 100%;
-		form {
-			min-width: 100%;
-			.mat-mdc-card-content {
-				margin: 1em auto;
-				.pair {
-					grid-template-columns: 1fr;
-					row-gap: 2em;
-				}
-			}
-		}
-	}
 }

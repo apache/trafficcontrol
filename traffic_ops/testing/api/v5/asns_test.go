@@ -79,7 +79,7 @@ func TestASN(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					asn := tc.ASN{}
+					asn := tc.ASNV5{}
 
 					if testCase.RequestBody != nil {
 						if cgId, ok := testCase.RequestBody["cachegroupId"]; ok {
@@ -119,7 +119,7 @@ func TestASN(t *testing.T) {
 
 func validateSorted() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
-		asnResp := resp.([]tc.ASN)
+		asnResp := resp.([]tc.ASNV5)
 		var sortedList []string
 		assert.RequireGreaterOrEqual(t, len(asnResp), 2, "Need at least 2 ASNs in Traffic Ops to test sorted, found: %d", len(asnResp))
 

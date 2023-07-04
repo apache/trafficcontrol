@@ -12,7 +12,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card appearance="outlined" class="table-page-content">
+<mat-card class="page-content">
 	<div class="search-container">
 		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Regions" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
 	</div>
@@ -21,6 +21,7 @@ limitations under the License.
 		[cols]="columnDefs"
 		[fuzzySearch]="fuzzySubject"
 		context="regions"
+		[doubleClickLink]="doubleClickLink"
 		[contextMenuItems]="contextMenuItems"
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>

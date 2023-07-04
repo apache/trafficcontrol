@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -306,17 +305,6 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 		result.Error = err
 		handler.resultChan <- result
 		return
-	}
-	if val, ok := miscStats["plugin.system_stats.timestamp_ms"]; ok {
-		valString := fmt.Sprintf("%s", val)
-		valInt, valErr := strconv.ParseInt(valString, 10, 64)
-		if valErr != nil {
-			log.Errorf("parse error '%v'", valErr)
-			result.Error = valErr
-			handler.resultChan <- result
-			return
-		}
-		result.Time = time.UnixMilli(valInt)
 	}
 	if value, ok := miscStats[rfc.Via]; ok {
 		result.ID = fmt.Sprintf("%v", value)

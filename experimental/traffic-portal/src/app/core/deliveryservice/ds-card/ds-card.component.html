@@ -14,7 +14,7 @@ limitations under the License.
 <mat-card appearance="outlined" id="{{deliveryService.xmlId}}" [ngClass]="{'inactive': !deliveryService.active, 'open': open, 'first': first, 'last': last}">
 	<mat-card-title-group (click)="toggle()">
 		<mat-card-title>{{deliveryService.displayName}}{{deliveryService.active ? '' : ' (inactive)'}}
-			<a href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="color-accent-inverted info" rel="noopener" target="_blank" title="More Information"><fa-icon [icon]="infoIcon"></fa-icon></a>
+			<a href="{{deliveryService.infoUrl}}" *ngIf="deliveryService.infoUrl" class="color-accent-inverted info" rel="noopener" target="_blank" title="More Information"><mat-icon>info</mat-icon></a>
 		</mat-card-title>
 		<mat-card-subtitle>{{deliveryService.type ? deliveryService.type : ''}}</mat-card-subtitle>
 	</mat-card-title-group>

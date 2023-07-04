@@ -1419,7 +1419,7 @@ def topology_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	"""
 	PyTest Fixture to create POST data for topologies endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get coordinate request template from a prerequisites file.
+	:param request_template_data: Fixture to get topology request template from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
 
@@ -1448,5 +1448,99 @@ def topology_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	msg = to_session.delete_topology(name=topology_name)
 	logger.info("Deleting topology data... %s", msg)
 	if msg is None:
-		logger.error("topology returned by Traffic Ops is missing an 'id' property")
+		logger.error("topology returned by Traffic Ops is missing an 'name' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="cdn_lock_post_data")
+def cdn_lock_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		user_post_data:dict[str, object], cdn_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for cdn_locks endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get cdn_locks request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	cdn_lock = check_template_data(request_template_data["cdn_locks"], "cdn_locks")
+
+	# Return new post data and post response from cdn_locks POST request
+	cdn_lock["cdn"] = cdn_post_data["name"]
+	cdn_lock["sharedUserNames"][0] = user_post_data["username"]
+	logger.info("New cdn_lock data to hit POST method %s", cdn_lock)
+	# Hitting cdn_locks POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_cdn_lock(data=cdn_lock)
+	resp_obj = check_template_data(response, "cdn_lock")
+	yield resp_obj
+	cdn_name = resp_obj.get("cdn")
+	msg = to_session.delete_cdn_lock(query_params={"cdn":cdn_name})
+	logger.info("Deleting cdn_lock data... %s", msg)
+	if msg is None:
+		logger.error("cdn_lock returned by Traffic Ops is missing an 'cdn' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="cdn_notification_post_data")
+def cdn_notification_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  cdn_post_data:dict[str, object], db_connection: psycopg2.connect) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for cdn_notifications endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get cdn_notification request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	cdn_notification = check_template_data(request_template_data["cdn_notifications"], "cdn_notifications")
+
+	# Return new post data and post response from cdn_notifications POST request
+	cdn_notification["cdn"] = cdn_post_data["name"]
+	logger.info("New cdn_notification data to hit POST method %s", cdn_notification)
+	# Hitting cdn_notification POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_cdn_notification(data=cdn_notification)
+	resp_obj = check_template_data(response, "cdn_notification")
+	yield resp_obj
+	notification_id = resp_obj.get("id")
+	msg = to_session.delete_cdn_notification(query_params={"id":notification_id})
+	logger.info("Deleting cdn_notification data... %s", msg)
+	if msg is None:
+		logger.error("cdn_notfication returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+
+@pytest.fixture(name="steering_post_data")
+def steering_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  delivery_services_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for steering endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get steering request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	steering = check_template_data(request_template_data["steering"], "steering")
+
+	# Return new post data and post response from steering POST request
+	ds_get_response = to_session.get_deliveryservices()
+	ds_data = ds_get_response[0][0]
+	delivery_service_id = ds_data.get("id")
+
+	steering["targetId"] = delivery_services_post_data["id"]
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "steering_target"})
+	steering["typeId"]= type_object["id"]
+
+	logger.info("New steering data to hit POST method %s", steering)
+	# Hitting steering POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_steering_targets(delivery_service_id=delivery_service_id, data=steering)
+	resp_obj = check_template_data(response, "steering")
+	yield resp_obj
+	deliveryservice_id = resp_obj.get("deliveryServiceId")
+	target_id = resp_obj.get("targetId")
+	msg = to_session.delete_steering_targets(delivery_service_id=deliveryservice_id, target_id=target_id)
+	logger.info("Deleting Steering data... %s", msg)
+	if msg is None:
+		logger.error("Steering returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
