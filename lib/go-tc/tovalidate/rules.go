@@ -218,6 +218,7 @@ func StringIsValidFloat() *validation.StringRule {
 	}, "must be a valid float")
 }
 
+// IsValidIPorCIDR returns whether the input is a valid IP address or CIDR notation subnet
 func IsValidIPorCIDR(input string) bool {
 	ip := net.ParseIP(input)
 	if ip != nil {

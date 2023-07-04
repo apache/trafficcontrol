@@ -29,18 +29,18 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	validation "github.com/go-ozzo/ozzo-validation"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/jmoiron/sqlx"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 const insertFederationResolverQuery = `
@@ -307,167 +307,66 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 	return alert, result, userErr, sysErr, statusCode
 }
 
-// [Version - 5] - We fixed time to respond with RFC3339-format date strings.
-// [Version - 5] GetFederationResolvers get all federation resolver or requested id or ipAddress or type
+// [V5] GetFederationResolvers get list of federation resolver or requested id or ipAddress or type for APIv5
 func GetFederationResolversV5(w http.ResponseWriter, r *http.Request) {
+	var runSecond bool
+	var maxTime time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	code := http.StatusOK
-	useIMS := false
-	config, e := api.GetConfig(r.Context())
-	if e == nil && config != nil {
-		useIMS = config.UseIMS
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":        dbhelpers.WhereColumnInfo{Column: "federation_resolver.id", Checker: api.IsInt},
+		"ipAddress": dbhelpers.WhereColumnInfo{Column: "federation_resolver.ip_address"},
+		"type":      dbhelpers.WhereColumnInfo{Column: "type.name"},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "id"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	}
+
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where, "federation_resolver"))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
 	} else {
-		log.Warnf("Couldn't get config %v", e)
+		log.Debugln("Non IMS request")
 	}
 
-	var maxTime time.Time
-	var usrErr error
-	var syErr error
-
-	var federationResolverList []tc.FederationResolverV5
-
-	tx := inf.Tx
-
-	federationResolverList, maxTime, code, usrErr, syErr = func(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.FederationResolverV5, time.Time, int, error, error) {
-		var runSecond bool
-		var maxTime time.Time
-		federationResolverList := []tc.FederationResolverV5{}
-
-		selectQuery := `
-SELECT federation_resolver.id,
-       federation_resolver.ip_address,
-       federation_resolver.last_updated,
-       type.name AS type
-FROM federation_resolver
-LEFT OUTER JOIN type ON type.id = federation_resolver.type
-`
-
-		// Query Parameters to Database Query column mappings
-		queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-			"id":        dbhelpers.WhereColumnInfo{Column: "federation_resolver.id", Checker: api.IsInt},
-			"ipAddress": dbhelpers.WhereColumnInfo{Column: "federation_resolver.ip_address"},
-			"type":      dbhelpers.WhereColumnInfo{Column: "type.name"},
-		}
-		if _, ok := params["orderby"]; !ok {
-			params["orderby"] = "id"
-		}
-		where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
-		if len(errs) > 0 {
-			return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
-		}
-
-		if useIMS {
-			runSecond, maxTime = TryIfModifiedSinceQueryV5(header, tx, where, queryValues)
-			if !runSecond {
-				log.Debugln("IMS HIT")
-				return federationResolverList, maxTime, http.StatusNotModified, nil, nil
-			}
-			log.Debugln("IMS MISS")
-		} else {
-			log.Debugln("Non IMS request")
-		}
-
-		query := selectQuery + where + orderBy + pagination
-		rows, err := tx.NamedQuery(query, queryValues)
-		if err != nil {
-			return nil, time.Time{}, http.StatusInternalServerError, nil, err
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			fr := tc.FederationResolverV5{}
-
-			if err = rows.Scan(&fr.ID, &fr.IPAddress, &fr.LastUpdated, &fr.Type); err != nil {
-				return nil, time.Time{}, http.StatusInternalServerError, nil, err
-			}
-			federationResolverList = append(federationResolverList, fr)
-		}
-
-		return federationResolverList, maxTime, http.StatusOK, nil, nil
-	}(tx, inf.Params, useIMS, r.Header)
-
-	if code == http.StatusNotModified {
-		w.WriteHeader(code)
-		api.WriteResp(w, r, []tc.FederationResolverV5{})
-		return
-	}
-
-	if code == http.StatusBadRequest {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, usrErr, nil)
-		return
-	}
-
-	if sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, syErr)
-		return
-	}
-
-	if maxTime != (time.Time{}) && api.SetLastModifiedHeader(r, useIMS) {
-		api.AddLastModifiedHdr(w, maxTime)
-	}
-
-	api.WriteResp(w, r, federationResolverList)
-}
-
-func TryIfModifiedSinceQueryV5(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
-	var max time.Time
-	var imsDate time.Time
-	var ok bool
-	imsDateHeader := []string{}
-	runSecond := true
-	dontRunSecond := false
-
-	if header == nil {
-		return runSecond, max
-	}
-
-	imsDateHeader = header[rfc.IfModifiedSince]
-	if len(imsDateHeader) == 0 {
-		return runSecond, max
-	}
-
-	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
-		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
-		return runSecond, max
-	}
-
-	query := SelectMaxLastUpdatedQuery(where, "federation_resolver")
+	query := readQuery + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return dontRunSecond, max
-	}
-
 	if err != nil {
-		log.Warnf("Couldn't get the max last updated time: %v", err)
-		return runSecond, max
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("federation_resolver scanning: %w", err))
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	fr := tc.FederationResolverV5{}
+	frList := []tc.FederationResolverV5{}
+	for rows.Next() {
+		if err = rows.Scan(&fr.ID, &fr.IPAddress, &fr.LastUpdated, &fr.Type); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("federation_resolver scanning: %w", err))
+		}
+		frList = append(frList, fr)
 	}
 
-	defer rows.Close()
-	// This should only ever contain one row
-	if rows.Next() {
-		v := time.Time{}
-		if err = rows.Scan(&v); err != nil {
-			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
-			return runSecond, max
-		}
-
-		max = v
-		// The request IMS time is later than the max of (lastUpdated, deleted_time)
-		if imsDate.After(v) {
-			return dontRunSecond, max
-		}
-	}
-	return runSecond, max
+	api.WriteResp(w, r, frList)
+	return
 }
 
-// [Version : 5] CreateFederationResolverV5 function creates the federation resolver with given data.
+// [V5] CreateFederationResolverV5 function creates the federation resolver with given data for APIv5
 func CreateFederationResolverV5(w http.ResponseWriter, r *http.Request) {
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -516,7 +415,7 @@ func CreateFederationResolverV5(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// [Version : V5] - readAndValidateJsonStructV5 function validates the JSON object passed.
+// [V5] readAndValidateJsonStructV5 function validates the JSON object passed for APIv5
 func readAndValidateJsonStructV5(r *http.Request) (tc.FederationResolverV5, error) {
 	var fr tc.FederationResolverV5
 	if err := json.NewDecoder(r.Body).Decode(&fr); err != nil {

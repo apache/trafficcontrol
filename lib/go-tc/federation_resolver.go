@@ -22,9 +22,10 @@ package tc
 import (
 	"database/sql"
 	"errors"
-	validation "github.com/go-ozzo/ozzo-validation"
 	"net"
 	"time"
+
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 // FederationResolversResponse represents a Traffic Ops API response to a
@@ -50,27 +51,34 @@ type FederationResolver struct {
 	TypeID      *uint      `json:"typeId,omitempty" db:"type"`
 }
 
-// [Version: 5] FederationResolversResponse represents a Traffic Ops API response to a
-// [Version: 5] GET request to its /federation_resolvers endpoint.
-type FederationResolversV5Response struct {
-	Alerts
-	Response []FederationResolverV5 `json:"response"`
-}
+// [Version: 5] FederationResolverV5 is an alias for the Federal Resolver struct response used for the latest minor version associated with api major version 5.
+type FederationResolverV5 = FederationResolverV50
 
-// [Version: 5] FederationResolverResponse represents a Traffic Ops API response to a
-// [Version: 5] POST or DELETE request to its /federation_resolvers endpoint.
-type FederationResolverV5Response struct {
-	Alerts
-	Response FederationResolverV5 `json:"response"`
-}
-
-// [Version: 5] FederationResolver represents a resolver record for a CDN Federation.
-type FederationResolverV5 struct {
+// FederationResolverV50 is used for RFC3339 format timestamp in FederationResolver which represents a resolver record for a CDN Federation.
+type FederationResolverV50 struct {
 	ID          *uint      `json:"id" db:"id"`
 	IPAddress   *string    `json:"ipAddress" db:"ip_address"`
 	LastUpdated *time.Time `json:"lastUpdated,omitempty" db:"last_updated"`
 	Type        *string    `json:"type"`
 	TypeID      *uint      `json:"typeId,omitempty" db:"type"`
+}
+
+// [Version: 5] FederationResolversResponse represents struct response used for the latest minor version associated with api major version 5.
+type FederationResolversV5Response = FederationResolversV50Response
+
+// [Version: 5] GET request to its /federation_resolvers endpoint.
+type FederationResolversV50Response struct {
+	Alerts
+	Response []FederationResolverV5 `json:"response"`
+}
+
+// [Version: 5] FederationResolverV5Response represents struct response used for the latest minor version associated with api major version 5.
+type FederationResolverV5Response = FederationResolverV50Response
+
+// [Version: 5] POST or DELETE request to its /federation_resolvers endpoint.
+type FederationResolverV50Response struct {
+	Alerts
+	Response FederationResolverV5 `json:"response"`
 }
 
 // Validate implements the github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.ParseValidator
