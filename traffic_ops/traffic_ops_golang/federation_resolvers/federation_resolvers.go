@@ -307,8 +307,8 @@ func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver
 	return alert, result, userErr, sysErr, statusCode
 }
 
-// [V5] GetFederationResolvers get list of federation resolver or requested id or ipAddress or type for APIv5
-func GetFederationResolversV5(w http.ResponseWriter, r *http.Request) {
+// GetFederationResolvers [V5] - get list of federation resolver for APIv5
+func GetFederationResolvers(w http.ResponseWriter, r *http.Request) {
 	var maxTime time.Time
 	var runSecond bool
 	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
@@ -388,8 +388,8 @@ func GetFederationResolversV5(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, resolvers)
 }
 
-// [V5] CreateFederationResolverV5 function creates the federation resolver with given data for APIv5
-func CreateFederationResolverV5(w http.ResponseWriter, r *http.Request) {
+// CreateFederationResolver [V5] - creates the federation resolver with given data for APIv5
+func CreateFederationResolver(w http.ResponseWriter, r *http.Request) {
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -437,7 +437,7 @@ func CreateFederationResolverV5(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// [V5] readAndValidateJsonStructV5 function validates the JSON object passed for APIv5
+// readAndValidateJsonStructV5 [V5] - validates the JSON object passed for APIv5
 func readAndValidateJsonStructV5(r *http.Request) (tc.FederationResolverV5, error) {
 	var fr tc.FederationResolverV5
 	if err := json.NewDecoder(r.Body).Decode(&fr); err != nil {
