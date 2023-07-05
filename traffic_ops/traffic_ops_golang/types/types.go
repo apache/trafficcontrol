@@ -344,9 +344,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestedId := inf.IntParams["id"]
+	requestedId := inf.Params["id"]
+	id, parseErr := strconv.Atoi(requestedId)
+	if parseErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer"), nil)
+		return
+	}
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedId, "type")
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "type")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
