@@ -330,7 +330,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 
 // Update [V5] - updates name & description of the type passed for APIv5.
 func Update(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -344,14 +344,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestedId := inf.Params["id"]
-	id, parseErr := strconv.Atoi(requestedId)
-	if parseErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer"), nil)
-		return
-	}
+	requestedId := inf.IntParams["id"]
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "type")
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedId, "type")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
