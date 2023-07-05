@@ -72,18 +72,6 @@ type TypeV50 struct {
 	UseInTable  string    `json:"useInTable"`
 }
 
-// TypeNullableV5 contains information about a given Type in Traffic Ops used for the latest minor version associated with api major version 5.
-type TypeNullableV5 = TypeNullableV50
-
-// TypeNullableV50 contains information about a given Type in Traffic Ops.
-type TypeNullableV50 struct {
-	ID          *int       `json:"id" db:"id"`
-	LastUpdated *time.Time `json:"lastUpdated" db:"last_updated"`
-	Name        *string    `json:"name" db:"name"`
-	Description *string    `json:"description" db:"description"`
-	UseInTable  *string    `json:"useInTable" db:"use_in_table"`
-}
-
 // GetTypeData returns the type's name and use_in_table, true/false if the
 // query returned data, and any error.
 //
