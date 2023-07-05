@@ -109,7 +109,7 @@ func TestParseAndDecode(t *testing.T) {
 
 	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
 	ctx := interface{}(pl)
-	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", rfc.ApplicationJSON)
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set(rfc.ContentType, rfc.ApplicationJSON)
 
 	decoder, err := GetDecoder("stats_over_http")
 	if err != nil {
