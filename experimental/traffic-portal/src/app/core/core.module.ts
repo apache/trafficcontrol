@@ -64,6 +64,7 @@ import { ServersTableComponent } from "./servers/servers-table/servers-table.com
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
 import { StatusDetailsComponent } from "./statuses/status-details/status-details.component";
 import { StatusesTableComponent } from "./statuses/statuses-table/statuses-table.component";
+import { TopologyDetailsComponent } from "./topologies/topology-details/topology-details.component";
 import { TypeDetailComponent } from "./types/detail/type-detail.component";
 import { TypesTableComponent } from "./types/table/types-table.component";
 import { RoleDetailComponent } from "./users/roles/detail/role-detail.component";
@@ -124,6 +125,7 @@ export const ROUTES: Routes = [
 	{ component: ISOGenerationFormComponent, path: "iso-gen"},
 	{ component: ProfileDetailComponent, path: "profiles/:id"},
 	{ component: ProfileTableComponent, path: "profiles"},
+	{ component: TopologyDetailsComponent, path: "topologies/:name"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -177,6 +179,7 @@ export const ROUTES: Routes = [
 		ProfileDetailComponent,
 		CapabilitiesComponent,
 		CapabilityDetailsComponent,
+		TopologyDetailsComponent,
 	],
 	exports: [],
 	imports: [
