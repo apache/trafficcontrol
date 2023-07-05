@@ -269,7 +269,7 @@ func UpdateDivision(w http.ResponseWriter, r *http.Request) {
 
 	intRequestId, convErr := strconv.Atoi(requestedID)
 	if convErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, convErr, nil)
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("division update error: %w, while converting from string to int", convErr), nil)
 	}
 	// check if the entity was already updated
 	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, intRequestId, "division")
