@@ -310,7 +310,7 @@ func (handler Handler) Handle(id string, rdr io.Reader, format string, reqTime t
 	if val, ok := miscStats["plugin.system_stats.timestamp_ms"]; ok {
 		valInt, valErr := strconv.ParseInt(val.(string), 10, 64)
 		if valErr != nil {
-			log.Errorf("parse error '%s'", valErr.Error())
+			log.Errorln("parse error: ", valErr)
 			result.Error = valErr
 			handler.resultChan <- result
 			return

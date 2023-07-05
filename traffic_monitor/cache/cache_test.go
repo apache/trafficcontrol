@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_monitor/poller"
@@ -108,7 +109,7 @@ func TestParseAndDecode(t *testing.T) {
 
 	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
 	ctx := interface{}(pl)
-	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "application/json")
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", rfc.ApplicationJSON)
 
 	decoder, err := GetDecoder("stats_over_http")
 	if err != nil {
