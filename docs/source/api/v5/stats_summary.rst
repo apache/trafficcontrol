@@ -110,7 +110,7 @@ Summary Stats
 
 :statName:            Stat name summary stat represents
 :statValue:           Summary stat value
-:summaryTime:         Timestamp of summary, in :ref:`non-rfc-datetime`
+:summaryTime:         Timestamp of summary, in :rfc:`3339` format
 :statDate:            Date stat was taken, in ``YYYY-MM-DD`` format
 
 .. code-block:: http
@@ -134,7 +134,7 @@ Summary Stats
 			"deliveryServiceName": "all",
 			"statName": "daily_maxgbps",
 			"statValue": 5,
-			"summaryTime": "2019-11-19 00:04:06+00",
+			"summaryTime": "2019-11-19T03:37:33+05:30",
 			"statDate": "2019-11-19"
 		},
 		{
@@ -142,7 +142,7 @@ Summary Stats
 			"deliveryServiceName": "all",
 			"statName": "daily_maxgbps",
 			"statValue": 3,
-			"summaryTime": "2019-11-18 00:04:06+00",
+			"summaryTime": "2019-11-18T07:59:54+05:30",
 			"statDate": "2019-11-18"
 		},
 		{
@@ -150,7 +150,7 @@ Summary Stats
 			"deliveryServiceName": "all",
 			"statName": "daily_bytesserved",
 			"statValue": 1000,
-			"summaryTime": "2019-11-19 00:04:06+00",
+			"summaryTime": "2019-11-19T00:42:12+05:30",
 			"statDate": "2019-11-19"
 		}
 	]}
@@ -158,7 +158,7 @@ Summary Stats
 Last Updated Summary Stat
 """""""""""""""""""""""""
 
-:summaryTime: Timestamp of the last updated summary, in :ref:`non-rfc-datetime`
+:summaryTime: Timestamp of the last updated summary, in :rfc:`3339` format
 
 .. code-block:: http
 	:caption: Response Example
@@ -176,7 +176,7 @@ Last Updated Summary Stat
 	Content-Length: 150
 
 	{ "response": {
-		"summaryTime": "2019-11-19 00:04:06+00"
+		"summaryTime": "2019-11-19T06:12:34+05:30"
 	}}
 
 ``POST``
@@ -201,7 +201,7 @@ Request Structure
 
 :statName:            Stat name summary stat represents
 :statValue:           Summary stat value
-:summaryTime:         Timestamp of summary, in :ref:`non-rfc-datetime`
+:summaryTime:         Timestamp of summary, in :rfc:`3339` format
 :statDate:            Date stat was taken, in ``YYYY-MM-DD`` format
 
 .. note:: ``statName``, ``statValue`` and ``summaryTime`` are required. If ``cdnName`` and ``deliveryServiceName`` are not given they will default to ``all``.
@@ -222,7 +222,7 @@ Request Structure
 		"deliveryServiceName": "all",
 		"statName": "daily_maxgbps",
 		"statValue": 10,
-		"summaryTime": "2019-12-05 00:03:57+00",
+		"summaryTime": "2019-12-05T09:55:07+05:30",
 		"statDate": "2019-12-05"
 	}
 

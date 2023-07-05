@@ -24,8 +24,8 @@ const apiStatsSummary = "/stats_summary"
 
 // GetSummaryStats gets a list of Summary Stats with the ability to filter on
 // CDN, Delivery Service, and/or stat name.
-func (to *Session) GetSummaryStats(opts RequestOptions) (tc.StatsSummaryResponse, toclientlib.ReqInf, error) {
-	var resp tc.StatsSummaryResponse
+func (to *Session) GetSummaryStats(opts RequestOptions) (tc.StatsSummaryResponseV5, toclientlib.ReqInf, error) {
+	var resp tc.StatsSummaryResponseV5
 	reqInf, err := to.get(apiStatsSummary, opts, &resp)
 	return resp, reqInf, err
 }
@@ -34,19 +34,19 @@ func (to *Session) GetSummaryStats(opts RequestOptions) (tc.StatsSummaryResponse
 // updated.
 // If 'statName' isn't nil, the response will be limited to the stat thereby
 // named.
-func (to *Session) GetSummaryStatsLastUpdated(opts RequestOptions) (tc.StatsSummaryLastUpdatedAPIResponse, toclientlib.ReqInf, error) {
+func (to *Session) GetSummaryStatsLastUpdated(opts RequestOptions) (tc.StatsSummaryLastUpdatedAPIResponseV5, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("lastSummaryDate", "true")
 
-	var resp tc.StatsSummaryLastUpdatedAPIResponse
+	var resp tc.StatsSummaryLastUpdatedAPIResponseV5
 	reqInf, err := to.get(apiStatsSummary, opts, &resp)
 	return resp, reqInf, err
 }
 
 // CreateSummaryStats creates the given Stats Summary.
-func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummary, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateSummaryStats(statsSummary tc.StatsSummaryV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiStatsSummary, opts, statsSummary, &alerts)
 	return alerts, reqInf, err
