@@ -345,10 +345,10 @@ func Routes(d ServerData) ([]Route, http.Handler, error) {
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `system/info/?$`, Handler: systeminfo.Get, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 42104747531},
 
 		//Type: CRUD
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `types/?$`, Handler: types.GetV5, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 422670182331},
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPut, Path: `types/{id}$`, Handler: types.UpdateTypeV5, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"TYPE:UPDATE", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4886011531},
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `types/?$`, Handler: types.CreateTypeV5, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"TYPE:CREATE", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 451330819531},
-		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodDelete, Path: `types/{id}$`, Handler: types.DeleteTypeV5, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"TYPE:DELETE", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4317577331},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `types/?$`, Handler: types.Read, RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: []string{"TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 422670182331},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPut, Path: `types/{id}$`, Handler: types.Update, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"TYPE:UPDATE", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4886011531},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodPost, Path: `types/?$`, Handler: types.Create, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"TYPE:CREATE", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 451330819531},
+		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodDelete, Path: `types/{id}$`, Handler: types.Delete, RequiredPrivLevel: auth.PrivLevelOperations, RequiredPermissions: []string{"TYPE:DELETE", "TYPE:READ"}, Authenticated: Authenticated, Middlewares: nil, ID: 4317577331},
 
 		//About
 		{Version: api.Version{Major: 5, Minor: 0}, Method: http.MethodGet, Path: `about/?$`, Handler: about.Handler(), RequiredPrivLevel: auth.PrivLevelReadOnly, RequiredPermissions: nil, Authenticated: Authenticated, Middlewares: nil, ID: 431750116631},

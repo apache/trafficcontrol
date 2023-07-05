@@ -216,7 +216,7 @@ WHERE id=:id`
 }
 
 // GetV5 [Version :V5] - GetV5 will retrieve a list of types for APIv5
-func GetV5(w http.ResponseWriter, r *http.Request) {
+func Read(w http.ResponseWriter, r *http.Request) {
 	var runSecond bool
 	var maxTime time.Time
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -275,7 +275,7 @@ func GetV5(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateType [Version : V5] - CreateTypeV5 function creates the type with the passed data.
-func CreateTypeV5(w http.ResponseWriter, r *http.Request) {
+func Create(w http.ResponseWriter, r *http.Request) {
 	typ := tc.TypeV5{}
 
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
@@ -329,7 +329,7 @@ func CreateTypeV5(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateType [Version : V5] - UpdateTypeV5 function updates name & description of the type passed.
-func UpdateTypeV5(w http.ResponseWriter, r *http.Request) {
+func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -344,9 +344,9 @@ func UpdateTypeV5(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestedId := inf.Params["id"]
+	requestedId := inf.IntParams["id"]
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedId, "type")
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedId, "type")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -376,7 +376,7 @@ func UpdateTypeV5(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteType [Version : V5] - DeleteTypeV5 function deletes the type passed.
-func DeleteTypeV5(w http.ResponseWriter, r *http.Request) {
+func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
