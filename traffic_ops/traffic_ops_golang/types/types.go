@@ -215,7 +215,7 @@ WHERE id=:id`
 	return query
 }
 
-// GetV5 [Version :V5] - GetV5 will retrieve a list of types for APIv5
+// Read [V5] - gets a list of types for APIv5
 func Read(w http.ResponseWriter, r *http.Request) {
 	var runSecond bool
 	var maxTime time.Time
@@ -274,7 +274,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// CreateType [Version : V5] - CreateTypeV5 function creates the type with the passed data.
+// Create [V5] -  creates the type with the passed data fpr APIv5.
 func Create(w http.ResponseWriter, r *http.Request) {
 	typ := tc.TypeV5{}
 
@@ -328,7 +328,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// UpdateType [Version : V5] - UpdateTypeV5 function updates name & description of the type passed.
+// Update [V5] - updates name & description of the type passed for APIv5.
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -375,7 +375,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// DeleteType [Version : V5] - DeleteTypeV5 function deletes the type passed.
+// Delete [V5] - deletes the type passed for APIv5.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	tx := inf.Tx.Tx
@@ -420,7 +420,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// readAndValidateJsonStructV5 [Version : V5] - readAndValidateJsonStructV5 function validates the JSON object passed.
+// readAndValidateJsonStructV5 [V5] - validates the JSON object passed.
 func readAndValidateJsonStructV5(r *http.Request) (tc.TypeV5, error) {
 	var typ tc.TypeV5
 	if err := json.NewDecoder(r.Body).Decode(&typ); err != nil {
