@@ -21,7 +21,6 @@ package cache
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -109,7 +108,7 @@ func TestParseAndDecode(t *testing.T) {
 
 	pl := &poller.HTTPPollCtx{HTTPHeader: http.Header{}}
 	ctx := interface{}(pl)
-	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "text/json")
+	ctx.(*poller.HTTPPollCtx).HTTPHeader.Set("Content-Type", "application/json")
 
 	decoder, err := GetDecoder("stats_over_http")
 	if err != nil {
@@ -126,8 +125,7 @@ func TestParseAndDecode(t *testing.T) {
 	}
 
 	if val, ok := miscStats["plugin.system_stats.timestamp_ms"]; ok {
-		valString := fmt.Sprintf("%s", val)
-		if valString != "1684784877939" {
+		if val.(string) != "1684784877939" {
 			t.Errorf("unable to read `plugin.system_stats.timestamp_ms`")
 		}
 	} else {
