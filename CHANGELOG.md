@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login. 
 - [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops* Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
 - [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
 - [#7291](https://github.com/apache/trafficcontrol/pull/7291) *Traffic Ops* Extended Layered Profile feature to aggregate parameters for all server profiles.
@@ -62,12 +63,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixes `federation_resolvers` v5 apis to respond with `RFC3339` date/time Format.
 
 ### Fixed
+- [#7608](https://github.com/apache/trafficcontrol/pull/7608) *Traffic Monitor* Use stats_over_http(plugin.system_stats.timestamp_ms) timestamp field to calculate bandwidth for TM's caches.
 - [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}
 - [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* *Traffic Ops* Fixed `ASN` V5 apis to respond with `RFC3339` date/time Format.
 - [#7598](https://github.com/apache/trafficcontrol/pull/7598)  *Traffic Ops* Fixes Server Capability V5 Type Name Minor version
 - [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixes `deliveryservice_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7312](https://github.com/apache/trafficcontrol/issues/7312) *Docs* Changing docs for CDN locks for DELETE response structure v4 and v5. 
 - [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixes Delivery Service Requests V5 apis docs with RFC3339 date/time Format
+- [#7544](https://github.com/apache/trafficcontrol/issues/7544) *Traffic Ops* Fixes stats_summary v5 apis to respond with RFC3339 date/time Format.
 - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
 - [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
 - [#7519] (https://github.com/apache/trafficcontrol/issues/7519) *Traffic Ops* Fixed TO API /servers/{id}/deliveryservices endpoint to responding with all DS's on cache that are directly assigned and inherited through topology.
