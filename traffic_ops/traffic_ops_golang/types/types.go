@@ -363,7 +363,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	err := tx.QueryRow(query, typ.Name, typ.Description, typ.UseInTable, requestedId).Scan(&typ.ID, &typ.LastUpdated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("type with id: %s not found", requestedId), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("type with id: %d not found", requestedId), nil)
 			return
 		}
 		usrErr, sysErr, code := api.ParseDBError(err)
