@@ -22,6 +22,7 @@ package tc
 import (
 	"database/sql"
 	"errors"
+	"time"
 )
 
 // TypesResponse is the type of a response from Traffic Ops to a GET request
@@ -47,6 +48,28 @@ type TypeNullable struct {
 	Name        *string    `json:"name" db:"name"`
 	Description *string    `json:"description" db:"description"`
 	UseInTable  *string    `json:"useInTable" db:"use_in_table"`
+}
+
+// TypesResponseV5 is type struct response used for the latest minor version associated with api major version 5.
+type TypesResponseV5 = TypesResponseV50
+
+// TypesResponseV50 is the type of response (for RFC3339) from Traffic Ops to a GET Request
+// made to its /types API endpoint.
+type TypesResponseV50 struct {
+	Response []TypeV50 `json:"response"`
+	Alerts
+}
+
+// TypeV5 contains information about a given Type in Traffic Ops used for the latest minor version associated with api major version 5.
+type TypeV5 = TypeV50
+
+// TypeV50 contains information about a given Type in Traffic Ops.
+type TypeV50 struct {
+	ID          int       `json:"id"`
+	LastUpdated time.Time `json:"lastUpdated"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	UseInTable  string    `json:"useInTable"`
 }
 
 // GetTypeData returns the type's name and use_in_table, true/false if the
