@@ -62,6 +62,7 @@ var LoginController = function($scope, $log, $uibModal, $location, authService, 
         continueURL.searchParams.append(redirectUriParamKey, redirectUriParam);
         continueURL.searchParams.append('client_id', propertiesModel.properties.oAuth.clientId);
         continueURL.searchParams.append('response_type', 'code');
+        continueURL.searchParams.append('scope', 'openid profile email');
 
         localStorage.setItem('redirectUri', redirectUriParam.toString());
         localStorage.setItem('redirectParam', redirectParam);

@@ -34,7 +34,7 @@ func TestStatsSummary(t *testing.T) {
 
 	CreateTestStatsSummaries(t)
 
-	methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.StatsSummary]{
+	methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.StatsSummaryV5]{
 		"GET": {
 			"OK when VALID request": {
 				ClientSession: TOSession,
@@ -115,7 +115,7 @@ func TestStatsSummary(t *testing.T) {
 func validateStatsSummaryFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Stats Summary response to not be nil.")
-		statsSummaryResp := resp.([]tc.StatsSummary)
+		statsSummaryResp := resp.([]tc.StatsSummaryV5)
 		for field, expected := range expectedResp {
 			for _, statsSummary := range statsSummaryResp {
 				switch field {
@@ -141,9 +141,10 @@ func validateStatsSummaryFields(expectedResp map[string]interface{}) utils.CkReq
 func validateStatsSummaryLastUpdatedField(expectedTime time.Time) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected StatsSummaryLastUpdated response to not be nil.")
-		statsSummaryLastUpdated := resp.(tc.StatsSummaryLastUpdated)
+		statsSummaryLastUpdated := resp.(tc.StatsSummaryLastUpdatedV5)
 		assert.RequireNotNil(t, statsSummaryLastUpdated.SummaryTime, "Expected SummaryTime to not be nil.")
-		assert.Equal(t, expectedTime, *statsSummaryLastUpdated.SummaryTime, "Expected SummaryTime to be %v, but got %v", expectedTime, *statsSummaryLastUpdated.SummaryTime)
+		assert.Equal(t, true, expectedTime.Equal(*statsSummaryLastUpdated.SummaryTime), "Expected SummaryTime to be %v, but got %v", expectedTime, *statsSummaryLastUpdated.SummaryTime)
+
 	}
 }
 
