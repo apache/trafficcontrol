@@ -72,6 +72,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./modules/private/capabilities/users').name,
         require('./modules/private/cdns').name,
         require('./modules/private/cdns/config').name,
+        require("./modules/private/ssl").name,
         require('./modules/private/cdns/deliveryServices').name,
         require('./modules/private/cdns/dnssecKeys').name,
         require('./modules/private/cdns/dnssecKeys/generate').name,
@@ -260,6 +261,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/locks').name,
         require('./common/modules/message').name,
         require('./common/modules/navigation').name,
+        require("./common/modules/ssl").name,
         require('./common/modules/notifications').name,
         require('./common/modules/release').name,
 
@@ -334,6 +336,7 @@ var trafficPortal = angular.module('trafficPortal', [
         require('./common/modules/form/serviceCategory').name,
         require('./common/modules/form/serviceCategory/edit').name,
         require('./common/modules/form/serviceCategory/new').name,
+        require("./common/modules/form/ssl").name,
         require('./common/modules/form/status').name,
         require('./common/modules/form/status/edit').name,
         require('./common/modules/form/status/new').name,
