@@ -219,7 +219,7 @@ func StringIsValidFloat() *validation.StringRule {
 }
 
 // IsValidIPorCIDR returns whether the input is a valid IP address or CIDR notation subnet
-func IsValidIPorCIDR(input string) bool {
+func IsValidIPOrCIDR(input string) bool {
 	ip := net.ParseIP(input)
 	if ip != nil {
 		return true // Valid IP address

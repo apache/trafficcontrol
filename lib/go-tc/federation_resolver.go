@@ -51,10 +51,10 @@ type FederationResolver struct {
 	TypeID      *uint      `json:"typeId,omitempty" db:"type"`
 }
 
-// [V5] FederationResolverV5 is an alias for the Federal Resolver struct response used for the latest minor version associated with api major version 5.
+// FederationResolverV5 [V5] - is an alias for the Federal Resolver struct response used for the latest minor version associated with APIv5.
 type FederationResolverV5 = FederationResolverV50
 
-// [V50] FederationResolverV50 is used for RFC3339 format timestamp in FederationResolver which represents a resolver record for a CDN Federation.
+// FederationResolverV50 [V50]- is used for RFC3339 format timestamp in FederationResolver which represents a resolver record for a CDN Federation for APIv50.
 type FederationResolverV50 struct {
 	ID          *uint      `json:"id" db:"id"`
 	IPAddress   *string    `json:"ipAddress" db:"ip_address"`
@@ -63,19 +63,19 @@ type FederationResolverV50 struct {
 	TypeID      *uint      `json:"typeId,omitempty" db:"type"`
 }
 
-// [V5] FederationResolversV5Response is an alias for the FederationResolvers struct response used for the latest minor version associated with api major version 5.
+// FederationResolversV5Response [V5] - an alias for the FederationResolvers struct response used for the latest minor version associated with APIv5.
 type FederationResolversV5Response = FederationResolversV50Response
 
-// [V50] GET request to its /federation_resolvers endpoint for APIv5.
+// FederationResolversV50Response [V50]- GET request to its /federation_resolvers endpoint for APIv50.
 type FederationResolversV50Response struct {
 	Alerts
 	Response []FederationResolverV5 `json:"response"`
 }
 
-// [V5] FederationResolverV5Response represents struct response used for the latest minor version associated with api major version 5.
+// FederationResolverV5Response [V5] - represents struct response used for the latest minor version associated with APIv5.
 type FederationResolverV5Response = FederationResolverV50Response
 
-// [V50] POST request to its /federation_resolvers endpoint APIv5.
+// FederationResolverV50Response [V50] - POST request to its /federation_resolvers endpoint APIv50.
 type FederationResolverV50Response struct {
 	Alerts
 	Response FederationResolverV5 `json:"response"`

@@ -446,7 +446,7 @@ func readAndValidateJsonStructV5(r *http.Request) (tc.FederationResolverV5, erro
 	}
 
 	// validate JSON body
-	rule := validation.NewStringRule(tovalidate.IsValidIPorCIDR, "invalid network IP or CIDR-notation subnet.")
+	rule := validation.NewStringRule(tovalidate.IsValidIPOrCIDR, "invalid network IP or CIDR-notation subnet.")
 	errs := tovalidate.ToErrors(validation.Errors{
 		"ip_address": validation.Validate(fr.IPAddress, validation.Required, rule),
 	})
