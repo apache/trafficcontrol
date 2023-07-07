@@ -263,7 +263,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:     api.AccessToken,
+			Name:     rfc.AccessToken,
 			Value:    string(jwtSigned),
 			Path:     "/",
 			MaxAge:   httpCookie.MaxAge,
@@ -461,15 +461,15 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
 			log.Warnf("Error parsing JSON response from oAuth: %s", err)
 			encodedToken = buf.String()
-		} else if _, ok := result[api.AccessToken]; !ok {
+		} else if _, ok := result[rfc.IDToken]; !ok {
 			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
 			usrErr := errors.New("Bad response from OAuth2.0 provider")
 			api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
 			return
 		} else {
-			switch t := result[api.AccessToken].(type) {
+			switch t := result[rfc.IDToken].(type) {
 			case string:
-				encodedToken = result[api.AccessToken].(string)
+				encodedToken = result[rfc.IDToken].(string)
 			default:
 				sysErr := fmt.Errorf("Incorrect type of access_token! Expected 'string', got '%v'\n", t)
 				usrErr := errors.New("Bad response from OAuth2.0 provider")
