@@ -41,12 +41,12 @@ func (to *Session) CreateFederationResolver(fr tc.FederationResolverV5, opts Req
 }
 
 // DeleteFederationResolver deletes the Federation Resolver identified by 'id'.
-func (to *Session) DeleteFederationResolver(id uint, opts RequestOptions) (tc.FederationResolverV5Response, toclientlib.ReqInf, error) {
+func (to *Session) DeleteFederationResolver(id uint, opts RequestOptions) (tc.FederationResolverResponse, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("id", strconv.FormatUint(uint64(id), 10))
-	var alerts tc.FederationResolverV5Response
+	var alerts tc.FederationResolverResponse
 	reqInf, err := to.del(apiFederationResolvers, opts, &alerts)
 	return alerts, reqInf, err
 }
