@@ -494,7 +494,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				jwt.WithVerifyAuto(false),
 				jwt.WithJWKSetFetcher(jwksFetcher),
 			); err != nil {
-				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Error decoding token with message: %w", err))
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("error decoding token with message: %w", err))
 				return
 			}
 		}
