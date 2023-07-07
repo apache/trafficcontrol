@@ -38,7 +38,7 @@ func TestTypes(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Type]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.TypeV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -65,7 +65,7 @@ func TestTypes(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when INVALID useInTable NOT server": {
 					ClientSession: TOSession,
-					RequestBody: tc.Type{
+					RequestBody: tc.TypeV5{
 						Description: "Host header regular expression-Test",
 						Name:        "TEST_1",
 						UseInTable:  "regex",
@@ -74,12 +74,12 @@ func TestTypes(t *testing.T) {
 				},
 				"OK when VALID request when useInTable=server": {
 					ClientSession: TOSession,
-					RequestBody: tc.Type{
+					RequestBody: tc.TypeV5{
 						Description: "Host header regular expression-Test",
 						Name:        "TEST_4",
 						UseInTable:  "server",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated),
 						validateTypeUpdateCreateFields("TEST_4", map[string]interface{}{"Name": "TEST_4"})),
 				},
 			},
@@ -87,7 +87,7 @@ func TestTypes(t *testing.T) {
 				"BAD REQUEST when useInTable NOT server": {
 					EndpointID:    GetTypeID(t, "ACTIVE_DIRECTORY"),
 					ClientSession: TOSession,
-					RequestBody: tc.Type{
+					RequestBody: tc.TypeV5{
 						Description: "Active Directory User",
 						Name:        "TEST_3",
 						UseInTable:  "cachegroup",
@@ -97,7 +97,7 @@ func TestTypes(t *testing.T) {
 				"OK when VALID request when useInTable=server": {
 					EndpointID:    GetTypeID(t, "RIAK"),
 					ClientSession: TOSession,
-					RequestBody: tc.Type{
+					RequestBody: tc.TypeV5{
 						Description: "riak type",
 						Name:        "TEST_5",
 						UseInTable:  "server",
@@ -158,7 +158,7 @@ func validateTypeSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Type response to not be nil.")
 		var typeNames []string
-		typeResp := resp.([]tc.Type)
+		typeResp := resp.([]tc.TypeV5)
 		for _, typ := range typeResp {
 			typeNames = append(typeNames, typ.Name)
 		}
@@ -169,7 +169,7 @@ func validateTypeSort() utils.CkReqFunc {
 func validateTypeFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Type response to not be nil.")
-		typeResp := resp.([]tc.Type)
+		typeResp := resp.([]tc.TypeV5)
 		for field, expected := range expectedResp {
 			for _, typ := range typeResp {
 				switch field {
