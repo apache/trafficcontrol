@@ -225,7 +225,6 @@ public class TrafficRouter {
 	 * @return A Delivery Service to use when servicing the request.
 	 */
 	protected DeliveryService selectDeliveryService(final Request request) {
-		// Srijeet ds matcher
 		if (cacheRegister == null) {
 			LOGGER.warn("no caches yet");
 			return null;
@@ -555,19 +554,6 @@ public class TrafficRouter {
 	 * @return The final result of routing.
 	 */
 	public DNSRouteResult route(final DNSRequest request, final Track track) throws GeolocationException {
-//		// srijeet
-// 		DeliveryService ds;
-//		System.out.println("Srijeet!!! in here selecting DS------------------------------------------------ " + request.getType());
-//		String requestName = request.getName().toString();
-//		if (requestName.endsWith(".")) {
-//			requestName = requestName.substring(0, requestName.length()-1);
-//		}
-//		if (cacheRegister != null && cacheRegister.getFQDNToDeliveryServiceMap() != null && cacheRegister.getFQDNToDeliveryServiceMap().get(requestName) != null) {
-//			System.out.println("SRIJEET HOLY SHIT!!!!!!! I'm HERE---------------------------------------------------------------");
-//			ds = cacheRegister.getFQDNToDeliveryServiceMap().get(requestName);
-//		} else {
-//			ds = selectDeliveryService(request);
-//		}
 		final DeliveryService ds = selectDeliveryService(request);
 
 		track.setRouteType(RouteType.DNS, request.getHostname());
@@ -1177,7 +1163,6 @@ public class TrafficRouter {
 	 */
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	public HTTPRouteResult route(final HTTPRequest request, final Track track) throws MalformedURLException, GeolocationException {
-		// srijeet you can do the check here also
 		track.setRouteType(RouteType.HTTP, request.getHostname());
 
 		final HTTPRouteResult result;

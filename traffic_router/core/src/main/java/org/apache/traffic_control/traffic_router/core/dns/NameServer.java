@@ -369,8 +369,7 @@ public class NameServer {
 			return;
 		}
 
-		if ((qname != null && qname.toString().startsWith("_")) ||
-				(clientAddress != null && clientAddress.getHostName().equals("_"))) {
+		if (clientAddress != null && clientAddress.getHostName().equals("_")) {
 			response.getHeader().setRcode(Rcode.NXDOMAIN);
 			response.getHeader().setFlag(Flags.AA);
 			addDenialOfExistence(qname, zone, response, flags);

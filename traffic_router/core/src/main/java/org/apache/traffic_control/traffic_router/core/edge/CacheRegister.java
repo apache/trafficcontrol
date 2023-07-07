@@ -143,6 +143,29 @@ public class CacheRegister {
 		this.deliveryServiceMatchers = matchers;
 	}
 
+	private String getRequestName(final Request request) {
+		String requestName = "";
+		if (request.getType().equals("http")) {
+			requestName = ((HTTPRequest)request).getRequestedUrl();
+		} else if (request.getType().equals("dns") && ((DNSRequest)request).getName() != null) {
+			requestName = ((DNSRequest)request).getName().toString();
+		}
+		if (requestName != null) {
+			final int index = requestName.indexOf("//");
+			if (index > 0) {
+				requestName = requestName.substring(index+2);
+				if (requestName.endsWith("/")) {
+					requestName = requestName.substring(0, requestName.length()-1);
+				}
+			}
+			if (requestName.endsWith(".")) {
+				requestName = requestName.substring(0, requestName.length()-1);
+			}
+		}
+
+		return requestName;
+	}
+
 	/**
 	 * Gets the first {@link DeliveryService} that matches the {@link Request}.
 	 * 
@@ -150,30 +173,17 @@ public class CacheRegister {
 	 *            the request to match
 	 * @return the DeliveryService that matches the request
 	 */
+	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	public DeliveryService getDeliveryService(final Request request) {
-		String requestName = "";
-		if (request.getType().equals("http")) {
-			requestName = ((HTTPRequest)request).getPath();
-		} else {
-			requestName = ((DNSRequest)request).getName().toString();
-		}
-		if (requestName.endsWith(".")) {
-			requestName = requestName.substring(0, requestName.length()-1);
-		}
+		final String requestName = getRequestName(request);
 		if (getFQDNToDeliveryServiceMap() != null && getFQDNToDeliveryServiceMap().get(requestName) != null) {
-			System.out.println("SRIJEET this time from within getDeliveryService HOLY SHIT!!!!!!! I'm HERE---------------------------------------------------------------");
 			return getFQDNToDeliveryServiceMap().get(requestName);
 		}
-		// srijeet get ds here
 		if (deliveryServiceMatchers == null) {
 			return null;
 		}
 
-		// srijeet get the request target here
 		for (final DeliveryServiceMatcher m : deliveryServiceMatchers) {
-//			System.out.println("SRIJEET!!!!!!!!!!!!!!!!!!!!!");
-//			System.out.println(m.getDeliveryService().getId());
-//			System.out.println(m.getRequestMatchers());
 			if (m.matches(request)) {
 				return m.getDeliveryService();
 			}
