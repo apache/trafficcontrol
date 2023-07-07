@@ -300,8 +300,8 @@ type ApplyMetaData struct {
 	// because of --no-unset-reval-flag or --report-only.
 	UnsetRevalFlag bool `json:"unset-reval-flag"`
 
-	// InstalledPackages is which yum packages were installed.
-	// Note this packages actually installed, not what would have been e.g.
+	// InstalledPackages is which yum packages are installed.
+	// Note this packages currently installed, not what would have been e.g.
 	// because of --install-packages=false or --report-only.
 	InstalledPackages []string `json:"installed-packages"`
 
@@ -362,6 +362,17 @@ func (md *ApplyMetaData) Format() ([]byte, error) {
 	bts = append(bts, '\n') // newline at the end of the file, so it's a valid POSIX text file
 
 	return bts, nil
+}
+
+func PackagesToMetaData(pkg map[string]bool) []string {
+	pkgs := []string{}
+	for k, v := range pkg {
+		if v {
+			pkgs = append(pkgs, k)
+		}
+	}
+	sort.Strings(pkgs)
+	return pkgs
 }
 
 // CombineOwnedFilePaths combines the owned file paths of two metadata objects.

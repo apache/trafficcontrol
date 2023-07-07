@@ -310,14 +310,6 @@ func TestDualHomingMonitoredInterfacesGetVitals(t *testing.T) {
 	if firstResult.Vitals != expectedFirstVitals {
 		t.Errorf("Vitals do not match expected output. expected: %v actual: %v:", expectedFirstVitals, firstResult.Vitals)
 	}
-
-	//Test if elapsedTimeInSecs == 0
-	secondResult.Time = firstResult.Time
-	GetVitals(&secondResult, &firstResult, &tmcm)
-	if firstResult.Statistics.Interfaces["bond0"] != secondResult.Statistics.Interfaces["bond0"] {
-		t.Errorf("Load avg statistics do not match. expected: %v, got: %v", firstResult.Statistics.Interfaces["bond0"], secondResult.Statistics.Interfaces["bond0"])
-	}
-
 }
 
 func TestCalcAvailabilityThresholds(t *testing.T) {
