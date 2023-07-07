@@ -69,13 +69,15 @@ To configure OAuth login:
 
 	.. table:: OAuth Configuration Property Definitions In cdn.conf
 
-		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
-		| Name                     | Type               | Description                                                                                                     |
-		+==========================+====================+=================================================================================================================+
-		| whitelisted_oauth_urls   | Array of strings   | List of whitelisted URLs for the JSON public key set returned by OAuth provider.  Can contain ``*`` wildcards.  |
-		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
-		| oauth_client_secret      | string             | Client secret registered with OAuth provider to verify client, passed in with `client_secret` parameter         |
-		+--------------------------+--------------------+-----------------------------------------------------------------------------------------------------------------+
+		+--------------------------+--------------------+---------------------------------------------------------------------------------------------------------------------+
+		| Name                     | Type               | Description                                                                                                         |
+		+==========================+====================+=================================================================================================================+++++
+		| whitelisted_oauth_urls   | Array of strings   | List of whitelisted URLs for the JSON public key set returned by OAuth provider.  Can contain ``*`` wildcards.      |
+		+--------------------------+--------------------+---------------------------------------------------------------------------------------------------------------------+
+		| oauth_client_secret      | string             | Client secret registered with OAuth provider to verify client, passed in with `oauth_client_secret` parameter       |
+		+--------------------------+--------------------+---------------------------------------------------------------------------------------------------------------------+
+		| oauth_user_attribute     | string             | Client username registered with OAuth provider to verify client, passed in with `oauth_user_attribute` parameter    |
+        +--------------------------+--------------------+---------------------------------------------------------------------------------------------------------------------+
 
 
 	.. code-block:: json
@@ -85,7 +87,8 @@ To configure OAuth login:
 			"traffic_ops_golang": {
 				"whitelisted_oauth_urls": [
 					"oauth.example.com",
-					"*.example.com"
+					"*.example.com",
+					"username@email.com"
 				],
 				"oauth_client_secret": "secret"
 			}

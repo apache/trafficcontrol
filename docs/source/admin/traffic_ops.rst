@@ -428,6 +428,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 	:log_location_warning: This optional field, if specified, should either be the location of a file to which warning-level output will be logged, or one of the special strings ``"stdout"`` which indicates that STDOUT should be used, ``"stderr"`` which indicates that STDERR should be used or ``"null"`` which indicates that no output of this level should be generated. An empty string (``""``) and literally ``null`` are equivalent to ``"null"``. Default if not specified is ``"null"``.
 	:max_db_connections: An optional limit on the number of allowed concurrent connections to the Traffic Ops Database. If it is less than or equal to zero, there is no limit. Default if not specified is zero.
 	:oauth_client_secret: An optional secret string to be shared with OAuth-capable clients attempting to authenticate via OAuth. The default behavior if this is not defined - or is an empty string (``""``) or ``null`` is to disallow authentication via OAuth.
+	:oauth_user_attribute: An optional username string to be shared with OAuth-capable clients attempting to authenticate via OAuth. The default behavior if this is not defined - or is an empty string (``""``) or ``null`` is to disallow authentication via OAuth.
 
 		.. warning:: OAuth support in Traffic Ops is still in its infancy, so most users are advised to avoid defining this field without good cause.
 
