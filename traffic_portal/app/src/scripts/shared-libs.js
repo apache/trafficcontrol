@@ -52,3 +52,6 @@ require('jquery-flot-stack');
 require('jquery-flot-time');
 require('jquery-flot-tooltip');
 require('jquery-flot-axislabels');
+
+/** @typedef { import("node-forge") } forge */
+window.forge = require("node-forge");

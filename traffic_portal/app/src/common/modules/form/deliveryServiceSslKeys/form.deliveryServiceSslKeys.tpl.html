@@ -21,12 +21,15 @@ under the License.
     <div class="x_title">
         <ol class="breadcrumb pull-left">
             <li><a ng-click="navigateToPath('/delivery-services')">Delivery Services</a></li>
-            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?dsType=' + deliveryService.type)">{{deliveryService.xmlId}}</a></li>
+            <li>
+                <a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?dsType=' + deliveryService.type)">{{deliveryService.xmlId}}</a>
+            </li>
             <li class="active">SSL keys</li>
         </ol>
         <div class="pull-right" role="group">
             <div class="btn-group" role="group" uib-dropdown is-open="more.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
+                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true"
+                        aria-expanded="false">
                     More&nbsp;
                     <span class="caret"></span>
                 </button>
@@ -39,69 +42,112 @@ under the License.
         <div class="clearfix"></div>
     </div>
     <div class="x_content">
-        <br>
-        <form name="dsSslKeyForm" class="form-horizontal form-label-left" novalidate>
-            <div class="form-group">
-                <label for="version" class="control-label col-md-2 col-sm-2 col-xs-12">Version</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="version" name="version" type="text" class="form-control" ng-model="sslKeys.version" readonly>
-                </div>
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" ng-class="{active: navState === 0 }">
+                <a data-toggle="tab" ng-click="updateState(0)">Stored</a>
+            </li>
+            <li role="presentation" ng-class="{active: navState === 1 }">
+                <a data-toggle="tab" ng-click="updateState(1)">Processed</a>
+            </li>
+        </ul>
+        <br >
+        <div class="tab-content">
+            <div class="tab-pane" role="tabpanel" ng-class="{show: navState === 0 }">
+                <form name="dsSslKeyForm" class="form-horizontal form-label-left" novalidate>
+                    <div class="form-group">
+                        <label for="version" class="control-label col-md-2 col-sm-2 col-xs-12">Version</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="version" name="version" type="text" class="form-control" ng-model="sslKeys.version"
+                                   readonly>
+                        </div>
+                    </div>
+                    <div class="form-group"
+                         ng-class="{'has-error': hasError(dsSslKeyForm.hostname), 'has-feedback': hasError(dsSslKeyForm.hostname)}">
+                        <label for="hostname" class="control-label col-md-2 col-sm-2 col-xs-12">Common Name *</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input id="hostname" name="hostname" type="text" class="form-control" ng-model="sslKeys.hostname"
+                                   required autofocus>
+                            <small class="input-error"
+                                   ng-show="hasPropertyError(dsSslKeyForm.hostname, 'required')">Required</small>
+                            <span ng-show="hasError(dsSslKeyForm.hostname)" class="form-control-feedback"><i
+                                    class="fa fa-times"></i></span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiration" class="control-label col-md-2 col-sm-2 col-xs-12">Expiration</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <output name="expiration" class="form-control">{{formattedExpiration}}</output>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sans" class="control-label col-md-2 col-sm-2 col-xs-12">SANs</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <output name="sans" class="form-control">{{sans}}</output>
+                        </div>
+                    </div>
+                    <div class="form-group"
+                         ng-class="{'has-error': hasError(dsSslKeyForm.authType), 'has-feedback': hasError(dsSslKeyForm.authType)}">
+                        <label for="authType" class="control-label col-md-2 col-sm-2 col-xs-12">Certificate Source (Self Signed,
+                            CA, etc) *</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <select id="authType" name="authType" type="text" class="form-control" ng-model="acmeProvider"
+                                    ng-options="acmeProviderOption as acmeProviderOption for acmeProviderOption in acmeProviders"
+                                    ng-change="updateProvider()" required></select>
+                            <small class="input-error"
+                                   ng-show="hasPropertyError(dsSslKeyForm.authType, 'required')">Required</small>
+                            <span ng-show="hasError(dsSslKeyForm.authType)" class="form-control-feedback"><i
+                                    class="fa fa-times"></i></span>
+                        </div>
+                    </div>
+                    <div class="form-group"
+                         ng-class="{'has-error': hasError(dsSslKeyForm.privateKey), 'has-feedback': hasError(dsSslKeyForm.privateKey)}">
+                        <label for="privateKey" class="control-label col-md-2 col-sm-2 col-xs-12">Private Key *</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea id="privateKey" name="privateKey" type="text" class="form-control private-text"
+                              ng-model="sslKeys.certificate.key" rows="25" required></textarea>
+                            <small class="input-error"
+                                   ng-show="hasPropertyError(dsSslKeyForm.privateKey, 'required')">Required</small>
+                            <span ng-show="hasError(dsSslKeyForm.privateKey)" class="form-control-feedback"><i
+                                    class="fa fa-times"></i></span>
+                        </div>
+                    </div>
+                    <div class="form-group"
+                         ng-class="{'has-error': hasError(dsSslKeyForm.certificateSigningRequest), 'has-feedback': hasError(dsSslKeyForm.certificateSigningRequest)}"
+                         ng-if="sslKeys.authType !== 'Lets Encrypt'">
+                        <label for="certificateSigningRequest" class="control-label col-md-2 col-sm-2 col-xs-12">Certificate
+                            Signing Request *</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea id="certificateSigningRequest" name="certificateSigningRequest" type="text"
+                              class="form-control" ng-model="sslKeys.certificate.csr" rows="25"
+                              ng-required="sslKeys.authType !== 'Lets Encrypt'"></textarea>
+                            <small class="input-error"
+                                   ng-show="hasPropertyError(dsSslKeyForm.certificateSigningRequest, 'required')">Required</small>
+                            <span ng-show="hasError(dsSslKeyForm.certificateSigningRequest)" class="form-control-feedback"><i
+                                    class="fa fa-times"></i></span>
+                        </div>
+                    </div>
+                    <div class="form-group"
+                         ng-class="{'has-error': hasError(dsSslKeyForm.certificate), 'has-feedback': hasError(dsSslKeyForm.certificate)}">
+                        <label for="certificate" class="control-label col-md-2 col-sm-2 col-xs-12">Certificate *</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                    <textarea id="certificate" name="certificate" type="text" class="form-control"
+                              ng-model="sslKeys.certificate.crt" rows="25" required></textarea>
+                            <small class="input-error"
+                                   ng-show="hasPropertyError(dsSslKeyForm.certificate, 'required')">Required</small>
+                            <span ng-show="hasError(dsSslKeyForm.certificate)" class="form-control-feedback"><i
+                                    class="fa fa-times"></i></span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success"
+                                ng-disabled="dsSslKeyForm.$pristine || dsSslKeyForm.$invalid" ng-click="save()">Update Keys
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.hostname), 'has-feedback': hasError(dsSslKeyForm.hostname)}">
-                <label for="hostname" class="control-label col-md-2 col-sm-2 col-xs-12">Common Name *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <input id="hostname" name="hostname" type="text" class="form-control" ng-model="sslKeys.hostname" required autofocus>
-                    <small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.hostname, 'required')">Required</small>
-                    <span ng-show="hasError(dsSslKeyForm.hostname)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
+            <div class="tab-pane" role="tabpanel" ng-class="{show: navState === 1 }">
+                <cert-viewer-controller chain="{{sslKeys.certificate.crt}}"></cert-viewer-controller>
             </div>
-			<div class="form-group">
-				<label for="expiration" class="control-label col-md-2 col-sm-2 col-xs-12">Expiration</label>
-				<div class="col-md-10 col-sm-10 col-xs-12">
-					<output name="expiration" class="form-control">{{formattedExpiration}}</output>
-				</div>
-			</div>
-            <div class="form-group">
-                <label for="sans" class="control-label col-md-2 col-sm-2 col-xs-12">SANs</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <output name="sans" class="form-control">{{sans}}</output>
-                </div>
-            </div>
-			<div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.authType), 'has-feedback': hasError(dsSslKeyForm.authType)}">
-				<label for="authType" class="control-label col-md-2 col-sm-2 col-xs-12">Certificate Source (Self Signed, CA, etc) *</label>
-				<div class="col-md-10 col-sm-10 col-xs-12">
-					<select id="authType" name="authType" type="text" class="form-control" ng-model="acmeProvider" ng-options="acmeProviderOption as acmeProviderOption for acmeProviderOption in acmeProviders" ng-change="updateProvider()" required></select>
-					<small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.authType, 'required')">Required</small>
-					<span ng-show="hasError(dsSslKeyForm.authType)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-				</div>
-			</div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.privateKey), 'has-feedback': hasError(dsSslKeyForm.privateKey)}">
-                <label for="privateKey" class="control-label col-md-2 col-sm-2 col-xs-12">Private Key *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="privateKey" name="privateKey" type="text" class="form-control private-text" ng-model="sslKeys.certificate.key" rows="25" required></textarea>
-                    <small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.privateKey, 'required')">Required</small>
-                    <span ng-show="hasError(dsSslKeyForm.privateKey)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.certificateSigningRequest), 'has-feedback': hasError(dsSslKeyForm.certificateSigningRequest)}" ng-if="sslKeys.authType !== 'Lets Encrypt'">
-                <label for="certificateSigningRequest" class="control-label col-md-2 col-sm-2 col-xs-12">Certificate Signing Request *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="certificateSigningRequest" name="certificateSigningRequest" type="text" class="form-control" ng-model="sslKeys.certificate.csr" rows="25" ng-required="sslKeys.authType !== 'Lets Encrypt'"></textarea>
-                    <small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.certificateSigningRequest, 'required')">Required</small>
-                    <span ng-show="hasError(dsSslKeyForm.certificateSigningRequest)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
-            <div class="form-group" ng-class="{'has-error': hasError(dsSslKeyForm.certificate), 'has-feedback': hasError(dsSslKeyForm.certificate)}">
-                <label for="certificate" class="control-label col-md-2 col-sm-2 col-xs-12">Certificate *</label>
-                <div class="col-md-10 col-sm-10 col-xs-12">
-                    <textarea id="certificate" name="certificate" type="text" class="form-control" ng-model="sslKeys.certificate.crt" rows="25" required></textarea>
-                    <small class="input-error" ng-show="hasPropertyError(dsSslKeyForm.certificate, 'required')">Required</small>
-                    <span ng-show="hasError(dsSslKeyForm.certificate)" class="form-control-feedback"><i class="fa fa-times"></i></span>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="dsSslKeyForm.$pristine || dsSslKeyForm.$invalid" ng-click="save()">Update Keys</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
