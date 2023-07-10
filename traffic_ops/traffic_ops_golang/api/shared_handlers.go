@@ -700,6 +700,7 @@ func Wrap(h Handler, requiredParams, intParams []string) http.HandlerFunc {
 			return
 		}
 		defer inf.Close()
+		inf.w = w
 
 		errCode, userErr, sysErr = h(inf)
 		if userErr != nil || sysErr != nil {

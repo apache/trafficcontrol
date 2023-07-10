@@ -515,6 +515,7 @@ type APIInfo struct {
 	Vault     trafficvault.TrafficVault
 	Config    *config.Config
 	request   *http.Request
+	w         http.ResponseWriter
 }
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
@@ -688,6 +689,81 @@ func (inf *APIInfo) Close() {
 	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
 	}
+}
+
+// WriteOKResponse writes a 200 OK response with the given object as the
+// 'response' property of the response body.
+//
+// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// Wrap - ing a Handler (yet).
+func (inf APIInfo) WriteOKResponse(resp any) (int, error, error) {
+	WriteResp(inf.w, inf.request, resp)
+	return http.StatusOK, nil, nil
+}
+
+// WriteOKResponseWithSummary writes a 200 OK response with the given object as
+// the 'response' property of the response body, and the given count as the
+// `count` property of the response's summary.
+//
+// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// Wrap - ing a Handler (yet).
+//
+// Deprecated: Summary sections on responses were intended to cover up for a
+// deficiency in jQuery-based tables on the front-end, so now that we aren't
+// using those anymore it serves no purpose.
+func (inf APIInfo) WriteOKResponseWithSummary(resp any, count uint64) (int, error, error) {
+	WriteRespWithSummary(inf.w, inf.request, resp, count)
+	return http.StatusOK, nil, nil
+}
+
+// WriteNotModifiedResponse writes a 304 Not Modified response with the given
+// object as the 'response' property of the response body.
+//
+// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// Wrap - ing a Handler (yet).
+func (inf APIInfo) WriteNotModifiedResponse(resp any) (int, error, error) {
+	inf.w.WriteHeader(http.StatusNotModified)
+	WriteResp(inf.w, inf.request, resp)
+	return http.StatusNotModified, nil, nil
+}
+
+// WriteSuccessResponse writes the given response object as the `response`
+// property of the response body, with the accompanying message as a
+// success-level Alert.
+func (inf APIInfo) WriteSuccessResponse(resp any, message string) (int, error, error) {
+	WriteAlertsObj(inf.w, inf.request, http.StatusOK, tc.CreateAlerts(tc.SuccessLevel, message), resp)
+	return http.StatusOK, nil, nil
+}
+
+// WriteCreatedResponse writes the given response object as the `response`
+// property of the response body of a 201 created response, with the
+// accompanying message as a success-level Alert. It also sets the Location
+// header to the given path. This will be automatically prefaced with the
+// correct path to the API version the client requested.
+func (inf APIInfo) WriteCreatedResponse(resp any, message, path string) (int, error, error) {
+	inf.w.Header().Set(rfc.Location, strings.Join([]string{"/api", inf.Version.String(), strings.TrimPrefix(path, "/")}, "/"))
+	inf.w.WriteHeader(http.StatusCreated)
+	WriteAlertsObj(inf.w, inf.request, http.StatusCreated, tc.CreateAlerts(tc.SuccessLevel, message), resp)
+	return http.StatusCreated, nil, nil
+}
+
+// RequestHeaders returns the headers sent by the client in the API request.
+func (inf APIInfo) RequestHeaders() http.Header {
+	return inf.request.Header
+}
+
+// SetLastModified sets the "last modified" header on the response writer.
+//
+// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// Wrap - ing a Handler (yet).
+func (inf APIInfo) SetLastModified(t time.Time) {
+	inf.w.Header().Set(rfc.LastModified, FormatLastModified(t))
+}
+
+// DecodeBody reads the client request's body and attempts to decode it into the
+// provided reference.
+func (inf APIInfo) DecodeBody(ref any) error {
+	return json.NewDecoder(inf.request.Body).Decode(ref)
 }
 
 // SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
