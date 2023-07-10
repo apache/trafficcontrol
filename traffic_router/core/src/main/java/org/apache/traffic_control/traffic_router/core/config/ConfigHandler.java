@@ -475,7 +475,7 @@ public class ConfigHandler {
 			deliveryService.setDns(isDns);
 			deliveryServiceMap.put(deliveryServiceId, deliveryService);
 			fqdnToDeliveryService.put(deliveryService.getRoutingName() + "." + deliveryService.getDomain(), deliveryService);
-			fqdnToDeliveryService.put("_" + "." + deliveryService.getDomain(), deliveryService);
+			fqdnToDeliveryService.put("_." + deliveryService.getDomain(), deliveryService);
 			cacheRegister.setFQDNToDeliveryServiceMap(fqdnToDeliveryService);
 		}
 

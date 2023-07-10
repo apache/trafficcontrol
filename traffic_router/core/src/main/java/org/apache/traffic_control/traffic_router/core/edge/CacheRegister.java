@@ -22,8 +22,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
-import org.apache.traffic_control.traffic_router.core.request.DNSRequest;
-import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
 import org.apache.traffic_control.traffic_router.core.request.Request;
 
 @SuppressWarnings("PMD.LooseCoupling")
