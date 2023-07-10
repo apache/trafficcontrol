@@ -459,7 +459,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		var result map[string]interface{}
 		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
-			log.Warnf("Error parsing JSON response from oAuth: %s", err)
+			log.Warnf("Error parsing JSON response from OAuth: %s", err)
 			encodedToken = buf.String()
 		} else if _, ok := result[rfc.IDToken]; !ok {
 			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
@@ -499,14 +499,19 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			}
 		}
 
-		var userId string
+		var userIDInterface interface{}
+		var userID string
+		var ok bool
 		if cfg.OAuthUserAttribute != "" {
 			attributes := decodedToken.PrivateClaims()
-			userId = attributes[cfg.OAuthUserAttribute].(string)
+			if userIDInterface, ok = attributes[cfg.OAuthUserAttribute]; !ok {
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Non-existent OAuth attribute : %s", cfg.OAuthUserAttribute))
+			}
+			userID = userIDInterface.(string)
 		} else {
-			userId = decodedToken.Subject()
+			userID = decodedToken.Subject()
 		}
-		form.Username = userId
+		form.Username = userID
 
 		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 		defer cancelTx()
@@ -526,7 +531,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
 				return
 			}
-			httpCookie := tocookie.GetCookie(userId, defaultCookieDuration, cfg.Secrets[0])
+			httpCookie := tocookie.GetCookie(userID, defaultCookieDuration, cfg.Secrets[0])
 			http.SetCookie(w, httpCookie)
 			resp = struct {
 				tc.Alerts
