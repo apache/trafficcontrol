@@ -483,17 +483,29 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		decodedToken, err := jwt.Parse(
+		var decodedToken jwt.Token
+		if decodedToken, err = jwt.Parse(
 			[]byte(encodedToken),
 			jwt.WithVerifyAuto(true),
 			jwt.WithJWKSetFetcher(jwksFetcher),
-		)
-		if err != nil {
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Error decoding token with message: %w", err))
-			return
+		); err != nil {
+			if decodedToken, err = jwt.Parse(
+				[]byte(encodedToken),
+				jwt.WithVerifyAuto(false),
+				jwt.WithJWKSetFetcher(jwksFetcher),
+			); err != nil {
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("error decoding token with message: %w", err))
+				return
+			}
 		}
 
-		userId := decodedToken.Subject()
+		var userId string
+		if cfg.OAuthUserAttribute != "" {
+			attributes := decodedToken.PrivateClaims()
+			userId = attributes[cfg.OAuthUserAttribute].(string)
+		} else {
+			userId = decodedToken.Subject()
+		}
 		form.Username = userId
 
 		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
