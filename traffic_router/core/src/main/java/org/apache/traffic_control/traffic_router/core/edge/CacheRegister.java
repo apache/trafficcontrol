@@ -143,29 +143,6 @@ public class CacheRegister {
 		this.deliveryServiceMatchers = matchers;
 	}
 
-	private String getRequestName(final Request request) {
-		String requestName = "";
-		if (request.getType().equals("http")) {
-			requestName = ((HTTPRequest)request).getRequestedUrl();
-		} else if (request.getType().equals("dns") && ((DNSRequest)request).getName() != null) {
-			requestName = ((DNSRequest)request).getName().toString();
-		}
-		if (requestName != null) {
-			final int index = requestName.indexOf("//");
-			if (index > 0) {
-				requestName = requestName.substring(index+2);
-				if (requestName.endsWith("/")) {
-					requestName = requestName.substring(0, requestName.length()-1);
-				}
-			}
-			if (requestName.endsWith(".")) {
-				requestName = requestName.substring(0, requestName.length()-1);
-			}
-		}
-
-		return requestName;
-	}
-
 	/**
 	 * Gets the first {@link DeliveryService} that matches the {@link Request}.
 	 * 
@@ -173,9 +150,8 @@ public class CacheRegister {
 	 *            the request to match
 	 * @return the DeliveryService that matches the request
 	 */
-	@SuppressWarnings({"PMD.CyclomaticComplexity"})
 	public DeliveryService getDeliveryService(final Request request) {
-		final String requestName = getRequestName(request);
+		final String requestName = request.getHostname();
 		if (getFQDNToDeliveryServiceMap() != null && getFQDNToDeliveryServiceMap().get(requestName) != null) {
 			return getFQDNToDeliveryServiceMap().get(requestName);
 		}
