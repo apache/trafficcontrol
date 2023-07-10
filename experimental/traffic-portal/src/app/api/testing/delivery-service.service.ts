@@ -16,7 +16,8 @@ import type {
 	Capacity,
 	Health,
 	RequestDeliveryService,
-	ResponseDeliveryService, ResponseDeliveryServiceSSLKey,
+	ResponseDeliveryService,
+	ResponseDeliveryServiceSSLKey,
 	SteeringConfiguration,
 	TypeFromResponse
 } from "trafficops-types";
