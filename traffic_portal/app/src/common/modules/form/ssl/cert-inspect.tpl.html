@@ -1,0 +1,47 @@
+<!--
+  ~  Licensed under the Apache License, Version 2.0 (the "License");
+  ~  you may not use this file except in compliance with the License.
+  ~  You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~  Unless required by applicable law or agreed to in writing, software
+  ~  distributed under the License is distributed on an "AS IS" BASIS,
+  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  See the License for the specific language governing permissions and
+  ~  limitations under the License.
+  ~
+  -->
+<div class="x_panel">
+    <div class="x_title">
+        <ol class="breadcrumb pull-left">
+            <li class="active">Inspect Certificate</li>
+        </ol>
+        <div class="clearfix"></div>
+    </div>
+    <div class="x_content">
+        <ul class="nav nav-tabs" role="navlist">
+            <li role="presentation" ng-class="{active: navState === 0}">
+                <a data-toggle="tab" ng-click="updateState(0)">Upload</a>
+            </li>
+            <li role="presentation" ng-class="{active: navState === 1, disabled: loadCert === ''}">
+                <a data-toggle="tab" ng-click="updateState(1)">Processed</a>
+            </li>
+        </ul>
+        <br />
+        <div class="tab-content">
+            <div class="tab-pane" role="tabpanel" ng-class="{show: navState === 0}">
+                <div>
+                    <textarea id="fileContent" name="fileContent" ng-model="inputCert" rows="25" cols="25" class="form-control" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success"
+                            ng-disabled="inputCert === ''" ng-click="load()">Load</button>
+                </div>
+            </div>
+            <div class="tab-pane" role="tabpanel" ng-class="{show: navState === 1}">
+                <cert-viewer-controller ng-if="loadCert !== ''" chain="{{loadCert}}"></cert-viewer-controller>
+            </div>
+        </div>
+    </div>
+</div>

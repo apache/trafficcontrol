@@ -263,7 +263,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:     api.AccessToken,
+			Name:     rfc.AccessToken,
 			Value:    string(jwtSigned),
 			Path:     "/",
 			MaxAge:   httpCookie.MaxAge,
@@ -459,17 +459,17 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		var result map[string]interface{}
 		if err := json.Unmarshal(buf.Bytes(), &result); err != nil {
-			log.Warnf("Error parsing JSON response from oAuth: %s", err)
+			log.Warnf("Error parsing JSON response from OAuth: %s", err)
 			encodedToken = buf.String()
-		} else if _, ok := result[api.AccessToken]; !ok {
+		} else if _, ok := result[rfc.IDToken]; !ok {
 			sysErr := fmt.Errorf("Missing access token in response: %s\n", buf.String())
 			usrErr := errors.New("Bad response from OAuth2.0 provider")
 			api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
 			return
 		} else {
-			switch t := result[api.AccessToken].(type) {
+			switch t := result[rfc.IDToken].(type) {
 			case string:
-				encodedToken = result[api.AccessToken].(string)
+				encodedToken = result[rfc.IDToken].(string)
 			default:
 				sysErr := fmt.Errorf("Incorrect type of access_token! Expected 'string', got '%v'\n", t)
 				usrErr := errors.New("Bad response from OAuth2.0 provider")
@@ -483,18 +483,35 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			return
 		}
 
-		decodedToken, err := jwt.Parse(
+		var decodedToken jwt.Token
+		if decodedToken, err = jwt.Parse(
 			[]byte(encodedToken),
 			jwt.WithVerifyAuto(true),
 			jwt.WithJWKSetFetcher(jwksFetcher),
-		)
-		if err != nil {
-			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Error decoding token with message: %w", err))
-			return
+		); err != nil {
+			if decodedToken, err = jwt.Parse(
+				[]byte(encodedToken),
+				jwt.WithVerifyAuto(false),
+				jwt.WithJWKSetFetcher(jwksFetcher),
+			); err != nil {
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("error decoding token with message: %w", err))
+				return
+			}
 		}
 
-		userId := decodedToken.Subject()
-		form.Username = userId
+		var userIDInterface interface{}
+		var userID string
+		var ok bool
+		if cfg.OAuthUserAttribute != "" {
+			attributes := decodedToken.PrivateClaims()
+			if userIDInterface, ok = attributes[cfg.OAuthUserAttribute]; !ok {
+				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Non-existent OAuth attribute : %s", cfg.OAuthUserAttribute))
+			}
+			userID = userIDInterface.(string)
+		} else {
+			userID = decodedToken.Subject()
+		}
+		form.Username = userID
 
 		dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second)
 		defer cancelTx()
@@ -514,7 +531,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
 				return
 			}
-			httpCookie := tocookie.GetCookie(userId, defaultCookieDuration, cfg.Secrets[0])
+			httpCookie := tocookie.GetCookie(userID, defaultCookieDuration, cfg.Secrets[0])
 			http.SetCookie(w, httpCookie)
 			resp = struct {
 				tc.Alerts
