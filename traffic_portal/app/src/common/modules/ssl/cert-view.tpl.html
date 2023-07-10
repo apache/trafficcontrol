@@ -1,0 +1,99 @@
+<!--
+  ~  Licensed under the Apache License, Version 2.0 (the "License");
+  ~  you may not use this file except in compliance with the License.
+  ~  You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~  Unless required by applicable law or agreed to in writing, software
+  ~  distributed under the License is distributed on an "AS IS" BASIS,
+  ~  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  See the License for the specific language governing permissions and
+  ~  limitations under the License.
+  ~
+  -->
+
+<form name="certViewerForm" class="form-horizontal form-label-left" novalidate>
+    <div class="form-group">
+        <label for="certOrder" class="control-label col-md-2 col-sm-2 col-xs-12">Detected Order</label>
+        <div class="col-md-10 col-sm-10 col-xs-12">
+            <input readonly name="certOrder" id="certOrder" type="text" class="form-control"
+                   ng-model="$ctrl.certOrder"/>
+        </div>
+    </div>
+    <hr/>
+    <fieldset ng-repeat="cert in $ctrl.certChain">
+        <legend ng-click="cert.hidden = !cert.hidden">
+            {{cert.type}}
+            <i class="fa" ng-class="cert.hidden ? 'fa-caret-up' : 'fa-caret-down'"></i>
+        </legend>
+        <div ng-show="!cert.hidden">
+            <cert-author-controller author-type="Issuer" author="cert.parsedIssuer"></cert-author-controller>
+            <cert-author-controller author-type="Subject" author="cert.parsedSubject"></cert-author-controller>
+            <fieldset>
+                <legend ng-click="cert.validityHidden = !cert.validityHidden">
+                    Validity
+                    <i class="fa" ng-class="cert.validityHidden ? 'fa-caret-up' : 'fa-caret-down'"></i>
+                </legend>
+                <div ng-show="!cert.validityHidden">
+                    <div class="form-group">
+                        <label for="validBefore" class="control-label col-md-2 col-sm-2 col-xs-12">Not Valid Before</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input readonly name="validBefore" id="validBefore" type="text" class="form-control"
+                                   ng-model="cert.validity.notBefore"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="validAfter" class="control-label col-md-2 col-sm-2 col-xs-12">Not Valid After</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input readonly name="validAfter" id="validAfter" type="text" class="form-control"
+                                   ng-model="cert.validity.notAfter"/>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend ng-click="cert.miscHidden = !cert.miscHidden">
+                    Misc
+                    <i class="fa" ng-class="cert.miscHidden ? 'fa-caret-up' : 'fa-caret-down'"></i>
+                </legend>
+                <div ng-show="!cert.miscHidden">
+                    <div class="form-group">
+                        <label for="sigType" class="control-label col-md-2 col-sm-2 col-xs-12">Signature Algorithm</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input readonly name="sigType" id="sigType" type="text" class="form-control"
+                                   ng-model="cert.oidName"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="version" class="control-label col-md-2 col-sm-2 col-xs-12">Version</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input readonly name="version" id="version" type="text" class="form-control"
+                                   ng-model="cert.version"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="serial" class="control-label col-md-2 col-sm-2 col-xs-12">Serial Number</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input readonly name="serial" id="serial" type="text" class="form-control"
+                                   ng-model="cert.serialNumber"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sha1" class="control-label col-md-2 col-sm-2 col-xs-12">SHA-1</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input readonly name="sha1" id="sha1" type="text" class="form-control" ng-model="cert.sha1"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="sha256" class="control-label col-md-2 col-sm-2 col-xs-12">SHA-256</label>
+                        <div class="col-md-10 col-sm-10 col-xs-12">
+                            <input readonly name="sha256" id="sha256" type="text" class="form-control"
+                                   ng-model="cert.sha256"/>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </fieldset>
+</form>
