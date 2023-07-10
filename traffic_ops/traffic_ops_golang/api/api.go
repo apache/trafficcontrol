@@ -215,6 +215,9 @@ func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode in
 			log.Errorln("rolling back transaction: " + err.Error())
 		}
 	}
+
+	w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
+	w.WriteHeader(statusCode)
 	handleSimpleErr(w, r, statusCode, userErr, sysErr)
 }
 
