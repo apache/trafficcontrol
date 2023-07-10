@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { Component, OnInit, ViewChild } from "@angular/core";
+import { FormControl } from "@angular/forms";
 import { MatTabGroup } from "@angular/material/tabs";
 import { ActivatedRoute } from "@angular/router";
 import * as forge from "node-forge";
@@ -56,6 +57,7 @@ export class CertViewerComponent implements OnInit {
 
 	public certChain: Array<AugmentedCertificate> = [];
 	public certOrder: CertOrder | undefined;
+	public privateKeyFormControl = new FormControl("");
 
 	@ViewChild("matTab") public matTab!: MatTabGroup;
 	constructor(
@@ -178,6 +180,7 @@ export class CertViewerComponent implements OnInit {
 		this.cert = await this.dsAPI.getSSLKeys(ID);
 		this.dsCert = true;
 		this.inputCert = this.cert.certificate.crt;
+		this.privateKeyFormControl.setValue(this.cert.certificate.key);
 		this.process();
 	}
 
