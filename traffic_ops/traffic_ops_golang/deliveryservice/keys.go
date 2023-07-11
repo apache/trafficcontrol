@@ -136,7 +136,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
 // GetSSlKeyExpirationInformation gets expiration information for all SSL certificates.
@@ -539,6 +539,8 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 		block := &pem.Block{Type: "CERTIFICATE", Bytes: link.Raw}
 		pemEncodedChain += string(pem.EncodeToMemory(block))
 	}
+	pemCertificate = strings.TrimSpace(pemCertificate)
+	pemEncodedChain = strings.TrimSpace(pemEncodedChain)
 
 	if len(pemEncodedChain) < 1 {
 		return "", "", false, false, false, errors.New("invalid empty certificate chain in request")

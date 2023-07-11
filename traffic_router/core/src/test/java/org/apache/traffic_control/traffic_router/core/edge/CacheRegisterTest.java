@@ -15,13 +15,23 @@
 
 package org.apache.traffic_control.traffic_router.core.edge;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryService;
 import org.apache.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher;
+import org.apache.traffic_control.traffic_router.core.request.DNSRequest;
 import org.apache.traffic_control.traffic_router.core.request.HTTPRequest;
 import org.apache.traffic_control.traffic_router.core.request.Request;
+import org.apache.traffic_control.traffic_router.core.util.JsonUtilsException;
 import org.junit.Before;
 import org.junit.Test;
+import org.xbill.DNS.Name;
+import org.xbill.DNS.TextParseException;
+import org.xbill.DNS.Type;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeSet;
 
 import static org.apache.traffic_control.traffic_router.core.ds.DeliveryServiceMatcher.Type.HOST;
@@ -89,5 +99,76 @@ public class CacheRegisterTest {
 		httpRequest.setHostname("foo.service01-kabletown.com");
 		httpRequest.setPath("foo/abcde/bar");
 		assertThat(cacheRegister.getDeliveryService(httpRequest), nullValue());
+	}
+
+	@Test
+	public void itReturnsDeliveryServiceFromFQDNMapForHTTPRequest() throws JsonUtilsException {
+		String requestName = "http://foo.service01.kabletown.com/";
+		HTTPRequest httpRequest = new HTTPRequest();
+		httpRequest.setHostname("foo.service01.kabletown.com");
+		httpRequest.setRequestedUrl(requestName);
+		Map<String, DeliveryService> map = new HashMap<>();
+
+		ObjectNode node = JsonNodeFactory.instance.objectNode();
+		ArrayNode domainNode = node.putArray("domains");
+		domainNode.add("kabletown.com");
+		node.put("routingName","foo");
+		node.put("coverageZoneOnly", false);
+		DeliveryService ds = new DeliveryService("service01", node);
+
+		map.put("foo.service01.kabletown.com", ds);
+		map.put("_.service01.kabletown.com", ds);
+		cacheRegister.setFQDNToDeliveryServiceMap(map);
+
+		DeliveryService answer = cacheRegister.getDeliveryService(httpRequest);
+		assertThat("FQDNToDeliveryServiceMap was expected to have the key foo.service01.kabletown.com",
+				cacheRegister.getFQDNToDeliveryServiceMap().containsKey("foo.service01.kabletown.com"));
+		assertThat("Returned Delivery Service was expected to have the ID service01",
+				answer.getId().equals("service01"));
+
+
+		httpRequest.setRequestedUrl("http://_.service01.kabletown.com");
+		answer = cacheRegister.getDeliveryService(httpRequest);
+		assertThat("FQDNToDeliveryServiceMap was expected to have the key _.service01.kabletown.com",
+				cacheRegister.getFQDNToDeliveryServiceMap().containsKey("_.service01.kabletown.com"));
+		assertThat("Returned Delivery Service was expected to have the ID service01",
+				answer.getId().equals("service01"));
+	}
+
+	@Test
+	public void itReturnsDeliveryServiceFromFQDNMapForDNSRequest() throws JsonUtilsException, TextParseException {
+		final Name name = Name.fromString("edge.example.com.");
+		DNSRequest dnsRequest = new DNSRequest("example.com", name, Type.A);
+		dnsRequest.setClientIP("10.10.10.10");
+		dnsRequest.setHostname(name.relativize(Name.root).toString());
+
+		Map<String, DeliveryService> map = new HashMap<>();
+
+		ObjectNode node = JsonNodeFactory.instance.objectNode();
+		ArrayNode domainNode = node.putArray("domains");
+		domainNode.add("example.com");
+		node.put("routingName","edge");
+		node.put("coverageZoneOnly", false);
+		DeliveryService ds = new DeliveryService("example", node);
+
+		map.put("edge.example.com", ds);
+		map.put("_.example.com", ds);
+		cacheRegister.setFQDNToDeliveryServiceMap(map);
+
+		DeliveryService answer = cacheRegister.getDeliveryService(dnsRequest);
+		assertThat("FQDNToDeliveryServiceMap was expected to have the key edge.example.com",
+				cacheRegister.getFQDNToDeliveryServiceMap().containsKey("edge.example.com"));
+		assertThat("Returned Delivery Service was expected to have the ID example",
+				answer.getId().equals("example"));
+
+		final Name underscoreName = Name.fromString("_.example.com");
+		dnsRequest = new DNSRequest("example.com", underscoreName, Type.A);
+		dnsRequest.setClientIP("10.10.10.10");
+		dnsRequest.setHostname(name.relativize(Name.root).toString());
+		answer = cacheRegister.getDeliveryService(dnsRequest);
+		assertThat("FQDNToDeliveryServiceMap was expected to have the key _.example.com",
+				cacheRegister.getFQDNToDeliveryServiceMap().containsKey("_.example.com"));
+		assertThat("Returned Delivery Service was expected to have the ID example",
+				answer.getId().equals("example"));
 	}
 }

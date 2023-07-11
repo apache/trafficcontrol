@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#7622](https://github.com/apache/trafficcontrol/pull/7622) *Traffic Router* Added further optimization to TR's algorithm of figuring out the zone for an incoming request.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login. 
 - [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops* Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
 - [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
@@ -62,8 +63,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 - [#7586](https://github.com/apache/trafficcontrol/pull/7586) *Traffic Ops* Add permission to Operations Role to read from dnsseckeys endpoint.
 - [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
+- [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
 
 ### Fixed
+- [#7623] (https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
 - [#7608](https://github.com/apache/trafficcontrol/pull/7608) *Traffic Monitor* Use stats_over_http(plugin.system_stats.timestamp_ms) timestamp field to calculate bandwidth for TM's caches.
 - [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}
 - [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* *Traffic Ops* Fixed `ASN` V5 apis to respond with `RFC3339` date/time Format.
@@ -129,6 +132,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
 - [#7590](https://github.com/apache/trafficcontrol/issues/7590) *Traffic Control Cache Config (t3c)* Fixed issue with git detected dubious ownership in repository.
 - [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixes `types` v5 apis to respond with `RFC3339` date/time Format.
+- [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixes an issue where certificate chain validation failed based on leading or trailing whitespace.
 
 ### Removed
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
