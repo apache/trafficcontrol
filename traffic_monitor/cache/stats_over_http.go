@@ -315,11 +315,11 @@ func parseInterfaces(stats map[string]interface{}) map[string]Interface {
 					}
 					speed = int64(value.(float64))
 				case string:
-					if statVal, err := strconv.ParseInt(value.(string), 10, 64); err != nil {
+					if statVal, err := strconv.ParseUint(value.(string), 10, 64); err != nil {
 						log.Warnf("speed of interface '%s' cannot parse to int64, was '%v': %v", statParts[0], value, err)
 						continue
 					} else {
-						speed = statVal
+						speed = int64(statVal)
 					}
 				default:
 					log.Warnf("speed for interface '%s' had unrecognized type '%T'", statParts[0], t)
