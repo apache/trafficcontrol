@@ -60,7 +60,7 @@ limitations under the License.
 					</mat-form-field>
 					<mat-form-field>
 						<mat-label>Private Key</mat-label>
-						<tp-obscured-text-input [name]="'privateKey'" [formControl]="privateKeyFormControl" [disabled]="true" ></tp-obscured-text-input>
+						<textarea matInput class="private-text" name="privateKey" [(ngModel)]="cert.certificate.key" cdkAutosizeMaxRows="15" cdkTextareaAutosize></textarea>
 					</mat-form-field>
 					<mat-form-field>
 						<mat-label>Certificate Signing Request</mat-label>
