@@ -14,6 +14,7 @@ package v5
 
 import (
 	"encoding/json"
+	"net/http"
 	"strconv"
 	"strings"
 	"testing"
@@ -41,6 +42,7 @@ func TestDeliveryServicesKeys(t *testing.T) {
 		t.Run("Delete URI Signing keys for a Delivery Service", DeleteTestDeliveryServicesURISigningKeys)
 		t.Run("Delete old CDN SSL keys", DeleteCDNOldSSLKeys)
 		t.Run("Create and retrieve SSL keys for a Delivery Service", DeliveryServiceSSLKeys)
+		t.Run("Retrieve SSL keys for a Delivery Service without keys", DeliveryServiceNoSSLKeys)
 	})
 }
 
@@ -232,6 +234,28 @@ func DeleteCDNOldSSLKeys(t *testing.T) {
 
 	assert.RequireNoError(t, err, "Unable to get CDN %v SSL keys: %v", cdn.Name, err)
 	assert.RequireEqual(t, len(newCdnKeys), 1, "Expected 1 ssl keys for CDN %v, got %d instead", cdn.Name, len(newCdnKeys))
+}
+
+func DeliveryServiceNoSSLKeys(t *testing.T) {
+	cdn := createBlankCDN("testDSWithNoSSLKeysCDN", t)
+
+	opts := client.NewRequestOptions()
+	opts.QueryParameters.Set("name", "HTTP")
+	types, _, err := TOSession.GetTypes(opts)
+	assert.RequireNoError(t, err, "Unable to get Types: %v - alerts: %+v", err, types.Alerts)
+	assert.RequireGreaterOrEqual(t, len(types.Response), 1, "Expected at least one type")
+
+	customDS := getCustomDS(cdn.ID, types.Response[0].ID, "dsNoSSLKeys", "routingName", "https://test.com", "dsNoSSLKeys")
+	customDS.Protocol = util.Ptr(0)
+	resp, _, err := TOSession.CreateDeliveryService(customDS, client.RequestOptions{})
+	assert.RequireNoError(t, err, "Unexpected error creating a Delivery Service: %v - alerts: %+v", err, resp.Alerts)
+
+	ds := resp.Response
+	assert.RequireNotNil(t, ds.XMLID, "Traffic Ops returned a representation for a Delivery Service with null or undefined XMLID")
+
+	_, reqInf, err := TOSession.GetDeliveryServiceSSLKeys(ds.XMLID, client.NewRequestOptions())
+	assert.RequireNotNil(t, err, "expected error getting ssl keys, but got nothing")
+	assert.RequireEqual(t, reqInf.StatusCode, http.StatusNotFound)
 }
 
 func DeliveryServiceSSLKeys(t *testing.T) {
