@@ -380,6 +380,7 @@ func VerifySSLKeysOnDsCreationTest(t *testing.T) {
 				break
 			}
 		}
+
 		if err != nil || dsSSLKey == nil {
 			t.Fatalf("unable to get DS %s SSL key: %v", ds.XMLID, err)
 		}
