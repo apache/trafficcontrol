@@ -42,7 +42,7 @@ type TrafficControl struct {
 	Profiles                                          []tc.Profile                            `json:"profiles"`
 	Parameters                                        []tc.Parameter                          `json:"parameters"`
 	ProfileParameters                                 []tc.ProfileParameter                   `json:"profileParameters"`
-	PhysLocations                                     []tc.PhysLocation                       `json:"physLocations"`
+	PhysLocations                                     []tc.PhysLocationV5                     `json:"physLocations"`
 	Regions                                           []tc.Region                             `json:"regions"`
 	Roles                                             []tc.RoleV4                             `json:"roles"`
 	Servers                                           []tc.ServerV4                           `json:"servers"`
