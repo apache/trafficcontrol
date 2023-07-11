@@ -115,7 +115,7 @@ func getBearerToken(r *http.Request) string {
 	}
 	for _, cookie := range r.Cookies() {
 		switch cookie.Name {
-		case api.AccessToken:
+		case rfc.AccessToken:
 			return cookie.Value
 		}
 	}

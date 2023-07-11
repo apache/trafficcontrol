@@ -83,10 +83,7 @@ const (
 	TrafficVaultContextKey = "tv"
 )
 
-const (
-	MojoCookie  = "mojoCookie"
-	AccessToken = "access_token"
-)
+const MojoCookie = "mojoCookie"
 
 const influxServersQuery = `
 SELECT (host_name||'.'||domain_name) as fqdn,
@@ -1091,7 +1088,7 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 				continue
 			}
 			switch givenCookie.Name {
-			case AccessToken:
+			case rfc.AccessToken:
 				bearerCookie, readToken, err := getCookieFromAccessToken(givenCookie.Value, secret)
 				if err != nil {
 					return auth.CurrentUser{}, errors.New("unauthorized, please log in."), err, http.StatusUnauthorized
@@ -1155,7 +1152,7 @@ func GetUserFromReq(w http.ResponseWriter, r *http.Request, secret string) (auth
 		}
 
 		http.SetCookie(w, &http.Cookie{
-			Name:     AccessToken,
+			Name:     rfc.AccessToken,
 			Value:    string(jwtSigned),
 			Path:     "/",
 			MaxAge:   newCookie.MaxAge,
