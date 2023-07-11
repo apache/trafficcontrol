@@ -150,8 +150,12 @@ public class CacheRegister {
 	 */
 	public DeliveryService getDeliveryService(final Request request) {
 		final String requestName = request.getHostname();
-		if (getFQDNToDeliveryServiceMap() != null && getFQDNToDeliveryServiceMap().get(requestName) != null) {
-			return getFQDNToDeliveryServiceMap().get(requestName);
+		final Map<String, DeliveryService> map = getFQDNToDeliveryServiceMap();
+		if (map != null) {
+			final DeliveryService ds = map.get(requestName);
+			if (ds != null) {
+				return ds;
+			}
 		}
 		if (deliveryServiceMatchers == null) {
 			return null;
