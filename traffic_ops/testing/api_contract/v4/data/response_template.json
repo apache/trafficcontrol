@@ -730,7 +730,10 @@
         ],
         "properties": {
             "maxRequestHeaderBytes": {
-                "type": ["null","integer"]
+                "type": [
+                    "null",
+                    "integer"
+                ]
             },
             "firstHeaderRewrite": {
                 "type": [
@@ -830,7 +833,10 @@
                 "type": "integer"
             },
             "cdnName": {
-                "type": "string"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "checkPath": {
                 "type": [
@@ -1580,6 +1586,27 @@
             },
             "status": {
                 "type": "string"
+            }
+        }
+    },
+    "multiple_servers_capabilities": {
+        "type": "object",
+        "required": [
+            "serverIds",
+            "serverCapabilities"
+        ],
+        "properties": {
+            "serverIds": {
+                "type": "array",
+                "items": {
+                    "type": "integer"
+                }
+            },
+            "serverCapabilities": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
             }
         }
     }

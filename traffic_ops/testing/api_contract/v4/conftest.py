@@ -1089,11 +1089,17 @@ def server_data_post(to_session: TOSession, request_template_data: list[JSONData
 	server = check_template_data(request_template_data["servers"], "servers")
 
 	# Check if type already exists, otherwise create it
-	type_data = check_template_data(request_template_data["types"], "types")
-	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+	msc_type_id = pytestconfig.cache.get("msctypeId", default=None)
+	type_id = None
+	if msc_type_id:
+		server["typeId"] = msc_type_id
+	else:
+		type_data = check_template_data(request_template_data["types"], "types")
+		type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"useInTable": "server"})
-	type_id = type_object["id"]
-	server["typeId"] = type_id
+		type_id = type_object["id"]
+		server["typeId"] = type_id
+
 	pytestconfig.cache.set("typeId", type_id)
 
 	server["cachegroupId"]= cache_group_post_data["id"]
@@ -1167,7 +1173,6 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 				      {"name": "HTTP", "useInTable":"deliveryservice"})
 	delivery_services["typeId"] = type_object["id"]
 	delivery_services["type"] = type_object["name"]
-
 
 	logger.info("New delivery_services data to hit POST method %s", delivery_services)
 	# Hitting delivery_services POST method
@@ -1486,17 +1491,20 @@ def cdn_notification_data_post(to_session: TOSession, request_template_data: lis
 	"""
 	PyTest Fixture to create POST data for cdn_notifications endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get cdn_notification request template from a prerequisites file.
+	:param request_template_data: Fixture to get cdn_notification request template
+	from a prerequisites file.
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	cdn_notification = check_template_data(request_template_data["cdn_notifications"], "cdn_notifications")
+	cdn_notification = check_template_data(request_template_data["cdn_notifications"],
+					"cdn_notifications")
 
 	# Return new post data and post response from cdn_notifications POST request
 	cdn_notification["cdn"] = cdn_post_data["name"]
 	logger.info("New cdn_notification data to hit POST method %s", cdn_notification)
 	# Hitting cdn_notification POST methed
-	response: tuple[JSONData, requests.Response] = to_session.create_cdn_notification(data=cdn_notification)
+	response: tuple[JSONData, requests.Response] = to_session.create_cdn_notification(
+		data=cdn_notification)
 	resp_obj = check_template_data(response, "cdn_notification")
 	yield resp_obj
 	notification_id = resp_obj.get("id")
@@ -1513,11 +1521,12 @@ def deliveryservice_request_data_post(to_session: TOSession, request_template_da
 	"""
 	PyTest Fixture to create POST data for deliveryservice_request endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get deliveryservice_request request template from a prerequisites file.
+	:param request_template_data: Fixture to get deliveryservice_request request template.
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	deliveryservice_request = check_template_data(request_template_data["deliveryservice_requests"], "deliveryservice_requests")
+	deliveryservice_request = check_template_data(request_template_data["deliveryservice_requests"],
+					       "deliveryservice_requests")
 
 	# Return new post data and post response from deliveryservice_request POST request
 	keys = ["displayName", "xmlId", "id", "cdnId", "tenantId", "type", "typeId"]
@@ -1525,7 +1534,8 @@ def deliveryservice_request_data_post(to_session: TOSession, request_template_da
 		deliveryservice_request["requested"][key] = delivery_services_post_data[key]
 	logger.info("New deliveryservice_request data to hit POST method %s", deliveryservice_request)
 	# Hitting deliveryservice_request POST methed
-	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice_request(data=deliveryservice_request)
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice_request(
+		data=deliveryservice_request)
 	resp_obj = check_template_data(response, "deliveryservice_request")
 	yield resp_obj
 	deliveryservice_request_id = resp_obj.get("id")
@@ -1561,13 +1571,68 @@ def steering_data_post(to_session: TOSession, request_template_data: list[JSONDa
 
 	logger.info("New steering data to hit POST method %s", steering)
 	# Hitting steering POST methed
-	response: tuple[JSONData, requests.Response] = to_session.create_steering_targets(delivery_service_id=delivery_service_id, data=steering)
+	response: tuple[JSONData, requests.Response] = to_session.create_steering_targets(
+		delivery_service_id=delivery_service_id, data=steering)
 	resp_obj = check_template_data(response, "steering")
 	yield resp_obj
 	deliveryservice_id = resp_obj.get("deliveryServiceId")
 	target_id = resp_obj.get("targetId")
-	msg = to_session.delete_steering_targets(delivery_service_id=deliveryservice_id, target_id=target_id)
+	msg = to_session.delete_steering_targets(delivery_service_id=deliveryservice_id,
+					  target_id=target_id)
 	logger.info("Deleting Steering data... %s", msg)
 	if msg is None:
 		logger.error("Steering returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+@pytest.fixture(name="type_post_data")
+def type_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  pytestconfig: pytest.Config):
+	"""
+	PyTest Fixture to create POST data for type endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get type request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+	type_get_response = to_session.get_types(query_params={"name":"EDGE"})
+	check_data = check_template_data(type_get_response[0], "type")
+	type_id = None
+	if len(check_data) > 1:
+		type_id = check_data["id"]
+	else:
+		type_data = check_template_data(request_template_data["types"], "types")
+		type_data["name"] = "EDGE"
+		type_data["useInTable"] = "server"
+		type_post_response = to_session.create_types(data=type_data)
+		type_post_data = check_template_data(type_post_response, "type")
+		type_id = type_post_data["id"]
+	pytestconfig.cache.set("msctypeId", type_id)
+
+
+@pytest.fixture(name="multiple_server_capabilities_post_data")
+def multiple_server_capabilities_data_post(to_session: TOSession,
+	request_template_data: list[JSONData], type_post_data, server_post_data:dict[str, object],
+	server_capabilities_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for multiple_server_capabilities endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get multiple_server_capabilities request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+	multiple_server_capabilities = check_template_data(
+		request_template_data["multiple_servers_capabilities"], "multiple_servers_capabilities")
+
+	# Return new post data and post response from multiple_server_capabilities POST request
+	multiple_server_capabilities["serverIds"][0] = server_post_data["id"]
+	multiple_server_capabilities["serverCapabilities"][0] = server_capabilities_post_data["name"]
+
+	logger.info("multiple_server_capabilities data to hit POST method %s",
+	     multiple_server_capabilities)
+	# Hitting multiple_server_capabilities POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_multiple_servers_capabilities(
+		data=multiple_server_capabilities)
+	resp_obj = check_template_data(response, "multiple_server_capabilities")
+	yield resp_obj
+	msg = to_session.delete_multiple_servers_capabilities(data=multiple_server_capabilities)
+	logger.info("Deleting multiple_servers_capabilities data... %s", msg)
+	if msg is None:
+		logger.error("multiple_servers_capabilities returned by Traffic Ops is missing an 'id' property")

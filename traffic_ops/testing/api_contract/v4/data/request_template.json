@@ -267,8 +267,8 @@
 			"targetId": 61,
 			"value": 100,
 			"typeId": 43
-    }
-  ],
+		}
+	],
 	"cdn_notifications": [
 		{
 			"cdn": "cdn1",
@@ -374,6 +374,17 @@
 				"serviceCategory": null,
 				"tlsVersions": null
 			}
+		}
+	],
+	"multiple_servers_capabilities": [
+		{
+			"serverIds": [
+				1
+			],
+			"serverCapabilities": [
+				"test"
+			],
+			"pageType": "server"
 		}
 	]
 }

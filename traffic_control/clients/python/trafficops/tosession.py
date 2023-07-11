@@ -1495,6 +1495,34 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+
+    #
+	# multiple_server_capabilities
+	#
+	@api_request('post', 'multiple_servers_capabilities', ('4.1', '5.0'))
+	def create_multiple_servers_capabilities(self, data=None):
+		"""
+		Create multiple_servers_capabilities
+		:ref:`to-api-multiple_servers_capabilities`
+		:param data: The multiple_servers_capabilities data to use for multiple_servers_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('delete', 'multiple_servers_capabilities', ('4.1', '5.0'))
+	def delete_multiple_servers_capabilities(self, data=None):
+		"""
+		Delete multiple_servers_capabilities
+		:ref:`to-api-multiple_servers_capabilities`
+		:param data: The multiple_servers_capabilities data to use for multiple_servers_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
 	#
 	# Physical Location
 	#
@@ -2181,6 +2209,15 @@ class TOSession(RestApiSession):
 	def get_types(self, query_params=None):
 		"""
 		Get Data Types.
+		:ref:`to-api-types`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('get', 'types', ('3.0', '4.0', '4.1', '5.0'))
+	def create_types(self, data=None):
+		"""
+		Create Data Types.
 		:ref:`to-api-types`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]

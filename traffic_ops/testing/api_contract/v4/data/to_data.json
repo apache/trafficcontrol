@@ -1,7 +1,7 @@
 {
     "user": "admin",
     "password": "twelve12",
-    "url": "https://localhost/api/4.0",
+    "url": "https://localhost/api/4.1",
     "port": 443,
     "db_name":"traffic_ops",
     "db_user":"traffic_ops",
