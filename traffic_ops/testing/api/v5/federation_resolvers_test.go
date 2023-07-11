@@ -29,7 +29,6 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-
 	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 

@@ -101,7 +101,6 @@ func Create(w http.ResponseWriter, r *http.Request) {
 }
 
 // Read is the handler for GET requests to /federation_resolvers (and /federation_resolvers/{{ID}}).
-// here based on request V5 is identified to get list of federation resolver for APIv5
 func Read(w http.ResponseWriter, r *http.Request) {
 	var maxTime time.Time
 	var runSecond bool
@@ -138,17 +137,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 	// Based on version we load types - for version 5 and above we use FederationResolverV5
 	var resolvers []interface{}
-	if inf.Version != nil && inf.Version.Major >= 5 && inf.Version.Minor >= 0 {
-		frData := []tc.FederationResolverV5{} // FR type data
-		for _, item := range frData {
-			resolvers = append(resolvers, item)
-		}
-	} else {
-		frData := []tc.FederationResolver{} // PR type data
-		for _, item := range frData {
-			resolvers = append(resolvers, item)
-		}
-	}
 
 	if useIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where, "federation_resolver"))
@@ -177,28 +165,29 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	for rows.Next() {
+		var resolver tc.FederationResolver
+		if err := rows.Scan(&resolver.ID, &resolver.IPAddress, &resolver.LastUpdated, &resolver.Type); err != nil {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+			if sysErr != nil {
+				sysErr = fmt.Errorf("federation_resolver scanning: %v", sysErr)
+			}
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+
 		// Based on version we load types - for version 5 and above we use FederationResolverV5
-		if inf.Version != nil && inf.Version.Major >= 5 && inf.Version.Minor >= 0 {
-			var resolver tc.FederationResolverV5
-			if err := rows.Scan(&resolver.ID, &resolver.IPAddress, &resolver.LastUpdated, &resolver.Type); err != nil {
-				userErr, sysErr, errCode = api.ParseDBError(err)
-				if sysErr != nil {
-					sysErr = fmt.Errorf("federation_resolver scanning: %v", sysErr)
-				}
-				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-				return
-			}
-			resolvers = append(resolvers, resolver)
+		if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
+			var v5Resolver tc.FederationResolverV5
+
+			// Convert FederationResolver fields to FederationResolverV5 fields
+			v5Resolver.ID = resolver.ID
+			v5Resolver.IPAddress = resolver.IPAddress
+			lastUpdated := time.Unix(resolver.LastUpdated.Unix(), 0)
+			v5Resolver.LastUpdated = &lastUpdated
+			v5Resolver.Type = resolver.Type
+
+			resolvers = append(resolvers, &v5Resolver)
 		} else {
-			var resolver tc.FederationResolver
-			if err := rows.Scan(&resolver.ID, &resolver.IPAddress, &resolver.LastUpdated, &resolver.Type); err != nil {
-				userErr, sysErr, errCode = api.ParseDBError(err)
-				if sysErr != nil {
-					sysErr = fmt.Errorf("federation_resolver scanning: %v", sysErr)
-				}
-				api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-				return
-			}
 			resolvers = append(resolvers, resolver)
 		}
 	}
