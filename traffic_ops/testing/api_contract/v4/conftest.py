@@ -1571,3 +1571,38 @@ def steering_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	if msg is None:
 		logger.error("Steering returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="delivery_services_regex_post_data")
+def delivery_services_regex_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  delivery_services_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for delivery_services_regex endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get delivery_services_regex request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	delivery_services_regex = check_template_data(
+		request_template_data["delivery_services_regex"], "delivery_services_regex")
+
+	# Return new post data and post response from delivery_services_regex POST request
+
+	delivery_service_id = delivery_services_post_data["id"]
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "regex"})
+	delivery_services_regex["type"]= type_object["id"]
+
+	logger.info("New delivery_services_regex data to hit POST method %s", delivery_services_regex)
+	# Hitting delivery_services_regex POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice_regexes(delivery_service_id=delivery_service_id, data=delivery_services_regex)
+	resp_obj = check_template_data(response, "delivery_services_regex")
+	yield [delivery_service_id,resp_obj]
+	regex_id = resp_obj.get("id")
+	msg = to_session.delete_deliveryservice_regex_by_regex_id(delivery_service_id=delivery_service_id, delivery_service_regex_id=regex_id)
+	logger.info("Deleting delivery_services_regex data... %s", msg)
+	if msg is None:
+		logger.error("delivery_services_regex returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
