@@ -66,6 +66,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - [#7639](https://github.com/apache/trafficcontrol/pull/7639) *T3C* Fixed `parent_is_proxy` not being written to `strategies.yaml` and fixed `strategiesdotconfig` functions not being consistent with file usage; now it is `strategiesdotyaml`.
+- [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
 - [#7623] (https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
 - [#7608](https://github.com/apache/trafficcontrol/pull/7608) *Traffic Monitor* Use stats_over_http(plugin.system_stats.timestamp_ms) timestamp field to calculate bandwidth for TM's caches.
 - [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}
@@ -129,7 +130,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7425](https://github.com/apache/trafficcontrol/pull/7425) *Traffic Control Cache Config (t3c)* Fixed issue with layered profile iteration being done in the wrong order.
 - [#6385](https://github.com/apache/trafficcontrol/issues/6385) *Traffic Ops* Reserved consistentHashQueryParameters cause internal server error
 - [#7471](https://github.com/apache/trafficcontrol/pull/7471) *Traffic Control Cache Config (t3c)* Fixed issue with MSO non topo origins from multiple cache groups.
-- [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
 - [#7590](https://github.com/apache/trafficcontrol/issues/7590) *Traffic Control Cache Config (t3c)* Fixed issue with git detected dubious ownership in repository.
 - [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixes `types` v5 apis to respond with `RFC3339` date/time Format.
 - [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixes an issue where certificate chain validation failed based on leading or trailing whitespace.
