@@ -319,6 +319,23 @@ func (to *TOClient) logout() (net.Addr, error) {
 	return remoteAddr, nil
 }
 
+// LoginWithCert returns an authenticated TOClient.
+//
+// Start with
+//
+//	toURL := "https://trafficops.example"
+//	apiVers := []string{"3.0", "3.1"}
+//	to := LoginWithClient(toURL, true, "certfile", "keyFile", "myapp/1.0", DefaultTimeout, apiVers)
+//
+// subsequent calls like to.GetData("datadeliveryservice") will be authenticated.
+//
+// Returns the logged in client, the remote IP address of Traffic Ops to which
+// the given URL was resolved and used to authenticate, and any error that
+// occurred. If the error is not nil, the remote address may or may not be nil,
+// depending on whether the error occurred before the login request.
+//
+// apiVersions is the list of API versions supported in this client. This
+// should generally be provided by the client package wrapping this package.
 func LoginWithCert(
 	toURL string,
 	insecure bool,
