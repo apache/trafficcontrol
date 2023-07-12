@@ -102,15 +102,10 @@ public class ConfigHandler {
 	private final AtomicBoolean cancelled = new AtomicBoolean(false);
 	private final AtomicBoolean isProcessing = new AtomicBoolean(false);
 
-	private final Map<String, DeliveryService> fqdnToDeliveryService = new HashMap<>();
 	private final static String NEUSTAR_POLLING_URL = "neustar.polling.url";
 	private final static String NEUSTAR_POLLING_INTERVAL = "neustar.polling.interval";
 
 	private final static String LOCALIZATION_METHODS = "localizationMethods";
-
-	public Map<String, DeliveryService> getFQDNToDeliveryServiceMap() {
-		return fqdnToDeliveryService;
-	}
 
 	public String getConfigDir() {
 		return configDir;
@@ -187,7 +182,7 @@ public class ConfigHandler {
 				cacheRegister.setStats(stats);
 				parseTrafficOpsConfig(config, stats);
 
-				final Map<String, DeliveryService> deliveryServiceMap = parseDeliveryServiceConfig(JsonUtils.getJsonNode(jo, deliveryServicesKey), cacheRegister);
+				final Map<String, DeliveryService> deliveryServiceMap = parseDeliveryServiceConfig(JsonUtils.getJsonNode(jo, deliveryServicesKey));
 
 				parseCertificatesConfig(config);
 				certificatesPublisher.setDeliveryServicesJson(deliveryServicesJson);
@@ -453,7 +448,7 @@ public class ConfigHandler {
 		statTracker.initialize(statMap, cacheRegister);
 	}
 
-	private Map<String, DeliveryService> parseDeliveryServiceConfig(final JsonNode allDeliveryServices, final CacheRegister cacheRegister) throws JsonUtilsException {
+	private Map<String, DeliveryService> parseDeliveryServiceConfig(final JsonNode allDeliveryServices) throws JsonUtilsException {
 		final Map<String,DeliveryService> deliveryServiceMap = new HashMap<>();
 
 		final Iterator<String> deliveryServiceIter = allDeliveryServices.fieldNames();
@@ -474,9 +469,6 @@ public class ConfigHandler {
 
 			deliveryService.setDns(isDns);
 			deliveryServiceMap.put(deliveryServiceId, deliveryService);
-			fqdnToDeliveryService.put(deliveryService.getRoutingName() + "." + deliveryService.getDomain(), deliveryService);
-			fqdnToDeliveryService.put("_." + deliveryService.getDomain(), deliveryService);
-			cacheRegister.setFQDNToDeliveryServiceMap(fqdnToDeliveryService);
 		}
 
 		return deliveryServiceMap;
