@@ -79,6 +79,14 @@ func NewSession(user, password, url, userAgent string, client *http.Client, useC
 	}
 }
 
+func LoginWithCert(toURL string, insecure bool, requestTimeout time.Duration, certFile, keyFile, userAgent string) (*Session, net.Addr, error) {
+	cl, ip, err := toclientlib.LoginWithCert(toURL, insecure, requestTimeout, certFile, keyFile, userAgent, apiVersions())
+	if err != nil {
+		return nil, nil, err
+	}
+	return &Session{TOClient: *cl}, ip, err
+}
+
 // LoginWithAgent creates a new authenticated session with a Traffic Ops
 // server. The session cookie should be set automatically in the returned
 // Session, so that subsequent calls are properly authenticated without further

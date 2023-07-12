@@ -319,6 +319,36 @@ func (to *TOClient) logout() (net.Addr, error) {
 	return remoteAddr, nil
 }
 
+func LoginWithCert(
+	toURL string,
+	insecure bool,
+	requestTimeout time.Duration,
+	certFile string,
+	keyFile string,
+	userAgent string,
+	apiVersions []string,
+) (*TOClient, net.Addr, error) {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return nil, nil, err
+	}
+	to := NewClient("", "", toURL, userAgent, &http.Client{
+		Timeout: requestTimeout,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				Certificates:       []tls.Certificate{cert},
+				InsecureSkipVerify: insecure,
+			},
+		},
+	}, apiVersions)
+
+	reqInf, err := to.login()
+	if err != nil {
+		return nil, reqInf.RemoteAddr, errors.New("logging in: " + err.Error())
+	}
+	return to, reqInf.RemoteAddr, nil
+}
+
 // LoginWithAgent returns an authenticated TOClient.
 //
 // Start with
