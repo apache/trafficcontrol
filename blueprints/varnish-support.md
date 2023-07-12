@@ -51,9 +51,9 @@ n/a
 
 ### ORT Impact
 
-- `go-varnish` package will be developed to handle generating configuration files for Varnish, Hitch, `varnishncsa` and `logrotate`. For detailed description of mapping configuration files from ATS to Varnish refer to [Varnish Support](https://github.com/apache/trafficcontrol/wiki/Varnish-Support) wiki.
-- New subcommands will be added to `t3c` including `t3c-varnish-generate` that works similar to `t3c-generate` but instead will depend on `go-varnish` package to generate different configuration files and `t3c-varnish-apply` that handles applying these configuration files, restarting and reloading different services running.
-- `go-atscfg` will be refactored to export some of its functionality to be reusable from `go-varnish`. So, instead of rewriting the logic of which IPs are allowed for specific HTTP requests, it could be separated and exported in a function that both packages utilize.
+- `varnishcfg` package will be developed to handle generating configuration files for Varnish, Hitch and `varnishncsa`. For detailed description of mapping configuration files from ATS to Varnish refer to [Varnish Support](https://github.com/apache/trafficcontrol/wiki/Varnish-Support) wiki.
+- New subcommands will be added to `t3c` including `t3c-varnish-generate` that works similar to `t3c-generate` but instead will depend on `varnishcfg` package to generate different configuration files and `t3c-varnish-apply` that handles applying these configuration files, restarting and reloading different services running.
+- `go-atscfg` will be refactored to export some of its functionality to be reusable from `varnishcfg`. So, instead of rewriting the logic of which IPs are allowed for specific HTTP requests, it could be separated and exported in a function that both packages utilize.
 
 ### Traffic Monitor Impact
 
@@ -106,8 +106,7 @@ n/a
 ## Dependencies
 
 - Varnish and its utilities (`varnishtest`, `varnishstat`, `varnishncsa`, ...).
-- Hitch to manage SSL part of the server.
-- `logrotate` to manage logs generated from `varnishncsa`.
+- Hitch to handle incoming HTTPS requests as Varnish doesn't support HTTPS.
 
 ## References
 
