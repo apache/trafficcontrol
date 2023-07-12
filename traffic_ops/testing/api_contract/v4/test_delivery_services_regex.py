@@ -14,6 +14,7 @@
 
 """API Contract Test Case for delivery_services_regex endpoint."""
 import logging
+from random import randint
 from typing import Union
 import pytest
 import requests
@@ -43,16 +44,24 @@ def test_delivery_services_regex_contract(to_session: TOSession,
 	logger.info("Accessing /delivery_services_regex endpoint through Traffic ops session.")
 	delivery_services_id = delivery_services_regex_post_data[0]
 	delivery_services_regex_data_post = delivery_services_regex_post_data[1]
-    
+
 	delivery_services_regex_id = delivery_services_regex_data_post["id"]
 	if not isinstance(delivery_services_regex_id, int):
 		raise TypeError("malformed API response; 'id' property not a integer")
-
 	delivery_services_regex_get_response: tuple[
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_deliveryservice_regexes_by_id(delivery_service_id=delivery_services_id,
 						  query_params={"id": delivery_services_regex_id})
+	delivery_services_regex_data_post["pattern"] = ".*\\.test" + str(randint(0, 1000)) + "\\..*"
+	logger.info("Updated delivery services regex data to hit PUT method %s",
+	     delivery_services_regex_data_post)
+	# Hitting delivery_services_regex PUT method
+	put_response: tuple[
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
+		requests.Response] = to_session.update_deliveryservice_regexes(
+		delivery_service_id=delivery_services_id, regex_id=delivery_services_regex_id,
+	    data= delivery_services_regex_data_post)
 	try:
 		delivery_services_regex_data = delivery_services_regex_get_response[0]
 		if not isinstance(delivery_services_regex_data, list):
@@ -60,20 +69,26 @@ def test_delivery_services_regex_contract(to_session: TOSession,
 
 		first_delivery_services_regex = delivery_services_regex_data[0]
 		if not isinstance(first_delivery_services_regex, dict):
-			raise TypeError("malformed API response; first delivery_services_regex in response is not an dict")
-		logger.info("delivery_services_regex Api response %s", first_delivery_services_regex)
+			raise TypeError(
+				"malformed API response; first delivery_services_regex in response is not an dict")
+		logger.info("delivery_services_regex Api get response %s", first_delivery_services_regex)
+		delivery_services_regex_put_response = put_response[0]
+		if not isinstance(delivery_services_regex_put_response, dict):
+			raise TypeError("malformed API response; delivery_services in response is not an dict")
+		logger.info("delivery_services_regex Api put response %s", delivery_services_regex_put_response)
 		delivery_services_regex_response_template = response_template_data.get("delivery_services_regex")
 		if not isinstance(delivery_services_regex_response_template, dict):
 			raise TypeError(f"delivery_services_regex response template data must be a dict, not '"
 							f"{type(delivery_services_regex_response_template)}'")
 
-		keys = ["pattern", "type", "setNumber"]
+		keys = ["type", "setNumber"]
 		prereq_values = [delivery_services_regex_data_post[key] for key in keys]
 		get_values = [first_delivery_services_regex[key] for key in keys]
-
 		assert validate(instance=first_delivery_services_regex,
 		  schema=delivery_services_regex_response_template) is None
 		assert get_values == prereq_values
+		assert validate(instance=delivery_services_regex_put_response,
+		  schema=delivery_services_regex_response_template) is None
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
-		pytest.fail("API contract test failed for delivery_services_regex endpoint: API response was malformed")
+		pytest.fail("API contract test failed : API response was malformed")
