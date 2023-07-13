@@ -506,6 +506,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			attributes := decodedToken.PrivateClaims()
 			if userIDInterface, ok = attributes[cfg.OAuthUserAttribute]; !ok {
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Non-existent OAuth attribute : %s", cfg.OAuthUserAttribute))
+				return
 			}
 			userID = userIDInterface.(string)
 		} else {
