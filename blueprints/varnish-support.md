@@ -46,13 +46,13 @@ n/a
 
 #### Data Model / Database Impact
 
-- A new profile type will be added `VARNISH_PROFILE` but it won't affect the model or other structures in `lib/go-tc`
+- The profile type `ATS_PROFILE` will be renamed to `CACHE_PROFILE` to indicate that the profile is used for any cache server not just ATS while parameters and other fields won't be affected.
 - `DeliveryService` structs contain fields related to ATS like `remapText`. It will be parsed and translated to Varnish configuration.
 
 ### ORT Impact
 
 - `varnishcfg` package will be developed to handle generating configuration files for Varnish, Hitch and `varnishncsa`. For detailed description of mapping configuration files from ATS to Varnish refer to [Varnish Support](https://github.com/apache/trafficcontrol/wiki/Varnish-Support) wiki.
-- New subcommands will be added to `t3c` including `t3c-varnish-generate` that works similar to `t3c-generate` but instead will depend on `varnishcfg` package to generate different configuration files and `t3c-varnish-apply` that handles applying these configuration files, restarting and reloading different services running.
+- New options will be added to `t3c-generate` and `t3c-apply` including `--cache` to indicate which cache server the configuration files will be generated or applied to (e.g. `--cache=varnish` or `--cache=ats`). Flags will be rewritten to indicate which cache server they can be used with. `t3c` subcommands will decide based on `cache` option whether to use `go-atscfg` or `varnishcfg` for configuration files generation and also how to apply them for each case.
 - `go-atscfg` will be refactored to export some of its functionality to be reusable from `varnishcfg`. So, instead of rewriting the logic of which IPs are allowed for specific HTTP requests, it could be separated and exported in a function that both packages utilize.
 
 ### Traffic Monitor Impact
