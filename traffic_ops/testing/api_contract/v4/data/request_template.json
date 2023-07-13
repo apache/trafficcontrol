@@ -375,16 +375,5 @@
 				"tlsVersions": null
 			}
 		}
-	],
-	"multiple_servers_capabilities": [
-		{
-			"serverIds": [
-				1
-			],
-			"serverCapabilities": [
-				"test"
-			],
-			"pageType": "server"
-		}
 	]
 }

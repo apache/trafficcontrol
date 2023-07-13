@@ -1588,26 +1588,5 @@
                 "type": "string"
             }
         }
-    },
-    "multiple_servers_capabilities": {
-        "type": "object",
-        "required": [
-            "serverIds",
-            "serverCapabilities"
-        ],
-        "properties": {
-            "serverIds": {
-                "type": "array",
-                "items": {
-                    "type": "integer"
-                }
-            },
-            "serverCapabilities": {
-                "type": "array",
-                "items": {
-                    "type": "string"
-                }
-            }
-        }
     }
 }

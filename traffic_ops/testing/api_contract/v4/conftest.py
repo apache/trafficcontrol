@@ -1606,33 +1606,3 @@ def type_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		type_post_data = check_template_data(type_post_response, "type")
 		type_id = type_post_data["id"]
 	pytestconfig.cache.set("msctypeId", type_id)
-
-
-@pytest.fixture(name="multiple_server_capabilities_post_data")
-def multiple_server_capabilities_data_post(to_session: TOSession,
-	request_template_data: list[JSONData], type_post_data, server_post_data:dict[str, object],
-	server_capabilities_post_data:dict[str, object]) -> dict[str, object]:
-	"""
-	PyTest Fixture to create POST data for multiple_server_capabilities endpoint.
-	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get multiple_server_capabilities request template.
-	:returns: Sample POST data and the actual API response.
-	"""
-	multiple_server_capabilities = check_template_data(
-		request_template_data["multiple_servers_capabilities"], "multiple_servers_capabilities")
-
-	# Return new post data and post response from multiple_server_capabilities POST request
-	multiple_server_capabilities["serverIds"][0] = server_post_data["id"]
-	multiple_server_capabilities["serverCapabilities"][0] = server_capabilities_post_data["name"]
-
-	logger.info("multiple_server_capabilities data to hit POST method %s",
-	     multiple_server_capabilities)
-	# Hitting multiple_server_capabilities POST methed
-	response: tuple[JSONData, requests.Response] = to_session.create_multiple_servers_capabilities(
-		data=multiple_server_capabilities)
-	resp_obj = check_template_data(response, "multiple_server_capabilities")
-	yield resp_obj
-	msg = to_session.delete_multiple_servers_capabilities(data=multiple_server_capabilities)
-	logger.info("Deleting multiple_servers_capabilities data... %s", msg)
-	if msg is None:
-		logger.error("multiple_servers_capabilities returned by Traffic Ops is missing an 'id' property")

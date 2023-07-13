@@ -122,4 +122,4 @@ truncate --size=0 traffic.ops.log # Removes output from previous API versions an
 
 cd "../testing/api_contract/v$INPUT_VERSION"
 
-pytest -rA --to-user admin --to-password twelve12 --to-url https://localhost:6443/api/4.1
+pytest -rA --to-user admin --to-password twelve12 --to-url https://localhost:6443/api/4.0
