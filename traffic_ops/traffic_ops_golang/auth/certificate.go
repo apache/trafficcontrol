@@ -52,12 +52,10 @@ func VerifyClientCertificate(r *http.Request, rootCertsDirPath string, insecureS
 
 func verifyClientRootChain(clientChain []*x509.Certificate, insecureSkipVerify bool) error {
 	if len(clientChain) == 0 {
-		fmt.Println("verifyClientRootChain failing here 1")
 		return fmt.Errorf("empty client chain")
 	}
 
 	if rootPool == nil {
-		fmt.Println("verifyClientRootChain failing here 2")
 		return fmt.Errorf("uninitialized root cert pool")
 	}
 
@@ -73,7 +71,6 @@ func verifyClientRootChain(clientChain []*x509.Certificate, insecureSkipVerify b
 	}
 	_, err := clientChain[0].Verify(opts)
 	if err != nil {
-		fmt.Println("verifyClientRootChain failing here 3")
 		if insecureSkipVerify {
 			return nil
 		}

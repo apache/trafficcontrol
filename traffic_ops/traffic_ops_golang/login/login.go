@@ -111,27 +111,23 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.DB, cfg config.Config, dbCtx context.Context, cancelTx context.CancelFunc, form auth.PasswordForm, authenticated bool) bool {
 	// No certs provided by the client. Skip to form authentication
 	if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
-		fmt.Println("client cert failing here 1")
 		return false
 	}
 
 	// If no configuration is set, skip to form auth
 	if cfg.ClientCertAuth == nil || len(cfg.ClientCertAuth.RootCertsDir) == 0 {
-		fmt.Println("client cert failing here 2")
 		return false
 	}
 
 	// Perform certificate verification to ensure it is valid against Root CAs
 	err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir, cfg.Insecure)
 	if err != nil {
-		fmt.Println("client cert failing here 3 " + err.Error())
 		log.Warnf("client cert auth: error attempting to verify client provided TLS certificate. err: %s\n", err)
 		return false
 	}
 
 	// Client provided a verified certificate. Extract UID value.
 	if username, err := auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0]); err != nil {
-		fmt.Println("client cert failing here 4 " + err.Error())
 		log.Errorf("parsing client certificate: %s\n", err)
 		return false
 	} else {
@@ -142,21 +138,17 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 	var blockingErr error
 	authenticated, err, blockingErr = auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
 	if blockingErr != nil {
-		fmt.Println("client cert failing here 5 " + blockingErr.Error())
 		api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user has role: %s", blockingErr.Error()))
 		return false
 	}
 	if err != nil {
-		fmt.Println("client cert failing here 6 " + err.Error())
 		log.Warnf("client cert auth: checking local user: %s\n", err)
 	}
 
 	// Check LDAP if enabled
 	if !authenticated && cfg.LDAPEnabled {
-		fmt.Println("client cert failing here 7 not authenticated")
 		_, authenticated, err = auth.LookupUserDN(form.Username, cfg.ConfigLDAP)
 		if err != nil {
-			fmt.Println("client cert failing here 8 " + err.Error())
 			log.Warnf("Client Cert Auth: checking ldap user: %s\n", err)
 		}
 	}
