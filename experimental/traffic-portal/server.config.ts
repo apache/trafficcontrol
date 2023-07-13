@@ -139,6 +139,8 @@ interface BaseConfig {
 	version: ServerVersion;
 	/** Path to the folder containing browser files. **/
 	browserFolder: string;
+	/** The URL of the Traffic Portal V1. */
+	tpv1url: URL;
 }
 
 /**
@@ -311,6 +313,7 @@ export const defaultConfig: ServerConfig = {
 	insecure: false,
 	port: 4200,
 	trafficOps: new URL("https://example.com"),
+	tpv1url: new URL("https://example.com"),
 	version: { version: "" }
 };
 /**
@@ -392,6 +395,7 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 				keyPath: args.keyPath,
 				port: cfg.port,
 				trafficOps: cfg.trafficOps,
+				tpv1url: cfg.tpv1url,
 				useSSL: true,
 				version: ver
 			};

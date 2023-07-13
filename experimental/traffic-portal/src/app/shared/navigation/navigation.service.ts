@@ -11,12 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from "@angular/core";
+import { Inject, Injectable } from "@angular/core";
 import { ReplaySubject } from "rxjs";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
-import { environment } from "src/environments/environment";
 
 /**
  * Defines the type of the header nav
@@ -62,7 +61,10 @@ export class NavigationService {
 	private readonly horizontalNavs: Map<string, HeaderNavigation>;
 	private readonly verticalNavs: Map<string, HeaderNavigation>;
 
-	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
+	constructor(
+		@Inject('TP_V1_URL') private tpv1Url: string,
+		private readonly auth: CurrentUserService,
+		private readonly api: UserService) {
 		this.horizontalNavs = new Map<string, HeaderNavigation>([
 			["Home", {
 				routerLink: "/core",
@@ -157,11 +159,11 @@ export class NavigationService {
 		}, {
 			children: [
 				{
-					href: `${environment.tpv1Url}/cache-checks`,
+					href: `${this.tpv1Url}/cache-checks`,
 					name: "Cache Checks"
 				},
 				{
-					href: `${environment.tpv1Url}/cache-stats`,
+					href: `${this.tpv1Url}/cache-stats`,
 					name: "Cache Stats"
 				}
 			],
@@ -169,11 +171,11 @@ export class NavigationService {
 		}, {
 			children: [
 				{
-					href: `${environment.tpv1Url}/delivery-services`,
+					href: `${this.tpv1Url}/delivery-services`,
 					name: "Delivery Services"
 				},
 				{
-					href: `${environment.tpv1Url}/delivery-service-requests`,
+					href: `${this.tpv1Url}/delivery-service-requests`,
 					name: "Delivery Service Requests"
 				}
 			],
@@ -184,7 +186,7 @@ export class NavigationService {
 					href: "/core/types",
 					name: "Types"
 				},{
-					href: `${environment.tpv1Url}/origins`,
+					href: `${this.tpv1Url}/origins`,
 					name: "Origins"
 				},
 				{
@@ -223,11 +225,11 @@ export class NavigationService {
 					name: "Generate System ISO"
 				},
 				{
-					href:`${environment.tpv1Url}/jobs`,
+					href:`${this.tpv1Url}/jobs`,
 					name: "Invalidate Content"
 				},
 				{
-					href:`${environment.tpv1Url}/notifications`,
+					href:`${this.tpv1Url}/notifications`,
 					name: "Notifications"
 				},
 			],

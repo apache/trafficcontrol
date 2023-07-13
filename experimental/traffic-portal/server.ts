@@ -192,7 +192,10 @@ export function app(serverConfig: ServerConfig): express.Express {
 
 	// All regular routes use the Universal engine
 	server.get("*", (req, res) => {
-		res.render(indexHtml, {providers: [{provide: APP_BASE_HREF, useValue: req.baseUrl}], req});
+		res.render(indexHtml, {providers: [
+			{provide: APP_BASE_HREF, useValue: req.baseUrl},
+			{provide: 'TP_V1_URL', useValue: serverConfig.tpv1url}
+		], req});
 	});
 
 	server.enable("trust proxy");

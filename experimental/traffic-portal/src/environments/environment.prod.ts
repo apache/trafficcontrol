@@ -22,5 +22,4 @@ export const environment: Environment = {
 	apiVersion: "4.0",
 	customModule: false,
 	production: true,
-	tpv1Url: "https://tp.staging.cdnlab.comcast.net/#!",
 };
