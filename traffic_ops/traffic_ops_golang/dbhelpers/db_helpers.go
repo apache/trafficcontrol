@@ -2217,3 +2217,18 @@ func ASNExists(tx *sql.Tx, id string) (bool, error) {
 	}
 	return true, nil
 }
+
+// DivisionExists confirms whether the division exists, and an error (if one occurs).
+func DivisionExists(tx *sql.Tx, id string) (bool, error) {
+	var count int
+	if err := tx.QueryRow("SELECT count(id) FROM division AS div WHERE div.id=$1", id).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting divisions info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting division info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
+}

@@ -38,7 +38,7 @@ func TestDivisions(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Division]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.DivisionV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -110,7 +110,7 @@ func TestDivisions(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetDivisionID(t, "cdn-div2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Division{
+					RequestBody: tc.DivisionV5{
 						Name: "testdivision",
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
@@ -120,7 +120,7 @@ func TestDivisions(t *testing.T) {
 					EndpointID:    GetDivisionID(t, "division1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.Division{
+					RequestBody: tc.DivisionV5{
 						Name: "division1",
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -128,7 +128,7 @@ func TestDivisions(t *testing.T) {
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetDivisionID(t, "division1"),
 					ClientSession: TOSession,
-					RequestBody: tc.Division{
+					RequestBody: tc.DivisionV5{
 						Name: "division1",
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
@@ -191,7 +191,7 @@ func TestDivisions(t *testing.T) {
 func validateDivisionFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Division response to not be nil.")
-		divisionResp := resp.([]tc.Division)
+		divisionResp := resp.([]tc.DivisionV5)
 		for field, expected := range expectedResp {
 			for _, division := range divisionResp {
 				switch field {
@@ -218,7 +218,7 @@ func validateDivisionUpdateCreateFields(name string, expectedResp map[string]int
 
 func validateDivisionPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.Division)
+		paginationResp := resp.([]tc.DivisionV5)
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
 		respBase, _, err := TOSession.GetDivisions(opts)
@@ -241,7 +241,7 @@ func validateDivisionSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Division response to not be nil.")
 		var divisionNames []string
-		divisionResp := resp.([]tc.Division)
+		divisionResp := resp.([]tc.DivisionV5)
 		for _, division := range divisionResp {
 			divisionNames = append(divisionNames, division.Name)
 		}
@@ -252,7 +252,7 @@ func validateDivisionSort() utils.CkReqFunc {
 func validateDivisionDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Division response to not be nil.")
-		divisionDescResp := resp.([]tc.Division)
+		divisionDescResp := resp.([]tc.DivisionV5)
 		var descSortedList []string
 		var ascSortedList []string
 		assert.RequireGreaterOrEqual(t, len(divisionDescResp), 2, "Need at least 2 Divisions in Traffic Ops to test desc sort, found: %d", len(divisionDescResp))
