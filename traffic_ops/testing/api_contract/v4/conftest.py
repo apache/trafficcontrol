@@ -1583,26 +1583,3 @@ def steering_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	if msg is None:
 		logger.error("Steering returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
-
-@pytest.fixture(name="type_post_data")
-def type_data_post(to_session: TOSession, request_template_data: list[JSONData],
-		  pytestconfig: pytest.Config):
-	"""
-	PyTest Fixture to create POST data for type endpoint.
-	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get type request template from a prerequisites file.
-	:returns: Sample POST data and the actual API response.
-	"""
-	type_get_response = to_session.get_types(query_params={"name":"EDGE"})
-	check_data = check_template_data(type_get_response[0], "type")
-	type_id = None
-	if len(check_data) > 1:
-		type_id = check_data["id"]
-	else:
-		type_data = check_template_data(request_template_data["types"], "types")
-		type_data["name"] = "EDGE"
-		type_data["useInTable"] = "server"
-		type_post_response = to_session.create_types(data=type_data)
-		type_post_data = check_template_data(type_post_response, "type")
-		type_id = type_post_data["id"]
-	pytestconfig.cache.set("msctypeId", type_id)
