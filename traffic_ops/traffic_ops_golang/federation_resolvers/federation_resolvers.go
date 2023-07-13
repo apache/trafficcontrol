@@ -177,14 +177,9 @@ func Read(w http.ResponseWriter, r *http.Request) {
 
 		// Based on version we load types - for version 5 and above we use FederationResolverV5
 		if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
-			var v5Resolver tc.FederationResolverV5
 
 			// Convert FederationResolver fields to FederationResolverV5 fields
-			v5Resolver.ID = resolver.ID
-			v5Resolver.IPAddress = resolver.IPAddress
-			lastUpdated := time.Unix(resolver.LastUpdated.Unix(), 0)
-			v5Resolver.LastUpdated = &lastUpdated
-			v5Resolver.Type = resolver.Type
+			v5Resolver := tc.UpgradeToFederationResolverV5(resolver)
 
 			resolvers = append(resolvers, &v5Resolver)
 		} else {

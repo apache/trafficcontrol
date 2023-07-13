@@ -102,3 +102,19 @@ func (fr *FederationResolver) Validate(tx *sql.Tx) error {
 		validation.Field(&fr.TypeID, validation.Required),
 	)
 }
+
+// UpgradeToFederationResolverV5 upgrades an APIv4 Federal Resolver into an APIv5 Federal Resolver of
+// the latest minor version.
+func UpgradeToFederationResolverV5(fr FederationResolver) *FederationResolverV5 {
+	upgraded := FederationResolverV5{
+		ID:        fr.ID,
+		IPAddress: fr.IPAddress,
+		LastUpdated: func() *time.Time {
+			lastUpdated := time.Unix(fr.LastUpdated.Unix(), 0)
+			return &lastUpdated
+		}(),
+		Type: fr.Type,
+	}
+
+	return &upgraded
+}
