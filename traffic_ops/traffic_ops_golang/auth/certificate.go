@@ -32,30 +32,32 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-rfc/ldap"
 )
 
-// ParseCertificate takes a http.Request, pulls the (optionally) provided client TLS
+// VerifyClientCertificate takes a http.Request, pulls the (optionally) provided client TLS
 // certificates and attempts to verify them against the directory of provided Root CA
 // certificates. The Root CA certificates can be different than those utilized by the
 // http.Server. Returns an error if the verification process fails
-func VerifyClientCertificate(r *http.Request, rootCertsDirPath string) error {
+func VerifyClientCertificate(r *http.Request, rootCertsDirPath string, insecureSkipVerify bool) error {
 	// TODO: Parse client headers as alternative to TLS in the request
 
 	if err := loadRootCerts(rootCertsDirPath); err != nil {
 		return fmt.Errorf("failed to load root certificates")
 	}
 
-	if err := verifyClientRootChain(r.TLS.PeerCertificates); err != nil {
+	if err := verifyClientRootChain(r.TLS.PeerCertificates, insecureSkipVerify); err != nil {
 		return fmt.Errorf("failed to verify client to root certificate chain")
 	}
 
 	return nil
 }
 
-func verifyClientRootChain(clientChain []*x509.Certificate) error {
+func verifyClientRootChain(clientChain []*x509.Certificate, insecureSkipVerify bool) error {
 	if len(clientChain) == 0 {
+		fmt.Println("verifyClientRootChain failing here 1")
 		return fmt.Errorf("empty client chain")
 	}
 
 	if rootPool == nil {
+		fmt.Println("verifyClientRootChain failing here 2")
 		return fmt.Errorf("uninitialized root cert pool")
 	}
 
@@ -71,6 +73,10 @@ func verifyClientRootChain(clientChain []*x509.Certificate) error {
 	}
 	_, err := clientChain[0].Verify(opts)
 	if err != nil {
+		fmt.Println("verifyClientRootChain failing here 3")
+		if insecureSkipVerify {
+			return nil
+		}
 		return fmt.Errorf("failed to verify client cert chain. err: %w", err)
 	}
 	return nil
