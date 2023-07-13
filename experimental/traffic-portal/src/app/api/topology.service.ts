@@ -170,7 +170,7 @@ export class TopologyService extends APIService {
 	 * @param treeNodes The data for a material tree
 	 */
 	protected treeToTopologyInner(topologyNodeIndicesByCacheGroup: Map<string, number>,
-	                              topologyNodes: Array<ResponseTopologyNode>, parent: ResponseTopologyNode | undefined, treeNodes: Array<TopTreeNode>): void {
+		topologyNodes: Array<ResponseTopologyNode>, parent: ResponseTopologyNode | undefined, treeNodes: Array<TopTreeNode>): void {
 
 		for (const treeNode of treeNodes) {
 			const cachegroup = treeNode.cachegroup;
