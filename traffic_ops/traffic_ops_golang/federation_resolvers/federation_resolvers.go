@@ -181,7 +181,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 			// Convert FederationResolver fields to FederationResolverV5 fields
 			v5Resolver := tc.UpgradeToFederationResolverV5(resolver)
 
-			resolvers = append(resolvers, &v5Resolver)
+			resolvers = append(resolvers, v5Resolver)
 		} else {
 			resolvers = append(resolvers, resolver)
 		}
