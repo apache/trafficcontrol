@@ -15,7 +15,8 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import type {
 	RequestTopology,
-	ResponseTopology, ResponseTopologyNode,
+	ResponseTopology,
+	ResponseTopologyNode,
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
@@ -96,42 +97,10 @@ export class TopologyService extends APIService {
 	 * Replaces an existing Topology with the provided new definition of a
 	 * Topology.
 	 *
-	 * @param name The if of the Topology being updated.
-	 * @param topology The new definition of the Topology.
+	 * @param topology The full new definition of the Topology being updated
 	 */
-	public async updateTopology(name: string, topology: RequestTopology): Promise<ResponseTopology>;
-	/**
-	 * Replaces an existing Topology with the provided new definition of a
-	 * Topology.
-	 *
-	 * @param topology The full new definition of the Topology being
-	 * updated.
-	 */
-	public async updateTopology(topology: ResponseTopology): Promise<ResponseTopology>;
-	/**
-	 * Replaces an existing Topology with the provided new definition of a
-	 * Topology.
-	 *
-	 * @param topologyOrName The full new definition of the Topology being
-	 * updated, or just its name.
-	 * @param payload The new definition of the Topology. This is required if
-	 * `topologyOrName` is an name, and ignored otherwise.
-	 */
-	public async updateTopology(topologyOrName: ResponseTopology | string, payload?: RequestTopology): Promise<ResponseTopology> {
-		let name;
-		let body;
-		if (typeof topologyOrName === "string") {
-			if (!payload) {
-				throw new TypeError("invalid call signature - missing request payload");
-			}
-			body = payload;
-			name = topologyOrName;
-		} else {
-			body = topologyOrName;
-			({name} = topologyOrName);
-		}
-
-		return this.put<ResponseTopology>(`topologies?name=${name}`, body).toPromise();
+	public async updateTopology(topology: ResponseTopology): Promise<ResponseTopology> {
+		return this.put<ResponseTopology>(`topologies?name=${topology.name}`, topology).toPromise();
 	}
 
 	/**
@@ -201,7 +170,7 @@ export class TopologyService extends APIService {
 	 * @param treeNodes The data for a material tree
 	 */
 	protected treeToTopologyInner(topologyNodeIndicesByCacheGroup: Map<string, number>,
-		topologyNodes: Array<ResponseTopologyNode>, parent: ResponseTopologyNode | undefined, treeNodes: Array<TopTreeNode>): void {
+	                              topologyNodes: Array<ResponseTopologyNode>, parent: ResponseTopologyNode | undefined, treeNodes: Array<TopTreeNode>): void {
 
 		for (const treeNode of treeNodes) {
 			const cachegroup = treeNode.cachegroup;

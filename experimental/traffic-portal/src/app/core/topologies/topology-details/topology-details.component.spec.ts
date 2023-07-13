@@ -12,17 +12,38 @@
 * limitations under the License.
 */
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatDialogModule } from "@angular/material/dialog";
+import { ActivatedRoute } from "@angular/router";
+import { RouterTestingModule } from "@angular/router/testing";
+import { ReplaySubject } from "rxjs";
+
+import { APITestingModule } from "src/app/api/testing";
+import {
+	NavigationService
+} from "src/app/shared/navigation/navigation.service";
 
 import { TopologyDetailsComponent } from "./topology-details.component";
 
 describe("TopologyDetailsComponent", () => {
 	let component: TopologyDetailsComponent;
 	let fixture: ComponentFixture<TopologyDetailsComponent>;
+	let route: ActivatedRoute;
+	let paramMap: jasmine.Spy;
+
+	const navSvc = jasmine.createSpyObj([], {
+		headerHidden: new ReplaySubject<boolean>(),
+		headerTitle: new ReplaySubject<string>(),
+	});
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
-			declarations: [TopologyDetailsComponent]
+			declarations: [TopologyDetailsComponent],
+			imports: [APITestingModule, RouterTestingModule, MatDialogModule],
+			providers: [{provide: NavigationService, useValue: navSvc}],
 		});
+		route = TestBed.inject(ActivatedRoute);
+		paramMap = spyOn(route.snapshot.paramMap, "get");
+		paramMap.and.returnValue(null);
 		fixture = TestBed.createComponent(TopologyDetailsComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
