@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login. 
 - [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops* Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
 - [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
 - [#7291](https://github.com/apache/trafficcontrol/pull/7291) *Traffic Ops* Extended Layered Profile feature to aggregate parameters for all server profiles.
@@ -38,6 +39,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7388](https://github.com/apache/trafficcontrol/pull/7388) *TC go Client* Adds sslkey_expiration methodology in v4 and v5 clients
 - [#7543](https://github.com/apache/trafficcontrol/pull/7543) *Traffic Portal* New Ansible Role to use Traffic Portal v2
 - [#7516](https://github.com/apache/trafficcontrol/pull/7516) *t3c* added command line arg to control go_direct in parent.config
+- [#7602](https://github.com/apache/trafficcontrol/pull/7602) *t3c* added installed package data to t3c-apply-metadata.json
+- [#7618](https://github.com/apache/trafficcontrol/pull/7618) *Traffic Portal* Add the ability to inspect a user provider cert, or the cert chain on DS SSL keys.
+- [#7619](https://github.com/apache/trafficcontrol/pull/7619) Traffic Ops* added optional field `oauth_user_attribute` for OAuth login credentials
 - [#7646](https://github.com/apache/trafficcontrol/pull/7646) *Traffic Portal* Add the ability to delete a cert.
 
 ### Changed
@@ -57,14 +61,22 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7366](https://github.com/apache/trafficcontrol/pull/7366) *t3c* Removed timestamp from metadata file since it's changing every minute and causing excessive commits to git repo.
 - [#7386](https://github.com/apache/trafficcontrol/pull/7386) *Traffic Portal* Increased the number of events that are logged to the TP access log.
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
+- [#7586](https://github.com/apache/trafficcontrol/pull/7586) *Traffic Ops* Add permission to Operations Role to read from dnsseckeys endpoint.
+- [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
+- [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
 
 ### Fixed
+- [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
+- [#7623] (https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
+- [#7608](https://github.com/apache/trafficcontrol/pull/7608) *Traffic Monitor* Use stats_over_http(plugin.system_stats.timestamp_ms) timestamp field to calculate bandwidth for TM's caches.
+- [#7612](https://github.com/apache/trafficcontrol/pull/7612) *Traffic Ops* Fixes Divisions V5 apis to respond with RFC3339 date/time Format
+- [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}
 - [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* *Traffic Ops* Fixed `ASN` V5 apis to respond with `RFC3339` date/time Format.
 - [#7598](https://github.com/apache/trafficcontrol/pull/7598)  *Traffic Ops* Fixes Server Capability V5 Type Name Minor version
 - [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixes `deliveryservice_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7312](https://github.com/apache/trafficcontrol/issues/7312) *Docs* Changing docs for CDN locks for DELETE response structure v4 and v5. 
 - [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixes Delivery Service Requests V5 apis docs with RFC3339 date/time Format
-- [#7539](https://github.com/apache/trafficcontrol/pull/7539) *Traffic Monitor* Use stats_over_http timestamp to calculate bandwidth for TM's health. 
+- [#7544](https://github.com/apache/trafficcontrol/issues/7544) *Traffic Ops* Fixes stats_summary v5 apis to respond with RFC3339 date/time Format.
 - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
 - [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
 - [#7519] (https://github.com/apache/trafficcontrol/issues/7519) *Traffic Ops* Fixed TO API /servers/{id}/deliveryservices endpoint to responding with all DS's on cache that are directly assigned and inherited through topology.
@@ -119,7 +131,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7425](https://github.com/apache/trafficcontrol/pull/7425) *Traffic Control Cache Config (t3c)* Fixed issue with layered profile iteration being done in the wrong order.
 - [#6385](https://github.com/apache/trafficcontrol/issues/6385) *Traffic Ops* Reserved consistentHashQueryParameters cause internal server error
 - [#7471](https://github.com/apache/trafficcontrol/pull/7471) *Traffic Control Cache Config (t3c)* Fixed issue with MSO non topo origins from multiple cache groups.
-- [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
+- [#7590](https://github.com/apache/trafficcontrol/issues/7590) *Traffic Control Cache Config (t3c)* Fixed issue with git detected dubious ownership in repository.
+- [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixes `types` v5 apis to respond with `RFC3339` date/time Format.
+- [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixes an issue where certificate chain validation failed based on leading or trailing whitespace.
 
 ### Removed
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.

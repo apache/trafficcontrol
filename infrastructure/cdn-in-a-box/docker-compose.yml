@@ -224,6 +224,8 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    depends_on:
+      - tchealthclient
     environment:
       DEBUG_PORT: '2347'
     env_file:
@@ -246,6 +248,8 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    depends_on:
+      - tchealthclient
     environment:
       DEBUG_PORT: '2348'
     env_file:
@@ -268,6 +272,8 @@ services:
         RHEL_VERSION: ${RHEL_VERSION:-8}
         ORT_RPM: infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
     domainname: infra.ciab.test
+    depends_on:
+      - tchealthclient
     environment:
       DEBUG_PORT: '2349'
     env_file:

@@ -256,7 +256,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	silentPtr := getopt.BoolLong(silentFlagName, 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
 	const goDirectFlagName = "go-direct"
-	goDirectPtr := getopt.StringLong(goDirectFlagName, 'G', "false", "[true|false|old] default will set go_direct to false, you can set go_direct true, or old will be based on opposite of parent_is_proxy directive.")
+	goDirectPtr := getopt.StringLong(goDirectFlagName, 'G', "old", "[true|false|old] default will set go_direct to old and it will be based on opposite of parent_is_proxy directivefalse, you can also set go_direct true, or false.")
 
 	const waitForParentsFlagName = "wait-for-parents"
 	waitForParentsPtr := getopt.BoolLong(waitForParentsFlagName, 'W', "[true | false] do not update if parent_pending = 1 in the update json. Default is false")
@@ -376,11 +376,11 @@ If any of the related flags are also set, they override the mode's default behav
 	switch *goDirectPtr {
 	case "false", "true", "old":
 		if !getopt.IsSet(goDirectFlagName) {
-			modeLogStrs = append(modeLogStrs, goDirectFlagName+" not set using default 'false")
+			modeLogStrs = append(modeLogStrs, goDirectFlagName+" not set using default 'old'")
 		}
 	default:
-		modeLogStrs = append(modeLogStrs, *goDirectPtr+" is not a valid go-direct option setting default 'false'")
-		*goDirectPtr = "false"
+		modeLogStrs = append(modeLogStrs, *goDirectPtr+" is not a valid go-direct option setting default 'old'")
+		*goDirectPtr = "old"
 	}
 
 	if *serviceActionPtr == "" {

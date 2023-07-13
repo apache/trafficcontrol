@@ -86,7 +86,7 @@ func TestUnencodeFilter(t *testing.T) {
 
 func TestIsPackageInstalled(t *testing.T) {
 	trops := NewTrafficOpsReq(testCfg)
-	trops.pkgs["trafficserver"] = true
+	trops.Pkgs["trafficserver"] = true
 
 	if trops.IsPackageInstalled("mouse") {
 		t.Errorf("isPackageInstalled() failed, expected 'false' got 'true'.")
@@ -96,7 +96,7 @@ func TestIsPackageInstalled(t *testing.T) {
 		t.Errorf("isPackageInstalled() failed, expected 'true' got 'false'.")
 	}
 
-	trops.pkgs["trafficserver"] = false
+	trops.Pkgs["trafficserver"] = false
 	if trops.IsPackageInstalled("trafficserver") {
 		t.Errorf("isPackageInstalled() failed, expected 'false' got 'true'.")
 	}

@@ -136,7 +136,7 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.WriteResp(w, r, "Successfully added ssl keys for "+*req.DeliveryService)
+	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully added ssl keys for "+*req.DeliveryService)
 }
 
 // GetSSlKeyExpirationInformation gets expiration information for all SSL certificates.
@@ -192,7 +192,6 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	logAlert := true
 	keyObjV4, err := getSslKeys(inf, r.Context())
 	if err != nil {
-		userError = api.LogErr(r, sc, nil, err)
 		if err == sql.ErrNoRows {
 			if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
 				sc = http.StatusNotFound
@@ -201,6 +200,8 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 				// For versions lesser than 5.0, don't log an alert if the error is ErrNoRows. This is for backward compatibility reasons.
 				logAlert = false
 			}
+		} else {
+			userError = api.LogErr(r, sc, nil, err)
 		}
 		if logAlert {
 			alerts.AddNewAlert(tc.ErrorLevel, userError.Error())
@@ -539,6 +540,8 @@ func verifyCertKeyPair(pemCertificate string, pemPrivateKey string, rootCA strin
 		block := &pem.Block{Type: "CERTIFICATE", Bytes: link.Raw}
 		pemEncodedChain += string(pem.EncodeToMemory(block))
 	}
+	pemCertificate = strings.TrimSpace(pemCertificate)
+	pemEncodedChain = strings.TrimSpace(pemEncodedChain)
 
 	if len(pemEncodedChain) < 1 {
 		return "", "", false, false, false, errors.New("invalid empty certificate chain in request")

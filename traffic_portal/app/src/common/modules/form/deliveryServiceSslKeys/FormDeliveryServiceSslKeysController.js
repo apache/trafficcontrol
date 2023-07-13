@@ -87,6 +87,11 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 		locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys/generate');
 	};
 
+	$scope.navState = 0;
+	$scope.updateState = function(newState) {
+		$scope.navState = newState;
+	}
+
 	$scope.renewCert = function() {
 		var params = {
 			title: 'Renew SSL Keys for Delivery Service: ' + deliveryService.xmlId

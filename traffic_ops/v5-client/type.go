@@ -26,14 +26,14 @@ import (
 const apiTypes = "/types"
 
 // CreateType creates the given Type. There should be a very good reason for doing this.
-func (to *Session) CreateType(typ tc.Type, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateType(typ tc.TypeV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiTypes, opts, typ, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateType replaces the Type identified by 'id' with the one provided.
-func (to *Session) UpdateType(id int, typ tc.Type, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateType(id int, typ tc.TypeV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiTypes, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, typ, &alerts)
@@ -44,8 +44,8 @@ func (to *Session) UpdateType(id int, typ tc.Type, opts RequestOptions) (tc.Aler
 // If a 'useInTable' parameter is passed, the returned Types are restricted to those with
 // that exact 'useInTable' property. Only exactly 1 or exactly 0 'useInTable' parameters may
 // be passed; passing more will result in an error being returned.
-func (to *Session) GetTypes(opts RequestOptions) (tc.TypesResponse, toclientlib.ReqInf, error) {
-	var data tc.TypesResponse
+func (to *Session) GetTypes(opts RequestOptions) (tc.TypesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.TypesResponseV5
 	reqInf, err := to.get(apiTypes, opts, &data)
 	return data, reqInf, err
 }

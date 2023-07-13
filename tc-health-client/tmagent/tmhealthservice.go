@@ -78,7 +78,7 @@ func loopPollAndUpdateCacheStatus(pi *ParentInfo, doneChan <-chan struct{}, upda
 		}
 		doTrafficOpsReq := toLoginDispersion <= 0
 
-		log.Infoln("service-status tm-health starting")
+		log.Infoln("service-status service=tm-health event=starting")
 		start := time.Now()
 		doPollAndUpdateCacheStatus(pi, doTrafficOpsReq)
 		updateHealthSignal()
@@ -99,18 +99,18 @@ func doPollAndUpdateCacheStatus(pi *ParentInfo, doTrafficOpsReq bool) {
 	} else {
 		// log.Debugf("updated parent info, total number of parents: %d\n", len(pi.Parents))
 		// TODO track map len
-		log.Debugf("updated parent info, total number of parents: %v\n", len(pi.GetParents()))
+		log.Debugf("tm-agent total_parents=%v\n", len(pi.GetParents()))
 	}
 
 	// read traffic manager cache statuses.
 	crStates, err := pi.GetCacheStatuses()
 	now := time.Now() // get the current poll time
 	if err != nil {
-		log.Errorf("error in TrafficMonitor polling: %s\n", err.Error())
+		log.Errorf("poll-status %v\n", err.Error())
 		if err := pi.GetTOData(cfg); err != nil {
-			log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+			log.Errorln("update event=could not update the list of trafficmonitors, keeping the old config")
 		} else {
-			log.Infoln("updated TrafficMonitor statuses from TrafficOps")
+			log.Infoln("service-status service=tm-health event=updated TrafficMonitor statuses from TrafficOps")
 		}
 
 		// log the poll state data if enabled
@@ -132,9 +132,9 @@ func doPollAndUpdateCacheStatus(pi *ParentInfo, doTrafficOpsReq bool) {
 	if doTrafficOpsReq {
 		// TODO move to its own TO poller
 		if err = pi.GetTOData(cfg); err != nil {
-			log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+			log.Errorln("update event=could not update the list of trafficmonitors, keeping the old config")
 		} else {
-			log.Infoln("updated TrafficMonitor statuses from TrafficOps")
+			log.Infoln("service-status service=tm-health event=updated TrafficMonitor statuses from TrafficOps")
 		}
 	}
 
@@ -153,7 +153,7 @@ func (pi *ParentInfo) GetCacheStatuses() (tc.CRStates, error) {
 
 	tmHostName, err := pi.findATrafficMonitor()
 	if err != nil {
-		return tc.CRStates{}, errors.New("finding a trafficmonitor: " + err.Error())
+		return tc.CRStates{}, errors.New("monitor=finding a trafficmonitor: " + err.Error())
 	}
 	tmc := tmclient.New("http://"+tmHostName, cfg.TORequestTimeout)
 

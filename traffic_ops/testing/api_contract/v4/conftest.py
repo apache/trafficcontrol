@@ -1482,7 +1482,7 @@ def cdn_lock_data_post(to_session: TOSession, request_template_data: list[JSONDa
 
 @pytest.fixture(name="cdn_notification_post_data")
 def cdn_notification_data_post(to_session: TOSession, request_template_data: list[JSONData],
-		  cdn_post_data:dict[str, object], db_connection: psycopg2.connect) -> dict[str, object]:
+		  cdn_post_data:dict[str, object]) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for cdn_notifications endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
@@ -1506,6 +1506,33 @@ def cdn_notification_data_post(to_session: TOSession, request_template_data: lis
 		logger.error("cdn_notfication returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
+
+@pytest.fixture(name="deliveryservice_request_post_data")
+def deliveryservice_request_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  delivery_services_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for deliveryservice_request endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get deliveryservice_request request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	deliveryservice_request = check_template_data(request_template_data["deliveryservice_requests"], "deliveryservice_requests")
+
+	# Return new post data and post response from deliveryservice_request POST request
+	keys = ["displayName", "xmlId", "id", "cdnId", "tenantId", "type", "typeId"]
+	for key in keys:
+		deliveryservice_request["requested"][key] = delivery_services_post_data[key]
+	logger.info("New deliveryservice_request data to hit POST method %s", deliveryservice_request)
+	# Hitting deliveryservice_request POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice_request(data=deliveryservice_request)
+	resp_obj = check_template_data(response, "deliveryservice_request")
+	yield resp_obj
+	deliveryservice_request_id = resp_obj.get("id")
+	msg = to_session.delete_deliveryservice_request(query_params={"id":deliveryservice_request_id})
+	logger.info("Deleting deliveryservice_request data... %s", msg)
+	if msg is None:
+		logger.error("deliveryservice_request returned by Traffic Ops is missing an 'id' property")
 
 
 @pytest.fixture(name="steering_post_data")

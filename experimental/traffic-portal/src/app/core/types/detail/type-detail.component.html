@@ -16,6 +16,8 @@ limitations under the License.
 	<tp-loading *ngIf="!type"></tp-loading>
 	<form ngNativeValidate (ngSubmit)="submit($event)" *ngIf="type">
 		<mat-card-header class="headers-container" *ngIf="!new">
+			<a mat-raised-button color="primary" *ngIf="type.useInTable === 'cachegroup'" [routerLink]="'/core/cache-groups'" [queryParams]="{typeName: type.name}">View Cache Groups</a>
+			<a mat-raised-button color="primary" *ngIf="type.useInTable === 'server'" [routerLink]="'/core/servers'" [queryParams]="{type: type.name}">View Servers</a>
 		</mat-card-header>
 		<mat-card-content class="container">
 			<mat-form-field *ngIf="!new">

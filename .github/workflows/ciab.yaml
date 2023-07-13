@@ -210,6 +210,24 @@ jobs:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
 
+  tc-health-client:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 5
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: ${{ github.job }}
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
+
   grove:
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-latest
@@ -292,6 +310,7 @@ jobs:
       - traffic_router
       - traffic_stats
       - trafficserver
+      - tc-health-client
     steps:
       - name: Checkout
         uses: actions/checkout@master
