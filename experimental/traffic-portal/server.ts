@@ -194,7 +194,7 @@ export function app(serverConfig: ServerConfig): express.Express {
 	server.get("*", (req, res) => {
 		res.render(indexHtml, {providers: [
 			{provide: APP_BASE_HREF, useValue: req.baseUrl},
-			{provide: 'TP_V1_URL', useValue: serverConfig.tpv1url}
+			{provide: 'TP_V1_URL', useValue: serverConfig.tpv1Url}
 		], req});
 	});
 
