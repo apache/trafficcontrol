@@ -140,7 +140,7 @@ interface BaseConfig {
 	/** Path to the folder containing browser files. **/
 	browserFolder: string;
 	/** The URL of the Traffic Portal V1. */
-	tpv1url: URL;
+	tpv1Url: URL;
 }
 
 /**
@@ -204,6 +204,12 @@ function isConfig(c: unknown): c is ServerConfig {
 	if (typeof((c as {trafficOps: unknown}).trafficOps) !== "string") {
 		throw new Error("'trafficOps' must be a string");
 	}
+	if (!Object.prototype.hasOwnProperty.call(c, "tpv1Url")) {
+		throw new Error("'tpv1Url' is required");
+	}
+	if (typeof((c as {tpv1Url: unknown}).tpv1Url) !== "string") {
+		throw new Error("'tpv1Url' must be a string");
+	}
 	if (!Object.prototype.hasOwnProperty.call(c, "browserFolder")) {
 		throw new Error("'browserFolder' is required");
 	}
@@ -215,6 +221,12 @@ function isConfig(c: unknown): c is ServerConfig {
 		(c as {trafficOps: URL}).trafficOps = new URL((c as {trafficOps: string}).trafficOps);
 	} catch (e) {
 		throw new Error(`'trafficOps' is not a valid URL: ${e}`);
+	}
+
+	try {
+		(c as {tpv1Url: URL}).tpv1Url = new URL((c as {tpv1Url: string}).tpv1Url);
+	} catch (e) {
+		throw new Error(`'tpv1Url' is not a valid URL: ${e}`);
 	}
 
 	if (Object.prototype.hasOwnProperty.call(c, "useSSL")) {
@@ -298,6 +310,7 @@ export function getVersion(path?: string): ServerVersion {
 /** The type of command line arguments to Traffic Portal. */
 interface Args {
 	trafficOps?: URL;
+	tpv1Url?: URL;
 	insecure: boolean;
 	port: number;
 	certPath?: string;
@@ -313,7 +326,7 @@ export const defaultConfig: ServerConfig = {
 	insecure: false,
 	port: 4200,
 	trafficOps: new URL("https://example.com"),
-	tpv1url: new URL("https://example.com"),
+	tpv1Url: new URL("https://example.com"),
 	version: { version: "" }
 };
 /**
@@ -375,6 +388,10 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 		}
 	}
 
+	if (args.tpv1Url) {
+		cfg.tpv1Url = args.tpv1Url;
+	}
+
 	if (readFromFile && cfg.useSSL) {
 		if (args.certPath) {
 			cfg.certPath = args.certPath;
@@ -395,7 +412,7 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 				keyPath: args.keyPath,
 				port: cfg.port,
 				trafficOps: cfg.trafficOps,
-				tpv1url: cfg.tpv1url,
+				tpv1Url: cfg.tpv1Url,
 				useSSL: true,
 				version: ver
 			};
