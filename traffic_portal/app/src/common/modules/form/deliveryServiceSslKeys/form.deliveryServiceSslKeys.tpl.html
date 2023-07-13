@@ -100,7 +100,8 @@ under the License.
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success" ng-disabled="dsSslKeyForm.$pristine || dsSslKeyForm.$invalid" ng-click="save()">Update Keys</button>
+                <button type="button" class="btn btn-danger" ng-show="sslKeys.version" ng-click="confirmDelete()">Delete</button>
+                <button type="button" class="btn btn-success" ng-disabled="dsSslKeyForm.$pristine || dsSslKeyForm.$invalid" ng-click="save()">Update</button>
             </div>
         </form>
     </div>
