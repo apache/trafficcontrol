@@ -108,13 +108,13 @@ A22D22wvfs7CE3cUz/8UnvLM3kbTTu1WbbBbrHjAV47sAHjW/ckTqeo=
 " > localhost.key
 
 if [[ ! -e "/etc/pki/tls/traffic_ops/" ]]; then
-	mkdir -p "/etc/pki/tls/traffic_ops/"
+	sudo mkdir -p "/etc/pki/tls/traffic_ops/"
 fi
 
 resources="$(dirname "$0")"
 envsubst <"${resources}/cdn.json" >cdn.conf
 cp "${resources}/database.json" database.conf
-cp "${resources}/*.pem" /etc/pki/tls/traffic_ops/
+sudo cp "${resources}/*.pem" /etc/pki/tls/traffic_ops/
 
 
 truncate --size=0 traffic.ops.log # Removes output from previous API versions and makes sure files exist
