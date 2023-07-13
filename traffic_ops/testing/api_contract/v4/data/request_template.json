@@ -267,8 +267,8 @@
 			"targetId": 61,
 			"value": 100,
 			"typeId": 43
-    }
-  ],
+		}
+	],
 	"cdn_notifications": [
 		{
 			"cdn": "cdn1",
@@ -373,6 +373,17 @@
 				"ecsEnabled": false,
 				"serviceCategory": null,
 				"tlsVersions": null
+			}
+		}
+	],
+	"delivery_service_sslkeys": [
+		{
+			"key": "ds-01",
+			"version": "1",
+			"certificate": {
+				"key": "some_key",
+				"csr": "some_csr",
+				"crt": "some_crt"
 			}
 		}
 	]

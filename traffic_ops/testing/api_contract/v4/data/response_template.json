@@ -730,7 +730,10 @@
         ],
         "properties": {
             "maxRequestHeaderBytes": {
-                "type": ["null","integer"]
+                "type": [
+                    "null",
+                    "integer"
+                ]
             },
             "firstHeaderRewrite": {
                 "type": [
@@ -1580,6 +1583,80 @@
             },
             "status": {
                 "type": "string"
+            }
+        }
+    },
+    "delivery_service_sslkeys": {
+        "type": "object",
+        "required": [
+            "certificate",
+            "deliveryservice",
+            "cdn",
+            "businessUnit",
+            "city",
+            "organization",
+            "hostname",
+            "country",
+            "state",
+            "version",
+            "expiration",
+            "sans"
+        ],
+        "properties": {
+            "certificate": {
+                "type": "object",
+                "required": [
+                    "crt",
+                    "key",
+                    "csr"
+                ],
+                "properties": {
+                    "crt": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "csr": {
+                        "type": "string"
+                    }
+                }
+            },
+            "deliveryservice": {
+                "type": "string"
+            },
+            "cdn": {
+                "type": "string"
+            },
+            "businessUnit": {
+                "type": "string"
+            },
+            "city": {
+                "type": "string"
+            },
+            "organization": {
+                "type": "string"
+            },
+            "hostname": {
+                "type": "string"
+            },
+            "country": {
+                "type": "string"
+            },
+            "state": {
+                "type": "string"
+            },
+            "version": {
+                "type": "string"
+            },
+            "expiration": {
+                "type": "string"
+            },
+            "sans": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
             }
         }
     }
