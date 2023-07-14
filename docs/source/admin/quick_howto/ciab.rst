@@ -119,8 +119,6 @@ To test the ``foo.kabletown.net.`` Federation:
 	# Expected response:
 	foo.kabletown.net.
 
-When the CDN is to be shut down, it is often best to do so using ``sudo docker-compose down -v`` due to the use of shared volumes in the system which might interfere with a proper initialization upon the next run.
-
 Readiness Check
 """""""""""""""
 
