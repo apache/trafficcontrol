@@ -24,17 +24,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -450,19 +450,18 @@ func DeletePhysLocation(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	id := inf.Params["id"]
+	if id == "" {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("couldn't delete Phys_Location. Invalid ID. Id Cannot be empty for Delete Operation"), nil)
+		return
+	}
 	exists, err := dbhelpers.PhysLocationExists(tx, id)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	if !exists {
-		if id != "" {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no PhysLocation exists by id: %s", id), nil)
-			return
-		} else {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no PhysLocation exists for empty id: %s", id), nil)
-			return
-		}
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no PhysLocation exists by id: %s", id), nil)
+		return
 	}
 
 	assignedServer := 0
