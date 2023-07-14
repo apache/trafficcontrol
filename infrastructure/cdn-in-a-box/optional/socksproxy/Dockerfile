@@ -20,7 +20,7 @@
 # Based on Rocky Linux 8
 ############################################################
     # Change BASE_IMAGE to centos when RHEL_VERSION=7
-ARG BASE_IMAGE=rockylinux \
+ARG BASE_IMAGE=centos \
     RHEL_VERSION=7
 FROM ${BASE_IMAGE}:${RHEL_VERSION}
 ARG RHEL_VERSION=7

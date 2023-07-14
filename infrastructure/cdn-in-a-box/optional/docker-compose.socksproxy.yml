@@ -45,6 +45,7 @@ services:
       context: .
       dockerfile: optional/socksproxy/Dockerfile
       args:
+        BASE_IMAGE: centos
         RHEL_VERSION: 7
     hostname: socksproxy
     domainname: infra.ciab.test
