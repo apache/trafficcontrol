@@ -20,6 +20,9 @@
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o nounset -o pipefail -o xtrace -o monitor
 
+# Needed because on Rocky Linux, cron jobs do not inherit the environment
+env > /ciab.env
+
 set_profile_parameter() {
 	local profile_file="$1" config_file="$2" name="$3" new_value="$4" human_readable="$5"
 	jq=(jq --arg CONFIG_FILE "$config_file" --arg NAME "$name" --arg NEW_VALUE "$new_value")
