@@ -70,7 +70,7 @@ Response Structure
 ------------------
 :id:          The integral, unique identifier of the resolver
 :ipAddress:   The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
-:lastUpdated: The date and time at which this resolver was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this resolver was last updated, in :rfc:`3339`
 :type:        The :term:`Type` of the resolver
 
 .. code-block:: http
@@ -92,7 +92,7 @@ Response Structure
 		{
 			"id": 1,
 			"ipAddress": "::1/1",
-			"lastUpdated": "2019-11-06 00:00:40+00",
+			"lastUpdated": "2019-11-06T15:18:14.952814+05:30",
 			"type": "RESOLVE6"
 		}
 	]}
