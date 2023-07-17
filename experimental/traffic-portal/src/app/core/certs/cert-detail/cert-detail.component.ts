@@ -123,8 +123,8 @@ export class CertDetailComponent implements OnChanges {
 		this.issuer = this.processAttributes(this.cert.issuer.attributes);
 		this.subject = this.processAttributes(this.cert.subject.attributes);
 
-		this.validBeforeFormControl.setValue(this.cert.validity.notBefore.toISOString().split("T")[0]);
-		this.validAfterFormControl.setValue(this.cert.validity.notAfter.toISOString().split("T")[0]);
+		this.validBeforeFormControl.setValue(this.cert.validity.notBefore.toISOString().slice(0, 16));
+		this.validAfterFormControl.setValue(this.cert.validity.notAfter.toISOString().slice(0, 16));
 		this.validAfterFormControl.markAsTouched();
 		this.validBeforeFormControl.markAsTouched();
 	}
