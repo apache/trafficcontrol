@@ -32,6 +32,7 @@ public class CacheRegister {
 	private Map<String,Cache> allCaches;
 	private TreeSet<DeliveryServiceMatcher> deliveryServiceMatchers;
 	private Map<String, DeliveryService> dsMap;
+	private Map<String, DeliveryService> fqdnToDeliveryServiceMap;
 	private JsonNode config;
 	private JsonNode stats;
 	private int edgeTrafficRouterCount;
@@ -148,6 +149,14 @@ public class CacheRegister {
 	 * @return the DeliveryService that matches the request
 	 */
 	public DeliveryService getDeliveryService(final Request request) {
+		final String requestName = request.getHostname();
+		final Map<String, DeliveryService> map = getFQDNToDeliveryServiceMap();
+		if (map != null) {
+			final DeliveryService ds = map.get(requestName);
+			if (ds != null) {
+				return ds;
+			}
+		}
 		if (deliveryServiceMatchers == null) {
 			return null;
 		}
@@ -177,6 +186,14 @@ public class CacheRegister {
 
 	public void setDeliveryServiceMap(final Map<String, DeliveryService> dsMap) {
 		this.dsMap = dsMap;
+	}
+
+	public Map<String, DeliveryService> getFQDNToDeliveryServiceMap() {
+		return fqdnToDeliveryServiceMap;
+	}
+
+	public void setFQDNToDeliveryServiceMap(final Map<String, DeliveryService> fqdnToDeliveryServiceMap) {
+		this.fqdnToDeliveryServiceMap = fqdnToDeliveryServiceMap;
 	}
 
 	public JsonNode getTrafficRouters() {
