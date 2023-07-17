@@ -14,9 +14,13 @@
 
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import {
-	ProfileExport, ProfileImport, ProfileImportResponse, RequestParameter,
-	RequestProfile, ResponseParameter, ResponseProfile
+import type {
+	ProfileImport,
+	ProfileImportResponse,
+	RequestParameter,
+	RequestProfile,
+	ResponseParameter,
+	ResponseProfile,
 } from "trafficops-types";
 
 import { APIService } from "./base-api.service";
@@ -117,25 +121,14 @@ export class ProfileService extends APIService {
 	}
 
 	/**
-	 * Deletes an existing profile.
+	 * Deletes an existing Profile.
 	 *
-	 * @param profileId Id of the profile to delete.
-	 * @returns The success message.
+	 * @param profile The Profile to delete, or just its ID.
+	 * @returns The deleted Profile.
 	 */
-	public async deleteProfile(profileId: number | ResponseProfile): Promise<ResponseProfile> {
-		const id = typeof (profileId) === "number" ? profileId : profileId.id;
+	public async deleteProfile(profile: number | ResponseProfile): Promise<ResponseProfile> {
+		const id = typeof (profile) === "number" ? profile : profile.id;
 		return this.delete<ResponseProfile>(`profiles/${id}`).toPromise();
-	}
-
-	/**
-	 * Exports profile
-	 *
-	 * @param profileId Id of the profile to export.
-	 * @returns profile export object.
-	 */
-	public async exportProfile(profileId: number | ResponseProfile): Promise<ProfileExport>{
-		const id = typeof (profileId) === "number" ? profileId : profileId.id;
-		return this.http.get<ProfileExport>(`/api/${this.apiVersion}/profiles/${id}/export`).toPromise();
 	}
 
 	/**
