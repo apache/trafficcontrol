@@ -592,7 +592,7 @@ func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
 		}
 	}
 	if !r.Cfg.RpmDBOk {
-		log.Warnf("RPM DB is corrupted cannot run IsPackageInstalled for '%v'", name)
+		log.Warnf("RPM DB is corrupted cannot run IsPackageInstalled for '%v' and package metadata is unavailable", name)
 		return false
 	}
 	log.Infof("IsPackageInstalled '%v' not found in cache, querying rpm", name)
@@ -1029,6 +1029,45 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 				log.Errorf("\nIn Report mode and %s needs installation.\n", install[ii])
 				return errors.New("In Report mode and packages need installation")
 			}
+		}
+	}
+	return nil
+}
+
+func pkgMetaDataToMap(pmd []string) map[string]bool {
+	pkgMap := map[string]bool{}
+	for _, pkg := range pmd {
+		pkgMap[pkg] = true
+	}
+	return pkgMap
+}
+
+func pkgMatch(pkgMetaData []string, pk string) bool {
+	for _, pkg := range pkgMetaData {
+		if ok := strings.Contains(pk, pkg); ok {
+			return true
+		}
+	}
+	return false
+
+}
+
+func (r *TrafficOpsReq) ProcessPackagesWithMetaData(packageMetaData []string) error {
+	pkgs, err := getPackages(r.Cfg)
+	pkgMdataMap := pkgMetaDataToMap(packageMetaData)
+	if err != nil {
+		return errors.New("getting packages: " + err.Error())
+	}
+	for _, pkg := range pkgs {
+		fullPackage := pkg.Name + "-" + pkg.Version
+		if pkgMdataMap[fullPackage] {
+			log.Infof("package %v is assumed to be installed according to metadata file", fullPackage)
+			r.Pkgs[fullPackage] = true
+		} else if pkgMatch(packageMetaData, pkg.Name) {
+			log.Infof("package %v is assumed to be installed according to metadata, but doesn't match traffic ops pkg", fullPackage)
+			r.Pkgs[fullPackage] = true
+		} else {
+			log.Infof("package %v does not appear to be installed.", pkg.Name+"-"+pkg.Version)
 		}
 	}
 	return nil

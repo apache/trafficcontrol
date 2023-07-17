@@ -22,7 +22,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -94,8 +93,8 @@ func Main() int {
 	var lock util.FileLock
 	cfg, err := config.GetCfg(Version, GitRevision)
 	if err != nil {
-		fmt.Println(err)
-		fmt.Println(FailureExitMsg)
+		log.Infoln(err)
+		log.Errorln(FailureExitMsg)
 		return ExitCodeConfigError
 	} else if cfg == (config.Cfg{}) { // user used the --help option
 		return ExitCodeSuccess
@@ -261,9 +260,7 @@ func Main() int {
 		// make sure we got the data necessary to check packages
 		log.Infoln("======== Didn't get all files, no package processing needed or possible ========")
 		metaData.InstalledPackages = oldMetaData.InstalledPackages
-	} else if !cfg.RpmDBOk {
-		log.Infoln("======== RPM DB checks failed, package processing not possible ========")
-	} else {
+	} else if cfg.RpmDBOk {
 		log.Infoln("======== Start processing packages  ========")
 		err = trops.ProcessPackages()
 		if err != nil {
@@ -278,6 +275,9 @@ func Main() int {
 			log.Errorf("Error verifying system services: %s\n", err.Error())
 			return GitCommitAndExit(ExitCodeServicesError, FailureExitMsg, cfg, metaData, oldMetaData)
 		}
+	} else {
+		log.Infoln("======== RPM DB checks failed, package processing not possible, using installed packages from  metadata if available========")
+		trops.ProcessPackagesWithMetaData(oldMetaData.InstalledPackages)
 	}
 
 	log.Debugf("Preparing to fetch the config files for %s, files: %s, syncdsUpdate: %s\n", cfg.CacheHostName, cfg.Files, syncdsUpdate)

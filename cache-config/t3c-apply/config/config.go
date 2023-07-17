@@ -347,10 +347,11 @@ If any of the related flags are also set, they override the mode's default behav
 	// so we want to log what flags the mode set here, to aid debugging.
 	// But we can't do that until the loggers are initialized.
 	modeLogStrs := []string{}
+	fatalLogStrs := []string{}
 	if getopt.IsSet(runModeFlagName) {
 		runMode := t3cutil.StrToMode(*runModePtr)
 		if runMode == t3cutil.ModeInvalid {
-			return Cfg{}, errors.New(*runModePtr + " is an invalid mode.")
+			fatalLogStrs = append(fatalLogStrs, *runModePtr+" is an invalid mode.")
 		}
 		modeLogStrs = append(modeLogStrs, "t3c-apply is running in "+runMode.String()+" mode")
 		switch runMode {
@@ -436,7 +437,7 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	if *verbosePtr > 2 {
-		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
+		fatalLogStrs = append(fatalLogStrs, "Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
 	var cacheHostName string
@@ -445,7 +446,7 @@ If any of the related flags are also set, they override the mode's default behav
 	} else {
 		cacheHostName, err = os.Hostname()
 		if err != nil {
-			return Cfg{}, errors.New("Could not get the hostname from the O.S., please supply a hostname: " + err.Error())
+			fatalLogStrs = append(fatalLogStrs, "Could not get the hostname from the O.S., please supply a hostname: "+err.Error())
 		}
 		// strings.Split always returns a slice with at least 1 element, so we don't need a len check
 		cacheHostName = strings.Split(cacheHostName, ".")[0]
@@ -454,7 +455,7 @@ If any of the related flags are also set, they override the mode's default behav
 	useGit := StrToUseGitFlag(*useGitStr)
 
 	if useGit == UseGitInvalid {
-		return Cfg{}, errors.New("Invalid git flag '" + *useGitStr + "'. Valid options are yes, no, auto.")
+		fatalLogStrs = append(fatalLogStrs, "Invalid git flag '"+*useGitStr+"'. Valid options are yes, no, auto.")
 	}
 
 	retries := *retriesPtr
@@ -497,7 +498,15 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	rpmDBisOk := VerifyRpmDB()
-	
+
+	if *installPackagesPtr && !rpmDBisOk {
+		if t3cutil.StrToMode(*runModePtr) == t3cutil.ModeBadAss {
+			fatalLogStrs = append(fatalLogStrs, "RPM database check failed unable to install packages cannot continue in badass mode")
+		} else {
+			fatalLogStrs = append(fatalLogStrs, "RPM database check failed unable to install packages cannot continue")
+		}
+	}
+
 	toInfoLog = append(toInfoLog, fmt.Sprintf("rpm database is ok: %v", rpmDBisOk))
 	// set TSHome
 	var tsHome = ""
@@ -531,23 +540,23 @@ If any of the related flags are also set, they override the mode's default behav
 	if *useLocalATSVersionPtr {
 		atsVersionStr, err = GetATSVersionStr(tsHome)
 		if err != nil {
-			return Cfg{}, errors.New("getting local ATS version: " + err.Error())
+			fatalLogStrs = append(fatalLogStrs, "getting local ATS version: "+err.Error())
 		}
 	}
 	toInfoLog = append(toInfoLog, fmt.Sprintf("ATSVersionStr: '%s'\n", atsVersionStr))
 
 	usageStr := "basic usage: t3c-apply --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
 	if strings.TrimSpace(toURL) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. " + usageStr)
+		fatalLogStrs = append(fatalLogStrs, "Missing required argument --traffic-ops-url or TO_URL environment variable. "+usageStr)
 	}
 	if strings.TrimSpace(toUser) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-user or TO_USER environment variable. " + usageStr)
+		fatalLogStrs = append(fatalLogStrs, "Missing required argument --traffic-ops-user or TO_USER environment variable. "+usageStr)
 	}
 	if strings.TrimSpace(toPass) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. " + usageStr)
+		fatalLogStrs = append(fatalLogStrs, "Missing required argument --traffic-ops-password or TO_PASS environment variable. "+usageStr)
 	}
 	if strings.TrimSpace(cacheHostName) == "" {
-		return Cfg{}, errors.New("Missing required argument --cache-host-name. " + usageStr)
+		fatalLogStrs = append(fatalLogStrs, "Missing required argument --cache-host-name. "+usageStr)
 	}
 
 	toURLParsed, err := url.Parse(toURL)
@@ -609,6 +618,13 @@ If any of the related flags are also set, they override the mode's default behav
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
 	}
 
+	if len(fatalLogStrs) > 0 {
+		for _, str := range fatalLogStrs {
+			str = strings.TrimSpace(str)
+			log.Warnln(str)
+		}
+		return Cfg{}, errors.New("fatal error has occurerd")
+	}
 	for _, str := range modeLogStrs {
 		str = strings.TrimSpace(str)
 		if str == "" {
