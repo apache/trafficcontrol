@@ -555,7 +555,7 @@ export class DeliveryServiceService {
 		const xmlId = typeof ds === "string" ? ds : ds.xmlId;
 		const key = this.dsSSLKeys.find(k => k.deliveryservice === xmlId);
 		if(!key) {
-			throw new Error(`no such Delivery Service: ${ds}`);
+			throw new Error(`no such Delivery Service: ${xmlId}`);
 		}
 
 		return key;

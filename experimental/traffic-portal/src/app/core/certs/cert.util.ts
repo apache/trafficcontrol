@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import * as forge from "node-forge";
+import { pki, md, asn1 } from "node-forge";
 
 /**
  * Converts a given oid to it's human-readable name
@@ -20,8 +20,8 @@ import * as forge from "node-forge";
  * @returns The human-readable oid
  */
 export function oidToName(oid: string): string {
-	if (oid in forge.pki.oids) {
-		return forge.pki.oids[oid];
+	if (oid in pki.oids) {
+		return pki.oids[oid];
 	}
 	return "";
 }
@@ -32,10 +32,10 @@ export function oidToName(oid: string): string {
  * @param cert The certificate to hash
  * @returns SHA-1 of the cert
  */
-export function pkiCertToSHA1(cert: forge.pki.Certificate): string {
-	const md = forge.md.sha1.create();
-	md.update(forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes());
-	return md.digest().toHex();
+export function pkiCertToSHA1(cert: pki.Certificate): string {
+	const md1 = md.sha1.create();
+	md1.update(asn1.toDer(pki.certificateToAsn1(cert)).getBytes());
+	return md1.digest().toHex();
 }
 
 /**
@@ -44,8 +44,8 @@ export function pkiCertToSHA1(cert: forge.pki.Certificate): string {
  * @param cert The certificate to hash
  * @returns SHA-256 of the cert
  */
-export function pkiCertToSHA256(cert: forge.pki.Certificate): string {
-	const md = forge.md.sha256.create();
-	md.update(forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes());
-	return md.digest().toHex();
+export function pkiCertToSHA256(cert: pki.Certificate): string {
+	const md256 = md.sha256.create();
+	md256.update(asn1.toDer(pki.certificateToAsn1(cert)).getBytes());
+	return md256.digest().toHex();
 }

@@ -14,7 +14,7 @@
 
 import { Component, Input } from "@angular/core";
 
-import { Author } from "src/app/core/certs/cert-detail/cert-detail.component";
+import { type Author } from "src/app/core/certs/cert-detail/cert-detail.component";
 
 /**
  * CertAuthorComponent is the controller used for displaying a cert author.
@@ -25,6 +25,6 @@ import { Author } from "src/app/core/certs/cert-detail/cert-detail.component";
 	templateUrl: "./cert-author.component.html"
 })
 export class CertAuthorComponent {
-	@Input() public author: Author | undefined;
+	@Input({required: true}) public author!: Author;
 
 }

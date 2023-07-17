@@ -15,8 +15,8 @@ import { Component, OnInit, ViewChild } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatTabGroup } from "@angular/material/tabs";
 import { ActivatedRoute } from "@angular/router";
-import * as forge from "node-forge";
-import { ResponseDeliveryServiceSSLKey } from "trafficops-types";
+import { pki } from "node-forge";
+import { type ResponseDeliveryServiceSSLKey } from "trafficops-types";
 
 import { DeliveryServiceService } from "src/app/api";
 
@@ -33,12 +33,12 @@ type CertOrder = "Client -> Root" | "Root -> Client" | "Unknown" | "Single";
 /**
  * Wrapper around Certificate that contains additional fields
  */
-export interface AugmentedCertificate extends forge.pki.Certificate {
+export interface AugmentedCertificate extends pki.Certificate {
 	type: CertType;
 	parseError: boolean;
 }
 
-export const NULL_CERT = forge.pki.createCertificate() as AugmentedCertificate;
+export const NULL_CERT = pki.createCertificate() as AugmentedCertificate;
 NULL_CERT.type = "Error";
 NULL_CERT.parseError = true;
 
@@ -74,7 +74,7 @@ export class CertViewerComponent implements OnInit {
 	 */
 	private newCert(input: string): AugmentedCertificate {
 		try {
-			return forge.pki.certificateFromPem(input) as AugmentedCertificate;
+			return pki.certificateFromPem(input) as AugmentedCertificate;
 		} catch (e) {
 			console.error(`ran into issue creating certificate from input ${input}`, e);
 			return NULL_CERT;

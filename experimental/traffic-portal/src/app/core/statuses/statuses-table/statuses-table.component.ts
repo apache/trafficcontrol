@@ -92,12 +92,6 @@ export class StatusesTableComponent implements OnInit {
 	/** Form controller for the user search input. */
 	public fuzzControl = new FormControl<string>("", {nonNullable: true});
 
-	/**
-	 * Constructs the component with its required injections.
-	 *
-	 * @param api The Servers API which is used to provide row data.
-	 * @param navSvc Manages the header
-	 */
 	constructor(
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,

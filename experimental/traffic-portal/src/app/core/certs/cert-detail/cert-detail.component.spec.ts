@@ -12,11 +12,11 @@
 * limitations under the License.
 */
 import { ComponentFixture, TestBed } from "@angular/core/testing";
-import * as forge from "node-forge";
+import { pki } from "node-forge";
 
 import { pkiCertToSHA1, pkiCertToSHA256 } from "src/app/core/certs/cert.util";
 
-import { Author, CertDetailComponent } from "./cert-detail.component";
+import { CertDetailComponent } from "./cert-detail.component";
 
 const certPEM = `
 -----BEGIN CERTIFICATE-----
@@ -43,7 +43,7 @@ EsdMDJmBaoVum+sR6ch08TsqrTHAfdB3xJF37Wc=
 
 describe("CertDetailComponent", () => {
 	let component: CertDetailComponent;
-	let cert: forge.pki.Certificate;
+	let cert: pki.Certificate;
 	let fixture: ComponentFixture<CertDetailComponent>;
 
 	beforeEach(async () => {
@@ -52,7 +52,7 @@ describe("CertDetailComponent", () => {
 		})
 			.compileComponents();
 
-		cert = forge.pki.certificateFromPem(certPEM);
+		cert = pki.certificateFromPem(certPEM);
 		cert.setIssuer([
 			{
 				name: "countryName",
@@ -153,14 +153,14 @@ describe("CertDetailComponent", () => {
 			localityName: "L",
 			orgName: "O",
 			stateOrProvince: "ST",
-		} as Author);
+		});
 		expect(component.subject).toEqual({
 			commonName: "CN",
 			countryName: "C",
 			localityName: "L",
 			orgName: "O",
 			stateOrProvince: "ST",
-		} as Author);
+		});
 		expect(component.sha1).toBe(pkiCertToSHA1(component.cert));
 		expect(component.sha256).toBe(pkiCertToSHA256(component.cert));
 	});

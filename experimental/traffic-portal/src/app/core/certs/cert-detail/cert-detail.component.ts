@@ -13,8 +13,7 @@
 */
 import { Component, Input, OnChanges } from "@angular/core";
 import { AbstractControl, FormControl, ValidationErrors, ValidatorFn } from "@angular/forms";
-import * as forge from "node-forge";
-import { Hex } from "node-forge";
+import { pki, Hex } from "node-forge";
 
 import { oidToName, pkiCertToSHA1, pkiCertToSHA256 } from "src/app/core/certs/cert.util";
 
@@ -52,7 +51,7 @@ function createDateValidator(before: boolean, now: Date): ValidatorFn {
 			valid = now <= d;
 		}
 
-		return valid ? null : {notValid: true};
+		return valid ? null : {outOfDate: true};
 	};
 }
 
@@ -65,7 +64,7 @@ function createDateValidator(before: boolean, now: Date): ValidatorFn {
 	templateUrl: "./cert-detail.component.html"
 })
 export class CertDetailComponent implements OnChanges {
-	@Input() public cert!: forge.pki.Certificate;
+	@Input({required: true}) public cert!: pki.Certificate;
 
 	public issuer: Author = {commonName: ""};
 	public subject: Author = {commonName: ""};
@@ -82,12 +81,12 @@ export class CertDetailComponent implements OnChanges {
 	 * @param attrs The attributes to process
 	 * @returns The resultant author
 	 */
-	public processAttributes(attrs: forge.pki.CertificateField[]): Author {
+	public processAttributes(attrs: pki.CertificateField[]): Author {
 		const a: Author = {commonName: ""};
 		for (const attr of attrs) {
 			if (attr.name && attr.value) {
 				if (typeof attr.value !== "string") {
-					console.log(`Unknown attribute value ${attr.value}`);
+					console.warn(`Unknown attribute value ${attr.value}`);
 					continue;
 				}
 				switch (attr.name) {

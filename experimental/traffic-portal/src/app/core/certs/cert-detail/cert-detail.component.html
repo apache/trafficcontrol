@@ -12,32 +12,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 <div>
-	<div class="mat-elevation-z2">
+	<div class="mat-elevation-z2 interior-container">
 		<h2>Issuer</h2>
 		<tp-cert-author [author]="issuer"></tp-cert-author>
 	</div>
-	<div class="mat-elevation-z2">
+	<div class="mat-elevation-z2 interior-container">
 		<h2>Subject</h2>
 		<tp-cert-author [author]="subject"></tp-cert-author>
 	</div>
-	<div class="mat-elevation-z2">
+	<div class="mat-elevation-z2 interior-container">
 		<h2>Validity</h2>
 		<div class="content">
 			<div class="double">
 				<mat-form-field>
 					<mat-label>Not Valid Before</mat-label>
-					<input matInput type="date" [formControl]="validBeforeFormControl" name="validBefore" readonly />
-					<mat-error *ngIf="validBeforeFormControl.hasError('notValid')">Not currently valid</mat-error>
+					<input matInput type="datetime" [formControl]="validBeforeFormControl" name="validBefore" readonly/>
+					<mat-error *ngIf="validBeforeFormControl.hasError('outOfDate')">Not currently valid</mat-error>
 				</mat-form-field>
 				<mat-form-field>
 					<mat-label>Not Valid After</mat-label>
-					<input matInput type="date" [formControl]="validAfterFormControl" name="validAfter" readonly />
-					<mat-error *ngIf="validAfterFormControl.hasError('notValid')">Not currently valid</mat-error>
+					<input matInput type="datetime" [formControl]="validAfterFormControl" name="validAfter" readonly/>
+					<mat-error *ngIf="validAfterFormControl.hasError('outOfDate')">Not currently valid</mat-error>
 				</mat-form-field>
 			</div>
 		</div>
 	</div>
-	<div class="mat-elevation-z2">
+	<div class="mat-elevation-z2 interior-container">
 		<h2>Misc</h2>
 		<div class="content">
 			<div class="double"></div>
@@ -48,7 +48,7 @@ limitations under the License.
 			<div class="squished">
 				<mat-form-field>
 					<mat-label>Version</mat-label>
-					<input matInput type="number" name="version" readonly value="{{cert.version}}"/>
+					<input matInput type="number" name="version" readonly [value]="cert.version.toString()"/>
 				</mat-form-field>
 				<mat-form-field>
 					<mat-label>Serial Number</mat-label>
@@ -57,11 +57,11 @@ limitations under the License.
 			</div>
 			<mat-form-field>
 				<mat-label>SHA 256</mat-label>
-				<input matInput type="text" name="pkiCertToSHA256" readonly [value]="sha256"/>
+				<input matInput type="text" name="sha256" readonly [value]="sha256"/>
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>SHA 1</mat-label>
-				<input matInput type="text" name="pkiCertToSHA256" readonly [value]="sha1"/>
+				<input matInput type="text" name="sha1" readonly [value]="sha1"/>
 			</mat-form-field>
 		</div>
 	</div>
