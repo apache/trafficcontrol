@@ -12,8 +12,7 @@
 # limitations under the License.
 #
 
-"""API Contract Test Case for delivery_service_sslkeys endpoint."""
-import json
+"""API Contract Test Case for delivery_service_sslkeys_generate endpoint."""
 import logging
 from typing import Union
 import pytest
@@ -38,35 +37,37 @@ def test_delivery_service_sslkeys_contract(to_session: TOSession,
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
-	:param delivery_service_sslkeys_post_data: Fixture to get sample delivery services sslkeys data and response.
+	:param delivery_service_sslkeys_post_data: Fixture to get delivery services sslkeys data.
 	"""
 	# validate delivery_service_sslkeys keys from api get response
 	logger.info("Accessing /delivery_service_sslkeys endpoint through Traffic ops session.")
 
-	delivery_service_sslkeys_xmlId = delivery_service_sslkeys_post_data["key"]
-	if not isinstance(delivery_service_sslkeys_xmlId, str):
+	delivery_service_sslkeys_xml_id = delivery_service_sslkeys_post_data["key"]
+	if not isinstance(delivery_service_sslkeys_xml_id, str):
 		raise TypeError("malformed API response; 'xmlId' property not a string")
 
 	delivery_service_sslkeys_get_response: tuple[
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
-	] = to_session.get_deliveryservice_ssl_keys_by_xml_id(xml_id=delivery_service_sslkeys_xmlId)
+	] = to_session.get_deliveryservice_ssl_keys_by_xml_id(xml_id=delivery_service_sslkeys_xml_id)
 	try:
-		delivery_service_sslkeys_data = delivery_service_sslkeys_get_response[0]
-		if not isinstance(delivery_service_sslkeys_data, list):
-			raise TypeError("malformed API response; 'response' property not an array")
+		# delivery_service_sslkeys_data = delivery_service_sslkeys_get_response[0]
+		# if not isinstance(delivery_service_sslkeys_data, list):
+		# 	raise TypeError("malformed API response; 'response' property not an array")
 
-		first_delivery_service_sslkeys = delivery_service_sslkeys_data[0]
+		first_delivery_service_sslkeys = delivery_service_sslkeys_get_response[0]
 		if not isinstance(first_delivery_service_sslkeys, dict):
-			raise TypeError("malformed API response; first delivery_service_sslkeys in response is not an dict")
+			raise TypeError(
+				"malformed API response; first delivery_service_sslkeys in response is not an dict")
 		logger.info("delivery_service_sslkeys Api get response %s", first_delivery_service_sslkeys)
 
-		delivery_service_sslkeys_response_template = response_template_data.get("delivery_service_sslkeys")
+		delivery_service_sslkeys_response_template = response_template_data.get(
+			"delivery_service_sslkeys")
 		if not isinstance(delivery_service_sslkeys_response_template, dict):
 			raise TypeError(f"delivery_service_sslkeys response template data must be a dict, not '"
 							f"{type(delivery_service_sslkeys_response_template)}'")
 
-		keys = ["version", "certificate"]
+		keys = ["key", "version"]
 		prereq_values = [delivery_service_sslkeys_post_data[key] for key in keys]
 		get_values = [first_delivery_service_sslkeys[key] for key in keys]
 
@@ -75,4 +76,5 @@ def test_delivery_service_sslkeys_contract(to_session: TOSession,
 		assert get_values == prereq_values
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
-		pytest.fail("API contract test failed for delivery_service_sslkeys endpoint: API response was malformed")
+		pytest.fail(
+			"API contract test failed for delivery_service_sslkeys endpoint: API response was malformed")

@@ -1575,22 +1575,26 @@ def steering_data_post(to_session: TOSession, request_template_data: list[JSONDa
 
 @pytest.fixture(name="delivery_service_sslkeys_post_data")
 def delivery_service_sslkeys_data_post(to_session: TOSession, request_template_data: list[JSONData],
-		  delivery_services_post_data:dict[str, object]) -> dict[str, object]:
+		cdn_post_data:dict[str, object], delivery_services_post_data:dict[str, object]
+		) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for delivery_service_sslkeys_post_data endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param request_template_data: Fixture to get delivery_service_sslkeys request template.
 	:returns: Sample POST data and the actual API response.
 	"""
+	logger.info("here %s", delivery_services_post_data)
 
-	delivery_service_sslkeys= check_template_data(request_template_data["delivery_service_sslkeys"], "delivery_service_sslkeys")
+	delivery_service_sslkeys= check_template_data(
+		request_template_data["delivery_service_sslkeys"], "delivery_service_sslkeys")
 
 	# Return new post data and post response from delivery_service_sslkeys POST request
 	delivery_service_sslkeys["key"] = delivery_services_post_data["xmlId"]
+	delivery_service_sslkeys["cdn"] = cdn_post_data["name"]
 	logger.info("New delivery_service_sslkeys data to hit POST method %s", delivery_service_sslkeys)
 	# Hitting delivery_service_sslkeys POST methed
-	response: tuple[JSONData, requests.Response] = to_session.add_ssl_keys_to_deliveryservice(data=delivery_service_sslkeys)
-	resp_obj = check_template_data(response, "delivery_service_sslkeys")
+	response: tuple[JSONData, requests.Response] = to_session.generate_deliveryservice_ssl_keys(
+		data=delivery_service_sslkeys)
 	yield delivery_service_sslkeys
 	deliveryservice_xml_id= delivery_service_sslkeys["key"]
 	msg = to_session.delete_deliveryservice_ssl_keys_by_xml_id(xml_id=deliveryservice_xml_id)

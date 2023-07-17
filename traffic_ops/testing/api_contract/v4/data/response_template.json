@@ -1599,8 +1599,7 @@
             "country",
             "state",
             "version",
-            "expiration",
-            "sans"
+            "expiration"
         ],
         "properties": {
             "certificate": {
@@ -1647,16 +1646,10 @@
                 "type": "string"
             },
             "version": {
-                "type": "string"
+                "type": "integer"
             },
             "expiration": {
                 "type": "string"
-            },
-            "sans": {
-                "type": "array",
-                "items": {
-                    "type": "string"
-                }
             }
         }
     }
