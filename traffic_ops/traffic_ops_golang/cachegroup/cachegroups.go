@@ -1080,7 +1080,21 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create cache group
-	query := `INSERT INTO cachegroup (name) VALUES ($1) RETURNING name, last_updated`
+	query := `INSERT INTO cachegroup (
+		name,
+		short_name,
+		type,
+		parent_cachegroup_id,
+		secondary_parent_cachegroup_id,
+		fallback_to_closest
+		) VALUES($1,$2,$3,$4,$5,$6)
+		RETURNING
+		id,
+		(SELECT name FROM type WHERE cachegroup.type = type.id),
+		(SELECT name FROM cachegroup parent
+			WHERE cachegroup.parent_cachegroup_id = parent.id),
+		(SELECT name FROM cachegroup secondary_parent
+			WHERE cachegroup.secondary_parent_cachegroup_id = secondary_parent.id)`
 	err = tx.QueryRow(query, cg.Name).Scan(&cg.Name, &cg.LastUpdated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
