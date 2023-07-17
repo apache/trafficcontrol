@@ -267,8 +267,8 @@ func GetPhysLocation(w http.ResponseWriter, r *http.Request) {
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
-	physLocation := tc.PhysLocationV5{}
-	physLocationList := []tc.PhysLocationV5{}
+	physLocation := tc.PhysLocationNullableV5{}
+	physLocationList := []tc.PhysLocationNullableV5{}
 	for rows.Next() {
 		if err = rows.Scan(&physLocation.Address, &physLocation.City, &physLocation.Comments, &physLocation.Email, &physLocation.ID, &physLocation.LastUpdated, &physLocation.Name, &physLocation.Phone, &physLocation.POC, &physLocation.RegionID, &physLocation.RegionName, &physLocation.ShortName, &physLocation.State, &physLocation.Zip); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting physLocation(s): %w", err))
