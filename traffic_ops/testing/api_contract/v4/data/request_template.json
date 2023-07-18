@@ -375,5 +375,12 @@
 				"tlsVersions": null
 			}
 		}
+	],
+	"delivery_services_regex": [
+		{
+			"pattern": ".*\\.foo-bar\\..*",
+			"type": 33,
+			"setNumber": 1
+		}
 	]
 }

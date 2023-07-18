@@ -1491,14 +1491,12 @@ def cdn_notification_data_post(to_session: TOSession, request_template_data: lis
 	"""
 	PyTest Fixture to create POST data for cdn_notifications endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get cdn_notification request template
-	from a prerequisites file.
+	:param request_template_data: Fixture to get cdn_notification request template.
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	cdn_notification = check_template_data(request_template_data["cdn_notifications"],
-					"cdn_notifications")
-
+	cdn_notification = check_template_data(
+		request_template_data["cdn_notifications"], "cdn_notifications")
 	# Return new post data and post response from cdn_notifications POST request
 	cdn_notification["cdn"] = cdn_post_data["name"]
 	logger.info("New cdn_notification data to hit POST method %s", cdn_notification)
@@ -1525,8 +1523,8 @@ def deliveryservice_request_data_post(to_session: TOSession, request_template_da
 	:returns: Sample POST data and the actual API response.
 	"""
 
-	deliveryservice_request = check_template_data(request_template_data["deliveryservice_requests"],
-					       "deliveryservice_requests")
+	deliveryservice_request = check_template_data(
+		request_template_data["deliveryservice_requests"], "deliveryservice_requests")
 
 	# Return new post data and post response from deliveryservice_request POST request
 	keys = ["displayName", "xmlId", "id", "cdnId", "tenantId", "type", "typeId"]
@@ -1577,9 +1575,46 @@ def steering_data_post(to_session: TOSession, request_template_data: list[JSONDa
 	yield resp_obj
 	deliveryservice_id = resp_obj.get("deliveryServiceId")
 	target_id = resp_obj.get("targetId")
-	msg = to_session.delete_steering_targets(delivery_service_id=deliveryservice_id,
-					  target_id=target_id)
+	msg = to_session.delete_steering_targets(
+		delivery_service_id=deliveryservice_id, target_id=target_id)
 	logger.info("Deleting Steering data... %s", msg)
 	if msg is None:
 		logger.error("Steering returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="delivery_services_regex_post_data")
+def delivery_services_regex_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  delivery_services_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for delivery_services_regex endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get delivery_services_regex request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	delivery_services_regex = check_template_data(
+		request_template_data["delivery_services_regex"], "delivery_services_regex")
+
+	# Return new post data and post response from delivery_services_regex POST request
+
+	delivery_service_id = delivery_services_post_data["id"]
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "regex"})
+	delivery_services_regex["type"]= type_object["id"]
+
+	logger.info("New delivery_services_regex data to hit POST method %s", delivery_services_regex)
+	# Hitting delivery_services_regex POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice_regexes(
+		delivery_service_id=delivery_service_id, data=delivery_services_regex)
+	resp_obj = check_template_data(response, "delivery_services_regex")
+	yield [delivery_service_id,resp_obj]
+	regex_id = resp_obj.get("id")
+	msg = to_session.delete_deliveryservice_regex_by_regex_id(
+		delivery_service_id=delivery_service_id, delivery_service_regex_id=regex_id)
+	logger.info("Deleting delivery_services_regex data... %s", msg)
+	if msg is None:
+		logger.error("delivery_services_regex returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")

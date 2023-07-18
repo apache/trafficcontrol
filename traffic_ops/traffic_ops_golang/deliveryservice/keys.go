@@ -192,7 +192,6 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	logAlert := true
 	keyObjV4, err := getSslKeys(inf, r.Context())
 	if err != nil {
-		userError = api.LogErr(r, sc, nil, err)
 		if err == sql.ErrNoRows {
 			if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
 				sc = http.StatusNotFound
@@ -201,6 +200,8 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 				// For versions lesser than 5.0, don't log an alert if the error is ErrNoRows. This is for backward compatibility reasons.
 				logAlert = false
 			}
+		} else {
+			userError = api.LogErr(r, sc, nil, err)
 		}
 		if logAlert {
 			alerts.AddNewAlert(tc.ErrorLevel, userError.Error())

@@ -14,8 +14,13 @@
 
 import { Injectable } from "@angular/core";
 import {
-	ProfileExport, ProfileImport, ProfileImportResponse, ProfileType,
-	RequestProfile, ResponseProfile, RequestParameter, ResponseParameter
+	type ProfileImport,
+	type ProfileImportResponse,
+	ProfileType,
+	type RequestProfile,
+	type ResponseProfile,
+	type RequestParameter,
+	type ResponseParameter,
 } from "trafficops-types";
 
 /**
@@ -138,16 +143,6 @@ export class ProfileService {
 			type: ProfileType.ATS_PROFILE
 		}
 	];
-	private readonly profileExport: ProfileExport = {
-		alerts: null,
-		parameters:[],
-		profile: {
-			cdn: "ALL",
-			description: "test",
-			name: "TRAFFIC_ANALYTICS",
-			type: ProfileType.TS_PROFILE
-		},
-	};
 
 	public async getProfiles(idOrName: number | string): Promise<ResponseProfile>;
 	public async getProfiles(): Promise<Array<ResponseProfile>>;
@@ -220,32 +215,18 @@ export class ProfileService {
 	}
 
 	/**
-	 * Deletes an existing profile.
+	 * Deletes an existing Profile.
 	 *
-	 * @param id Id of the profile to delete.
-	 * @returns The success message.
+	 * @param profile The Profile to delete, or just its ID.
+	 * @returns The deleted Profile.
 	 */
-	public async deleteProfile(id: number | ResponseProfile): Promise<ResponseProfile> {
-		const index = this.profiles.findIndex(t => t.id === id);
-		if (index === -1) {
-			throw new Error(`no such profile: ${id}`);
-		}
-		return this.profiles.splice(index, 1)[0];
-	}
-
-	/**
-	 * Export Profile object from the API.
-	 *
-	 * @param profile Specify unique identifier (number) of a specific Profile to retrieve the export object.
-	 * @returns The requested Profile as attachment.
-	 */
-	public async exportProfile(profile: number | ResponseProfile): Promise<ProfileExport> {
+	public async deleteProfile(profile: number | ResponseProfile): Promise<ResponseProfile> {
 		const id = typeof(profile) === "number" ? profile : profile.id;
 		const index = this.profiles.findIndex(t => t.id === id);
 		if (index === -1) {
-			throw new Error(`no such Profile: ${id}`);
+			throw new Error(`no such Profile #${id}`);
 		}
-		return this.profileExport;
+		return this.profiles.splice(index, 1)[0];
 	}
 
 	/**

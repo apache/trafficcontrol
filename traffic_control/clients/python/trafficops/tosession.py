@@ -1025,7 +1025,7 @@ class TOSession(RestApiSession):
 
 	@api_request('put', 'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_deliveryservice_regexes(self, delivery_service_id=None, regex_id=None,
-	                                   query_params=None):
+	                                   data=None):
 		"""
 		Update a regex for a delivery service
 		:ref:`to-api-deliveryservices-id-regexes-rid`
@@ -1033,8 +1033,8 @@ class TOSession(RestApiSession):
 		:type delivery_service_id: int
 		:param regex_id: The delivery service regex id
 		:type regex_id: int
-		:param query_params: The required data to update delivery service regexes
-		:type query_params: Dict[str, Any]
+		:param data: The required data to update delivery service regexes
+		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

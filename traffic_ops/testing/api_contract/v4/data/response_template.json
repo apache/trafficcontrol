@@ -1588,5 +1588,32 @@
                 "type": "string"
             }
         }
+    },
+    "delivery_services_regex": {
+        "type": "object",
+        "required": [
+            "id",
+            "type",
+            "typeName",
+            "setNumber",
+            "pattern"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "type": {
+                "type": "integer"
+            },
+            "typeName": {
+                "type": "string"
+            },
+            "setNumber": {
+                "type": "integer"
+            },
+            "pattern": {
+                "type": "string"
+            }
+        }
     }
 }

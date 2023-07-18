@@ -120,7 +120,7 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 	}
 
 	// Perform certificate verification to ensure it is valid against Root CAs
-	err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir)
+	err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir, cfg.Insecure)
 	if err != nil {
 		log.Warnf("client cert auth: error attempting to verify client provided TLS certificate. err: %s\n", err)
 		return false
@@ -506,6 +506,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			attributes := decodedToken.PrivateClaims()
 			if userIDInterface, ok = attributes[cfg.OAuthUserAttribute]; !ok {
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Non-existent OAuth attribute : %s", cfg.OAuthUserAttribute))
+				return
 			}
 			userID = userIDInterface.(string)
 		} else {
