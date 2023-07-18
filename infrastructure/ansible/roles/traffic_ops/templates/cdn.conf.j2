@@ -81,7 +81,10 @@
          "password": "{{ to_riak_username_password }}",
          "MaxTLSVersion": "{{ to_riak_tls_max_version }}"
 {% endif %}
-      }
+      },
+      "whitelisted_oauth_urls": {{ to_go_whitelisted_oauth_urls | to_json }},
+      "oauth_client_secret": "{{ to_go_oauth_client_secret }}",
+      "oauth_user_attribute": "{{ to_go_oauth_user_attribute }}"
    },
    "lets_encrypt": {
       "user_email": "{{ to_le_user_email }}",

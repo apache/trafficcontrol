@@ -98,6 +98,10 @@ to_go_supported_ds_metrics:
   - tps_4xx
   - tps_5xx
 
+to_go_whitelisted_oauth_urls: ""
+to_go_oauth_user_attribute: ""
+to_go_oauth_client_secret: ""
+
 to_plugin_config: {}
 
 to_le_user_email: user@example.test

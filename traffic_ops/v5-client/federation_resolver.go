@@ -27,15 +27,15 @@ import (
 const apiFederationResolvers = "/federation_resolvers"
 
 // GetFederationResolvers retrieves Federation Resolvers from Traffic Ops.
-func (to *Session) GetFederationResolvers(opts RequestOptions) (tc.FederationResolversResponse, toclientlib.ReqInf, error) {
-	var data tc.FederationResolversResponse
+func (to *Session) GetFederationResolvers(opts RequestOptions) (tc.FederationResolversResponseV5, toclientlib.ReqInf, error) {
+	var data tc.FederationResolversResponseV5
 	inf, err := to.get(apiFederationResolvers, opts, &data)
 	return data, inf, err
 }
 
 // CreateFederationResolver creates the Federation Resolver 'fr'.
-func (to *Session) CreateFederationResolver(fr tc.FederationResolver, opts RequestOptions) (tc.FederationResolverResponse, toclientlib.ReqInf, error) {
-	var response tc.FederationResolverResponse
+func (to *Session) CreateFederationResolver(fr tc.FederationResolverV5, opts RequestOptions) (tc.FederationResolverResponseV5, toclientlib.ReqInf, error) {
+	var response tc.FederationResolverResponseV5
 	reqInf, err := to.post(apiFederationResolvers, opts, fr, &response)
 	return response, reqInf, err
 }

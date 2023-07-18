@@ -45,7 +45,6 @@ services:
     depends_on:
       - dns
     volumes:
-      - /var/lib/postgresql/data
       - shared:/shared
     env_file:
       - variables.env
