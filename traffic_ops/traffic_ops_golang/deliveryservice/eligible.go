@@ -100,16 +100,17 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Based on version we load Delivery Service Eligible Server - for version 5 and above we use DSServerV5
 	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
 
-		v5Servers := make([]tc.DSServerV5, len(servers))
+		serverList := make([]tc.DSServerV5, len(servers))
 
-		for i, v1 := range servers {
-			r := time.Unix(v1.LastUpdated.Unix(), 0)
-			v5Servers[i].LastUpdated = &r
+		for i, dss := range servers {
+			r := time.Unix(dss.LastUpdated.Unix(), 0)
+			serverList[i].LastUpdated = &r
 		}
 
-		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v5Servers)
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, serverList)
 		api.WriteResp(w, r, servers)
 		return
 	}
