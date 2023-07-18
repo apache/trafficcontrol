@@ -51,10 +51,6 @@ def test_delivery_service_sslkeys_contract(to_session: TOSession,
 		requests.Response
 	] = to_session.get_deliveryservice_ssl_keys_by_xml_id(xml_id=delivery_service_sslkeys_xml_id)
 	try:
-		# delivery_service_sslkeys_data = delivery_service_sslkeys_get_response[0]
-		# if not isinstance(delivery_service_sslkeys_data, list):
-		# 	raise TypeError("malformed API response; 'response' property not an array")
-
 		first_delivery_service_sslkeys = delivery_service_sslkeys_get_response[0]
 		if not isinstance(first_delivery_service_sslkeys, dict):
 			raise TypeError(

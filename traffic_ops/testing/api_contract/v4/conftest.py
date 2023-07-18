@@ -1585,7 +1585,7 @@ def delivery_service_sslkeys_data_post(to_session: TOSession, request_template_d
 	"""
 	logger.info("here %s", delivery_services_post_data)
 
-	delivery_service_sslkeys= check_template_data(
+	delivery_service_sslkeys = check_template_data(
 		request_template_data["delivery_service_sslkeys"], "delivery_service_sslkeys")
 
 	# Return new post data and post response from delivery_service_sslkeys POST request
@@ -1596,7 +1596,7 @@ def delivery_service_sslkeys_data_post(to_session: TOSession, request_template_d
 	response: tuple[JSONData, requests.Response] = to_session.generate_deliveryservice_ssl_keys(
 		data=delivery_service_sslkeys)
 	yield delivery_service_sslkeys
-	deliveryservice_xml_id= delivery_service_sslkeys["key"]
+	deliveryservice_xml_id = delivery_service_sslkeys["key"]
 	msg = to_session.delete_deliveryservice_ssl_keys_by_xml_id(xml_id=deliveryservice_xml_id)
 	logger.info("Deleting delivery_service_sslkeys data... %s", msg)
 	if msg is None:
