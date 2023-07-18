@@ -1089,16 +1089,11 @@ def server_data_post(to_session: TOSession, request_template_data: list[JSONData
 	server = check_template_data(request_template_data["servers"], "servers")
 
 	# Check if type already exists, otherwise create it
-	msc_type_id = pytestconfig.cache.get("msctypeId", default=None)
-	type_id = None
-	if msc_type_id:
-		server["typeId"] = msc_type_id
-	else:
-		type_data = check_template_data(request_template_data["types"], "types")
-		type_object = create_or_get_existing(to_session, "types", "type", type_data,
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"useInTable": "server"})
-		type_id = type_object["id"]
-		server["typeId"] = type_id
+	type_id = type_object["id"]
+	server["typeId"] = type_id
 
 	pytestconfig.cache.set("typeId", type_id)
 
