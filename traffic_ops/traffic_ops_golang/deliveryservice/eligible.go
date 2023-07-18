@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -41,6 +42,8 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
+
+	alerts := tc.Alerts{}
 
 	dsTenantID, ok, err := getDSTenantIDByID(inf.Tx.Tx, inf.IntParams["id"])
 	if err != nil {
@@ -96,6 +99,21 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		api.WriteResp(w, r, v3ServerList)
 		return
 	}
+
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
+
+		v5Servers := make([]tc.DSServerV5, len(servers))
+
+		for i, v1 := range servers {
+			r := time.Unix(v1.LastUpdated.Unix(), 0)
+			v5Servers[i].LastUpdated = &r
+		}
+
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v5Servers)
+		api.WriteResp(w, r, servers)
+		return
+	}
+
 	api.WriteResp(w, r, servers)
 }
 

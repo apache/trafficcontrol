@@ -724,6 +724,20 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v3ServerList)
 		return
 	}
+
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
+
+		v5Servers := make([]tc.DSServerV5, len(servers))
+
+		for i, v1 := range servers {
+			r := time.Unix(v1.LastUpdated.Unix(), 0)
+			v5Servers[i].LastUpdated = &r
+		}
+
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, v5Servers)
+		return
+	}
+
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
