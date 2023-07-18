@@ -2213,15 +2213,6 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
-	@api_request('get', 'types', ('3.0', '4.0', '4.1', '5.0'))
-	def create_types(self, data=None):
-		"""
-		Create Data Types.
-		:ref:`to-api-types`
-		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
 
 	#
 	# Users
