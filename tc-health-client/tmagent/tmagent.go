@@ -370,7 +370,7 @@ func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
 		} else {
 			// log.Infof("updated parents from new %s, total parents: %d\n", ParentsFile, len(pi.Parents))
 			// TODO track map len
-			log.Infof("updated parents from new %s, total parents: %v\n", ParentsFile, len(pi.GetParents()))
+			log.Infof("tm-agent total_parents=%v event=updated parents from new parent.config\n", len(pi.GetParents()))
 		}
 	}
 
@@ -381,7 +381,7 @@ func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
 		} else {
 			// log.Infof("updated parents from new %s total parents: %d\n", StrategiesFile, len(pi.Parents))
 			// TODO track map len
-			log.Infof("updated parents from new %s, total parents: %v\n", StrategiesFile, len(pi.GetParents()))
+			log.Infof("tm-agent total_parents=%v event=updated parents from new strategies.yaml\n", len(pi.GetParents()))
 		}
 	}
 
@@ -785,7 +785,7 @@ func (pi *ParentInfo) readHostStatus(cfg *config.Cfg) error {
 		}
 		// log.Debugf("processed trafficserver host status results, total parents: %d\n", len(parentStatus))
 		// TODO count parentStatus len?
-		log.Debugf("processed trafficserver host status results, total parents: %v\n", len(pi.GetParents()))
+		log.Debugf("tm-agent total_parents=%v\n", len(pi.GetParents()))
 	}
 	return nil
 }

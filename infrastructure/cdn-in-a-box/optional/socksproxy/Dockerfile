@@ -20,16 +20,16 @@
 # Based on Rocky Linux 8
 ############################################################
     # Change BASE_IMAGE to centos when RHEL_VERSION=7
-ARG BASE_IMAGE=rockylinux \
-    RHEL_VERSION=8
+ARG BASE_IMAGE=centos \
+    RHEL_VERSION=7
 FROM ${BASE_IMAGE}:${RHEL_VERSION}
-ARG RHEL_VERSION=8
+ARG RHEL_VERSION=7
 
 RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
-ARG DANTES_SRC=https://www.inet.no/dante/files/dante-1.4.2.tar.gz
+ARG DANTES_SRC=https://www.inet.no/dante/files/dante-1.4.3.tar.gz
 
 RUN dnf install -y net-tools bind-utils iproute wget curl automake autoconf gcc make && \
     curl -Ls -o /tmp/dante.tar.gz $DANTES_SRC && \

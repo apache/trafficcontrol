@@ -197,7 +197,7 @@ func decideHealthy(
 	// TODO wait for all polls to have results, before marking down?
 	//      Maybe it doesn't matter for pessimistic health?
 
-	log.Infof("decide-healthy host=%v tm=%v l4=%v l7=%v svc=%v\n", parentFQDN, printbp(tmHealthy), printbp(l4Healthy), printbp(l7Healthy), printbp(recursiveHealthy))
+	log.Infof("decide-healthy monitored_host=%v tm=%v l4=%v l7=%v svc=%v\n", parentFQDN, printbp(tmHealthy), printbp(l4Healthy), printbp(l7Healthy), printbp(recursiveHealthy))
 
 	// nilOrTrue is a helper func that returns true if the given *bool is nil or true.
 	// This is used for pessimistic health, but if the health doesn't exist for the parent
@@ -309,10 +309,11 @@ func getParentFQDNs(pi *ParentInfo, tmh *TrafficMonitorHealth, l4h *ParentHealth
 //
 // This is a safety mechanism: if for any reason most or all parents are marked down, something
 // is seriously wrong, possibly with the health code itself, and therefore don't mark any parents down,
-const HealthSafetyRatio = 0.3 // TODO make configurable?
+const HealthSafetyRatio = 0.3 // TODO make configurable? // 0.3
 
 func doMarkdown(pi *ParentInfo) {
 	cfg := pi.Cfg.Get()
+	var pv ParentStatus
 
 	tmHealth := pi.TrafficMonitorHealth.Get()
 	parentHealthL4 := pi.ParentHealthL4.Get()
@@ -331,9 +332,9 @@ func doMarkdown(pi *ParentInfo) {
 	}
 
 	unhealthyParentsExceedSafetyRatio := (float64(unhealthyNum) / float64(len(newCacheHealth))) > HealthSafetyRatio
-	log.Infof("markdown Unhealthy parents %v/%v safety ratio %v\n", unhealthyNum, len(newCacheHealth), HealthSafetyRatio)
+	log.Infof("markdown unhealthy_parents=%v total_parents=%v safety_ratio=%v\n", unhealthyNum, len(newCacheHealth), HealthSafetyRatio)
 	if unhealthyParentsExceedSafetyRatio {
-		log.Errorf("Unhealthy parents %v/%v exceed safety ratio %v!! Marking all parents up!!\n", unhealthyNum, len(newCacheHealth), HealthSafetyRatio)
+		log.Errorf("unhealthy_parents=%v total_parents=%v exceed safety_ratio=%v!! Marking all parents up!!\n", unhealthyNum, len(newCacheHealth), HealthSafetyRatio)
 	}
 
 	for _, fqdn := range parentFQDNs {
@@ -359,7 +360,7 @@ func doMarkdown(pi *ParentInfo) {
 		if oldAvailable != newAvailable {
 			// do not mark down if the configuration disables mark downs.
 			if !cfg.EnableActiveMarkdowns && !newAvailable {
-				log.Infof("TM reports that %s is not available and should be marked DOWN but, mark downs are disabled by configuration", fqdn)
+				log.Infof("markdown monitored_host=%v host_status=%v event=TM reports host is not available", fqdn, pv.Status())
 			} else {
 				if newParentStatus, err := markParent(cfg, parentStatus, isAvailable.Status, newAvailable); err != nil {
 					log.Errorln(err.Error())
@@ -396,6 +397,7 @@ func doMarkdown(pi *ParentInfo) {
 func markParent(cfg *config.Cfg, pv ParentStatus, cacheStatus string, available bool) (ParentStatus, error) {
 	var hostAvailable bool
 
+	hostStatus := pv.Status()
 	hostName := pv.Fqdn
 	activeReason := pv.ActiveReason
 	localReason := pv.LocalReason
@@ -407,7 +409,7 @@ func markParent(cfg *config.Cfg, pv ParentStatus, cacheStatus string, available 
 	if !available { // unavailable
 		unavailablePollCount += 1
 		if unavailablePollCount < cfg.UnavailablePollThreshold {
-			log.Infof("TM indicates %s is unavailable but the UnavailablePollThreshold has not been reached", hostName)
+			log.Infof("markdown monitored_host=%v host_status=%v event=TM indicates host is unavailable but the UnavailablePollThreshold has not been reached", hostName, hostStatus)
 			hostAvailable = true
 		} else {
 			// marking the host down
@@ -420,7 +422,7 @@ func markParent(cfg *config.Cfg, pv ParentStatus, cacheStatus string, available 
 			// reset the poll counts
 			markUpPollCount = 0
 			unavailablePollCount = 0
-			log.Infof("marked parent %s DOWN, cache status was: %s\n", hostName, cacheStatus)
+			log.Infof("marked monitored_host=%v host_status=%v event=%v\n", hostName, hostStatus, cacheStatus)
 		}
 	} else { // available
 		// marking the host up
@@ -437,7 +439,7 @@ func markParent(cfg *config.Cfg, pv ParentStatus, cacheStatus string, available 
 			// reset the poll counts
 			unavailablePollCount = 0
 			markUpPollCount = 0
-			log.Infof("marked parent %s UP, cache status was: %s\n", hostName, cacheStatus)
+			log.Infof("markdown monitored_host=%v host_status=%v event=%v\n", hostName, hostStatus, cacheStatus)
 		}
 	}
 

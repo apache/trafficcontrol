@@ -25,11 +25,11 @@ import { isArrayBufferView } from "../utils";
 export class FileUtilsService {
 
 	/** The default MIME-Type for string data downloads. */
-	public static readonly TEXT_CONTENT_TYPE = "text/plain;charset=UTF-8";
+	public static readonly TEXT_CONTENT_TYPE = "text/plain+x-traffic-ops;charset=UTF-8";
 	/** The default MIME-Type for raw binary data downloads. */
 	public static readonly BINARY_DATA_CONTENT_TYPE = "application/octet-stream";
 	/** The default MIME-Type for arbitrary object downloads. */
-	public static readonly JSON_DATA_CONTENT_TYPE = "application/json";
+	public static readonly JSON_DATA_CONTENT_TYPE = "application/json+x-traffic-ops";
 
 	/**
 	 * The file name that will be used for downloads, if one is not provided.

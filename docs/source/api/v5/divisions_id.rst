@@ -57,7 +57,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this Division was last modified, in :rfc:`3339`
 :name:        The Division name
 
 .. code-block:: http
@@ -83,7 +83,7 @@ Response Structure
 	],
 	"response": {
 		"id": 3,
-		"lastUpdated": "2018-11-29 20:10:36+00",
+		"lastUpdated": "2018-11-29T16:23:53.696397+05:30",
 		"name": "quest"
 	}}
 
@@ -118,13 +118,9 @@ Request Structure
 	Content-Length: 2
 	Content-Type: application/json
 
-	{}
 
 Response Structure
 ------------------
-:id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in :ref:`non-rfc-datetime`
-:name:        The Division name
 
 .. code-block:: http
 	:caption: Response Example
@@ -141,9 +137,14 @@ Response Structure
 	Date: Thu, 29 Nov 2018 20:10:36 GMT
 	Content-Length: 83
 
-	{ "alerts": [
-		{
-			"text": "division was deleted.",
-			"level": "success"
-		}
-	]}
+    {
+        "alerts": [
+            {
+                "text": "division was deleted.",
+                "level": "success"
+            }
+        ],
+        "response": {
+            "id": "3"
+        }
+    }

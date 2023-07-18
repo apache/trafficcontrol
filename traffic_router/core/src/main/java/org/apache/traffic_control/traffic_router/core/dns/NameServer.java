@@ -369,14 +369,6 @@ public class NameServer {
 			return;
 		}
 
-		if (clientAddress != null && clientAddress.getHostName().equals("_")) {
-			response.getHeader().setRcode(Rcode.NXDOMAIN);
-			response.getHeader().setFlag(Flags.AA);
-			addDenialOfExistence(qname, zone, response, flags);
-			addSOA(zone, response, Section.AUTHORITY, flags);
-			return;
-		}
-
 		final SetResponse sr = zone.findRecords(qname, qtype);
 
 		if (sr.isSuccessful()) {

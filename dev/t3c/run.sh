@@ -58,7 +58,7 @@ fi
 
 traffic_server &
 
-while inotifywait --exclude '.*(\.md|\.json|\.pl|\.rst|_test\.go|\.gitignore|__debug_bin|-logrotate|.service)$|^\./(build|t3c-check-refs/test-files|testing|t3util/testing|tm-health-client/(config|tmagent)/test_files)/.*' -e modify -r . ; do
+while inotifywait --include '\.go$' -e modify -r . -e modify -r . ; do
 	T3C_PID="$(ps | grep t3c | grep -v grep | grep -v inotifywait | grep -v run.sh | tr -s ' ' | cut -d ' ' -f2)"
 	if [[ ! -z "$T3" ]]; then
 		echo "$T3C_PID" | xargs kill;
