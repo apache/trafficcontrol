@@ -267,8 +267,8 @@
 			"targetId": 61,
 			"value": 100,
 			"typeId": 43
-    }
-  ],
+		}
+	],
 	"cdn_notifications": [
 		{
 			"cdn": "cdn1",
@@ -374,6 +374,13 @@
 				"serviceCategory": null,
 				"tlsVersions": null
 			}
+		}
+	],
+	"delivery_services_regex": [
+		{
+			"pattern": ".*\\.foo-bar\\..*",
+			"type": 33,
+			"setNumber": 1
 		}
 	]
 }
