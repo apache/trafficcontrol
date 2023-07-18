@@ -1605,7 +1605,7 @@ def delivery_service_sslkeys_data_post(to_session: TOSession, request_template_d
 	logger.info("Deleting delivery_service_sslkeys data... %s", msg)
 	if msg is None:
 		logger.error("delivery_service_sslkeys returned by Traffic Ops is missing an 'xmlId' property")
-    pytest.fail("Response from delete request is empty, Failing test_case")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="delivery_services_regex_post_data")
