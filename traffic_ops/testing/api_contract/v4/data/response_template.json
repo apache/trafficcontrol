@@ -730,7 +730,10 @@
         ],
         "properties": {
             "maxRequestHeaderBytes": {
-                "type": ["null","integer"]
+                "type": [
+                    "null",
+                    "integer"
+                ]
             },
             "firstHeaderRewrite": {
                 "type": [
@@ -830,7 +833,10 @@
                 "type": "integer"
             },
             "cdnName": {
-                "type": "string"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "checkPath": {
                 "type": [
@@ -1579,6 +1585,33 @@
                 "$ref": "#/delivery_services"
             },
             "status": {
+                "type": "string"
+            }
+        }
+    },
+    "delivery_services_regex": {
+        "type": "object",
+        "required": [
+            "id",
+            "type",
+            "typeName",
+            "setNumber",
+            "pattern"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "type": {
+                "type": "integer"
+            },
+            "typeName": {
+                "type": "string"
+            },
+            "setNumber": {
+                "type": "integer"
+            },
+            "pattern": {
                 "type": "string"
             }
         }
