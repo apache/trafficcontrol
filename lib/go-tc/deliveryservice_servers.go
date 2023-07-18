@@ -255,6 +255,15 @@ type DSServerResponseV40 struct {
 // API version 4.
 type DSServerResponseV4 = DSServerResponseV40
 
+// DSServerResponseV50 is response from Traffic Ops to a request for servers assigned to a Delivery Service - in  the latest minor version APIv50.
+type DSServerResponseV50 struct {
+	Response []DSServerV50 `json:"response"`
+	Alerts
+}
+
+// DSServerResponseV5 is the response from Traffic Ops to a request for servers assigned to a Delivery Service - in APIv5.
+type DSServerResponseV5 = DSServerResponseV50
+
 // ToDSServerBaseV4 upgrades the DSServerBase to the structure used by the
 // latest minor version of version 4 of Traffic Ops's API.
 func (oldBase DSServerBase) ToDSServerBaseV4() DSServerBaseV4 {
