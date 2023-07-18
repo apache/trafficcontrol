@@ -1094,6 +1094,7 @@ def server_data_post(to_session: TOSession, request_template_data: list[JSONData
 				      {"useInTable": "server"})
 	type_id = type_object["id"]
 	server["typeId"] = type_id
+
 	pytestconfig.cache.set("typeId", type_id)
 
 	server["cachegroupId"]= cache_group_post_data["id"]
@@ -1167,7 +1168,6 @@ def delivery_services_data_post(to_session: TOSession, request_template_data: li
 				      {"name": "HTTP", "useInTable":"deliveryservice"})
 	delivery_services["typeId"] = type_object["id"]
 	delivery_services["type"] = type_object["name"]
-
 
 	logger.info("New delivery_services data to hit POST method %s", delivery_services)
 	# Hitting delivery_services POST method
@@ -1492,7 +1492,6 @@ def cdn_notification_data_post(to_session: TOSession, request_template_data: lis
 
 	cdn_notification = check_template_data(
 		request_template_data["cdn_notifications"], "cdn_notifications")
-
 	# Return new post data and post response from cdn_notifications POST request
 	cdn_notification["cdn"] = cdn_post_data["name"]
 	logger.info("New cdn_notification data to hit POST method %s", cdn_notification)

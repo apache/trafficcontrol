@@ -833,7 +833,10 @@
                 "type": "integer"
             },
             "cdnName": {
-                "type": "string"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "checkPath": {
                 "type": [
