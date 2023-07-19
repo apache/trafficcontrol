@@ -296,6 +296,22 @@ func CreatePhysLocation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// checks to see if the supplied region name and ID in the phys_location body correspond to each other.
+	if physLocation.RegionName != "" {
+		regionName, ok, err := dbhelpers.GetRegionNameFromID(tx, physLocation.RegionID)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error fetching name from region ID: %w", err), nil)
+			return
+		} else if !ok {
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such region"), nil)
+			return
+		}
+		if regionName != physLocation.RegionName {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("region name and ID do not match"), nil)
+			return
+		}
+	}
+
 	// check if phys_location already exists
 	var count int
 	err := tx.QueryRow("SELECT count(*) from phys_location where name = $1", physLocation.Name).Scan(&count)
