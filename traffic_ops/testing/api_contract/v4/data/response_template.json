@@ -1682,5 +1682,40 @@
                 "type": "string"
             }
         }
+    },
+    "delivery_service_request_comments": {
+        "type": "object",
+        "required": [
+            "authorId",
+            "author",
+            "deliveryServiceRequestId",
+            "id",
+            "lastUpdated",
+            "value",
+            "xmlId"
+        ],
+        "properties": {
+            "authorId": {
+                "type": "integer"
+            },
+            "author": {
+                "type": "string"
+            },
+            "deliveryServiceRequestId": {
+                "type": "integer"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            },
+            "xmlId": {
+                "type": "string"
+            }
+        }
     }
 }
