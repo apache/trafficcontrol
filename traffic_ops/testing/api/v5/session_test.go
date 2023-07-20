@@ -16,6 +16,7 @@ package v5
 */
 
 import (
+	"testing"
 	"time"
 
 	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
@@ -48,8 +49,21 @@ func TeardownSession(toReqTimeout time.Duration, toURL string, toUser string, to
 func SwitchSession(toReqTimeout time.Duration, toURL string, toOldUser string, toOldPass string, toNewUser string, toNewPass string) error {
 	err := TeardownSession(toReqTimeout, toURL, toOldUser, toOldPass)
 
-	// intentially skip errors so that we can continue with setup in the event of a 403
+	// intentionally skip errors so that we can continue with setup in the event of a 403
 
 	err = SetupSession(toReqTimeout, toURL, toNewUser, toNewPass)
 	return err
+}
+
+func TestLoginWithCert(t *testing.T) {
+	session, _, err := client.LoginWithCert(Config.TrafficOps.URL, true, time.Second*60,
+		"./client-intermediate-chain.crt.pem",
+		"./client.key.pem", "")
+
+	if err != nil {
+		t.Fatalf("expected no error while logging in with cert, but got %v", err)
+	}
+	if session == nil {
+		t.Fatalf("expected a valid session, but got nothing")
+	}
 }

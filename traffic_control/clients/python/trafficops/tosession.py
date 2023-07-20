@@ -1025,7 +1025,7 @@ class TOSession(RestApiSession):
 
 	@api_request('put', 'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_deliveryservice_regexes(self, delivery_service_id=None, regex_id=None,
-	                                   query_params=None):
+	                                   data=None):
 		"""
 		Update a regex for a delivery service
 		:ref:`to-api-deliveryservices-id-regexes-rid`
@@ -1033,8 +1033,8 @@ class TOSession(RestApiSession):
 		:type delivery_service_id: int
 		:param regex_id: The delivery service regex id
 		:type regex_id: int
-		:param query_params: The required data to update delivery service regexes
-		:type query_params: Dict[str, Any]
+		:param data: The required data to update delivery service regexes
+		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1494,6 +1494,34 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+
+
+    #
+	# multiple_server_capabilities
+	#
+	@api_request('post', 'multiple_servers_capabilities', ('4.1', '5.0'))
+	def create_multiple_servers_capabilities(self, data=None):
+		"""
+		Create multiple_servers_capabilities
+		:ref:`to-api-multiple_servers_capabilities`
+		:param data: The multiple_servers_capabilities data to use for multiple_servers_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('delete', 'multiple_servers_capabilities', ('4.1', '5.0'))
+	def delete_multiple_servers_capabilities(self, data=None):
+		"""
+		Delete multiple_servers_capabilities
+		:ref:`to-api-multiple_servers_capabilities`
+		:param data: The multiple_servers_capabilities data to use for multiple_servers_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 
 	#
 	# Physical Location

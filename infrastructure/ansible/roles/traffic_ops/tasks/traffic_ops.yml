@@ -122,6 +122,12 @@
     dest: "{{ to_tvdb_aes_key_loc }}"
   notify: Restart Traffic Ops
 
+- name: Remove LDAP config if LDAP not used
+  file:
+    path: "{{ to_conf_installdir }}/ldap.conf"
+    state: absent
+  when: not to_ldap_setup
+
 - name: Render Traffic Ops configuration files
   template:
     src: "{{item}}.j2"
@@ -134,9 +140,18 @@
     - production/log4perl.conf
     - production/riak.conf
     - cdn.conf
-    - ldap.conf
     - influxdb.conf
   notify: Restart Traffic Ops
+
+- name: Render Traffic Ops LDAP configuration file
+  template:
+    src: "ldap.conf.j2"
+    owner: "{{ to_user }}"
+    group: "{{ to_group }}"
+    mode: 0600
+    dest: "{{ to_conf_installdir }}/ldap.conf"
+  notify: Restart Traffic Ops
+  when: to_ldap_setup
 
 - name: Upgrade TODB
   command: ./db/admin -env=production upgrade

@@ -107,9 +107,20 @@ A22D22wvfs7CE3cUz/8UnvLM3kbTTu1WbbBbrHjAV47sAHjW/ckTqeo=
 -----END RSA PRIVATE KEY-----
 " > localhost.key
 
+if [[ ! -e "/etc/pki/tls/traffic_ops/" ]]; then
+	sudo mkdir -p "/etc/pki/tls/traffic_ops/"
+fi
+
 resources="$(dirname "$0")"
 envsubst <"${resources}/cdn.json" >cdn.conf
 cp "${resources}/database.json" database.conf
+sudo cp "${resources}/intermediate.crt.pem" /etc/pki/tls/traffic_ops/
+sudo cp "${resources}/intermediate.key.pem" /etc/pki/tls/traffic_ops/
+sudo cp "${resources}/server.crt.pem" /etc/pki/tls/traffic_ops/
+sudo cp "${resources}/server.key.pem" /etc/pki/tls/traffic_ops/
+sudo cp "${resources}/rootca.crt.pem" /etc/pki/tls/traffic_ops/
+sudo cp "${resources}/rootca.key.pem" /etc/pki/tls/traffic_ops/
+
 
 truncate --size=0 traffic.ops.log # Removes output from previous API versions and makes sure files exist
 ./traffic_ops_golang --cfg ./cdn.conf --dbcfg ./database.conf &

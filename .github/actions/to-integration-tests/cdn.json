@@ -1,8 +1,15 @@
 {
+	"client_certificate_authentication" : {
+		"root_certificates_directory" : "/etc/pki/tls/traffic_ops/"
+	},
 	"disable_auto_cert_deletion": false,
 	"use_ims": true,
 	"role_based_permissions": true,
 	"traffic_ops_golang": {
+		"tls_config": {
+			"MinVersion": 769,
+			"ClientAuth" : 1
+		},
 		"cert": "$PWD/localhost.crt",
 		"key": "$PWD/localhost.key",
 		"insecure": true,
