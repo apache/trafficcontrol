@@ -25,7 +25,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -103,15 +102,10 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 	// Based on version we load Delivery Service Eligible Server - for version 5 and above we use DSServerV5
 	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
 
-		serverList := make([]tc.DSServerV5, len(servers))
+		// Convert lastupdate time format to RFC3339 of DSServerV4 to DSServerV5
+		newServerList := tc.ConvertV4LastupdateToV5(servers)
 
-		for i, dss := range servers {
-			r := time.Unix(dss.LastUpdated.Unix(), 0)
-			serverList[i].LastUpdated = &r
-		}
-
-		api.WriteAlertsObj(w, r, http.StatusOK, alerts, serverList)
-		api.WriteResp(w, r, servers)
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, newServerList)
 		return
 	}
 
