@@ -520,7 +520,7 @@ func DeletePhysLocation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "phys_location was deleted.")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, inf.Params)
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
 	return
 }
 
