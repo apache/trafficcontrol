@@ -121,7 +121,7 @@ Response Structure
 			"iloIpNetmask": "",
 			"iloPassword": "",
 			"iloUsername": "",
-			"lastUpdated": "2018-10-30 16:01:12+00",
+			"lastUpdated": "2018-10-30T15:18:14.952814+05:30",
 			"mgmtIpAddress": "",
 			"mgmtIpGateway": "",
 			"mgmtIpNetmask": "",
