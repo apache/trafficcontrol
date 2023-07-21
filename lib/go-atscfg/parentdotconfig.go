@@ -141,7 +141,7 @@ func MakeParentDotConfig(
 	warnings := []string{}
 	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, tcServerParams, &warnings)
 
-	parentAbstraction, dataWarns, err := makeParentDotConfigData(
+	parentAbstraction, dataWarns, err := MakeParentDotConfigData(
 		dses,
 		server,
 		servers,
@@ -292,7 +292,7 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 	return topoName, topo, warns
 }
 
-func makeParentDotConfigData(
+func MakeParentDotConfigData(
 	dses []DeliveryService,
 	server *Server,
 	servers []Server,
@@ -1057,6 +1057,7 @@ func getTopologyParentConfigLine(
 	}
 
 	pasvc := &ParentAbstractionService{}
+	pasvc.DS = *ds
 	pasvc.Name = *ds.XMLID
 	pasvc.Comment = makeParentComment(addComments, *ds.XMLID, *ds.Topology)
 	pasvc.DestDomain = orgURI.Hostname()
