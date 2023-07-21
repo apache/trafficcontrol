@@ -171,7 +171,7 @@ type DSServerBaseV4 struct {
 // DSServerBaseV5 contains the base information for a Delivery Service Server associated with APIv5.
 type DSServerBaseV5 = DSServerBaseV50
 
-// DSServerBaseV50 contains the base information for a Delivery Service Server for the latest minor version associated with APIv50.
+// DSServerBaseV50 contains the base information for a Delivery Service Server for the latest major version associated with APIv50.
 type DSServerBaseV50 struct {
 	Cachegroup                  *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID                *int                 `json:"cachegroupId" db:"cachegroup_id"`
@@ -224,7 +224,7 @@ type DSServer struct {
 // DSServerV5 contains information of Delivery Service Server associated with APIv5.
 type DSServerV5 = DSServerV50
 
-// DSServerV50 contains information for a Delivery Service Server for the latest minor version associated with APIv50.
+// DSServerV50 contains information for a Delivery Service Server for the latest major version associated with APIv50.
 type DSServerV50 struct {
 	DSServerBaseV50
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
@@ -348,4 +348,14 @@ func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort, pDesc *s
 	dsServerBase.RouterHostName = routerHostName
 	dsServerBase.RouterPortName = routerPort
 	return dsServerBase
+}
+
+func ConvertV4LastupdateToV5(serverList []DSServerV4) []DSServerV5 {
+	updatedServerList := make([]DSServerV5, len(serverList))
+
+	for i, server := range serverList {
+		r := time.Unix(server.LastUpdated.Unix(), 0)
+		updatedServerList[i].LastUpdated = &r
+	}
+	return updatedServerList
 }
