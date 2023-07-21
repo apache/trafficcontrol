@@ -350,6 +350,7 @@ func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort, pDesc *s
 	return dsServerBase
 }
 
+// ConvertV4LastupdateToV5 convert DSServerV4 lastUpdated time format to RFC3339 for DSServerV5
 func ConvertV4LastupdateToV5(serverList []DSServerV4) []DSServerV5 {
 	updatedServerList := make([]DSServerV5, len(serverList))
 
