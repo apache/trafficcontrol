@@ -122,6 +122,9 @@ type Cfg struct {
 	// Monitor health poll is a single HTTP request and thus doesn't need workers.
 	NumHealthWorkers int `json:"num-health-workers"`
 
+	// Monitor peers inside strategies.yaml file
+	MonitorStrategiesPeers bool `json:"monitor-strategies-peers"`
+
 	TMPollingInterval time.Duration
 	TORequestTimeout  time.Duration
 

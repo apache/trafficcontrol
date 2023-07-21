@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/tc-health-client/util"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -315,7 +315,7 @@ func NewParentInfo(cfgPtr *util.AtomicPtr[config.Cfg]) (*ParentInfo, error) {
 	}
 
 	// read the strategies.yaml.
-	if err := parentInfo.readStrategies(); err != nil {
+	if err := parentInfo.readStrategies(cfg.MonitorStrategiesPeers); err != nil {
 		return nil, errors.New("loading parent " + StrategiesFile + " file: " + err.Error())
 	}
 
@@ -376,7 +376,7 @@ func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
 
 	if pi.StrategiesDotYaml.LastModifyTime < stime {
 		// read the 'strategies.yaml'.
-		if err := pi.readStrategies(); err != nil {
+		if err := pi.readStrategies(cfg.MonitorStrategiesPeers); err != nil {
 			return errors.New("updating parent " + StrategiesFile + " file: " + err.Error())
 		} else {
 			// log.Infof("updated parents from new %s total parents: %d\n", StrategiesFile, len(pi.Parents))
@@ -533,7 +533,7 @@ func (pi *ParentInfo) readParentConfig() error {
 }
 
 // load the parent hosts from 'strategies.yaml'.
-func (pi *ParentInfo) readStrategies() error {
+func (pi *ParentInfo) readStrategies(monitorPeers bool) error {
 	var includes []string
 	fn := pi.StrategiesDotYaml.Filename
 
@@ -593,6 +593,33 @@ func (pi *ParentInfo) readStrategies() error {
 
 	if err := yaml.Unmarshal([]byte(yamlContent), &strategies); err != nil {
 		return errors.New("failed to unmarshall " + fn + ": " + err.Error())
+	}
+
+	// If we are to not monitor peers, this will set the hosts to non-peer hosts only
+	if !monitorPeers {
+		type YAMLHosts struct {
+			Hosts []yaml.Node `yaml:"hosts"`
+		}
+
+		// Empty the hosts since we want to rebuild
+		strategies.Hosts = []Host{}
+
+		var yamlPeers YAMLHosts
+
+		if err := yaml.Unmarshal([]byte(yamlContent), &yamlPeers); err != nil {
+			return errors.New("failed to unmarshall " + fn + ": " + err.Error())
+		}
+
+		for _, host := range yamlPeers.Hosts {
+			if host.Anchor[0:4] != "peer" {
+				var hostObj Host
+				if err := host.Decode(&hostObj); err != nil {
+					return errors.New("Failed to unmarshall non-peer object. " + fn + ": " + err.Error())
+				}
+
+				strategies.Hosts = append(strategies.Hosts, hostObj)
+			}
+		}
 	}
 
 	for _, host := range strategies.Hosts {
