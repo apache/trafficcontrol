@@ -75,6 +75,7 @@ const ResourceModifiedError = errorConstant("resource was modified since the tim
 
 // Common context.Context value keys.
 const (
+	TxContextKey           = "tx"
 	DBContextKey           = "db"
 	ConfigContextKey       = "context"
 	ReqIDContextKey        = "reqid"
@@ -515,6 +516,7 @@ type APIInfo struct {
 	Vault     trafficvault.TrafficVault
 	Config    *config.Config
 	request   *http.Request
+	closeTx   bool // closeTx is whether this APIInfo owns the context and should close it.
 }
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
@@ -573,11 +575,21 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 	if userErr != nil || sysErr != nil {
 		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
 	}
-	dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
-	tx, err := db.BeginTxx(dbCtx, nil)                                                                        // must be last, MUST not return an error if this succeeds, without closing the tx
+
+	ownsTx := false
+	txInf, err := GetTx(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
+		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting tx: " + err.Error()), nil, http.StatusInternalServerError
 	}
+	// txInf will only exist in the context for batch requests.
+	if txInf == nil {
+		txInf, err = StartTx(db, time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second, r.Context())
+		if err != nil {
+			return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: txInf.CancelF}, userErr, err, http.StatusInternalServerError
+		}
+		ownsTx = true
+	}
+
 	return &APIInfo{
 		Config:    cfg,
 		ReqID:     reqID,
@@ -585,11 +597,32 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		Params:    params,
 		IntParams: intParams,
 		User:      user,
-		Tx:        tx,
-		CancelTx:  cancelTx,
+		Tx:        txInf.Tx,
+		CancelTx:  txInf.CancelF,
 		Vault:     tv,
 		request:   r,
+		closeTx:   ownsTx,
 	}, nil, nil, http.StatusOK
+}
+
+// DbTx contains the database transaction and associated values.
+type DbTx struct {
+	CancelF context.CancelFunc
+	Tx      *sqlx.Tx
+}
+
+// StartTx starts a database transaction.
+// It returns the transaction, the function to cancel the transaction (via the context), and any error.
+func StartTx(db *sqlx.DB, timeout time.Duration, reqCtx context.Context) (*DbTx, error) {
+	dbCtx, cancelTx := context.WithTimeout(reqCtx, timeout) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
+	tx, err := db.BeginTxx(dbCtx, nil)                      // must be last, MUST not return an error if this succeeds, without closing the tx
+	if err != nil {
+		return nil, errors.New("could not begin transaction: " + err.Error())
+	}
+	return &DbTx{
+		CancelF: cancelTx,
+		Tx:      tx,
+	}, nil
 }
 
 const createChangeLogQuery = `
@@ -684,8 +717,16 @@ func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, er
 //
 // Close will commit the transaction, if it hasn't been rolled back.
 func (inf *APIInfo) Close() {
-	defer inf.CancelTx()
-	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
+	if inf.closeTx {
+		CloseTx(inf.Tx, inf.CancelTx)
+	}
+}
+
+// CloseTx commits the given tx, and also cancels it in case the commit fails.
+// Any error is logged, no error is returned.
+func CloseTx(tx *sqlx.Tx, cancelTx context.CancelFunc) {
+	defer cancelTx()
+	if err := tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
 	}
 }
@@ -863,6 +904,21 @@ func GetDB(ctx context.Context) (*sqlx.DB, error) {
 		}
 	}
 	return nil, errors.New("No db found in Context")
+}
+
+// GetTx returns the database transaction from the context.
+// If the transaction has not been put in the context, this returns nil with no error.
+func GetTx(ctx context.Context) (*DbTx, error) {
+	val := ctx.Value(TxContextKey)
+	if val == nil {
+		return nil, nil
+	}
+	switch v := val.(type) {
+	case *DbTx:
+		return v, nil
+	default:
+		return nil, fmt.Errorf("Tx found with bad type: %T", v)
+	}
 }
 
 func GetConfig(ctx context.Context) (*config.Config, error) {
