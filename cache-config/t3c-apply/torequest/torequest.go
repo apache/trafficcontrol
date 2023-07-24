@@ -587,12 +587,12 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
 	for k, v := range r.Pkgs {
 		if strings.HasPrefix(k, name) {
-			log.Infof("Found in cache for '%v'", k)
+			log.Infof("Found in cache for '%s'", k)
 			return v
 		}
 	}
 	if !r.Cfg.RpmDBOk {
-		log.Warnf("RPM DB is corrupted cannot run IsPackageInstalled for '%v' and package metadata is unavailable", name)
+		log.Warnf("RPM DB is corrupted cannot run IsPackageInstalled for '%s' and package metadata is unavailable", name)
 		return false
 	}
 	log.Infof("IsPackageInstalled '%v' not found in cache, querying rpm", name)
@@ -1044,7 +1044,7 @@ func pkgMetaDataToMap(pmd []string) map[string]bool {
 
 func pkgMatch(pkgMetaData []string, pk string) bool {
 	for _, pkg := range pkgMetaData {
-		if ok := strings.Contains(pk, pkg); ok {
+		if strings.Contains(pk, pkg) {
 			return true
 		}
 	}
@@ -1056,18 +1056,18 @@ func (r *TrafficOpsReq) ProcessPackagesWithMetaData(packageMetaData []string) er
 	pkgs, err := getPackages(r.Cfg)
 	pkgMdataMap := pkgMetaDataToMap(packageMetaData)
 	if err != nil {
-		return errors.New("getting packages: " + err.Error())
+		return fmt.Errorf("getting packages: %w", err)
 	}
 	for _, pkg := range pkgs {
 		fullPackage := pkg.Name + "-" + pkg.Version
 		if pkgMdataMap[fullPackage] {
-			log.Infof("package %v is assumed to be installed according to metadata file", fullPackage)
+			log.Infof("package %s is assumed to be installed according to metadata file", fullPackage)
 			r.Pkgs[fullPackage] = true
 		} else if pkgMatch(packageMetaData, pkg.Name) {
-			log.Infof("package %v is assumed to be installed according to metadata, but doesn't match traffic ops pkg", fullPackage)
+			log.Infof("package %s is assumed to be installed according to metadata, but doesn't match traffic ops pkg", fullPackage)
 			r.Pkgs[fullPackage] = true
 		} else {
-			log.Infof("package %v does not appear to be installed.", pkg.Name+"-"+pkg.Version)
+			log.Infof("package %s does not appear to be installed.", pkg.Name+"-"+pkg.Version)
 		}
 	}
 	return nil

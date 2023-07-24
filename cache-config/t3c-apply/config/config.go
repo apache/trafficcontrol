@@ -190,13 +190,13 @@ func directoryExists(dir string) (bool, os.FileInfo) {
 	return info.IsDir(), info
 }
 
-const RpmDir = "/var/lib/rpm"
+const rpmDir = "/var/lib/rpm"
 
 // verifies the rpm database files. if there is any database corruption
 // it will return false
-func VerifyRpmDB() bool {
+func verifyRpmDB() bool {
 	exclude := regexp.MustCompile(`(^\.|^__)`)
-	dbFiles, err := os.ReadDir(RpmDir)
+	dbFiles, err := os.ReadDir(rpmDir)
 	if err != nil {
 		return false
 	}
@@ -204,7 +204,7 @@ func VerifyRpmDB() bool {
 		if exclude.Match([]byte(file.Name())) {
 			continue
 		}
-		cmd := exec.Command("/usr/lib/rpm/rpmdb_verify", RpmDir+"/"+file.Name())
+		cmd := exec.Command("/usr/lib/rpm/rpmdb_verify", rpmDir+"/"+file.Name())
 		err := cmd.Run()
 		if err != nil || cmd.ProcessState.ExitCode() > 0 {
 			return false
@@ -497,7 +497,7 @@ If any of the related flags are also set, they override the mode's default behav
 		os.Setenv("TO_PASS", toPass)
 	}
 
-	rpmDBisOk := VerifyRpmDB()
+	rpmDBisOk := verifyRpmDB()
 
 	if *installPackagesPtr && !rpmDBisOk {
 		if t3cutil.StrToMode(*runModePtr) == t3cutil.ModeBadAss {
@@ -507,7 +507,7 @@ If any of the related flags are also set, they override the mode's default behav
 		}
 	}
 
-	toInfoLog = append(toInfoLog, fmt.Sprintf("rpm database is ok: %v", rpmDBisOk))
+	toInfoLog = append(toInfoLog, fmt.Sprintf("rpm database is ok: %t", rpmDBisOk))
 	// set TSHome
 	var tsHome = ""
 	if *tsHomePtr != "" {
@@ -621,7 +621,7 @@ If any of the related flags are also set, they override the mode's default behav
 	if len(fatalLogStrs) > 0 {
 		for _, str := range fatalLogStrs {
 			str = strings.TrimSpace(str)
-			log.Warnln(str)
+			log.Errorln(str)
 		}
 		return Cfg{}, errors.New("fatal error has occurerd")
 	}

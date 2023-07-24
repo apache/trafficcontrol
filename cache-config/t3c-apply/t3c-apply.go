@@ -276,7 +276,7 @@ func Main() int {
 			return GitCommitAndExit(ExitCodeServicesError, FailureExitMsg, cfg, metaData, oldMetaData)
 		}
 	} else {
-		log.Infoln("======== RPM DB checks failed, package processing not possible, using installed packages from  metadata if available========")
+		log.Warnln("======== RPM DB checks failed, package processing not possible, using installed packages from  metadata if available========")
 		trops.ProcessPackagesWithMetaData(oldMetaData.InstalledPackages)
 	}
 
