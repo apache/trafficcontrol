@@ -229,10 +229,12 @@
 	],
 	"profile_parameters": [
 		{
-			"profile": "test profile",
-			"profileId": 25,
-			"parameter": "test parameter",
-			"parameterId": 60
+			"profileId": 18,
+			"parameterId": 2
+		},
+		{
+			"profileId": 18,
+			"parameterId": 3
 		}
 	]
 }
