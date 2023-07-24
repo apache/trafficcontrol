@@ -1153,29 +1153,21 @@
     "profile_parameters": {
         "type": "object",
         "required":[
+            "lastUpdated",
             "profile",
-            "profileId",
-            "parameter",
-            "parameterId"
+            "parameter"
         ],
         "properties":{
+            "lastUpdated":{
+                "type": "string"
+            },
             "profile":{
                 "type": "string"
-            },
-            "profileId":{
-                "type": [
-                    "integer",
-                    "null"
-                ]
+
             },
             "parameter":{
-                "type": "string"
-            },
-            "parameterId": {
-                "type": [
-                    "integer",
-                    "null"
-                ]
+                "type": "integer"
+            
             }
         }
     }
