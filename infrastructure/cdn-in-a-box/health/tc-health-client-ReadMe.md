@@ -17,7 +17,7 @@
 	under the License.
 -->
 
-# CDN-in-a-Box Health Client Teating
+# CDN-in-a-Box Health Client Testing
 
 ## Building and Running
 
