@@ -84,6 +84,38 @@ function compressedFileHandler(req: express.Request, res: TPResponseWriter, next
 }
 
 /**
+ * A handler for proxying the Traffic Ops API.
+ *
+ * @param req The client's request.
+ * @param res The server's response writer.
+ */
+function toProxyHandler(req: express.Request, res: TPResponseWriter): void {
+	const {logger, config} = res.locals;
+
+	logger.debug(`Making TO API request to \`${req.originalUrl}\``);
+
+	const fwdRequest: RequestOptions = {
+		headers: req.headers,
+		host: config.trafficOps.hostname,
+		method: req.method,
+		path: req.originalUrl,
+		port: config.trafficOps.port,
+		rejectUnauthorized: !config.insecure,
+	};
+
+	try {
+		const proxiedRequest = request(fwdRequest, r => {
+			res.writeHead(r.statusCode ?? 502, r.headers);
+			r.pipe(res);
+		});
+		req.pipe(proxiedRequest);
+	} catch (e) {
+		console.error("proxying request:", e);
+	}
+	res.locals.endTime = new Date();
+}
+
+/**
  * The Express app is exported so that it can be used by serverless Functions.
  *
  * @param serverConfig Server configuration.
@@ -111,37 +143,6 @@ export function app(serverConfig: ServerConfig): express.Express {
 	server.get("*.*", express.static(serverConfig.browserFolder, {
 		maxAge: "1y"
 	}));
-
-	/**
-	 * A handler for proxying the Traffic Ops API.
-	 *
-	 * @param req The client's request.
-	 * @param res The server's response writer.
-	 */
-	function toProxyHandler(req: express.Request, res: TPResponseWriter): void {
-		const {logger, config} = res.locals;
-
-		logger.debug(`Making TO API request to \`${req.originalUrl}\``);
-
-		const fwdRequest: RequestOptions = {
-			headers: req.headers,
-			host: config.trafficOps.hostname,
-			method: req.method,
-			path: req.originalUrl,
-			port: config.trafficOps.port,
-			rejectUnauthorized: !config.insecure,
-		};
-
-		try {
-			const proxiedRequest = request(fwdRequest, (r) => {
-				res.writeHead(r.statusCode ?? 502, r.headers);
-				r.pipe(res);
-			});
-			req.pipe(proxiedRequest);
-		} catch (e) {
-			logger.error("proxying request:", e);
-		}
-	}
 	server.get("*.*", (_: express.Request, res: TPResponseWriter) => {
 		res.locals.endTime = new Date();
 	});
