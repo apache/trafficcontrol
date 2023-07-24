@@ -11,10 +11,11 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Inject, Injectable } from "@angular/core";
+import { Injectable } from "@angular/core";
 import { ReplaySubject } from "rxjs";
 
 import { UserService } from "src/app/api";
+import { LOCAL_TPV1_URL } from "src/app/app.component";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
@@ -60,11 +61,12 @@ export class NavigationService {
 
 	private readonly horizontalNavs: Map<string, HeaderNavigation>;
 	private readonly verticalNavs: Map<string, HeaderNavigation>;
+	private readonly tpv1Url: string | null = "http:localhost:433";
 
 	constructor(
-		@Inject("TP_V1_URL") private readonly tpv1Url: string,
 		private readonly auth: CurrentUserService,
 		private readonly api: UserService) {
+		this.tpv1Url = localStorage.getItem(LOCAL_TPV1_URL) ? localStorage.getItem(LOCAL_TPV1_URL) : this.tpv1Url;
 		this.horizontalNavs = new Map<string, HeaderNavigation>([
 			["Home", {
 				routerLink: "/core",
@@ -185,7 +187,7 @@ export class NavigationService {
 				{
 					href: "/core/types",
 					name: "Types"
-				},{
+				}, {
 					href: `${this.tpv1Url}/origins`,
 					name: "Origins"
 				},
@@ -225,11 +227,11 @@ export class NavigationService {
 					name: "Generate System ISO"
 				},
 				{
-					href:`${this.tpv1Url}/jobs`,
+					href: `${this.tpv1Url}/jobs`,
 					name: "Invalidate Content"
 				},
 				{
-					href:`${this.tpv1Url}/notifications`,
+					href: `${this.tpv1Url}/notifications`,
 					name: "Notifications"
 				},
 			],
