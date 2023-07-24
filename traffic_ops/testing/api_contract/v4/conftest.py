@@ -1663,7 +1663,7 @@ def delivery_service_required_capabilities_data_post(to_session: TOSession,
 	deliveryServiceID = delivery_services_post_data["id"]
 	requiredCapability = server_capabilities_post_data["name"]
 	delivery_service_required_capabilities["deliveryServiceID"] = deliveryServiceID
-	delivery_service_required_capabilities["requiredCapability"]= requiredCapability
+	delivery_service_required_capabilities["requiredCapability"] = requiredCapability
 
 	logger.info("New delivery_service_required_capabilities data to hit POST method %s",
 	     delivery_service_required_capabilities)
