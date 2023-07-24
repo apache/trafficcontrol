@@ -37,7 +37,8 @@ def test_profile_parameters_contract(
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
-	:param profile_parameter_post_data: Fixture to get sample profile parameter data and actual Profile Parameter response.
+	:param profile_parameter_post_data: Fixture to get sample profile parameter data 
+	and actual Profile Parameter response.
 	"""
 	# validate Profile Parameter keys from profile parameters get response
 	logger.info(
@@ -73,12 +74,12 @@ def test_profile_parameters_contract(
 			raise TypeError(
 				f"Profile Parameter response template data must be a dict, not '{type(profile_parameter_response_template)}'")
 
-		# validate profile_parameter values from prereq data in profile parameters get response.
-		keys = ["profile", "profileId", "parameter", "parameterId"]
-		prereq_values = [profile_parameters_post_data[key] for key in keys]
-		
-		# print(profile_parameter_data)
+		profile_parameters_post_data["profile"] = first_profile_parameter["profile"]
+		profile_parameters_post_data["parameter"] = first_profile_parameter["parameter"]
 
+		# validate profile_parameter values from prereq data in profile parameters get response.
+		keys = ["profile", "parameter"]
+		prereq_values = [profile_parameters_post_data[key] for key in keys]
 		get_values = [first_profile_parameter[key] for key in keys]
 
 		assert validate(instance=first_profile_parameter,
