@@ -13,7 +13,7 @@
 */
 import "zone.js/node";
 
-import { existsSync, readdirSync, readFileSync, statSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { createServer as createRedirectServer } from "http";
 import { createServer, request, RequestOptions } from "https";
 import { join } from "path";
@@ -37,57 +37,56 @@ import { AppServerModule } from "src/main.server";
 
 import { errorMiddleWare, loggingMiddleWare, type TPResponseWriter } from "./middleware";
 
-/**
- * StaticFile defines what compression files are available.
- */
-interface StaticFile {
-	compressions: Array<CompressionType>;
-}
+const typeMap = new Map([
+	["js", "application/javascript"],
+	["css", "text/css"],
+	["ttf", "font/ttf"],
+	["svg", "image/svg+xml"]
+]);
 
 /**
- * CompressionType defines the different compression algorithms.
- */
-interface CompressionType {
-	fileExt: string;
-	headerEncoding: string;
-	name: string;
-}
-
-const gzip = {
-	fileExt: "gz",
-	headerEncoding: "gzip",
-	name: "gzip"
-};
-const br = {
-	fileExt: "br",
-	headerEncoding: "br",
-	name: "brotli"
-};
-
-/**
- * getFiles recursively gets all the files in a directory.
+ * A handler for serving files from compressed variants.
  *
- * @param path The path to get files from.
- * @returns Files found in the directory.
+ * @param req The client request.
+ * @param res Response writer.
+ * @param next A delegation to the next handler, to be called if this handler
+ * determines it can't write a response (which is always because this handler
+ * doesn't do that).
+ * @returns nothing. This is just required because we're returning void function
+ * calls. Not actually sure why, seems like a bug to me.
  */
-function getFiles(path: string): string[] {
-	const all = readdirSync(path)
-		.map(file => join(path, file));
-	const dirs = all
-		.filter(file => statSync(file).isDirectory());
-	let files = all
-		.filter(file => !statSync(file).isDirectory());
-	for (const dir of dirs) {
-		files = files.concat(getFiles(dir));
+function compressedFileHandler(req: express.Request, res: TPResponseWriter, next: express.NextFunction): void {
+	const type = req.path.split(".").pop();
+	if (type === undefined || !typeMap.has(type)) {
+		res.locals.logger.debug("unrecognized/non-compress-able file extension:", type);
+		return next();
 	}
-	return files;
+	const path = join(res.locals.config.browserFolder, req.path.substring(1, req.path.length));
+	const file = res.locals.foundFiles.get(path);
+	if(!file || file.compressions.length === 0) {
+		res.locals.logger.debug("file", path, "doesn't have any available compression");
+		return next();
+	}
+	const acceptedEncodings = req.acceptsEncodings();
+	for(const compression of file.compressions) {
+		if (!acceptedEncodings.includes(compression.headerEncoding)) {
+			continue;
+		}
+		req.url = req.url.replace(`${req.path}`, `${req.path}.${compression.fileExt}`);
+		res.set("Content-Encoding", compression.headerEncoding);
+		res.set("Content-Type", typeMap.get(type));
+		res.locals.logger.info("Serving", compression.name, "compressed file", req.path);
+		return next();
+	}
+
+	res.locals.logger.debug("no file found that matches an encoding the client accepts - serving uncompressed");
+	next();
 }
 
-let config: ServerConfig;
 /**
  * The Express app is exported so that it can be used by serverless Functions.
  *
- * @param serverConfig Server configuration
+ * @param serverConfig Server configuration.
  * @returns The Express.js application.
  */
 export function app(serverConfig: ServerConfig): express.Express {
@@ -105,60 +104,10 @@ export function app(serverConfig: ServerConfig): express.Express {
 	server.set("view engine", "html");
 	server.set("views", "./");
 
-	const allFiles = getFiles(serverConfig.browserFolder);
-	const compressedFiles = new Map(allFiles
-		.filter(file => file.match(/\.(br|gz)$/))
-		.map(file => [file, undefined]));
-	const foundFiles = new Map<string, StaticFile>(allFiles
-		.filter(file => file.match(/\.(js|css|tff|svg)$/))
-		.map(file => {
-			const staticFile: StaticFile = {
-				compressions: []
-			};
-			if (compressedFiles.has(`${file}.${br.fileExt}`)) {
-				staticFile.compressions.push(br);
-			}
-			if (compressedFiles.has(`${file}.${gzip.fileExt}`)) {
-				staticFile.compressions.push(gzip);
-			}
-			return [file, staticFile];
-		}));
-
-	const typeMap = new Map([
-		["js", "application/javascript"],
-		["css", "text/css"],
-		["ttf", "font/ttf"],
-		["svg", "image/svg+xml"]
-	]);
-
 	server.use(loggingMiddleWare);
 	// Could just use express compression `server.use(compression())` but that is calculated for each request
-	server.get("*.(js|css|ttf|svg)", function(req, res, next) {
-		const type = req.path.split(".").pop();
-		if (type === undefined || !typeMap.has(type)) {
-			return next();
-		}
-		const path = join(serverConfig.browserFolder, req.path.substring(1, req.path.length));
-		const file = foundFiles.get(path);
-		if(!file || file.compressions.length === 0) {
-			return next();
-		}
-		const acceptedEncodings = req.acceptsEncodings();
-		for(const compression of file.compressions) {
-			if (acceptedEncodings.indexOf(compression.headerEncoding) === -1) {
-				continue;
-			}
-			req.url = req.url.replace(`${req.path}`, `${req.path}.${compression.fileExt}`);
-			res.set("Content-Encoding", compression.headerEncoding);
-			res.set("Content-Type", typeMap.get(type));
-			console.log(`Serving ${compression.name} compressed file ${req.path}`);
-			return next();
-		}
-		next();
-	});
-	// Example Express Rest API endpoints
-	// server.get('/api/**', (req, res) => { });
-	// Serve static files from /browser
+	server.get("*.(js|css|ttf|svg)", compressedFileHandler);
+
 	server.get("*.*", express.static(serverConfig.browserFolder, {
 		maxAge: "1y"
 	}));
@@ -169,8 +118,10 @@ export function app(serverConfig: ServerConfig): express.Express {
 	 * @param req The client's request.
 	 * @param res The server's response writer.
 	 */
-	function toProxyHandler(req: express.Request, res: express.Response): void {
-		console.log(`Making TO API request to \`${req.originalUrl}\``);
+	function toProxyHandler(req: express.Request, res: TPResponseWriter): void {
+		const {logger, config} = res.locals;
+
+		logger.debug(`Making TO API request to \`${req.originalUrl}\``);
 
 		const fwdRequest: RequestOptions = {
 			headers: req.headers,
@@ -188,9 +139,12 @@ export function app(serverConfig: ServerConfig): express.Express {
 			});
 			req.pipe(proxiedRequest);
 		} catch (e) {
-			console.error("proxying request:", e);
+			logger.error("proxying request:", e);
 		}
 	}
+	server.get("*.*", (_: express.Request, res: TPResponseWriter) => {
+		res.locals.endTime = new Date();
+	});
 
 	server.use("api/**", toProxyHandler);
 	server.use("/api/**", toProxyHandler);
@@ -202,7 +156,7 @@ export function app(serverConfig: ServerConfig): express.Express {
 			{
 				providers: [
 					{provide: APP_BASE_HREF, useValue: req.baseUrl},
-					{provide: "TP_V1_URL", useValue: config.tpv1Url},
+					{provide: "TP_V1_URL", useValue: res.locals.config.tpv1Url},
 				],
 			},
 		);
@@ -296,6 +250,7 @@ function run(): number {
 		version: versionToString(version)
 	});
 
+	let config: ServerConfig;
 	try {
 		config = getConfig(parser.parse_args(), version);
 	} catch (e) {

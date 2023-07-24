@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { opendir } from "fs/promises";
+import { join } from "path";
 
 import type { NextFunction, Request, Response } from "express";
 
@@ -22,11 +24,28 @@ import { environment } from "src/environments/environment";
 import type { ServerConfig } from "./server.config";
 
 /**
+ * StaticFile defines what compression files are available.
+ */
+interface StaticFile {
+	compressions: Array<CompressionType>;
+}
+
+/**
+ * CompressionType defines the different compression algorithms.
+ */
+interface CompressionType {
+	fileExt: string;
+	headerEncoding: string;
+	name: string;
+}
+
+/**
  * TPResponseLocals are the express.Response.locals properties specific to a
  * response writer for the TP server.
  */
 interface TPResponseLocals {
 	config: ServerConfig;
+	foundFiles: Map<string, StaticFile>;
 	logger: Logger;
 	/** The time at which the request was received. */
 	startTime: Date;
@@ -48,6 +67,43 @@ export type TPResponseWriter = Response<unknown, TPResponseLocals>;
  */
 export type TPHandler = (req: Request, resp: TPResponseWriter, next: NextFunction) => void | PromiseLike<void>;
 
+const gzip = {
+	fileExt: "gz",
+	headerEncoding: "gzip",
+	name: "gzip"
+};
+const br = {
+	fileExt: "br",
+	headerEncoding: "br",
+	name: "brotli"
+};
+
+/**
+ * getFiles recursively gets all the files in a directory.
+ *
+ * @param path The path to get files from.
+ * @returns Files found in the directory.
+ */
+async function getFiles(path: string): Promise<string[]> {
+	const dir = await opendir(path);
+	let dirEnt = await dir.read();
+	let files = new Array<string>();
+
+	while (dirEnt !== null) {
+		const name = join(path, dirEnt.name);
+
+		if (dirEnt.isDirectory()) {
+			files = files.concat(await getFiles(name));
+		} else {
+			files.push(name);
+		}
+
+		dirEnt = await dir.read();
+	}
+
+	return files;
+}
+
 /**
  * loggingMiddleWare is a middleware factory for express.js that provides a
  * logger.
@@ -64,6 +120,33 @@ export function loggingMiddleWare(config: ServerConfig): TPHandler {
 		const prefix = `${req.ip} HTTP/${req.httpVersion} ${req.method} ${req.url} ${req.hostname}`;
 		resp.locals.logger = new Logger(console, environment.production ? LogLevel.INFO : LogLevel.DEBUG, prefix);
 		resp.locals.startTime = new Date();
+
+		const allFiles = await getFiles(config.browserFolder);
+		const compressedFiles = new Map(
+			allFiles.filter(
+				file => file.match(/\.(br|gz)$/)
+			).map(
+				file => [file, undefined]
+			)
+		);
+		resp.locals.foundFiles = new Map<string, StaticFile>(
+			allFiles.filter(
+				file => file.match(/\.(js|css|tff|svg)$/)
+			).map(
+				file => {
+					const staticFile: StaticFile = {
+						compressions: []
+					};
+					if (compressedFiles.has(`${file}.${br.fileExt}`)) {
+						staticFile.compressions.push(br);
+					}
+					if (compressedFiles.has(`${file}.${gzip.fileExt}`)) {
+						staticFile.compressions.push(gzip);
+					}
+					return [file, staticFile];
+				}
+			)
+		);
 		next();
 	};
 }
