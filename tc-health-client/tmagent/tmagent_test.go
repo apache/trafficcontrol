@@ -80,6 +80,7 @@ func TestReadStrategiesDotYaml(t *testing.T) {
 	cfg := &config.Cfg{
 		HealthClientConfigFile: cf,
 		TrafficServerConfigDir: "test_files/etc/",
+		MonitorStrategiesPeers: true,
 	}
 	parents := util.ConfigFile{
 		Filename:       filepath.Join(cfg.TrafficServerConfigDir, ParentsFile),
@@ -107,8 +108,10 @@ func TestReadStrategiesDotYaml(t *testing.T) {
 		}
 
 		numParents := len(pi.GetParents())
-		if numParents != 2 {
+		if numParents != 2 && !cfg.MonitorStrategiesPeers {
 			t.Fatalf("failed readStrategies(): expected 2 parents got %d\n", numParents)
+		} else if numParents != 6 && cfg.MonitorStrategiesPeers {
+			t.Fatalf("failed readStrategies(): expected 6 parents got %d\n", numParents)
 		}
 	})
 
