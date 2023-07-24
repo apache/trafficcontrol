@@ -1020,8 +1020,9 @@ def coordinate_data_post(to_session: TOSession, request_template_data: list[JSON
 	return resp_obj
 	
 @pytest.fixture(name="profile_parameters_post_data")
-def profile_parameters_data_post(to_session: TOSession, request_template_data: list[JSONData]
-		  ) -> dict[str, object]:
+def profile_parameters_post_data(to_session: TOSession, request_template_data: list[JSONData],
+		profile_post_data:dict[str, object], parameter_post_data:dict[str, object]
+		) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for profile parameters endpoint.
 	:param to_session: Fixture to get Traffic Ops session.
@@ -1032,13 +1033,21 @@ def profile_parameters_data_post(to_session: TOSession, request_template_data: l
 	profile_parameters = check_template_data(request_template_data["profile_parameters"], "profile_parameters")
 
 	# Return new post data and post response from profile parameters POST request
-	profileId = profile_parameters["profileId"]
-	parameterId = profile_parameters["parameterId"]
-	
+	profile_get_response = to_session.get_profiles()
+	profile_data = profile_get_response [0][0]
+	profile_id = profile_data.get("id")
+
+	parameter_get_response = to_session.get_parameters()
+	parameter_data = parameter_get_response [0][0]
+	parameter_id = parameter_data.get("id")
+
+	profile_parameters["profileId"] = profile_post_data["id"]
+	profile_parameters["parameterId"] = parameter_post_data["id"]
+
 	logger.info("New profile_parameter data to hit POST method %s", profile_parameters)
-	
-	# Hitting profile parameters POST methed
-	response: tuple[JSONData, requests.Response] = to_session.associate_paramater_to_profile(data=profile_parameters)
+
+	# Hitting profile parameters POST method
+	response: tuple[JSONData, requests.Response] = to_session.associate_paramater_to_profile(profile_id=profile_id, data=profile_parameters)
 	resp_obj = check_template_data(response, "profile_parameters")
 	yield resp_obj
 	profile_id = resp_obj.get("profileId")
