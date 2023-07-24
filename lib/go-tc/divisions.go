@@ -19,6 +19,8 @@ package tc
  * under the License.
  */
 
+import "time"
+
 // DivisionsResponse is a list of Divisions as a response.
 // swagger:response DivisionsResponse
 type DivisionsResponse struct {
@@ -59,4 +61,32 @@ type DivisionNullable struct {
 	ID          *int       `json:"id" db:"id"`
 	LastUpdated *TimeNoMod `json:"lastUpdated" db:"last_updated"`
 	Name        *string    `json:"name" db:"name"`
+}
+
+// DivisionsResponseV5 is an alias for the latest minor version for the major version 5.
+type DivisionsResponseV5 DivisionsResponseV50
+
+// DivisionResponseV5 is an alias for the latest minor version for the major version 5.
+type DivisionResponseV5 DivisionResponseV50
+
+// DivisionV5 is an alias for the latest minor version for the major version 5.
+type DivisionV5 DivisionV50
+
+// DivisionsResponseV50 is a list of Divisions as a response.
+type DivisionsResponseV50 struct {
+	Response []DivisionV5 `json:"response"`
+	Alerts
+}
+
+// DivisionResponseV50 is a single Division response for Update and Create to
+// depict what changed.
+type DivisionResponseV50 struct {
+	Response DivisionV5 `json:"response"`
+}
+
+// A DivisionV50 is a named collection of Regions.
+type DivisionV50 struct {
+	ID          int       `json:"id" db:"id"`
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
+	Name        string    `json:"name" db:"name"`
 }

@@ -140,6 +140,30 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 		});
 	};
 
+	$scope.confirmDelete = function() {
+		var params = {
+			title: 'Delete latest SSL Keys for Delivery Service: ' + deliveryService.xmlId,
+			key: deliveryService.xmlId + '-keys'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+			controller: 'DialogDeleteController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			deliveryServiceSslKeysService.deleteCert(deliveryService).then(
+				function() {
+					$anchorScroll();
+					$scope.refresh();
+				});
+		});
+	};
+
 	$scope.updateProvider = function() {
 		sslKeys.authType = $scope.acmeProvider;
 	};

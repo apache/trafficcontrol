@@ -34,8 +34,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-
-	"github.com/jmoiron/sqlx"
 )
 
 const insertFederationResolverQuery = `
@@ -136,13 +134,17 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	} else {
 		log.Warnf("Couldn't get config %v", e)
 	}
+
+	// Based on version we load types - for version 5 and above we use FederationResolverV5
+	var resolvers []interface{}
+
 	if useIMS {
-		runSecond, maxTime = TryIfModifiedSinceQuery(r.Header, inf.Tx, where, orderBy, pagination, queryValues)
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where, "federation_resolver"))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			api.AddLastModifiedHdr(w, maxTime)
 			w.WriteHeader(http.StatusNotModified)
-			api.WriteResp(w, r, []tc.FederationResolver{})
+			api.WriteResp(w, r, resolvers)
 			return
 		}
 		log.Debugln("IMS MISS")
@@ -162,7 +164,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var resolvers = []tc.FederationResolver{}
 	for rows.Next() {
 		var resolver tc.FederationResolver
 		if err := rows.Scan(&resolver.ID, &resolver.IPAddress, &resolver.LastUpdated, &resolver.Type); err != nil {
@@ -174,7 +175,16 @@ func Read(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resolvers = append(resolvers, resolver)
+		// Based on version we load types - for version 5 and above we use FederationResolverV5
+		if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
+
+			// Convert FederationResolver fields to FederationResolverV5 fields
+			v5Resolver := tc.UpgradeToFederationResolverV5(resolver)
+
+			resolvers = append(resolvers, v5Resolver)
+		} else {
+			resolvers = append(resolvers, resolver)
+		}
 	}
 
 	if api.SetLastModifiedHeader(r, useIMS) {
@@ -183,52 +193,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(rfc.LastModified, date)
 	}
 	api.WriteResp(w, r, resolvers)
-}
-
-func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, orderBy string, pagination string, queryValues map[string]interface{}) (bool, time.Time) {
-	var max time.Time
-	var imsDate time.Time
-	var ok bool
-	imsDateHeader := []string{}
-	runSecond := true
-	dontRunSecond := false
-	if header == nil {
-		return runSecond, max
-	}
-	imsDateHeader = header[rfc.IfModifiedSince]
-	if len(imsDateHeader) == 0 {
-		return runSecond, max
-	}
-	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
-		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
-		return runSecond, max
-	}
-	query := SelectMaxLastUpdatedQuery(where, "federation_resolver")
-	rows, err := tx.NamedQuery(query, queryValues)
-	if err != nil {
-		log.Warnf("Couldn't get the max last updated time: %v", err)
-		return runSecond, max
-	}
-	if err == sql.ErrNoRows {
-		return dontRunSecond, max
-	}
-	defer rows.Close()
-	// This should only ever contain one row
-	if rows.Next() {
-		v := &ims.LatestTimestamp{}
-		if err = rows.StructScan(v); err != nil || v == nil {
-			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
-			return runSecond, max
-		}
-		if v.LatestTime != nil {
-			max = v.LatestTime.Time
-			// The request IMS time is later than the max of (lastUpdated, deleted_time)
-			if imsDate.After(v.LatestTime.Time) {
-				return dontRunSecond, max
-			}
-		}
-	}
-	return runSecond, max
 }
 
 func SelectMaxLastUpdatedQuery(where string, tableName string) string {

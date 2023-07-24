@@ -63,7 +63,7 @@ func TestVerifyClientCertificate_Success(t *testing.T) {
 	connState.PeerCertificates = append(connState.PeerCertificates, intermediateCert)
 	req.TLS = connState
 
-	err = VerifyClientCertificate(req, "root/pool/created/above")
+	err = VerifyClientCertificate(req, "root/pool/created/above", false)
 	if err != nil {
 		t.Fatalf("error failed to verify client certificate: %s", err)
 	}
@@ -96,7 +96,7 @@ func TestVerifyClientCertificate_NoIntermediate_Fail(t *testing.T) {
 	connState.PeerCertificates = append(connState.PeerCertificates, clientCert)
 	req.TLS = connState
 
-	err = VerifyClientCertificate(req, "root/pool/created/above")
+	err = VerifyClientCertificate(req, "root/pool/created/above", false)
 	if err == nil {
 		t.Fatalf("should have failed without intermediate certificate: %s", err)
 	}
@@ -136,7 +136,7 @@ func TestVerifyClientChainSuccess(t *testing.T) {
 		t.Fatalf("failed to extract x509 from PEM string for intermediateCert. err: %s", err)
 	}
 
-	if err = verifyClientRootChain([]*x509.Certificate{clientCert, intermediateCert}); err != nil {
+	if err = verifyClientRootChain([]*x509.Certificate{clientCert, intermediateCert}, false); err != nil {
 		t.Fatalf("failed to verify certificate chain with valid certs. err: %s", err)
 	}
 }
@@ -153,7 +153,7 @@ func TestVerifyClientChain_EmptyClient_Fail(t *testing.T) {
 	rootPool = x509.NewCertPool()
 	rootPool.AddCert(rootCert)
 
-	if err = verifyClientRootChain([]*x509.Certificate{}); err == nil {
+	if err = verifyClientRootChain([]*x509.Certificate{}, false); err == nil {
 		t.Fatalf("failed to verify certificate chain with valid certs. err: %s", err)
 	}
 }
@@ -167,7 +167,7 @@ func TestVerifyClientChain_EmptyRoot_Fail(t *testing.T) {
 		t.Fatalf("failed to extract x509 from PEM string for clientCert. err: %s", err)
 	}
 
-	if err = verifyClientRootChain([]*x509.Certificate{clientCert}); err == nil {
+	if err = verifyClientRootChain([]*x509.Certificate{clientCert}, false); err == nil {
 		t.Fatalf("failed to verify certificate chain with valid certs. err: %s", err)
 	}
 }
@@ -191,7 +191,7 @@ func TestVerifyClientChain_WrongCertKeyUsage_Fail(t *testing.T) {
 		t.Fatalf("failed to extract x509 from PEM string for serverCert. err: %s", err)
 	}
 
-	if err = verifyClientRootChain([]*x509.Certificate{serverCert}); err == nil {
+	if err = verifyClientRootChain([]*x509.Certificate{serverCert}, false); err == nil {
 		t.Fatalf("failed to verify certificate chain with valid certs. err: %s", err)
 	}
 }

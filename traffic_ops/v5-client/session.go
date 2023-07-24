@@ -79,6 +79,21 @@ func NewSession(user, password, url, userAgent string, client *http.Client, useC
 	}
 }
 
+// LoginWithCert creates a new authenticated session with a Traffic Ops
+// server, and gives the client the ability to log in using certificates.
+//
+// Returns the logged in client, the remote address of Traffic Ops which was
+// translated and used to log in, and any error that occurred along the way. If
+// the error is not nil, the remote address may or may not be nil, depending on
+// whether the error occurred before the login request.
+func LoginWithCert(toURL string, insecure bool, requestTimeout time.Duration, certFile, keyFile, userAgent string) (*Session, net.Addr, error) {
+	cl, ip, err := toclientlib.LoginWithCert(toURL, insecure, requestTimeout, certFile, keyFile, userAgent, apiVersions())
+	if err != nil {
+		return nil, nil, err
+	}
+	return &Session{TOClient: *cl}, ip, err
+}
+
 // LoginWithAgent creates a new authenticated session with a Traffic Ops
 // server. The session cookie should be set automatically in the returned
 // Session, so that subsequent calls are properly authenticated without further
