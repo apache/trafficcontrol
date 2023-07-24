@@ -387,13 +387,20 @@
 			"organization": "Kabletown",
 			"city": "Denver",
 			"state": "Colorado"
-    }
-  ],
+		}
+	],
 	"delivery_services_regex": [
 		{
 			"pattern": ".*\\.foo-bar\\..*",
 			"type": 33,
 			"setNumber": 1
+		}
+	],
+	"cdn_federation": [
+		{
+			"cname": "test.quest.",
+			"ttl": 48,
+			"description": "A test federation"
 		}
 	]
 }

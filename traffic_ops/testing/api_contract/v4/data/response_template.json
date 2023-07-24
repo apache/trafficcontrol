@@ -1682,5 +1682,32 @@
                 "type": "string"
             }
         }
+    },
+    "cdn_federation": {
+        "type": "object",
+        "required": [
+            "id",
+            "cname",
+            "ttl",
+            "description",
+            "lastUpdated"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "cname": {
+                "type": "string"
+            },
+            "ttl": {
+                "type": "integer"
+            },
+            "description": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            }
+        }
     }
 }
