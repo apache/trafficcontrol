@@ -14,7 +14,7 @@
 import { Component, OnInit, ViewChild } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatTabGroup } from "@angular/material/tabs";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { pki } from "node-forge";
 import { type ResponseDeliveryServiceSSLKey } from "trafficops-types";
 
@@ -62,7 +62,8 @@ export class CertViewerComponent implements OnInit {
 	@ViewChild("matTab") public matTab!: MatTabGroup;
 	constructor(
 		private readonly route: ActivatedRoute,
-		private readonly dsAPI: DeliveryServiceService) {
+		private readonly dsAPI: DeliveryServiceService,
+		private readonly router: Router) {
 	}
 
 	/**
@@ -177,7 +178,12 @@ export class CertViewerComponent implements OnInit {
 			this.dsCert = false;
 			return;
 		}
-		this.cert = await this.dsAPI.getSSLKeys(ID);
+		try {
+			this.cert = await this.dsAPI.getSSLKeys(ID);
+		} catch(_) {
+			await this.router.navigate(["/core/certs/ssl/"]);
+			return;
+		}
 		this.dsCert = true;
 		this.inputCert = this.cert.certificate.crt;
 		this.privateKeyFormControl.setValue(this.cert.certificate.key);

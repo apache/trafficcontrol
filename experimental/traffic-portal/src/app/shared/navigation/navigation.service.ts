@@ -196,7 +196,7 @@ export class NavigationService {
 				},
 				{
 					href: "/core/certs/ssl",
-					name: "Inspect Cert"
+					name: "Inspect Certificate"
 				}
 			],
 			name: "Other"

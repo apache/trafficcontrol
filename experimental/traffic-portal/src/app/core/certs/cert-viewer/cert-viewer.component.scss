@@ -23,11 +23,13 @@
 }
 
 .private-text {
-	color: transparent !important;
-	text-shadow: 0 0 8px rgba(0,0,0,0.5);
+	&:not(:focus) {
+		color: transparent;
+		text-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+	}
 
 	&:focus {
-		color: inherit !important;
+		color: inherit;
 		text-shadow: none;
 	}
 }

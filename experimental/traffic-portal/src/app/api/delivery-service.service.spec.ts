@@ -582,8 +582,18 @@ describe("DeliveryServiceService", () => {
 	});
 
 	it("gets DS ssl keys", async () => {
-		const resp = service.getSSLKeys(testDS.xmlId);
-		const req = httpTestingController.expectOne(r => r.url ===
+		let resp = service.getSSLKeys(testDS.xmlId);
+		let req = httpTestingController.expectOne(r => r.url ===
+			`/api/${service.apiVersion}/deliveryservices/xmlId/${testDS.xmlId}/sslkeys`);
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("decode")).toBe("true");
+		expect(req.request.method).toBe("GET");
+		req.flush({response: testDSSSLKeys});
+
+		await expectAsync(resp).toBeResolvedTo(testDSSSLKeys);
+
+		resp = service.getSSLKeys(testDS);
+		req = httpTestingController.expectOne(r => r.url ===
 			`/api/${service.apiVersion}/deliveryservices/xmlId/${testDS.xmlId}/sslkeys`);
 		expect(req.request.params.keys().length).toBe(1);
 		expect(req.request.params.get("decode")).toBe("true");

@@ -23,12 +23,13 @@ import { CertAuthorComponent } from "./cert-author/cert-author.component";
 import { CertDetailComponent } from "./cert-detail/cert-detail.component";
 
 export const ROUTES: Routes = [
-	{component: CertViewerComponent, path: "ssl/ds/:xmlId"},
+	{component: CertViewerComponent, path: "ssl/:xmlId"},
 	{component: CertViewerComponent, path: "ssl"}
 ];
 
 /**
- *
+ * Declares the module for SSL certificates. Is seperated since `node-forge` which provides
+ * SSL functions is quite large.
  */
 @NgModule({
 	declarations: [
