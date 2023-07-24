@@ -27,11 +27,15 @@ import {
 	defaultConfigFile,
 	getConfig,
 	getVersion,
-	ServerConfig,
+	type ServerConfig,
 	versionToString
 } from "server.config";
 
-import { AppServerModule } from "./src/main.server";
+import { hasProperty, Logger, LogLevel } from "src/app/utils";
+import { environment } from "src/environments/environment";
+import { AppServerModule } from "src/main.server";
+
+import { errorMiddleWare, loggingMiddleWare, type TPResponseWriter } from "./middleware";
 
 /**
  * StaticFile defines what compression files are available.
@@ -127,6 +131,7 @@ export function app(serverConfig: ServerConfig): express.Express {
 		["svg", "image/svg+xml"]
 	]);
 
+	server.use(loggingMiddleWare);
 	// Could just use express compression `server.use(compression())` but that is calculated for each request
 	server.get("*.(js|css|ttf|svg)", function(req, res, next) {
 		const type = req.path.split(".").pop();
@@ -191,12 +196,20 @@ export function app(serverConfig: ServerConfig): express.Express {
 	server.use("/api/**", toProxyHandler);
 
 	// All regular routes use the Universal engine
-	server.get("*", (req, res) => {
-		res.render(indexHtml, {providers: [
-			{provide: APP_BASE_HREF, useValue: req.baseUrl},
-			{provide: "TP_V1_URL", useValue: config.tpv1Url}
-		], req});
+	server.get("*", (req, res: TPResponseWriter) => {
+		res.render(
+			indexHtml,
+			{
+				providers: [
+					{provide: APP_BASE_HREF, useValue: req.baseUrl},
+					{provide: "TP_V1_URL", useValue: config.tpv1Url},
+				],
+			},
+		);
+		res.locals.endTime = new Date();
 	});
+
+	server.use(errorMiddleWare);
 
 	server.enable("trust proxy");
 	return server;
@@ -290,6 +303,8 @@ function run(): number {
 		return 1;
 	}
 
+	const logger = new Logger(console, environment.production ? LogLevel.INFO : LogLevel.DEBUG);
+
 	// Start up the Node server
 	const server = app(config);
 
@@ -302,7 +317,10 @@ function run(): number {
 			key = readFileSync(config.keyPath, {encoding: "utf8"});
 			ca = config.certificateAuthPaths.map(c => readFileSync(c, {encoding: "utf8"}));
 		} catch (e) {
-			console.error("reading SSL key/cert:", e);
+			logger.error("reading SSL key/cert:", String(e));
+			if (!environment.production) {
+				console.trace(e);
+			}
 			return 1;
 		}
 		createServer(
@@ -314,7 +332,7 @@ function run(): number {
 			},
 			server
 		).listen(config.port, () => {
-			console.log(`Node Express server listening on port ${config.port}`);
+			logger.debug(`Node Express server listening on port ${config.port}`);
 		});
 		try {
 			const redirectServer = createRedirectServer(
@@ -332,20 +350,18 @@ function run(): number {
 			);
 			redirectServer.listen(80);
 			redirectServer.on("error", e => {
-				console.error(`redirect server encountered error: ${e}`);
-				if (Object.prototype.hasOwnProperty.call(e, "code") && (e as typeof e & {
-					code: unknown;
-				}).code === "EACCES") {
-					console.warn("access to port 80 not allowed; closing redirect server");
+				logger.error("redirect server encountered error:", String(e));
+				if (hasProperty(e, "code", "string") && e.code === "EACCES") {
+					logger.warn("access to port 80 not allowed; closing redirect server");
 					redirectServer.close();
 				}
 			});
 		} catch (e) {
-			console.warn("Failed to initialize HTTP-to-HTTPS redirect listener:", e);
+			logger.warn("Failed to initialize HTTP-to-HTTPS redirect listener:", e);
 		}
 	} else {
 		server.listen(config.port, () => {
-			console.log(`Node Express server listening on port ${config.port}`);
+			logger.debug(`Node Express server listening on port ${config.port}`);
 		});
 	}
 	return 0;
