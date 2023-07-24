@@ -20,7 +20,10 @@ import { ActivatedRoute } from "@angular/router";
 import { RequestStatus, ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
-import { DecisionDialogComponent, DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import {
+	DecisionDialogComponent,
+	DecisionDialogData
+} from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -46,21 +49,12 @@ export class StatusDetailsComponent {
 		name: new FormControl("", {nonNullable: true}),
 	});
 
-	/**
-	 * Constructor.
-	 *
-	 * @param api The Servers API which is used to provide row data.
-	 * @param route A reference to the route of this view which is used to get the 'id' query parameter of status.
-	 * @param router Angular router
-	 * @param dialog Dialog manager
-	 * @param fb Form builder
-	 * @param navSvc Manages the header
-	 */
 	constructor(
 		private readonly api: ServerService,
 		private readonly route: ActivatedRoute,
 		private readonly dialog: MatDialog,
-		private readonly navSvc: NavigationService, private readonly location: Location,
+		private readonly navSvc: NavigationService,
+		private readonly location: Location,
 	) {
 		// Getting id from the route
 		const id = this.route.snapshot.paramMap.get("id");
@@ -94,7 +88,7 @@ export class StatusDetailsComponent {
 		this.statusDetailsForm.setValue({
 			description: this.statusDetails.description ? this.statusDetails.description : "",
 			name: this.statusDetails.name
-		  });
+		});
 
 		this.loading = false;
 	}
@@ -104,7 +98,7 @@ export class StatusDetailsComponent {
 	 *
 	 * @param event HTML form submission event.
 	 */
-	public async onSubmit(event: Event): Promise<void>  {
+	public async onSubmit(event: Event): Promise<void> {
 		event.preventDefault();
 		event.stopPropagation();
 
@@ -119,8 +113,8 @@ export class StatusDetailsComponent {
 				const editData: ResponseStatus = {
 					description: this.statusDetailsForm.controls.description.value,
 					id: this.statusDetails.id,
-					lastUpdated:this.statusDetails.lastUpdated,
-					name:this.statusDetailsForm.controls.name.value
+					lastUpdated: this.statusDetails.lastUpdated,
+					name: this.statusDetailsForm.controls.name.value
 				};
 				this.statusDetails = await this.api.updateStatusDetail(editData);
 			}

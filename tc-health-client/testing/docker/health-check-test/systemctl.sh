@@ -66,7 +66,7 @@ case $COMMAND in
         /opt/trafficserver/bin/trafficserver start
         ;;
       tc-health-client)
-        nohup tc-health-client -vvv&
+        nohup tc-health-client -vvv &
         ;;
     esac
     ;;

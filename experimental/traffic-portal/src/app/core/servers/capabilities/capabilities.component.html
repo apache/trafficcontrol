@@ -12,15 +12,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 -->
 
-<mat-card class="table-page-content">
+<mat-card class="page-content">
 	<div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Server Capabilities" autofocus inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Server Capabilities" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
 	</div>
 	<tp-generic-table
 		[data]="capabilities | async"
 		[cols]="columnDefs"
 		[fuzzySearch]="fuzzySubject"
 		context="capabilities"
+		[doubleClickLink]="doubleClickLink"
 		[contextMenuItems]="contextMenuItems"
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>

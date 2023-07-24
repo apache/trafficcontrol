@@ -12,8 +12,6 @@
 * limitations under the License.
 */
 import { Component } from "@angular/core";
-import { IconDefinition } from "@fortawesome/fontawesome-svg-core";
-import { faCheck, faClock } from "@fortawesome/free-solid-svg-icons";
 import { ICellRendererAngularComp } from "ag-grid-angular";
 import { ICellRendererParams } from "ag-grid-community";
 
@@ -30,11 +28,6 @@ export class UpdateCellRendererComponent implements ICellRendererAngularComp {
 
 	/** The value of the column of the rendered row. */
 	public value = false;
-
-	/** The icon to be displayed - dependent on value. */
-	public get icon(): IconDefinition {
-		return this.value ? faClock : faCheck;
-	}
 
 	/**
 	 * Called when the value changes - I don't think this will ever happen.

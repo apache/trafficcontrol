@@ -21,7 +21,11 @@ import type { ResponseServerCapability } from "trafficops-types";
 import { ServerService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink
+} from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -36,7 +40,7 @@ export class CapabilitiesComponent implements OnInit {
 	/** All the physical locations which should appear in the table. */
 	public capabilities: Promise<Array<ResponseServerCapability>>;
 
-  	/** Definitions of the table's columns according to the ag-grid API */
+	/** Definitions of the table's columns according to the ag-grid API */
 	public columnDefs = [
 		{
 			field: "name",
@@ -48,6 +52,11 @@ export class CapabilitiesComponent implements OnInit {
 			hide: true
 		},
 	];
+
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseServerCapability> = {
+		href: (row: ResponseServerCapability): string => `/core/capabilities/${row.name}`
+	};
 
 	/** Definitions for the context menu items (which act on augmented cache-group data). */
 	public contextMenuItems: Array<ContextMenuItem<ResponseServerCapability>> = [

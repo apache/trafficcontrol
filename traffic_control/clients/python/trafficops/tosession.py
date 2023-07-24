@@ -559,6 +559,42 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+	#
+	# CDN Notifications
+	#
+	@api_request('get', 'cdn_notifications', ('4.0', '4.1', '5.0'))
+	def get_cdn_notifications(self, query_params=None):
+		"""
+		Get all CDN notifications.
+		:ref:`to-api-cdn-notifications`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'cdn_notifications', ('4.0', '4.1', '5.0'))
+	def create_cdn_notification(self, data=None):
+		"""
+		Create a new CDN notification.
+		:ref:`to-api-cdn-notifications`
+		:param data: The parameter data to use for cdn creation.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('delete', 'cdn_notifications', ('4.0', '4.1', '5.0'))
+	def delete_cdn_notification(self, query_params=None):
+		"""
+		Deletes an existing CDN notification.
+		:ref:`to-api-cdn-notifications`
+		:param query_params: See API page for more information on accepted parameters
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 	#
 	# CDN Topology
@@ -621,6 +657,38 @@ class TOSession(RestApiSession):
 		:ref:`to-api-cdns-name-name-sslkeys`
 		:param cdn_name: The CDN name to find ssl keys for
 		:type cdn_name: String
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	#
+	# CDN Lock
+	#
+	@api_request('get', 'cdn_locks', ('4.0', '4.1', '5.0'))
+	def get_cdn_locks(self, query_params=None):
+		"""
+		Returns information for all CDN locks.
+		:ref:`to-api-cdn-locks`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'cdn_locks', ('4.0', '4.1', '5.0'))
+	def create_cdn_lock(self, data=None):
+		"""
+		Create a new CDN lock.
+		:ref:`to-api-cdn-locks`
+		:param data: The parameter data to use for cdn_lock creation.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'cdn_locks', ('4.0', '4.1', '5.0'))
+	def delete_cdn_lock(self, query_params=None):
+		"""
+		Deletes an existing CDN Lock.
+		:ref:`to-api-cdn-locks`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -703,6 +771,50 @@ class TOSession(RestApiSession):
 		:ref:`to-api-deliveryservices-id`
 		:param delivery_service_id: The delivery service Id
 		:type delivery_service_id: int
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+    #
+	# Delivery Service Requests
+	#
+	@api_request('get', 'deliveryservice_requests', ('3.0', '4.0', '4.1', '5.0'))
+	def get_deliveryservice_requests(self, query_params=None):
+		"""
+		Retrieves all delivery service reuests.
+		:ref:`to-api-deliveryservice-requests`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'deliveryservice_requests', ('3.0', '4.0', '4.1', '5.0'))
+	def create_deliveryservice_request(self, data=None):
+		"""
+		Creates a new delivery service request.
+		:ref:`to-api-deliveryservice-requests`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('put', 'deliveryservice_requests', ('3.0', '4.0', '4.1', '5.0'))
+	def update_deliveryservice_request(self, query_params=None, data=None):
+		"""
+		Updates an existing Delivery Service Request.
+		:ref:`to-api-deliveryservice-requests`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'deliveryservice_requests', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_deliveryservice_request(self, query_params=None):
+		"""
+		Deletes a Delivery Service Request.
+		:ref:`to-api-deliveryservice-requests`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -913,7 +1025,7 @@ class TOSession(RestApiSession):
 
 	@api_request('put', 'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_deliveryservice_regexes(self, delivery_service_id=None, regex_id=None,
-	                                   query_params=None):
+	                                   data=None):
 		"""
 		Update a regex for a delivery service
 		:ref:`to-api-deliveryservices-id-regexes-rid`
@@ -921,8 +1033,8 @@ class TOSession(RestApiSession):
 		:type delivery_service_id: int
 		:param regex_id: The delivery service regex id
 		:type regex_id: int
-		:param query_params: The required data to update delivery service regexes
-		:type query_params: Dict[str, Any]
+		:param data: The required data to update delivery service regexes
+		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1382,6 +1494,34 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+
+
+    #
+	# multiple_server_capabilities
+	#
+	@api_request('post', 'multiple_servers_capabilities', ('4.1', '5.0'))
+	def create_multiple_servers_capabilities(self, data=None):
+		"""
+		Create multiple_servers_capabilities
+		:ref:`to-api-multiple_servers_capabilities`
+		:param data: The multiple_servers_capabilities data to use for multiple_servers_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('delete', 'multiple_servers_capabilities', ('4.1', '5.0'))
+	def delete_multiple_servers_capabilities(self, data=None):
+		"""
+		Delete multiple_servers_capabilities
+		:ref:`to-api-multiple_servers_capabilities`
+		:param data: The multiple_servers_capabilities data to use for multiple_servers_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 
 	#
 	# Physical Location
@@ -1878,6 +2018,46 @@ class TOSession(RestApiSession):
 		"""
 
 	#
+	# steering_id_targets
+	#
+	@api_request('get', 'steering/{delivery_service_id:d}/targets', ('3.0', '4.0', '4.1', '5.0'))
+	def get_steering_targets(self, delivery_service_id=None, query_params=None):
+		"""
+		Get all targets for a steering Delivery Service.
+		:ref:`to-api-steering-id-targets`
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'steering/{delivery_service_id:d}/targets', ('3.0', '4.0', '4.1', '5.0'))
+	def create_steering_targets(self, delivery_service_id=None, data=None):
+		"""
+		Create a steering target.
+		:ref:`to-api-steering-id-targets`
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:param data: The steering(s) data to use for steering creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'steering/{delivery_service_id:d}/targets/{target_id:d}', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_steering_targets(self, delivery_service_id=None, target_id=None):
+		"""
+		Removes a specific target mapping from a specific Delivery Service.
+		:ref:`to-api-steering-id-targets`
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:param target_id: The target Id
+		:type target_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	#
 	# System
 	#
 	@api_request('get', 'system/info', ('3.0', '4.0', '4.1', '5.0'))
@@ -1888,7 +2068,6 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-
 
 	#
 	# Tenants

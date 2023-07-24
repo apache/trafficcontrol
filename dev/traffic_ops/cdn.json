@@ -10,6 +10,7 @@
 		"log_location_event": "stdout",
 		"whitelisted_oauth_urls": [],
 		"oauth_client_secret": "",
+		"oauth_user_attribute": "unique_name",
 		"traffic_vault_backend": "postgres",
 		"traffic_vault_config": {
 			"aes_key_location": "/aes.key",

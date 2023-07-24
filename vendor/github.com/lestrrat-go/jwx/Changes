@@ -1,6 +1,130 @@
 Changes
 =======
 
+v1.2.26 - 14 Jun 2023
+[Security]
+  * Potential Padding Oracle Attack Vulnerability and Timing Attack Vulnerability 
+    for JWE AES-CBC encrypted payloads affecting all v2 releases up to v2.0.10,
+    all v1 releases up to v1.2.25, and all v0 releases up to v0.9.2 have been reported by
+    @shogo82148.
+
+    Please note that v0 versions will NOT receive fixes.
+    This release fixes these vulnerabilities for the v1 series.
+
+[Miscellaneous]
+  * JWE tests now only run algorithms that are supported by the underlying
+    `jose` tool
+
+v1.2.25 23 May 2022
+[Bug Fixes][Security]
+  * [jwe] An old bug from at least 7 years ago existed in handling AES-CBC unpadding,
+    where the unpad operation might remove more bytes than necessary (#744)
+    This affects all jwx code that is available before v2.0.2 and v1.2.25. 
+
+v1.2.24 05 May 2022
+[Security]
+  * Upgrade golang.org/x/crypto (#724)
+
+v1.2.23 13 Apr 2022
+[Bug fixes]
+  * [jwk] jwk.AutoRefresh had a race condition when `Configure()` was
+    called concurrently (#686)
+    (It has been patched correctly, but we may come back to revisit
+     the design choices in the near future)
+
+v1.2.22 08 Apr 2022
+[Bug fixes]
+  * [jws] jws.Verify was ignoring the `b64` header when it was present
+    in the protected headers (#681). Now the following should work:
+
+      jws.Sign(..., jws.WithDetachedPayload(payload))
+      // previously payload had to be base64 encoded
+      jws.Verify(..., jws.WithDetachedPayload(payload))
+
+    (note: v2 branch was not affected)
+
+v1.2.21 30 Mar 2022
+[Bug fixes]
+  * [jwk] RSA keys without p and q can now be parsed.
+
+v1.2.20 03 Mar 2022
+[Miscellaneous]
+  * Dependency on golang.org/x/crypto has been upgraded to
+    v0.0.0-20220214200702-86341886e292 to address
+    https://nvd.nist.gov/vuln/detail/CVE-2020-14040 (#598)
+
+v1.2.19 22 Feb 2022
+[New Feature]
+  * [jwk] jwk.Parse (and (jwk.AutoRefresh).Configure) can accept a new
+    option `jwk.WithIgnoreParseError(bool)`, which allows users to ignore
+    errors during parsing of each key contained in the JWKS, allowing
+    you to "skip" invalid keys.
+
+    This option should not be used lightly, as it hides the presence of
+    possibly faulty keys. However, this can be an escape hatch if you are
+    faced with a faulty JWKS that you do not control.
+
+v1.2.18 23 Jan 2022
+[Bug fixes]
+  * [jwe] When presented with jwk.Key with a key ID, the jwe encryption
+    code path did not assign this key ID to the resulting data structure.
+    This has been fixed, and now the key ID is properly applied to the
+    `kid` field.
+  * [jws] Use for `crypto.Signer`s were implemented for signing, but verification was
+    never properly implemented. This has been fixed.
+
+[Miscellaneous]
+  * [jws] Because of fixes to code path that deals with `crypto.Signer`s, we are
+    now able to fully integrate with Cloud services, such as Google's Cloud KMS
+    and AWS KMS, that provide key management and signing payloads
+
+    An implementation for these are available at https://github.com/jwx-go/crypto-signer.
+
+    Suppot `crypto.Signer` in JWE encryption has not been implemented.
+
+v1.2.17 12 Jan 2022
+[Miscellaneous]
+  * Re-release v1.2.16 as v1.2.17 because of an error in the release process.
+    The code is exactly the same as what v1.2.16 intended to release.
+    v1.2.16 has been retracted in go.mod.
+
+v1.2.16 12 Jan 2022 
+
+  THIS VERSION HAS BEEN RETRACTED. PLEASE USE v1.2.17
+
+[Bug Fixes]
+  * Peviously, `jws.Sign()` could not create a signed payload with
+    detached and unencoded payload, even when the documentation said it could.
+    Now you may use the `jws.Sign()` in the following way to create
+    a JWS message with detached, unencoded state:
+
+       hdrs := jws.NewHeaders()
+       hdrs.Set("b64", false)
+       hdrs.Set("crit", "b64")
+       jws.Sign(nil, alg, key, jws.WithDetachedPayload(payload), jws.WithHeaders(hdrs))
+
+    Notice the use of `nil` for the first parameter, and the use of
+    `jws.WithDetachedPayload()`.
+
+    We realize this is not exactly a clean API, but this is currently the
+    only way to implement this in a backward-compatible fashion. Most likely
+    this will change in a future major version.
+[Miscellaneous]
+  * `jws.WithDetachedPayload()` is now of type `jws.SignVerifyOption`, which
+    satisfies both `jws.SignOption` and `jws.VerifyOption`
+   
+
+v1.2.15 07 Jan 2022
+[New Features]
+  * `(jwk.AutoRefresh).Remove()` has been implemented.
+[Bug Fixes]
+  * ES256K is now included in the list of JWS inferred algorithms, if it's
+    enabled via -tags jwx_es256k
+[Miscellaneous]
+  * `jwt.Parse` has been improved for efficiency and has more tests to
+    cover corner cases.
+  * Documentation fixes
+
 v1.2.14 22 Dec 2021
 [New Features]
   * `jwk.Fetch()` and `(*jwk.AutoRefresh).Configure()` can now take `jwk.Whitelist`

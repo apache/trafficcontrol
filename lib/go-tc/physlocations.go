@@ -19,6 +19,8 @@ package tc
  * under the License.
  */
 
+import "time"
+
 // PhysLocationsResponse is a list of PhysLocations as a response.
 type PhysLocationsResponse struct {
 	Response []PhysLocation `json:"response"`
@@ -200,4 +202,65 @@ type PhysLocationNullable struct {
 // PhysLocationTrimmed contains only the name of a physical location.
 type PhysLocationTrimmed struct {
 	Name string `json:"name"`
+}
+
+// PhysLocationV5 is an alias for the latest minor version for the major version 5.
+type PhysLocationV5 PhysLocationV50
+
+// PhysLocationV50 contains the physical location of a cache group.
+type PhysLocationV50 struct {
+	Address     string    `json:"address" db:"address"`
+	City        string    `json:"city" db:"city"`
+	Comments    string    `json:"comments" db:"comments"`
+	Email       string    `json:"email" db:"email"`
+	ID          int       `json:"id" db:"id"`
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
+	Name        string    `json:"name" db:"name"`
+	Phone       string    `json:"phone" db:"phone"`
+	POC         string    `json:"poc" db:"poc"`
+	RegionID    int       `json:"regionId" db:"region"`
+	RegionName  string    `json:"region" db:"region_name"`
+	ShortName   string    `json:"shortName" db:"short_name"`
+	State       string    `json:"state" db:"state"`
+	Zip         string    `json:"zip" db:"zip"`
+}
+
+// PhysLocationsResponseV5 is an alias for the latest minor version for the major version 5.
+type PhysLocationsResponseV5 PhysLocationsResponseV50
+
+// PhysLocationsResponseV50 is a list of PhysLocations as a response.
+type PhysLocationsResponseV50 struct {
+	Response []PhysLocationV5 `json:"response"`
+	Alerts
+}
+
+// PhysLocationNullableV5 is an alias for the latest minor version for the major version 5.
+type PhysLocationNullableV5 PhysLocationNullableV50
+
+// PhysLocationNullableV50 contains the physical location of a cache group. It
+// allows for all fields to be null.
+type PhysLocationNullableV50 struct {
+	Address     *string   `json:"address" db:"address"`
+	City        *string   `json:"city" db:"city"`
+	Comments    *string   `json:"comments" db:"comments"`
+	Email       *string   `json:"email" db:"email"`
+	ID          *int      `json:"id" db:"id"`
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
+	Name        *string   `json:"name" db:"name"`
+	Phone       *string   `json:"phone" db:"phone"`
+	POC         *string   `json:"poc" db:"poc"`
+	RegionID    *int      `json:"regionId" db:"region"`
+	RegionName  *string   `json:"region" db:"region_name"`
+	ShortName   *string   `json:"shortName" db:"short_name"`
+	State       *string   `json:"state" db:"state"`
+	Zip         *string   `json:"zip" db:"zip"`
+}
+
+// PhysLocationResponseV5 is an alias for the latest minor version for the major version 5.
+type PhysLocationResponseV5 PhysLocationResponseV50
+
+// PhysLocationResponseV50 is a single PhysLocationNullable as a response.
+type PhysLocationResponseV50 struct {
+	Response PhysLocationNullableV5 `json:"response"`
+	Alerts
 }

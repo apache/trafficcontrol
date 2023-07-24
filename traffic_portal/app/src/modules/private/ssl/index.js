@@ -11,18 +11,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-mat-card {
-	margin: 1em auto;
-	box-sizing: border-box;
-	width: 80%;
-	min-width: 350px;
-	mat-card-content {
-		display: grid;
-		grid-template-columns: 1fr;
-		row-gap: 2em;
-		margin: 1em auto 50px;
-	}
-	mat-card-actions mat-button {
-		margin: 0 8px;
-	}
-}
+
+module.exports = angular.module("trafficPortal.private.ssl", [])
+	.config(function($stateProvider, $urlRouterProvider) {
+		$stateProvider
+			.state("trafficPortal.private.ssl", {
+				url: "inspect-cert",
+				views: {
+					privateContent: {
+						templateUrl: "common/modules/form/ssl/cert-inspect.tpl.html",
+						controller: "CertInspectController",
+					}
+				}
+			});
+		$urlRouterProvider.otherwise("/");
+	});

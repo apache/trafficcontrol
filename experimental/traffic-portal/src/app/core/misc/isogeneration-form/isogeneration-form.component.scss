@@ -12,21 +12,18 @@
  * limitations under the License.
  */
 
- form mat-card {
-	 width: 100%;
-	 min-width: none;
-	fieldset {
-		border: none;
-		display: grid;
-		grid-template-columns: 1fr;
-		row-gap: 2em;
-	}
+form mat-card fieldset {
+	border: none;
+	display: grid;
+	grid-template-columns: 1fr;
+	row-gap: 2em;
 }
 
 div.form-header {
 	display: flex;
 	margin: 16px;
 	justify-content: space-between;
+
 	mat-slide-toggle {
 		margin-left: 16px;
 	}

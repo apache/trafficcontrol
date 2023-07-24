@@ -13,7 +13,15 @@
 */
 
 import { Injectable } from "@angular/core";
-import {ProfileType, RequestParameter, RequestProfile, ResponseParameter, ResponseProfile} from "trafficops-types";
+import {
+	type ProfileImport,
+	type ProfileImportResponse,
+	ProfileType,
+	type RequestProfile,
+	type ResponseProfile,
+	type RequestParameter,
+	type ResponseParameter,
+} from "trafficops-types";
 
 /**
  * ProfileService exposes API functionality related to Profiles.
@@ -207,17 +215,32 @@ export class ProfileService {
 	}
 
 	/**
-	 * Deletes an existing profile.
+	 * Deletes an existing Profile.
 	 *
-	 * @param id Id of the profile to delete.
-	 * @returns The success message.
+	 * @param profile The Profile to delete, or just its ID.
+	 * @returns The deleted Profile.
 	 */
-	public async deleteProfile(id: number | ResponseProfile): Promise<ResponseProfile> {
+	public async deleteProfile(profile: number | ResponseProfile): Promise<ResponseProfile> {
+		const id = typeof(profile) === "number" ? profile : profile.id;
 		const index = this.profiles.findIndex(t => t.id === id);
 		if (index === -1) {
-			throw new Error(`no such Type: ${id}`);
+			throw new Error(`no such Profile #${id}`);
 		}
 		return this.profiles.splice(index, 1)[0];
+	}
+
+	/**
+	 * import profile from json or text file
+	 *
+	 * @param profile imported date for profile creation.
+	 * @returns The created profile which is profileImportResponse with id added.
+	 */
+	public async importProfile(profile: ProfileImport): Promise<ProfileImportResponse> {
+		const t = {
+			...profile.profile,
+			id: ++this.lastID,
+		};
+		return t;
 	}
 
 	private lastParamID = 20;

@@ -14,7 +14,7 @@
  */
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
-import {ProfileType, ResponseProfile} from "trafficops-types";
+import { ProfileType, type ResponseProfile} from "trafficops-types";
 
 import { ProfileService } from "./profile.service";
 
@@ -30,6 +30,16 @@ describe("ProfileService", () => {
 		name: "TestQuest",
 		routingDisabled: false,
 		type: ProfileType.ATS_PROFILE
+	};
+	const importProfile = {
+		parameters:[],
+		profile: {
+			cdn: "CDN",
+			description: "",
+			id: 1,
+			name: "TestQuest",
+			type: ProfileType.ATS_PROFILE,
+		}
 	};
 
 	const parameter = {
@@ -114,6 +124,16 @@ describe("ProfileService", () => {
 		expect(req.request.body).toBeNull();
 		req.flush({response: profile});
 		await expectAsync(responseP).toBeResolvedTo(profile);
+	});
+
+	it("sends requests to import Profiles", async () => {
+		const responseP = service.importProfile(importProfile);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles/import`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBe(importProfile);
+		req.flush({response: importProfile.profile});
+		await expectAsync(responseP).toBeResolvedTo(importProfile.profile);
 	});
 
 	it("sends requests multiple Parameters", async () => {

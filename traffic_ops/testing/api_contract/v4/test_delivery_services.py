@@ -14,6 +14,7 @@
 
 """API Contract Test Case for delivery services endpoint."""
 import logging
+from random import randint
 from typing import Union
 import pytest
 import requests
@@ -50,6 +51,15 @@ def test_delivery_services_contract(to_session: TOSession,
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_deliveryservices(query_params={"id": delivery_services_id})
+
+	# Hitting delivery_services PUT method
+	delivery_services_post_data["longDesc"] = "test" + str(randint(0, 1000)) 
+	logger.info("Updated delivery services data to hit PUT method %s", delivery_services_post_data)
+	put_response: tuple[
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive], 
+		requests.Response] = to_session.update_deliveryservice_by_id(
+		data=delivery_services_post_data, delivery_service_id=delivery_services_id)
+
 	try:
 		delivery_services_data = delivery_services_get_response[0]
 		if not isinstance(delivery_services_data, list):
@@ -58,7 +68,15 @@ def test_delivery_services_contract(to_session: TOSession,
 		first_delivery_services = delivery_services_data[0]
 		if not isinstance(first_delivery_services, dict):
 			raise TypeError("malformed API response; first delivery_services in response is not an dict")
-		logger.info("delivery_services Api response %s", first_delivery_services)
+		logger.info("delivery_services Api get response %s", first_delivery_services)
+
+		delivery_services_put_data = put_response[0]
+		if not isinstance(delivery_services_put_data, list):
+			raise TypeError("malformed API response; 'response' property not an array")
+		delivery_services_put_response = delivery_services_put_data[0]
+		if not isinstance(delivery_services_put_response, dict):
+			raise TypeError("malformed API response; delivery_services in response is not an dict")
+		logger.info("delivery_services Api put response %s", delivery_services_put_response)
 		delivery_services_response_template = response_template_data.get("delivery_services")
 		if not isinstance(delivery_services_response_template, dict):
 			raise TypeError(f"delivery_services response template data must be a dict, not '"
@@ -71,22 +89,8 @@ def test_delivery_services_contract(to_session: TOSession,
 		assert validate(instance=first_delivery_services,
 		  schema=delivery_services_response_template) is None
 		assert get_values == prereq_values
+		assert validate(instance=delivery_services_put_response,
+		  schema=delivery_services_response_template) is None
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for delivery_services endpoint: API response was malformed")
-	finally:
-		# Delete delivery_services after test execution to avoid redundancy.
-		delivery_service_id = delivery_services_post_data.get("id")
-		if to_session.delete_deliveryservice_by_id(delivery_service_id=delivery_service_id) is None:
-			logger.error("delivery_services returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_delivery_services_contract")
-
-		profile_id = delivery_services_post_data.get("profileId")
-		if to_session.delete_profile_by_id(profile_id=profile_id) is None:
-			logger.error("profile returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_delivery_services_contract")
-
-		cdn_id = delivery_services_post_data.get("cdnId")
-		if to_session.delete_cdn_by_id(cdn_id=cdn_id) is None:
-			logger.error("cdn returned by Traffic Ops is missing an 'id' property")
-			pytest.fail("Response from delete request is empty, Failing test_delivery_services_contract")

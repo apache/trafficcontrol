@@ -15,7 +15,8 @@
 ag-grid-angular {
 	width: 100%;
 	margin: auto;
-	height: 85vh;
+	min-height: 350px;
+	height: 80vh;
 }
 
 .extra-actions {
@@ -91,13 +92,12 @@ ag-grid-angular {
 	}
 
 	button {
-		fa-icon.caret {
+		.caret {
 			display: inline-block;
-			line-height: 30px;
 			transition: 0.5s;
 
 			&.rotate {
-				transform: rotate(-180deg)
+				transform: rotate(-180deg);
 			}
 		}
 	}

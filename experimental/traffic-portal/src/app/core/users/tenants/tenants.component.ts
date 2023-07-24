@@ -20,7 +20,11 @@ import { ResponseTenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
-import type { ContextMenuActionEvent, ContextMenuItem } from "src/app/shared/generic-table/generic-table.component";
+import type {
+	ContextMenuActionEvent,
+	ContextMenuItem,
+	DoubleClickLink
+} from "src/app/shared/generic-table/generic-table.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -79,8 +83,12 @@ export class TenantsComponent implements OnInit, OnDestroy {
 		}
 	];
 
-	public contextMenuItems: ContextMenuItem<Readonly<ResponseTenant>>[] = [
-	];
+	/** Defines what the table should do when a row is double-clicked. */
+	public doubleClickLink: DoubleClickLink<ResponseTenant> = {
+		href: (row: ResponseTenant): string => `/core/tenants/${row.id}`
+	};
+
+	public contextMenuItems: ContextMenuItem<Readonly<ResponseTenant>>[] = [];
 
 	public loading = true;
 	private readonly subscription: Subscription;
@@ -117,7 +125,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 			});
 			this.contextMenuItems.push({
 				action: "disable",
-				disabled: (ts): boolean => ts.some(t=>t.name === "root" || t.id === this.auth.currentUser?.tenantId),
+				disabled: (ts): boolean => ts.some(t => t.name === "root" || t.id === this.auth.currentUser?.tenantId),
 				multiRow: true,
 				name: "Disable"
 			});
@@ -173,7 +181,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 *
 	 * @param a The action selected from the context menu.
 	 */
-	 public handleContextMenu(a: ContextMenuActionEvent<Readonly<ResponseTenant>>): void {
+	public handleContextMenu(a: ContextMenuActionEvent<Readonly<ResponseTenant>>): void {
 		console.log("action:", a);
 	}
 

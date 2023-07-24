@@ -21,6 +21,7 @@ import { ProfileType } from "trafficops-types";
 
 import { ProfileService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
+import { FileUtilsService } from "src/app/shared/file-utils.service";
 import { isAction } from "src/app/shared/generic-table/generic-table.component";
 
 import { ProfileTableComponent } from "./profile-table.component";
@@ -36,6 +37,9 @@ describe("ProfileTableComponent", () => {
 				APITestingModule,
 				RouterTestingModule,
 				MatDialogModule
+			],
+			providers:[
+				FileUtilsService
 			]
 		})
 			.compileComponents();
@@ -123,4 +127,34 @@ describe("ProfileTableComponent", () => {
 
 		await asyncExpectation;
 	}));
+
+	it("constructs profile export context menu links", async () => {
+		const item = component.contextMenuItems.find(c => c.name === "Export Profile");
+		if (!item) {
+			return fail("missing 'Export Profile' context menu item");
+		}
+		if (isAction(item)) {
+			return fail("expected a link, not an action");
+		}
+		expect(item.newTab).toBeTrue();
+		expect(item.disabled).toBeUndefined();
+		expect(item.fragment).toBeUndefined();
+		expect(item.queryParams).toBeUndefined();
+
+		if (typeof(item.href) !== "function") {
+			return fail(`expected a functional href property, got: ${typeof(item.href)}`);
+		}
+
+		const api = TestBed.inject(ProfileService);
+		const profile = await api.createProfile({
+			cdn: 1,
+			description: "blah",
+			name: "test",
+			routingDisabled: false,
+			type: ProfileType.ATS_PROFILE
+		});
+
+		expect(item.href(profile)).toBe(`/api/${api.apiVersion}/profiles/${profile.id}/export`);
+		await api.deleteProfile(profile);
+	});
 });

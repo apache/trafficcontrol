@@ -18,11 +18,14 @@
 			"prefix": "tp",
 			"architect": {
 				"build": {
-					"builder": "@angular-devkit/build-angular:browser",
+					"builder": "@angular-builders/custom-webpack:browser",
 					"options": {
 						"allowedCommonJsDependencies": [
 							"chart.js"
 						],
+						"customWebpackConfig": {
+							"path": "src/compress-webpack.config.js"
+						},
 						"optimization": false,
 						"sourceMap": true,
 						"namedChunks": false,
@@ -141,7 +144,8 @@
 								}
 							],
 							"sourceMap": false,
-							"optimization": true
+              "optimization": true,
+              "buildOptimizer": true
 						}
 					}
 				},

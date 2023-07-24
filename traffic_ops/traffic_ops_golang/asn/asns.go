@@ -20,16 +20,21 @@ package asn
  */
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )
@@ -203,4 +208,230 @@ RETURNING
 
 func deleteQuery() string {
 	return `DELETE FROM asn WHERE id=:id`
+}
+
+// Read gets list of ASNs for APIv5
+func Read(w http.ResponseWriter, r *http.Request) {
+	var runSecond bool
+	var maxTime time.Time
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"asn": {Column: "a.asn", Checker: api.IsInt},
+		"id":  {Column: "a.id", Checker: api.IsInt},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "asn"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	}
+
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	query := selectQuery() + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("asn read: error getting asn(s): %w", err))
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	asn := tc.ASNV5{}
+	asnList := []tc.ASNV5{}
+	for rows.Next() {
+		if err = rows.Scan(&asn.ID, &asn.ASN, &asn.LastUpdated, &asn.CachegroupID, &asn.Cachegroup); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting asn(s): %w", err))
+		}
+		asnList = append(asnList, asn)
+	}
+
+	api.WriteResp(w, r, asnList)
+	return
+}
+
+// Create an ASN for APIv5
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	asn, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if asn already exists
+	var count int
+	err := tx.QueryRow("SELECT count(*) from asn where asn=$1", asn.ASN).Scan(&count)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if asn '%d' exists", err, asn.ASN))
+		return
+	}
+	if count == 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn:'%d' already exists", asn.ASN), nil)
+		return
+	}
+
+	// create asn
+	query := `INSERT INTO asn (asn, cachegroup) VALUES ($1, $2) RETURNING id, last_updated, (select name FROM cachegroup where id = $2)`
+	err = tx.QueryRow(query, asn.ASN, asn.CachegroupID).Scan(&asn.ID, &asn.LastUpdated, &asn.Cachegroup)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating asn:%d", err, asn.ASN), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/asns?id=%d", inf.Version.Major, inf.Version.Minor, asn.ID))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, asn)
+	return
+}
+
+// Update an ASN for APIv5
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	asn, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	requestedAsnId := inf.IntParams["id"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedAsnId, "asn")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	//update asn and cachegroup of an asn
+	query := `UPDATE asn SET
+		asn = $1,
+		cachegroup = $2
+	WHERE id = $3
+	RETURNING id, last_updated, (select name FROM cachegroup where id = $2)`
+
+	err := tx.QueryRow(query, asn.ASN, asn.CachegroupID, requestedAsnId).Scan(&asn.ID, &asn.LastUpdated, &asn.Cachegroup)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn: %d not found", asn.ASN), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, asn)
+	return
+}
+
+// Delete an ASN for APIv5
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.Params["id"]
+	exists, err := dbhelpers.ASNExists(tx, id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		if id != "" {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no asn exists by id: %s", id), nil)
+			return
+		} else {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no asn exists for empty id"), nil)
+			return
+		}
+	}
+
+	res, err := tx.Exec("DELETE FROM asn WHERE id=$1", id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete asn: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for asn"), nil)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was deleted.")
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+// readAndValidateJsonStruct reads json body and validates json fields
+func readAndValidateJsonStruct(r *http.Request) (tc.ASNV5, error) {
+	var asn tc.ASNV5
+	if err := json.NewDecoder(r.Body).Decode(&asn); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into ASNV5 struct %w", err)
+		return asn, userErr
+	}
+
+	// validate JSON body
+	errs := tovalidate.ToErrors(validation.Errors{
+		"asn":          validation.Validate(asn.ASN, validation.NotNil, validation.Min(0)),
+		"cachegroupId": validation.Validate(asn.CachegroupID, validation.NotNil, validation.Min(0)),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return asn, userErr
+	}
+	return asn, nil
+}
+
+// selectMaxLastUpdatedQuery used for TryIfModifiedSinceQuery()
+func selectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(a.last_updated) as t from asn a
+		JOIN cachegroup c ON a.cachegroup = c.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='asn') as res`
 }

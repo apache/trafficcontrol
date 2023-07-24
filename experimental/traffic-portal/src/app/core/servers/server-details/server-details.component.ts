@@ -16,8 +16,6 @@ import { CdkDragDrop, moveItemInArray } from "@angular/cdk/drag-drop";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
-import { faClock as hollowClock } from "@fortawesome/free-regular-svg-icons";
-import { faClock, faMinus, faPlus, faToggleOff, faToggleOn, IconDefinition } from "@fortawesome/free-solid-svg-icons";
 import type {
 	Interface,
 	ResponseCacheGroup,
@@ -66,32 +64,18 @@ export class ServerDetailsComponent implements OnInit {
 	 */
 	public validGatewayPattern = IP;
 	/**
-	 * Icon for adding to a collection.
-	 */
-	public addIcon = faPlus;
-	/**
-	 * Icon for removing from a collection.
-	 */
-	public removeIcon = faMinus;
-	/**
-	 * Icon for the "clear updates" button.
-	 */
-	public clearUpdatesIcon = faClock;
-	/**
-	 * Icon for the "queue updates" button.
-	 */
-	public updateIcon = hollowClock;
-	/**
 	 * Icon for the "change status" button.
+	 *
+	 * @returns Material icon name
 	 */
-	public get statusChangeIcon(): IconDefinition {
+	public statusChangeIcon(): string {
 		if (this.isNew || !this.server.status) {
-			return faToggleOn;
+			return "toggle_on";
 		}
 		if (this.server.status === "ONLINE" || this.server.status === "REPORTED") {
-			return faToggleOn;
+			return "toggle_on";
 		}
-		return faToggleOff;
+		return "toggle_off";
 	}
 
 	/**
@@ -146,7 +130,6 @@ export class ServerDetailsComponent implements OnInit {
 			(e: unknown): void => {
 				console.error(`Failed to get ${obj}:`, e);
 			};
-		;
 
 		this.cacheGroupService.getCacheGroups().then(
 			cgs => {

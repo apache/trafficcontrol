@@ -26,7 +26,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-phys-loc-detail",
-	styleUrls: ["../../../styles/form.page.scss", "./phys-loc-detail.component.scss"],
+	styleUrls: ["./phys-loc-detail.component.scss"],
 	templateUrl: "./phys-loc-detail.component.html"
 })
 export class PhysLocDetailComponent implements OnInit {

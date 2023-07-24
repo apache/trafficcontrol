@@ -28,7 +28,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
  */
 @Component({
 	selector: "tp-cache-group-details",
-	styleUrls: ["../../styles/form.page.scss", "./cache-group-details.component.scss"],
+	styleUrls: ["./cache-group-details.component.scss"],
 	templateUrl: "./cache-group-details.component.html",
 })
 export class CacheGroupDetailsComponent implements OnInit {
@@ -65,18 +65,6 @@ export class CacheGroupDetailsComponent implements OnInit {
 		LocalizationMethod.DEEP_CZ,
 		LocalizationMethod.GEO
 	];
-
-	/**
-	 * A description of the Cache Group's selected Type - or `null` if no Type
-	 * is (yet) selected.
-	 */
-	public get selectedTypeDescription(): string | null {
-		const type = this.types.find(t => t.id === this.typeCtrl.value);
-		if (!type) {
-			return null;
-		}
-		return type.description;
-	}
 
 	constructor(
 		private readonly route: ActivatedRoute,

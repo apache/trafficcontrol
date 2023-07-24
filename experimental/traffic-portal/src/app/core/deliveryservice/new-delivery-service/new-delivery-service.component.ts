@@ -37,17 +37,17 @@ import { IPV4, IPV6 } from "src/app/utils";
 /**
  * A regular expression that matches character strings that are illegal in `xml_id`s
  */
-const XML_ID_SANITIZE = /[^a-z0-9\-]+/g;
+const XML_ID_SANITIZE = /[^a-z0-9-]+/g;
 
 /**
  * A regular expression that matches a valid xml_id
  */
-const VALID_XML_ID = /^[a-z0-9]([a-z0-9\-]*[a-z0-9])?$/;
+const VALID_XML_ID = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/;
 
 /**
  * A regular expression that matches a valid hostname
  */
-const VALID_HOSTNAME = /^[A-z\d]([A-z0-9\-]*[A-z0-9])?(\.[A-z\d]([A-z0-9\-]*[A-z0-9])?)*$/;
+const VALID_HOSTNAME = /^[A-z\d]([A-z0-9-]*[A-z0-9])?(\.[A-z\d]([A-z0-9-]*[A-z0-9])?)*$/;
 
 /**
  * NewDeliveryServiceComponent is the controller for the new Delivery Service

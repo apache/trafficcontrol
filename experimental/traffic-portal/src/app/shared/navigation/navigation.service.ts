@@ -112,39 +112,46 @@ export class NavigationService {
 			name: "Dashboard"
 		}, {
 			children: [{
-				href: "/core/servers",
-				name: "Servers"
-			}, {
-				href: "/core/phys-locs",
-				name: "Physical Locations"
-			},
-			{
-				href: "/core/statuses",
-				name: "Statuses"
-			},
-			{
-				href: "/core/capabilities",
-				name: "Capabilities",
-			},
-			{
-				children: [{
-					href: "/core/cache-groups",
-					name: "Cache Groups"
-				}, {
-					href: "/core/coordinates",
-					name: "Coordinates"
-				}, {
-					href: "/core/divisions",
-					name: "Divisions"
-				}, {
-					href: "/core/regions",
-					name: "Regions"
-				}, {
-					href: "/core/asns",
-					name: "ASNs"
-				}],
-				name: "Cache Groups"
+				href: "/core/cdns",
+				name: "CDNs"
 			}],
+			name: "CDNs",
+		}, {
+			children: [
+				{
+					href: "/core/servers",
+					name: "Servers"
+				}, {
+					href: "/core/phys-locs",
+					name: "Physical Locations"
+				},
+				{
+					href: "/core/statuses",
+					name: "Statuses"
+				},
+				{
+					href: "/core/capabilities",
+					name: "Capabilities",
+				},
+				{
+					children: [{
+						href: "/core/cache-groups",
+						name: "Cache Groups"
+					}, {
+						href: "/core/coordinates",
+						name: "Coordinates"
+					}, {
+						href: "/core/divisions",
+						name: "Divisions"
+					}, {
+						href: "/core/regions",
+						name: "Regions"
+					}, {
+						href: "/core/asns",
+						name: "ASNs"
+					}],
+					name: "Cache Groups"
+				}],
 			name: "Servers"
 		}, {
 			children: [
@@ -153,16 +160,11 @@ export class NavigationService {
 					name: "Types"
 				},
 				{
-					children: [
-						{
-							href: "/core/parameters",
-							name: "Parameters"
-						},
-						{
-							href: "/core/profiles",
-							name: "Profiles"
-						}
-					],
+					href: "/core/parameters",
+					name: "Parameters"
+				},
+				{
+					href: "/core/profiles",
 					name: "Profiles"
 				}
 			],

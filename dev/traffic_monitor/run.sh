@@ -40,7 +40,7 @@ dlv --accept-multiclient --continue --listen=:81 --headless --api-version=2 debu
 
 # "static" files need to be watched since TM caches their contents, so it needs
 # to be restarted to apply changes to them.
-while inotifywait --exclude '.*(\.md|\.csv|\.json|\.cfg|_test\.go|\.gitignore|__debug_bin)$|^\./(build|tools|tests|tmclient)/.*' -e modify -r . ; do
+while inotifywait --include '\.go$' -e modify -r . ; do
 	kill "$(netstat -nlp | grep ':80' | grep __debug_bin | head -n1 | tr -s ' ' | cut -d ' ' -f7 | cut -d '/' -f1)"
 	kill "$(netstat -nlp | grep ':81' | grep dlv | head -n1 | tr -s ' ' | cut -d ' ' -f7 | cut -d '/' -f1)"
 	dlv --accept-multiclient --continue --listen=:81 --headless --api-version=2 debug -- --opsCfg="$TC/dev/traffic_monitor/ops.config.json" --config="$TC/dev/traffic_monitor/tm.config.json" &

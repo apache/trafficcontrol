@@ -60,7 +60,6 @@ func (t Threshold) String() string {
 
 // GetVitals Gets the vitals to decide health on in the right format
 func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.TrafficMonitorConfigMap) {
-	var elapsedTimeInSecs float64
 	if newResult.Error != nil {
 		log.Errorf("cache_health.GetVitals() called with an errored Result!")
 		return
@@ -86,14 +85,6 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 	if ts.Interfaces == nil {
 		log.Warnf("no interfaces reported in config map for cache: %s", newResult.ID)
 		return
-	}
-
-	if prevResult != nil {
-		elapsedTimeInSecs = float64(newResult.Time.UnixMilli()-prevResult.Time.UnixMilli()) / 1000
-		if elapsedTimeInSecs <= 0 {
-			*newResult = *prevResult
-			return
-		}
 	}
 
 	var monitoredInterfaces []tc.ServerInterfaceInfo
@@ -124,6 +115,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 		}
 
 		if prevResult != nil && prevResult.InterfaceVitals != nil && prevResult.InterfaceVitals[ifaceName].BytesOut != 0 {
+			elapsedTimeInSecs := float64(newResult.Time.UnixNano()-prevResult.Time.UnixNano()) / 1000000000
 			ifaceVitals.KbpsOut = int64(float64((ifaceVitals.BytesOut-prevResult.InterfaceVitals[ifaceName].BytesOut)*8/1000) / elapsedTimeInSecs)
 		}
 		newResult.InterfaceVitals[ifaceName] = ifaceVitals
@@ -136,6 +128,7 @@ func GetVitals(newResult *cache.Result, prevResult *cache.Result, mc *tc.Traffic
 	}
 
 	if prevResult != nil && prevResult.Vitals.BytesOut != 0 {
+		elapsedTimeInSecs := float64(newResult.Time.UnixNano()-prevResult.Time.UnixNano()) / 1000000000
 		newResult.Vitals.KbpsOut = int64(float64((newResult.Vitals.BytesOut-prevResult.Vitals.BytesOut)*8/1000) / elapsedTimeInSecs)
 	}
 

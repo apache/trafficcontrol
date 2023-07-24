@@ -220,11 +220,180 @@
 			"cachegroupId": 10
 		}
 	],
+	"jobs": [
+		{
+			"deliveryService": "test",
+			"invalidationType": "REFRESH",
+			"regex": "/.+",
+			"startTime": "2030-11-09T01:02:03Z",
+			"ttlHours": 72
+		}
+	],
 	"coordinates": [
 		{
 			"name": "test",
-        	"latitude": 38.897663,
-        	"longitude": -77.036574
+			"latitude": 38.897663,
+			"longitude": -77.036574
+		}
+	],
+	"users": [
+		{
+			"username": "mike",
+			"addressLine1": "22 Mike Wazowski You've Got Your Life Back Lane",
+			"city": "Monstropolis",
+			"compary": "Monsters Inc.",
+			"email": "mwazowski@minc.biz",
+			"fullName": "Mike Wazowski",
+			"localPasswd": "BFFsully",
+			"confirmLocalPasswd": "BFFsully",
+			"newUser": true,
+			"role": "admin",
+			"tenantId": 1
+		}
+	],
+	"topologies": [
+		{
+			"name": "test",
+			"description": "This is my topology",
+			"nodes": [
+				{
+					"cachegroup": "test1"
+				}
+			]
+		}
+	],
+	"steering": [
+		{
+			"targetId": 61,
+			"value": 100,
+			"typeId": 43
+		}
+	],
+	"cdn_notifications": [
+		{
+			"cdn": "cdn1",
+			"notification": "the content of the notification"
+		}
+	],
+	"cdn_locks": [
+		{
+			"cdn": "test",
+			"message": "acquiring lock to snap CDN",
+			"sharedUserNames": [
+				"test"
+			],
+			"soft": true
+		}
+	],
+	"deliveryservice_requests": [
+		{
+			"changeType": "update",
+			"status": "draft",
+			"requested": {
+				"active": false,
+				"anonymousBlockingEnabled": false,
+				"cacheurl": null,
+				"ccrDnsTtl": null,
+				"cdnId": 2,
+				"cdnName": "CDN-in-a-Box",
+				"checkPath": null,
+				"displayName": "test",
+				"dnsBypassCname": null,
+				"dnsBypassIp": null,
+				"dnsBypassIp6": null,
+				"dnsBypassTtl": null,
+				"dscp": 0,
+				"edgeHeaderRewrite": null,
+				"firstHeaderRewrite": null,
+				"geoLimit": 0,
+				"geoLimitCountries": null,
+				"geoLimitRedirectURL": null,
+				"geoProvider": 0,
+				"globalMaxMbps": null,
+				"globalMaxTps": null,
+				"httpBypassFqdn": null,
+				"id": 3,
+				"infoUrl": null,
+				"initialDispersion": 1,
+				"innerHeaderRewrite": null,
+				"ipv6RoutingEnabled": true,
+				"lastHeaderRewrite": null,
+				"lastUpdated": "2020-02-13T16:43:54Z",
+				"logsEnabled": true,
+				"longDesc": "Apachecon North America 2018",
+				"matchList": [
+					{
+						"type": "HOST_REGEXP",
+						"setNumber": 0,
+						"pattern": ".*\\.demo1\\..*"
+					}
+				],
+				"maxDnsAnswers": null,
+				"midHeaderRewrite": null,
+				"missLat": 42,
+				"missLong": -88,
+				"multiSiteOrigin": false,
+				"originShield": null,
+				"orgServerFqdn": "http://origin.infra.ciab.test",
+				"profileDescription": null,
+				"profileId": null,
+				"profileName": null,
+				"protocol": 2,
+				"qstringIgnore": 0,
+				"rangeRequestHandling": 0,
+				"regexRemap": null,
+				"regionalGeoBlocking": false,
+				"remapText": null,
+				"routingName": "video",
+				"signed": false,
+				"sslKeyVersion": 1,
+				"tenantId": 1,
+				"type": "HTTP",
+				"typeId": 1,
+				"xmlId": "test",
+				"exampleURLs": [
+					"http://video.demo1.mycdn.ciab.test",
+					"https://video.demo1.mycdn.ciab.test"
+				],
+				"deepCachingType": "NEVER",
+				"fqPacingRate": null,
+				"signingAlgorithm": null,
+				"tenant": "root",
+				"topology": null,
+				"trResponseHeaders": null,
+				"trRequestHeaders": null,
+				"consistentHashRegex": null,
+				"consistentHashQueryParams": [
+					"abc",
+					"pdq",
+					"xxx",
+					"zyx"
+				],
+				"maxOriginConnections": 0,
+				"ecsEnabled": false,
+				"serviceCategory": null,
+				"tlsVersions": null
+			}
+		}
+	],
+	"delivery_service_sslkeys": [
+		{
+			"key": "demo1",
+			"businessUnit": "CDN Engineering",
+			"version": 3,
+			"cdn": "CDN-in-a-Box",
+			"hostname": "tr.ds-01.ott.kabletown.com",
+			"country": "US",
+			"organization": "Kabletown",
+			"city": "Denver",
+			"state": "Colorado"
+    }
+  ],
+	"delivery_services_regex": [
+		{
+			"pattern": ".*\\.foo-bar\\..*",
+			"type": 33,
+			"setNumber": 1
 		}
 	],
 	"profile_parameters": [

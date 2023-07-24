@@ -18,8 +18,8 @@ limitations under the License.
 	<button mat-flat-button type="button"*ngFor="let btn of tableTitleButtons" (click)="emitTitleButtonAction(btn.action)">{{btn.text}}</button>
 	<div class="toggle-columns" role="group" title="Select Table Columns">
 		<button type="button" mat-flat-button [matMenuTriggerFor]="menu" #trigger="matMenuTrigger">
-			<fa-icon [icon]="columnsIcon"></fa-icon>&nbsp;
-			<fa-icon [icon]="caretIcon" class="caret" [ngClass]="{'rotate': trigger.menuOpen}"></fa-icon>
+			<mat-icon>view_column</mat-icon>&nbsp;
+			<mat-icon class="caret" [ngClass]="{'rotate': trigger.menuOpen}">expand_more</mat-icon>
 		</button>
 		<mat-menu #menu="matMenu">
 			<div class="column-menu">
@@ -33,8 +33,8 @@ limitations under the License.
 	</div>
 	<div class="toggle-columns" role="group" title="Extra Table Actions">
 		<button type="button" mat-flat-button [matMenuTriggerFor]="extraMenu" #extraTrigger="matMenuTrigger">
-			More
-			<fa-icon [icon]="caretIcon" [ngClass]="{'rotate': extraTrigger.menuOpen}" class="caret"></fa-icon>
+			<mat-icon>menu_open</mat-icon>
+			<mat-icon class="caret" [ngClass]="{'rotate': extraTrigger.menuOpen}">expand_more</mat-icon>
 		</button>
 		<mat-menu #extraMenu="matMenu">
 			<button mat-menu-item type="button" *ngFor="let btn of moreMenuButtons" (click)="emitMoreButtonAction(btn.action)">{{btn.text}}</button>
