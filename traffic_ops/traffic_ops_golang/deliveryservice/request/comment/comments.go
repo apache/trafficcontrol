@@ -176,7 +176,7 @@ func selectQuery() string {
 a.username AS author,
 dsrc.author_id,
 dsrc.deliveryservice_request_id,
-dsr.deliveryservice->>'xmlId' as xml_id,
+COALESCE(dsr.deliveryservice->>'xmlId', dsr.original->>'xmlId') as xml_id,
 dsrc.id,
 dsrc.last_updated,
 dsrc.value

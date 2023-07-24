@@ -100,6 +100,21 @@ var DeliveryServiceSslKeysService = function($http, messageModel, ENV) {
         );
     };
 
+    this.deleteCert = function(deliveryService) {
+        return $http.delete(ENV.api.unstable + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys").then(
+            function(result) {
+                messageModel.setMessages(result.data.alerts, false);
+                return result;
+            },
+            function(err) {
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                    throw err;
+                }
+            }
+        );
+    };
+
     this.getSslKeys = function(deliveryService) {
         return $http.get(ENV.api.unstable + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys", {params: {decode: "true"}}).then(
             function(result) {

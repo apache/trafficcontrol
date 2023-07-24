@@ -87,6 +87,11 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 		locationUtils.navigateToPath('/delivery-services/' + deliveryService.id + '/ssl-keys/generate');
 	};
 
+	$scope.navState = 0;
+	$scope.updateState = function(newState) {
+		$scope.navState = newState;
+	}
+
 	$scope.renewCert = function() {
 		var params = {
 			title: 'Renew SSL Keys for Delivery Service: ' + deliveryService.xmlId
@@ -132,6 +137,30 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
                     $scope.refresh();
                     if ($scope.dsSslKeyForm) $scope.dsSslKeyForm.$setPristine();
                 });
+		});
+	};
+
+	$scope.confirmDelete = function() {
+		var params = {
+			title: 'Delete latest SSL Keys for Delivery Service: ' + deliveryService.xmlId,
+			key: deliveryService.xmlId + '-keys'
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
+			controller: 'DialogDeleteController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			deliveryServiceSslKeysService.deleteCert(deliveryService).then(
+				function() {
+					$anchorScroll();
+					$scope.refresh();
+				});
 		});
 	};
 

@@ -133,6 +133,7 @@ type ConfigTrafficOpsGolang struct {
 	RiakPort             *uint    `json:"riak_port"`
 	WhitelistedOAuthUrls []string `json:"whitelisted_oauth_urls"`
 	OAuthClientSecret    string   `json:"oauth_client_secret"`
+	OAuthUserAttribute   string   `json:"oauth_user_attribute"`
 	RoutingBlacklist     `json:"routing_blacklist"`
 	SupportedDSMetrics   []string        `json:"supported_ds_metrics"`
 	TLSConfig            *tls.Config     `json:"tls_config"`

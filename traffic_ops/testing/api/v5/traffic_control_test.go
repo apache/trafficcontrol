@@ -34,15 +34,15 @@ type TrafficControl struct {
 	DeliveryServicesRequiredCapabilities              []tc.DeliveryServicesRequiredCapability `json:"deliveryservicesRequiredCapabilities"`
 	DeliveryServiceServerAssignments                  []tc.DeliveryServiceServers             `json:"deliveryServiceServerAssignments"`
 	TopologyBasedDeliveryServicesRequiredCapabilities []tc.DeliveryServicesRequiredCapability `json:"topologyBasedDeliveryServicesRequiredCapabilities"`
-	Divisions                                         []tc.Division                           `json:"divisions"`
+	Divisions                                         []tc.DivisionV5                         `json:"divisions"`
 	Federations                                       []tc.CDNFederation                      `json:"federations"`
-	FederationResolvers                               []tc.FederationResolver                 `json:"federation_resolvers"`
+	FederationResolvers                               []tc.FederationResolverV5               `json:"federation_resolvers"`
 	Jobs                                              []tc.InvalidationJobCreateV4            `json:"jobs"`
 	Origins                                           []tc.Origin                             `json:"origins"`
 	Profiles                                          []tc.Profile                            `json:"profiles"`
 	Parameters                                        []tc.Parameter                          `json:"parameters"`
 	ProfileParameters                                 []tc.ProfileParameter                   `json:"profileParameters"`
-	PhysLocations                                     []tc.PhysLocation                       `json:"physLocations"`
+	PhysLocations                                     []tc.PhysLocationV5                     `json:"physLocations"`
 	Regions                                           []tc.Region                             `json:"regions"`
 	Roles                                             []tc.RoleV4                             `json:"roles"`
 	Servers                                           []tc.ServerV4                           `json:"servers"`
@@ -51,11 +51,11 @@ type TrafficControl struct {
 	ServiceCategories                                 []tc.ServiceCategoryV5                  `json:"serviceCategories"`
 	Statuses                                          []tc.StatusNullable                     `json:"statuses"`
 	StaticDNSEntries                                  []tc.StaticDNSEntry                     `json:"staticdnsentries"`
-	StatsSummaries                                    []tc.StatsSummary                       `json:"statsSummaries"`
+	StatsSummaries                                    []tc.StatsSummaryV5                     `json:"statsSummaries"`
 	Tenants                                           []tc.Tenant                             `json:"tenants"`
 	ServerCheckExtensions                             []tc.ServerCheckExtensionNullable       `json:"servercheck_extensions"`
 	Topologies                                        []tc.Topology                           `json:"topologies"`
-	Types                                             []tc.Type                               `json:"types"`
+	Types                                             []tc.TypeV5                             `json:"types"`
 	SteeringTargets                                   []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                                      []tc.ServercheckRequestNullable         `json:"serverchecks"`
 	Users                                             []tc.UserV4                             `json:"users"`

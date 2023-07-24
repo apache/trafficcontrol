@@ -656,9 +656,84 @@
     },
     "delivery_services": {
         "type": "object",
+        "required": [
+            "maxRequestHeaderBytes",
+            "firstHeaderRewrite",
+            "innerHeaderRewrite",
+            "lastHeaderRewrite",
+            "serviceCategory",
+            "topology",
+            "ecsEnabled",
+            "rangeSliceBlockSize",
+            "consistentHashRegex",
+            "consistentHashQueryParams",
+            "maxOriginConnections",
+            "deepCachingType",
+            "fqPacingRate",
+            "signingAlgorithm",
+            "tenant",
+            "trResponseHeaders",
+            "trRequestHeaders",
+            "active",
+            "anonymousBlockingEnabled",
+            "ccrDnsTtl",
+            "cdnId",
+            "cdnName",
+            "checkPath",
+            "displayName",
+            "dnsBypassCname",
+            "dnsBypassIp",
+            "dnsBypassIp6",
+            "dnsBypassTtl",
+            "dscp",
+            "edgeHeaderRewrite",
+            "exampleURLs",
+            "geoLimit",
+            "geoLimitRedirectURL",
+            "geoProvider",
+            "globalMaxMbps",
+            "globalMaxTps",
+            "httpBypassFqdn",
+            "id",
+            "infoUrl",
+            "initialDispersion",
+            "ipv6RoutingEnabled",
+            "lastUpdated",
+            "logsEnabled",
+            "longDesc",
+            "matchList",
+            "maxDnsAnswers",
+            "midHeaderRewrite",
+            "missLat",
+            "missLong",
+            "multiSiteOrigin",
+            "originShield",
+            "orgServerFqdn",
+            "profileDescription",
+            "profileId",
+            "profileName",
+            "protocol",
+            "qstringIgnore",
+            "rangeRequestHandling",
+            "regexRemap",
+            "regionalGeoBlocking",
+            "remapText",
+            "routingName",
+            "signed",
+            "sslKeyVersion",
+            "tenantId",
+            "type",
+            "typeId",
+            "xmlId",
+            "tlsVersions",
+            "geoLimitCountries"
+        ],
         "properties": {
             "maxRequestHeaderBytes": {
-                "type": "integer"
+                "type": [
+                    "null",
+                    "integer"
+                ]
             },
             "firstHeaderRewrite": {
                 "type": [
@@ -758,7 +833,10 @@
                 "type": "integer"
             },
             "cdnName": {
-                "type": "string"
+                "type": [
+                    "null",
+                    "string"
+                ]
             },
             "checkPath": {
                 "type": [
@@ -1457,6 +1535,150 @@
                 "type": "string"
             },
             "user": {
+                "type": "string"
+            }
+        }
+    },
+    "deliveryservice_requests": {
+        "type": "object",
+        "required": [
+            "assignee",
+            "author",
+            "changeType",
+            "createdAt",
+            "id",
+            "lastEditedBy",
+            "lastUpdated",
+            "original",
+            "requested",
+            "status"
+        ],
+        "properties": {
+            "assignee": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "author": {
+                "type": "string"
+            },
+            "changeType": {
+                "type": "string"
+            },
+            "createdAt": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastEditedBy": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "original": {
+                "$ref": "#/delivery_services"
+            },
+            "requested": {
+                "$ref": "#/delivery_services"
+            },
+            "status": {
+                "type": "string"
+            }
+        }
+    },
+    "delivery_service_sslkeys": {
+        "type": "object",
+        "required": [
+            "certificate",
+            "deliveryservice",
+            "cdn",
+            "businessUnit",
+            "city",
+            "organization",
+            "hostname",
+            "country",
+            "state",
+            "version",
+            "expiration"
+        ],
+        "properties": {
+            "certificate": {
+                "type": "object",
+                "required": [
+                    "crt",
+                    "key",
+                    "csr"
+                ],
+                "properties": {
+                    "crt": {
+                        "type": "string"
+                    },
+                    "key": {
+                        "type": "string"
+                    },
+                    "csr": {
+                        "type": "string"
+                    }
+                }
+            },
+            "deliveryservice": {
+                "type": "string"
+            },
+            "cdn": {
+                "type": "string"
+            },
+            "businessUnit": {
+                "type": "string"
+            },
+            "city": {
+                "type": "string"
+            },
+            "organization": {
+                "type": "string"
+            },
+            "hostname": {
+                "type": "string"
+            },
+            "country": {
+                "type": "string"
+            },
+            "state": {
+                "type": "string"
+            },
+            "version": {
+                "type": "integer"
+            },
+            "expiration": {
+                "type": "string"
+            }
+        }
+    },
+    "delivery_services_regex": {
+        "type": "object",
+        "required": [
+            "id",
+            "type",
+            "typeName",
+            "setNumber",
+            "pattern"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "type": {
+                "type": "integer"
+            },
+            "typeName": {
+                "type": "string"
+            },
+            "setNumber": {
+                "type": "integer"
+            },
+            "pattern": {
                 "type": "string"
             }
         }
