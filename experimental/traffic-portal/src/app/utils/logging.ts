@@ -15,10 +15,10 @@
  */
 
 /**
- * Streams are the underlying raw event writers used by {@link Logger}s. The
- * simplest and most useful example of a Streams implementation is `console`.
+ * LogStreams are the underlying raw event writers used by {@link Logger}s. The
+ * simplest and most useful example of a LogStreams implementation is `console`.
  */
-export interface Streams {
+export interface LogStreams {
 	debug(...args: unknown[]): void;
 	info(...args: unknown[]): void;
 	error(...args: unknown[]): void;
@@ -26,10 +26,11 @@ export interface Streams {
 }
 
 /**
- * A Level describes the verbosity of logging. Each level is cumulative, meaning
- * that a logger set to some level will also log all of the levels above it.
+ * A LogLevel describes the verbosity of logging. Each level is cumulative,
+ * meaning that a logger set to some level will also log all of the levels above
+ * it.
  */
-export const enum Level {
+export const enum LogLevel {
 	/** Log only errors. */
 	ERROR,
 	/** Log warnings and errors. */
@@ -51,15 +52,15 @@ export const enum Level {
  * @param level The level to convert.
  * @returns A string representation of `level`.
  */
-export function logLevelToString(level: Level): string {
+export function logLevelToString(level: LogLevel): string {
 	switch(level) {
-		case Level.DEBUG:
+		case LogLevel.DEBUG:
 			return "DEBUG";
-		case Level.ERROR:
+		case LogLevel.ERROR:
 			return "ERROR";
-		case Level.INFO:
+		case LogLevel.INFO:
 			return "INFO";
-		case Level.WARN:
+		case LogLevel.WARN:
 			return "WARN";
 	}
 }
@@ -99,8 +100,8 @@ export class Logger {
 	 * not necessarily when the logging method is called).
 	 */
 	constructor(
-		private readonly streams: Streams,
-		level: Level,
+		private readonly streams: LogStreams,
+		level: LogLevel,
 		prefix: string = "",
 		private readonly useLevelPrefixes: boolean = true,
 		private readonly timestamps: boolean = true,
@@ -113,11 +114,11 @@ export class Logger {
 
 		const doNothing = (): void => { /* Do nothing */ };
 		switch (level) {
-			case Level.ERROR:
+			case LogLevel.ERROR:
 				this.warn = doNothing;
-			case Level.WARN:
+			case LogLevel.WARN:
 				this.info = doNothing;
-			case Level.INFO:
+			case LogLevel.INFO:
 				this.debug = doNothing;
 		}
 
@@ -135,7 +136,7 @@ export class Logger {
 	 * @param level The level at which a message is being logged.
 	 * @returns A prefix, or an empty string if no prefix is to be used.
 	 */
-	private getPrefix(level: Level): string {
+	private getPrefix(level: LogLevel): string {
 		const parts = new Array<string>();
 
 		if (this.timestamps) {
@@ -165,7 +166,7 @@ export class Logger {
 	 * newlines.
 	 */
 	public debug(...args: unknown[]): void {
-		const prefix = this.getPrefix(Level.DEBUG);
+		const prefix = this.getPrefix(LogLevel.DEBUG);
 		if (prefix) {
 			this.streams.debug(prefix, ...args);
 			return;
@@ -182,7 +183,7 @@ export class Logger {
 	 * newlines.
 	 */
 	public error(...args: unknown[]): void {
-		const prefix = this.getPrefix(Level.ERROR);
+		const prefix = this.getPrefix(LogLevel.ERROR);
 		if (prefix) {
 			this.streams.error(prefix, ...args);
 			return;
@@ -199,7 +200,7 @@ export class Logger {
 	 * newlines.
 	 */
 	public info(...args: unknown[]): void {
-		const prefix = this.getPrefix(Level.INFO);
+		const prefix = this.getPrefix(LogLevel.INFO);
 		if (prefix) {
 			this.streams.info(prefix, ...args);
 			return;
@@ -216,7 +217,7 @@ export class Logger {
 	 * newlines.
 	 */
 	public warn(...args: unknown[]): void {
-		const prefix = this.getPrefix(Level.WARN);
+		const prefix = this.getPrefix(LogLevel.WARN);
 		if (prefix) {
 			this.streams.warn(prefix, ...args);
 			return;

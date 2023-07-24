@@ -12,9 +12,10 @@
 * limitations under the License.
 */
 
-export * from "./order-by";
 export * from "./fuzzy";
 export * from "./ip";
+export * from "./logging";
+export * from "./order-by";
 export * from "./time";
 
 /**
