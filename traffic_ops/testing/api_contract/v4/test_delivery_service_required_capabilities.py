@@ -79,4 +79,4 @@ def test_delivery_service_required_capabilities_contract(to_session: TOSession,
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")
 		pytest.fail("API contract test failed for delivery_service_required_capabilities endpoint:"
-	      " API response was malformed")
+	        "API response was malformed")
