@@ -62,7 +62,7 @@ export class NavigationService {
 	private readonly verticalNavs: Map<string, HeaderNavigation>;
 
 	constructor(
-		@Inject('TP_V1_URL') private tpv1Url: string,
+		@Inject("TP_V1_URL") private readonly tpv1Url: string,
 		private readonly auth: CurrentUserService,
 		private readonly api: UserService) {
 		this.horizontalNavs = new Map<string, HeaderNavigation>([

@@ -197,5 +197,5 @@ export class TpSidebarComponent implements OnInit, AfterViewInit {
 	public isAbsoluteURL(href: string): boolean {
 		const regexPattern = /^(?:[a-z]+:)?\/\//i;
 		return regexPattern.test(href);
-	  }
+	}
 }
