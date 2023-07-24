@@ -30,3 +30,9 @@ For testing only the `tc-health-client.json` are the settings used to run it loc
 ## Rebuilding the tc-health-client only 
 
 Delete the `trafficcontrol-health-client-[version].rpm` from the `\dist` folder and from `/trafficcontrol/infrastructure/cdn-in-a-box/health` then cd into `/trafficcontrol` and run `./pkg -v -8 -b tc-health-client_build` this builds the RPM to be used with docker or `./pkg -v -8 tc-health-client_build` to build x86_64. Then copy the rpm from `/dist` into `/trafficcontrol/infrastructure/cdn-in-a-box/health` and rename it to `trafficcontrol-health-client.rpm` by removing the version. Build and run with `docker-compose -f docker-compose.yml -f docker-compose`.
+
+## Example Testing Commands
+
+Cd into `/opt/trafficserver/bin/` and run `./traffic_ctl host down --reason active mid-01.infra.ciab.test` or `./traffic_ctl host status mid-01.infra.ciab.test` update it as needed for other servers or reason codes. 
+
+At the `/opt` level of a running containder for either edge or mid run `curl -vL http://trafficmonitor.infra.ciab.test:80` to test traffic_monitor
