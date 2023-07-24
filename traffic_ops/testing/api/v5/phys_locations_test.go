@@ -38,7 +38,7 @@ func TestPhysLocations(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.PhysLocation]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.PhysLocationV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -99,7 +99,7 @@ func TestPhysLocations(t *testing.T) {
 			"POST": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestBody: tc.PhysLocation{
+					RequestBody: tc.PhysLocationV5{
 						Address:    "100 blah lane",
 						City:       "foo",
 						Comments:   "comment",
@@ -112,12 +112,12 @@ func TestPhysLocations(t *testing.T) {
 						State:      "CO",
 						Zip:        "80602",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated),
 						validatePhysicalLocationUpdateCreateFields("testPhysicalLocation", map[string]interface{}{"Name": "testPhysicalLocation"})),
 				},
 				"BAD REQUEST when REGION ID does NOT MATCH REGION NAME": {
 					ClientSession: TOSession,
-					RequestBody: tc.PhysLocation{
+					RequestBody: tc.PhysLocationV5{
 						Address:    "1234 southern way",
 						City:       "Atlanta",
 						Name:       "HotAtlanta",
@@ -135,7 +135,7 @@ func TestPhysLocations(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
-					RequestBody: tc.PhysLocation{
+					RequestBody: tc.PhysLocationV5{
 						Address:   "1234 southern way",
 						City:      "NewCity",
 						Name:      "HotAtlanta",
@@ -152,7 +152,7 @@ func TestPhysLocations(t *testing.T) {
 					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.PhysLocation{
+					RequestBody: tc.PhysLocationV5{
 						Address:   "1234 southern way",
 						City:      "Atlanta",
 						RegionID:  GetRegionID(t, "region1")(),
@@ -166,7 +166,7 @@ func TestPhysLocations(t *testing.T) {
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,
-					RequestBody: tc.PhysLocation{
+					RequestBody: tc.PhysLocationV5{
 						Address:   "1234 southern way",
 						City:      "Atlanta",
 						RegionID:  GetRegionID(t, "region1")(),
@@ -230,7 +230,7 @@ func TestPhysLocations(t *testing.T) {
 func validatePhysicalLocationFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Physical Location response to not be nil.")
-		plResp := resp.([]tc.PhysLocation)
+		plResp := resp.([]tc.PhysLocationV5)
 		for field, expected := range expectedResp {
 			for _, pl := range plResp {
 				switch field {
@@ -259,7 +259,7 @@ func validatePhysicalLocationUpdateCreateFields(name string, expectedResp map[st
 
 func validatePhysicalLocationPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.PhysLocation)
+		paginationResp := resp.([]tc.PhysLocationV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
@@ -283,7 +283,7 @@ func validatePhysicalLocationSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Physical Location response to not be nil.")
 		var physLocNames []string
-		physLocResp := resp.([]tc.PhysLocation)
+		physLocResp := resp.([]tc.PhysLocationV5)
 		for _, pl := range physLocResp {
 			physLocNames = append(physLocNames, pl.Name)
 		}
@@ -295,7 +295,7 @@ func validatePhysicalLocationIDSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Physical Location response to not be nil.")
 		var physLocIDs []int
-		physLocResp := resp.([]tc.PhysLocation)
+		physLocResp := resp.([]tc.PhysLocationV5)
 		for _, pl := range physLocResp {
 			physLocIDs = append(physLocIDs, pl.ID)
 		}
