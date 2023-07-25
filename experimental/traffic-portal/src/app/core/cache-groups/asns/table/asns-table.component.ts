@@ -38,7 +38,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 	styleUrls: ["./asns-table.component.scss"],
 	templateUrl: "./asns-table.component.html"
 })
-export class AsnsTableComponent implements OnInit {
+export class ASNsTableComponent implements OnInit {
 	/** List of asns */
 	public asns: Promise<Array<ResponseASN>>;
 

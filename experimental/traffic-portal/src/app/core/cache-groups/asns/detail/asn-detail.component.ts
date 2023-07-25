@@ -30,7 +30,7 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 	styleUrls: ["./asn-detail.component.scss"],
 	templateUrl: "./asn-detail.component.html"
 })
-export class AsnDetailComponent implements OnInit {
+export class ASNDetailComponent implements OnInit {
 	public new = false;
 	public asn!: ResponseASN;
 	public cachegroups!: Array<ResponseCacheGroup>;
