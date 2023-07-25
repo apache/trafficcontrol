@@ -1663,9 +1663,6 @@ def profile_parameters_post_data(to_session: TOSession, request_template_data: l
 	profile_data = profile_get_response [0][0]
 	profile_id = profile_data.get("id")
 
-	parameter_get_response = to_session.get_parameters()
-	parameter_data = parameter_get_response [0][0]
-
 	profile_parameters["profileId"] = profile_post_data["id"]
 	profile_parameters["parameterId"] = parameter_post_data["id"]
 
