@@ -21,6 +21,7 @@ import type {
 	DataPoint,
 	DataSet,
 } from "src/app/models";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * DsCardComponent is a component for displaying information about a Delivery
@@ -118,7 +119,7 @@ export class DsCardComponent implements OnInit {
 		return "";
 	}
 
-	constructor(private readonly dsAPI: DeliveryServiceService) {
+	constructor(private readonly dsAPI: DeliveryServiceService, private readonly log: LoggingService) {
 		this.available = 100;
 		this.maintenance = 0;
 		this.utilized = 0;
@@ -151,10 +152,6 @@ export class DsCardComponent implements OnInit {
 	 * 00:00 UTC the current day and ending at the current date/time.
 	 */
 	public toggle(): void {
-		if (!this.deliveryService.id) {
-			console.error("Toggling DS card for DS with no ID:", this.deliveryService);
-			return;
-		}
 		if (!this.open) {
 			if (!this.loaded) {
 				this.loaded = true;
@@ -226,7 +223,7 @@ export class DsCardComponent implements OnInit {
 				fillColor: "#3CBA9F",
 				label: "Edge-tier Bandwidth"
 			}]);
-			console.error(`Failed getting edge KBPS for DS '${xmlID}':`, e);
+			this.log.error(`Failed getting edge KBPS for DS '${xmlID}':`, e);
 		}
 	}
 }

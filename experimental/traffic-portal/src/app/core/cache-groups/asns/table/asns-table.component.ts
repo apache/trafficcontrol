@@ -27,6 +27,7 @@ import type {
 	ContextMenuItem,
 	DoubleClickLink
 } from "src/app/shared/generic-table/generic-table.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -41,8 +42,14 @@ export class AsnsTableComponent implements OnInit {
 	/** List of asns */
 	public asns: Promise<Array<ResponseASN>>;
 
-	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: NavigationService,
-		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly headerSvc: NavigationService,
+		private readonly api: CacheGroupService,
+		private readonly dialog: MatDialog,
+		public readonly auth: CurrentUserService,
+		private readonly log: LoggingService,
+	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.asns = this.api.getASNs();
 		this.headerSvc.headerTitle.next("ASNs");
@@ -59,7 +66,7 @@ export class AsnsTableComponent implements OnInit {
 				}
 			},
 			e => {
-				console.error("Failed to get query parameters:", e);
+				this.log.error("Failed to get query parameters:", e);
 			}
 		);
 	}
@@ -126,7 +133,7 @@ export class AsnsTableComponent implements OnInit {
 	 */
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseASN>): Promise<void> {
 		if (Array.isArray(evt.data)) {
-			console.error("cannot delete multiple ASNs at once:", evt.data);
+			this.log.error("cannot delete multiple ASNs at once:", evt.data);
 			return;
 		}
 		const data = evt.data;

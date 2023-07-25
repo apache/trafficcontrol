@@ -19,6 +19,7 @@ import { catchError } from "rxjs/operators";
 import type { Alert } from "trafficops-types";
 
 import { AlertService } from "../alert/alert.service";
+import { LoggingService } from "../logging.service";
 
 /**
  * This class intercepts any and all HTTP error responses and checks for
@@ -29,7 +30,8 @@ export class ErrorInterceptor implements HttpInterceptor {
 
 	constructor(
 		private readonly alerts: AlertService,
-		private readonly router: Router
+		private readonly router: Router,
+		private readonly log: LoggingService,
 	) {}
 
 	/**
@@ -54,7 +56,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 	 */
 	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 		return next.handle(request).pipe(catchError((err: HttpErrorResponse) => {
-			console.error("HTTP Error: ", err);
+			this.log.error("HTTP Error: ", err);
 
 			if (typeof(err.error) === "string") {
 				try {
@@ -63,7 +65,7 @@ export class ErrorInterceptor implements HttpInterceptor {
 						this.raiseAlerts(body.alerts);
 					}
 				} catch (e) {
-					console.error("non-JSON HTTP error response:", e);
+					this.log.error("non-JSON HTTP error response:", e);
 				}
 			} else if (typeof(err.error) === "object" && Array.isArray(err.error.alerts)) {
 				this.raiseAlerts(err.error.alerts);

@@ -84,7 +84,7 @@ function compressedFileHandler(req: express.Request, res: TPResponseWriter, next
 }
 
 /**
- * A handler for proxying the Traffic Ops API.
+ * A handler for proxy-ing the Traffic Ops API.
  *
  * @param req The client's request.
  * @param res The server's response writer.
@@ -104,13 +104,13 @@ function toProxyHandler(req: express.Request, res: TPResponseWriter): void {
 	};
 
 	try {
-		const proxiedRequest = request(fwdRequest, r => {
+		const proxyRequest = request(fwdRequest, r => {
 			res.writeHead(r.statusCode ?? 502, r.headers);
 			r.pipe(res);
 		});
-		req.pipe(proxiedRequest);
+		req.pipe(proxyRequest);
 	} catch (e) {
-		console.error("proxying request:", e);
+		logger.error("proxy-ing request:", e);
 	}
 	res.locals.endTime = new Date();
 }
@@ -255,6 +255,8 @@ function run(): number {
 	try {
 		config = getConfig(parser.parse_args(), version);
 	} catch (e) {
+		// Logger cannot be initialized before reading server configuration
+		// eslint-disable-next-line no-console
 		console.error(`Failed to initialize server configuration: ${e}`);
 		return 1;
 	}
@@ -295,7 +297,7 @@ function run(): number {
 				(req, res) => {
 					if (!req.url) {
 						res.statusCode = 500;
-						console.error("got HTTP request for redirect that had no URL");
+						logger.error("got HTTP request for redirect that had no URL");
 						res.end();
 						return;
 					}
@@ -340,6 +342,8 @@ try {
 		}
 	}
 } catch (e) {
+	// Logger cannot be initialized before reading server configuration
+	// eslint-disable-next-line no-console
 	console.error("Encountered error while running server:", e);
 	process.exit(1);
 }

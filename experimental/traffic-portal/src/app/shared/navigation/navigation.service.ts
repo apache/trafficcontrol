@@ -19,6 +19,8 @@ import { UserService } from "src/app/api";
 import { LOCAL_TPV1_URL } from "src/app/app.component";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
+import { LoggingService } from "../logging.service";
+
 /**
  * Defines the type of the header nav
  */
@@ -67,7 +69,9 @@ export class NavigationService {
 	constructor(
 		private readonly auth: CurrentUserService,
 		private readonly api: UserService,
-		@Inject(PLATFORM_ID) private readonly platformId: object) {
+		@Inject(PLATFORM_ID) private readonly platformId: object,
+		private readonly log: LoggingService,
+	) {
 		if (isPlatformBrowser(this.platformId)) {
 			this.tpv1Url = window.localStorage.getItem(LOCAL_TPV1_URL) ?? this.tpv1Url;
 		}
@@ -291,7 +295,7 @@ export class NavigationService {
 	 */
 	public async logout(): Promise<void> {
 		if (!(await this.api.logout())) {
-			console.warn("Failed to log out - clearing user data anyway!");
+			this.log.warn("Failed to log out - clearing user data anyway!");
 		}
 		this.auth.logout();
 	}

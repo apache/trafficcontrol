@@ -27,6 +27,7 @@ import type {
 	ContextMenuItem,
 	DoubleClickLink
 } from "src/app/shared/generic-table/generic-table.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -41,8 +42,14 @@ export class RegionsTableComponent implements OnInit {
 	/** List of regions */
 	public regions: Promise<Array<ResponseRegion>>;
 
-	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: NavigationService,
-		private readonly api: CacheGroupService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly headerSvc: NavigationService,
+		private readonly api: CacheGroupService,
+		private readonly dialog: MatDialog,
+		public readonly auth: CurrentUserService,
+		private readonly log: LoggingService,
+	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.regions = this.api.getRegions();
 		this.headerSvc.headerTitle.next("Regions");
@@ -59,7 +66,7 @@ export class RegionsTableComponent implements OnInit {
 				}
 			},
 			e => {
-				console.error("Failed to get query parameters:", e);
+				this.log.error("Failed to get query parameters:", e);
 			}
 		);
 	}

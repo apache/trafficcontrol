@@ -18,6 +18,7 @@ import { MAT_DIALOG_DATA } from "@angular/material/dialog";
 import { AlertLevel } from "trafficops-types";
 
 import { AlertService } from "../alert/alert.service";
+import { LoggingService } from "../logging.service";
 
 /**
  * Contains the structure of the data that {@link ImportJsonTxtComponent}
@@ -78,12 +79,14 @@ export class ImportJsonTxtComponent {
 	 *
 	 * @param dialogRef Dialog manager
 	 * @param alertService Alert service manager
-	 * @param datePipe Default angular date pipe for formating date
+	 * @param datePipe Default angular date pipe for formatting date
 	 */
 	constructor(
 		@Inject(MAT_DIALOG_DATA) public readonly data: ImportJsonTxtComponentModel,
 		private readonly alertService: AlertService,
-		private readonly datePipe: DatePipe) { }
+		private readonly datePipe: DatePipe,
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * Hosts listener for drag over
@@ -137,7 +140,7 @@ export class ImportJsonTxtComponent {
 	 */
 	public uploadFile(event: Event): void {
 		if (!(event.target instanceof HTMLInputElement) || !event.target.files) {
-			console.warn("file uploading triggered on non-file-input element:", event.target);
+			this.log.warn("file uploading triggered on non-file-input element:", event.target);
 			return;
 		}
 

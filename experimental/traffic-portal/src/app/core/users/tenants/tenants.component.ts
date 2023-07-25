@@ -25,6 +25,7 @@ import type {
 	ContextMenuItem,
 	DoubleClickLink
 } from "src/app/shared/generic-table/generic-table.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -96,7 +97,8 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	constructor(
 		private readonly userService: UserService,
 		public readonly auth: CurrentUserService,
-		private readonly navSvc: NavigationService
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
 	) {
 		this.navSvc.headerTitle.next("Tenant");
 		this.subscription = this.auth.userChanged.subscribe(
@@ -182,7 +184,7 @@ export class TenantsComponent implements OnInit, OnDestroy {
 	 * @param a The action selected from the context menu.
 	 */
 	public handleContextMenu(a: ContextMenuActionEvent<Readonly<ResponseTenant>>): void {
-		console.log("action:", a);
+		this.log.debug("action:", a);
 	}
 
 	/**

@@ -12,8 +12,10 @@
 * limitations under the License.
 */
 
-import {DOCUMENT} from "@angular/common";
-import {EventEmitter, Inject, Injectable} from "@angular/core";
+import { DOCUMENT } from "@angular/common";
+import { EventEmitter, Inject, Injectable } from "@angular/core";
+
+import { LoggingService } from "../logging.service";
 
 /**
  * Defines a theme. If fileName is null, it is the default theme
@@ -24,7 +26,8 @@ export interface Theme {
 }
 
 /**
- *
+ * The ThemeManagerService manages the user's theming settings, to be applied
+ * throughout the UI.
  */
 @Injectable({
 	providedIn: "root"
@@ -35,7 +38,7 @@ export class ThemeManagerService {
 
 	public themeChanged = new EventEmitter<Theme>();
 
-	constructor(@Inject(DOCUMENT) private readonly document: Document) {
+	constructor(@Inject(DOCUMENT) private readonly document: Document, private readonly log: LoggingService) {
 		this.initTheme();
 	}
 
@@ -95,7 +98,7 @@ export class ThemeManagerService {
 			try {
 				this.document.defaultView.localStorage.setItem(this.storageKey, JSON.stringify(theme));
 			} catch (e) {
-				console.error(`Unable to store theme into local storage: ${e}`);
+				this.log.error(`Unable to store theme into local storage: ${e}`);
 			}
 		}
 	}
@@ -110,7 +113,7 @@ export class ThemeManagerService {
 			try {
 				return JSON.parse(this.document.defaultView.localStorage.getItem(this.storageKey) ?? "null");
 			} catch (e) {
-				console.error(`Unable to load theme from local storage: ${e}`);
+				this.log.error(`Unable to load theme from local storage: ${e}`);
 			}
 		}
 		return null;

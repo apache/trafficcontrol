@@ -18,6 +18,8 @@ import { from, type Observable, type Subscription } from "rxjs";
 
 import type { DataSet } from "src/app/models/data";
 
+import { LoggingService } from "../logging.service";
+
 /**
  * LinechartDirective decorates canvases by creating a rendering context for
  * ChartJS charts.
@@ -54,7 +56,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	/** Chart.js configuration options. */
 	private opts: Chart.ChartConfiguration = {};
 
-	constructor(private readonly element: ElementRef) { }
+	constructor(private readonly element: ElementRef, private readonly log: LoggingService) { }
 
 	/**
 	 * Initializes the chart using the input data.
@@ -177,7 +179,7 @@ export class LinechartDirective implements AfterViewInit, OnDestroy {
 	 * @param e The error that occurred.
 	 */
 	private dataError(e: Error): void {
-		console.error("data error occurred:", e);
+		this.log.error("data error occurred:", e);
 		this.destroyChart();
 		if (this.ctx) {
 			this.ctx.font = "30px serif";

@@ -18,6 +18,8 @@ import { Capability, ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 
+import { LoggingService } from "../logging.service";
+
 /**
  * This service keeps track of the currently authenticated user.
  *
@@ -52,7 +54,7 @@ export class CurrentUserService {
 		return this.currentUser !== null;
 	}
 
-	constructor(private readonly router: Router, private readonly api: UserService) {
+	constructor(private readonly router: Router, private readonly api: UserService, private readonly log: LoggingService) {
 		this.updateCurrentUser();
 	}
 
@@ -86,7 +88,7 @@ export class CurrentUserService {
 				}
 			).catch(
 				e => {
-					console.error("Failed to update current user:", e);
+					this.log.error("Failed to update current user:", e);
 					return false;
 				}
 			).finally(() => this.updatingUserPromise = null );

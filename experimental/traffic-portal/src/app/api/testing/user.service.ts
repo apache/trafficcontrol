@@ -27,6 +27,8 @@ import type {
 	ResponseUser
 } from "trafficops-types";
 
+import { LoggingService } from "src/app/shared/logging.service";
+
 /**
  * Represents a request to register a user via email using the `/users/register`
  * API endpoint.
@@ -103,6 +105,8 @@ export class UserService {
 
 	private readonly tokens = new Map<string, string>();
 
+	constructor(private readonly log: LoggingService) {}
+
 	/**
 	 * Performs authentication with the Traffic Ops server.
 	 *
@@ -120,19 +124,19 @@ export class UserService {
 	public async login(uOrT: string, p?: string): Promise<HttpResponse<object> | null> {
 		if (p !== undefined) {
 			if (uOrT !== this.testAdminUsername || p !== this.testAdminPassword) {
-				console.error("Invalid username or password.");
+				this.log.error("Invalid username or password.");
 				return null;
 			}
 			return new HttpResponse({body: {alerts: [{level: "success", text: "Successfully logged in."}]}, status: 200});
 		}
 		const email = this.tokens.get(uOrT);
 		if (email === undefined) {
-			console.error(`token '${uOrT}' did not match any set token for any user`);
+			this.log.error(`token '${uOrT}' did not match any set token for any user`);
 			return null;
 		}
 		const user = this.users.find(u=>u.email === email);
 		if (!user) {
-			console.error(`email '${email}' associated with token '${uOrT}' did not belong to any User`);
+			this.log.error(`email '${email}' associated with token '${uOrT}' did not belong to any User`);
 			return null;
 		}
 		this.tokens.delete(uOrT);
@@ -187,7 +191,7 @@ export class UserService {
 		if (user) {
 			return transformUser(user);
 		}
-		console.warn("stored admin username not found in stored users: from now on the current user will be (more or less) random");
+		this.log.warn("stored admin username not found in stored users: from now on the current user will be (more or less) random");
 		user = this.users[0];
 		if (!user) {
 			throw new Error("no users exist");
@@ -204,7 +208,7 @@ export class UserService {
 	public async updateCurrentUser(user: ResponseCurrentUser): Promise<boolean> {
 		const storedUser = this.users.findIndex(u=>u.id === user.id);
 		if (storedUser < 0) {
-			console.error(`no such User: #${user.id}`);
+			this.log.error(`no such User: #${user.id}`);
 			return false;
 		}
 		this.testAdminUsername = user.username;
@@ -555,11 +559,11 @@ export class UserService {
 	 */
 	public async resetPassword(email: string): Promise<void> {
 		if (!this.users.some(u=>u.email === email)) {
-			console.error(`no User exists with email '${email}' - TO doesn't expose that information with an error, so neither will we`);
+			this.log.error(`no User exists with email '${email}' - TO doesn't expose that information with an error, so neither will we`);
 			return;
 		}
 		const token = (Math.random() + 1).toString(36).substring(2);
-		console.log("setting token", token, "for email", email);
+		this.log.debug("setting token", token, "for email", email);
 		this.tokens.set(token, email);
 	}
 

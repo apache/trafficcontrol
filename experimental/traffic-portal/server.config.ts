@@ -12,6 +12,10 @@
 * limitations under the License.
 */
 
+// Logging cannot be initialized until after the job of the routines in this
+// file are complete.
+/* eslint-disable no-console */
+
 import { execSync } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";

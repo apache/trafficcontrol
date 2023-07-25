@@ -19,6 +19,7 @@ import { ResponseASN, ResponseCacheGroup } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -33,9 +34,15 @@ export class AsnDetailComponent implements OnInit {
 	public new = false;
 	public asn!: ResponseASN;
 	public cachegroups!: Array<ResponseCacheGroup>;
-	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location, private readonly dialog: MatDialog,
-		private readonly header: NavigationService) {
+
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly cacheGroupService: CacheGroupService,
+		private readonly location: Location,
+		private readonly dialog: MatDialog,
+		private readonly header: NavigationService,
+		private readonly log: LoggingService,
+	) {
 	}
 
 	/**
@@ -45,7 +52,7 @@ export class AsnDetailComponent implements OnInit {
 		this.cachegroups = await this.cacheGroupService.getCacheGroups();
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
@@ -63,7 +70,7 @@ export class AsnDetailComponent implements OnInit {
 		}
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
-			console.error("route parameter 'id' was non-number:", ID);
+			this.log.error("route parameter 'id' was non-number:", ID);
 			return;
 		}
 
@@ -76,7 +83,7 @@ export class AsnDetailComponent implements OnInit {
 	 */
 	public async deleteAsn(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new ASN");
+			this.log.error("Unable to delete new ASN");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {

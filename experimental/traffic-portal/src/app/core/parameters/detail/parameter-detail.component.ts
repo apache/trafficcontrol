@@ -20,6 +20,7 @@ import { ResponseParameter } from "trafficops-types";
 
 import { ProfileService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -38,8 +39,14 @@ export class ParameterDetailComponent implements OnInit {
 		{ label: "false", value: false }
 	];
 
-	constructor(private readonly route: ActivatedRoute, private readonly profileService: ProfileService,
-		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService) { }
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly profileService: ProfileService,
+		private readonly location: Location,
+		private readonly dialog: MatDialog,
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
@@ -47,7 +54,7 @@ export class ParameterDetailComponent implements OnInit {
 	public async ngOnInit(): Promise<void> {
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
@@ -68,7 +75,7 @@ export class ParameterDetailComponent implements OnInit {
 
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
-			console.error("route parameter 'id' was non-number: ", ID);
+			this.log.error("route parameter 'id' was non-number: ", ID);
 			return;
 		}
 
@@ -81,7 +88,7 @@ export class ParameterDetailComponent implements OnInit {
 	 */
 	public async deleteParameter(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new parameter");
+			this.log.error("Unable to delete new parameter");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {

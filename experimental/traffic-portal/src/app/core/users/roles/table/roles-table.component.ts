@@ -23,6 +23,7 @@ import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import type { ContextMenuActionEvent, ContextMenuItem, DoubleClickLink } from "src/app/shared/generic-table/generic-table.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -36,8 +37,15 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 export class RolesTableComponent implements OnInit {
 	/** List of roles */
 	public roles: Promise<Array<ResponseRole>>;
-	constructor(private readonly route: ActivatedRoute, private readonly headerSvc: NavigationService,
-		private readonly api: UserService, private readonly dialog: MatDialog, public readonly auth: CurrentUserService) {
+
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly headerSvc: NavigationService,
+		private readonly api: UserService,
+		private readonly dialog: MatDialog,
+		public readonly auth: CurrentUserService,
+		private readonly log: LoggingService,
+	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.roles = this.api.getRoles();
 		this.headerSvc.headerTitle.next("Roles");
@@ -54,7 +62,7 @@ export class RolesTableComponent implements OnInit {
 				}
 			},
 			e => {
-				console.error("Failed to get query parameters:", e);
+				this.log.error("Failed to get query parameters:", e);
 			}
 		);
 	}
@@ -123,7 +131,7 @@ export class RolesTableComponent implements OnInit {
 	 */
 	public async handleContextMenu(evt: ContextMenuActionEvent<ResponseRole>): Promise<void> {
 		if (Array.isArray(evt.data)) {
-			console.error("cannot delete multiple roles at once:", evt.data);
+			this.log.error("cannot delete multiple roles at once:", evt.data);
 			return;
 		}
 		const data = evt.data;
