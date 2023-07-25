@@ -43,7 +43,8 @@
 				"no-restricted-imports": [
 					"error",
 					"../"
-				]
+				],
+				"no-console": "off"
 			}
 		}
 	]
