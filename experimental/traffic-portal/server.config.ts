@@ -19,6 +19,7 @@
 import { execSync } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
+
 import { hasProperty } from "src/app/utils";
 
 /**
@@ -99,30 +100,25 @@ function isServerVersion(v: unknown): v is ServerVersion {
 		return false;
 	}
 
-	if (!Object.prototype.hasOwnProperty.call(v, "version")) {
-		console.error("version missing required field 'version'");
-		return false;
-	}
-	if (typeof((v as {version: unknown}).version) !== "string") {
+	if (!hasProperty(v, "version", "string")) {
+		console.error("version required field 'version' missing or invalid");
 		return false;
 	}
 
-	if (Object.prototype.hasOwnProperty.call(v, "commits") && (typeof((v as {commits: unknown}).commits)) !== "string") {
-		console.error(`version property 'commits' has incorrect type; want: string, got: ${typeof((v as {commits: unknown}).commits)}`);
+	if (hasProperty(v, "commits") && typeof(v.commits) !== "string") {
+		console.error(`version property 'commits' has incorrect type; want: string, got: ${typeof(v.commits)}`);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "hash") && (typeof((v as {hash: unknown}).hash)) !== "string") {
-		console.error(`version property 'hash' has incorrect type; want: string, got: ${typeof((v as {hash: unknown}).hash)}`);
+	if (hasProperty(v, "hash") && typeof(v.hash) !== "string") {
+		console.error(`version property 'hash' has incorrect type; want: string, got: ${typeof(v.hash)}`);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "elRelease") && (typeof((v as {elRelease: unknown}).elRelease)) !== "string") {
-		console.error(
-			`version property 'elRelease' has incorrect type; want: string, got: ${typeof (v as {elRelease: unknown}).elRelease}`
-		);
+	if (hasProperty(v, "elRelease") && typeof(v.elRelease) !== "string") {
+		console.error(`version property 'elRelease' has incorrect type; want: string, got: ${typeof(v.elRelease)}`);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "arch") && (typeof((v as {arch: unknown}).arch)) !== "string") {
-		console.error(`version property 'arch' has incorrect type; want: string, got: ${typeof((v as {arch: unknown}).arch)}`);
+	if (hasProperty(v, "arch") && typeof(v.arch) !== "string") {
+		console.error(`version property 'arch' has incorrect type; want: string, got: ${typeof(v.arch)}`);
 		return false;
 	}
 	return true;
@@ -197,39 +193,27 @@ function isConfig(c: unknown): c is ServerConfig {
 	} else {
 		(c as {insecure: boolean}).insecure = false;
 	}
-	if (!hasProperty(c, "port")) {
-		throw new Error("'port' is required");
+	if (!hasProperty(c, "port", "number")) {
+		throw new Error("required configuration for 'port' is missing or not a valid number");
 	}
-	if (typeof(c.port) !== "number") {
-		throw new Error("'port' must be a number");
+	if (!hasProperty(c, "trafficOps", "string")) {
+		throw new Error("required configuration for 'trafficOps' is missing or not a string");
 	}
-	if (!hasProperty(c, "trafficOps")){
-		throw new Error("'trafficOps' is required");
+	if (!hasProperty(c, "browserFolder", "string")) {
+		throw new Error("required configuration for 'browserFolder' is missing or not a string");
 	}
-	if (typeof(c.trafficOps) !== "string") {
-		throw new Error("'trafficOps' must be a string");
-	}
-	if(!hasProperty(c, "tpv1Url")){
-		throw new Error("'tpv1Url' is required");
-	}
-	if (typeof(c.tpv1Url) !== "string") {
-		throw new Error("'tpv1Url' must be a string");
-	}
-	if (!hasProperty(c, "browserFolder")) {
-		throw new Error("'browserFolder' is required");
-	}
-	if (typeof(c.browserFolder) !== "string") {
-		throw new Error("'browserFolder' must be a string");
+	if(!hasProperty(c, "tpv1Url", "string")){
+		throw new Error("required configuration for 'tpv1Url' is missing or not a string");
 	}
 
 	try {
-		c.trafficOps = new URL(c.trafficOps);
+		(c as {trafficOps: URL | string}).trafficOps = new URL(c.trafficOps);
 	} catch (e) {
 		throw new Error(`'trafficOps' is not a valid URL: ${e}`);
 	}
 
 	try {
-		c.tpv1Url = new URL(c.tpv1Url);
+		(c as {tpv1Url: URL | string}).tpv1Url = new URL(c.tpv1Url);
 	} catch (e) {
 		throw new Error(`'tpv1Url' is not a valid URL: ${e}`);
 	}
@@ -239,17 +223,11 @@ function isConfig(c: unknown): c is ServerConfig {
 			throw new Error("'useSSL' must be a boolean");
 		}
 		if (c.useSSL) {
-			if (!hasProperty(c, "certPath")) {
-				throw new Error("'certPath' is required to use SSL");
+			if (!hasProperty(c, "certPath", "string")) {
+				throw new Error("missing or invalid 'certPath' - required to use SSL");
 			}
-			if (typeof(c.certPath) !== "string") {
-				throw new Error("'certPath' must be a string");
-			}
-			if (!hasProperty(c, "keyPath")) {
-				throw new Error("'keyPath' is required to use SSL");
-			}
-			if (typeof(c.keyPath) !== "string") {
-				throw new Error("'keyPath' must be a string");
+			if (!hasProperty(c, "keyPath", "string")) {
+				throw new Error("missing or invalid 'keyPath' - required to use SSL");
 			}
 		}
 	}
@@ -330,8 +308,8 @@ export const defaultConfig: ServerConfig = {
 	browserFolder: "/opt/traffic-portal/browser",
 	insecure: false,
 	port: 4200,
-	trafficOps: new URL("https://example.com"),
 	tpv1Url: new URL("https://example.com"),
+	trafficOps: new URL("https://example.com"),
 	version: { version: "" }
 };
 /**
@@ -416,8 +394,8 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 				insecure: cfg.insecure,
 				keyPath: args.keyPath,
 				port: cfg.port,
-				trafficOps: cfg.trafficOps,
 				tpv1Url: cfg.tpv1Url,
+				trafficOps: cfg.trafficOps,
 				useSSL: true,
 				version: ver
 			};
