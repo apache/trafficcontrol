@@ -1678,4 +1678,4 @@ def profile_parameters_post_data(to_session: TOSession, request_template_data: l
 	logger.info("Deleting Profile Parameters data... %s", msg)
 	if msg is None:
 		logger.error("Profile Parameter returned by Traffic Ops is missing a 'profile_id' property")
-    		pytest.fail("Response from delete request is empty, Failing test_case")
+		pytest.fail("Response from delete request is empty, Failing test_case")
