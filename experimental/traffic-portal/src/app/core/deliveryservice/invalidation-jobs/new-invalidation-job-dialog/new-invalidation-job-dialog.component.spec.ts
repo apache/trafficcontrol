@@ -25,14 +25,14 @@ describe("NewInvalidationJobDialogComponent", () => {
 	let component: NewInvalidationJobDialogComponent;
 	let fixture: ComponentFixture<NewInvalidationJobDialogComponent>;
 	const dialogRef = {
-		close: jasmine.createSpy("dialog 'close' method", (): void => console.log("dialog closed"))
+		close: jasmine.createSpy("dialog 'close' method", (): void => { /* Do nothing */ })
 	};
 	const dialogData = {
 		dsID: -1
 	};
 
 	beforeEach(async () => {
-		dialogRef.close = jasmine.createSpy("dialog 'close' method", (): void => console.log("dialog closed"));
+		dialogRef.close = jasmine.createSpy("dialog 'close' method", (): void => { /* Do nothing */ });
 		await TestBed.configureTestingModule({
 			declarations: [ NewInvalidationJobDialogComponent ],
 			imports: [
@@ -128,7 +128,7 @@ describe("NewInvalidationJobDialogComponent - editing", () => {
 	let component: NewInvalidationJobDialogComponent;
 	let fixture: ComponentFixture<NewInvalidationJobDialogComponent>;
 	const dialogRef = {
-		close: jasmine.createSpy("dialog 'close' method", (): void => console.log("dialog closed"))
+		close: jasmine.createSpy("dialog 'close' method", (): void => { /* Do nothing */ })
 	};
 	const dialogData = {
 		dsID: -1,
@@ -142,7 +142,7 @@ describe("NewInvalidationJobDialogComponent - editing", () => {
 	};
 
 	beforeEach(async () => {
-		dialogRef.close = jasmine.createSpy("dialog 'close' method", (): void => console.log("dialog closed"));
+		dialogRef.close = jasmine.createSpy("dialog 'close' method", (): void => { /* Do nothing */ });
 		await TestBed.configureTestingModule({
 			declarations: [ NewInvalidationJobDialogComponent ],
 			imports: [

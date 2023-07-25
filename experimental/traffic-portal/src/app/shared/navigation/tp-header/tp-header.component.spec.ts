@@ -54,10 +54,6 @@ describe("TpHeaderComponent", () => {
 	});
 
 	afterAll(() => {
-		try{
-			TestBed.resetTestingModule();
-		} catch (e) {
-			console.error("error in TpHeaderComponent afterAll:", e);
-		}
+		TestBed.resetTestingModule();
 	});
 });
