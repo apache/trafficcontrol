@@ -38,6 +38,12 @@ import {
 })
 export class TopologyDetailsComponent implements OnInit {
 	public new = false;
+
+	/** Loader status for the actions */
+	public loading = true;
+
+	public oldName: string | undefined = undefined;
+
 	public topology: ResponseTopology = {
 		description: "",
 		lastUpdated: new Date(),
@@ -65,6 +71,7 @@ export class TopologyDetailsComponent implements OnInit {
 		const name = this.route.snapshot.paramMap.get("name");
 		if (name === null) {
 			console.error("missing required route parameter 'name'");
+			this.loading = false;
 			return;
 		}
 
@@ -73,16 +80,20 @@ export class TopologyDetailsComponent implements OnInit {
 			this.new = true;
 			this.setTitle();
 			await topologiesPromise;
+			this.loading = false;
 			return;
 		}
 		await topologiesPromise;
 		const index = this.topologies.findIndex(c => c.name === name);
 		if (index < 0) {
-			console.error(`no such Topology: #${name}`);
+			console.error(`no such Topology: ${name}`);
+			this.loading = false;
 			return;
 		}
+		this.oldName = name;
 		this.topology = this.topologies.splice(index, 1)[0];
-		this.topologySource.data = this.api.topologyToTree(this.topology);
+		this.topologySource.data = TopologyService.topologyToTree(this.topology);
+		this.loading = false;
 	}
 
 	/**
@@ -93,7 +104,7 @@ export class TopologyDetailsComponent implements OnInit {
 	 * @returns If the node has children.
 	 */
 	public hasChild(_: number, node: TopTreeNode): boolean {
-		return node.children instanceof Array && node.children.length > 0;
+		return Array.isArray(node.children) && node.children.length > 0;
 	}
 
 	/**
@@ -136,7 +147,7 @@ export class TopologyDetailsComponent implements OnInit {
 	 * @param e HTML form submission event.
 	 */
 	public async submit(e: Event): Promise<void> {
-		this.topology = this.api.treeToTopology(this.topology.name, this.topology.description, this.topologySource.data);
+		this.topology = TopologyService.treeToTopology(this.topology.name, this.topology.description, this.topologySource.data);
 
 		e.preventDefault();
 		e.stopPropagation();
@@ -145,7 +156,7 @@ export class TopologyDetailsComponent implements OnInit {
 			this.topology = await this.api.createTopology(this.topology);
 			this.new = false;
 		} else {
-			this.topology = await this.api.updateTopology(this.topology);
+			this.topology = await this.api.updateTopology(this.topology, this.oldName);
 		}
 		this.setTitle();
 	}

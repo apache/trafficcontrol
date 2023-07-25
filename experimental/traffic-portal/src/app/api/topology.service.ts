@@ -43,33 +43,20 @@ export class TopologyService extends APIService {
 	}
 
 	/**
-	 * Gets a specific Topology from Traffic Ops
-	 *
-	 * @param name The name of the Topology to be returned.
-	 * @returns The Topology with the given name.
-	 */
-	public async getTopologies(name: string): Promise<ResponseTopology>;
-	/**
-	 * Gets all Topologies from Traffic Ops
-	 *
-	 * @returns An Array of all Topologies configured in Traffic Ops.
-	 */
-	public async getTopologies(): Promise<Array<ResponseTopology>>;
-	/**
 	 * Gets one or all Topologies from Traffic Ops
 	 *
 	 * @param name The name of a single Topology to be returned.
-	 * @returns Either an Array of Topology objects, or a single Topology, depending on
+	 * @returns An Array of Topologies
 	 * whether `name` was	passed.
 	 */
-	public async getTopologies(name?: string): Promise<Array<ResponseTopology> | ResponseTopology> {
+	public async getTopologies(name?: string): Promise<Array<ResponseTopology>> {
 		const path = "topologies";
 		if (name) {
 			const topology = await this.get<[ResponseTopology]>(path, undefined, {name}).toPromise();
 			if (topology.length !== 1) {
 				throw new Error(`${topology.length} Topologies found by name ${name}`);
 			}
-			return topology[0];
+			return topology;
 		}
 		return this.get<Array<ResponseTopology>>(path).toPromise();
 	}
@@ -81,7 +68,7 @@ export class TopologyService extends APIService {
 	 */
 	public async deleteTopology(topology: ResponseTopology | string): Promise<void> {
 		const name = typeof topology === "string" ? topology : topology.name;
-		return this.delete(`topologies?name=${name}`).toPromise();
+		return this.delete("topologies", undefined, {name}).toPromise();
 	}
 
 	/**
@@ -98,9 +85,13 @@ export class TopologyService extends APIService {
 	 * Topology.
 	 *
 	 * @param topology The full new definition of the Topology being updated
+	 * @param name What the topology was named before it was updated
 	 */
-	public async updateTopology(topology: ResponseTopology): Promise<ResponseTopology> {
-		return this.put<ResponseTopology>(`topologies?name=${topology.name}`, topology).toPromise();
+	public async updateTopology(topology: ResponseTopology, name: string | undefined): Promise<ResponseTopology> {
+		if (typeof name === "undefined") {
+			name = topology.name;
+		}
+		return this.put<ResponseTopology>("topologies", topology, {name}).toPromise();
 	}
 
 	/**
@@ -109,25 +100,21 @@ export class TopologyService extends APIService {
 	 * @param topology The topology to generate a material tree from.
 	 * @returns a material tree.
 	 */
-	public topologyToTree(topology: ResponseTopology): Array<TopTreeNode> {
+	public static topologyToTree(topology: ResponseTopology): Array<TopTreeNode> {
 		const treeNodes: Array<TopTreeNode> = [];
 		const topLevel: Array<TopTreeNode> = [];
 		for (const node of topology.nodes) {
-			const name = node.cachegroup;
-			const cachegroup = node.cachegroup;
-			const children: Array<TopTreeNode> = [];
-			const parents: Array<TopTreeNode> = [];
 			treeNodes.push({
-				cachegroup,
-				children,
-				name,
-				parents,
+				cachegroup: node.cachegroup,
+				children: [],
+				name: node.cachegroup,
+				parents: [],
 			});
 		}
 		for (let index = 0; index < topology.nodes.length; index++) {
 			const node = topology.nodes[index];
 			const treeNode = treeNodes[index];
-			if (!(node.parents instanceof Array) || node.parents.length < 1) {
+			if (!Array.isArray(node.parents) || node.parents.length < 1) {
 				topLevel.push(treeNode);
 				continue;
 			}
@@ -145,19 +132,18 @@ export class TopologyService extends APIService {
 	 * @param name The topology name
 	 * @param description The topology description
 	 * @param treeNodes The data for a material tree
-	 * @returns a material tree.
+	 * @returns a topology.
 	 */
-	public treeToTopology(name: string, description: string, treeNodes: Array<TopTreeNode>): ResponseTopology {
+	public static treeToTopology(name: string, description: string, treeNodes: Array<TopTreeNode>): ResponseTopology {
 		const topologyNodeIndicesByCacheGroup: Map<string, number> = new Map();
 		const nodes: Array<ResponseTopologyNode> = new Array<ResponseTopologyNode>();
 		this.treeToTopologyInner(topologyNodeIndicesByCacheGroup, nodes, undefined, treeNodes);
-		const topology: ResponseTopology = {
+		return {
 			description,
 			lastUpdated: new Date(),
 			name,
 			nodes,
 		};
-		return topology;
 	}
 
 	/**
@@ -169,8 +155,11 @@ export class TopologyService extends APIService {
 	 * @param parent The parent, if it exists
 	 * @param treeNodes The data for a material tree
 	 */
-	protected treeToTopologyInner(topologyNodeIndicesByCacheGroup: Map<string, number>,
-		topologyNodes: Array<ResponseTopologyNode>, parent: ResponseTopologyNode | undefined, treeNodes: Array<TopTreeNode>): void {
+	protected static treeToTopologyInner(
+		topologyNodeIndicesByCacheGroup: Map<string, number>,
+		topologyNodes: Array<ResponseTopologyNode>,
+		parent: ResponseTopologyNode | undefined,
+		treeNodes: Array<TopTreeNode>): void {
 
 		for (const treeNode of treeNodes) {
 			const cachegroup = treeNode.cachegroup;

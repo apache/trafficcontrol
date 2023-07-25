@@ -49,17 +49,15 @@ export class TopologyService {
 	/**
 	 * Gets one or all Topologies from Traffic Ops
 	 *
-	 * @param name? The integral, unique identifier of a single Topology to be
-	 * returned
-	 * @returns Either a Map of Topology names to full Topology objects, or a single Topology, depending on whether `id` was
-	 * 	passed.
-	 * (In the event that `id` is passed but does not match any Topology, `null` will be emitted)
+	 * @param name The unique name of a single Topology to be returned
+	 * @returns Either an Array of Topologies or a single Topology, depending on whether `name` was
+	 * passed.
 	 */
 	public async getTopologies(name?: string): Promise<Array<ResponseTopology> | ResponseTopology> {
 		if (name !== undefined) {
 			const topology = this.topologies.find(t => t.name === name);
 			if (!topology) {
-				throw new Error(`no such Topology #${name}`);
+				throw new Error(`no such Topology ${name}`);
 			}
 			return topology;
 		}
@@ -69,13 +67,13 @@ export class TopologyService {
 	/**
 	 * Deletes a Topology.
 	 *
-	 * @param topology The Topology to be deleted, or just its ID.
+	 * @param topology The Topology to be deleted, or just its name.
 	 */
 	public async deleteTopology(topology: ResponseTopology | string): Promise<void> {
 		const name = typeof topology === "string" ? topology : topology.name;
 		const idx = this.topologies.findIndex(t => t.name === name);
 		if (idx < 0) {
-			throw new Error(`no such Topology: #${name}`);
+			throw new Error(`no such Topology: ${name}`);
 		}
 		this.topologies.splice(idx, 1);
 	}
@@ -87,7 +85,7 @@ export class TopologyService {
 	 */
 	public async createTopology(topology: RequestTopology): Promise<ResponseTopology> {
 		const nodes: ResponseTopologyNode[] = topology.nodes.map(node => {
-			if (!(node.parents instanceof Array)) {
+			if (!Array.isArray(node.parents)) {
 				node.parents = [];
 			}
 			const responseNode: ResponseTopologyNode = {
@@ -110,8 +108,7 @@ export class TopologyService {
 	 * Replaces an existing Topology with the provided new definition of a
 	 * Topology.
 	 *
-	 * @param topology The full new definition of the Topology being
-	 * updated, or just its ID.
+	 * @param topology The full new definition of the Topology being updated
 	 */
 	public async updateTopology(topology: ResponseTopology): Promise<ResponseTopology> {
 		const idx = this.topologies.findIndex(t => t.name === topology.name);
@@ -121,7 +118,7 @@ export class TopologyService {
 		};
 
 		if (idx < 0) {
-			throw new Error(`no such Topology: #${topology}`);
+			throw new Error(`no such Topology: ${topology}`);
 		}
 
 		this.topologies[idx] = topology;
