@@ -250,6 +250,7 @@
 							</mappings>
 							<requires>
 								<require>java-11-openjdk-headless</require>
+								<require>tzdata-java</require>
 								<require>tomcat >= ${env.TOMCAT_VERSION}.${env.TOMCAT_RELEASE}</require>
 								<require>apr >= 1.4.8</require>
 								<require>tomcat-native >= 1.2.23</require>
