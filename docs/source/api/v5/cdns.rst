@@ -89,7 +89,7 @@ Response Structure
 			"dnssecEnabled": false,
 			"domainName": "-",
 			"id": 1,
-			"lastUpdated": "2018-11-14T18:21.516553Z",
+			"lastUpdated": "2018-11-14T18:21.32.516553Z",
 			"name": "ALL",
 			"ttlOverride": 60
 		},
@@ -97,7 +97,7 @@ Response Structure
 			"dnssecEnabled": false,
 			"domainName": "mycdn.ciab.test",
 			"id": 2,
-			"lastUpdated": "2018-11-14 18:21:516553Z",
+			"lastUpdated": "2018-11-14 18:21.32:516553Z",
 			"name": "CDN-in-a-Box"
 		}
 	]}

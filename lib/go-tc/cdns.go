@@ -122,41 +122,6 @@ type CDN struct {
 	TTLOverride int `json:"ttlOverride,omitempty" db:"ttl_override"`
 }
 
-// CDNNullableV5 is identical to CDN except that its fields are reference values,
-// which allows them to be nil.
-type CDNNullableV5 struct {
-
-	// The CDN to retrieve
-	//
-	// enables Domain Name Security Extensions on the specified CDN
-	//
-	// required: true
-	DNSSECEnabled *bool `json:"dnssecEnabled" db:"dnssec_enabled"`
-
-	// DomainName of the CDN
-	//
-	// required: true
-	DomainName *string `json:"domainName" db:"domain_name"`
-
-	// ID of the CDN
-	//
-	// required: true
-	ID *int `json:"id" db:"id"`
-
-	// LastUpdated
-	//
-	LastUpdated *time.Time `json:"lastUpdated" db:"last_updated"`
-
-	// Name of the CDN
-	//
-	// required: true
-	Name *string `json:"name" db:"name"`
-
-	// TTLOverride
-	//
-	TTLOverride *int `json:"ttlOverride,omitempty" db:"ttl_override"`
-}
-
 // CDNNullable is identical to CDN except that its fields are reference values,
 // which allows them to be nil.
 type CDNNullable struct {
