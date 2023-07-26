@@ -15,6 +15,7 @@
 import { execSync } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
+import { hasProperty } from "src/app/utils";
 
 /**
  * ServerVersion contains versioning information for the server,
@@ -185,65 +186,65 @@ function isConfig(c: unknown): c is ServerConfig {
 		throw new Error("'null' is not a valid configuration");
 	}
 
-	if (Object.prototype.hasOwnProperty.call(c, "insecure")) {
-		if (typeof((c as {insecure: unknown}).insecure) !== "boolean") {
+	if (hasProperty(c, "insecure")) {
+		if (typeof(c.insecure) !== "boolean") {
 			throw new Error("'insecure' must be a boolean");
 		}
 	} else {
 		(c as {insecure: boolean}).insecure = false;
 	}
-	if (!Object.prototype.hasOwnProperty.call(c, "port")) {
+	if (!hasProperty(c, "port")) {
 		throw new Error("'port' is required");
 	}
-	if (typeof((c as {port: unknown}).port) !== "number") {
+	if (typeof(c.port) !== "number") {
 		throw new Error("'port' must be a number");
 	}
-	if (!Object.prototype.hasOwnProperty.call(c, "trafficOps")) {
+	if (!hasProperty(c, "trafficOps")){
 		throw new Error("'trafficOps' is required");
 	}
-	if (typeof((c as {trafficOps: unknown}).trafficOps) !== "string") {
+	if (typeof(c.trafficOps) !== "string") {
 		throw new Error("'trafficOps' must be a string");
 	}
-	if (!Object.prototype.hasOwnProperty.call(c, "tpv1Url")) {
+	if(!hasProperty(c, "tpv1Url")){
 		throw new Error("'tpv1Url' is required");
 	}
-	if (typeof((c as {tpv1Url: unknown}).tpv1Url) !== "string") {
+	if (typeof(c.tpv1Url) !== "string") {
 		throw new Error("'tpv1Url' must be a string");
 	}
-	if (!Object.prototype.hasOwnProperty.call(c, "browserFolder")) {
+	if (!hasProperty(c, "browserFolder")) {
 		throw new Error("'browserFolder' is required");
 	}
-	if (typeof((c as {browserFolder: unknown}).browserFolder) !== "string") {
+	if (typeof(c.browserFolder) !== "string") {
 		throw new Error("'browserFolder' must be a string");
 	}
 
 	try {
-		(c as {trafficOps: URL}).trafficOps = new URL((c as {trafficOps: string}).trafficOps);
+		c.trafficOps = new URL(c.trafficOps);
 	} catch (e) {
 		throw new Error(`'trafficOps' is not a valid URL: ${e}`);
 	}
 
 	try {
-		(c as {tpv1Url: URL}).tpv1Url = new URL((c as {tpv1Url: string}).tpv1Url);
+		c.tpv1Url = new URL(c.tpv1Url);
 	} catch (e) {
 		throw new Error(`'tpv1Url' is not a valid URL: ${e}`);
 	}
 
-	if (Object.prototype.hasOwnProperty.call(c, "useSSL")) {
-		if (typeof((c as {useSSL: unknown}).useSSL) !== "boolean") {
+	if (hasProperty(c, "useSSL")) {
+		if (typeof(c.useSSL) !== "boolean") {
 			throw new Error("'useSSL' must be a boolean");
 		}
-		if ((c as {useSSL: boolean}).useSSL) {
-			if (!Object.prototype.hasOwnProperty.call(c, "certPath")) {
+		if (c.useSSL) {
+			if (!hasProperty(c, "certPath")) {
 				throw new Error("'certPath' is required to use SSL");
 			}
-			if (typeof((c as {certPath: unknown}).certPath) !== "string") {
+			if (typeof(c.certPath) !== "string") {
 				throw new Error("'certPath' must be a string");
 			}
-			if (!Object.prototype.hasOwnProperty.call(c, "keyPath")) {
+			if (!hasProperty(c, "keyPath")) {
 				throw new Error("'keyPath' is required to use SSL");
 			}
-			if (typeof((c as {keyPath: unknown}).keyPath) !== "string") {
+			if (typeof(c.keyPath) !== "string") {
 				throw new Error("'keyPath' must be a string");
 			}
 		}

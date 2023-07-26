@@ -194,7 +194,7 @@ export function app(serverConfig: ServerConfig): express.Express {
 	server.get("*", (req, res) => {
 		res.render(indexHtml, {providers: [
 			{provide: APP_BASE_HREF, useValue: req.baseUrl},
-			{provide: 'TP_V1_URL', useValue: serverConfig.tpv1Url}
+			{provide: "TP_V1_URL", useValue: config.tpv1Url}
 		], req});
 	});
 
@@ -219,6 +219,20 @@ function run(): number {
 	parser.add_argument("-t", "--traffic-ops", {
 		dest: "trafficOps",
 		help: "Specify the Traffic Ops host/URL, including port. (Default: uses the `TO_URL` environment variable)",
+		type: (arg: string) => {
+			try {
+				return new URL(arg);
+			} catch (e) {
+				if (e instanceof TypeError) {
+					return new URL(`https://${arg}`);
+				}
+				throw e;
+			}
+		}
+	});
+	parser.add_argument("-t", "--tpv1-url", {
+		dest: "tpv1Url",
+		help: "Specify the Traffic Portal v1 URL. (Default: uses the `TP_V1_URL` environment variable)",
 		type: (arg: string) => {
 			try {
 				return new URL(arg);

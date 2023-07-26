@@ -11,7 +11,8 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from "@angular/core";
+import { isPlatformBrowser } from "@angular/common";
+import { Inject, Injectable, PLATFORM_ID } from "@angular/core";
 import { ReplaySubject } from "rxjs";
 
 import { UserService } from "src/app/api";
@@ -61,12 +62,15 @@ export class NavigationService {
 
 	private readonly horizontalNavs: Map<string, HeaderNavigation>;
 	private readonly verticalNavs: Map<string, HeaderNavigation>;
-	private readonly tpv1Url: string | null = "http:localhost:433";
+	private readonly tpv1Url: string = "http:localhost:433";
 
 	constructor(
 		private readonly auth: CurrentUserService,
-		private readonly api: UserService) {
-		this.tpv1Url = localStorage.getItem(LOCAL_TPV1_URL) ? localStorage.getItem(LOCAL_TPV1_URL) : this.tpv1Url;
+		private readonly api: UserService,
+		@Inject(PLATFORM_ID) private readonly platformId: object) {
+		if (isPlatformBrowser(this.platformId)) {
+			this.tpv1Url = window.localStorage.getItem(LOCAL_TPV1_URL) ?? this.tpv1Url;
+		}
 		this.horizontalNavs = new Map<string, HeaderNavigation>([
 			["Home", {
 				routerLink: "/core",
