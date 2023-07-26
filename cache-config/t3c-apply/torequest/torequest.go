@@ -1052,6 +1052,8 @@ func pkgMatch(pkgMetaData []string, pk string) bool {
 
 }
 
+// ProcessPackagesWithMetaData will attempt to get installed package data from 
+// t3c-apply-metadata.json and log the results.
 func (r *TrafficOpsReq) ProcessPackagesWithMetaData(packageMetaData []string) error {
 	pkgs, err := getPackages(r.Cfg)
 	pkgMdataMap := pkgMetaDataToMap(packageMetaData)
