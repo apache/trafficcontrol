@@ -395,5 +395,15 @@
 			"type": 33,
 			"setNumber": 1
 		}
+	],
+	"profile_parameters": [
+		{
+			"profileId": 18,
+			"parameterId": 2
+		},
+		{
+			"profileId": 18,
+			"parameterId": 3
+		}
 	]
 }

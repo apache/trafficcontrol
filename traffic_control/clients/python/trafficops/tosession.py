@@ -1645,6 +1645,15 @@ class TOSession(RestApiSession):
 	#
 	# Profile Parameters
 	#
+	@api_request('get', 'profileparameters', ('3.0', '4.0', '4.1', '5.0'))
+	def get_profile_parameters(self, data=None):
+		"""
+		Retrieve all Parameter/Profile assignments.
+		:ref:`to-api-profileparameters`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	@api_request('post', 'profileparameters', ('3.0', '4.0', '4.1', '5.0'))
 	def associate_paramater_to_profile(self, data=None):
 		"""
