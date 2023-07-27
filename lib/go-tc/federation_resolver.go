@@ -51,7 +51,7 @@ type FederationResolver struct {
 	TypeID      *uint      `json:"typeId,omitempty" db:"type"`
 }
 
-// FederationResolverV5 - is an alias for the Federal Resolver struct response used for the latest major version associated with APIv5.
+// FederationResolverV5 - is an alias for the Federal Resolver struct response used for the latest minor version associated with APIv5.
 type FederationResolverV5 = FederationResolverV50
 
 // FederationResolverV50 - is used for RFC3339 format timestamp in FederationResolver which represents a resolver record for a CDN Federation for APIv50.
@@ -63,7 +63,7 @@ type FederationResolverV50 struct {
 	TypeID      *uint      `json:"typeId,omitempty" db:"type"`
 }
 
-// FederationResolversResponseV5 - an alias for the Federation Resolver's struct response used for the latest major version associated with APIv5.
+// FederationResolversResponseV5 - an alias for the Federation Resolver's struct response used for the latest minor version associated with APIv5.
 type FederationResolversResponseV5 = FederationResolversResponseV50
 
 // FederationResolversResponseV50 - GET request to its /federation_resolvers endpoint for APIv50.
@@ -72,7 +72,7 @@ type FederationResolversResponseV50 struct {
 	Response []FederationResolverV5 `json:"response"`
 }
 
-// FederationResolverResponseV5 - represents struct response used for the latest major version associated with APIv5.
+// FederationResolverResponseV5 - represents struct response used for the latest minor version associated with APIv5.
 type FederationResolverResponseV5 = FederationResolverResponseV50
 
 // FederationResolverResponseV50 - POST request to its /federation_resolvers endpoint APIv50.
@@ -104,7 +104,7 @@ func (fr *FederationResolver) Validate(tx *sql.Tx) error {
 }
 
 // UpgradeToFederationResolverV5 upgrades an APIv4 Federal Resolver into an APIv5 Federal Resolver of
-// the latest major version APIv5.
+// the latest minor version.
 func UpgradeToFederationResolverV5(fr FederationResolver) *FederationResolverV5 {
 	upgraded := FederationResolverV5{
 		ID:        fr.ID,

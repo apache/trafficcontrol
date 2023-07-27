@@ -42,8 +42,6 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	alerts := tc.Alerts{}
-
 	dsTenantID, ok, err := getDSTenantIDByID(inf.Tx.Tx, inf.IntParams["id"])
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant: "+err.Error()))
@@ -102,10 +100,9 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 	// Based on version we load Delivery Service Eligible Server - for version 5 and above we use DSServerV5
 	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
 
-		// Convert lastupdate time format to RFC3339 of DSServerV4 to DSServerV5
-		newServerList := tc.ConvertV4LastupdateToV5(servers)
+		newServerList := tc.ToDSServerV5(servers)
 
-		api.WriteAlertsObj(w, r, http.StatusOK, alerts, newServerList)
+		api.WriteResp(w, r, newServerList)
 		return
 	}
 

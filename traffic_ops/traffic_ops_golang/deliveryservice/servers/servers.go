@@ -728,8 +728,7 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 	// Based on version we load Delivery Service Server - for version 5 and above we use DSServerV5
 	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
 
-		// Convert lastupdate time format to RFC3339 of DSServerV4 to DSServerV5
-		newServerList := tc.ConvertV4LastupdateToV5(servers)
+		newServerList := tc.ToDSServerV5(servers)
 
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, newServerList)
 		return

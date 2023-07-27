@@ -169,10 +169,7 @@ type DSServerBaseV4 struct {
 }
 
 // DSServerBaseV5 contains the base information for a Delivery Service Server associated with APIv5.
-type DSServerBaseV5 = DSServerBaseV50
-
-// DSServerBaseV50 contains the base information for a Delivery Service Server for the latest major version associated with APIv50.
-type DSServerBaseV50 struct {
+type DSServerBaseV5 struct {
 	Cachegroup                  *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID                *int                 `json:"cachegroupId" db:"cachegroup_id"`
 	CDNID                       *int                 `json:"cdnId" db:"cdn_id"`
@@ -221,15 +218,6 @@ type DSServer struct {
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
 }
 
-// DSServerV5 contains information of Delivery Service Server associated with APIv5.
-type DSServerV5 = DSServerV50
-
-// DSServerV50 contains information for a Delivery Service Server for the latest major version associated with APIv50.
-type DSServerV50 struct {
-	DSServerBaseV50
-	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
-}
-
 // DSServerResponseV30 is the type of a response from Traffic Ops to a request
 // for servers assigned to a Delivery Service - in API version 3.0.
 type DSServerResponseV30 struct {
@@ -261,7 +249,16 @@ type DSServerResponseV50 struct {
 	Alerts
 }
 
-// DSServerResponseV5 is the response from Traffic Ops to a request for servers assigned to a Delivery Service - in APIv5.
+// DSServerV5 is an alias for the latest minor version of the major version 5.
+type DSServerV5 = DSServerV50
+
+// DSServerV50 contains information for a Delivery Service Server.
+type DSServerV50 struct {
+	DSServerBaseV5
+	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
+}
+
+// DSServerResponseV5 is an alias for the latest minor version of the major version 5.
 type DSServerResponseV5 = DSServerResponseV50
 
 // ToDSServerBaseV4 upgrades the DSServerBase to the structure used by the
@@ -350,13 +347,47 @@ func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort, pDesc *s
 	return dsServerBase
 }
 
-// ConvertV4LastupdateToV5 convert DSServerV4 lastUpdated time format to RFC3339 for DSServerV5
-func ConvertV4LastupdateToV5(serverList []DSServerV4) []DSServerV5 {
+// ToDSServerV5 convert DSServerV4 lastUpdated time format to RFC3339 for DSServerV5
+// and also assign V4 values to V5
+func ToDSServerV5(serverList []DSServerV4) []DSServerV5 {
 	updatedServerList := make([]DSServerV5, len(serverList))
 
 	for i, server := range serverList {
 		r := time.Unix(server.LastUpdated.Unix(), 0)
 		updatedServerList[i].LastUpdated = &r
+		updatedServerList[i].Cachegroup = server.Cachegroup
+		updatedServerList[i].CachegroupID = server.CachegroupID
+		updatedServerList[i].CDNID = server.CDNID
+		updatedServerList[i].CDNName = server.CDNName
+		updatedServerList[i].DeliveryServices = server.DeliveryServices
+		updatedServerList[i].DomainName = server.DomainName
+		updatedServerList[i].FQDN = server.FQDN
+		updatedServerList[i].FqdnTime = server.FqdnTime
+		updatedServerList[i].GUID = server.GUID
+		updatedServerList[i].HostName = server.HostName
+		updatedServerList[i].HTTPSPort = server.HTTPSPort
+		updatedServerList[i].ID = server.ID
+		updatedServerList[i].ILOIPAddress = server.ILOIPAddress
+		updatedServerList[i].ILOIPGateway = server.ILOIPGateway
+		updatedServerList[i].ILOIPNetmask = server.ILOIPNetmask
+		updatedServerList[i].ILOPassword = server.ILOPassword
+		updatedServerList[i].ILOUsername = server.ILOUsername
+		updatedServerList[i].MgmtIPAddress = server.MgmtIPAddress
+		updatedServerList[i].MgmtIPGateway = server.MgmtIPGateway
+		updatedServerList[i].MgmtIPNetmask = server.MgmtIPNetmask
+		updatedServerList[i].OfflineReason = server.OfflineReason
+		updatedServerList[i].PhysLocation = server.PhysLocation
+		updatedServerList[i].PhysLocationID = server.PhysLocationID
+		updatedServerList[i].ProfileNames = server.ProfileNames
+		updatedServerList[i].Rack = server.Rack
+		updatedServerList[i].Status = server.Status
+		updatedServerList[i].StatusID = server.StatusID
+		updatedServerList[i].TCPPort = server.TCPPort
+		updatedServerList[i].Type = server.Type
+		updatedServerList[i].TypeID = server.TypeID
+		updatedServerList[i].UpdPending = server.UpdPending
+		updatedServerList[i].ServerCapabilities = server.ServerCapabilities
+		updatedServerList[i].DeliveryServiceCapabilities = server.DeliveryServiceCapabilities
 	}
 	return updatedServerList
 }
