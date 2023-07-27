@@ -78,7 +78,7 @@ func loopPollAndUpdateCacheStatus(pi *ParentInfo, doneChan <-chan struct{}, upda
 		}
 		doTrafficOpsReq := toLoginDispersion <= 0
 
-		log.Infoln("service-status service=tm-health event=starting")
+		log.Infoln("service-status service=tm-health event=\"starting\"")
 		start := time.Now()
 		doPollAndUpdateCacheStatus(pi, doTrafficOpsReq)
 		updateHealthSignal()
@@ -108,9 +108,9 @@ func doPollAndUpdateCacheStatus(pi *ParentInfo, doTrafficOpsReq bool) {
 	if err != nil {
 		log.Errorf("poll-status %v\n", err.Error())
 		if err := pi.GetTOData(cfg); err != nil {
-			log.Errorln("update event=could not update the list of trafficmonitors, keeping the old config")
+			log.Errorln("update event=\"could not update the list of trafficmonitors, keeping the old config\"")
 		} else {
-			log.Infoln("service-status service=tm-health event=updated TrafficMonitor statuses from TrafficOps")
+			log.Infoln("service-status service=tm-health event=\"updated TrafficMonitor statuses from TrafficOps\"")
 		}
 
 		// log the poll state data if enabled
@@ -132,9 +132,9 @@ func doPollAndUpdateCacheStatus(pi *ParentInfo, doTrafficOpsReq bool) {
 	if doTrafficOpsReq {
 		// TODO move to its own TO poller
 		if err = pi.GetTOData(cfg); err != nil {
-			log.Errorln("update event=could not update the list of trafficmonitors, keeping the old config")
+			log.Errorln("update event=\"could not update the list of trafficmonitors, keeping the old config\"")
 		} else {
-			log.Infoln("service-status service=tm-health event=updated TrafficMonitor statuses from TrafficOps")
+			log.Infoln("service-status service=tm-health event=\"updated TrafficMonitor statuses from TrafficOps\"")
 		}
 	}
 
