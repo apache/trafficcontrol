@@ -1645,6 +1645,42 @@ def delivery_services_regex_data_post(to_session: TOSession, request_template_da
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
+@pytest.fixture(name="delivery_service_required_capabilities_post_data")
+def delivery_service_required_capabilities_data_post(to_session: TOSession,
+		request_template_data: list[JSONData], delivery_services_post_data:dict[str, object],
+		server_capabilities_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for delivery_service_required_capabilities endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get delivery_service_required_capabilities request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	delivery_service_required_capabilities = check_template_data(
+		request_template_data["delivery_service_required_capabilities"], "delivery_service_required_capabilities")
+
+	# Return new post data and post response from delivery_service_required_capabilities POST request
+	deliveryServiceID = delivery_services_post_data["id"]
+	requiredCapability = server_capabilities_post_data["name"]
+	delivery_service_required_capabilities["deliveryServiceID"] = deliveryServiceID
+	delivery_service_required_capabilities["requiredCapability"] = requiredCapability
+
+	logger.info("New delivery_service_required_capabilities data to hit POST method %s",
+	     delivery_service_required_capabilities)
+	# Hitting delivery_service_required_capabilities POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservices_required_capabilities(
+		data=delivery_service_required_capabilities)
+	resp_obj = check_template_data(response, "delivery_service_required_capabilities")
+	yield resp_obj
+	msg = to_session.delete_deliveryservices_required_capabilities(
+		query_params={"deliveryServiceID":deliveryServiceID,"requiredCapability":requiredCapability})
+	logger.info("Deleting delivery_service_required_capabilities data... %s", msg)
+	if msg is None:
+		logger.error(
+		"delivery_service_required_capabilities returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
 @pytest.fixture(name="delivery_service_request_comments_post_data")
 def delivery_service_request_comments_data_post(to_session: TOSession,
 		request_template_data: list[JSONData],

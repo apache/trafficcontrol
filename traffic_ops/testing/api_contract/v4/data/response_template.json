@@ -1738,5 +1738,24 @@
                 "type": "string"
             }
         }
+    },
+    "delivery_service_required_capabilities": {
+        "type": "object",
+        "required": [
+            "deliveryServiceID",
+            "lastUpdated",
+            "requiredCapability"
+        ],
+        "properties": {
+            "deliveryServiceID": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "requiredCapability": {
+                "type": "string"
+            }
+        }
     }
 }
