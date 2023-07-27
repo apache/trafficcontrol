@@ -180,7 +180,7 @@ export class CertViewerComponent implements OnInit {
 		}
 		try {
 			this.cert = await this.dsAPI.getSSLKeys(ID);
-		} catch(_) {
+		} catch {
 			await this.router.navigate(["/core/certs/ssl/"]);
 			return;
 		}
