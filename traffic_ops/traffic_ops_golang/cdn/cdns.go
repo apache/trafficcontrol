@@ -64,9 +64,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		"dnssecEnabled": dbhelpers.WhereColumnInfo{Column: "dnssec_enabled"},
 		"id":            dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
 		"name":          dbhelpers.WhereColumnInfo{Column: "name"},
-	}
-	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
-		queryParamsToQueryCols["ttlOverride"] = dbhelpers.WhereColumnInfo{Column: "ttl_override", Checker: api.IsInt}
+		"ttlOverride":   dbhelpers.WhereColumnInfo{Column: "ttl_override", Checker: api.IsInt},
 	}
 
 	if _, ok := inf.Params["orderby"]; !ok {
@@ -75,6 +73,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
 	}
 
 	if inf.Config.UseIMS {
@@ -93,21 +92,17 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	query := selectQuery(inf.Version) + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("cdn get: error getting cdn(s): %w", err))
+		api.HandleErr(w, r, tx.Tx, http.StatusNotFound, nil, fmt.Errorf("cdn get: error getting cdn(s): %w", err))
+		return
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
 	cdn := tc.CDNV5{}
 	cdns := []tc.CDNV5{}
 	for rows.Next() {
-		if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
-			if err = rows.Scan(&cdn.DNSSECEnabled, &cdn.DomainName, &cdn.ID, &cdn.LastUpdated, &cdn.TTLOverride, &cdn.Name); err != nil {
-				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting cdn(s): %w", err))
-			}
-		} else {
-			if err = rows.Scan(&cdn.DNSSECEnabled, &cdn.DomainName, &cdn.ID, &cdn.LastUpdated, &cdn.Name); err != nil {
-				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting cdn(s): %w", err))
-			}
+		if err = rows.Scan(&cdn.DNSSECEnabled, &cdn.DomainName, &cdn.ID, &cdn.LastUpdated, &cdn.TTLOverride, &cdn.Name); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting cdn(s): %w", err))
+			return
 		}
 		cdns = append(cdns, cdn)
 	}
@@ -143,11 +138,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
-		err = tx.QueryRow(insertQuery(inf.Version), cdn.DNSSECEnabled, cdn.DomainName, cdn.Name, cdn.TTLOverride).Scan(&cdn.ID, &cdn.LastUpdated)
-	} else {
-		err = tx.QueryRow(insertQuery(inf.Version), cdn.DNSSECEnabled, cdn.DomainName, cdn.Name).Scan(&cdn.ID, &cdn.LastUpdated)
-	}
+	cdn.DomainName = strings.ToLower(cdn.DomainName)
+
+	rows, err := inf.Tx.NamedQuery(insertQuery(inf.Version), cdn)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating cdn with name: %s", err, cdn.Name), nil)
@@ -156,6 +149,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		usrErr, sysErr, code := api.ParseDBError(err)
 		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
+	}
+	if rows.Next() {
+		if err = rows.Scan(&cdn.ID, &cdn.LastUpdated); err != nil {
+			usrErr, sysErr, code := api.ParseDBError(err)
+			api.HandleErr(w, r, tx, code, usrErr, sysErr)
+			return
+		}
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn was created.")
@@ -181,20 +181,37 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, inf.IntParams["id"], "cdn")
+	id, err := strconv.Atoi(inf.Params["id"])
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(tx, int64(id), inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 
-	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
-		err = tx.QueryRow(updateQuery(inf.Version), cdn.DNSSECEnabled, cdn.DomainName, cdn.Name, cdn.TTLOverride, cdn.ID).Scan(&cdn.LastUpdated)
-	} else {
-		err = tx.QueryRow(updateQuery(inf.Version), cdn.DNSSECEnabled, cdn.DomainName, cdn.Name, cdn.ID).Scan(&cdn.ID, &cdn.LastUpdated)
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "cdn")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
+
+	cdn.DomainName = strings.ToLower(cdn.DomainName)
+
+	query := `UPDATE
+cdn SET
+dnssec_enabled=$1,
+domain_name=$2,
+name=$3,
+ttl_override=$4
+WHERE id=$5 RETURNING last_updated`
+	err = tx.QueryRow(query, cdn.DNSSECEnabled, cdn.DomainName, cdn.Name, cdn.TTLOverride, inf.Params["id"]).Scan(&cdn.LastUpdated)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cdn with id: %d not found", inf.IntParams["id"]), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cdn with id: %s not found", inf.Params["id"]), nil)
 			return
 		}
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -218,16 +235,28 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 
 	var exists bool
-	if err := tx.QueryRow("SELECT EXISTS(SELECT id from cdn where name = $1)", cdn.Name).Scan(&exists); err != nil {
+	if err := tx.QueryRow("SELECT EXISTS(SELECT id from cdn where id = $1)", inf.Params["id"]).Scan(&exists); err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if cdn with name %s exists", err, cdn.Name))
 		return
 	}
 	if !exists {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cdn name '%s' does not exist.", cdn.Name), nil)
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cdn id '%d' does not exist", cdn.ID), nil)
 		return
 	}
 
-	res, err := tx.Exec(deleteQuery(), inf.IntParams["id"])
+	id, err := strconv.Atoi(inf.Params["id"])
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(tx, int64(id), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	res, err := tx.Exec(`DELETE FROM cdn WHERE id=$1`, id)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
@@ -252,11 +281,9 @@ func validateRequest(r *http.Request, v *api.Version) (tc.CDNV5, error) {
 	validName := validation.NewStringRule(IsValidCDNName, "invalid characters found - Use alphanumeric . or - .")
 	validDomainName := validation.NewStringRule(govalidator.IsDNSName, "not a valid domain name")
 	errs := validation.Errors{
-		"name":       validation.Validate(cdn.Name, validation.Required, validName),
-		"domainName": validation.Validate(cdn.DomainName, validation.Required, validDomainName),
-	}
-	if v.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
-		errs["ttlOverride"] = validation.Validate(cdn.TTLOverride, validation.By(tovalidate.IsGreaterThanZero))
+		"name":        validation.Validate(cdn.Name, validation.Required, validName),
+		"domainName":  validation.Validate(cdn.DomainName, validation.Required, validDomainName),
+		"ttlOverride": validation.Validate(cdn.TTLOverride, validation.By(tovalidate.IsGreaterThanZero)),
 	}
 	return cdn, util.JoinErrs(tovalidate.ToErrors(errs))
 }

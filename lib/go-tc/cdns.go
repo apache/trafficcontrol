@@ -84,7 +84,7 @@ type CDNV5 struct {
 
 	// TTLOverride
 	//
-	TTLOverride int `json:"ttlOverride,omitempty" db:"ttl_override"`
+	TTLOverride *int `json:"ttlOverride,omitempty" db:"ttl_override"`
 }
 
 // A CDN represents a set of configuration and hardware that can be used to
