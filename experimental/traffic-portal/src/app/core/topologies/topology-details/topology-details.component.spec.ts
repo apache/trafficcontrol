@@ -35,7 +35,7 @@ describe("TopologyDetailsComponent", () => {
 		headerTitle: new ReplaySubject<string>(),
 	});
 
-	beforeEach(() => {
+	beforeEach(async () => {
 		TestBed.configureTestingModule({
 			declarations: [TopologyDetailsComponent],
 			imports: [APITestingModule, RouterTestingModule, MatDialogModule],
@@ -47,9 +47,24 @@ describe("TopologyDetailsComponent", () => {
 		fixture = TestBed.createComponent(TopologyDetailsComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
+		await fixture.whenStable();
 	});
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
+		expect(paramMap).toHaveBeenCalled();
+	});
+
+	it("existing topology", async () => {
+		paramMap.and.returnValue("test");
+
+		fixture = TestBed.createComponent(TopologyDetailsComponent);
+		component = fixture.componentInstance;
+		fixture.detectChanges();
+		await fixture.whenStable();
+		expect(paramMap).toHaveBeenCalled();
+		expect(component.topology).toBeInstanceOf(Object);
+		expect(component.topology.name).toBe("test");
+		expect(component.new).toBeFalse();
 	});
 });

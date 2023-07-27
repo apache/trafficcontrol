@@ -126,6 +126,7 @@ export const ROUTES: Routes = [
 	{ component: ProfileDetailComponent, path: "profiles/:id"},
 	{ component: ProfileTableComponent, path: "profiles"},
 	{ component: TopologyDetailsComponent, path: "topologies/:name"},
+	{ component: TopologyDetailsComponent, path: "topologies-new"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**

@@ -69,14 +69,9 @@ export class TopologyDetailsComponent implements OnInit {
 	 */
 	public async ngOnInit(): Promise<void> {
 		const name = this.route.snapshot.paramMap.get("name");
-		if (name === null) {
-			console.error("missing required route parameter 'name'");
-			this.loading = false;
-			return;
-		}
 
 		const topologiesPromise = this.api.getTopologies().then(topologies => this.topologies = topologies);
-		if (name === "new") {
+		if (name === null) {
 			this.new = true;
 			this.setTitle();
 			await topologiesPromise;

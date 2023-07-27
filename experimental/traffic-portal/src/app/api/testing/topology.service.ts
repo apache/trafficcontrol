@@ -19,6 +19,8 @@ import {
 	ResponseTopologyNode
 } from "trafficops-types";
 
+import { TopologyService as ConcreteService, TopTreeNode } from "src/app/api";
+
 /**
  * TopologyService expose API functionality relating to Topologies.
  */
@@ -43,7 +45,7 @@ export class TopologyService {
 					parents: [],
 				},
 			],
-		}
+		},
 	];
 
 	/**
@@ -123,5 +125,27 @@ export class TopologyService {
 
 		this.topologies[idx] = topology;
 		return topology;
+	}
+
+	/**
+	 * Generates a material tree from a topology.
+	 *
+	 * @param topology The topology to generate a material tree from.
+	 * @returns a material tree.
+	 */
+	public static topologyToTree(topology: ResponseTopology): Array<TopTreeNode> {
+		return ConcreteService.topologyToTree(topology);
+	}
+
+	/**
+	 * Generates a topology from a material tree.
+	 *
+	 * @param name The topology name
+	 * @param description The topology description
+	 * @param treeNodes The data for a material tree
+	 * @returns a topology.
+	 */
+	public static treeToTopology(name: string, description: string, treeNodes: Array<TopTreeNode>): ResponseTopology {
+		return ConcreteService.treeToTopology(name, description, treeNodes);
 	}
 }
