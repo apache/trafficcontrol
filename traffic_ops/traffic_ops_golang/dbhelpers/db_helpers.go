@@ -2232,3 +2232,18 @@ func DivisionExists(tx *sql.Tx, id string) (bool, error) {
 	}
 	return true, nil
 }
+
+// PhysLocationExists confirms whether the PhysLocationExists exists, and an error (if one occurs).
+func PhysLocationExists(tx *sql.Tx, id string) (bool, error) {
+	var count int
+	if err := tx.QueryRow("SELECT count(name) FROM phys_location WHERE id=$1", id).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting PhysLocation info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting PhysLocation info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
+}

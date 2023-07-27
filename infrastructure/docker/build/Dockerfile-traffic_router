@@ -46,6 +46,8 @@ RUN	yum -y install \
 		which  \
 		curl \
 		java-11-openjdk \
+		# necessary in case tzdata-java is not already installed as a dependency of java-11-openjdk-headless
+		tzdata-java \
 		java-11-openjdk-devel && \
 	yum -y clean all
 

@@ -400,6 +400,16 @@
 		{
 			"deliveryServiceRequestId": 2,
 			"value": "Does anyone have time to review my delivery service request?"
+     }
+	],
+	"profile_parameters": [
+		{
+			"profileId": 18,
+			"parameterId": 2
+		},
+		{
+			"profileId": 18,
+			"parameterId": 3
 		}
 	]
 }
