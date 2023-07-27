@@ -26,7 +26,7 @@ import (
 const apiPhysLocations = "/phys_locations"
 
 // CreatePhysLocation creates the passed Physical Location.
-func (to *Session) CreatePhysLocation(pl tc.PhysLocation, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreatePhysLocation(pl tc.PhysLocationV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if pl.RegionID == 0 && pl.RegionName != "" {
 		regionOpts := NewRequestOptions()
 		regionOpts.QueryParameters.Set("name", pl.RegionName)
@@ -47,7 +47,7 @@ func (to *Session) CreatePhysLocation(pl tc.PhysLocation, opts RequestOptions) (
 
 // UpdatePhysLocation replaces the Physical Location identified by 'id' with
 // the given Physical Location structure.
-func (to *Session) UpdatePhysLocation(id int, pl tc.PhysLocation, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdatePhysLocation(id int, pl tc.PhysLocationV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiPhysLocations, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, pl, &alerts)
@@ -55,8 +55,8 @@ func (to *Session) UpdatePhysLocation(id int, pl tc.PhysLocation, opts RequestOp
 }
 
 // GetPhysLocations retrieves Physical Locations from Traffic Ops.
-func (to *Session) GetPhysLocations(opts RequestOptions) (tc.PhysLocationsResponse, toclientlib.ReqInf, error) {
-	var data tc.PhysLocationsResponse
+func (to *Session) GetPhysLocations(opts RequestOptions) (tc.PhysLocationsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.PhysLocationsResponseV5
 	reqInf, err := to.get(apiPhysLocations, opts, &data)
 	return data, reqInf, err
 }
