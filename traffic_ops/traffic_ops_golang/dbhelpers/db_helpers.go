@@ -2247,3 +2247,43 @@ func DivisionExists(tx *sql.Tx, id string) (bool, error) {
 	}
 	return true, nil
 }
+
+func GetCoordinateID(tx *sql.Tx, id int) (*int, error) {
+	q := `SELECT coordinate FROM cachegroup WHERE id = $1`
+
+	var coordinateID *int
+	if err := tx.QueryRow(q, id).Scan(&coordinateID); err != nil {
+		return nil, err
+	}
+
+	return coordinateID, nil
+}
+
+func DeleteCoordinate(tx *sql.Tx, coordinateID int) error {
+	q := `UPDATE cachegroup SET coordinate = NULL WHERE id = $1`
+	result, err := tx.Exec(q, coordinateID)
+	if err != nil {
+		return fmt.Errorf("updating cachegroup %d coordinate to null: %s", coordinateID, err.Error())
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("updating cachegroup %d coordinate to null, getting rows affected: %s", coordinateID, err.Error())
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("updating cachegroup %d coordinate to null, zero rows affected", coordinateID)
+	}
+
+	q = `DELETE FROM coordinate WHERE id = $1`
+	result, err = tx.Exec(q, coordinateID)
+	if err != nil {
+		return fmt.Errorf("delete coordinate %d for cachegroup %d: %s", coordinateID, coordinateID, err.Error())
+	}
+	rowsAffected, err = result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("delete coordinate %d for cachegroup %d, getting rows affected: %s", coordinateID, coordinateID, err.Error())
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("delete coordinate %d for cachegroup %d, zero rows affected", coordinateID, coordinateID)
+	}
+	return nil
+}
