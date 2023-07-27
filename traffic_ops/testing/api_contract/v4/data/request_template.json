@@ -387,13 +387,25 @@
 			"organization": "Kabletown",
 			"city": "Denver",
 			"state": "Colorado"
-    }
-  ],
+		}
+	],
 	"delivery_services_regex": [
 		{
 			"pattern": ".*\\.foo-bar\\..*",
 			"type": 33,
 			"setNumber": 1
+		}
+	],
+	"delivery_service_required_capabilities": [
+		{
+			"deliveryServiceID": 1,
+			"requiredCapability": "disk"
+		}
+	],
+	"delivery_service_request_comments": [
+		{
+			"deliveryServiceRequestId": 2,
+			"value": "Does anyone have time to review my delivery service request?"
 		}
 	],
 	"profile_parameters": [
