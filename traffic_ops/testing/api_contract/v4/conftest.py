@@ -1676,7 +1676,7 @@ def delivery_service_request_comments_data_post(to_session: TOSession,
 	if msg is None:
 		logger.error(
 		"delivery_service_request_comments returned by Traffic Ops is missing an 'id' property")
-    pytest.fail("Response from delete request is empty, Failing test_case")
+                pytest.fail("Response from delete request is empty, Failing test_case")
 
   
 @pytest.fixture(name="profile_parameters_post_data")
