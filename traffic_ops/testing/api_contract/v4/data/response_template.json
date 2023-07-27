@@ -1680,6 +1680,27 @@
             },
             "pattern": {
                 "type": "string"
+
+            }
+        }
+    },
+     "profile_parameters": {
+        "type": "object",
+        "required":[
+            "lastUpdated",
+            "profile",
+            "parameter"
+        ],
+        "properties":{
+            "lastUpdated":{
+                "type": "string"
+            },
+            "profile":{
+                "type": "string"
+
+            },
+            "parameter":{
+                "type": "integer"
             }
         }
     }
