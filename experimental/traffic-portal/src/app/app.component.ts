@@ -42,7 +42,7 @@ export class AppComponent implements OnInit {
 
 		// get data from transferState if browser side
 		if (isPlatformBrowser(this.platformId)) {
-			this.tpv1url = this.transferState.get(storeKey, "defaultMessageValue");
+			this.tpv1url = this.transferState.get(storeKey, "https://localhost");
 			window.localStorage.setItem(LOCAL_TPV1_URL, this.tpv1url);
 		} else { // server side: get provided tpv1 url and store in in transfer state
 			this.transferState.set(storeKey, this.tpv1url);

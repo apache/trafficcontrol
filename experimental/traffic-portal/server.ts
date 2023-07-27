@@ -230,7 +230,7 @@ function run(): number {
 			}
 		}
 	});
-	parser.add_argument("-t", "--tpv1-url", {
+	parser.add_argument("-u", "--tpv1-url", {
 		dest: "tpv1Url",
 		help: "Specify the Traffic Portal v1 URL. (Default: uses the `TP_V1_URL` environment variable)",
 		type: (arg: string) => {

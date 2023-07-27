@@ -18,10 +18,10 @@ limitations under the License.
 			<mat-tree [dataSource]="dataSource" [treeControl]="treeCtrl" id="sidebar-nav-tree">
 				<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
 					<!-- load either redirect or relative path href -->
-					<div *ngIf="isAbsoluteURL(node.href); then obsoluteHrefBlock else relativeHrefBlock"></div>
+					<div *ngIf="isAbsoluteURL(node.href); then absolute else relative"></div>
 				
 					<!-- Checking whether href is relative URL -->
-					<ng-template #relativeHrefBlock>
+					<ng-template #relative>
 						<a class="mat-tree-node" mat-menu-item [attr.aria-label]="'Navigate to ' + node.name" [routerLink]="node.href"
 							[routerLinkActive]="['boldNode']" [routerLinkActiveOptions]="routeOptions">
 							{{node.name}}
@@ -29,7 +29,7 @@ limitations under the License.
 					</ng-template>
 				
 					<!-- Checking whether href is absolute URL - For TPv1 redirect purpose -->
-					<ng-template #obsoluteHrefBlock>
+					<ng-template #absolute>
 						<a class="mat-tree-node" mat-menu-item [attr.aria-label]="'Navigate to ' + node.name" [href]="node.href"
 							target="_blank">
 							{{node.name}}
