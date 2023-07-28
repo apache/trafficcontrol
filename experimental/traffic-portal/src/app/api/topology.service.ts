@@ -47,7 +47,7 @@ export class TopologyService extends APIService {
 	 *
 	 * @param name The name of a single Topology to be returned.
 	 * @returns An Array of Topologies
-	 * whether `name` was	passed.
+	 * whether `name` was passed.
 	 */
 	public async getTopologies(name?: string): Promise<Array<ResponseTopology>> {
 		const path = "topologies";
