@@ -822,7 +822,6 @@ func (cg *TOCacheGroup) handleCoordinateUpdate() (*int, error, error, int) {
 func (cg *TOCacheGroup) getCoordinateID() (*int, error) {
 	q := `SELECT coordinate FROM cachegroup WHERE id = $1`
 
-	fmt.Println("Kurt 1", q, *cg.ID)
 	var coordinateID *int
 	if err := cg.ReqInfo.Tx.Tx.QueryRow(q, *cg.ID).Scan(&coordinateID); err != nil {
 		return nil, err
@@ -980,7 +979,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	var usrErr error
 	var syErr error
 
-	var cgList []tc.CacheGroupV5
+	var cgList []interface{}
 
 	tx := inf.Tx
 
@@ -1009,16 +1008,20 @@ func Get(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetCacheGroup [Version : V5] receives transactions from Get function and returns cachegroups list.
-func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
+func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]interface{}, time.Time, int, error, error) {
+	//func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
 	var runSecond bool
 	var maxTime time.Time
-	cgList := []tc.CacheGroupV5{}
-
-	selectQuery := `SELECT name, last_updated FROM cachegroup as cg`
+	cgList := []interface{}{}
+	//cgList := []tc.CacheGroupV5{}
 
 	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-		"name": {Column: "cg.name", Checker: nil},
+		"id":        {Column: "cachegroup.id", Checker: api.IsInt},
+		"name":      {Column: "cachegroup.name"},
+		"shortName": {Column: "cachegroup.short_name"},
+		"type":      {Column: "cachegroup.type"},
+		"topology":  {Column: "topology_cachegroup.topology"},
 	}
 	if _, ok := params["orderby"]; !ok {
 		params["orderby"] = "name"
@@ -1038,7 +1041,21 @@ func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header ht
 	} else {
 		log.Debugln("Non IMS request")
 	}
-	query := selectQuery + where + orderBy + pagination
+	baseSelect := SelectQuery()
+	if _, ok := params["topology"]; ok {
+		baseSelect += `
+		LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
+		`
+	}
+	// If the type cannot be converted to an int, return 400
+	if cgType, ok := params["type"]; ok {
+		_, err := strconv.Atoi(cgType)
+		if err != nil {
+			return nil, time.Time{}, http.StatusBadRequest, nil, fmt.Errorf("cachegroup read: converting cachegroup type to integer " + err.Error())
+		}
+	}
+
+	query := baseSelect + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		return nil, time.Time{}, http.StatusInternalServerError, nil, err
@@ -1046,10 +1063,30 @@ func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header ht
 	defer rows.Close()
 
 	for rows.Next() {
-		cg := tc.CacheGroupV5{}
-		if err = rows.Scan(&cg.Name, &cg.LastUpdated); err != nil {
+		var cg TOCacheGroupV5
+		lms := make([]tc.LocalizationMethod, 0)
+		cgfs := make([]string, 0)
+		if err = rows.Scan(
+			&cg.ID,
+			&cg.Name,
+			&cg.ShortName,
+			&cg.Latitude,
+			&cg.Longitude,
+			pq.Array(&lms),
+			&cg.ParentCachegroupID,
+			&cg.ParentName,
+			&cg.SecondaryParentCachegroupID,
+			&cg.SecondaryParentName,
+			&cg.Type,
+			&cg.TypeID,
+			&cg.LastUpdated,
+			pq.Array(&cgfs),
+			&cg.FallbackToClosest,
+		); err != nil {
 			return nil, time.Time{}, http.StatusInternalServerError, nil, err
 		}
+		cg.LocalizationMethods = &lms
+		cg.Fallbacks = &cgfs
 		cgList = append(cgList, cg)
 	}
 
@@ -1326,9 +1363,6 @@ func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
 
 	ID := inf.Params["id"]
 	id, err := strconv.Atoi(ID)
-	fmt.Println("Kurt 1", inf)
-	fmt.Println("Kurt 2", id)
-	fmt.Println("Kurt 3", r)
 
 	inUse, err := isUsed(inf.Tx, id)
 	if inUse {
