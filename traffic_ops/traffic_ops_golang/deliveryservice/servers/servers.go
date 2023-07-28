@@ -728,7 +728,11 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 	// Based on version we load Delivery Service Server - for version 5 and above we use DSServerV5
 	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
 
-		newServerList := tc.ToDSServerV5(servers)
+		newServerList := make([]tc.DSServerV5, len(servers))
+
+		for i, server := range servers {
+			newServerList[i] = server.ToDSServerV5()
+		}
 
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, newServerList)
 		return
