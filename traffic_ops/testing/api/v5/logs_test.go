@@ -70,7 +70,7 @@ func TestLogs(t *testing.T) {
 
 func validateLogsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		logs := resp.([]tc.Log)
+		logs := resp.([]tc.LogV5)
 		for field, expected := range expectedResp {
 			for _, log := range logs {
 				switch field {
