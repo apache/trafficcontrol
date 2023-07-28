@@ -63,7 +63,7 @@ describe("TopologyDetailsComponent", () => {
 		fixture.detectChanges();
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
-		expect(component.topology).toBeInstanceOf(Object);
+		expect(component.topology).toBeDefined();
 		expect(component.topology.name).toBe("test");
 		expect(component.new).toBeFalse();
 	});
