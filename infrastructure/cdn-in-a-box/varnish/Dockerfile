@@ -22,35 +22,16 @@ ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available at runtime
 ENV RHEL_VERSION="$RHEL_VERSION"
 
-RUN dnf install -y 'dnf-command(config-manager)'
-RUN yum config-manager --set-enabled powertools
-RUN yum install -y diffutils python3-sphinx
+RUN dnf module disable varnish -y && yum install -y epel-release
 
-RUN yum install -y epel-release && yum install -y \
-    make \
-    autoconf \
-    automake \
-    jemalloc-devel \
-    libedit-devel \
-    libtool \
-    libunwind-devel \
-    ncurses-devel \
-    pcre2-devel \
-    pkgconfig \
-    python3-docutils \
-    cpio \
-    git \
-    perl \
-    jq \
-    gettext
+RUN curl -s https://packagecloud.io/install/repositories/varnishcache/varnish73/script.rpm.sh | bash
 
-RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel && \
-    dnf install -y logrotate && \
+RUN yum install varnish-7.3.0-1.el8.x86_64 -y
+
+RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel git perl && \
+    dnf install -y jq logrotate findutils && \
     dnf clean all
 
-RUN curl -O https://varnish-cache.org/downloads/varnish-7.3.0.tgz && tar xf varnish-7.3.0.tgz
-RUN cd varnish-7.3.0 && sh autogen.sh && sh configure && make && make install
-RUN rm -rf varnish*
 
 COPY infrastructure/cdn-in-a-box/varnish/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
 
@@ -59,10 +40,15 @@ COPY infrastructure/cdn-in-a-box/dns/set-dns.sh \
     /usr/local/sbin/
     
 
+COPY infrastructure/cdn-in-a-box/varnish/systemctl.sh /usr/bin/systemctl
+
 ARG ORT_RPM=infrastructure/cdn-in-a-box/cache/trafficcontrol-cache-config.rpm
 COPY $ORT_RPM /
 RUN rpm -Uvh /$(basename $ORT_RPM) &&\
     rm /$(basename $ORT_RPM)
+
+COPY infrastructure/cdn-in-a-box/varnish/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
+
 
 CMD /run.sh
 

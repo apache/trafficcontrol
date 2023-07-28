@@ -55,7 +55,7 @@ func (v vclFile) String() string {
 	}
 	// varnishd will fail if there are no backends defined
 	if len(v.backends) == 0 {
-		txt += fmt.Sprint("backend default none;")
+		txt += fmt.Sprint("backend default none;\n")
 	}
 
 	for name, acl := range v.acls {

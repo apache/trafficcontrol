@@ -220,7 +220,7 @@ func Main() int {
 		}
 
 	} else {
-		syncdsUpdate, err = trops.CheckSyncDSState(metaData)
+		syncdsUpdate, err = trops.CheckSyncDSState(metaData, cfg)
 		if err != nil {
 			log.Errorln("Checking syncds state: " + err.Error())
 			return GitCommitAndExit(ExitCodeSyncDSError, FailureExitMsg, cfg, metaData, oldMetaData)
@@ -241,7 +241,7 @@ func Main() int {
 				} else if rc == 0 {
 					log.Infoln("updated the remap.config for reloading.")
 				}
-				if err := trops.StartServices(&syncdsUpdate, metaData); err != nil {
+				if err := trops.StartServices(&syncdsUpdate, metaData, cfg); err != nil {
 					log.Errorln("failed to start services: " + err.Error())
 					metaData.PartialSuccess = true
 					return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg, metaData, oldMetaData)
@@ -311,7 +311,7 @@ func Main() int {
 		}
 	}
 
-	if err := trops.StartServices(&syncdsUpdate, metaData); err != nil {
+	if err := trops.StartServices(&syncdsUpdate, metaData, cfg); err != nil {
 		log.Errorln("failed to start services: " + err.Error())
 		metaData.PartialSuccess = true
 		return GitCommitAndExit(ExitCodeServicesError, PostConfigFailureExitMsg, cfg, metaData, oldMetaData)
@@ -373,7 +373,7 @@ func GitCommitAndExit(exitCode int, exitMsg string, cfg config.Cfg, metaData *t3
 	// so add the old files to the new metadata.
 	// This is especially important for reval runs, which don't add all files.
 	metaData.OwnedFilePaths = t3cutil.CombineOwnedFilePaths(metaData, oldMetaData)
-	if len(metaData.InstalledPackages) == 0 {
+	if len(metaData.InstalledPackages) == 0 && oldMetaData != nil {
 		metaData.InstalledPackages = oldMetaData.InstalledPackages
 	}
 	WriteMetaData(cfg, metaData)

@@ -86,13 +86,16 @@ func main() {
 	}
 
 	if cfg.Cache == "varnish" {
-		vcl, err := cfgfile.GetVarnishConfigs(toData)
+		configs, err := cfgfile.GetVarnishConfigs(toData, cfg)
 		if err != nil {
 			log.Errorln("Generating varnish config for'" + *toData.Server.HostName + "': " + err.Error())
 			os.Exit(config.ExitCodeErrGeneric)
 		}
-		// TODO: print json for t3c-apply to consume. will be done with t3c-apply changes
-		fmt.Println(vcl)
+		err = cfgfile.WriteConfigs(configs, os.Stdout)
+		if err != nil {
+			log.Errorln("Writing configs for '" + *toData.Server.HostName + "': " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
 		os.Exit(config.ExitCodeSuccess)
 	}
 

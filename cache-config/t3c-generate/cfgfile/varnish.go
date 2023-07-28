@@ -1,6 +1,7 @@
 package cfgfile
 
 import (
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/varnishcfg"
 )
@@ -26,10 +27,20 @@ import (
 
 // GetVarnishConfigs returns varnish configuration files
 // TODO: add varnishncsa and hitch configs
-func GetVarnishConfigs(toData *t3cutil.ConfigData) (string, error) {
+func GetVarnishConfigs(toData *t3cutil.ConfigData, cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	vclBuilder := varnishcfg.NewVCLBuilder(toData)
 	vcl, warnings, err := vclBuilder.BuildVCLFile()
 	logWarnings("Generating varnish configuration files: ", warnings)
 
-	return vcl, err
+	configs := make([]t3cutil.ATSConfigFile, 0)
+	// TODO: should be parameterized and generated from varnishcfg
+	configs = append(configs, t3cutil.ATSConfigFile{
+		Name:        "default.vcl",
+		Text:        vcl,
+		Path:        cfg.Dir,
+		ContentType: "text/plain; charset=us-ascii",
+		LineComment: "//",
+		Secure:      false,
+	})
+	return configs, err
 }

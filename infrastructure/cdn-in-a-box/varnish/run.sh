@@ -19,6 +19,7 @@
 
 trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 set -o errexit -o nounset -o pipefail -o xtrace -o monitor
+env > /ciab.env
 
 mkdir /tmp/ort
 
@@ -72,6 +73,7 @@ until [[ $(to-get "api/4.0/cdns/name/$CDN_NAME/sslkeys" | jq '.response | length
 	echo 'waiting for SSL keys to exist'
 	sleep 3
 done
+mkdir -p /tmp/trafficcontrol-cache-config
 
 # hostname is already defined in /etc/init.d/99-run.sh
 hostname="${hostname//-/_}" # replace - with _
@@ -79,14 +81,12 @@ hostname="${hostname^^}" # uppercase
 debug_variable_name="T3C_DEBUG_COMPONENT_${hostname}"
 debug_binary="${!debug_variable_name}"
 if ! type -p "$debug_binary"; then
-	mkdir -p /etc/varnish/
-	(t3c request --get-data=config --traffic-ops-url="$TO_URL" --traffic-ops-user="$TO_USER" --traffic-ops-password="$TO_PASSWORD" | t3c generate --cache=varnish | tee /etc/varnish/default.vcl) || { echo "Failed"; }
+	t3c apply --cache=varnish --run-mode=badass --traffic-ops-url="$TO_URL" --traffic-ops-user="$TO_USER" --traffic-ops-password="$TO_PASSWORD" --git=yes -vv || { echo "Failed"; }
 fi
 
 envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/etc/cron.d/traffic_ops_ort-cron" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"
 chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_ops_ort-cron"
 
 crond -im off
-varnishd -f /etc/varnish/default.vcl
 
 varnishlog
