@@ -1686,7 +1686,7 @@ def cdn_federation_data_post(to_session: TOSession, request_template_data: list[
 	logger.info("Deleting cdn_federation dara... %s", msg)
 	if msg is None:
 		logger.error("cdn_federation returned by Traffic Ops is missing an 'id' property")
-    pytest.fail("Response from delete request is empty, Failing test_case")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="delivery_service_required_capabilities_post_data")
