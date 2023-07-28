@@ -53,7 +53,7 @@ export class TopologyService extends APIService {
 		const path = "topologies";
 		if (name) {
 			const topology = await this.get<[ResponseTopology]>(path, undefined, {name}).toPromise();
-			if (topology.length !== 1) {
+			if (topology.length !== 1 || topology[0].name !== name) {
 				throw new Error(`${topology.length} Topologies found by name ${name}`);
 			}
 			return topology;
@@ -87,7 +87,7 @@ export class TopologyService extends APIService {
 	 * @param topology The full new definition of the Topology being updated
 	 * @param name What the topology was named before it was updated
 	 */
-	public async updateTopology(topology: ResponseTopology, name: string | undefined): Promise<ResponseTopology> {
+	public async updateTopology(topology: ResponseTopology, name?: string): Promise<ResponseTopology> {
 		if (typeof name === "undefined") {
 			name = topology.name;
 		}
@@ -165,10 +165,7 @@ export class TopologyService extends APIService {
 			const cachegroup = treeNode.cachegroup;
 			const parents: number[] = [];
 			if (parent instanceof Object) {
-				const index = topologyNodeIndicesByCacheGroup.get(parent.cachegroup);
-				if (!(typeof index === "number")) {
-					throw new Error(`index of cachegroup ${parent?.cachegroup} not found in topologyNodeIndicesByCacheGroup`);
-				}
+				const index = topologyNodeIndicesByCacheGroup.get(parent.cachegroup) as number;
 				parents.push(index);
 			}
 			const topologyNode: ResponseTopologyNode = {

@@ -111,9 +111,13 @@ export class TopologyService {
 	 * Topology.
 	 *
 	 * @param topology The full new definition of the Topology being updated
+	 * @param name What the topology was named before it was updated
 	 */
-	public async updateTopology(topology: ResponseTopology): Promise<ResponseTopology> {
-		const idx = this.topologies.findIndex(t => t.name === topology.name);
+	public async updateTopology(topology: ResponseTopology, name?: string): Promise<ResponseTopology> {
+		if (typeof name === "undefined") {
+			name = topology.name;
+		}
+		const idx = this.topologies.findIndex(t => t.name === name);
 		topology = {
 			...topology,
 			lastUpdated: new Date()

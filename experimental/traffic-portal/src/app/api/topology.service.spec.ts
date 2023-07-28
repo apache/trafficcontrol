@@ -12,10 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
+import {
+	HttpClientTestingModule,
+	HttpTestingController
+} from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
 
-import { TopologyService } from "./topology.service";
+import { TopologyService, TopTreeNode } from "./topology.service";
 
 describe("TopologyService", () => {
 	let service: TopologyService;
@@ -23,22 +26,39 @@ describe("TopologyService", () => {
 	const topology = {
 		description: "",
 		lastUpdated: new Date(),
-		name: "test",
+		name: "my-topology",
 		nodes: [
-			{
-				cachegroup: "Edge",
-				parents: [1],
-			},
-			{
-				cachegroup: "Mid",
-				parents: [2],
-			},
 			{
 				cachegroup: "Origin",
 				parents: [],
 			},
+			{
+				cachegroup: "Mid",
+				parents: [0],
+			},
+			{
+				cachegroup: "Edge",
+				parents: [1],
+			},
 		],
 	};
+
+	const tree: Array<TopTreeNode> = [{
+		cachegroup: "Origin",
+		children: [{
+			cachegroup: "Mid",
+			children: [{
+				cachegroup: "Edge",
+				children: [],
+				name: "Edge",
+				parents: []
+			}],
+			name: "Mid",
+			parents: []
+		}],
+		name: "Origin",
+		parents: []
+	}];
 
 	beforeEach(() => {
 		TestBed.configureTestingModule({
@@ -55,6 +75,26 @@ describe("TopologyService", () => {
 		expect(service).toBeTruthy();
 	});
 
+	it("gets a topology by name", async () => {
+		const name = "my-topology";
+		const responseP = service.getTopologies(name);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/topologies?name=${name}`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		req.flush({response: [topology]});
+		await expectAsync(responseP).toBeResolvedTo([topology]);
+	});
+
+	it("throws an error when no Topology has the given name", async () => {
+		const name = "nonexistent";
+		const responseP = service.getTopologies(name);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/topologies?name=${name}`);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		req.flush({response: [topology]});
+		await expectAsync(responseP).toBeRejected();
+	});
+
 	it("gets multiple Topologies", async () => {
 		const responseP = service.getTopologies();
 		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/topologies`);
@@ -62,6 +102,70 @@ describe("TopologyService", () => {
 		expect(req.request.params.keys().length).toBe(0);
 		req.flush({response: [topology]});
 		await expectAsync(responseP).toBeResolvedTo([topology]);
+	});
+
+	it("creates a new Topology", async () => {
+		const responseP = service.createTopology(topology);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/topologies`);
+		expect(req.request.method).toBe("POST");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBe(topology);
+		req.flush({response: topology});
+		await expectAsync(responseP).toBeResolved();
+	});
+
+	it("updates an existing Topology", async () => {
+		const responseP = service.updateTopology(topology);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/topologies?name=${topology.name}`);
+		expect(req.request.method).toBe("PUT");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.body).toBe(topology);
+		req.flush({response: topology});
+		await expectAsync(responseP).toBeResolved();
+	});
+
+	it("updates an existing Topology by name", async () => {
+		const responseP = service.updateTopology(topology, topology.name);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/topologies?name=${topology.name}`);
+		expect(req.request.method).toBe("PUT");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.body).toBe(topology);
+		req.flush({response: topology});
+		await expectAsync(responseP).toBeResolved();
+	});
+
+	it("deletes an existing Topology by name", async () => {
+		const name = "my-topology";
+		const responseP = service.deleteTopology(name);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/topologies?name=${name}`);
+		expect(req.request.method).toBe("DELETE");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.body).toBeNull();
+		req.flush({response: topology});
+		await expectAsync(responseP).toBeResolved();
+	});
+
+	it("deletes an existing Topology", async () => {
+		const responseP = service.deleteTopology(topology);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/topologies?name=${topology.name}`);
+		expect(req.request.method).toBe("DELETE");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.body).toBeNull();
+		req.flush({response: topology});
+		await expectAsync(responseP).toBeResolved();
+	});
+
+	it("converts from a material tree to a topology", () => {
+		const result = TopologyService.treeToTopology(topology.name, topology.description, tree);
+		topology.lastUpdated = result.lastUpdated;
+		expect(result).toEqual(topology);
+	});
+
+	it("converts from a topology to a material tree", () => {
+		const result = TopologyService.topologyToTree(topology);
+		result[0].children[0].parents = [];
+		result[0].children[0].children[0].parents = [];
+		expect(result).toEqual(tree);
 	});
 
 	afterEach(() => {
