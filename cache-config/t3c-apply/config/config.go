@@ -27,6 +27,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -81,6 +82,7 @@ type Cfg struct {
 	SvcManagement       SvcManagement
 	Retries             int
 	ReverseProxyDisable bool
+	RpmDBOk             bool
 	SkipOSCheck         bool
 	UseStrategies       t3cutil.UseStrategiesFlag
 	TOInsecure          bool
@@ -186,6 +188,29 @@ func directoryExists(dir string) (bool, os.FileInfo) {
 		return false, nil
 	}
 	return info.IsDir(), info
+}
+
+const rpmDir = "/var/lib/rpm"
+
+// verifies the rpm database files. if there is any database corruption
+// it will return false
+func verifyRpmDB() bool {
+	exclude := regexp.MustCompile(`(^\.|^__)`)
+	dbFiles, err := os.ReadDir(rpmDir)
+	if err != nil {
+		return false
+	}
+	for _, file := range dbFiles {
+		if exclude.Match([]byte(file.Name())) {
+			continue
+		}
+		cmd := exec.Command("/usr/lib/rpm/rpmdb_verify", rpmDir+"/"+file.Name())
+		err := cmd.Run()
+		if err != nil || cmd.ProcessState.ExitCode() > 0 {
+			return false
+		}
+	}
+	return true
 }
 
 // derives the ATS Installation directory from
@@ -322,10 +347,11 @@ If any of the related flags are also set, they override the mode's default behav
 	// so we want to log what flags the mode set here, to aid debugging.
 	// But we can't do that until the loggers are initialized.
 	modeLogStrs := []string{}
+	fatalLogStrs := []string{}
 	if getopt.IsSet(runModeFlagName) {
 		runMode := t3cutil.StrToMode(*runModePtr)
 		if runMode == t3cutil.ModeInvalid {
-			return Cfg{}, errors.New(*runModePtr + " is an invalid mode.")
+			fatalLogStrs = append(fatalLogStrs, *runModePtr+" is an invalid mode.")
 		}
 		modeLogStrs = append(modeLogStrs, "t3c-apply is running in "+runMode.String()+" mode")
 		switch runMode {
@@ -411,7 +437,7 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	if *verbosePtr > 2 {
-		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
+		fatalLogStrs = append(fatalLogStrs, "Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
 	var cacheHostName string
@@ -420,7 +446,7 @@ If any of the related flags are also set, they override the mode's default behav
 	} else {
 		cacheHostName, err = os.Hostname()
 		if err != nil {
-			return Cfg{}, errors.New("Could not get the hostname from the O.S., please supply a hostname: " + err.Error())
+			fatalLogStrs = append(fatalLogStrs, "Could not get the hostname from the O.S., please supply a hostname: "+err.Error())
 		}
 		// strings.Split always returns a slice with at least 1 element, so we don't need a len check
 		cacheHostName = strings.Split(cacheHostName, ".")[0]
@@ -429,7 +455,7 @@ If any of the related flags are also set, they override the mode's default behav
 	useGit := StrToUseGitFlag(*useGitStr)
 
 	if useGit == UseGitInvalid {
-		return Cfg{}, errors.New("Invalid git flag '" + *useGitStr + "'. Valid options are yes, no, auto.")
+		fatalLogStrs = append(fatalLogStrs, "Invalid git flag '"+*useGitStr+"'. Valid options are yes, no, auto.")
 	}
 
 	retries := *retriesPtr
@@ -471,6 +497,17 @@ If any of the related flags are also set, they override the mode's default behav
 		os.Setenv("TO_PASS", toPass)
 	}
 
+	rpmDBisOk := verifyRpmDB()
+
+	if *installPackagesPtr && !rpmDBisOk {
+		if t3cutil.StrToMode(*runModePtr) == t3cutil.ModeBadAss {
+			fatalLogStrs = append(fatalLogStrs, "RPM database check failed unable to install packages cannot continue in badass mode")
+		} else {
+			fatalLogStrs = append(fatalLogStrs, "RPM database check failed unable to install packages cannot continue")
+		}
+	}
+
+	toInfoLog = append(toInfoLog, fmt.Sprintf("rpm database is ok: %t", rpmDBisOk))
 	// set TSHome
 	var tsHome = ""
 	if *tsHomePtr != "" {
@@ -481,13 +518,13 @@ If any of the related flags are also set, they override the mode's default behav
 		tsHome = os.Getenv("TS_HOME") // check for the environment variable.
 		if tsHome != "" {
 			toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from TS_HOME environment variable '%s'\n", TSHome))
-		} else { // finally check using the config file listing from the rpm package.
+		} else if rpmDBisOk { // check using the config file listing from the rpm package if rpmdb is ok.
 			tsHome = GetTSPackageHome()
 			if tsHome != "" {
 				toInfoLog = append(toInfoLog, fmt.Sprintf("set TSHome from the RPM config file  list '%s'\n", TSHome))
-			} else {
-				toInfoLog = append(toInfoLog, fmt.Sprintf("no override for TSHome was found, using the configured default: '%s'\n", TSHome))
 			}
+		} else if tsHome == "" {
+			toInfoLog = append(toInfoLog, fmt.Sprintf("no override for TSHome was found, using the configured default: '%s'\n", TSHome))
 		}
 	}
 
@@ -503,23 +540,23 @@ If any of the related flags are also set, they override the mode's default behav
 	if *useLocalATSVersionPtr {
 		atsVersionStr, err = GetATSVersionStr(tsHome)
 		if err != nil {
-			return Cfg{}, errors.New("getting local ATS version: " + err.Error())
+			fatalLogStrs = append(fatalLogStrs, "getting local ATS version: "+err.Error())
 		}
 	}
 	toInfoLog = append(toInfoLog, fmt.Sprintf("ATSVersionStr: '%s'\n", atsVersionStr))
 
 	usageStr := "basic usage: t3c-apply --traffic-ops-url=myurl --traffic-ops-user=myuser --traffic-ops-password=mypass --cache-host-name=my-cache"
 	if strings.TrimSpace(toURL) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-url or TO_URL environment variable. " + usageStr)
+		fatalLogStrs = append(fatalLogStrs, "Missing required argument --traffic-ops-url or TO_URL environment variable. "+usageStr)
 	}
 	if strings.TrimSpace(toUser) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-user or TO_USER environment variable. " + usageStr)
+		fatalLogStrs = append(fatalLogStrs, "Missing required argument --traffic-ops-user or TO_USER environment variable. "+usageStr)
 	}
 	if strings.TrimSpace(toPass) == "" {
-		return Cfg{}, errors.New("Missing required argument --traffic-ops-password or TO_PASS environment variable. " + usageStr)
+		fatalLogStrs = append(fatalLogStrs, "Missing required argument --traffic-ops-password or TO_PASS environment variable. "+usageStr)
 	}
 	if strings.TrimSpace(cacheHostName) == "" {
-		return Cfg{}, errors.New("Missing required argument --cache-host-name. " + usageStr)
+		fatalLogStrs = append(fatalLogStrs, "Missing required argument --cache-host-name. "+usageStr)
 	}
 
 	toURLParsed, err := url.Parse(toURL)
@@ -540,6 +577,7 @@ If any of the related flags are also set, they override the mode's default behav
 		CacheHostName:               cacheHostName,
 		SvcManagement:               svcManagement,
 		Retries:                     retries,
+		RpmDBOk:                     rpmDBisOk,
 		ReverseProxyDisable:         reverseProxyDisable,
 		SkipOSCheck:                 skipOsCheck,
 		UseStrategies:               useStrategies,
@@ -580,6 +618,13 @@ If any of the related flags are also set, they override the mode's default behav
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
 	}
 
+	if len(fatalLogStrs) > 0 {
+		for _, str := range fatalLogStrs {
+			str = strings.TrimSpace(str)
+			log.Errorln(str)
+		}
+		return Cfg{}, errors.New("fatal error has occurred")
+	}
 	for _, str := range modeLogStrs {
 		str = strings.TrimSpace(str)
 		if str == "" {

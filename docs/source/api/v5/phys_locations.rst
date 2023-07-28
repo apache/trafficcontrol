@@ -71,7 +71,7 @@ Response Structure
 :comments:    Any and all human-readable comments
 :email:       The email address of the physical location's ``poc``
 :id:          An integral, unique identifier for the physical location
-:lastUpdated: The date and time at which the physical location was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339` Format
 :name:        The name of the physical location
 :phone:       A phone number where the the physical location's ``poc`` might be reached
 :poc:         The name of a "point of contact" for the physical location
@@ -103,7 +103,7 @@ Response Structure
 			"comments": "",
 			"email": "",
 			"id": 2,
-			"lastUpdated": "2018-12-05 17:50:58+00",
+			"lastUpdated": "2018-12-05T18:56:27.057163+05:30",
 			"name": "CDN_in_a_Box",
 			"phone": "",
 			"poc": "",
@@ -173,7 +173,7 @@ Response Structure
 :comments:    Any and all human-readable comments
 :email:       The email address of the physical location's ``poc``
 :id:          An integral, unique identifier for the physical location
-:lastUpdated: The date and time at which the physical location was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339`
 :name:        The name of the physical location
 :phone:       A phone number where the the physical location's ``poc`` might be reached
 :poc:         The name of a "point of contact" for the physical location
@@ -210,7 +210,7 @@ Response Structure
 		"comments": "Buckingham Palace",
 		"email": "steve.kingstone@royal.gsx.gov.uk",
 		"id": 3,
-		"lastUpdated": "2018-12-06 00:14:47+00",
+		"lastUpdated": "2018-12-06T18:56:27.057163+05:30",
 		"name": "Great_Britain",
 		"phone": "0-843-816-6276",
 		"poc": "Her Majesty The Queen Elizabeth Alexandra Mary Windsor II",

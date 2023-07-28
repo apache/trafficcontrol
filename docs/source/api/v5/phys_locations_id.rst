@@ -85,7 +85,7 @@ Response Structure
 :comments:    Any and all human-readable comments
 :email:       The email address of the physical location's ``poc``
 :id:          An integral, unique identifier for the physical location
-:lastUpdated: The date and time at which the physical location was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339`
 :name:        The name of the physical location
 :phone:       A phone number where the the physical location's ``poc`` might be reached
 :poc:         The name of a "point of contact" for the physical location
@@ -122,7 +122,7 @@ Response Structure
 		"comments": "The White House",
 		"email": "the@white.house",
 		"id": 2,
-		"lastUpdated": "2018-12-05 23:39:17+00",
+		"lastUpdated": "2018-12-05T18:56:27.057163+05:30",
 		"name": "CDN_in_a_Box",
 		"phone": "1-202-456-1414",
 		"poc": "Donald J. Trump",
