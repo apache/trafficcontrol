@@ -59,9 +59,9 @@ func (to *Session) AssignServersToDeliveryService(servers []string, xmlID string
 }
 
 // GetServersByDeliveryService gets the servers that are assigned to the delivery service with the given ID.
-func (to *Session) GetServersByDeliveryService(id int, opts RequestOptions) (tc.DSServerResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetServersByDeliveryService(id int, opts RequestOptions) (tc.DSServerResponseV5, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf(apiDeliveryServicesServers, strconv.Itoa(id))
-	resp := tc.DSServerResponseV4{}
+	resp := tc.DSServerResponseV5{}
 	reqInf, err := to.get(route, opts, &resp)
 	return resp, reqInf, err
 }
