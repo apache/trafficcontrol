@@ -402,5 +402,21 @@
 			"ttl": 48,
 			"description": "A test federation"
 		}
+	],
+	"user_federation": [
+		{
+			"userIds": [
+				2
+			],
+			"replace": true
+		}
+	],
+	"delivery_service_federation": [
+		{
+			"dsIds": [
+				37
+			],
+			"replace": true
+		}
 	]
 }

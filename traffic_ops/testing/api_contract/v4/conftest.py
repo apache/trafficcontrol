@@ -1680,50 +1680,10 @@ def cdn_federation_data_post(to_session: TOSession, request_template_data: list[
 	response: tuple[JSONData, requests.Response] = to_session.assign_delivery_services_to_federations(federation_id=federation_id, data=delivery_service_federation)
 	delivery_service_federation_resp_obj = check_template_data(response, "delivery_service_federation")
 
-	#Create a federation using delivery service xmlid
-	delivery_service_xml_id = delivery_services_post_data["xmlId"]
-	federation = check_template_data(request_template_data["federation"], "federation")
-	federation["deliveryService"] = delivery_service_xml_id
-	response: tuple[JSONData, requests.Response] = to_session.create_federation(data=federation)
-	federation_resp_obj = check_template_data(response, "federation")
-
-	yield [cdn_name, cdn_federation_resp_obj, federation_id, ]
+	yield [cdn_name, cdn_federation_resp_obj, cdn_federation, federation_id, delivery_service_federation_resp_obj]
 	
 	msg = to_session.delete_federation_in_cdn(cdn_name=cdn_name, federation_id=federation_id)
 	logger.info("Deleting cdn_federation dara... %s", msg)
 	if msg is None:
 		logger.error("cdn_federation returned by Traffic Ops is missing an 'id' property")
-		pytest.fail("Response from delete request is empty, Failing test_case")
-
-
-@pytest.fixture(name="federations_post_data")
-def federations_data_post(to_session: TOSession, request_template_data: list[JSONData],
-		  delivery_services_post_data:dict[str, object]) -> dict[str, object]:
-	"""
-	PyTest Fixture to create POST data for federationsendpoint.
-	:param to_session: Fixture to get Traffic Ops session.
-	:param request_template_data: Fixture to get federations request template.
-	:returns: Sample POST data and the actual API response.
-	"""
-
-	federation = check_template_data(
-		request_template_data["federations"], "federations")
-
-	# Return new post data and post response from federations POST request
-
-	delivery_service_id = delivery_services_post_data["id"]
-
-	federation["type"]= type_object["id"]
-
-	logger.info("New federations data to hit POST method %s", federation)
-	# Hitting federations POST methed
-	response: tuple[JSONData, requests.Response] = to_session.create_federation(data=federation)
-	resp_obj = check_template_data(response, "federations")
-	yield federation
-	regex_id = resp_obj.get("id")
-	msg = to_session.delete_federation_resolver(
-		delivery_service_id=delivery_service_id, delivery_service_regex_id=regex_id)
-	logger.info("Deleting delivery_services_regex data... %s", msg)
-	if msg is None:
-		logger.error("delivery_services_regex returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")

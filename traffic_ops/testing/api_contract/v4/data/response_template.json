@@ -1709,5 +1709,68 @@
                 "type": "string"
             }
         }
+    },
+    "user_federation": {
+        "type": "object",
+        "required": [
+            "fullName",
+            "email",
+            "id",
+            "role",
+            "company",
+            "username"
+        ],
+        "properties": {
+            "fullName": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "email": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "id": {
+                "type": "integer"
+            },
+            "role": {
+                "type": "string"
+            },
+            "company": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "username": {
+                "type": "string"
+            }
+        }
+    },
+    "delivery_service_federation": {
+        "type": "object",
+        "required": [
+            "id",
+            "cdn",
+            "type",
+            "xmlId"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "cdn": {
+                "type": "string"
+            },
+            "type": {
+                "type": "string"
+            },
+            "xmlId": {
+                "type": "string"
+            }
+        }
     }
 }
