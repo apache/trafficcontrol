@@ -150,20 +150,20 @@ func TestCacheGroups(t *testing.T) {
 				},
 			},
 			"PUT": {
-				//"OK when VALID request": {
-				//	EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
-				//	RequestBody: tc.CacheGroupNullableV5{
-				//		Latitude:            util.Ptr(17.5),
-				//		Longitude:           util.Ptr(17.5),
-				//		Name:                util.Ptr("cachegroup1"),
-				//		ShortName:           util.Ptr("newShortName"),
-				//		LocalizationMethods: util.Ptr([]tc.LocalizationMethod{tc.LocalizationMethodCZ}),
-				//		Fallbacks:           util.Ptr([]string{"fallback1"}),
-				//		Type:                util.Ptr("EDGE_LOC"),
-				//		TypeID:              util.Ptr(GetTypeId(t, "EDGE_LOC")),
-				//	},
-				//	Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
-				//},
+				"OK when VALID request": {
+					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					RequestBody: tc.CacheGroupNullableV5{
+						Latitude:            util.Ptr(17.5),
+						Longitude:           util.Ptr(17.5),
+						Name:                util.Ptr("cachegroup1"),
+						ShortName:           util.Ptr("newShortName"),
+						LocalizationMethods: util.Ptr([]tc.LocalizationMethod{tc.LocalizationMethodCZ}),
+						Fallbacks:           util.Ptr([]string{"fallback1"}),
+						Type:                util.Ptr("EDGE_LOC"),
+						TypeID:              util.Ptr(GetTypeId(t, "EDGE_LOC")),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+				},
 				"OK when updating CG with null Lat/Long": {
 					EndpointID: GetCacheGroupId(t, "nullLatLongCG"), ClientSession: TOSession,
 					RequestBody: tc.CacheGroupNullableV5{
@@ -175,45 +175,45 @@ func TestCacheGroups(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
-				//"BAD REQUEST when updating TYPE of CG in TOPOLOGY": {
-				//	EndpointID: GetCacheGroupId(t, "topology-edge-cg-01"), ClientSession: TOSession,
-				//	RequestBody: tc.CacheGroupNullableV5{
-				//		Latitude:  util.Ptr(0.0),
-				//		Longitude: util.Ptr(0.0),
-				//		Name:      util.Ptr("topology-edge-cg-01"),
-				//		ShortName: util.Ptr("te1"),
-				//		Type:      util.Ptr("MID_LOC"),
-				//		TypeID:    util.Ptr(GetTypeId(t, "MID_LOC")),
-				//	},
-				//	Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				//},
-				//"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-				//	EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
-				//	RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-				//	RequestBody: tc.CacheGroupNullableV5{
-				//		Name:      util.Ptr("cachegroup1"),
-				//		ShortName: util.Ptr("changeName"),
-				//		Type:      util.Ptr("EDGE_LOC"),
-				//		TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
-				//	},
-				//	Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-				//},
-				//"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-				//	EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
-				//	RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-				//	RequestBody: tc.CacheGroupNullableV5{
-				//		Name:      util.Ptr("cachegroup1"),
-				//		ShortName: util.Ptr("changeName"),
-				//		Type:      util.Ptr("EDGE_LOC"),
-				//		TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
-				//	},
-				//	Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-				//},
-				//"UNAUTHORIZED when NOT LOGGED IN": {
-				//	EndpointID:    GetCacheGroupId(t, "cachegroup1"),
-				//	ClientSession: NoAuthTOSession,
-				//	Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
-				//},
+				"BAD REQUEST when updating TYPE of CG in TOPOLOGY": {
+					EndpointID: GetCacheGroupId(t, "topology-edge-cg-01"), ClientSession: TOSession,
+					RequestBody: tc.CacheGroupNullableV5{
+						Latitude:  util.Ptr(0.0),
+						Longitude: util.Ptr(0.0),
+						Name:      util.Ptr("topology-edge-cg-01"),
+						ShortName: util.Ptr("te1"),
+						Type:      util.Ptr("MID_LOC"),
+						TypeID:    util.Ptr(GetTypeId(t, "MID_LOC")),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+					RequestBody: tc.CacheGroupNullableV5{
+						Name:      util.Ptr("cachegroup1"),
+						ShortName: util.Ptr("changeName"),
+						Type:      util.Ptr("EDGE_LOC"),
+						TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
+					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+					RequestBody: tc.CacheGroupNullableV5{
+						Name:      util.Ptr("cachegroup1"),
+						ShortName: util.Ptr("changeName"),
+						Type:      util.Ptr("EDGE_LOC"),
+						TypeID:    util.Ptr(GetTypeId(t, "EDGE_LOC")),
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
+				},
+				"UNAUTHORIZED when NOT LOGGED IN": {
+					EndpointID:    GetCacheGroupId(t, "cachegroup1"),
+					ClientSession: NoAuthTOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusUnauthorized)),
+				},
 			},
 			"DELETE": {
 				"NOT FOUND when INVALID ID parameter": {

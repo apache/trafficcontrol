@@ -2248,6 +2248,7 @@ func DivisionExists(tx *sql.Tx, id string) (bool, error) {
 	return true, nil
 }
 
+// GetCoordinateID obtains coordinateID, and an error (if one occurs)
 func GetCoordinateID(tx *sql.Tx, id int) (*int, error) {
 	q := `SELECT coordinate FROM cachegroup WHERE id = $1`
 
@@ -2259,11 +2260,12 @@ func GetCoordinateID(tx *sql.Tx, id int) (*int, error) {
 	return coordinateID, nil
 }
 
-func DeleteCoordinate(tx *sql.Tx, coordinateID int) error {
+// DeleteCoordinate deletes coordinate by id, and an error (if one occurs)
+func DeleteCoordinate(tx *sql.Tx, cacheGroupID int, coordinateID int) error {
 	q := `UPDATE cachegroup SET coordinate = NULL WHERE id = $1`
-	result, err := tx.Exec(q, coordinateID)
+	result, err := tx.Exec(q, cacheGroupID)
 	if err != nil {
-		return fmt.Errorf("updating cachegroup %d coordinate to null: %s", coordinateID, err.Error())
+		return fmt.Errorf("updating cachegroup %d coordinate to null: %s", cacheGroupID, err.Error())
 	}
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {

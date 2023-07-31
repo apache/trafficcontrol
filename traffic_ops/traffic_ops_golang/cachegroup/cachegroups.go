@@ -1006,7 +1006,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, cgList)
 }
 
-// GetCacheGroup [Version : V5] receives transactions from Get function and returns cachegroups list.
+// GetCacheGroup [Version : V5] receives transactions from Get function and returns cache groups list.
 func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]interface{}, time.Time, int, error, error) {
 	//func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
 	var runSecond bool
@@ -1208,9 +1208,11 @@ func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestedName := inf.Params["name"]
+	ID := inf.Params["id"]
+	id, err := strconv.Atoi(ID)
+
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedName, "cachegroup")
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "cachegroup")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
@@ -1219,8 +1221,39 @@ func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	dgCg := Downgrade(cg)
 	dgCg.ReqInfo = inf
 
-	// CheckIfCurrentUserCanModifyCachegroup
-	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroup(dgCg.ReqInfo.Tx.Tx, *cg.ID, dgCg.ReqInfo.User.UserName)
+	keyFields := dgCg.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
+	// ignoring ok value -- will be checked after param processing
+
+	keys := make(map[string]interface{}) // a map of keyField to keyValue where keyValue is an {}interface
+	for _, kf := range keyFields {
+		paramKey := inf.Params[kf.Field]
+		if paramKey == "" {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
+			return
+		}
+
+		paramValue, err := kf.Func(paramKey)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+			return
+		}
+
+		if paramValue != "" {
+			// if key's value provided in params,  overwrite it and ignore that provided in JSON
+			keys[kf.Field] = paramValue
+		}
+	}
+
+	// check that all keys were properly filled in
+	dgCg.SetKeys(keys)
+	_, ok := dgCg.GetKeys()
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
+		return
+	}
+
+	// check if user can modify cache group
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroup(dgCg.ReqInfo.Tx.Tx, *dgCg.ID, dgCg.ReqInfo.User.UserName)
 	if sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, fmt.Errorf("update cachegroup: checking if user can modify: "+sysErr.Error()), sysErr)
 		return
@@ -1240,7 +1273,7 @@ func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := dgCg.ValidateTypeInTopology()
+	err = dgCg.ValidateTypeInTopology()
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("update cachegroup: validating type in topology: "+err.Error()), err)
 		return
@@ -1267,7 +1300,7 @@ func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cache group with name: %s not found", requestedName), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cache group with name: %s not found", dgCg.Name), nil)
 			return
 		}
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -1329,7 +1362,7 @@ func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// CheckIfCurrentUserCanModifyCachegroup
+	// check if user can modify cache group
 	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroup(inf.Tx.Tx, id, inf.User.UserName)
 	if userErr != nil {
 		api.HandleErr(w, r, tx, errCode, fmt.Errorf("cachegroup delete: getting coord: "+userErr.Error()), nil)
@@ -1340,7 +1373,7 @@ func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = dbhelpers.DeleteCoordinate(inf.Tx.Tx, *coordinateID); err != nil {
+	if err = dbhelpers.DeleteCoordinate(inf.Tx.Tx, id, *coordinateID); err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("cachegroup delete: deleting coord: "+err.Error()), nil)
 		return
 	}
@@ -1366,6 +1399,7 @@ func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// readAndValidateJsonStruct populates select missing fields and validates JSON body
 func readAndValidateJsonStruct(r *http.Request) (tc.CacheGroupNullableV5, error) {
 	var cg tc.CacheGroupNullableV5
 	if err := json.NewDecoder(r.Body).Decode(&cg); err != nil {
