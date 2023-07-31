@@ -168,44 +168,6 @@ type DSServerBaseV4 struct {
 	DeliveryServiceCapabilities []string             `json:"-" db:"deliveryservice_capabilities"`
 }
 
-// DSServerBaseV5 contains the base information for a Delivery Service Server associated with APIv5.
-type DSServerBaseV5 struct {
-	Cachegroup                  *string              `json:"cachegroup" db:"cachegroup"`
-	CachegroupID                *int                 `json:"cachegroupId" db:"cachegroup_id"`
-	CDNID                       *int                 `json:"cdnId" db:"cdn_id"`
-	CDNName                     *string              `json:"cdnName" db:"cdn_name"`
-	DeliveryServices            *map[string][]string `json:"deliveryServices,omitempty"`
-	DomainName                  *string              `json:"domainName" db:"domain_name"`
-	FQDN                        *string              `json:"fqdn,omitempty"`
-	FqdnTime                    time.Time            `json:"-"`
-	GUID                        *string              `json:"guid" db:"guid"`
-	HostName                    *string              `json:"hostName" db:"host_name"`
-	HTTPSPort                   *int                 `json:"httpsPort" db:"https_port"`
-	ID                          *int                 `json:"id" db:"id"`
-	ILOIPAddress                *string              `json:"iloIpAddress" db:"ilo_ip_address"`
-	ILOIPGateway                *string              `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	ILOIPNetmask                *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	ILOPassword                 *string              `json:"iloPassword" db:"ilo_password"`
-	ILOUsername                 *string              `json:"iloUsername" db:"ilo_username"`
-	LastUpdated                 *time.Time           `json:"lastUpdated" db:"last_updated"`
-	MgmtIPAddress               *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway               *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask               *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason               *string              `json:"offlineReason" db:"offline_reason"`
-	PhysLocation                *string              `json:"physLocation" db:"phys_location"`
-	PhysLocationID              *int                 `json:"physLocationId" db:"phys_location_id"`
-	ProfileNames                []string             `json:"profileNames" db:"profile_name"`
-	Rack                        *string              `json:"rack" db:"rack"`
-	Status                      *string              `json:"status" db:"status"`
-	StatusID                    *int                 `json:"statusId" db:"status_id"`
-	TCPPort                     *int                 `json:"tcpPort" db:"tcp_port"`
-	Type                        string               `json:"type" db:"server_type"`
-	TypeID                      *int                 `json:"typeId" db:"server_type_id"`
-	UpdPending                  *bool                `json:"updPending" db:"upd_pending"`
-	ServerCapabilities          []string             `json:"-" db:"server_capabilities"`
-	DeliveryServiceCapabilities []string             `json:"-" db:"deliveryservice_capabilities"`
-}
-
 // DSServerV11 contains the legacy format for a Delivery Service Server.
 type DSServerV11 struct {
 	DSServerBase
@@ -248,7 +210,9 @@ type DSServerV5 = DSServerV50
 
 // DSServerV50 contains information for a Delivery Service Server.
 type DSServerV50 struct {
-	DSServerBaseV5
+	DSServerBase
+	LastUpdated      *time.Time                `json:"lastUpdated" db:"last_updated"`
+	ProfileNames     []string                  `json:"profileNames" db:"profile_name"`
 	ServerInterfaces *[]ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 }
 
@@ -353,8 +317,7 @@ func (server DSServerV4) ToDSServerV5() DSServerV5 {
 	r := time.Unix(server.LastUpdated.Unix(), 0)
 
 	return DSServerV5{
-		DSServerBaseV5: DSServerBaseV5{
-			LastUpdated:                 &r,
+		DSServerBase: DSServerBase{
 			Cachegroup:                  server.Cachegroup,
 			CachegroupID:                server.CachegroupID,
 			CDNID:                       server.CDNID,
@@ -378,7 +341,6 @@ func (server DSServerV4) ToDSServerV5() DSServerV5 {
 			OfflineReason:               server.OfflineReason,
 			PhysLocation:                server.PhysLocation,
 			PhysLocationID:              server.PhysLocationID,
-			ProfileNames:                server.ProfileNames,
 			Rack:                        server.Rack,
 			Status:                      server.Status,
 			StatusID:                    server.StatusID,
@@ -389,6 +351,8 @@ func (server DSServerV4) ToDSServerV5() DSServerV5 {
 			ServerCapabilities:          server.ServerCapabilities,
 			DeliveryServiceCapabilities: server.DeliveryServiceCapabilities,
 		},
+		LastUpdated:      &r,
+		ProfileNames:     server.ProfileNames,
 		ServerInterfaces: server.ServerInterfaces,
 	}
 }
