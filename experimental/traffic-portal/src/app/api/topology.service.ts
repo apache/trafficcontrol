@@ -164,7 +164,7 @@ export class TopologyService extends APIService {
 		for (const treeNode of treeNodes) {
 			const cachegroup = treeNode.cachegroup;
 			const parents: number[] = [];
-			if (parent instanceof Object) {
+			if (typeof parent !== "undefined") {
 				const index = topologyNodeIndicesByCacheGroup.get(parent.cachegroup) as number;
 				parents.push(index);
 			}
