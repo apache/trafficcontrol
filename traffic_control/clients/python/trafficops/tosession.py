@@ -818,6 +818,82 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+
+	#
+	# Delivery Service Request Comments
+	#
+	@api_request('get', 'deliveryservice_request_comments', ('3.0', '4.0', '4.1', '5.0'))
+	def get_deliveryservice_request_comments(self, query_params=None):
+		"""
+		Retrieves all delivery service reuest comments.
+		:ref:`to-api-deliveryservice-request-comments`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'deliveryservice_request_comments', ('3.0', '4.0', '4.1', '5.0'))
+	def create_deliveryservice_request_comment(self, data=None):
+		"""
+		Creates a new delivery service request comment.
+		:ref:`to-api-deliveryservice-request-comments`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('put', 'deliveryservice_request_comments', ('3.0', '4.0', '4.1', '5.0'))
+	def update_deliveryservice_request_comment(self, query_params=None, data=None):
+		"""
+		Updates an existing Delivery Service Request comment.
+		:ref:`to-api-deliveryservice-request-comments`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'deliveryservice_request_comments', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_deliveryservice_request_comment(self, query_params=None):
+		"""
+		Deletes a Delivery Service Request comment.
+		:ref:`to-api-deliveryservice-request-comments`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+    #
+	# Delivery Service Required capabilities
+	#
+	@api_request('get', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def get_deliveryservices_required_capabilities(self, query_params=None):
+		"""
+		Retrieves all delivery service required capabilities.
+		:ref:`to-api-deliveryservice-required-capabilities`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def create_deliveryservices_required_capabilities(self, data=None):
+		"""
+		Creates a new delivery service required capability.
+		:ref:`to-api-deliveryservice-required-capabilities`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_deliveryservices_required_capabilities(self, query_params=None):
+		"""
+		Deletes a Delivery Service Required capability.
+		:ref:`to-api-deliveryservice-required-capabilities`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 	#
 	# Delivery Service Health
@@ -1025,7 +1101,7 @@ class TOSession(RestApiSession):
 
 	@api_request('put', 'deliveryservices/{delivery_service_id:d}/regexes/{regex_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_deliveryservice_regexes(self, delivery_service_id=None, regex_id=None,
-	                                   query_params=None):
+	                                   data=None):
 		"""
 		Update a regex for a delivery service
 		:ref:`to-api-deliveryservices-id-regexes-rid`
@@ -1033,8 +1109,8 @@ class TOSession(RestApiSession):
 		:type delivery_service_id: int
 		:param regex_id: The delivery service regex id
 		:type regex_id: int
-		:param query_params: The required data to update delivery service regexes
-		:type query_params: Dict[str, Any]
+		:param data: The required data to update delivery service regexes
+		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -1495,6 +1571,34 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+
+    #
+	# multiple_server_capabilities
+	#
+	@api_request('post', 'multiple_servers_capabilities', ('4.1', '5.0'))
+	def create_multiple_servers_capabilities(self, data=None):
+		"""
+		Create multiple_servers_capabilities
+		:ref:`to-api-multiple_servers_capabilities`
+		:param data: The multiple_servers_capabilities data to use for multiple_servers_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('delete', 'multiple_servers_capabilities', ('4.1', '5.0'))
+	def delete_multiple_servers_capabilities(self, data=None):
+		"""
+		Delete multiple_servers_capabilities
+		:ref:`to-api-multiple_servers_capabilities`
+		:param data: The multiple_servers_capabilities data to use for multiple_servers_capabilities creation.
+		:type data: Union[Dict[str, Any], List[Dict[str, Any]]]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
 	#
 	# Physical Location
 	#
@@ -1617,6 +1721,15 @@ class TOSession(RestApiSession):
 	#
 	# Profile Parameters
 	#
+	@api_request('get', 'profileparameters', ('3.0', '4.0', '4.1', '5.0'))
+	def get_profile_parameters(self, data=None):
+		"""
+		Retrieve all Parameter/Profile assignments.
+		:ref:`to-api-profileparameters`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	@api_request('post', 'profileparameters', ('3.0', '4.0', '4.1', '5.0'))
 	def associate_paramater_to_profile(self, data=None):
 		"""

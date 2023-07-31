@@ -65,7 +65,7 @@ Response Structure
 :dnssecEnabled: ``true`` if DNSSEC is enabled on this CDN, otherwise ``false``
 :domainName:    Top Level Domain name within which this CDN operates
 :id:            The integral, unique identifier for the CDN
-:lastUpdated:   Date and time when the CDN was last modified in :ref:`non-rfc-datetime`
+:lastUpdated:   Date and time when the CDN was last modified in :rfc:`3339`
 :name:          The name of the CDN
 :ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
 
@@ -89,7 +89,7 @@ Response Structure
 			"dnssecEnabled": false,
 			"domainName": "-",
 			"id": 1,
-			"lastUpdated": "2018-11-14 18:21:06+00",
+			"lastUpdated": "2018-11-14T18:21.32.516553Z",
 			"name": "ALL",
 			"ttlOverride": 60
 		},
@@ -97,7 +97,7 @@ Response Structure
 			"dnssecEnabled": false,
 			"domainName": "mycdn.ciab.test",
 			"id": 2,
-			"lastUpdated": "2018-11-14 18:21:14+00",
+			"lastUpdated": "2018-11-14 18:21.32:516553Z",
 			"name": "CDN-in-a-Box"
 		}
 	]}
@@ -166,6 +166,6 @@ Response Structure
 		"dnssecEnabled": false,
 		"domainName": "quest",
 		"id": 3,
-		"lastUpdated": "2018-11-14 20:49:28+00",
+		"lastUpdated": "2018-11-14T20:49:28.111111Z",
 		"name": "test",
 	}}
