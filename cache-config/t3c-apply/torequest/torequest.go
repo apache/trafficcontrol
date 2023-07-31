@@ -587,10 +587,14 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 func (r *TrafficOpsReq) IsPackageInstalled(name string) bool {
 	for k, v := range r.Pkgs {
 		if strings.HasPrefix(k, name) {
+			log.Infof("Found in cache for '%s'", k)
 			return v
 		}
 	}
-
+	if !r.Cfg.RpmDBOk {
+		log.Warnf("RPM DB is corrupted cannot run IsPackageInstalled for '%s' and package metadata is unavailable", name)
+		return false
+	}
 	log.Infof("IsPackageInstalled '%v' not found in cache, querying rpm", name)
 	pkgArr, err := util.PackageInfo("pkg-query", name)
 	if err != nil {
@@ -1025,6 +1029,47 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 				log.Errorf("\nIn Report mode and %s needs installation.\n", install[ii])
 				return errors.New("In Report mode and packages need installation")
 			}
+		}
+	}
+	return nil
+}
+
+func pkgMetaDataToMap(pmd []string) map[string]bool {
+	pkgMap := map[string]bool{}
+	for _, pkg := range pmd {
+		pkgMap[pkg] = true
+	}
+	return pkgMap
+}
+
+func pkgMatch(pkgMetaData []string, pk string) bool {
+	for _, pkg := range pkgMetaData {
+		if strings.Contains(pk, pkg) {
+			return true
+		}
+	}
+	return false
+
+}
+
+// ProcessPackagesWithMetaData will attempt to get installed package data from
+// t3c-apply-metadata.json and log the results.
+func (r *TrafficOpsReq) ProcessPackagesWithMetaData(packageMetaData []string) error {
+	pkgs, err := getPackages(r.Cfg)
+	pkgMdataMap := pkgMetaDataToMap(packageMetaData)
+	if err != nil {
+		return fmt.Errorf("getting packages: %w", err)
+	}
+	for _, pkg := range pkgs {
+		fullPackage := pkg.Name + "-" + pkg.Version
+		if pkgMdataMap[fullPackage] {
+			log.Infof("package %s is assumed to be installed according to metadata file", fullPackage)
+			r.Pkgs[fullPackage] = true
+		} else if pkgMatch(packageMetaData, pkg.Name) {
+			log.Infof("package %s is assumed to be installed according to metadata, but doesn't match traffic ops pkg", fullPackage)
+			r.Pkgs[fullPackage] = true
+		} else {
+			log.Infof("package %s does not appear to be installed.", pkg.Name+"-"+pkg.Version)
 		}
 	}
 	return nil
