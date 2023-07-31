@@ -207,8 +207,8 @@ dnssec_enabled=$1,
 domain_name=$2,
 name=$3,
 ttl_override=$4
-WHERE id=$5 RETURNING last_updated`
-	err = tx.QueryRow(query, cdn.DNSSECEnabled, cdn.DomainName, cdn.Name, cdn.TTLOverride, inf.Params["id"]).Scan(&cdn.LastUpdated)
+WHERE id=$5 RETURNING last_updated, id`
+	err = tx.QueryRow(query, cdn.DNSSECEnabled, cdn.DomainName, cdn.Name, cdn.TTLOverride, inf.Params["id"]).Scan(&cdn.LastUpdated, &cdn.ID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cdn with id: %s not found", inf.Params["id"]), nil)
