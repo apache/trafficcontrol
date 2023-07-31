@@ -1,0 +1,41 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<div *ngIf="author" class="content">
+	<mat-form-field>
+		<mat-label>Common Name</mat-label>
+		<input matInput type="text" name="commonName" readonly [value]="author.commonName"/>
+	</mat-form-field>
+	<div class="triple">
+		<mat-form-field>
+			<mat-label>Country Name</mat-label>
+			<input matInput type="text" name="country" readonly [value]="author.countryName ?? ''"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>State or Province</mat-label>
+			<input matInput type="text" name="state" readonly [value]="author.stateOrProvince ?? ''"/>
+		</mat-form-field>
+		<mat-form-field>
+			<mat-label>Locality</mat-label>
+			<input matInput type="text" name="local" readonly [value]="author.localityName ?? ''"/>
+		</mat-form-field>
+	</div>
+	<mat-form-field>
+		<mat-label>Organization</mat-label>
+		<input matInput type="text" name="org" readonly [value]="author.orgName ?? ''"/>
+	</mat-form-field>
+	<mat-form-field>
+		<mat-label>Organization Unit</mat-label>
+		<input matInput type="text" name="org" readonly [value]="author.orgUnit ?? ''"/>
+	</mat-form-field>
+</div>

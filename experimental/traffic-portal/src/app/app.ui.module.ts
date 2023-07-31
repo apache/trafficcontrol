@@ -37,6 +37,7 @@ import { MatSidenavModule } from "@angular/material/sidenav";
 import { MatSlideToggleModule } from "@angular/material/slide-toggle";
 import { MatSnackBarModule } from "@angular/material/snack-bar";
 import { MatStepperModule } from "@angular/material/stepper";
+import { MatTabsModule } from "@angular/material/tabs";
 import { MatToolbarModule } from "@angular/material/toolbar";
 import { MatTooltipModule } from "@angular/material/tooltip";
 import { MatTreeModule } from "@angular/material/tree";
@@ -74,6 +75,7 @@ import { AgGridModule } from "ag-grid-angular";
 		MatSidenavModule,
 		MatSnackBarModule,
 		MatStepperModule,
+		MatTabsModule,
 		MatToolbarModule,
 		MatTooltipModule,
 		MatTreeModule,
