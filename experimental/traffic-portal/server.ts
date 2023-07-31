@@ -192,7 +192,10 @@ export function app(serverConfig: ServerConfig): express.Express {
 
 	// All regular routes use the Universal engine
 	server.get("*", (req, res) => {
-		res.render(indexHtml, {providers: [{provide: APP_BASE_HREF, useValue: req.baseUrl}], req});
+		res.render(indexHtml, {providers: [
+			{provide: APP_BASE_HREF, useValue: req.baseUrl},
+			{provide: "TP_V1_URL", useValue: config.tpv1Url}
+		], req});
 	});
 
 	server.enable("trust proxy");
@@ -216,6 +219,20 @@ function run(): number {
 	parser.add_argument("-t", "--traffic-ops", {
 		dest: "trafficOps",
 		help: "Specify the Traffic Ops host/URL, including port. (Default: uses the `TO_URL` environment variable)",
+		type: (arg: string) => {
+			try {
+				return new URL(arg);
+			} catch (e) {
+				if (e instanceof TypeError) {
+					return new URL(`https://${arg}`);
+				}
+				throw e;
+			}
+		}
+	});
+	parser.add_argument("-u", "--tpv1-url", {
+		dest: "tpv1Url",
+		help: "Specify the Traffic Portal v1 URL. (Default: uses the `TP_V1_URL` environment variable)",
 		type: (arg: string) => {
 			try {
 				return new URL(arg);

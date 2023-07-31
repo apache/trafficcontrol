@@ -21,7 +21,17 @@ package tc
 
 import (
 	"database/sql"
+	"time"
 )
+
+// CDNsV5Response is a list of CDNs as a response.
+// swagger:response CDNsResponse
+// in: body
+type CDNsV5Response struct {
+	// in: body
+	Response []CDNV5 `json:"response"`
+	Alerts
+}
 
 // CDNsResponse is a list of CDNs as a response.
 // swagger:response CDNsResponse
@@ -40,6 +50,41 @@ type CDNResponse struct {
 	// in: body
 	Response CDN `json:"response"`
 	Alerts
+}
+
+// A CDNV5 represents a set of configuration and hardware that can be used to
+// serve content within a specific top-level domain.
+type CDNV5 struct {
+
+	// The CDN to retrieve
+	//
+	// enables Domain Name Security Extensions on the specified CDN
+	//
+	// required: true
+	DNSSECEnabled bool `json:"dnssecEnabled" db:"dnssec_enabled"`
+
+	// DomainName of the CDN
+	//
+	// required: true
+	DomainName string `json:"domainName" db:"domain_name"`
+
+	// ID of the CDN
+	//
+	// required: true
+	ID int `json:"id" db:"id"`
+
+	// LastUpdated
+	//
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
+
+	// Name of the CDN
+	//
+	// required: true
+	Name string `json:"name" db:"name"`
+
+	// TTLOverride
+	//
+	TTLOverride *int `json:"ttlOverride,omitempty" db:"ttl_override"`
 }
 
 // A CDN represents a set of configuration and hardware that can be used to

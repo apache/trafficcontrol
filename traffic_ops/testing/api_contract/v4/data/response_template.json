@@ -1680,6 +1680,81 @@
             },
             "pattern": {
                 "type": "string"
+
+            }
+        }
+    },
+     "profile_parameters": {
+        "type": "object",
+        "required":[
+            "lastUpdated",
+            "profile",
+            "parameter"
+        ],
+        "properties":{
+            "lastUpdated":{
+                "type": "string"
+            },
+            "profile":{
+                "type": "string"
+
+            },
+            "parameter":{
+                "type": "integer"
+            }
+        }
+    },
+    "delivery_service_request_comments": {
+        "type": "object",
+        "required": [
+            "authorId",
+            "author",
+            "deliveryServiceRequestId",
+            "id",
+            "lastUpdated",
+            "value",
+            "xmlId"
+        ],
+        "properties": {
+            "authorId": {
+                "type": "integer"
+            },
+            "author": {
+                "type": "string"
+            },
+            "deliveryServiceRequestId": {
+                "type": "integer"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "value": {
+                "type": "string"
+            },
+            "xmlId": {
+                "type": "string"
+            }
+        }
+    },
+    "delivery_service_required_capabilities": {
+        "type": "object",
+        "required": [
+            "deliveryServiceID",
+            "lastUpdated",
+            "requiredCapability"
+        ],
+        "properties": {
+            "deliveryServiceID": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "requiredCapability": {
+                "type": "string"
             }
         }
     }
