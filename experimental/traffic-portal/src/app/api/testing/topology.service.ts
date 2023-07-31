@@ -52,16 +52,15 @@ export class TopologyService {
 	 * Gets one or all Topologies from Traffic Ops
 	 *
 	 * @param name The unique name of a single Topology to be returned
-	 * @returns Either an Array of Topologies or a single Topology, depending on whether `name` was
-	 * passed.
+	 * @returns An Array of Topologies
 	 */
-	public async getTopologies(name?: string): Promise<Array<ResponseTopology> | ResponseTopology> {
+	public async getTopologies(name?: string): Promise<Array<ResponseTopology>> {
 		if (name !== undefined) {
 			const topology = this.topologies.find(t => t.name === name);
 			if (!topology) {
 				throw new Error(`no such Topology ${name}`);
 			}
-			return topology;
+			return [topology];
 		}
 		return this.topologies;
 	}
