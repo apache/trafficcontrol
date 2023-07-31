@@ -2261,7 +2261,8 @@ func PhysLocationExists(tx *sql.Tx, id string) (bool, error) {
 		return false, fmt.Errorf("getting PhysLocation info - expected row count: 1, actual: %d", count)
 	}
 	return true, nil
-  
+}
+
 // GetCoordinateID obtains coordinateID, and an error (if one occurs)
 func GetCoordinateID(tx *sql.Tx, id int) (*int, error) {
 	q := `SELECT coordinate FROM cachegroup WHERE id = $1`
