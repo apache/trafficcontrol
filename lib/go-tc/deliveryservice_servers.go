@@ -210,10 +210,10 @@ type DSServerV5 = DSServerV50
 
 // DSServerV50 contains information for a Delivery Service Server.
 type DSServerV50 struct {
-	DSServerBase
-	LastUpdated      *time.Time                `json:"lastUpdated" db:"last_updated"`
-	ProfileNames     []string                  `json:"profileNames" db:"profile_name"`
-	ServerInterfaces *[]ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
+	ServerV4                               // Please replace me when ServerV50 is born
+	LastUpdated                 *time.Time `json:"lastUpdated" db:"last_updated"`
+	ServerCapabilities          []string   `json:"-" db:"server_capabilities"`
+	DeliveryServiceCapabilities []string   `json:"-" db:"deliveryservice_capabilities"`
 }
 
 // DSServerResponseV5 is an alias for the latest minor version of the major version 5.
@@ -317,42 +317,41 @@ func (server DSServerV4) ToDSServerV5() DSServerV5 {
 	r := time.Unix(server.LastUpdated.Unix(), 0)
 
 	return DSServerV5{
-		DSServerBase: DSServerBase{
-			Cachegroup:                  server.Cachegroup,
-			CachegroupID:                server.CachegroupID,
-			CDNID:                       server.CDNID,
-			CDNName:                     server.CDNName,
-			DeliveryServices:            server.DeliveryServices,
-			DomainName:                  server.DomainName,
-			FQDN:                        server.FQDN,
-			FqdnTime:                    server.FqdnTime,
-			GUID:                        server.GUID,
-			HostName:                    server.HostName,
-			HTTPSPort:                   server.HTTPSPort,
-			ID:                          server.ID,
-			ILOIPAddress:                server.ILOIPAddress,
-			ILOIPGateway:                server.ILOIPGateway,
-			ILOIPNetmask:                server.ILOIPNetmask,
-			ILOPassword:                 server.ILOPassword,
-			ILOUsername:                 server.ILOUsername,
-			MgmtIPAddress:               server.MgmtIPAddress,
-			MgmtIPGateway:               server.MgmtIPGateway,
-			MgmtIPNetmask:               server.MgmtIPNetmask,
-			OfflineReason:               server.OfflineReason,
-			PhysLocation:                server.PhysLocation,
-			PhysLocationID:              server.PhysLocationID,
-			Rack:                        server.Rack,
-			Status:                      server.Status,
-			StatusID:                    server.StatusID,
-			TCPPort:                     server.TCPPort,
-			Type:                        server.Type,
-			TypeID:                      server.TypeID,
-			UpdPending:                  server.UpdPending,
-			ServerCapabilities:          server.ServerCapabilities,
-			DeliveryServiceCapabilities: server.DeliveryServiceCapabilities,
+		ServerV4: ServerV4{
+			Cachegroup:       server.Cachegroup,
+			CachegroupID:     server.CachegroupID,
+			CDNID:            server.CDNID,
+			CDNName:          server.CDNName,
+			DeliveryServices: server.DeliveryServices,
+			DomainName:       server.DomainName,
+			FQDN:             server.FQDN,
+			FqdnTime:         server.FqdnTime,
+			GUID:             server.GUID,
+			HostName:         server.HostName,
+			HTTPSPort:        server.HTTPSPort,
+			ID:               server.ID,
+			ILOIPAddress:     server.ILOIPAddress,
+			ILOIPGateway:     server.ILOIPGateway,
+			ILOIPNetmask:     server.ILOIPNetmask,
+			ILOPassword:      server.ILOPassword,
+			ILOUsername:      server.ILOUsername,
+			MgmtIPAddress:    server.MgmtIPAddress,
+			MgmtIPGateway:    server.MgmtIPGateway,
+			MgmtIPNetmask:    server.MgmtIPNetmask,
+			OfflineReason:    server.OfflineReason,
+			PhysLocation:     server.PhysLocation,
+			PhysLocationID:   server.PhysLocationID,
+			Rack:             server.Rack,
+			Status:           server.Status,
+			StatusID:         server.StatusID,
+			TCPPort:          server.TCPPort,
+			Type:             server.Type,
+			TypeID:           server.TypeID,
+			UpdPending:       server.UpdPending,
+			Interfaces:       *server.ServerInterfaces,
 		},
-		LastUpdated:      &r,
-		ProfileNames:     server.ProfileNames,
-		ServerInterfaces: server.ServerInterfaces,
+		LastUpdated:                 &r,
+		ServerCapabilities:          server.ServerCapabilities,
+		DeliveryServiceCapabilities: server.DeliveryServiceCapabilities,
 	}
 }
