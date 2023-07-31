@@ -233,8 +233,8 @@ export class NavigationService {
 				{
 					href: "/core/certs/ssl",
 					name: "Inspect Certificate"
-        },
-        {
+				},
+				{
 					href: `${this.tpv1Url}/jobs`,
 					name: "Invalidate Content"
 				},
