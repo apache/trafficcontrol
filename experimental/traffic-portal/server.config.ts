@@ -15,6 +15,7 @@
 import { execSync } from "child_process";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
+import { hasProperty } from "src/app/utils";
 
 /**
  * ServerVersion contains versioning information for the server,
@@ -139,6 +140,8 @@ interface BaseConfig {
 	version: ServerVersion;
 	/** Path to the folder containing browser files. **/
 	browserFolder: string;
+	/** The URL of the Traffic Portal V1. */
+	tpv1Url: URL;
 }
 
 /**
@@ -183,53 +186,65 @@ function isConfig(c: unknown): c is ServerConfig {
 		throw new Error("'null' is not a valid configuration");
 	}
 
-	if (Object.prototype.hasOwnProperty.call(c, "insecure")) {
-		if (typeof((c as {insecure: unknown}).insecure) !== "boolean") {
+	if (hasProperty(c, "insecure")) {
+		if (typeof(c.insecure) !== "boolean") {
 			throw new Error("'insecure' must be a boolean");
 		}
 	} else {
 		(c as {insecure: boolean}).insecure = false;
 	}
-	if (!Object.prototype.hasOwnProperty.call(c, "port")) {
+	if (!hasProperty(c, "port")) {
 		throw new Error("'port' is required");
 	}
-	if (typeof((c as {port: unknown}).port) !== "number") {
+	if (typeof(c.port) !== "number") {
 		throw new Error("'port' must be a number");
 	}
-	if (!Object.prototype.hasOwnProperty.call(c, "trafficOps")) {
+	if (!hasProperty(c, "trafficOps")){
 		throw new Error("'trafficOps' is required");
 	}
-	if (typeof((c as {trafficOps: unknown}).trafficOps) !== "string") {
+	if (typeof(c.trafficOps) !== "string") {
 		throw new Error("'trafficOps' must be a string");
 	}
-	if (!Object.prototype.hasOwnProperty.call(c, "browserFolder")) {
+	if(!hasProperty(c, "tpv1Url")){
+		throw new Error("'tpv1Url' is required");
+	}
+	if (typeof(c.tpv1Url) !== "string") {
+		throw new Error("'tpv1Url' must be a string");
+	}
+	if (!hasProperty(c, "browserFolder")) {
 		throw new Error("'browserFolder' is required");
 	}
-	if (typeof((c as {browserFolder: unknown}).browserFolder) !== "string") {
+	if (typeof(c.browserFolder) !== "string") {
 		throw new Error("'browserFolder' must be a string");
 	}
 
 	try {
-		(c as {trafficOps: URL}).trafficOps = new URL((c as {trafficOps: string}).trafficOps);
+		c.trafficOps = new URL(c.trafficOps);
 	} catch (e) {
 		throw new Error(`'trafficOps' is not a valid URL: ${e}`);
 	}
 
-	if (Object.prototype.hasOwnProperty.call(c, "useSSL")) {
-		if (typeof((c as {useSSL: unknown}).useSSL) !== "boolean") {
+	try {
+		c.tpv1Url = new URL(c.tpv1Url);
+	} catch (e) {
+		throw new Error(`'tpv1Url' is not a valid URL: ${e}`);
+	}
+
+	if (hasProperty(c, "useSSL")) {
+		if (typeof(c.useSSL) !== "boolean") {
 			throw new Error("'useSSL' must be a boolean");
 		}
-		if ((c as {useSSL: boolean}).useSSL) {
-			if (!Object.prototype.hasOwnProperty.call(c, "certPath")) {
+		if (c.useSSL) {
+			if (!hasProperty(c, "certPath")) {
 				throw new Error("'certPath' is required to use SSL");
 			}
-			if (typeof((c as {certPath: unknown}).certPath) !== "string") {
+			if (typeof(c.certPath) !== "string") {
 				throw new Error("'certPath' must be a string");
 			}
-			if (!Object.prototype.hasOwnProperty.call(c, "keyPath")) {
+			if (!hasProperty(c, "keyPath")) {
 				throw new Error("'keyPath' is required to use SSL");
 			}
-			if (typeof((c as {keyPath: unknown}).keyPath) !== "string") {
+			if (typeof(c.keyPath) !== "string") {
 				throw new Error("'keyPath' must be a string");
 			}
 		}
@@ -296,6 +311,7 @@ export function getVersion(path?: string): ServerVersion {
 /** The type of command line arguments to Traffic Portal. */
 interface Args {
 	trafficOps?: URL;
+	tpv1Url?: URL;
 	insecure: boolean;
 	port: number;
 	certPath?: string;
@@ -311,6 +327,7 @@ export const defaultConfig: ServerConfig = {
 	insecure: false,
 	port: 4200,
 	trafficOps: new URL("https://example.com"),
+	tpv1Url: new URL("https://example.com"),
 	version: { version: "" }
 };
 /**
@@ -372,6 +389,10 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 		}
 	}
 
+	if (args.tpv1Url) {
+		cfg.tpv1Url = args.tpv1Url;
+	}
+
 	if (readFromFile && cfg.useSSL) {
 		if (args.certPath) {
 			cfg.certPath = args.certPath;
@@ -392,6 +413,7 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 				keyPath: args.keyPath,
 				port: cfg.port,
 				trafficOps: cfg.trafficOps,
+				tpv1Url: cfg.tpv1Url,
 				useSSL: true,
 				version: ver
 			};
