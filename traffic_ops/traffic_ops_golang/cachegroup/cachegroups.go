@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strconv"
 	"strings"
@@ -1032,7 +1031,7 @@ func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header ht
 	}
 
 	if useIMS {
-		runSecond, maxTime = TryIfModifiedSinceQuery(header, tx, where, queryValues)
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, header, queryValues, selectMaxLastUpdatedQuery(where))
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			return cgList, maxTime, http.StatusNotModified, nil, nil
@@ -1091,60 +1090,6 @@ func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header ht
 	}
 
 	return cgList, maxTime, http.StatusOK, nil, nil
-}
-
-// TryIfModifiedSinceQuery [Version : V5] function receives transactions and header from GetCacheGroup function and returns bool value if status is not modified.
-func TryIfModifiedSinceQuery(header http.Header, tx *sqlx.Tx, where string, queryValues map[string]interface{}) (bool, time.Time) {
-	var max time.Time
-	var imsDate time.Time
-	var ok bool
-	imsDateHeader := []string{}
-	runSecond := true
-	dontRunSecond := false
-
-	if header == nil {
-		return runSecond, max
-	}
-
-	imsDateHeader = header[rfc.IfModifiedSince]
-	if len(imsDateHeader) == 0 {
-		return runSecond, max
-	}
-
-	if imsDate, ok = rfc.ParseHTTPDate(imsDateHeader[0]); !ok {
-		log.Warnf("IMS request header date '%s' not parsable", imsDateHeader[0])
-		return runSecond, max
-	}
-
-	imsQuery := `SELECT max(last_updated) as t from cachegroup cg`
-	query := imsQuery + where
-	rows, err := tx.NamedQuery(query, queryValues)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return dontRunSecond, max
-	}
-
-	if err != nil {
-		log.Warnf("Couldn't get the max last updated time: %v", err)
-		return runSecond, max
-	}
-
-	defer rows.Close()
-	// This should only ever contain one row
-	if rows.Next() {
-		v := time.Time{}
-		if err = rows.Scan(&v); err != nil {
-			log.Warnf("Failed to parse the max time stamp into a struct %v", err)
-			return runSecond, max
-		}
-
-		max = v
-		// The request IMS time is later than the max of (lastUpdated, deleted_time)
-		if imsDate.After(v) {
-			return dontRunSecond, max
-		}
-	}
-	return runSecond, max
 }
 
 // CreateCacheGroup [Version : V5] function creates the cache group with the passed name.
