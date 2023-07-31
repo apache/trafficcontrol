@@ -27,14 +27,14 @@ import (
 const apiCDNs = "/cdns"
 
 // CreateCDN creates a CDN.
-func (to *Session) CreateCDN(cdn tc.CDN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateCDN(cdn tc.CDNV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiCDNs, opts, cdn, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateCDN replaces the identified CDN with the provided CDN.
-func (to *Session) UpdateCDN(id int, cdn tc.CDN, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateCDN(id int, cdn tc.CDNV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiCDNs, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, cdn, &alerts)
@@ -42,8 +42,8 @@ func (to *Session) UpdateCDN(id int, cdn tc.CDN, opts RequestOptions) (tc.Alerts
 }
 
 // GetCDNs retrieves CDNs from Traffic Ops.
-func (to *Session) GetCDNs(opts RequestOptions) (tc.CDNsResponse, toclientlib.ReqInf, error) {
-	var data tc.CDNsResponse
+func (to *Session) GetCDNs(opts RequestOptions) (tc.CDNsV5Response, toclientlib.ReqInf, error) {
+	var data tc.CDNsV5Response
 	reqInf, err := to.get(apiCDNs, opts, &data)
 	return data, reqInf, err
 }
