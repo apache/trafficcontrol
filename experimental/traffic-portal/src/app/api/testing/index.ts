@@ -25,6 +25,7 @@ import {
 	PhysicalLocationService,
 	ProfileService,
 	ServerService,
+	TopologyService,
 	TypeService,
 	UserService
 } from "..";
@@ -38,6 +39,7 @@ import { MiscAPIsService as TestingMiscAPIsService } from "./misc-apis.service";
 import { PhysicalLocationService as TestingPhysicalLocationService } from "./physical-location.service";
 import { ProfileService as TestingProfileService } from "./profile.service";
 import { ServerService as TestingServerService } from "./server.service";
+import { TopologyService as TestingTopologyService } from "./topology.service";
 import { TypeService as TestingTypeService } from "./type.service";
 import { UserService as TestingUserService } from "./user.service";
 
@@ -60,6 +62,7 @@ import { UserService as TestingUserService } from "./user.service";
 		{provide: PhysicalLocationService, useClass: TestingPhysicalLocationService},
 		{provide: ProfileService, useClass: TestingProfileService},
 		{provide: ServerService, useClass: TestingServerService},
+		{provide: TopologyService, useClass: TestingTopologyService},
 		{provide: TypeService, useClass: TestingTypeService},
 		{provide: UserService, useClass: TestingUserService},
 		TestingServerService,

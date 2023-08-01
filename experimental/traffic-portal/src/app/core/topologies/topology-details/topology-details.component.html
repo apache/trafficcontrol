@@ -1,0 +1,44 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<mat-card appearance="outlined" class="page-content single-column">
+	<tp-loading *ngIf="loading"></tp-loading>
+	<form ngNativeValidate (ngSubmit)="submit($event)">
+		<mat-card-content class="container">
+			<mat-form-field>
+				<mat-label>Name</mat-label>
+				<input matInput type="text" name="name" required [(ngModel)]="topology.name">
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>Description</mat-label>
+				<textarea matInput name="description" [(ngModel)]="topology.description"></textarea>
+			</mat-form-field>
+		</mat-card-content>
+		<mat-card-content class="container">
+			<mat-tree [dataSource]="topologySource" [treeControl]="topologyControl">
+				<mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
+					<div class="mat-tree-node" matTreeNodeToggle mat-menu-item [attr.aria-label]="'Toggle ' + node.name">
+						{{node.name}}
+					</div>
+					<div class="expand-node" role="group">
+						<ng-container matTreeNodeOutlet></ng-container>
+					</div>
+				</mat-nested-tree-node>
+			</mat-tree>
+		</mat-card-content>
+		<mat-card-actions align="end" class="actions-container">
+			<button mat-raised-button type="button" *ngIf="!new" color="warn" (click)="delete()">Delete</button>
+			<button mat-raised-button color="primary" type="submit">Save</button>
+		</mat-card-actions>
+	</form>
+</mat-card>
