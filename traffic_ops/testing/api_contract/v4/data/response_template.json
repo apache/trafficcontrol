@@ -1680,26 +1680,24 @@
             },
             "pattern": {
                 "type": "string"
-
             }
         }
     },
-     "profile_parameters": {
+    "profile_parameters": {
         "type": "object",
-        "required":[
+        "required": [
             "lastUpdated",
             "profile",
             "parameter"
         ],
-        "properties":{
-            "lastUpdated":{
+        "properties": {
+            "lastUpdated": {
                 "type": "string"
             },
-            "profile":{
+            "profile": {
                 "type": "string"
-
             },
-            "parameter":{
+            "parameter": {
                 "type": "integer"
             }
         }
@@ -1765,7 +1763,8 @@
             "cname",
             "ttl",
             "description",
-            "lastUpdated"
+            "lastUpdated",
+            "deliveryService"
         ],
         "properties": {
             "id": {
@@ -1782,6 +1781,21 @@
             },
             "lastUpdated": {
                 "type": "string"
+            },
+            "deliveryService": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "xmlId"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "xmlId": {
+                        "type": "string"
+                    }
+                }
             }
         }
     },

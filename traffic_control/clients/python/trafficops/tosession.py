@@ -1222,8 +1222,6 @@ class TOSession(RestApiSession):
 		"""
 		Allows a user to delete federations for their delivery service(s).
 		:ref:`to-api-federations`
-		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
-		:type data: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

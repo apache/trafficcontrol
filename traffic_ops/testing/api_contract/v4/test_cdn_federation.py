@@ -49,7 +49,6 @@ def test_cdn_federation_contract(to_session: TOSession,
 	federation_id = cdn_federation_post_data[3]
 	if not isinstance(cdn_name, str):
 		raise TypeError("malformed API response; 'cdn_name' property not a string")
-	logger.info(cdn_name)
 
 	cdn_federation_get_response: tuple[
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
