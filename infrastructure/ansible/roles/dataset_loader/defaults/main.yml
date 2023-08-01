@@ -671,7 +671,7 @@ dl_ds_default_profiles:
         value: tps_total
         secure: 0
 
-dl_ds_ats_major_version: "{{ 8 if dl_ats_version is version('8','>=') else 7 }}"
+dl_ds_ats_major_version: "{{ 9 if dl_ats_version is version('9','>=') else 8 if dl_ats_version is version('8', '>=') else 7 }}"
 
 # ATS Profiles are huge, we should normalize them a big to make them more understandable
 dl_ds_default_profile_layers:
@@ -696,9 +696,6 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.cache.hostdb.sync_frequency
           configFile: records.config
           value: INT 0
-        - name: CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup
-          configFile: records.config
-          value: INT 0
         - name: CONFIG proxy.config.cache.ram_cache_cutoff
           configFile: records.config
           value: "INT {{ (dl_atsec_ram_cache_max_obj_size_mb | float * 1000000) | int }}"
@@ -711,9 +708,6 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.hostdb.serve_stale_for
           configFile: records.config
           value: INT 20
-        - name: CONFIG proxy.config.http.origin_max_connections
-          configFile: records.config
-          value: INT 500
         - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
           configFile: records.config
           value: INT 2
@@ -805,6 +799,14 @@ dl_ds_default_profile_layers:
         - name: remap_stats.so
           configFile: plugin.config
           value: ''
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.http.origin_max_connections
+          configFile: records.config
+          value: INT 500
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup
+          configFile: records.config
+          value: INT 0
       v8:
         - name: remap_stats.so -p
           configFile: plugin.config
@@ -813,6 +815,19 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.ssl.server.multicert.exit_on_load_fail
           configFile: records.config
           value: INT 0
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.http.origin_max_connections
+          configFile: records.config
+          value: INT 500
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup
+          configFile: records.config
+          value: INT 0
+      v9:
+        # Param change for ATS 9, from proxy.config.http.origin_max_connections
+        - name: CONFIG proxy.config.http.per_server.connection.max
+          configFile: records.config
+          value: INT 500
     mid:
       common:
         - name: location
@@ -836,9 +851,6 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.hostdb.ttl_mode
           configFile: records.config
           value: INT 2
-        - name: CONFIG proxy.config.http.origin_max_connections
-          configFile: records.config
-          value: INT 1500
         - name: CONFIG proxy.config.http.parent_proxy.connect_attempts_timeout
           configFile: records.config
           value: INT 1
@@ -858,7 +870,20 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.cop.active_health_checks
           configFile: records.config
           value: INT 0
-      v8: []
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.http.origin_max_connections
+          configFile: records.config
+          value: INT 1500
+      v8:
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.http.origin_max_connections
+          configFile: records.config
+          value: INT 1500
+      v9:
+        # Param change for ATS 9, from proxy.config.http.origin_max_connections
+        - name: CONFIG proxy.config.http.per_server.connection.max
+          configFile: records.config
+          value: INT 1500
     common:
       common:
         - name: location
@@ -1056,15 +1081,9 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.http.negative_caching_list
           configFile: records.config
           value: STRING 204 305 403 404 405 414 500 501 502 503 504
-        - name: CONFIG proxy.config.http.origin_max_connections_queue
-          configFile: records.config
-          value: INT 0
         - name: CONFIG proxy.config.http.parent_proxy.retry_time
           configFile: records.config
           value: INT 10
-        - name: CONFIG proxy.config.http.parent_proxy_routing_enable
-          configFile: records.config
-          value: INT 1
         - name: CONFIG proxy.config.http.referer_default_redirect
           configFile: records.config
           value: STRING http://www.kabletown.invalid/
@@ -1092,9 +1111,6 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.net.default_inactivity_timeout
           configFile: records.config
           value: INT 180
-        - name: CONFIG proxy.config.net.max_connections_active_in
-          configFile: records.config
-          value: INT 100000
         - name: CONFIG proxy.config.net.max_connections_in
           configFile: records.config
           value: INT 100000
@@ -1216,6 +1232,18 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.http.normalize_ae_gzip
           configFile: records.config
           value: INT 0
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.net.max_connections_active_in
+          configFile: records.config
+          value: INT 100000
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.http.origin_max_connections_queue
+          configFile: records.config
+          value: INT 0
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.http.parent_proxy_routing_enable
+          configFile: records.config
+          value: INT 1
       v8:
         - name: LogFormat.Format
           configFile: logging.yaml
@@ -1297,6 +1325,27 @@ dl_ds_default_profile_layers:
         - name: LOCAL proxy.local.cluster.type
           configFile: records.config
           value: INT 3
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.net.max_connections_active_in
+          configFile: records.config
+          value: INT 100000
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.http.origin_max_connections_queue
+          configFile: records.config
+          value: INT 0
+        # ATS 7,8 specific param
+        - name: CONFIG proxy.config.http.parent_proxy_routing_enable
+          configFile: records.config
+          value: INT 1
+      v9:
+        # Param change for ATS 9, from proxy.config.net.max_connections_active_in
+        - name: CONFIG proxy.config.net.max_requests_in
+          configFile: records.config
+          value: INT 100000
+        # Param change for ATS 9, from proxy.config.http.origin_max_connections_queue
+        - name: CONFIG proxy.config.http.per_server.connection.queue_size
+          configFile: records.config
+          value: INT 0
 
 # TO Profiles (templates) and associated parameters
 # These should be the profiles which vary by CDN association
@@ -1674,6 +1723,12 @@ dl_ds_default_profile_cdntemplates:
     type: ATS_PROFILE
     routingDisabled: false
     parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
+  - name: "EDGE_ATS_9_{{ Target_cdn_delegation }}"
+    description: "Edge cache({{ Target_cdn_delegation }}) - ATS 9"
+    cdn: "{{ Target_cdn_delegation }}"
+    type: ATS_PROFILE
+    routingDisabled: false
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.edge.common + dl_ds_default_profile_layers.ats.edge['v'+dl_ds_ats_major_version] }}"
   - name: "MID_ATS_7_{{ Target_cdn_delegation }}"
     description: "Mid cache({{ Target_cdn_delegation }}) - ATS 7"
     cdn: "{{ Target_cdn_delegation }}"
@@ -1682,6 +1737,12 @@ dl_ds_default_profile_cdntemplates:
     parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
   - name: "MID_ATS_8_{{ Target_cdn_delegation }}"
     description: "Mid cache({{ Target_cdn_delegation }}) - ATS 8"
+    cdn: "{{ Target_cdn_delegation }}"
+    type: ATS_PROFILE
+    routingDisabled: false
+    parameters: "{{ dl_ds_default_profile_layers.ats.common.common + dl_ds_default_profile_layers.ats.common['v'+dl_ds_ats_major_version] + dl_ds_default_profile_layers.ats.mid.common + dl_ds_default_profile_layers.ats.mid['v'+dl_ds_ats_major_version] }}"
+  - name: "MID_ATS_9_{{ Target_cdn_delegation }}"
+    description: "Mid cache({{ Target_cdn_delegation }}) - ATS 9"
     cdn: "{{ Target_cdn_delegation }}"
     type: ATS_PROFILE
     routingDisabled: false
