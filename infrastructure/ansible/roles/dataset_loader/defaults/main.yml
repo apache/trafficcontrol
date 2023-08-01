@@ -799,11 +799,11 @@ dl_ds_default_profile_layers:
         - name: remap_stats.so
           configFile: plugin.config
           value: ''
-        # ATS 7 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.http.origin_max_connections
           configFile: records.config
           value: INT 500
-        # ATS 7 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup
           configFile: records.config
           value: INT 0
@@ -815,11 +815,11 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.ssl.server.multicert.exit_on_load_fail
           configFile: records.config
           value: INT 0
-        # ATS 8 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.http.origin_max_connections
           configFile: records.config
           value: INT 500
-        # ATS 8 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.cache.http.compatibility.4-2-0-fixup
           configFile: records.config
           value: INT 0
@@ -870,12 +870,12 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.cop.active_health_checks
           configFile: records.config
           value: INT 0
-        # ATS 7 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.http.origin_max_connections
           configFile: records.config
           value: INT 1500
       v8:
-        # ATS 8 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.http.origin_max_connections
           configFile: records.config
           value: INT 1500
@@ -1114,9 +1114,9 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.net.max_connections_in
           configFile: records.config
           value: INT 100000
-        - name: CONFIG proxy.config.net.sock_option_flag_in
-          configFile: records.config
-          value: INT 13
+        #- name: CONFIG proxy.config.net.sock_option_flag_in
+        #  configFile: records.config
+        #  value: INT 13
         - name: CONFIG proxy.config.net.sock_option_flag_out
           configFile: records.config
           value: INT 9
@@ -1232,15 +1232,15 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.http.normalize_ae_gzip
           configFile: records.config
           value: INT 0
-        # ATS 7 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.net.max_connections_active_in
           configFile: records.config
           value: INT 100000
-        # ATS 7 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.http.origin_max_connections_queue
           configFile: records.config
           value: INT 0
-        # ATS 7 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.http.parent_proxy_routing_enable
           configFile: records.config
           value: INT 1
@@ -1329,15 +1329,15 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.net.sock_option_flag_in
           configFile: records.config
           value: INT 5
-        # ATS 8 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.net.max_connections_active_in
           configFile: records.config
           value: INT 100000
-        # ATS 8 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.http.origin_max_connections_queue
           configFile: records.config
           value: INT 0
-        # ATS 8 specific param
+        # ATS 7,8 specific param
         - name: CONFIG proxy.config.http.parent_proxy_routing_enable
           configFile: records.config
           value: INT 1
@@ -1351,9 +1351,9 @@ dl_ds_default_profile_layers:
           configFile: records.config
           value: INT 0
         # Param value changed between ATS 7,9
-        - name: CONFIG proxy.config.net.sock_option_flag_in
-          configFile: records.config
-          value: INT 1
+        #- name: CONFIG proxy.config.net.sock_option_flag_in
+        #  configFile: records.config
+        #  value: INT 1
         # Param value changed between ATS 8 & 9, default is 0
         - name: CONFIG proxy.config.ssl.handshake_timeout_in
           configFile: records.config
