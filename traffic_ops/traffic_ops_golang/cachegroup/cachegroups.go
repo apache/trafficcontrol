@@ -1110,7 +1110,7 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	var exists bool
 	err := tx.QueryRow(`SELECT EXISTS(SELECT * from cachegroup where name = $1)`, cg.Name).Scan(&exists)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if cache group with name %s exists", err, cg.Name))
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if cache group with name %s exists", err, *cg.Name))
 		return
 	}
 	if exists {
@@ -1137,7 +1137,7 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating cache group with name: %s", err, cg.Name), nil)
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating cache group with name: %s", err, *cg.Name), nil)
 			return
 		}
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -1414,10 +1414,10 @@ func readAndValidateJsonStruct(r *http.Request) (tc.CacheGroupNullableV5, error)
 	}
 
 	if cg.Latitude == nil {
-		cg.Latitude = util.FloatPtr(0.0)
+		cg.Latitude = util.Ptr(0.0)
 	}
 	if cg.Longitude == nil {
-		cg.Longitude = util.FloatPtr(0.0)
+		cg.Longitude = util.Ptr(0.0)
 	}
 	if cg.LocalizationMethods == nil {
 		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
