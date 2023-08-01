@@ -1643,3 +1643,108 @@ def delivery_services_regex_data_post(to_session: TOSession, request_template_da
 	if msg is None:
 		logger.error("delivery_services_regex returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="delivery_service_required_capabilities_post_data")
+def delivery_service_required_capabilities_data_post(to_session: TOSession,
+		request_template_data: list[JSONData], delivery_services_post_data:dict[str, object],
+		server_capabilities_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for delivery_service_required_capabilities endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get delivery_service_required_capabilities request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	delivery_service_required_capabilities = check_template_data(
+		request_template_data["delivery_service_required_capabilities"], "delivery_service_required_capabilities")
+
+	# Return new post data and post response from delivery_service_required_capabilities POST request
+	deliveryServiceID = delivery_services_post_data["id"]
+	requiredCapability = server_capabilities_post_data["name"]
+	delivery_service_required_capabilities["deliveryServiceID"] = deliveryServiceID
+	delivery_service_required_capabilities["requiredCapability"] = requiredCapability
+
+	logger.info("New delivery_service_required_capabilities data to hit POST method %s",
+	     delivery_service_required_capabilities)
+	# Hitting delivery_service_required_capabilities POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservices_required_capabilities(
+		data=delivery_service_required_capabilities)
+	resp_obj = check_template_data(response, "delivery_service_required_capabilities")
+	yield resp_obj
+	msg = to_session.delete_deliveryservices_required_capabilities(
+		query_params={"deliveryServiceID":deliveryServiceID,"requiredCapability":requiredCapability})
+	logger.info("Deleting delivery_service_required_capabilities data... %s", msg)
+	if msg is None:
+		logger.error(
+		"delivery_service_required_capabilities returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="delivery_service_request_comments_post_data")
+def delivery_service_request_comments_data_post(to_session: TOSession,
+		request_template_data: list[JSONData],
+		deliveryservice_request_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for delivery_service_request_comments endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get delivery_service_request_comments request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	delivery_service_request_comments = check_template_data(
+		request_template_data["delivery_service_request_comments"], "delivery_service_request_comments")
+
+	# Return new post data and post response from delivery_service_request_comments POST request
+	delivery_service_request_id = deliveryservice_request_post_data["id"]
+	delivery_service_request_comments["deliveryServiceRequestId"]= delivery_service_request_id
+
+	logger.info("New delivery_service_request_comments data to hit POST method %s",
+	     delivery_service_request_comments)
+	# Hitting delivery_service_request_comments POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice_request_comment(
+		data=delivery_service_request_comments)
+	resp_obj = check_template_data(response, "delivery_service_request_comments")
+	yield resp_obj
+	request_comment_id = resp_obj.get("id")
+	msg = to_session.delete_deliveryservice_request_comment(query_params={"id":request_comment_id})
+	logger.info("Deleting delivery_service_request_comments data... %s", msg)
+	if msg is None:
+		logger.error("delivery_service_request_comments returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+  
+@pytest.fixture(name="profile_parameters_post_data")
+def profile_parameters_post_data(to_session: TOSession, request_template_data: list[JSONData],
+		profile_post_data:dict[str, object], parameter_post_data:dict[str, object]
+		) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for profile parameters endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get profile parameters request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	profile_parameters = check_template_data(request_template_data["profile_parameters"], "profile_parameters")
+
+	# Return new post data and post response from profile parameters POST request
+	profile_get_response = to_session.get_profiles()
+	profile_data = profile_get_response [0][0]
+	profile_id = profile_data.get("id")
+
+	profile_parameters["profileId"] = profile_post_data["id"]
+	profile_parameters["parameterId"] = parameter_post_data["id"]
+
+	logger.info("New profile_parameter data to hit POST method %s", profile_parameters)
+
+	# Hitting profile parameters POST method
+	response: tuple[JSONData, requests.Response] = to_session.associate_paramater_to_profile(profile_id=profile_id, data=profile_parameters)
+	resp_obj = check_template_data(response, "profile_parameters")
+	yield resp_obj
+	profile_id = resp_obj.get("profileId")
+	parameter_id = resp_obj.get("parameterId")
+	msg = to_session.delete_profile_parameter_association_by_id(profile_id=profile_id, parameter_id=parameter_id)
+	logger.info("Deleting Profile Parameters data... %s", msg)
+	if msg is None:
+		logger.error("Profile Parameter returned by Traffic Ops is missing a 'profile_id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")

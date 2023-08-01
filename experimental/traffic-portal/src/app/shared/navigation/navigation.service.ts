@@ -11,10 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Injectable } from "@angular/core";
+import { isPlatformBrowser } from "@angular/common";
+import { Inject, Injectable, PLATFORM_ID } from "@angular/core";
 import { ReplaySubject } from "rxjs";
 
 import { UserService } from "src/app/api";
+import { LOCAL_TPV1_URL } from "src/app/app.component";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 
 /**
@@ -60,8 +62,15 @@ export class NavigationService {
 
 	private readonly horizontalNavs: Map<string, HeaderNavigation>;
 	private readonly verticalNavs: Map<string, HeaderNavigation>;
+	private readonly tpv1Url: string = "http:localhost:433";
 
-	constructor(private readonly auth: CurrentUserService, private readonly api: UserService) {
+	constructor(
+		private readonly auth: CurrentUserService,
+		private readonly api: UserService,
+		@Inject(PLATFORM_ID) private readonly platformId: object) {
+		if (isPlatformBrowser(this.platformId)) {
+			this.tpv1Url = window.localStorage.getItem(LOCAL_TPV1_URL) ?? this.tpv1Url;
+		}
 		this.horizontalNavs = new Map<string, HeaderNavigation>([
 			["Home", {
 				routerLink: "/core",
@@ -156,8 +165,35 @@ export class NavigationService {
 		}, {
 			children: [
 				{
+					href: `${this.tpv1Url}/cache-checks`,
+					name: "Cache Checks"
+				},
+				{
+					href: `${this.tpv1Url}/cache-stats`,
+					name: "Cache Stats"
+				}
+			],
+			name: "Monitor"
+		}, {
+			children: [
+				{
+					href: `${this.tpv1Url}/delivery-services`,
+					name: "Delivery Services"
+				},
+				{
+					href: `${this.tpv1Url}/delivery-service-requests`,
+					name: "Delivery Service Requests"
+				}
+			],
+			name: "Services"
+		}, {
+			children: [
+				{
 					href: "/core/types",
 					name: "Types"
+				}, {
+					href: `${this.tpv1Url}/origins`,
+					name: "Origins"
 				},
 				{
 					href: "/core/parameters",
@@ -193,7 +229,19 @@ export class NavigationService {
 				{
 					href: "/core/iso-gen",
 					name: "Generate System ISO"
-				}
+				},
+				{
+					href: "/core/certs/ssl",
+					name: "Inspect Certificate"
+				},
+				{
+					href: `${this.tpv1Url}/jobs`,
+					name: "Invalidate Content"
+				},
+				{
+					href: `${this.tpv1Url}/notifications`,
+					name: "Notifications"
+				},
 			],
 			name: "Other"
 		}]);
