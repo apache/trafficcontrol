@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strings"
 	"time"
@@ -543,14 +544,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, statusCode := addNodes2(tx, topology.Name, legacyNodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := addNodes2(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 			return
 		}
 	}
 
-	if userErr, sysErr, statusCode := addParents2(tx, legacyNodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := addParents2(tx, topology.Nodes); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
@@ -576,15 +577,348 @@ func (topology *TOTopology) Create() (error, error, int) {
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-	if userErr, sysErr, errCode := addNodes2(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
-	if userErr, sysErr, errCode := addParents2(tx, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := topology.addParents(); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
 	return nil, nil, 0
+}
+
+func readTopologies(r *http.Request, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	var maxTime time.Time
+	var runSecond bool
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		//api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return nil, userErr, sysErr, errCode, &maxTime
+	}
+	defer inf.Close()
+
+	interfaces := make([]interface{}, 0)
+
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"name":        {Column: "t.name"},
+		"description": {Column: "t.description"},
+		"lastUpdated": {Column: "t.last_updated"},
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, &maxTime
+	}
+
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(inf.Tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return []interface{}{}, nil, nil, http.StatusNotModified, &maxTime
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	// Case where we need to run the second query
+	query := selectQuery() + where + orderBy + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		//api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("topology read: querying: "+err.Error()))
+		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError, &maxTime
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	topologies := map[string]*tc.TopologyV5{}
+	indices := map[int]int{}
+	for index := 0; rows.Next(); index++ {
+		var (
+			name, description string
+			lastUpdated       time.Time
+		)
+		topologyNode := tc.TopologyNodeV5{}
+		topologyNode.Parents = []int{}
+		var parents pq.Int64Array
+		if err = rows.Scan(
+			&name,
+			&description,
+			&lastUpdated,
+			&topologyNode.Id,
+			&topologyNode.Cachegroup,
+			&parents,
+		); err != nil {
+			//api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("topology read: scanning: "+err.Error()))
+			return nil, nil, errors.New("topology read: scanning: " + err.Error()), http.StatusInternalServerError, &maxTime
+		}
+		for _, id := range parents {
+			topologyNode.Parents = append(topologyNode.Parents, int(id))
+		}
+		indices[topologyNode.Id] = index
+		if _, exists := topologies[name]; !exists {
+			topology := tc.TopologyV5{Nodes: []tc.TopologyNodeV5{}}
+			topologies[name] = &topology
+			topology.Name = name
+			topology.Description = description
+			topology.LastUpdated, err = util.ConvertTimeFormat(lastUpdated, time.RFC3339)
+			if err != nil {
+				//api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("couldn't convert last updated time to rfc3339 format: "+err.Error()))
+				return nil, nil, errors.New("couldn't convert last updated time to rfc3339 format: " + err.Error()), http.StatusInternalServerError, &maxTime
+			}
+		}
+		topologies[name].Nodes = append(topologies[name].Nodes, topologyNode)
+	}
+
+	for _, topology := range topologies {
+		nodeMap := map[int]int{}
+		for index, node := range topology.Nodes {
+			nodeMap[node.Id] = index
+		}
+		for _, node := range topology.Nodes {
+			for parentIndex := 0; parentIndex < len(node.Parents); parentIndex++ {
+				node.Parents[parentIndex] = nodeMap[node.Parents[parentIndex]]
+			}
+		}
+		interfaces = append(interfaces, *topology)
+	}
+	return interfaces, nil, nil, http.StatusOK, &maxTime
+}
+
+func Read(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, statusCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, nil, statusCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	interfaces, userErr, sysErr, statusCode, maxTime := readTopologies(r, inf.Config.UseIMS)
+	if statusCode == http.StatusNotModified {
+		api.AddLastModifiedHdr(w, *maxTime)
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+	if api.SetLastModifiedHeader(r, inf.Config.UseIMS) {
+		date := maxTime.Format(rfc.LastModifiedFormat)
+		w.Header().Add(rfc.LastModified, date)
+	}
+	api.WriteResp(w, r, interfaces)
+	return
+
+	//var runSecond bool
+	//var maxTime time.Time
+	//inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	//tx := inf.Tx
+	//if userErr != nil || sysErr != nil {
+	//	api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+	//	return
+	//}
+	//defer inf.Close()
+	//
+	//// Query Parameters to Database Query column mappings
+	//queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+	//	"name":       {Column: "typ.name"},
+	//	"id":         {Column: "typ.id", Checker: api.IsInt},
+	//	"useInTable": {Column: "typ.use_in_table"},
+	//}
+	//if _, ok := inf.Params["orderby"]; !ok {
+	//	inf.Params["orderby"] = "name"
+	//}
+	//where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	//if len(errs) > 0 {
+	//	api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	//}
+	//
+	//if inf.Config.UseIMS {
+	//	runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where))
+	//	if !runSecond {
+	//		log.Debugln("IMS HIT")
+	//		api.AddLastModifiedHdr(w, maxTime)
+	//		w.WriteHeader(http.StatusNotModified)
+	//		return
+	//	}
+	//	log.Debugln("IMS MISS")
+	//} else {
+	//	log.Debugln("Non IMS request")
+	//}
+	//
+	//query := selectQuery() + where + orderBy + pagination
+	//rows, err := tx.NamedQuery(query, queryValues)
+	//if err != nil {
+	//	api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("type get: error getting type(s): %w", err))
+	//}
+	//defer log.Close(rows, "unable to close DB connection")
+	//
+	//typ := tc.TypeV5{}
+	//typeList := []tc.TypeV5{}
+	//for rows.Next() {
+	//	if err = rows.Scan(&typ.ID, &typ.Name, &typ.Description, &typ.UseInTable, &typ.LastUpdated); err != nil {
+	//		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting type(s): %w", err))
+	//	}
+	//	typeList = append(typeList, typ)
+	//}
+	//
+	//api.WriteResp(w, r, typeList)
+	//return
+}
+
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, statusCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	topologies, userErr, sysErr, statusCode, _ := readTopologies(r, false)
+	if len(topologies) != 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("cannot find exactly 1 topology with the query string provided"), nil)
+		return
+	}
+
+	topology := topologies[0].(tc.TopologyV5)
+	nodes := DowngradeTopologyNodes(topology.Nodes)
+	userErr, sysErr, statusCode = checkIfTopologyCanBeAlteredByCurrentUser(inf, nodes)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+
+	where, _, _, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, map[string]dbhelpers.WhereColumnInfo{
+		"name":        {Column: "t.name"},
+		"description": {Column: "t.description"},
+		"lastUpdated": {Column: "t.last_updated"},
+	})
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	query := deleteQueryBase() + where
+	result, err := inf.Tx.NamedExec(query, queryValues)
+	if err != nil {
+		userErr, sysErr, statusCode = api.ParseDBError(err)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
+	if rowsAffected, err := result.RowsAffected(); err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("deleting topology: getting rows affected: "+err.Error()))
+		return
+	} else if rowsAffected < 1 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusNotFound, errors.New("no topology with that key found"), nil)
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("topology delete affected too many rows: %d", rowsAffected))
+		return
+	}
+
+	alertsObject := tc.CreateAlerts(tc.SuccessLevel, "topology was deleted.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alertsObject, topology)
+
+	changeLogMsg := fmt.Sprintf("TOPOLOGY: %s, ACTION: Deleted topology, keys: {name: %s }", topology.Name, topology.Name)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, statusCode := api.NewInfo(r, []string{"name"}, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	topologies, userErr, sysErr, statusCode, _ := readTopologies(r, false)
+	if len(topologies) != 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("cannot find exactly 1 topology with the query string provided"), nil)
+		return
+	}
+	var topology tc.TopologyV5
+	if err := json.NewDecoder(r.Body).Decode(&topology); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	alerts, userErr, sysErr := ValidateTopology(topology, inf)
+	if userErr != nil || sysErr != nil {
+		code := http.StatusBadRequest
+		if sysErr != nil {
+			code = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+		return
+	}
+
+	requestedName := inf.Params["name"]
+	// check if the entity was already updated
+	userErr, sysErr, statusCode = api.CheckIfUnModifiedByName(r.Header, inf.Tx, requestedName, "topology")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+	nodes := DowngradeTopologyNodes(topology.Nodes)
+	userErr, sysErr, statusCode = checkIfTopologyCanBeAlteredByCurrentUser(inf, nodes)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+
+	oldTopology := topologies[0].(tc.TopologyV5)
+
+	if err := removeParents(tx, oldTopology.Name); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+
+	var oldNodes, newNodes = map[string]int{}, map[string]int{}
+	for index, node := range oldTopology.Nodes {
+		oldNodes[node.Cachegroup] = index
+	}
+	for index, node := range topology.Nodes {
+		newNodes[node.Cachegroup] = index
+	}
+	var toRemove []string
+	for cachegroupName := range oldNodes {
+		if _, exists := newNodes[cachegroupName]; !exists {
+			toRemove = append(toRemove, cachegroupName)
+		} else {
+			topology.Nodes[newNodes[cachegroupName]].Id = oldTopology.Nodes[oldNodes[cachegroupName]].Id
+		}
+	}
+
+	if len(toRemove) > 0 {
+		if err := removeNodes(inf.Tx.Tx, oldTopology.Name, &toRemove); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+			return
+		}
+	}
+
+	if userErr, sysErr, statusCode := setTopologyDetails2(tx, &topology); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+
+	if userErr, sysErr, statusCode := addNodes2(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+	if userErr, sysErr, statusCode := addParents2(tx, topology.Nodes); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		return
+	}
+
+	alertsObject := tc.CreateAlerts(tc.SuccessLevel, "topology was updated.")
+	if len(alerts.Alerts) != 0 {
+		alertsObject.AddAlerts(alerts)
+	}
+	api.WriteAlertsObj(w, r, http.StatusOK, alertsObject, topology)
+
+	changeLogMsg := fmt.Sprintf("TOPOLOGY: %s, ACTION: Updated topology, keys: {name: %s }", topology.Name, topology.Name)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
 // Read is a requirement of the api.Reader interface and is called by api.ReadHandler().
@@ -662,16 +996,16 @@ func (topology *TOTopology) Read(h http.Header, useIMS bool) ([]interface{}, err
 	return interfaces, nil, nil, http.StatusOK, &maxTime
 }
 
-func (topology *TOTopology) removeParents() error {
-	_, err := topology.ReqInfo.Tx.Exec(deleteParentsQuery(), topology.Name)
+func removeParents(tx *sql.Tx, name string) error {
+	_, err := tx.Exec(deleteParentsQuery(), name)
 	if err != nil {
 		return errors.New("topology update: error deleting old parents: " + err.Error())
 	}
 	return nil
 }
 
-func (topology *TOTopology) removeNodes(cachegroups *[]string) error {
-	_, err := topology.ReqInfo.Tx.Exec(deleteNodesQuery(), topology.Name, pq.Array(*cachegroups))
+func removeNodes(tx *sql.Tx, name string, cachegroups *[]string) error {
+	_, err := tx.Exec(deleteNodesQuery(), name, pq.Array(*cachegroups))
 	if err != nil {
 		return errors.New("topology update: error removing old unused nodes: " + err.Error())
 	}
@@ -705,7 +1039,7 @@ func (topology *TOTopology) addNodes() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func addNodes2(tx *sql.Tx, name string, nodes []tc.TopologyNode) (error, error, int) {
+func addNodes2(tx *sql.Tx, name string, nodes []tc.TopologyNodeV5) (error, error, int) {
 	var cachegroupsToInsert []string
 	var indices = make([]int, 0)
 	for index, node := range nodes {
@@ -719,7 +1053,7 @@ func addNodes2(tx *sql.Tx, name string, nodes []tc.TopologyNode) (error, error, 
 	}
 	rows, err := tx.Query(nodeInsertQuery(), name, pq.Array(cachegroupsToInsert))
 	if err != nil {
-		return nil, errors.New("error adding nodes: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("error adding nodes 2: " + err.Error()), http.StatusInternalServerError
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	for _, index := range indices {
@@ -764,7 +1098,7 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func addParents2(tx *sql.Tx, nodes []tc.TopologyNode) (error, error, int) {
+func addParents2(tx *sql.Tx, nodes []tc.TopologyNodeV5) (error, error, int) {
 	var (
 		children []int
 		parents  []int
@@ -791,6 +1125,21 @@ func addParents2(tx *sql.Tx, nodes []tc.TopologyNode) (error, error, int) {
 			if err != nil {
 				return api.ParseDBError(err)
 			}
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
+func setTopologyDetails2(tx *sql.Tx, topology *tc.TopologyV5) (error, error, int) {
+	rows, err := tx.Query(updateQuery(), topology.Name, topology.Description, topology.Name)
+	if err != nil {
+		return nil, fmt.Errorf("topology update: error setting the name and/or description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "unable to close DB connection")
+	for rows.Next() {
+		err = rows.Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
+		if err != nil {
+			return api.ParseDBError(err)
 		}
 	}
 	return nil, nil, http.StatusOK
@@ -832,7 +1181,7 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	}
 	oldTopology := TOTopology{APIInfoImpl: topology.APIInfoImpl, Topology: topologies[0].(tc.Topology)}
 
-	if err := oldTopology.removeParents(); err != nil {
+	if err := removeParents(oldTopology.APIInfoImpl.APIInfo().Tx.Tx, oldTopology.Name); err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
 	var oldNodes, newNodes = map[string]int{}, map[string]int{}
@@ -851,7 +1200,7 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 		}
 	}
 	if len(toRemove) > 0 {
-		if err := oldTopology.removeNodes(&toRemove); err != nil {
+		if err := removeNodes(oldTopology.APIInfoImpl.APIInfo().Tx.Tx, oldTopology.Name, &toRemove); err != nil {
 			return nil, err, http.StatusInternalServerError
 		}
 	}
