@@ -20,71 +20,324 @@ package cdn
  */
 
 import (
+	"database/sql"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
-// we need a type alias to define functions on
+// TOCDN is the struct needed for the CRUDer
 type TOCDN struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CDNNullable
 }
 
-func (v *TOCDN) GetLastUpdated() (*time.Time, bool, error) {
-	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "cdn")
+func Read(w http.ResponseWriter, r *http.Request) {
+	var runSecond bool
+	var maxTime time.Time
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"domainName":    dbhelpers.WhereColumnInfo{Column: "domain_name"},
+		"dnssecEnabled": dbhelpers.WhereColumnInfo{Column: "dnssec_enabled"},
+		"id":            dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
+		"name":          dbhelpers.WhereColumnInfo{Column: "name"},
+		"ttlOverride":   dbhelpers.WhereColumnInfo{Column: "ttl_override", Checker: api.IsInt},
+	}
+
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	query := selectQuery(inf.Version) + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusNotFound, nil, fmt.Errorf("cdn get: error getting cdn(s): %w", err))
+		return
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	cdn := tc.CDNV5{}
+	cdns := []tc.CDNV5{}
+	for rows.Next() {
+		if err = rows.Scan(&cdn.DNSSECEnabled, &cdn.DomainName, &cdn.ID, &cdn.LastUpdated, &cdn.TTLOverride, &cdn.Name); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting cdn(s): %w", err))
+			return
+		}
+		cdns = append(cdns, cdn)
+	}
+
+	api.WriteResp(w, r, cdns)
+	return
 }
 
-func (v *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+func Create(w http.ResponseWriter, r *http.Request) {
+	cdn := tc.CDNV5{}
+
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	cdn, err := validateRequest(r, inf.Version)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	var exists bool
+	if err = tx.QueryRow("SELECT EXISTS(SELECT id from cdn where name = $1)", cdn.Name).Scan(&exists); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if cdn with name %s exists", err, cdn.Name))
+		return
+	}
+	if exists {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cdn name '%s' already exists.", cdn.Name), nil)
+		return
+	}
+
+	cdn.DomainName = strings.ToLower(cdn.DomainName)
+
+	rows, err := inf.Tx.NamedQuery(insertQuery(inf.Version), cdn)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating cdn with name: %s", err, cdn.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	if rows.Next() {
+		if err = rows.Scan(&cdn.ID, &cdn.LastUpdated); err != nil {
+			usrErr, sysErr, code := api.ParseDBError(err)
+			api.HandleErr(w, r, tx, code, usrErr, sysErr)
+			return
+		}
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/cdns?name=%s", inf.Version.Major, inf.Version.Minor, cdn.Name))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cdn)
+	return
+}
+
+func Update(w http.ResponseWriter, r *http.Request) {
+	cdn := tc.CDNV5{}
+
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	cdn, err := validateRequest(r, inf.Version)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	id, err := strconv.Atoi(inf.Params["id"])
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(tx, int64(id), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "cdn")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	cdn.DomainName = strings.ToLower(cdn.DomainName)
+
+	query := `UPDATE
+cdn SET
+dnssec_enabled=$1,
+domain_name=$2,
+name=$3,
+ttl_override=$4
+WHERE id=$5 RETURNING last_updated, id`
+	err = tx.QueryRow(query, cdn.DNSSECEnabled, cdn.DomainName, cdn.Name, cdn.TTLOverride, inf.Params["id"]).Scan(&cdn.LastUpdated, &cdn.ID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cdn with id: %s not found", inf.Params["id"]), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn was updated.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, cdn)
+	return
+}
+
+func Delete(w http.ResponseWriter, r *http.Request) {
+	cdn := tc.CDNV5{}
+
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	var exists bool
+	if err := tx.QueryRow("SELECT EXISTS(SELECT id from cdn where id = $1)", inf.Params["id"]).Scan(&exists); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if cdn with name %s exists", err, cdn.Name))
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cdn id '%d' does not exist", cdn.ID), nil)
+		return
+	}
+
+	id, err := strconv.Atoi(inf.Params["id"])
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(tx, int64(id), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	res, err := tx.Exec(`DELETE FROM cdn WHERE id=$1`, id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if rows, err := res.RowsAffected(); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("unable to determine rows affected for deletion of cdn: %w", err))
+		return
+	} else if rows == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("no rows deleted for cdn"))
+		return
+	}
+
+	api.WriteAlerts(w, r, http.StatusOK, tc.CreateAlerts(tc.SuccessLevel, "cdn was deleted."))
+	return
+}
+func validateRequest(r *http.Request, v *api.Version) (tc.CDNV5, error) {
+	var cdn tc.CDNV5
+	if err := json.NewDecoder(r.Body).Decode(&cdn); err != nil {
+		return cdn, fmt.Errorf("error decoding POST request body into CDN struct %w", err)
+	}
+
+	validName := validation.NewStringRule(IsValidCDNName, "invalid characters found - Use alphanumeric . or - .")
+	validDomainName := validation.NewStringRule(govalidator.IsDNSName, "not a valid domain name")
+	errs := validation.Errors{
+		"name":        validation.Validate(cdn.Name, validation.Required, validName),
+		"domainName":  validation.Validate(cdn.DomainName, validation.Required, validDomainName),
+		"ttlOverride": validation.Validate(cdn.TTLOverride, validation.By(tovalidate.IsGreaterThanZero)),
+	}
+	return cdn, util.JoinErrs(tovalidate.ToErrors(errs))
+}
+
+func SelectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from cdn c  ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='cdn') as res`
+}
+
+func (cdn *TOCDN) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(cdn.APIInfo().Tx, *cdn.ID, "cdn")
+}
+
+func (cdn *TOCDN) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
 	return `SELECT max(t) from (
 		SELECT max(last_updated) as t from ` + tableName + ` c ` + where + orderBy + pagination +
 		` UNION ALL
 	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
-func (v *TOCDN) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOCDN) InsertQuery() string           { return insertQuery(v.APIInfo().Version) }
-func (v *TOCDN) NewReadObj() interface{}       { return &tc.CDNNullable{} }
-func (v *TOCDN) SelectQuery() string           { return selectQuery(v.APIInfo().Version) }
-func (v *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+func (cdn *TOCDN) SetLastUpdated(t tc.TimeNoMod) { cdn.LastUpdated = &t }
+func (cdn *TOCDN) InsertQuery() string           { return insertQuery(cdn.APIInfo().Version) }
+func (cdn *TOCDN) NewReadObj() interface{}       { return &tc.CDNNullable{} }
+func (cdn *TOCDN) SelectQuery() string           { return selectQuery(cdn.APIInfo().Version) }
+func (cdn *TOCDN) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	columnInfo := map[string]dbhelpers.WhereColumnInfo{
 		"domainName":    dbhelpers.WhereColumnInfo{Column: "domain_name"},
 		"dnssecEnabled": dbhelpers.WhereColumnInfo{Column: "dnssec_enabled"},
 		"id":            dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
 		"name":          dbhelpers.WhereColumnInfo{Column: "name"},
 	}
-	if v.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
+	if cdn.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 4, Minor: 1}) {
 		columnInfo["ttlOverride"] = dbhelpers.WhereColumnInfo{Column: "ttl_override", Checker: api.IsInt}
 	}
 	return columnInfo
 }
-func (v *TOCDN) UpdateQuery() string { return updateQuery(v.APIInfo().Version) }
-func (v *TOCDN) DeleteQuery() string { return deleteQuery() }
+func (cdn *TOCDN) UpdateQuery() string { return updateQuery(cdn.APIInfo().Version) }
+func (cdn *TOCDN) DeleteQuery() string { return deleteQuery() }
 
-func (cdn TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
+func (cdn *TOCDN) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 // Implementation of the Identifier, Validator interface functions
-func (cdn TOCDN) GetKeys() (map[string]interface{}, bool) {
+func (cdn *TOCDN) GetKeys() (map[string]interface{}, bool) {
 	if cdn.ID == nil {
 		return map[string]interface{}{"id": 0}, false
 	}
 	return map[string]interface{}{"id": *cdn.ID}, true
 }
 
-func (cdn TOCDN) GetAuditName() string {
+func (cdn *TOCDN) GetAuditName() string {
 	if cdn.Name != nil {
 		return *cdn.Name
 	}
@@ -94,7 +347,7 @@ func (cdn TOCDN) GetAuditName() string {
 	return "0"
 }
 
-func (cdn TOCDN) GetType() string {
+func (cdn *TOCDN) GetType() string {
 	return "cdn"
 }
 
@@ -103,30 +356,8 @@ func (cdn *TOCDN) SetKeys(keys map[string]interface{}) {
 	cdn.ID = &i
 }
 
-func isValidCDNchar(r rune) bool {
-	if r >= 'a' && r <= 'z' {
-		return true
-	}
-	if r >= 'A' && r <= 'Z' {
-		return true
-	}
-	if r >= '0' && r <= '9' {
-		return true
-	}
-	if r == '.' || r == '-' {
-		return true
-	}
-	return false
-}
-
-// IsValidCDNName returns true if the name contains only characters valid for a CDN name
-func IsValidCDNName(str string) bool {
-	i := strings.IndexFunc(str, func(r rune) bool { return !isValidCDNchar(r) })
-	return i == -1
-}
-
 // Validate fulfills the api.Validator interface.
-func (cdn TOCDN) Validate() (error, error) {
+func (cdn *TOCDN) Validate() (error, error) {
 	validName := validation.NewStringRule(IsValidCDNName, "invalid characters found - Use alphanumeric . or - .")
 	validDomainName := validation.NewStringRule(govalidator.IsDNSName, "not a valid domain name")
 	errs := validation.Errors{
@@ -174,6 +405,28 @@ func (cdn *TOCDN) Delete() (error, error, int) {
 		}
 	}
 	return api.GenericDelete(cdn)
+}
+
+func isValidCDNchar(r rune) bool {
+	if r >= 'a' && r <= 'z' {
+		return true
+	}
+	if r >= 'A' && r <= 'Z' {
+		return true
+	}
+	if r >= '0' && r <= '9' {
+		return true
+	}
+	if r == '.' || r == '-' {
+		return true
+	}
+	return false
+}
+
+// IsValidCDNName returns true if the name contains only characters valid for a CDN name
+func IsValidCDNName(str string) bool {
+	i := strings.IndexFunc(str, func(r rune) bool { return !isValidCDNchar(r) })
+	return i == -1
 }
 
 func formatQueryByAPIVersion(apiVersion *api.Version, minimumAPIVersion *api.Version, queryFormatString string, columnStrs []string, lowAPIVersionColumnStrs []string) string {

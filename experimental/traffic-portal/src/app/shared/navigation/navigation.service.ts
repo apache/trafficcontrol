@@ -231,6 +231,10 @@ export class NavigationService {
 					name: "Generate System ISO"
 				},
 				{
+					href: "/core/certs/ssl",
+					name: "Inspect Certificate"
+				},
+				{
 					href: `${this.tpv1Url}/jobs`,
 					name: "Invalidate Content"
 				},

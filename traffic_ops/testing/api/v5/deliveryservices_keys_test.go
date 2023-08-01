@@ -46,8 +46,8 @@ func TestDeliveryServicesKeys(t *testing.T) {
 	})
 }
 
-func createBlankCDN(cdnName string, t *testing.T) tc.CDN {
-	_, _, err := TOSession.CreateCDN(tc.CDN{
+func createBlankCDN(cdnName string, t *testing.T) tc.CDNV5 {
+	_, _, err := TOSession.CreateCDN(tc.CDNV5{
 		DNSSECEnabled: false,
 		DomainName:    cdnName + ".ai",
 		Name:          cdnName,
