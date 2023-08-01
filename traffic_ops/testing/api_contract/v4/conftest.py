@@ -1645,6 +1645,50 @@ def delivery_services_regex_data_post(to_session: TOSession, request_template_da
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
+@pytest.fixture(name="cdn_federation_post_data")
+def cdn_federation_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  cdn_post_data:dict[str, object], user_post_data:dict[str, object],
+		  delivery_services_post_data: dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for cdn_name_federations endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get federations request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	cdn_federation = check_template_data(request_template_data["cdn_federation"], "cdn_federation")
+	# Return new post data and post response from cdn_federation POST request
+	cdn_name = cdn_post_data["name"]
+
+	logger.info("New federations data to hit POST method %s", cdn_federation)
+	# Hitting cdn_federation POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_federation_in_cdn(cdn_name=cdn_name, data= cdn_federation)
+	cdn_federation_resp_obj = check_template_data(response, "cdn_federation")
+	federation_id = cdn_federation_resp_obj.get("id")
+
+	#Assign created federation to a user
+	user_id = user_post_data["id"]
+	user_federation = check_template_data(request_template_data["user_federation"], "user_federation")
+	user_federation["userIds"][0] = user_id
+	response: tuple[JSONData, requests.Response] = to_session.create_federation_user(federation_id=federation_id, data=user_federation)
+	user_federation_resp_obj = check_template_data(response, "user_federation")
+
+	#Assign the federation to a delivery_service
+	delivery_service_id = delivery_services_post_data["id"]
+	delivery_service_federation = check_template_data(request_template_data["delivery_service_federation"], "delivery_service_federation")
+	delivery_service_federation["dsIds"][0] = delivery_service_id
+	response: tuple[JSONData, requests.Response] = to_session.assign_delivery_services_to_federations(federation_id=federation_id, data=delivery_service_federation)
+	delivery_service_federation_resp_obj = check_template_data(response, "delivery_service_federation")
+
+	yield [cdn_name, cdn_federation_resp_obj, cdn_federation, federation_id, delivery_service_federation_resp_obj]
+	
+	msg = to_session.delete_federation_in_cdn(cdn_name=cdn_name, federation_id=federation_id)
+	logger.info("Deleting cdn_federation dara... %s", msg)
+	if msg is None:
+		logger.error("cdn_federation returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
 @pytest.fixture(name="delivery_service_required_capabilities_post_data")
 def delivery_service_required_capabilities_data_post(to_session: TOSession,
 		request_template_data: list[JSONData], delivery_services_post_data:dict[str, object],

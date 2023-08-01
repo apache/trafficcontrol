@@ -1217,6 +1217,15 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request('delete', 'federations', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_federation(self):
+		"""
+		Allows a user to delete federations for their delivery service(s).
+		:ref:`to-api-federations`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 
 	@api_request('get', 'cdns/{cdn_name:s}/federations', ('3.0', '4.0', '4.1', '5.0'))
 	def get_federations_for_cdn(self, cdn_name=None, query_params=None):
@@ -1244,7 +1253,7 @@ class TOSession(RestApiSession):
 		"""
 
 	@api_request('put', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('3.0', '4.0', '4.1', '5.0'))
-	def update_federation_in_cdn(self, cdn_name=None, federation_id=None, query_params=None):
+	def update_federation_in_cdn(self, cdn_name=None, federation_id=None, data=None):
 		"""
 		Update a federation.
 		:ref:`to-api-cdns-name-federations-id`

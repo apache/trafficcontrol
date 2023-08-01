@@ -396,6 +396,29 @@
 			"setNumber": 1
 		}
 	],
+	"cdn_federation": [
+		{
+			"cname": "test.quest.",
+			"ttl": 48,
+			"description": "A test federation"
+		}
+	],
+	"user_federation": [
+		{
+			"userIds": [
+				2
+			],
+			"replace": true
+		}
+	],
+	"delivery_service_federation": [
+		{
+			"dsIds": [
+				37
+			],
+			"replace": true
+      }
+	],
 	"delivery_service_required_capabilities": [
 		{
 			"deliveryServiceID": 1,
