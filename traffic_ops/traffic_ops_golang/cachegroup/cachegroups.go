@@ -956,8 +956,8 @@ func DeleteQuery() string {
 	return `DELETE FROM cachegroup WHERE id=$1`
 }
 
-// Get [Version : V5] function Process the *http.Request and writes the response. It uses GetCacheGroup function.
-func Get(w http.ResponseWriter, r *http.Request) {
+// GetCacheGroup [Version : V5] function Process the *http.Request and writes the response. It uses getCacheGroup function.
+func GetCacheGroup(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -982,7 +982,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	tx := inf.Tx
 
-	cgList, maxTime, code, usrErr, syErr = GetCacheGroup(tx, inf.Params, useIMS, r.Header)
+	cgList, maxTime, code, usrErr, syErr = getCacheGroup(tx, inf.Params, useIMS, r.Header)
 	if code == http.StatusNotModified {
 		w.WriteHeader(code)
 		api.WriteResp(w, r, []tc.CacheGroupV5{})
@@ -1006,13 +1006,11 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, cgList)
 }
 
-// GetCacheGroup [Version : V5] receives transactions from Get function and returns cache groups list.
-func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]interface{}, time.Time, int, error, error) {
-	//func GetCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
+func getCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]interface{}, time.Time, int, error, error) {
+	//func getCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
 	var runSecond bool
 	var maxTime time.Time
 	cgList := []interface{}{}
-	//cgList := []tc.CacheGroupV5{}
 
 	// Query Parameters to Database Query column mappings
 	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
@@ -1116,7 +1114,7 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if exists {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cache group name '%s' already exists.", cg.Name), nil)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cache group name '%s' already exists.", *cg.Name), nil)
 		return
 	}
 
@@ -1187,7 +1185,7 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/cachegroups?name=%s", inf.Version.Major, inf.Version.Minor, cg.Name))
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/cachegroups?name=%s", inf.Version.Major, inf.Version.Minor, *cg.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cg)
 	return
 }
@@ -1210,6 +1208,10 @@ func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
 
 	ID := inf.Params["id"]
 	id, err := strconv.Atoi(ID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusUnprocessableEntity, fmt.Errorf("update cachegroup: converted to type int: "+err.Error()), nil)
+		return
+	}
 
 	// check if the entity was already updated
 	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "cachegroup")
@@ -1300,7 +1302,7 @@ func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cache group with name: %s not found", dgCg.Name), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cache group with name: %s not found", *dgCg.Name), nil)
 			return
 		}
 		usrErr, sysErr, code := api.ParseDBError(err)
@@ -1341,6 +1343,10 @@ func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
 
 	ID := inf.Params["id"]
 	id, err := strconv.Atoi(ID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusUnprocessableEntity, fmt.Errorf("delete cachegroup: converted to type int: "+err.Error()), nil)
+		return
+	}
 
 	inUse, err := isUsed(inf.Tx, id)
 	if inUse {
