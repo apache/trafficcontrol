@@ -23,6 +23,43 @@ import { join } from "path";
 import { hasProperty } from "src/app/utils";
 
 /**
+ * A Node system error. I don't know why but this isn't exposed by Node - it's a
+ * class but you won't be able to use `instanceof` - and isn't present in Node
+ * typings. I copied the properties and their descriptions from the NodeJS
+ * documentation.
+ */
+type SystemError = Error & {
+	/** If present, the address to which a network connection failed. */
+	readonly address?: string;
+	/** The string error code. */
+	readonly code: string;
+	/** If present, the file path destination when reporting a file system error. */
+	readonly dest?: string;
+	/** The system-provided error number. */
+	readonly errno: number;
+	/** If present, extra details about the error condition. */
+	readonly info?: unknown;
+	/** A system-provided human-readable description of the error. */
+	readonly message: string;
+	/** If present, the file path when reporting a file system error. */
+	readonly path?: string;
+	/** If present, the network connection port that is not available. */
+	readonly port?: number;
+	/** The name of the system call that triggered the error. */
+	readonly syscall: string;
+};
+
+/**
+ * Checks if an {@link Error} is a {@link SystemError}.
+ *
+ * @param e The {@link Error} to check.
+ * @returns Whether `e` is a {@link SystemError}.
+ */
+function isSystemError(e: Error): e is SystemError {
+	return hasProperty(e, "code");
+}
+
+/**
  * ServerVersion contains versioning information for the server,
  * consistent with what other components provide, even if some
  * of it doesn't really make sense for a Node server.
