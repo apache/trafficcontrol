@@ -24,7 +24,7 @@ type TrafficControl struct {
 	ASNs                                              []tc.ASNV5                              `json:"asns"`
 	CDNs                                              []tc.CDNV5                              `json:"cdns"`
 	CDNLocks                                          []tc.CDNLock                            `json:"cdnlocks"`
-	CacheGroups                                       []tc.CacheGroupNullable                 `json:"cachegroups"`
+	CacheGroups                                       []tc.CacheGroupNullableV5               `json:"cachegroups"`
 	Capabilities                                      []tc.Capability                         `json:"capability"`
 	Coordinates                                       []tc.CoordinateV5                       `json:"coordinates"`
 	DeliveryServicesRegexes                           []tc.DeliveryServiceRegexesTest         `json:"deliveryServicesRegexes"`
