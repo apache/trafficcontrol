@@ -17,11 +17,11 @@ limitations under the License.
 		<mat-card-content class="container">
 			<mat-form-field>
 				<mat-label>Name</mat-label>
-				<input matInput type="text" name="name" required [value]="topology.name">
+				<input matInput type="text" name="name" required [(ngModel)]="topology.name">
 			</mat-form-field>
 			<mat-form-field>
 				<mat-label>Description</mat-label>
-				<textarea matInput name="description" [value]="topology.description"></textarea>
+				<textarea matInput name="description" [(ngModel)]="topology.description"></textarea>
 			</mat-form-field>
 		</mat-card-content>
 		<mat-card-content class="container">
