@@ -21,6 +21,7 @@ package topology
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -88,6 +89,109 @@ func (topology *TOTopology) GetType() string {
 	return "topology"
 }
 
+func DowngradeTopologyNodes(nodes []tc.TopologyNodeV5) []tc.TopologyNode {
+	var legacyNodes []tc.TopologyNode
+	for _, n := range nodes {
+		var legacyNode tc.TopologyNode
+		legacyNode.Id = n.Id
+		legacyNode.Cachegroup = n.Cachegroup
+		legacyNode.Parents = make([]int, 0)
+		for _, p := range n.Parents {
+			legacyNode.Parents = append(legacyNode.Parents, p)
+		}
+		if n.LastUpdated != nil {
+			legacyNode.LastUpdated = tc.TimeNoModFromTime(*n.LastUpdated)
+		}
+		legacyNodes = append(legacyNodes, legacyNode)
+	}
+	return legacyNodes
+}
+
+func ValidateTopology(topology tc.TopologyV5, reqInfo *api.APIInfo) (tc.Alerts, error, error) {
+	var alertsObject tc.Alerts
+	currentTopoName := reqInfo.Params["name"]
+	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters.")
+	rules := validation.Errors{}
+	rules["name"] = validation.Validate(topology.Name, validation.Required, nameRule)
+
+	nodeCount := len(topology.Nodes)
+	if nodeCount < 1 {
+		rules["length"] = fmt.Errorf("must provide 1 or more node, %v found", nodeCount)
+	}
+	var (
+		cacheGroups      = make([]tc.CacheGroupNullable, nodeCount)
+		cacheGroupsExist = true
+		err              error
+		userErr          error
+		sysErr           error
+		cacheGroupMap    map[string]tc.CacheGroupNullable
+		exists           bool
+	)
+	_ = err
+
+	legacyNodes := DowngradeTopologyNodes(topology.Nodes)
+	cacheGroupNames := make([]string, len(topology.Nodes))
+	for index, node := range topology.Nodes {
+		rules[fmt.Sprintf("node %v parents size", index)] = validation.Validate(node.Parents, validation.Length(0, 2))
+		rules[fmt.Sprintf("node %v duplicate parents", index)] = checkForDuplicateParents(legacyNodes, index)
+		rules[fmt.Sprintf("node %v self parent", index)] = checkForSelfParents(legacyNodes, index)
+		cacheGroupNames[index] = node.Cachegroup
+	}
+	if cacheGroupMap, userErr, sysErr, _ = cachegroup.GetCacheGroupsByName(cacheGroupNames, reqInfo.Tx); userErr != nil || sysErr != nil {
+		return alertsObject, userErr, sysErr
+	}
+	cacheGroups = make([]tc.CacheGroupNullable, len(topology.Nodes))
+	for index, node := range topology.Nodes {
+		if cacheGroups[index], exists = cacheGroupMap[node.Cachegroup]; !exists {
+			rules[fmt.Sprintf("cachegroup %s not found", node.Cachegroup)] = fmt.Errorf("node %d references nonexistent cachegroup %s", index, node.Cachegroup)
+			cacheGroupsExist = false
+		}
+	}
+	rules["duplicate cachegroup name"] = checkUniqueCacheGroupNames(legacyNodes)
+	if !cacheGroupsExist {
+		return alertsObject, util.JoinErrs(tovalidate.ToErrors(rules)), nil
+	}
+
+	for index, node := range topology.Nodes {
+		alerts, err := checkForEdgeParents(topology, cacheGroups, index)
+		if len(alerts.Alerts) != 0 {
+			alertsObject = alerts
+		}
+		rules[fmt.Sprintf("parent '%v' edge type", node.Cachegroup)] = err
+	}
+
+	cacheGroupIds := make([]int, len(cacheGroupNames))
+	for index, cacheGroup := range cacheGroups {
+		cacheGroupIds[index] = *cacheGroup.ID
+	}
+	dsCDNs, err := dbhelpers.GetDeliveryServiceCDNsByTopology(reqInfo.Tx.Tx, currentTopoName)
+	if err != nil {
+		return alertsObject, errors.New("unable to validate topology"), fmt.Errorf("validating Topology: %w", err)
+	}
+	rules["empty cachegroups"] = topology_validation.CheckForEmptyCacheGroups(reqInfo.Tx, cacheGroupIds, dsCDNs, false, nil)
+	//Get current Topology-CG for the requested change.
+	topoCachegroupNames := getCachegroupNames(legacyNodes)
+	rules["required capabilities"] = validateDSRequiredCapabilities(reqInfo.Tx.Tx, currentTopoName, topoCachegroupNames)
+
+	userErr, sysErr, _ = dbhelpers.CheckTopologyOrgServerCGInDSCG(reqInfo.Tx.Tx, dsCDNs, currentTopoName, topoCachegroupNames)
+	if userErr != nil || sysErr != nil {
+		return alertsObject, userErr, sysErr
+	}
+
+	/* Only perform further checks if everything so far is valid */
+	if err = util.JoinErrs(tovalidate.ToErrors(rules)); err != nil {
+		return alertsObject, err, nil
+	}
+
+	for _, leafMid := range checkForLeafMids(legacyNodes, cacheGroups) {
+		rules[fmt.Sprintf("node %v leaf mid", leafMid.Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 primary or secondary child cache group)", leafMid.Cachegroup, tc.CacheGroupMidTypeName)
+	}
+	_, rules["topology cycles"] = checkForCycles(legacyNodes)
+	rules["super-topology cycles"] = checkForCyclesAcrossTopologies(reqInfo, legacyNodes, topology.Name)
+
+	return alertsObject, util.JoinErrs(tovalidate.ToErrors(rules)), nil
+}
+
 // Validate is a requirement of the api.Validator interface.
 func (topology *TOTopology) Validate() (error, error) {
 	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
@@ -144,10 +248,11 @@ func (topology *TOTopology) Validate() (error, error) {
 		return errors.New("unable to validate topology"), fmt.Errorf("validating Topology: %w", err)
 	}
 	rules["empty cachegroups"] = topology_validation.CheckForEmptyCacheGroups(topology.ReqInfo.Tx, cacheGroupIds, dsCDNs, false, nil)
-	rules["required capabilities"] = topology.validateDSRequiredCapabilities(currentTopoName)
 
 	//Get current Topology-CG for the requested change.
-	topoCachegroupNames := topology.getCachegroupNames()
+	topoCachegroupNames := getCachegroupNames(topology.Nodes)
+	rules["required capabilities"] = validateDSRequiredCapabilities(topology.APIInfo().Tx.Tx, currentTopoName, topoCachegroupNames)
+
 	userErr, sysErr, _ = dbhelpers.CheckTopologyOrgServerCGInDSCG(topology.ReqInfo.Tx.Tx, dsCDNs, currentTopoName, topoCachegroupNames)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr
@@ -162,13 +267,13 @@ func (topology *TOTopology) Validate() (error, error) {
 		rules[fmt.Sprintf("node %v leaf mid", leafMid.Cachegroup)] = fmt.Errorf("cachegroup %v's type is %v; it cannot be a leaf (it must have at least 1 primary or secondary child cache group)", leafMid.Cachegroup, tc.CacheGroupMidTypeName)
 	}
 	_, rules["topology cycles"] = checkForCycles(topology.Nodes)
-	rules["super-topology cycles"] = topology.checkForCyclesAcrossTopologies()
+	rules["super-topology cycles"] = checkForCyclesAcrossTopologies(topology.APIInfo(), topology.Nodes, topology.Name)
 
 	return util.JoinErrs(tovalidate.ToErrors(rules)), nil
 }
 
-func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[string][]string, error) {
-	currentTopoName := topology.APIInfoImpl.ReqInfo.Params["name"]
+func nodesInOtherTopologies(info *api.APIInfo, topologyNodes []tc.TopologyNode) ([]tc.TopologyNode, map[string][]string, error) {
+	currentTopoName := info.Params["name"]
 	baseError := errors.New("unable to verify that there are no cycles across all topologies")
 	where := `WHERE name != :topology_name`
 	query := selectQueryWithParentNames() + where + `
@@ -180,7 +285,7 @@ func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[str
 		"edge_type_prefix": strings.ToLower(tc.EdgeTypePrefix) + "%",
 		"mid_type_prefix":  strings.ToLower(tc.MidTypePrefix) + "%",
 	}
-	rows, err := topology.ReqInfo.Tx.NamedQuery(query, parameters)
+	rows, err := info.Tx.NamedQuery(query, parameters)
 	if err != nil {
 		return nil, nil, baseError
 	}
@@ -226,12 +331,12 @@ func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[str
 	}
 
 	// Add nodes for the topology we are validating
-	for _, node := range topology.Nodes {
+	for _, node := range topologyNodes {
 		if _, exists := parentMapMap[node.Cachegroup]; !exists {
 			parentMapMap[node.Cachegroup] = map[string]bool{}
 		}
 		for _, parentCacheGroupIndex := range node.Parents {
-			parentMapMap[node.Cachegroup][topology.Nodes[parentCacheGroupIndex].Cachegroup] = true
+			parentMapMap[node.Cachegroup][topologyNodes[parentCacheGroupIndex].Cachegroup] = true
 		}
 	}
 
@@ -261,9 +366,8 @@ func (topology *TOTopology) nodesInOtherTopologies() ([]tc.TopologyNode, map[str
 	return nodes, topologiesByCacheGroup, nil
 }
 
-func (topology TOTopology) validateDSRequiredCapabilities(currentTopoName string) error {
+func validateDSRequiredCapabilities(tx *sql.Tx, currentTopoName string, cachegroups []string) error {
 	baseError := errors.New("unable to verify that delivery service required capabilities are satisfied")
-	tx := topology.APIInfo().Tx.Tx
 	dsRequiredCapabilities, dsCDNs, err := getDSRequiredCapabilitiesByTopology(currentTopoName, tx)
 	if err != nil {
 		log.Errorf("validating delivery service required capabilities for topology %s: %v", currentTopoName, err)
@@ -272,7 +376,6 @@ func (topology TOTopology) validateDSRequiredCapabilities(currentTopoName string
 	if len(dsRequiredCapabilities) == 0 {
 		return nil
 	}
-	cachegroups := topology.getCachegroupNames()
 	cdnMap := make(map[int]struct{})
 	for _, cdn := range dsCDNs {
 		cdnMap[cdn] = struct{}{}
@@ -367,9 +470,9 @@ GROUP BY d.xml_id, d.cdn_id, d.required_capabilities
 	return requiredCapabilities, dsCdnIDs, nil
 }
 
-func (topology TOTopology) getCachegroupNames() []string {
+func getCachegroupNames(nodes []tc.TopologyNode) []string {
 	cgSet := make(map[string]struct{})
-	for _, n := range topology.Nodes {
+	for _, n := range nodes {
 		cgSet[n.Cachegroup] = struct{}{}
 	}
 	cachegroups := make([]string, 0, len(cgSet))
@@ -396,10 +499,76 @@ func (topology *TOTopology) GetAuditName() string {
 	return topology.Name
 }
 
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+	var topology tc.TopologyV5
+	if err := json.NewDecoder(r.Body).Decode(&topology); err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
+		return
+	}
+
+	alerts, userErr, sysErr := ValidateTopology(topology, inf)
+	if userErr != nil || sysErr != nil {
+		code := http.StatusBadRequest
+		if sysErr != nil {
+			code = http.StatusInternalServerError
+		}
+		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
+		return
+	}
+
+	legacyNodes := DowngradeTopologyNodes(topology.Nodes)
+	userErr, sysErr, statusCode := checkIfTopologyCanBeAlteredByCurrentUser(inf, legacyNodes)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+	err := tx.QueryRow(insertQuery(), topology.Name, topology.Description).Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
+	if err != nil {
+		userErr, sysErr, statusCode := api.ParseDBError(err)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+	topology.LastUpdated, err = util.ConvertTimeFormat(*topology.LastUpdated, time.RFC3339)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("could not convert last updated time into rfc3339 format: %s", err.Error()))
+		return
+	}
+
+	if userErr, sysErr, statusCode := addNodes2(tx, topology.Name, legacyNodes); userErr != nil || sysErr != nil {
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
+	if userErr, sysErr, statusCode := addParents2(tx, legacyNodes); userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+		return
+	}
+
+	alertsObject := tc.CreateAlerts(tc.SuccessLevel, "topology was created.")
+	if len(alerts.Alerts) != 0 {
+		alertsObject.AddAlerts(alerts)
+	}
+	api.WriteAlertsObj(w, r, http.StatusOK, alertsObject, topology)
+
+	changeLogMsg := fmt.Sprintf("Topology: %s, ACTION: Created topology, keys: {name: %s }", topology.Name, topology.Name)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+}
+
 // Create is a requirement of the api.Creator interface.
 func (topology *TOTopology) Create() (error, error, int) {
 	tx := topology.APIInfo().Tx.Tx
-	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	userErr, sysErr, statusCode := checkIfTopologyCanBeAlteredByCurrentUser(topology.APIInfo(), topology.Nodes)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}
@@ -407,12 +576,11 @@ func (topology *TOTopology) Create() (error, error, int) {
 	if err != nil {
 		return api.ParseDBError(err)
 	}
-
-	if userErr, sysErr, errCode := topology.addNodes(); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := addNodes2(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
-	if userErr, sysErr, errCode := topology.addParents(); userErr != nil || sysErr != nil {
+	if userErr, sysErr, errCode := addParents2(tx, topology.Nodes); userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
 
@@ -537,6 +705,33 @@ func (topology *TOTopology) addNodes() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
+func addNodes2(tx *sql.Tx, name string, nodes []tc.TopologyNode) (error, error, int) {
+	var cachegroupsToInsert []string
+	var indices = make([]int, 0)
+	for index, node := range nodes {
+		if node.Id == 0 {
+			cachegroupsToInsert = append(cachegroupsToInsert, node.Cachegroup)
+			indices = append(indices, index)
+		}
+	}
+	if len(cachegroupsToInsert) == 0 {
+		return nil, nil, http.StatusOK
+	}
+	rows, err := tx.Query(nodeInsertQuery(), name, pq.Array(cachegroupsToInsert))
+	if err != nil {
+		return nil, errors.New("error adding nodes: " + err.Error()), http.StatusInternalServerError
+	}
+	defer log.Close(rows, "unable to close DB connection")
+	for _, index := range indices {
+		rows.Next()
+		err = rows.Scan(&nodes[index].Id, &name, &nodes[index].Cachegroup)
+		if err != nil {
+			return api.ParseDBError(err)
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
 func (topology *TOTopology) addParents() (error, error, int) {
 	var (
 		children []int
@@ -560,6 +755,38 @@ func (topology *TOTopology) addParents() (error, error, int) {
 		for rank := 1; rank <= len(node.Parents); rank++ {
 			rows.Next()
 			parent := topology.Nodes[node.Parents[rank-1]]
+			err = rows.Scan(&node.Id, &parent.Id, &rank)
+			if err != nil {
+				return api.ParseDBError(err)
+			}
+		}
+	}
+	return nil, nil, http.StatusOK
+}
+
+func addParents2(tx *sql.Tx, nodes []tc.TopologyNode) (error, error, int) {
+	var (
+		children []int
+		parents  []int
+		ranks    []int
+	)
+	for _, node := range nodes {
+		for rank := 1; rank <= len(node.Parents); rank++ {
+			parent := nodes[node.Parents[rank-1]]
+			children = append(children, node.Id)
+			parents = append(parents, parent.Id)
+			ranks = append(ranks, rank)
+		}
+	}
+	rows, err := tx.Query(nodeParentInsertQuery(), pq.Array(children), pq.Array(parents), pq.Array(ranks))
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+	defer log.Close(rows, "unable to close DB connection")
+	for _, node := range nodes {
+		for rank := 1; rank <= len(node.Parents); rank++ {
+			rows.Next()
+			parent := nodes[node.Parents[rank-1]]
 			err = rows.Scan(&node.Id, &parent.Id, &rank)
 			if err != nil {
 				return api.ParseDBError(err)
@@ -599,7 +826,7 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, errCode
 	}
-	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	userErr, sysErr, statusCode := checkIfTopologyCanBeAlteredByCurrentUser(topology.APIInfo(), topology.Nodes)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}
@@ -644,7 +871,7 @@ func (topology *TOTopology) Update(h http.Header) (error, error, int) {
 // Delete is unused and simply satisfies the Deleter interface
 // (although TOTOpology is used as an OptionsDeleter)
 func (topology *TOTopology) Delete() (error, error, int) {
-	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	userErr, sysErr, statusCode := checkIfTopologyCanBeAlteredByCurrentUser(topology.APIInfo(), topology.Nodes)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}
@@ -661,7 +888,7 @@ func (topology *TOTopology) OptionsDelete() (error, error, int) {
 		return fmt.Errorf("cannot find exactly 1 topology with the query string provided"), nil, http.StatusBadRequest
 	}
 	topology.Topology = topologies[0].(tc.Topology)
-	userErr, sysErr, statusCode := topology.checkIfTopologyCanBeAlteredByCurrentUser()
+	userErr, sysErr, statusCode := checkIfTopologyCanBeAlteredByCurrentUser(topology.APIInfo(), topology.Nodes)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}
@@ -811,17 +1038,17 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as ti from last_deleted l where l.table_name='topology') as res`
 }
 
-func (topology *TOTopology) checkIfTopologyCanBeAlteredByCurrentUser() (error, error, int) {
-	cachegroups := topology.getCachegroupNames()
-	serverIDs, err := dbhelpers.GetServerIDsFromCachegroupNames(topology.ReqInfo.Tx.Tx, cachegroups)
+func checkIfTopologyCanBeAlteredByCurrentUser(info *api.APIInfo, nodes []tc.TopologyNode) (error, error, int) {
+	cachegroups := getCachegroupNames(nodes)
+	serverIDs, err := dbhelpers.GetServerIDsFromCachegroupNames(info.Tx.Tx, cachegroups)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	cdns, err := dbhelpers.GetCDNNamesFromServerIds(topology.ReqInfo.Tx.Tx, serverIDs)
+	cdns, err := dbhelpers.GetCDNNamesFromServerIds(info.Tx.Tx, serverIDs)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNs(topology.ReqInfo.Tx.Tx, cdns, topology.ReqInfo.User.UserName)
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNs(info.Tx.Tx, cdns, info.User.UserName)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}

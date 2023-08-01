@@ -1,5 +1,7 @@
 package tc
 
+import "time"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,6 +21,15 @@ package tc
  * under the License.
  */
 
+type TopologyV5 TopologyV50
+
+type TopologyV50 struct {
+	Description string           `json:"description" db:"description"`
+	Name        string           `json:"name" db:"name"`
+	Nodes       []TopologyNodeV5 `json:"nodes"`
+	LastUpdated *time.Time       `json:"lastUpdated" db:"last_updated"`
+}
+
 // Topology holds the name and set of TopologyNodes that comprise a flexible topology.
 type Topology struct {
 	Description string         `json:"description" db:"description"`
@@ -36,10 +47,33 @@ type TopologyNode struct {
 	LastUpdated *TimeNoMod `json:"-" db:"last_updated"`
 }
 
+type TopologyNodeV5 TopologyNodeV50
+
+type TopologyNodeV50 struct {
+	Id          int        `json:"-" db:"id"`
+	Cachegroup  string     `json:"cachegroup" db:"cachegroup"`
+	Parents     []int      `json:"parents"`
+	LastUpdated *time.Time `json:"-" db:"last_updated"`
+}
+
+type TopologyResponseV5 TopologyResponseV50
+
+type TopologyResponseV50 struct {
+	Response TopologyV5 `json:"response"`
+	Alerts
+}
+
 // TopologyResponse models the JSON object returned for a single Topology in a
 // response from the Traffic Ops API.
 type TopologyResponse struct {
 	Response Topology `json:"response"`
+	Alerts
+}
+
+type TopologiesResponseV5 TopologiesResponseV50
+
+type TopologiesResponseV50 struct {
+	Response []TopologyV5 `json:"response"`
 	Alerts
 }
 
