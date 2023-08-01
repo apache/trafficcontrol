@@ -17,6 +17,7 @@ import type {
 	Health,
 	RequestDeliveryService,
 	ResponseDeliveryService,
+	ResponseDeliveryServiceSSLKey,
 	SteeringConfiguration,
 	TypeFromResponse
 } from "trafficops-types";
@@ -171,6 +172,13 @@ export class DeliveryServiceService {
 			useInTable: "deliveryservice"
 		}
 	];
+	private readonly dsSSLKeys: Array<ResponseDeliveryServiceSSLKey> = [{
+		cdn: "'",
+		certificate: {crt: "", csr: "", key: ""},
+		deliveryservice: "xml",
+		expiration: new Date(),
+		version: ""
+	}];
 
 	constructor(
 		private readonly cdnService: CDNService,
@@ -535,5 +543,21 @@ export class DeliveryServiceService {
 	 */
 	public async getDSTypes(): Promise<Array<TypeFromResponse>> {
 		return this.dsTypes;
+	}
+
+	/**
+	 * Gets a Delivery Service's SSL Keys
+	 *
+	 * @param ds The delivery service xmlid or object
+	 * @returns The DS ssl keys
+	 */
+	public async getSSLKeys(ds: string | ResponseDeliveryService): Promise<ResponseDeliveryServiceSSLKey> {
+		const xmlId = typeof ds === "string" ? ds : ds.xmlId;
+		const key = this.dsSSLKeys.find(k => k.deliveryservice === xmlId);
+		if(!key) {
+			throw new Error(`no such Delivery Service: ${xmlId}`);
+		}
+
+		return key;
 	}
 }
