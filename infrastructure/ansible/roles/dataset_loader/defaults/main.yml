@@ -1114,9 +1114,9 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.net.max_connections_in
           configFile: records.config
           value: INT 100000
-        #- name: CONFIG proxy.config.net.sock_option_flag_in
-        #  configFile: records.config
-        #  value: INT 13
+        - name: CONFIG proxy.config.net.sock_option_flag_in
+          configFile: records.config
+          value: INT 13
         - name: CONFIG proxy.config.net.sock_option_flag_out
           configFile: records.config
           value: INT 9
@@ -1325,10 +1325,6 @@ dl_ds_default_profile_layers:
         - name: LOCAL proxy.local.cluster.type
           configFile: records.config
           value: INT 3
-        # Param value changed between ATS 7 & 8
-        - name: CONFIG proxy.config.net.sock_option_flag_in
-          configFile: records.config
-          value: INT 5
         # ATS 7,8 specific param
         - name: CONFIG proxy.config.net.max_connections_active_in
           configFile: records.config
@@ -1350,14 +1346,10 @@ dl_ds_default_profile_layers:
         - name: CONFIG proxy.config.http.per_server.connection.queue_size
           configFile: records.config
           value: INT 0
-        # Param value changed between ATS 7,9
-        #- name: CONFIG proxy.config.net.sock_option_flag_in
-        #  configFile: records.config
-        #  value: INT 1
         # Param value changed between ATS 8 & 9, default is 0
-        - name: CONFIG proxy.config.ssl.handshake_timeout_in
-          configFile: records.config
-          value: INT 30
+        #- name: CONFIG proxy.config.ssl.handshake_timeout_in
+        #  configFile: records.config
+        #  value: INT 30
 
 # TO Profiles (templates) and associated parameters
 # These should be the profiles which vary by CDN association
