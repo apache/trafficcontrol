@@ -24,6 +24,7 @@ tpv2_conf_dir: /etc/traffic-portal
 tpv2_insecure: true
 tpv2_sslPort: 443
 tpv2_to_base_url: "https://localhost:6443"
+tpv2_to_tpv1: "https://localhost:6443"
 tpv2_useSSL: true
 tpv2_ssl_ca_files:
   - /etc/pki/tls/ca-localhost.crt
