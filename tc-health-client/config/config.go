@@ -335,6 +335,8 @@ const DefaultMarkdownMinIntervalMS = 5000
 // Users should create and pass a copy of Cfg if changes on error are not acceptable.
 func LoadConfig(cfg *Cfg) (bool, error) {
 	configFile := cfg.HealthClientConfigFile.Filename
+	// Load default value for strategies.yaml
+	cfg.MonitorStrategiesPeers = true
 	modTime, err := util.GetFileModificationTime(configFile)
 	if err != nil {
 		return false, errors.New(err.Error())
@@ -349,7 +351,9 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 	if err != nil {
 		return false, errors.New(err.Error())
 	}
+	log.Infof("Value for monitoring strategies peers: %v", cfg.MonitorStrategiesPeers)
 	err = json.Unmarshal(content, cfg)
+	log.Infof("Value for monitoring strategies peers after loading json: %v", cfg.MonitorStrategiesPeers)
 	if err != nil {
 		return false, fmt.Errorf("config parsing failed: %w", err)
 	}

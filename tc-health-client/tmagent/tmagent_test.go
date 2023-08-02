@@ -80,7 +80,6 @@ func TestReadStrategiesDotYaml(t *testing.T) {
 	cfg := &config.Cfg{
 		HealthClientConfigFile: cf,
 		TrafficServerConfigDir: "test_files/etc/",
-		MonitorStrategiesPeers: true,
 	}
 	parents := util.ConfigFile{
 		Filename:       filepath.Join(cfg.TrafficServerConfigDir, ParentsFile),
@@ -102,6 +101,7 @@ func TestReadStrategiesDotYaml(t *testing.T) {
 			TrafficServerBinDir:    cfg.TrafficServerBinDir,
 			TrafficServerConfigDir: cfg.TrafficServerConfigDir,
 		}
+		t.Logf("Monitoring peers value: %v", cfg.MonitorStrategiesPeers)
 
 		if err := pi.readStrategies(cfg.MonitorStrategiesPeers); err != nil {
 			t.Fatalf("failed readStrategies(): %s\n", err.Error())
