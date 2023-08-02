@@ -115,40 +115,42 @@ async function getFiles(path: string): Promise<string[]> {
  * @returns A middleware that adds a property `logger` to `resp.locals` for
  * logging purposes.
  */
-export function loggingMiddleWare(config: ServerConfig): TPHandler {
+export async function loggingMiddleWare(config: ServerConfig): Promise<TPHandler> {
+	const allFiles = await getFiles(config.browserFolder);
+	const compressedFiles = new Map(
+		allFiles.filter(
+			file => file.match(/\.(br|gz)$/)
+		).map(
+			file => [file, undefined]
+		)
+	);
+	const foundFiles = new Map<string, StaticFile>(
+		allFiles.filter(
+			file => file.match(/\.(js|css|tff|svg)$/)
+		).map(
+			file => {
+				const staticFile: StaticFile = {
+					compressions: []
+				};
+				if (compressedFiles.has(`${file}.${br.fileExt}`)) {
+					staticFile.compressions.push(br);
+				}
+				if (compressedFiles.has(`${file}.${gzip.fileExt}`)) {
+					staticFile.compressions.push(gzip);
+				}
+				return [file, staticFile];
+			}
+		)
+	);
+
 	return async (req: Request, resp: TPResponseWriter, next: NextFunction): Promise<void> => {
 		resp.locals.config = config;
 		const prefix = `${req.ip} HTTP/${req.httpVersion} ${req.method} ${req.url} ${req.hostname}`;
 		resp.locals.logger = new Logger(console, environment.production ? LogLevel.INFO : LogLevel.DEBUG, prefix);
 		resp.locals.logger.debug("handling");
 		resp.locals.startTime = new Date();
+		resp.locals.foundFiles = foundFiles;
 
-		const allFiles = await getFiles(config.browserFolder);
-		const compressedFiles = new Map(
-			allFiles.filter(
-				file => file.match(/\.(br|gz)$/)
-			).map(
-				file => [file, undefined]
-			)
-		);
-		resp.locals.foundFiles = new Map<string, StaticFile>(
-			allFiles.filter(
-				file => file.match(/\.(js|css|tff|svg)$/)
-			).map(
-				file => {
-					const staticFile: StaticFile = {
-						compressions: []
-					};
-					if (compressedFiles.has(`${file}.${br.fileExt}`)) {
-						staticFile.compressions.push(br);
-					}
-					if (compressedFiles.has(`${file}.${gzip.fileExt}`)) {
-						staticFile.compressions.push(gzip);
-					}
-					return [file, staticFile];
-				}
-			)
-		);
 		next();
 	};
 }

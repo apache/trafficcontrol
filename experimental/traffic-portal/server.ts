@@ -121,7 +121,7 @@ function toProxyHandler(req: express.Request, res: TPResponseWriter): void {
  * @param serverConfig Server configuration.
  * @returns The Express.js application.
  */
-export function app(serverConfig: ServerConfig): express.Express {
+export async function app(serverConfig: ServerConfig): Promise<express.Express> {
 	const server = express();
 	const indexHtml = join(serverConfig.browserFolder, "index.html");
 
@@ -141,7 +141,7 @@ export function app(serverConfig: ServerConfig): express.Express {
 	//
 	// Note: Express 5.x fully supports async handlers - including seamless
 	// rejections - but it's still in beta at the time of this writing.
-	const loggingMW: express.RequestHandler = loggingMiddleWare(serverConfig) as express.RequestHandler;
+	const loggingMW: express.RequestHandler = await loggingMiddleWare(serverConfig) as express.RequestHandler;
 	server.use(loggingMW);
 
 	// Could just use express compression `server.use(compression())` but that is calculated for each request
@@ -284,7 +284,7 @@ async function run(): Promise<number> {
 	const logger = new Logger(console, environment.production ? LogLevel.INFO : LogLevel.DEBUG);
 
 	// Start up the Node server
-	const server = app(config);
+	const server = await app(config);
 
 	if (config.useSSL) {
 		let cert: string;
