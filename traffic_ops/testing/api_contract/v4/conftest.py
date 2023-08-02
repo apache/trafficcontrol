@@ -1679,3 +1679,37 @@ def profile_parameters_post_data(to_session: TOSession, request_template_data: l
 	if msg is None:
 		logger.error("Profile Parameter returned by Traffic Ops is missing a 'profile_id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="server_server_capabilities_post_data")
+def server_server_capabilities_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		server_post_data:dict[str, object], server_capabilities_post_data:dict[str, object]
+		) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for server server capabilities endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get Server Server Capabilities request template from a prerequisites file.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	server_server_capabilities = check_template_data(request_template_data["server_server_capabilities"], "server_server_capabilities")
+
+	# Return new post data and post response from server server capabilities POST request
+	server_get_response = to_session.get_servers()
+	server_data = server_get_response [0][0]
+	server_id = server_data.get("id")
+
+	server_server_capabilities["serverId"] = server_post_data["id"]
+
+	logger.info("New server_server_capabilities data to hit POST method %s", server_server_capabilities)
+
+	# Hitting server server capabilities POST method
+	response: tuple[JSONData, requests.Response] = to_session.associate_server_capability_to_server(server_id=server_id, data=server_server_capabilities)
+	resp_obj = check_template_data(response, "server_server_capabilities")
+	yield resp_obj
+	server_id = resp_obj.get("serverId")
+	msg = to_session.delete_server_capability_association_to_server(query_params=server_id)
+	logger.info("Deleting Server Server Capability data... %s", msg)
+	if msg is None:
+		logger.error("Server Server Capability returned by Traffic Ops is missing a 'server_id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
