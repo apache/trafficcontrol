@@ -13,7 +13,7 @@
 */
 import "zone.js/node";
 
-import { existsSync, readFileSync } from "fs";
+import { readFileSync } from "fs";
 import { createServer as createRedirectServer } from "http";
 import { createServer, request, RequestOptions } from "https";
 import { join } from "path";
@@ -61,7 +61,7 @@ function compressedFileHandler(req: express.Request, res: TPResponseWriter, next
 		res.locals.logger.debug("unrecognized/non-compress-able file extension:", type);
 		return next();
 	}
-	const path = join(res.locals.config.browserFolder, req.path.substring(1, req.path.length));
+	const path = join(res.locals.config.browserFolder, req.path.substring(1));
 	const file = res.locals.foundFiles.get(path);
 	if(!file || file.compressions.length === 0) {
 		res.locals.logger.debug("file", path, "doesn't have any available compression");
@@ -124,9 +124,6 @@ function toProxyHandler(req: express.Request, res: TPResponseWriter): void {
 export function app(serverConfig: ServerConfig): express.Express {
 	const server = express();
 	const indexHtml = join(serverConfig.browserFolder, "index.html");
-	if (!existsSync(indexHtml)) {
-		throw new Error(`Unable to start TP server, unable to find browser index.html at: ${indexHtml}`);
-	}
 
 	// Our Universal express-engine (found @ https://github.com/angular/universal/tree/master/modules/express-engine)
 	server.engine("html", ngExpressEngine({
