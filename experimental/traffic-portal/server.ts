@@ -136,7 +136,17 @@ export function app(serverConfig: ServerConfig): express.Express {
 	server.set("view engine", "html");
 	server.set("views", "./");
 
-	server.use(loggingMiddleWare);
+	// Express 4.x doesn't handle Promise rejections (need to be manually
+	// propagated with `next`), so it's not technically accurate to say that
+	// void Promises are the same as void. Using `async`, though, is so much
+	// easier than not doing that, so we're gonna go ahead and pretend that
+	// `Promise<void>` is the same as `void`, in this one case.
+	//
+	// Note: Express 5.x fully supports async handlers - including seamless
+	// rejections - but it's still in beta at the time of this writing.
+	const loggingMW: express.RequestHandler = loggingMiddleWare(serverConfig) as express.RequestHandler;
+	server.use(loggingMW);
+
 	// Could just use express compression `server.use(compression())` but that is calculated for each request
 	server.get("*.(js|css|ttf|svg)", compressedFileHandler);
 
