@@ -829,79 +829,58 @@ func (s Server) ToNullable() ServerNullableV2 {
 	}
 }
 
-func coerceBool(b *bool) bool {
-	if b == nil {
-		return false
-	}
-	return *b
-}
-
-func coerceInt(i *int) int {
-	if i == nil {
-		return 0
-	}
-	return *i
-}
-
-func coerceString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
 // ToNonNullable converts the ServerNullableV2 safely to a Server structure.
 //
 // Deprecated: Traffic Ops API version 2 is deprecated, new code should use
 // ServerV40 or newer structures.
 func (s ServerNullableV2) ToNonNullable() Server {
 	ret := Server{
-		Cachegroup:     coerceString(s.Cachegroup),
-		CachegroupID:   coerceInt(s.CachegroupID),
-		CDNID:          coerceInt((s.CDNID)),
-		CDNName:        coerceString(s.CDNName),
-		DomainName:     coerceString(s.DomainName),
+		Cachegroup:     util.CoalesceToDefault(s.Cachegroup),
+		CachegroupID:   util.CoalesceToDefault(s.CachegroupID),
+		CDNID:          util.CoalesceToDefault((s.CDNID)),
+		CDNName:        util.CoalesceToDefault(s.CDNName),
+		DomainName:     util.CoalesceToDefault(s.DomainName),
 		FQDN:           s.FQDN,
 		FqdnTime:       s.FqdnTime,
-		GUID:           coerceString(s.GUID),
-		HostName:       coerceString(s.HostName),
-		HTTPSPort:      coerceInt(s.HTTPSPort),
-		ID:             coerceInt(s.ID),
-		ILOIPAddress:   coerceString(s.ILOIPAddress),
-		ILOIPGateway:   coerceString(s.ILOIPGateway),
-		ILOIPNetmask:   coerceString(s.ILOIPNetmask),
-		ILOPassword:    coerceString(s.ILOPassword),
-		ILOUsername:    coerceString(s.ILOUsername),
-		InterfaceMtu:   coerceInt(s.InterfaceMtu),
-		InterfaceName:  coerceString(s.InterfaceName),
-		IP6Address:     coerceString(s.IP6Address),
-		IP6IsService:   coerceBool(s.IP6IsService),
-		IP6Gateway:     coerceString(s.IP6Gateway),
-		IPAddress:      coerceString(s.IPAddress),
-		IPIsService:    coerceBool(s.IPIsService),
-		IPGateway:      coerceString(s.IPGateway),
-		IPNetmask:      coerceString(s.IPNetmask),
-		MgmtIPAddress:  coerceString(s.MgmtIPAddress),
-		MgmtIPGateway:  coerceString(s.MgmtIPGateway),
-		MgmtIPNetmask:  coerceString(s.MgmtIPNetmask),
-		OfflineReason:  coerceString(s.OfflineReason),
-		PhysLocation:   coerceString(s.PhysLocation),
-		PhysLocationID: coerceInt(s.PhysLocationID),
-		Profile:        coerceString(s.Profile),
-		ProfileDesc:    coerceString(s.ProfileDesc),
-		ProfileID:      coerceInt(s.ProfileID),
-		Rack:           coerceString(s.Rack),
-		RevalPending:   coerceBool(s.RevalPending),
-		RouterHostName: coerceString(s.RouterHostName),
-		RouterPortName: coerceString(s.RouterPortName),
-		Status:         coerceString(s.Status),
-		StatusID:       coerceInt(s.StatusID),
-		TCPPort:        coerceInt(s.TCPPort),
+		GUID:           util.CoalesceToDefault(s.GUID),
+		HostName:       util.CoalesceToDefault(s.HostName),
+		HTTPSPort:      util.CoalesceToDefault(s.HTTPSPort),
+		ID:             util.CoalesceToDefault(s.ID),
+		ILOIPAddress:   util.CoalesceToDefault(s.ILOIPAddress),
+		ILOIPGateway:   util.CoalesceToDefault(s.ILOIPGateway),
+		ILOIPNetmask:   util.CoalesceToDefault(s.ILOIPNetmask),
+		ILOPassword:    util.CoalesceToDefault(s.ILOPassword),
+		ILOUsername:    util.CoalesceToDefault(s.ILOUsername),
+		InterfaceMtu:   util.CoalesceToDefault(s.InterfaceMtu),
+		InterfaceName:  util.CoalesceToDefault(s.InterfaceName),
+		IP6Address:     util.CoalesceToDefault(s.IP6Address),
+		IP6IsService:   util.CoalesceToDefault(s.IP6IsService),
+		IP6Gateway:     util.CoalesceToDefault(s.IP6Gateway),
+		IPAddress:      util.CoalesceToDefault(s.IPAddress),
+		IPIsService:    util.CoalesceToDefault(s.IPIsService),
+		IPGateway:      util.CoalesceToDefault(s.IPGateway),
+		IPNetmask:      util.CoalesceToDefault(s.IPNetmask),
+		MgmtIPAddress:  util.CoalesceToDefault(s.MgmtIPAddress),
+		MgmtIPGateway:  util.CoalesceToDefault(s.MgmtIPGateway),
+		MgmtIPNetmask:  util.CoalesceToDefault(s.MgmtIPNetmask),
+		OfflineReason:  util.CoalesceToDefault(s.OfflineReason),
+		PhysLocation:   util.CoalesceToDefault(s.PhysLocation),
+		PhysLocationID: util.CoalesceToDefault(s.PhysLocationID),
+		Profile:        util.CoalesceToDefault(s.Profile),
+		ProfileDesc:    util.CoalesceToDefault(s.ProfileDesc),
+		ProfileID:      util.CoalesceToDefault(s.ProfileID),
+		Rack:           util.CoalesceToDefault(s.Rack),
+		RevalPending:   util.CoalesceToDefault(s.RevalPending),
+		RouterHostName: util.CoalesceToDefault(s.RouterHostName),
+		RouterPortName: util.CoalesceToDefault(s.RouterPortName),
+		Status:         util.CoalesceToDefault(s.Status),
+		StatusID:       util.CoalesceToDefault(s.StatusID),
+		TCPPort:        util.CoalesceToDefault(s.TCPPort),
 		Type:           s.Type,
-		TypeID:         coerceInt(s.TypeID),
-		UpdPending:     coerceBool(s.UpdPending),
-		XMPPID:         coerceString(s.XMPPID),
-		XMPPPasswd:     coerceString(s.XMPPPasswd),
+		TypeID:         util.CoalesceToDefault(s.TypeID),
+		UpdPending:     util.CoalesceToDefault(s.UpdPending),
+		XMPPID:         util.CoalesceToDefault(s.XMPPID),
+		XMPPPasswd:     util.CoalesceToDefault(s.XMPPPasswd),
 	}
 
 	if s.DeliveryServices == nil {
