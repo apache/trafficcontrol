@@ -120,6 +120,7 @@ export function loggingMiddleWare(config: ServerConfig): TPHandler {
 		resp.locals.config = config;
 		const prefix = `${req.ip} HTTP/${req.httpVersion} ${req.method} ${req.url} ${req.hostname}`;
 		resp.locals.logger = new Logger(console, environment.production ? LogLevel.INFO : LogLevel.DEBUG, prefix);
+		resp.locals.logger.debug("handling");
 		resp.locals.startTime = new Date();
 
 		const allFiles = await getFiles(config.browserFolder);
@@ -167,15 +168,13 @@ export function errorMiddleWare(err: unknown, _: Request, resp: TPResponseWriter
 		if (!environment.production) {
 			console.trace(err);
 		}
-		resp.status(502); // "Bad Gateway"
-		resp.write('{"alerts":[{"level":"error","text":"Unknown Traffic Portal server error occurred"}]}');
-		resp.end("\n");
-		resp.locals.endTime = new Date();
-		next(err);
-	}
-
-	if (!resp.locals.endTime) {
-		resp.locals.endTime = new Date();
+		if (!resp.locals.endTime) {
+			resp.status(502); // "Bad Gateway"
+			resp.write('{"alerts":[{"level":"error","text":"Unknown Traffic Portal server error occurred"}]}\n');
+			resp.end("\n");
+			resp.locals.endTime = new Date();
+			next(err);
+		}
 	}
 	const elapsed = resp.locals.endTime.valueOf() - resp.locals.startTime.valueOf();
 	resp.locals.logger.info("handled in", elapsed, "milliseconds with code", resp.statusCode);
