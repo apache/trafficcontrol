@@ -544,14 +544,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, statusCode := addNodes2(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := addNodes(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 			return
 		}
 	}
 
-	if userErr, sysErr, statusCode := addParents2(tx, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := addParents(tx, topology.Nodes); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
@@ -704,62 +704,6 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 	api.WriteResp(w, r, interfaces)
 	return
-
-	//var runSecond bool
-	//var maxTime time.Time
-	//inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	//tx := inf.Tx
-	//if userErr != nil || sysErr != nil {
-	//	api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
-	//	return
-	//}
-	//defer inf.Close()
-	//
-	//// Query Parameters to Database Query column mappings
-	//queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
-	//	"name":       {Column: "typ.name"},
-	//	"id":         {Column: "typ.id", Checker: api.IsInt},
-	//	"useInTable": {Column: "typ.use_in_table"},
-	//}
-	//if _, ok := inf.Params["orderby"]; !ok {
-	//	inf.Params["orderby"] = "name"
-	//}
-	//where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
-	//if len(errs) > 0 {
-	//	api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
-	//}
-	//
-	//if inf.Config.UseIMS {
-	//	runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where))
-	//	if !runSecond {
-	//		log.Debugln("IMS HIT")
-	//		api.AddLastModifiedHdr(w, maxTime)
-	//		w.WriteHeader(http.StatusNotModified)
-	//		return
-	//	}
-	//	log.Debugln("IMS MISS")
-	//} else {
-	//	log.Debugln("Non IMS request")
-	//}
-	//
-	//query := selectQuery() + where + orderBy + pagination
-	//rows, err := tx.NamedQuery(query, queryValues)
-	//if err != nil {
-	//	api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("type get: error getting type(s): %w", err))
-	//}
-	//defer log.Close(rows, "unable to close DB connection")
-	//
-	//typ := tc.TypeV5{}
-	//typeList := []tc.TypeV5{}
-	//for rows.Next() {
-	//	if err = rows.Scan(&typ.ID, &typ.Name, &typ.Description, &typ.UseInTable, &typ.LastUpdated); err != nil {
-	//		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting type(s): %w", err))
-	//	}
-	//	typeList = append(typeList, typ)
-	//}
-	//
-	//api.WriteResp(w, r, typeList)
-	//return
 }
 
 func Delete(w http.ResponseWriter, r *http.Request) {
@@ -897,16 +841,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userErr, sysErr, statusCode := setTopologyDetails2(tx, &topology); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := setTopologyDetails(tx, &topology); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 
-	if userErr, sysErr, statusCode := addNodes2(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := addNodes(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
-	if userErr, sysErr, statusCode := addParents2(tx, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := addParents(tx, topology.Nodes); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
@@ -1039,7 +983,7 @@ func (topology *TOTopology) addNodes() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func addNodes2(tx *sql.Tx, name string, nodes []tc.TopologyNodeV5) (error, error, int) {
+func addNodes(tx *sql.Tx, name string, nodes []tc.TopologyNodeV5) (error, error, int) {
 	var cachegroupsToInsert []string
 	var indices = make([]int, 0)
 	for index, node := range nodes {
@@ -1098,7 +1042,7 @@ func (topology *TOTopology) addParents() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func addParents2(tx *sql.Tx, nodes []tc.TopologyNodeV5) (error, error, int) {
+func addParents(tx *sql.Tx, nodes []tc.TopologyNodeV5) (error, error, int) {
 	var (
 		children []int
 		parents  []int
@@ -1130,7 +1074,7 @@ func addParents2(tx *sql.Tx, nodes []tc.TopologyNodeV5) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func setTopologyDetails2(tx *sql.Tx, topology *tc.TopologyV5) (error, error, int) {
+func setTopologyDetails(tx *sql.Tx, topology *tc.TopologyV5) (error, error, int) {
 	rows, err := tx.Query(updateQuery(), topology.Name, topology.Description, topology.Name)
 	if err != nil {
 		return nil, fmt.Errorf("topology update: error setting the name and/or description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
