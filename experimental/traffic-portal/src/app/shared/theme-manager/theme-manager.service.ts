@@ -38,6 +38,19 @@ export class ThemeManagerService {
 
 	public themeChanged = new EventEmitter<Theme>();
 
+	/**
+	 * Provides a "safe" accessor for the local session storage. According to
+	 * typings, `Document.defaultView` may be `null`, but if it isn't then
+	 * `Document.defaultView.localStorage` definitely *isn't* `null`. That's
+	 * simply untrue. So this provides that check for you.
+	 */
+	private get localStorage(): Storage | null {
+		if (this.document.defaultView && this.document.defaultView.localStorage) {
+			return this.document.defaultView.localStorage;
+		}
+		return null;
+	}
+
 	constructor(@Inject(DOCUMENT) private readonly document: Document, private readonly log: LoggingService) {
 		this.initTheme();
 	}
@@ -94,12 +107,10 @@ export class ThemeManagerService {
 	 * @param theme Theme to be stored
 	 */
 	private storeTheme(theme: Theme): void {
-		if(this.document.defaultView) {
-			try {
-				this.document.defaultView.localStorage.setItem(this.storageKey, JSON.stringify(theme));
-			} catch (e) {
-				this.log.error(`Unable to store theme into local storage: ${e}`);
-			}
+		try {
+			this.localStorage?.setItem(this.storageKey, JSON.stringify(theme));
+		} catch (e) {
+			this.log.error(`Unable to store theme into local storage: ${e}`);
 		}
 	}
 
@@ -109,12 +120,10 @@ export class ThemeManagerService {
 	 * @returns The stored theme name or null
 	 */
 	private loadStoredTheme(): Theme | null {
-		if(this.document.defaultView) {
-			try {
-				return JSON.parse(this.document.defaultView.localStorage.getItem(this.storageKey) ?? "null");
-			} catch (e) {
-				this.log.error(`Unable to load theme from local storage: ${e}`);
-			}
+		try {
+			return JSON.parse(this.localStorage?.getItem(this.storageKey) ?? "null");
+		} catch (e) {
+			this.log.error(`Unable to load theme from local storage: ${e}`);
 		}
 		return null;
 	}
@@ -123,9 +132,7 @@ export class ThemeManagerService {
 	 * Clears theme saved in local storage
 	 */
 	private clearStoredTheme(): void {
-		if(this.document.defaultView) {
-			this.document.defaultView.localStorage.removeItem(this.storageKey);
-		}
+		this.localStorage?.removeItem(this.storageKey);
 	}
 
 	/**

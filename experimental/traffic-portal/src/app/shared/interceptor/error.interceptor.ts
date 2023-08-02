@@ -56,7 +56,12 @@ export class ErrorInterceptor implements HttpInterceptor {
 	 */
 	public intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
 		return next.handle(request).pipe(catchError((err: HttpErrorResponse) => {
-			this.log.error("HTTP Error: ", err);
+			// I don't know why, but sometimes these errors have just no content
+			// and stringify to simply just the word "Error". So in order to get
+			// anything at all useful out of them, I'm adding a stack trace at
+			// the debugging level.
+			this.log.error(`HTTP error: ${err.message || err.error || err}`);
+			this.log.debug(err);
 
 			if (typeof(err.error) === "string") {
 				try {
