@@ -17,7 +17,6 @@
 /* eslint-disable no-console */
 
 import { execSync } from "child_process";
-import { existsSync, readFileSync } from "fs";
 import { access, constants, readFile, readdir, realpath } from "fs/promises";
 import { join, sep } from "path";
 
@@ -276,6 +275,30 @@ function isConfig(c: unknown): c is ServerConfig {
 const defaultVersionFile = "/etc/traffic-portal/version.json";
 
 /**
+ * Searches recursively upward through the filesystem to find a file named
+ * "VERSION" and returns the real, absolute path to that file.
+ *
+ * @param path The path from which to begin the search.
+ * @returns The path to the VERSION file, assuming it was found.
+ * @throws {Error} If no VERSION file could be found in `path` or any of its
+ * ancestor directories.
+ * @throws {SystemError} If the given path isn't a directory, or directory
+ * traversal fails for some reason.
+ */
+async function findVersionFile(path: string = "."): Promise<string> {
+	for (const ent of await readdir(path)) {
+		if (ent === "VERSION") {
+			return realpath(join(path, ent));
+		}
+	}
+	path = await realpath(join(path, ".."));
+	if (path === sep) {
+		throw new Error("VERSION file not found");
+	}
+	return findVersionFile(path);
+}
+
+/**
  * Retrieves the server's version from the file path provided.
  *
  * @param path The path to a version file containing a ServerVersion object.
@@ -305,11 +328,15 @@ export async function getVersion(path?: string): Promise<ServerVersion> {
 		}
 	}
 
-	if (!existsSync("../../../../VERSION")) {
-		throw new Error(`'${path}' doesn't exist and '../../../../VERSION' doesn't exist`);
+	let versionFilePath: string;
+	try {
+		versionFilePath = await findVersionFile();
+	} catch (e) {
+		throw new Error(`'${path}' doesn't exist and couldn't find a VERSION file from which to read a server version: ${e}`);
 	}
+
 	const ver: ServerVersion = {
-		version: readFileSync("../../../../VERSION", {encoding: "utf8"}).trimEnd()
+		version: (await readFile(versionFilePath, {encoding: "utf8"})).trimEnd()
 	};
 
 	try {
