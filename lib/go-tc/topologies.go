@@ -21,8 +21,10 @@ import "time"
  * under the License.
  */
 
+// TopologyV5 is the struct used to represent topologies, for the latest minor version of api 5.x.
 type TopologyV5 TopologyV50
 
+// TopologyV50 holds the name and set of TopologyNodes that comprise a flexible topology, as represented in api version 5.0.
 type TopologyV50 struct {
 	Description string           `json:"description" db:"description"`
 	Name        string           `json:"name" db:"name"`
@@ -47,8 +49,11 @@ type TopologyNode struct {
 	LastUpdated *TimeNoMod `json:"-" db:"last_updated"`
 }
 
+// TopologyNodeV5 is the struct used to represent topology nodes, for the latest minor version of api 5.x.
 type TopologyNodeV5 TopologyNodeV50
 
+// TopologyNodeV50 holds a reference to a cachegroup and the indices of up to 2 parent
+// nodes in the same topology's array of nodes, as represented in api version 5.0.
 type TopologyNodeV50 struct {
 	Id          int        `json:"-" db:"id"`
 	Cachegroup  string     `json:"cachegroup" db:"cachegroup"`
@@ -56,8 +61,11 @@ type TopologyNodeV50 struct {
 	LastUpdated *time.Time `json:"-" db:"last_updated"`
 }
 
+// TopologyResponseV5 is the struct used to represent a topology response, for the latest minor version of api 5.x.
 type TopologyResponseV5 TopologyResponseV50
 
+// TopologyResponseV50 models the JSON object returned for a single Topology in a
+// response from the Traffic Ops API, as represented in api version 5.0.
 type TopologyResponseV50 struct {
 	Response TopologyV5 `json:"response"`
 	Alerts
@@ -70,8 +78,12 @@ type TopologyResponse struct {
 	Alerts
 }
 
+// TopologiesResponseV5 is the struct used to represent a response consisting of multiple topologies,
+// for the latest minor version of api 5.x.
 type TopologiesResponseV5 TopologiesResponseV50
 
+// TopologiesResponseV50 models the JSON object returned for a list of topologies in a response, as represented in api
+// version 5.0.
 type TopologiesResponseV50 struct {
 	Response []TopologyV5 `json:"response"`
 	Alerts

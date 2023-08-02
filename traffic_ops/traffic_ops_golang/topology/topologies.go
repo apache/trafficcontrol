@@ -90,6 +90,7 @@ func (topology *TOTopology) GetType() string {
 	return "topology"
 }
 
+// DowngradeTopologyNodes downgrades v5 topology nodes into legacy topology node structures.
 func DowngradeTopologyNodes(nodes []tc.TopologyNodeV5) []tc.TopologyNode {
 	var legacyNodes []tc.TopologyNode
 	for _, n := range nodes {
@@ -108,6 +109,7 @@ func DowngradeTopologyNodes(nodes []tc.TopologyNodeV5) []tc.TopologyNode {
 	return legacyNodes
 }
 
+// ValidateTopology validates a v5 topology to make sure that the supplied fields are valid.
 func ValidateTopology(topology tc.TopologyV5, reqInfo *api.APIInfo) (tc.Alerts, error, error) {
 	var alertsObject tc.Alerts
 	currentTopoName := reqInfo.Params["name"]
@@ -500,6 +502,7 @@ func (topology *TOTopology) GetAuditName() string {
 	return topology.Name
 }
 
+// Create is the handler for creating a new topology entity in api version 5.0.
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -685,6 +688,7 @@ func readTopologies(r *http.Request, useIMS bool) ([]interface{}, error, error, 
 	return interfaces, nil, nil, http.StatusOK, &maxTime
 }
 
+// Read is the handler for reading topologies in api version 5.0.
 func Read(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, statusCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -706,6 +710,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Delete is the handler for removing a topology entity in api version 5.0.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, statusCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
@@ -767,6 +772,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 }
 
+// Update is the handler for modifying a topology entity in api version 5.0.
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, statusCode := api.NewInfo(r, []string{"name"}, nil)
 	if userErr != nil || sysErr != nil {
