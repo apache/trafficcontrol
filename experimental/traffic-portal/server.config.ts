@@ -18,7 +18,8 @@
 
 import { execSync } from "child_process";
 import { existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { access, constants, readFile, readdir, realpath } from "fs/promises";
+import { join, sep } from "path";
 
 import { hasProperty } from "src/app/utils";
 
@@ -283,17 +284,25 @@ const defaultVersionFile = "/etc/traffic-portal/version.json";
  * looking for the ATC VERSION file.
  * @returns The parsed server version.
  */
-export function getVersion(path?: string): ServerVersion {
+export async function getVersion(path?: string): Promise<ServerVersion> {
 	if (!path) {
 		path = defaultVersionFile;
 	}
 
-	if (existsSync(path)) {
-		const v = JSON.parse(readFileSync(path, {encoding: "utf8"}));
+	try {
+		const v = JSON.parse(await readFile(path, {encoding: "utf8"}));
 		if (isServerVersion(v)) {
 			return v;
 		}
 		throw new Error(`contents of version file '${path}' does not represent an ATC version`);
+	} catch (e) {
+		if (e instanceof Error && isSystemError(e)) {
+			if (e.code !== "ENOENT") {
+				throw new Error(`file at "${path}" could not be read: ${e.message}`);
+			}
+		} else {
+			throw new Error(`file at "${path}" could not be read: ${e}`);
+		}
 	}
 
 	if (!existsSync("../../../../VERSION")) {
@@ -356,35 +365,41 @@ export const defaultConfig: ServerConfig = {
  * @param ver The version to use for the server.
  * @returns A full configuration for the server.
  */
-export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
+export async function getConfig(args: Args, ver: ServerVersion): Promise<ServerConfig> {
 	let cfg = defaultConfig;
 	cfg.version = ver;
 
 	let readFromFile = false;
-	if (existsSync(args.configFile)) {
-		const cfgFromFile = JSON.parse(readFileSync(args.configFile, {encoding: "utf8"}));
-		try {
-			if (isConfig(cfgFromFile)) {
-				cfg = cfgFromFile;
-				cfg.version = ver;
-			}
-		} catch (err) {
-			throw new Error(`invalid configuration file at '${args.configFile}': ${err}`);
+	try {
+		const cfgFromFile = JSON.parse(await readFile(args.configFile, {encoding: "utf8"}));
+		if (isConfig(cfgFromFile)) {
+			cfg = cfgFromFile;
+			cfg.version = ver;
+		} else {
+			throw new Error("bad contents; doesn't represent a configuration file");
 		}
 		readFromFile = true;
-	} else if (args.configFile !== defaultConfigFile) {
-		throw new Error(`no such configuration file: ${args.configFile}`);
+	} catch (err) {
+		const msg = `invalid configuration file at '${args.configFile}'`;
+		if (err instanceof Error) {
+			if (!isSystemError(err) || (err.code !== "ENOENT" || args.configFile !== defaultConfigFile)) {
+				throw new Error(`${msg}: ${err.message}`);
+			}
+		} else {
+			throw new Error(`${msg}: ${err}`);
+		}
 	}
 
-	let folder = cfg.browserFolder;
 	if(args.browserFolder !== defaultConfig.browserFolder) {
-		folder = args.browserFolder;
+		cfg.browserFolder = args.browserFolder;
 	}
-	if(!existsSync(folder)) {
-		throw new Error(`no such folder: ${folder}`);
-	}
-	if(!existsSync(join(folder, "index.html"))) {
-		throw new Error(`no such browser file: ${join(folder, "index.html")}`);
+
+	try {
+		if (!(await readdir(cfg.browserFolder)).includes("index.html")) {
+			throw new Error("directory doesn't include an 'index.html' file");
+		}
+	} catch (e) {
+		throw new Error(`setting browser directory: ${e instanceof Error ? e.message : e}`);
 	}
 
 	if(args.port !== defaultConfig.port) {
@@ -446,11 +461,15 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 	}
 
 	if (cfg.useSSL) {
-		if (!existsSync(cfg.certPath)) {
-			throw new Error(`no such certificate file: ${cfg.certPath}`);
+		try {
+			await access(cfg.certPath, constants.R_OK);
+		} catch (e) {
+			throw new Error(`checking certificate file "${cfg.certPath}": ${e instanceof Error ? e.message : e}`);
 		}
-		if (!existsSync(cfg.keyPath)) {
-			throw new Error(`no such key file: ${cfg.keyPath}`);
+		try {
+			await access(cfg.keyPath, constants.R_OK);
+		} catch (e) {
+			throw new Error(`checking key file "${cfg.keyPath}": ${e instanceof Error ? e.message : e}`);
 		}
 	}
 

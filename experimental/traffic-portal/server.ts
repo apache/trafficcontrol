@@ -195,8 +195,8 @@ export function app(serverConfig: ServerConfig): express.Express {
  *
  * @returns An exit code for the process.
  */
-function run(): number {
-	const version = getVersion();
+async function run(): Promise<number> {
+	const version = await getVersion();
 	const parser = new ArgumentParser({
 		// Nothing I can do about this, library specifies its interface.
 		/* eslint-disable @typescript-eslint/naming-convention */
@@ -273,7 +273,7 @@ function run(): number {
 
 	let config: ServerConfig;
 	try {
-		config = getConfig(parser.parse_args(), version);
+		config = await getConfig(parser.parse_args(), version);
 	} catch (e) {
 		// Logger cannot be initialized before reading server configuration
 		// eslint-disable-next-line no-console
@@ -356,10 +356,13 @@ try {
 	const mainModule = __non_webpack_require__.main;
 	const moduleFilename = mainModule && mainModule.filename || "";
 	if (moduleFilename === __filename || moduleFilename.includes("iisnode")) {
-		const code = run();
-		if (code) {
-			process.exit(code);
-		}
+		run().then(
+			code => {
+				if (code) {
+					process.exit(code);
+				}
+			}
+		);
 	}
 } catch (e) {
 	// Logger cannot be initialized before reading server configuration
