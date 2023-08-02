@@ -56,5 +56,5 @@ jobs:
           with:
             - owner: apache
             - repo: trafficserver
-            - branch: 9.1.x
+            - branch: 9.2.x
 ```

@@ -48,6 +48,8 @@ RUN dnf -y install epel-release && \
     fi && \
     dnf -y install              \
         brotli                  \
+        # cjose is required by the ATS TSB RPM
+        cjose \
         # find is required by to-access.sh
         findutils               \
         GeoIP                   \
