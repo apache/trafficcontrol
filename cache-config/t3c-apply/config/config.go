@@ -535,6 +535,9 @@ If any of the related flags are also set, they override the mode's default behav
 	if tsHome != "" {
 		TSHome = tsHome
 		tsConfigDir = tsHome + "/etc/trafficserver"
+		if cache != nil && *cache == "varnish" {
+			tsConfigDir = tsHome + "/etc/varnish"
+		}
 		toInfoLog = append(toInfoLog, fmt.Sprintf("TSHome: %s, TSConfigDir: %s\n", TSHome, tsConfigDir))
 	}
 

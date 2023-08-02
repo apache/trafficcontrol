@@ -2,7 +2,6 @@ package varnishcfg
 
 import (
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -147,11 +146,11 @@ func TestAddBackendsToDirector(t *testing.T) {
 				{FQDN: "parent.example.com", Port: 80},
 				{FQDN: "parent2.example.com", Port: 80},
 			},
-			expectedLines: strings.Split(
-				`new dir = directors.round_robin();
-dir.add_backend(parent_example_com_80);
-dir.add_backend(parent2_example_com_80);`,
-				"\n"),
+			expectedLines: []string{
+				`new dir = directors.round_robin();`,
+				`dir.add_backend(parent_example_com_80);`,
+				`dir.add_backend(parent2_example_com_80);`,
+			},
 		},
 		{
 			name:         "fallback",
@@ -161,11 +160,11 @@ dir.add_backend(parent2_example_com_80);`,
 				{FQDN: "parent.example.com", Port: 80},
 				{FQDN: "parent2.example.com", Port: 80},
 			},
-			expectedLines: strings.Split(
-				`new dir = directors.fallback();
-dir.add_backend(parent_example_com_80);
-dir.add_backend(parent2_example_com_80);`,
-				"\n"),
+			expectedLines: []string{
+				`new dir = directors.fallback();`,
+				`dir.add_backend(parent_example_com_80);`,
+				`dir.add_backend(parent2_example_com_80);`,
+			},
 		},
 		{
 			name:         "fallback sticky",
@@ -175,11 +174,11 @@ dir.add_backend(parent2_example_com_80);`,
 				{FQDN: "parent.example.com", Port: 80},
 				{FQDN: "parent2.example.com", Port: 80},
 			},
-			expectedLines: strings.Split(
-				`new dir = directors.fallback(1);
-dir.add_backend(parent_example_com_80);
-dir.add_backend(parent2_example_com_80);`,
-				"\n"),
+			expectedLines: []string{
+				`new dir = directors.fallback(1);`,
+				`dir.add_backend(parent_example_com_80);`,
+				`dir.add_backend(parent2_example_com_80);`,
+			},
 		},
 	}
 	for _, tC := range testCases {
@@ -210,10 +209,10 @@ func TestAddDirectors(t *testing.T) {
 				Port:        80,
 			},
 			expectedSubroutines: map[string][]string{
-				"vcl_init": strings.Split(
-					`new demo = directors.fallback();
-demo.add_backend(origin_example_com_80);`,
-					"\n"),
+				"vcl_init": {
+					`new demo = directors.fallback();`,
+					`demo.add_backend(origin_example_com_80);`,
+				},
 			},
 		},
 		{
@@ -229,13 +228,13 @@ demo.add_backend(origin_example_com_80);`,
 				Port:       80,
 			},
 			expectedSubroutines: map[string][]string{
-				"vcl_init": strings.Split(
-					`new demo_primary = directors.shard();
-demo_primary.add_backend(parent_example_com_80);
-new demo = directors.fallback();
-demo.add_backend(demo_primary.backend());
-demo.add_backend(origin_example_com_80);`,
-					"\n"),
+				"vcl_init": {
+					`new demo_primary = directors.shard();`,
+					`demo_primary.add_backend(parent_example_com_80);`,
+					`new demo = directors.fallback();`,
+					`demo.add_backend(demo_primary.backend());`,
+					`demo.add_backend(origin_example_com_80);`,
+				},
 			},
 		},
 		{
@@ -254,16 +253,16 @@ demo.add_backend(origin_example_com_80);`,
 				Port:       80,
 			},
 			expectedSubroutines: map[string][]string{
-				"vcl_init": strings.Split(
-					`new demo_primary = directors.fallback(1);
-demo_primary.add_backend(parent_example_com_80);
-new demo_secondary = directors.fallback(1);
-demo_secondary.add_backend(parent2_example_com_80);
-new demo = directors.fallback();
-demo.add_backend(demo_primary.backend());
-demo.add_backend(demo_secondary.backend());
-demo.add_backend(origin_example_com_80);`,
-					"\n"),
+				"vcl_init": {
+					`new demo_primary = directors.fallback(1);`,
+					`demo_primary.add_backend(parent_example_com_80);`,
+					`new demo_secondary = directors.fallback(1);`,
+					`demo_secondary.add_backend(parent2_example_com_80);`,
+					`new demo = directors.fallback();`,
+					`demo.add_backend(demo_primary.backend());`,
+					`demo.add_backend(demo_secondary.backend());`,
+					`demo.add_backend(origin_example_com_80);`,
+				},
 			},
 		},
 	}
@@ -294,12 +293,16 @@ func TestAssignBackends(t *testing.T) {
 			},
 			requestFQDNs: []string{"example.com"},
 			expectedSubroutines: map[string][]string{
-				"vcl_recv": strings.Split(
-					`if (req.http.host == "example.com") {
-	set req.backend_hint = demo.backend();
-	set req.http.host = "origin.example.com";
-}`,
-					"\n"),
+				"vcl_recv": {
+					`if (req.http.host == "example.com") {`,
+					`	set req.backend_hint = demo.backend();`,
+					`}`,
+				},
+				"vcl_backend_fetch": {
+					`if (bereq.http.host == "example.com") {`,
+					`	set bereq.http.host = "origin.example.com";`,
+					`}`,
+				},
 			},
 		},
 		{
@@ -311,12 +314,16 @@ func TestAssignBackends(t *testing.T) {
 			},
 			requestFQDNs: []string{"example.com", "another.example.com"},
 			expectedSubroutines: map[string][]string{
-				"vcl_recv": strings.Split(
-					`if (req.http.host == "example.com" || req.http.host == "another.example.com") {
-	set req.backend_hint = demo.backend();
-	set req.http.host = "origin.example.com";
-}`,
-					"\n"),
+				"vcl_recv": {
+					`if (req.http.host == "example.com" || req.http.host == "another.example.com") {`,
+					`	set req.backend_hint = demo.backend();`,
+					`}`,
+				},
+				"vcl_backend_fetch": {
+					`if (bereq.http.host == "example.com" || bereq.http.host == "another.example.com") {`,
+					`	set bereq.http.host = "origin.example.com";`,
+					`}`,
+				},
 			},
 		},
 		{
@@ -328,11 +335,11 @@ func TestAssignBackends(t *testing.T) {
 			},
 			requestFQDNs: []string{"origin.example.com"},
 			expectedSubroutines: map[string][]string{
-				"vcl_recv": strings.Split(
-					`if (req.http.host == "origin.example.com") {
-	set req.backend_hint = demo.backend();
-}`,
-					"\n"),
+				"vcl_recv": {
+					`if (req.http.host == "origin.example.com") {`,
+					`	set req.backend_hint = demo.backend();`,
+					`}`,
+				},
 			},
 		},
 	}

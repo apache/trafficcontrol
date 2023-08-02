@@ -28,7 +28,7 @@ start_varnishd() {
     echo "varnishd is already running."
   else
     echo "Starting varnishd..."
-    "$VARNISHD_EXECUTABLE" -f /opt/trafficserver/etc/trafficserver/default.vcl
+    "$VARNISHD_EXECUTABLE" -f /opt/cache/etc/varnish/default.vcl
     echo "varnishd is now running."
   fi
 }

@@ -67,11 +67,13 @@ func (v vclFile) String() string {
 	}
 
 	// has to be before other subroutines for variables initialization
-	txt += fmt.Sprint("sub vcl_init {\n")
-	for _, entry := range v.subroutines["vcl_init"] {
-		txt += fmt.Sprintf("\t%s\n", entry)
+	if _, ok := v.subroutines["vcl_init"]; ok {
+		txt += fmt.Sprint("sub vcl_init {\n")
+		for _, entry := range v.subroutines["vcl_init"] {
+			txt += fmt.Sprintf("\t%s\n", entry)
+		}
+		txt += fmt.Sprint("}\n")
 	}
-	txt += fmt.Sprint("}\n")
 
 	for name, subroutine := range v.subroutines {
 		if name == "vcl_init" {

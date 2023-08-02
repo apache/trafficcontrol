@@ -64,10 +64,13 @@ func (v *VCLBuilder) configureDirectors(vclFile *vclFile, parents *atscfg.Parent
 
 func assignBackends(subroutines map[string][]string, svc *atscfg.ParentAbstractionService, requestFQDNs []string) {
 	lines := make([]string, 0)
+	hostHeaderLines := make([]string, 0)
 
 	conditions := make([]string, 0)
+	backendConditions := make([]string, 0)
 	for _, fqdn := range requestFQDNs {
 		conditions = append(conditions, fmt.Sprintf(`req.http.host == "%s"`, fqdn))
+		backendConditions = append(backendConditions, fmt.Sprintf(`bereq.http.host == "%s"`, fqdn))
 	}
 
 	lines = append(lines, fmt.Sprintf("if (%s) {", strings.Join(conditions, " || ")))
@@ -76,7 +79,9 @@ func assignBackends(subroutines map[string][]string, svc *atscfg.ParentAbstracti
 	// only change request host from edge servers which typically has multiple request FQDNs or
 	// one request FQDN that is not the origin.
 	if len(requestFQDNs) > 1 || (len(requestFQDNs) == 1 && requestFQDNs[0] != svc.DestDomain) {
-		lines = append(lines, fmt.Sprintf("\tset req.http.host = \"%s\";", svc.DestDomain))
+		hostHeaderLines = append(hostHeaderLines, fmt.Sprintf("if (%s) {", strings.Join(backendConditions, " || ")))
+		hostHeaderLines = append(hostHeaderLines, fmt.Sprintf("\tset bereq.http.host = \"%s\";", svc.DestDomain))
+		hostHeaderLines = append(hostHeaderLines, "}")
 	}
 
 	lines = append(lines, "}")
@@ -85,6 +90,14 @@ func assignBackends(subroutines map[string][]string, svc *atscfg.ParentAbstracti
 		subroutines["vcl_recv"] = make([]string, 0)
 	}
 	subroutines["vcl_recv"] = append(subroutines["vcl_recv"], lines...)
+	if len(hostHeaderLines) == 0 {
+		return
+	}
+
+	if _, ok := subroutines["vcl_backend_fetch"]; !ok {
+		subroutines["vcl_backend_fetch"] = make([]string, 0)
+	}
+	subroutines["vcl_backend_fetch"] = append(subroutines["vcl_backend_fetch"], hostHeaderLines...)
 }
 
 func addBackends(backends map[string]backend, parents []*atscfg.ParentAbstractionServiceParent, originDomain string, originPort int) {
@@ -98,7 +111,7 @@ func addBackends(backends map[string]backend, parents []*atscfg.ParentAbstractio
 			port: parent.Port,
 		}
 	}
-	backendName := fmt.Sprintf("%s", getBackendName(originDomain, originPort))
+	backendName := getBackendName(originDomain, originPort)
 	if _, ok := backends[backendName]; ok {
 		return
 	}
@@ -133,11 +146,7 @@ func addDirectors(subroutines map[string][]string, svc *atscfg.ParentAbstraction
 
 func addBackendsToDirector(name string, retryPolicy atscfg.ParentAbstractionServiceRetryPolicy, parents []*atscfg.ParentAbstractionServiceParent) []string {
 	lines := make([]string, 0)
-	directorType := getDirectorType(retryPolicy)
-	sticky := ""
-	if directorType == "fallback" && retryPolicy == atscfg.ParentAbstractionServiceRetryPolicyLatched {
-		sticky = "1"
-	}
+	directorType, sticky := getDirectorType(retryPolicy)
 	lines = append(lines, fmt.Sprintf("new %s = directors.%s(%s);", name, directorType, sticky))
 	for _, parent := range parents {
 		lines = append(lines, fmt.Sprintf("%s.add_backend(%s);", name, getBackendName(parent.FQDN, parent.Port)))
@@ -145,21 +154,23 @@ func addBackendsToDirector(name string, retryPolicy atscfg.ParentAbstractionServ
 	return lines
 }
 
-func getDirectorType(retryPolicy atscfg.ParentAbstractionServiceRetryPolicy) string {
+func getDirectorType(retryPolicy atscfg.ParentAbstractionServiceRetryPolicy) (director string, sticky string) {
 	switch retryPolicy {
 	case atscfg.ParentAbstractionServiceRetryPolicyRoundRobinIP:
 		fallthrough
 	case atscfg.ParentAbstractionServiceRetryPolicyRoundRobinStrict:
-		return "round_robin"
+		director = "round_robin"
 	case atscfg.ParentAbstractionServiceRetryPolicyFirst:
-		fallthrough
+		director = "fallback"
 	case atscfg.ParentAbstractionServiceRetryPolicyLatched:
-		return "fallback"
+		director = "fallback"
+		sticky = "1"
 	case atscfg.ParentAbstractionServiceRetryPolicyConsistentHash:
-		return "shard"
+		director = "shard"
 	default:
-		return "shard"
+		director = "shard"
 	}
+	return
 }
 
 func getBackendName(host string, port int) string {
