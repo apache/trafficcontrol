@@ -176,6 +176,4 @@ export function errorMiddleWare(err: unknown, _: Request, resp: TPResponseWriter
 			next(err);
 		}
 	}
-	const elapsed = resp.locals.endTime.valueOf() - resp.locals.startTime.valueOf();
-	resp.locals.logger.info("handled in", elapsed, "milliseconds with code", resp.statusCode);
 }

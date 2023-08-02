@@ -150,12 +150,17 @@ export function app(serverConfig: ServerConfig): express.Express {
 	// Could just use express compression `server.use(compression())` but that is calculated for each request
 	server.get("*.(js|css|ttf|svg)", compressedFileHandler);
 
-	server.get("*.*", express.static(serverConfig.browserFolder, {
-		maxAge: "1y"
-	}));
-	server.get("*.*", (_: express.Request, res: TPResponseWriter) => {
-		res.locals.endTime = new Date();
-	});
+	server.get(
+		"*.*",
+		(req, res: TPResponseWriter, next) => {
+			express.static(res.locals.config.browserFolder, {maxAge: "1y"})(req, res, next);
+			// Express's static handler doesn't call `next` and calling it
+			// yourself will break it for some reason, so we need to do this by
+			// hand here.
+			const elapsed = (new Date()).valueOf() - res.locals.startTime.valueOf();
+			res.locals.logger.info("handled in", elapsed, "milliseconds with code", res.statusCode);
+		}
+	);
 
 	server.use("api/**", toProxyHandler);
 	server.use("/api/**", toProxyHandler);
@@ -175,6 +180,13 @@ export function app(serverConfig: ServerConfig): express.Express {
 	});
 
 	server.use(errorMiddleWare);
+	server.use((_, resp: TPResponseWriter) => {
+		if (!resp.locals.endTime) {
+			resp.locals.endTime = new Date();
+		}
+		const elapsed = resp.locals.endTime.valueOf() - resp.locals.startTime.valueOf();
+		resp.locals.logger.info("handled in", elapsed, "milliseconds with code", resp.statusCode);
+	});
 
 	server.enable("trust proxy");
 	return server;
