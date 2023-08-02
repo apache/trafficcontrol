@@ -1359,12 +1359,10 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'federation_resolvers/{federation_resolver_id:d}', ('3.0', '4.0', '4.1', '5.0'))
-	def delete_federation_resolver(self, federation_resolver_id=None):
+	@api_request('delete', 'federation_resolvers', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_federation_resolver(self, query_params=None):
 		"""
 		Delete a federation resolver.
-		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
-		:type data: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

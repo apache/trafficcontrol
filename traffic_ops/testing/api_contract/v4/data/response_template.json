@@ -1874,5 +1874,28 @@
                 "type": "string"
             }
         }
+    },
+    "federation_resolver": {
+        "type": "object",
+        "required": [
+            "id",
+            "ipAddress",
+            "lastUpdated",
+            "type"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "ipAddress": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "type": {
+                "type": "string"
+            }
+        }
     }
 }

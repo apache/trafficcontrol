@@ -417,7 +417,7 @@
 				37
 			],
 			"replace": true
-      }
+		}
 	],
 	"delivery_service_required_capabilities": [
 		{
@@ -439,6 +439,12 @@
 		{
 			"profileId": 18,
 			"parameterId": 3
+		}
+	],
+	"federation_resolver": [
+		{
+			"ipAddress": "::1/1",
+			"typeId": 37
 		}
 	]
 }
