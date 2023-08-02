@@ -704,25 +704,39 @@ type CommonServerProperties struct {
 	ILOPassword      *string              `json:"iloPassword" db:"ilo_password"`
 	ILOUsername      *string              `json:"iloUsername" db:"ilo_username"`
 	LastUpdated      *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
-	MgmtIPAddress    *string              `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway    *string              `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
-	MgmtIPNetmask    *string              `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason    *string              `json:"offlineReason" db:"offline_reason"`
-	PhysLocation     *string              `json:"physLocation" db:"phys_location"`
-	PhysLocationID   *int                 `json:"physLocationId" db:"phys_location_id"`
-	Profile          *string              `json:"profile" db:"profile"`
-	ProfileDesc      *string              `json:"profileDesc" db:"profile_desc"`
-	ProfileID        *int                 `json:"profileId" db:"profile_id"`
-	Rack             *string              `json:"rack" db:"rack"`
-	RevalPending     *bool                `json:"revalPending" db:"reval_pending"`
-	Status           *string              `json:"status" db:"status"`
-	StatusID         *int                 `json:"statusId" db:"status_id"`
-	TCPPort          *int                 `json:"tcpPort" db:"tcp_port"`
-	Type             string               `json:"type" db:"server_type"`
-	TypeID           *int                 `json:"typeId" db:"server_type_id"`
-	UpdPending       *bool                `json:"updPending" db:"upd_pending"`
-	XMPPID           *string              `json:"xmppId" db:"xmpp_id"`
-	XMPPPasswd       *string              `json:"xmppPasswd" db:"xmpp_passwd"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
+	MgmtIPAddress *string `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
+	MgmtIPGateway *string `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
+	MgmtIPNetmask  *string `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason  *string `json:"offlineReason" db:"offline_reason"`
+	PhysLocation   *string `json:"physLocation" db:"phys_location"`
+	PhysLocationID *int    `json:"physLocationId" db:"phys_location_id"`
+	Profile        *string `json:"profile" db:"profile"`
+	// Deprecated: In API versions 4 and later, Profile descriptions must be
+	// taken from the Profiles themselves, and Servers only contain identifying
+	// information for their Profiles.
+	ProfileDesc *string `json:"profileDesc" db:"profile_desc"`
+	// Deprecated: In API versions 4 and later, Servers identify their Profiles
+	// by Name, not ID.
+	ProfileID    *int    `json:"profileId" db:"profile_id"`
+	Rack         *string `json:"rack" db:"rack"`
+	RevalPending *bool   `json:"revalPending" db:"reval_pending"`
+	Status       *string `json:"status" db:"status"`
+	StatusID     *int    `json:"statusId" db:"status_id"`
+	TCPPort      *int    `json:"tcpPort" db:"tcp_port"`
+	Type         string  `json:"type" db:"server_type"`
+	TypeID       *int    `json:"typeId" db:"server_type_id"`
+	UpdPending   *bool   `json:"updPending" db:"upd_pending"`
+	XMPPID       *string `json:"xmppId" db:"xmpp_id"`
+	XMPPPasswd   *string `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
 // ServerNullableV11 is a server as it appeared in API version 1.1.
@@ -957,7 +971,7 @@ func (s ServerV30) UpgradeToV40(profileNames []string) (ServerV40, error) {
 //
 // This makes a "shallow" copy of the structure's properties.
 //
-// Deprecated: Traffic Ops API version 2 is deprecated, new code should use
+// Deprecated: Traffic Ops API version 2 is gone, new code should use
 // ServerV40 or newer structures.
 func (s ServerNullableV2) UpgradeToV40(profileNames []string) (ServerV40, error) {
 	ipv4IsService := false
@@ -978,7 +992,11 @@ func (s ServerNullableV2) UpgradeToV40(profileNames []string) (ServerV40, error)
 	return upgraded, nil
 }
 
-// UpdateServerPropertiesV40 updates CommonServerProperties of V2 and V3 to ServerV40
+// UpdateServerPropertiesV40 updates CommonServerProperties of V2 and V3 to
+// ServerV40.
+//
+// Deprecated: Traffic Ops API version 3 is deprecated, new code should use
+// ServerV40 or newer structures.
 func UpdateServerPropertiesV40(profileNames []string, properties CommonServerProperties) ServerV40 {
 	return ServerV40{
 		Cachegroup:       properties.Cachegroup,
@@ -1021,26 +1039,35 @@ func UpdateServerPropertiesV40(profileNames []string, properties CommonServerPro
 
 // ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.
 type ServerV40 struct {
-	Cachegroup        *string                  `json:"cachegroup" db:"cachegroup"`
-	CachegroupID      *int                     `json:"cachegroupId" db:"cachegroup_id"`
-	CDNID             *int                     `json:"cdnId" db:"cdn_id"`
-	CDNName           *string                  `json:"cdnName" db:"cdn_name"`
-	DeliveryServices  *map[string][]string     `json:"deliveryServices,omitempty"`
-	DomainName        *string                  `json:"domainName" db:"domain_name"`
-	FQDN              *string                  `json:"fqdn,omitempty"`
-	FqdnTime          time.Time                `json:"-"`
-	GUID              *string                  `json:"guid" db:"guid"`
-	HostName          *string                  `json:"hostName" db:"host_name"`
-	HTTPSPort         *int                     `json:"httpsPort" db:"https_port"`
-	ID                *int                     `json:"id" db:"id"`
-	ILOIPAddress      *string                  `json:"iloIpAddress" db:"ilo_ip_address"`
-	ILOIPGateway      *string                  `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	ILOIPNetmask      *string                  `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	ILOPassword       *string                  `json:"iloPassword" db:"ilo_password"`
-	ILOUsername       *string                  `json:"iloUsername" db:"ilo_username"`
-	LastUpdated       *TimeNoMod               `json:"lastUpdated" db:"last_updated"`
-	MgmtIPAddress     *string                  `json:"mgmtIpAddress" db:"mgmt_ip_address"`
-	MgmtIPGateway     *string                  `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
+	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
+	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
+	CDNName          *string              `json:"cdnName" db:"cdn_name"`
+	DeliveryServices *map[string][]string `json:"deliveryServices,omitempty"`
+	DomainName       *string              `json:"domainName" db:"domain_name"`
+	FQDN             *string              `json:"fqdn,omitempty"`
+	FqdnTime         time.Time            `json:"-"`
+	GUID             *string              `json:"guid" db:"guid"`
+	HostName         *string              `json:"hostName" db:"host_name"`
+	HTTPSPort        *int                 `json:"httpsPort" db:"https_port"`
+	ID               *int                 `json:"id" db:"id"`
+	ILOIPAddress     *string              `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway     *string              `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask     *string              `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword      *string              `json:"iloPassword" db:"ilo_password"`
+	ILOUsername      *string              `json:"iloUsername" db:"ilo_username"`
+	LastUpdated      *TimeNoMod           `json:"lastUpdated" db:"last_updated"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
+	MgmtIPAddress *string `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
+	MgmtIPGateway *string `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
 	MgmtIPNetmask     *string                  `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
 	OfflineReason     *string                  `json:"offlineReason" db:"offline_reason"`
 	PhysLocation      *string                  `json:"physLocation" db:"phys_location"`
@@ -1069,6 +1096,9 @@ type ServerV40 struct {
 type ServerV4 = ServerV40
 
 // ServerV30 is the representation of a Server in version 3 of the Traffic Ops API.
+//
+// Deprecated: Traffic Ops API version 3 is deprecated, new code should use
+// ServerV40 or newer structures.
 type ServerV30 struct {
 	CommonServerProperties
 	RouterHostName    *string               `json:"routerHostName" db:"router_host_name"`
