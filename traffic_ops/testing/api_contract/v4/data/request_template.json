@@ -405,5 +405,11 @@
 			"profileId": 18,
 			"parameterId": 3
 		}
+	],
+	"server_server_capabilities":[
+		{
+			"serverId": 1,
+			"serverCapability": "disk"
+		}
 	]
 }

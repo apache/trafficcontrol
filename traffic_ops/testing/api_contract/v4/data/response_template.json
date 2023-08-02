@@ -1703,5 +1703,25 @@
                 "type": "integer"
             }
         }
+    },
+    "server_server_capabilities":{
+        "type":"object",
+        "required":[
+            "lastUpdated",
+            "serverId",
+            "serverCapability"
+        ],
+        "properties":{
+            "lastUpdated":{
+                "type": "string"
+            },
+            "serverCapability":{
+                "type": "string"
+
+            },
+            "serverId":{
+                "type": "integer"
+            }
+        }
     }
 }
