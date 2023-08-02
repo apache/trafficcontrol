@@ -171,6 +171,7 @@ export function app(serverConfig: ServerConfig): express.Express {
 					{provide: APP_BASE_HREF, useValue: req.baseUrl},
 					{provide: "TP_V1_URL", useValue: res.locals.config.tpv1Url},
 				],
+				req
 			},
 		);
 		res.locals.endTime = new Date();
