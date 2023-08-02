@@ -100,6 +100,7 @@ async function getFiles(path: string): Promise<string[]> {
 
 		dirEnt = await dir.read();
 	}
+	await dir.close();
 
 	return files;
 }
