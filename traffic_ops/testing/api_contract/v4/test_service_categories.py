@@ -14,7 +14,6 @@
 
 """API Contract Test Case for service_categories endpoint."""
 import logging
-from random import randint
 from typing import Union
 import pytest
 import requests
