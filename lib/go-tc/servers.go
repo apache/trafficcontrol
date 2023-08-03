@@ -1058,10 +1058,12 @@ func UpdateServerPropertiesV40(profileNames []string, properties CommonServerPro
 
 // ServerV40 is the representation of a Server in version 4.0 of the Traffic Ops API.
 type ServerV40 struct {
-	Cachegroup       *string              `json:"cachegroup" db:"cachegroup"`
-	CachegroupID     *int                 `json:"cachegroupId" db:"cachegroup_id"`
-	CDNID            *int                 `json:"cdnId" db:"cdn_id"`
-	CDNName          *string              `json:"cdnName" db:"cdn_name"`
+	Cachegroup   *string `json:"cachegroup" db:"cachegroup"`
+	CachegroupID *int    `json:"cachegroupId" db:"cachegroup_id"`
+	CDNID        *int    `json:"cdnId" db:"cdn_id"`
+	CDNName      *string `json:"cdnName" db:"cdn_name"`
+	// Deprecated: this has no known purpose, doesn't appear in any known API
+	// responses, and it doesn't exist in the V5 version of this structure.
 	DeliveryServices *map[string][]string `json:"deliveryServices,omitempty"`
 	DomainName       *string              `json:"domainName" db:"domain_name"`
 	FQDN             *string              `json:"fqdn,omitempty"`
@@ -1163,12 +1165,6 @@ func (s ServerV4) Upgrade() ServerV50 {
 	}
 
 	copy(upgraded.Profiles, s.ProfileNames)
-
-	if s.DeliveryServices != nil {
-		upgraded.DeliveryServices = util.CopyMap(*s.DeliveryServices)
-	} else {
-		upgraded.DeliveryServices = map[string][]string{}
-	}
 
 	for i, inf := range s.Interfaces {
 		upgraded.Interfaces[i] = inf.Copy()
@@ -1322,10 +1318,7 @@ type ServerV50 struct {
 	CDN              string     `json:"cdn" db:"cdn_name"`
 	ConfigApplyTime  *time.Time `json:"configApplyTime" db:"config_apply_time"`
 	ConfigUpdateTime *time.Time `json:"configUpdateTime" db:"config_update_time"`
-	// DeliveryServices doesn't include Delivery Services assigned via Topology
-	// usage (use the Topologies property for that). Read-only.
-	DeliveryServices map[string][]string `json:"deliveryServices"`
-	DomainName       string              `json:"domainName" db:"domain_name"`
+	DomainName       string     `json:"domainName" db:"domain_name"`
 	// Deprecated: This property has unknown purpose and should not be used so
 	// that we can get rid of it.
 	GUID         *string                  `json:"guid" db:"guid"`
@@ -1423,12 +1416,6 @@ func (s ServerV50) Downgrade() ServerV4 {
 	copy(downgraded.ProfileNames, s.Profiles)
 	for i, inf := range s.Interfaces {
 		downgraded.Interfaces[i] = inf.Copy()
-	}
-
-	// For DeliveryServices, specifically, we have to preserve actual nil values
-	// because of how omitempty works.
-	if s.DeliveryServices != nil {
-		downgraded.DeliveryServices = util.Ptr(util.CopyMap(s.DeliveryServices))
 	}
 
 	return downgraded

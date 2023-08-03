@@ -134,13 +134,10 @@ func ExampleServerInterfaceInfoV40_Copy() {
 
 func TestServerV5DowngradeUpgrade(t *testing.T) {
 	serverV5 := ServerV50{
-		CacheGroup:   "Cache Group",
-		CacheGroupID: 1,
-		CDNID:        2,
-		CDN:          "CDN",
-		DeliveryServices: map[string][]string{
-			"test": {"foo", "bar"},
-		},
+		CacheGroup:         "Cache Group",
+		CacheGroupID:       1,
+		CDNID:              2,
+		CDN:                "CDN",
 		DomainName:         "domain",
 		GUID:               nil,
 		HostName:           "host",
@@ -201,16 +198,6 @@ func TestServerV5DowngradeUpgrade(t *testing.T) {
 
 	if !reflect.DeepEqual(serverV4.Upgrade(), serverV5) {
 		t.Error("server not equal after downgrading then upgrading")
-	}
-}
-
-func TestServerV4_Upgrade(t *testing.T) {
-	s := ServerV40{
-		DeliveryServices: nil,
-	}
-
-	if s.Upgrade().DeliveryServices == nil {
-		t.Error("upgrading a nil DS slice shouldn't be nil, but it was")
 	}
 }
 
