@@ -956,9 +956,16 @@ JOIN server_profile sp ON s.id = sp.server`
 		if err != nil {
 			return nil, serverCount, nil, errors.New("getting servers: " + err.Error()), http.StatusInternalServerError, nil
 		}
-		if user.PrivLevel < auth.PrivLevelOperations {
-			s.ILOPassword = &HiddenField
-			s.XMPPPasswd = &HiddenField
+		if version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+			if !user.Can("SERVER-SECURE:READ") {
+				s.ILOPassword = &HiddenField
+				s.XMPPPasswd = &HiddenField
+			}
+		} else {
+			if user.PrivLevel < auth.PrivLevelOperations {
+				s.ILOPassword = &HiddenField
+				s.XMPPPasswd = &HiddenField
+			}
 		}
 
 		if s.ID == nil {
