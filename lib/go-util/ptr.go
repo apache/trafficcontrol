@@ -127,7 +127,7 @@ func Coalesce[T any](p *T, def T) T {
 // nil. This is equivalent to:
 //
 //	var x T
-//	result := CoalesceToDefault(p, x)
+//	result := Coalesce(p, x)
 //
 // ... but can be done on one line without knowing the type of `p`.
 func CoalesceToDefault[T any](p *T) T {
