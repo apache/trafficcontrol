@@ -14,7 +14,7 @@
  */
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
-import { DSStats, DSStatsMetricType } from "trafficops-types";
+import { DSStats, DSStatsMetricType, ResponseDeliveryServiceSSLKey } from "trafficops-types";
 
 import { constructDataSetFromResponse, DeliveryServiceService } from "./delivery-service.service";
 
@@ -94,6 +94,15 @@ export const testDS = {
 	type: "HTTP",
 	typeId: 1,
 	xmlId: "testquest",
+};
+
+/** A dummy DS SSL Key for testing */
+export const testDSSSLKeys: ResponseDeliveryServiceSSLKey = {
+	cdn: testDS.cdnName,
+	certificate: {crt: "", csr: "", key: ""},
+	deliveryservice: testDS.xmlId,
+	expiration: new Date(),
+	version: ""
 };
 
 /**
@@ -369,7 +378,7 @@ describe("DeliveryServiceService", () => {
 				expect(req.request.method).toBe("GET");
 
 				const metricType = req.request.params.get("metricType");
-				switch(metricType) {
+				switch (metricType) {
 					case "tps_total":
 						req.flush({response: totalResponse});
 						break;
@@ -416,32 +425,34 @@ describe("DeliveryServiceService", () => {
 				expect(req.request.params.get("endDate")).toBe(now.toISOString());
 				expect(req.request.method).toBe("GET");
 
-				req.flush({response: {
-					series: {
-						columns: ["time", "mean"],
-						count: 0,
-						name: "invalid",
-						values: [
-							[
-								twoSecondsAgo,
-								null
+				req.flush({
+					response: {
+						series: {
+							columns: ["time", "mean"],
+							count: 0,
+							name: "invalid",
+							values: [
+								[
+									twoSecondsAgo,
+									null
+								],
+								[
+									now,
+									0
+								]
 							],
-							[
-								now,
-								0
-							]
-						],
-					},
-					summary: {
-						average: 1,
-						count: 2,
-						fifthPercentile: 3,
-						max: 4,
-						min: 5,
-						ninetyEightPercentile: 6,
-						ninetyFifthPercentile: 7
+						},
+						summary: {
+							average: 1,
+							count: 2,
+							fifthPercentile: 3,
+							max: 4,
+							min: 5,
+							ninetyEightPercentile: 6,
+							ninetyFifthPercentile: 7
+						}
 					}
-				}});
+				});
 			}
 
 			await expectAsync(responseP).toBeRejected();
@@ -568,6 +579,28 @@ describe("DeliveryServiceService", () => {
 		expect(req.request.method).toBe("GET");
 		req.flush({response});
 		await expectAsync(responseP).toBeResolvedTo(response);
+	});
+
+	it("gets DS ssl keys", async () => {
+		let resp = service.getSSLKeys(testDS.xmlId);
+		let req = httpTestingController.expectOne(r => r.url ===
+			`/api/${service.apiVersion}/deliveryservices/xmlId/${testDS.xmlId}/sslkeys`);
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("decode")).toBe("true");
+		expect(req.request.method).toBe("GET");
+		req.flush({response: testDSSSLKeys});
+
+		await expectAsync(resp).toBeResolvedTo(testDSSSLKeys);
+
+		resp = service.getSSLKeys(testDS);
+		req = httpTestingController.expectOne(r => r.url ===
+			`/api/${service.apiVersion}/deliveryservices/xmlId/${testDS.xmlId}/sslkeys`);
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("decode")).toBe("true");
+		expect(req.request.method).toBe("GET");
+		req.flush({response: testDSSSLKeys});
+
+		await expectAsync(resp).toBeResolvedTo(testDSSSLKeys);
 	});
 
 	afterEach(() => {

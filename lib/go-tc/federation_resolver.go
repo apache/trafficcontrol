@@ -72,7 +72,7 @@ type FederationResolversResponseV50 struct {
 	Response []FederationResolverV5 `json:"response"`
 }
 
-// FederationResolverResponseV50 - represents struct response used for the latest minor version associated with APIv5.
+// FederationResolverResponseV5 - represents struct response used for the latest minor version associated with APIv5.
 type FederationResolverResponseV5 = FederationResolverResponseV50
 
 // FederationResolverResponseV50 - POST request to its /federation_resolvers endpoint APIv50.

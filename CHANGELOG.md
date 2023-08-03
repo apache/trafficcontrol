@@ -45,6 +45,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7619](https://github.com/apache/trafficcontrol/pull/7619) Traffic Ops* added optional field `oauth_user_attribute` for OAuth login credentials
 - [#7641](https://github.com/apache/trafficcontrol/pull/7641) *Traffic Router* Added further optimization to TR's algorithm of figuring out the zone for an incoming request.
 - [#7646](https://github.com/apache/trafficcontrol/pull/7646) *Traffic Portal* Add the ability to delete a cert.
+- [#7652](https://github.com/apache/trafficcontrol/pull/7652) *t3c* added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt
 
 ### Changed
 - [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
@@ -65,6 +66,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 - [#7586](https://github.com/apache/trafficcontrol/pull/7586) *Traffic Ops* Add permission to Operations Role to read from dnsseckeys endpoint.
 - [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
+- [##7605](https://github.com/apache/trafficcontrol/pull/#7605) *Traffic Ops* Fixes `cachegroups_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
 
 ### Fixed
@@ -138,6 +140,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixes `types` v5 apis to respond with `RFC3339` date/time Format.
 - [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixes an issue where certificate chain validation failed based on leading or trailing whitespace.
 - [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixes `federation_resolvers` v5 apis to respond with `RFC3339` date/time Format.
+- [#7660](https://github.com/apache/trafficcontrol/pull/7660) *Traffic Ops* Fixes `deliveryServices` v5 apis to respond with `RFC3339` date/time Format.
 - [#7686](https://github.com/apache/trafficcontrol/pull/7686) *Traffic Ops* Fixes secured parameters being visible when role has proper permissions.
 
 ### Removed

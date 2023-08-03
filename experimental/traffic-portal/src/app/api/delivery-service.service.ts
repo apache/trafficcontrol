@@ -20,7 +20,8 @@ import type {
 	RequestDeliveryService,
 	ResponseDeliveryService,
 	SteeringConfiguration,
-	TypeFromResponse
+	TypeFromResponse,
+	ResponseDeliveryServiceSSLKey
 } from "trafficops-types";
 
 import type {
@@ -440,5 +441,17 @@ export class DeliveryServiceService extends APIService {
 		const r = await this.get<Array<TypeFromResponse>>(path, undefined, {useInTable: "deliveryservice"}).toPromise();
 		this.deliveryServiceTypes = r;
 		return r;
+	}
+
+	/**
+	 * Gets a Delivery Service's SSL Keys
+	 *
+	 * @param ds The delivery service xmlid or object
+	 * @returns The DS ssl keys
+	 */
+	public async getSSLKeys(ds: string | ResponseDeliveryService): Promise<ResponseDeliveryServiceSSLKey> {
+		const xmlId = typeof ds === "string" ? ds : ds.xmlId;
+		const path = `deliveryservices/xmlId/${xmlId}/sslkeys`;
+		return this.get<ResponseDeliveryServiceSSLKey>(path, undefined, {decode: true}).toPromise();
 	}
 }

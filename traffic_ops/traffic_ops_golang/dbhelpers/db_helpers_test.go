@@ -563,6 +563,57 @@ func TestASNExists(t *testing.T) {
 	}
 }
 
+func TestCacheGroupExistsExists(t *testing.T) {
+	var testCases = []struct {
+		description   string
+		name          string
+		expectedError error
+		exists        bool
+	}{
+		{
+			description:   "Success: Get valid Cache Group",
+			name:          "testCacheGroup1",
+			expectedError: nil,
+			exists:        true,
+		},
+		{
+			description:   "Failure: Cache Group not in DB",
+			name:          "testCacheGroup2",
+			expectedError: sql.ErrNoRows,
+			exists:        false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close()
+
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+
+			mock.ExpectBegin()
+			rows := sqlmock.NewRows([]string{"count"})
+			if testCase.exists {
+				rows = rows.AddRow(1)
+			}
+			mock.ExpectQuery("SELECT").WillReturnRows(rows)
+			mock.ExpectCommit()
+
+			cgExists, err := CacheGroupExists(db.MustBegin().Tx, testCase.name)
+			if testCase.exists != cgExists {
+				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, cgExists)
+			}
+
+			if !errors.Is(err, testCase.expectedError) {
+				t.Errorf("CacheGroupExists expected: %s, actual: %s", testCase.expectedError, err)
+			}
+		})
+	}
+}
+
 func TestDivisionExists(t *testing.T) {
 	var testCases = []struct {
 		description   string

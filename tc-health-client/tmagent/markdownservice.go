@@ -309,7 +309,7 @@ func getParentFQDNs(pi *ParentInfo, tmh *TrafficMonitorHealth, l4h *ParentHealth
 //
 // This is a safety mechanism: if for any reason most or all parents are marked down, something
 // is seriously wrong, possibly with the health code itself, and therefore don't mark any parents down,
-const HealthSafetyRatio = 0.3 // TODO make configurable? // 0.3
+const HealthSafetyRatio = 0.3 // TODO make configurable?
 
 func doMarkdown(pi *ParentInfo) {
 	cfg := pi.Cfg.Get()
@@ -360,7 +360,7 @@ func doMarkdown(pi *ParentInfo) {
 		if oldAvailable != newAvailable {
 			// do not mark down if the configuration disables mark downs.
 			if !cfg.EnableActiveMarkdowns && !newAvailable {
-				log.Infof("markdown monitored_host=%v host_status=%v event=TM reports host is not available", fqdn, pv.Status())
+				log.Infof("markdown monitored_host=%v host_status=%v event=\"TM reports host is not available\"", fqdn, pv.Status())
 			} else {
 				if newParentStatus, err := markParent(cfg, parentStatus, isAvailable.Status, newAvailable); err != nil {
 					log.Errorln(err.Error())
@@ -409,7 +409,7 @@ func markParent(cfg *config.Cfg, pv ParentStatus, cacheStatus string, available 
 	if !available { // unavailable
 		unavailablePollCount += 1
 		if unavailablePollCount < cfg.UnavailablePollThreshold {
-			log.Infof("markdown monitored_host=%v host_status=%v event=TM indicates host is unavailable but the UnavailablePollThreshold has not been reached", hostName, hostStatus)
+			log.Infof("markdown monitored_host=%v host_status=UNAVAILABLE event=\"TM indicates host is unavailable but the UnavailablePollThreshold has not been reached\"", hostName)
 			hostAvailable = true
 		} else {
 			// marking the host down
@@ -422,13 +422,13 @@ func markParent(cfg *config.Cfg, pv ParentStatus, cacheStatus string, available 
 			// reset the poll counts
 			markUpPollCount = 0
 			unavailablePollCount = 0
-			log.Infof("marked monitored_host=%v host_status=%v event=%v\n", hostName, hostStatus, cacheStatus)
+			log.Infof("marked monitored_host=%v host_status=%v event=\"%v\"\n", hostName, hostStatus, cacheStatus)
 		}
 	} else { // available
 		// marking the host up
 		markUpPollCount += 1
 		if markUpPollCount < cfg.MarkUpPollThreshold {
-			log.Infof("TM indicates %s is available but the MarkUpPollThreshold has not been reached", hostName)
+			log.Infof("monitored_host=%v event=\"TM indicates host is available but the MarkUpPollThreshold has not been reached\"", hostName)
 			hostAvailable = false
 		} else {
 			if err := execTrafficCtl(pv.Fqdn, true, cfg.ReasonCode, cfg.TrafficServerBinDir); err != nil {
@@ -439,7 +439,7 @@ func markParent(cfg *config.Cfg, pv ParentStatus, cacheStatus string, available 
 			// reset the poll counts
 			unavailablePollCount = 0
 			markUpPollCount = 0
-			log.Infof("markdown monitored_host=%v host_status=%v event=%v\n", hostName, hostStatus, cacheStatus)
+			log.Infof("markdown monitored_host=%v host_status=%v event=\"%v\"\n", hostName, hostStatus, cacheStatus)
 		}
 	}
 

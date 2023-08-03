@@ -27,8 +27,8 @@ import (
 const apiCachegroups = "/cachegroups"
 
 // CreateCacheGroup creates the given Cache Group.
-func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullable, opts RequestOptions) (tc.CacheGroupDetailResponse, toclientlib.ReqInf, error) {
-	var resp tc.CacheGroupDetailResponse
+func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullableV5, opts RequestOptions) (tc.CacheGroupDetailResponseV5, toclientlib.ReqInf, error) {
+	var resp tc.CacheGroupDetailResponseV5
 	if cachegroup.TypeID == nil && cachegroup.Type != nil {
 		opts := NewRequestOptions()
 		opts.QueryParameters.Set("name", *cachegroup.Type)
@@ -78,16 +78,16 @@ func (to *Session) CreateCacheGroup(cachegroup tc.CacheGroupNullable, opts Reque
 
 // UpdateCacheGroup replaces the Cache Group identified by the given ID with
 // the given Cache Group.
-func (to *Session) UpdateCacheGroup(id int, cachegroup tc.CacheGroupNullable, opts RequestOptions) (tc.CacheGroupDetailResponse, toclientlib.ReqInf, error) {
+func (to *Session) UpdateCacheGroup(id int, cachegroup tc.CacheGroupNullableV5, opts RequestOptions) (tc.CacheGroupDetailResponseV5, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiCachegroups, id)
-	var cachegroupResp tc.CacheGroupDetailResponse
+	var cachegroupResp tc.CacheGroupDetailResponseV5
 	reqInf, err := to.put(route, opts, cachegroup, &cachegroupResp)
 	return cachegroupResp, reqInf, err
 }
 
 // GetCacheGroups retrieves Cache Groups configured in Traffic Ops.
-func (to *Session) GetCacheGroups(opts RequestOptions) (tc.CacheGroupsNullableResponse, toclientlib.ReqInf, error) {
-	var data tc.CacheGroupsNullableResponse
+func (to *Session) GetCacheGroups(opts RequestOptions) (tc.CacheGroupsNullableResponseV5, toclientlib.ReqInf, error) {
+	var data tc.CacheGroupsNullableResponseV5
 	reqInf, err := to.get(apiCachegroups, opts, &data)
 	return data, reqInf, err
 }

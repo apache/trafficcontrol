@@ -21,6 +21,7 @@ package cachegroup
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -28,14 +29,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"
@@ -45,6 +45,64 @@ import (
 type TOCacheGroup struct {
 	api.APIInfoImpl `json:"-"`
 	tc.CacheGroupNullable
+}
+
+type TOCacheGroupV5 struct {
+	api.APIInfoImpl `json:"-"`
+	tc.CacheGroupNullableV5
+}
+
+// Downgrade will convert an instance of CacheGroupNullableV5 to CacheGroupNullable.
+// Note that this function does a shallow copy of the requested and original Cache Group structures.
+func Downgrade(cgV5 tc.CacheGroupNullableV5) TOCacheGroup {
+	var cg TOCacheGroup
+	cg.ID = util.CopyIfNotNil(cgV5.ID)
+	cg.Name = util.CopyIfNotNil(cgV5.Name)
+	cg.ShortName = util.CopyIfNotNil(cgV5.ShortName)
+	cg.Latitude = util.CopyIfNotNil(cgV5.Latitude)
+	cg.Longitude = util.CopyIfNotNil(cgV5.Longitude)
+	cg.ParentName = util.CopyIfNotNil(cgV5.ParentName)
+	cg.ParentCachegroupID = util.CopyIfNotNil(cgV5.ParentCachegroupID)
+	cg.SecondaryParentName = util.CopyIfNotNil(cgV5.SecondaryParentName)
+	cg.SecondaryParentCachegroupID = util.CopyIfNotNil(cgV5.SecondaryParentCachegroupID)
+	cg.FallbackToClosest = util.CopyIfNotNil(cgV5.FallbackToClosest)
+	cg.LocalizationMethods = util.CopyIfNotNil(cgV5.LocalizationMethods)
+	cg.Type = util.CopyIfNotNil(cgV5.Type)
+	cg.TypeID = util.CopyIfNotNil(cgV5.TypeID)
+	if cgV5.LastUpdated != nil {
+		cg.LastUpdated = tc.TimeNoModFromTime(*cgV5.LastUpdated)
+	}
+	cg.Fallbacks = util.CopyIfNotNil(cgV5.Fallbacks)
+	return cg
+}
+
+// Upgrade will convert an instance of CacheGroupNullable to CacheGroupNullableV5.
+// Note that this function does a shallow copy of the requested and original Cache Group structures.
+func (cg TOCacheGroup) Upgrade() (tc.CacheGroupNullableV5, error) {
+	var cgV5 tc.CacheGroupNullableV5
+	cgV5.ID = util.CopyIfNotNil(cg.ID)
+	cgV5.Name = util.CopyIfNotNil(cg.Name)
+	cgV5.ShortName = util.CopyIfNotNil(cg.ShortName)
+	cgV5.Latitude = util.CopyIfNotNil(cg.Latitude)
+	cgV5.Longitude = util.CopyIfNotNil(cg.Longitude)
+	cgV5.ParentName = util.CopyIfNotNil(cg.ParentName)
+	cgV5.ParentCachegroupID = util.CopyIfNotNil(cg.ParentCachegroupID)
+	cgV5.SecondaryParentName = util.CopyIfNotNil(cg.SecondaryParentName)
+	cgV5.SecondaryParentCachegroupID = util.CopyIfNotNil(cg.SecondaryParentCachegroupID)
+	cgV5.FallbackToClosest = util.CopyIfNotNil(cg.FallbackToClosest)
+	cgV5.LocalizationMethods = util.CopyIfNotNil(cg.LocalizationMethods)
+	cgV5.Type = util.CopyIfNotNil(cg.Type)
+	cgV5.TypeID = util.CopyIfNotNil(cg.TypeID)
+	if cg.LastUpdated != nil {
+		cgV5.LastUpdated = &cg.LastUpdated.Time
+		t, err := util.ConvertTimeFormat(*cgV5.LastUpdated, time.RFC3339)
+		if err != nil {
+			return cgV5, err
+		}
+		cgV5.LastUpdated = t
+	}
+	cgV5.Fallbacks = util.CopyIfNotNil(cg.Fallbacks)
+	return cgV5, nil
 }
 
 func (cg TOCacheGroup) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -896,4 +954,490 @@ last_updated`
 
 func DeleteQuery() string {
 	return `DELETE FROM cachegroup WHERE id=$1`
+}
+
+// GetCacheGroup [Version : V5] function Process the *http.Request and writes the response. It uses getCacheGroup function.
+func GetCacheGroup(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	code := http.StatusOK
+	useIMS := false
+	config, e := api.GetConfig(r.Context())
+	if e == nil && config != nil {
+		useIMS = config.UseIMS
+	} else {
+		log.Warnf("Couldn't get config %v", e)
+	}
+
+	var maxTime time.Time
+	var usrErr error
+	var syErr error
+
+	var cgList []interface{}
+
+	tx := inf.Tx
+
+	cgList, maxTime, code, usrErr, syErr = getCacheGroup(tx, inf.Params, useIMS, r.Header)
+	if code == http.StatusNotModified {
+		w.WriteHeader(code)
+		api.WriteResp(w, r, []tc.CacheGroupV5{})
+		return
+	}
+
+	if code == http.StatusBadRequest {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, usrErr, nil)
+		return
+	}
+
+	if sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, syErr)
+		return
+	}
+
+	if maxTime != (time.Time{}) && api.SetLastModifiedHeader(r, useIMS) {
+		api.AddLastModifiedHdr(w, maxTime)
+	}
+
+	api.WriteResp(w, r, cgList)
+}
+
+func getCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]interface{}, time.Time, int, error, error) {
+	//func getCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
+	var runSecond bool
+	var maxTime time.Time
+	cgList := []interface{}{}
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"id":        {Column: "cachegroup.id", Checker: api.IsInt},
+		"name":      {Column: "cachegroup.name"},
+		"shortName": {Column: "cachegroup.short_name"},
+		"type":      {Column: "cachegroup.type"},
+		"topology":  {Column: "topology_cachegroup.topology"},
+	}
+	if _, ok := params["orderby"]; !ok {
+		params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+	}
+
+	if useIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			return cgList, maxTime, http.StatusNotModified, nil, nil
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+	baseSelect := SelectQuery()
+	if _, ok := params["topology"]; ok {
+		baseSelect += `
+		LEFT JOIN topology_cachegroup ON cachegroup.name = topology_cachegroup.cachegroup
+		`
+	}
+	// If the type cannot be converted to an int, return 400
+	if cgType, ok := params["type"]; ok {
+		_, err := strconv.Atoi(cgType)
+		if err != nil {
+			return nil, time.Time{}, http.StatusBadRequest, nil, fmt.Errorf("cachegroup read: converting cachegroup type to integer " + err.Error())
+		}
+	}
+
+	query := baseSelect + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		return nil, time.Time{}, http.StatusInternalServerError, nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var cg TOCacheGroupV5
+		lms := make([]tc.LocalizationMethod, 0)
+		cgfs := make([]string, 0)
+		if err = rows.Scan(
+			&cg.ID,
+			&cg.Name,
+			&cg.ShortName,
+			&cg.Latitude,
+			&cg.Longitude,
+			pq.Array(&lms),
+			&cg.ParentCachegroupID,
+			&cg.ParentName,
+			&cg.SecondaryParentCachegroupID,
+			&cg.SecondaryParentName,
+			&cg.Type,
+			&cg.TypeID,
+			&cg.LastUpdated,
+			pq.Array(&cgfs),
+			&cg.FallbackToClosest,
+		); err != nil {
+			return nil, time.Time{}, http.StatusInternalServerError, nil, err
+		}
+		cg.LocalizationMethods = &lms
+		cg.Fallbacks = &cgfs
+		cgList = append(cgList, cg)
+	}
+
+	return cgList, maxTime, http.StatusOK, nil, nil
+}
+
+// CreateCacheGroup [Version : V5] function creates the cache group with the passed name.
+func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	cg, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// check if cache group already exists
+	var exists bool
+	err := tx.QueryRow(`SELECT EXISTS(SELECT * from cachegroup where name = $1)`, cg.Name).Scan(&exists)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if cache group with name %s exists", err, *cg.Name))
+		return
+	}
+	if exists {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cache group name '%s' already exists.", *cg.Name), nil)
+		return
+	}
+
+	// create cache group
+	query := InsertQuery()
+
+	err = tx.QueryRow(
+		query,
+		cg.Name,
+		cg.ShortName,
+		cg.TypeID,
+		cg.ParentCachegroupID,
+		cg.SecondaryParentCachegroupID,
+		cg.FallbackToClosest,
+	).Scan(
+		&cg.ID,
+		&cg.Type,
+		&cg.ParentName,
+		&cg.SecondaryParentName,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating cache group with name: %s", err, *cg.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+
+	dgCg := Downgrade(cg)
+	dgCg.ReqInfo = inf
+	coordinateID, err := dgCg.createCoordinate()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("cachegroup create: creating coord: "+err.Error()), nil)
+		return
+	}
+
+	checkLastUpdated := `UPDATE cachegroup SET coordinate=$1 WHERE id=$2 RETURNING last_updated`
+
+	err = tx.QueryRow(
+		checkLastUpdated,
+		coordinateID,
+		*cg.ID,
+	).Scan(
+		&cg.LastUpdated,
+	)
+
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("followup update during cachegroup create: %v", err), nil)
+		return
+	}
+
+	if err = dgCg.createLocalizationMethods(); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("creating cachegroup: creating localization methods: "+err.Error()), nil)
+		return
+	}
+
+	if err = dgCg.createCacheGroupFallbacks(); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("creating cachegroup: creating cache group fallbacks: "+err.Error()), nil)
+		return
+	}
+
+	cg, err = dgCg.Upgrade()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("converting cachegroup: converting cache group upgrade: "+err.Error()), nil)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/cachegroups?name=%s", inf.Version.Major, inf.Version.Minor, *cg.Name))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cg)
+	return
+}
+
+// UpdateCacheGroup [Version : V5] function updates the name of the cache group passed.
+func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	cg, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	ID := inf.Params["id"]
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusUnprocessableEntity, fmt.Errorf("update cachegroup: converted to type int: "+err.Error()), nil)
+		return
+	}
+
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, id, "cachegroup")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	dgCg := Downgrade(cg)
+	dgCg.ReqInfo = inf
+
+	keyFields := dgCg.GetKeyFieldsInfo() //expecting a slice of the key fields info which is a struct with the field name and a function to convert a string into a {}interface of the right type. in most that will be [{Field:"id",Func: func(s string)({}interface,error){return strconv.Atoi(s)}}]
+	// ignoring ok value -- will be checked after param processing
+
+	keys := make(map[string]interface{}) // a map of keyField to keyValue where keyValue is an {}interface
+	for _, kf := range keyFields {
+		paramKey := inf.Params[kf.Field]
+		if paramKey == "" {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("missing key: "+kf.Field), nil)
+			return
+		}
+
+		paramValue, err := kf.Func(paramKey)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("failed to parse key: "+kf.Field), nil)
+			return
+		}
+
+		if paramValue != "" {
+			// if key's value provided in params,  overwrite it and ignore that provided in JSON
+			keys[kf.Field] = paramValue
+		}
+	}
+
+	// check that all keys were properly filled in
+	dgCg.SetKeys(keys)
+	_, ok := dgCg.GetKeys()
+	if !ok {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("unable to parse required keys from request body"), nil)
+		return
+	}
+
+	// check if user can modify cache group
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroup(dgCg.ReqInfo.Tx.Tx, *dgCg.ID, dgCg.ReqInfo.User.UserName)
+	if sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, fmt.Errorf("update cachegroup: checking if user can modify: "+sysErr.Error()), sysErr)
+		return
+	}
+	if userErr != nil {
+		api.HandleErr(w, r, tx, errCode, fmt.Errorf("update cachegroup: checking if user can modify: "+userErr.Error()), userErr)
+		return
+	}
+
+	coordinateID, userErr, sysErr, errCode := dgCg.handleCoordinateUpdate()
+	if sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, fmt.Errorf("update cachegroup: updating coordinate: "+sysErr.Error()), sysErr)
+		return
+	}
+	if userErr != nil {
+		api.HandleErr(w, r, tx, errCode, fmt.Errorf("update cachegroup: updating coordinate: "+userErr.Error()), userErr)
+		return
+	}
+
+	err = dgCg.ValidateTypeInTopology()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("update cachegroup: validating type in topology: "+err.Error()), err)
+		return
+	}
+
+	//update cache group
+	query := UpdateQuery()
+
+	err = tx.QueryRow(
+		query,
+		dgCg.Name,
+		dgCg.ShortName,
+		coordinateID,
+		dgCg.ParentCachegroupID,
+		dgCg.SecondaryParentCachegroupID,
+		dgCg.TypeID,
+		dgCg.FallbackToClosest,
+		dgCg.ID,
+	).Scan(
+		&dgCg.Type,
+		&dgCg.ParentName,
+		&dgCg.SecondaryParentName,
+		&dgCg.LastUpdated,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("cache group with name: %s not found", *dgCg.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+
+	if err = dgCg.createLocalizationMethods(); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("creating cachegroup: creating localization methods: "+err.Error()), nil)
+		return
+	}
+
+	if err = dgCg.createCacheGroupFallbacks(); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("creating cachegroup: creating cache group fallbacks: "+err.Error()), nil)
+		return
+	}
+
+	cg, err = dgCg.Upgrade()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("converting cachegroup: converting cache group upgrade: "+err.Error()), nil)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, cg)
+	return
+}
+
+// DeleteCacheGroup [Version : V5] function deletes the cache group passed.
+func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	ID := inf.Params["id"]
+	id, err := strconv.Atoi(ID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusUnprocessableEntity, fmt.Errorf("delete cachegroup: converted to type int: "+err.Error()), nil)
+		return
+	}
+
+	inUse, err := isUsed(inf.Tx, id)
+	if inUse {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, nil, nil)
+		return
+	}
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("cachegroup delete: checking use: "+err.Error()), nil)
+		return
+	}
+
+	coordinateID, err := dbhelpers.GetCoordinateID(inf.Tx.Tx, id)
+	if err == sql.ErrNoRows {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no cachegroup with that id found"), nil)
+		return
+	}
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("cachegroup delete: deleting cachegroup: "+err.Error()), nil)
+		return
+	}
+
+	// check if user can modify cache group
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCachegroup(inf.Tx.Tx, id, inf.User.UserName)
+	if userErr != nil {
+		api.HandleErr(w, r, tx, errCode, fmt.Errorf("cachegroup delete: getting coord: "+userErr.Error()), nil)
+		return
+	}
+	if sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, fmt.Errorf("cachegroup delete: getting coord: "+sysErr.Error()), nil)
+		return
+	}
+
+	if err = dbhelpers.DeleteCoordinate(inf.Tx.Tx, id, *coordinateID); err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("cachegroup delete: deleting coord: "+err.Error()), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM cachegroup AS cg WHERE cg.ID=$1", ID)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete cachegroup: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("no rows deleted for cachegroup"))
+		return
+	}
+
+	alertMessage := fmt.Sprintf("%s was deleted.", ID)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+// readAndValidateJsonStruct populates select missing fields and validates JSON body
+func readAndValidateJsonStruct(r *http.Request) (tc.CacheGroupNullableV5, error) {
+	var cg tc.CacheGroupNullableV5
+	if err := json.NewDecoder(r.Body).Decode(&cg); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into CacheGroupV5 struct %w", err)
+		return cg, userErr
+	}
+
+	if cg.Latitude == nil {
+		cg.Latitude = util.Ptr(0.0)
+	}
+	if cg.Longitude == nil {
+		cg.Longitude = util.Ptr(0.0)
+	}
+	if cg.LocalizationMethods == nil {
+		cg.LocalizationMethods = &[]tc.LocalizationMethod{}
+	}
+	if cg.Fallbacks == nil {
+		cg.Fallbacks = &[]string{}
+	}
+	if cg.FallbackToClosest == nil {
+		fbc := true
+		cg.FallbackToClosest = &fbc
+	}
+
+	// validate JSON body
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name": validation.Validate(cg.Name, validation.Required, rule),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return cg, userErr
+	}
+	return cg, nil
 }
