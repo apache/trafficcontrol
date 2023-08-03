@@ -1,7 +1,5 @@
 package varnishcfg
 
-import "fmt"
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +18,8 @@ import "fmt"
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import "fmt"
 
 const defaultVCLVersion = "4.1"
 

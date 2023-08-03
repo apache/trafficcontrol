@@ -26,7 +26,7 @@ RUN dnf module disable varnish -y && yum install -y epel-release
 
 RUN curl -s https://packagecloud.io/install/repositories/varnishcache/varnish73/script.rpm.sh | bash
 
-RUN yum install varnish-7.3.0-1.el8.x86_64 -y
+RUN yum install varnish-7.3.0 -y
 
 RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel git perl && \
     dnf install -y jq logrotate findutils && \

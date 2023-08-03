@@ -1,12 +1,6 @@
+// Package varnishcfg manages generating configuration files
+// for Varnish cache and Hitch proxy using data from Traffic Ops APIs.
 package varnishcfg
-
-import (
-	"fmt"
-	"strings"
-
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-)
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -26,6 +20,14 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+)
 
 // VCLBuilder builds the default VCL file using TO data.
 type VCLBuilder struct {

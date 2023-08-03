@@ -1,13 +1,5 @@
 package varnishcfg
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -26,6 +18,14 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/lib/go-tc"
+)
 
 func (v *VCLBuilder) configureDirectors(vclFile *vclFile, parents *atscfg.ParentAbstraction) ([]string, error) {
 	warnings := []string{}

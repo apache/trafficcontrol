@@ -1,12 +1,5 @@
 package varnishcfg
 
-import (
-	"reflect"
-	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -25,6 +18,13 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"reflect"
+	"testing"
+
+	"github.com/apache/trafficcontrol/lib/go-atscfg"
+)
 
 func TestAddBackends(t *testing.T) {
 	testCases := []struct {
