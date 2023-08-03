@@ -141,6 +141,15 @@ type ServerIPAddress struct {
 	ServiceAddress bool    `json:"serviceAddress" db:"service_address"`
 }
 
+// Copy creates a deep copy of the IP address.
+func (ip ServerIPAddress) Copy() ServerIPAddress {
+	return ServerIPAddress{
+		Address:        ip.Address,
+		Gateway:        util.CopyIfNotNil(ip.Gateway),
+		ServiceAddress: ip.ServiceAddress,
+	}
+}
+
 // ServerInterfaceInfo is the data associated with a server's interface.
 type ServerInterfaceInfo struct {
 	IPAddresses  []ServerIPAddress `json:"ipAddresses" db:"ip_addresses"`
@@ -150,11 +159,36 @@ type ServerInterfaceInfo struct {
 	Name         string            `json:"name" db:"name"`
 }
 
+// Copy creates a deep copy of the Server Interface.
+func (inf ServerInterfaceInfo) Copy() ServerInterfaceInfo {
+	newInf := ServerInterfaceInfo{
+		IPAddresses:  make([]ServerIPAddress, len(inf.IPAddresses)),
+		MaxBandwidth: util.CopyIfNotNil(inf.MaxBandwidth),
+		Monitor:      inf.Monitor,
+		MTU:          util.CopyIfNotNil(inf.MTU),
+		Name:         inf.Name,
+	}
+	for i, ip := range inf.IPAddresses {
+		newInf.IPAddresses[i] = ip.Copy()
+	}
+
+	return newInf
+}
+
 // ServerInterfaceInfoV40 is the data associated with a V40 server's interface.
 type ServerInterfaceInfoV40 struct {
 	ServerInterfaceInfo
 	RouterHostName string `json:"routerHostName" db:"router_host_name"`
 	RouterPortName string `json:"routerPortName" db:"router_port_name"`
+}
+
+// Copy creates a deep copy of the Server Interface.
+func (inf ServerInterfaceInfoV40) Copy() ServerInterfaceInfoV40 {
+	return ServerInterfaceInfoV40{
+		ServerInterfaceInfo: inf.ServerInterfaceInfo.Copy(),
+		RouterHostName:      inf.RouterHostName,
+		RouterPortName:      inf.RouterPortName,
+	}
 }
 
 // GetDefaultAddressOrCIDR returns the IPv4 and IPv6 service addresses of the interface.

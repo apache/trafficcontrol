@@ -83,6 +83,53 @@ func ExampleLegacyInterfaceDetails_String() {
 	// Output: LegacyInterfaceDetails(InterfaceMtu=9000, InterfaceName='test', IP6Address='2001:DB8::/64', IP6Gateway=nil, IPAddress='192.0.2.0', IPGateway=nil, IPNetmask=nil)
 }
 
+func ExampleServerIPAddress_Copy() {
+	ip := ServerIPAddress{
+		Address:        "test",
+		Gateway:        new(string),
+		ServiceAddress: false,
+	}
+
+	*ip.Gateway = "not a gateway, but who cares?"
+	ip2 := ip.Copy()
+	fmt.Println(*ip.Gateway == *ip2.Gateway)
+
+	*ip.Gateway = "something different"
+	fmt.Println(*ip.Gateway == *ip2.Gateway)
+
+	// Output: true
+	// false
+}
+
+func ExampleServerInterfaceInfoV40_Copy() {
+	inf := ServerInterfaceInfoV40{
+		ServerInterfaceInfo: ServerInterfaceInfo{
+			IPAddresses: []ServerIPAddress{
+				{
+					Address:        "test",
+					Gateway:        new(string),
+					ServiceAddress: false,
+				},
+			},
+			MaxBandwidth: new(uint64),
+			Monitor:      false,
+			MTU:          new(uint64),
+			Name:         "eth0",
+		},
+		RouterHostName: "router host",
+		RouterPortName: "router port",
+	}
+
+	*inf.IPAddresses[0].Gateway = "not a gateway, but who cares?"
+	inf2 := inf.Copy()
+
+	fmt.Println(*inf.IPAddresses[0].Gateway == *inf2.IPAddresses[0].Gateway)
+	*inf.IPAddresses[0].Gateway = "something different"
+	fmt.Println(*inf.IPAddresses[0].Gateway == *inf2.IPAddresses[0].Gateway)
+
+	// Output: true
+	// false
+}
 type interfaceTest struct {
 	ExpectedIPv4        string
 	ExpectedIPv4Gateway string
