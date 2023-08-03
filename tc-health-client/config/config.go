@@ -351,9 +351,7 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 	if err != nil {
 		return false, errors.New(err.Error())
 	}
-	log.Infof("Value for monitoring strategies peers: %v", cfg.MonitorStrategiesPeers)
 	err = json.Unmarshal(content, cfg)
-	log.Infof("Value for monitoring strategies peers after loading json: %v", cfg.MonitorStrategiesPeers)
 	if err != nil {
 		return false, fmt.Errorf("config parsing failed: %w", err)
 	}
