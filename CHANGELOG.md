@@ -69,6 +69,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
 - [##7605](https://github.com/apache/trafficcontrol/pull/#7605) *Traffic Ops* Fixes `cachegroups_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
+- [#7694](https://github.com/apache/trafficcontrol/pull/7694) *t3c*, *Traffic Control Health Client* Upgrade to ATS 9.2
 
 ### Fixed
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
