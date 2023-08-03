@@ -1874,5 +1874,20 @@
                 "type": "string"
             }
         }
+    },
+    "service_category": {
+        "type": "object",
+        "required": [
+            "lastUpdated",
+            "name"
+        ],
+        "properties": {
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            }
+        }
     }
 }

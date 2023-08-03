@@ -440,5 +440,10 @@
 			"profileId": 18,
 			"parameterId": 3
 		}
+	],
+	"service_category": [
+		{
+			"name": "SERVICE-CATEGORY-NAME"
+		}
 	]
 }

@@ -1792,3 +1792,34 @@ def profile_parameters_post_data(to_session: TOSession, request_template_data: l
 	if msg is None:
 		logger.error("Profile Parameter returned by Traffic Ops is missing a 'profile_id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="service_category_post_data")
+def service_category_data_post(to_session: TOSession,
+		request_template_data: list[JSONData]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for service_category endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get service_category request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	service_category = check_template_data(
+		request_template_data["service_category"], "service_category")
+
+	# Return new post data and post response from service_category POST request
+	service_category_name = service_category["name"]
+	service_category["name"] = service_category_name + str(randint(0,1000))
+
+	logger.info("New service_category data to hit POST method %s", service_category)
+	# Hitting service_category POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_service_category(
+		data=service_category)
+	resp_obj = check_template_data(response, "service_category")
+	yield resp_obj
+	service_category_name = resp_obj.get("name")
+	msg = to_session.delete_service_category(service_category_name=service_category_name)
+	logger.info("Deleting service_category data... %s", msg)
+	if msg is None:
+		logger.error("service_category returned by Traffic Ops is missing an 'name' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")

@@ -2018,6 +2018,49 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+	#
+	# Service categories
+	#
+	@api_request('get', 'service_categories', ('3.0', '4.0', '4.1', '5.0'))
+	def get_service_categories(self, query_params=None):
+		"""
+		Get service categories.
+		:ref:`to-api-service_categories`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('post', 'service_categories', ('3.0', '4.0', '4.1', '5.0'))
+	def create_service_category(self, data=None):
+		"""
+		Create a service category.
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('put', 'service_categories/{service_category_name:s}', ('4.0', '4.1', '5.0'))
+	def update_service_category(self, service_category_name=None, data=None):
+		"""
+		Update a service category.
+		:param service_category_name: The current name of the Service Category.
+		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'service_categories/{service_category_name:s}', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_service_category(self, service_category_name=None):
+		"""
+		Delete a service category.
+		:param service_category_name: The current name of the Service Category to be deleted.
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 	#
 	# Static DNS Entries
