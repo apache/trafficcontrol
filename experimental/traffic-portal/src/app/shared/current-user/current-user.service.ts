@@ -88,7 +88,7 @@ export class CurrentUserService {
 				}
 			).catch(
 				e => {
-					let msg = e instanceof Error ? e.message : String(e);
+					const msg = e instanceof Error ? e.message : String(e);
 					this.log.error(`Failed to update current user: ${msg}`);
 					return false;
 				}
