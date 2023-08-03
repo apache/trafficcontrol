@@ -21,6 +21,7 @@ package tc
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -130,6 +131,89 @@ func ExampleServerInterfaceInfoV40_Copy() {
 	// Output: true
 	// false
 }
+
+func TestServerV5DowngradeUpgrade(t *testing.T) {
+	serverV5 := ServerV50{
+		CacheGroup:   "Cache Group",
+		CacheGroupID: 1,
+		CDNID:        2,
+		CDN:          "CDN",
+		DeliveryServices: map[string][]string{
+			"test": {"foo", "bar"},
+		},
+		DomainName:         "domain",
+		GUID:               nil,
+		HostName:           "host",
+		HTTPSPort:          nil,
+		ID:                 3,
+		ILOIPAddress:       nil,
+		ILOIPGateway:       nil,
+		ILOIPNetmask:       nil,
+		ILOPassword:        nil,
+		ILOUsername:        nil,
+		LastUpdated:        time.Time{}.Add(time.Hour),
+		MgmtIPAddress:      nil,
+		MgmtIPGateway:      nil,
+		MgmtIPNetmask:      nil,
+		OfflineReason:      nil,
+		PhysicalLocation:   "physical location",
+		PhysicalLocationID: 4,
+		Profiles:           []string{"test", "quest"},
+		Rack:               nil,
+		Status:             "Status",
+		StatusID:           5,
+		TCPPort:            nil,
+		Topologies:         []string{},
+		Type:               "type",
+		TypeID:             6,
+		XMPPID:             nil,
+		XMPPPasswd:         nil,
+		Interfaces: []ServerInterfaceInfoV40{
+			{
+				ServerInterfaceInfo: ServerInterfaceInfo{
+					IPAddresses: []ServerIPAddress{
+						{
+							Address:        "192.0.0.1/12",
+							Gateway:        nil,
+							ServiceAddress: true,
+						},
+					},
+					MaxBandwidth: nil,
+					Monitor:      false,
+					MTU:          nil,
+					Name:         "eth0",
+				},
+				RouterHostName: "router host",
+				RouterPortName: "router port",
+			},
+		},
+		StatusLastUpdated: nil,
+		ConfigUpdateTime:  nil,
+		ConfigApplyTime:   nil,
+		RevalUpdateTime:   nil,
+		RevalApplyTime:    nil,
+	}
+
+	serverV4 := serverV5.Downgrade()
+	if fqdn := serverV5.HostName + "." + serverV5.DomainName; serverV4.FQDN == nil || *serverV4.FQDN != fqdn {
+		t.Errorf("incorrectly calculated FQDN; want: %s, got: %v", fqdn, serverV4.FQDN)
+	}
+
+	if !reflect.DeepEqual(serverV4.Upgrade(), serverV5) {
+		t.Error("server not equal after downgrading then upgrading")
+	}
+}
+
+func TestServerV4_Upgrade(t *testing.T) {
+	s := ServerV40{
+		DeliveryServices: nil,
+	}
+
+	if s.Upgrade().DeliveryServices == nil {
+		t.Error("upgrading a nil DS slice shouldn't be nil, but it was")
+	}
+}
+
 type interfaceTest struct {
 	ExpectedIPv4        string
 	ExpectedIPv4Gateway string

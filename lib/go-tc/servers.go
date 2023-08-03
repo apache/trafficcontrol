@@ -760,17 +760,23 @@ type CommonServerProperties struct {
 	ProfileDesc *string `json:"profileDesc" db:"profile_desc"`
 	// Deprecated: In API versions 4 and later, Servers identify their Profiles
 	// by Name, not ID.
-	ProfileID    *int    `json:"profileId" db:"profile_id"`
-	Rack         *string `json:"rack" db:"rack"`
+	ProfileID *int    `json:"profileId" db:"profile_id"`
+	Rack      *string `json:"rack" db:"rack"`
+	// Deprecated: In APIv5 and later, this extraneous field is not calculated
+	// by Traffic Ops; the information is available by comparing RevalUpdateTime
+	// to RevalApplyTime.
 	RevalPending *bool   `json:"revalPending" db:"reval_pending"`
 	Status       *string `json:"status" db:"status"`
 	StatusID     *int    `json:"statusId" db:"status_id"`
 	TCPPort      *int    `json:"tcpPort" db:"tcp_port"`
 	Type         string  `json:"type" db:"server_type"`
 	TypeID       *int    `json:"typeId" db:"server_type_id"`
-	UpdPending   *bool   `json:"updPending" db:"upd_pending"`
-	XMPPID       *string `json:"xmppId" db:"xmpp_id"`
-	XMPPPasswd   *string `json:"xmppPasswd" db:"xmpp_passwd"`
+	// Deprecated: In APIv5 and later, this extraneous field is not calculated
+	// by Traffic Ops; the information is available by comparing
+	// ConfigUpdateTime to ConfigApplyTime.
+	UpdPending *bool   `json:"updPending" db:"upd_pending"`
+	XMPPID     *string `json:"xmppId" db:"xmpp_id"`
+	XMPPPasswd *string `json:"xmppPasswd" db:"xmpp_passwd"`
 }
 
 // ServerNullableV11 is a server as it appeared in API version 1.1.
@@ -1081,18 +1087,24 @@ type ServerV40 struct {
 	// Deprecated: In the future, management interfaces must be configured as
 	// interfaces within the Interfaces of the server, not separately on these
 	// properties.
-	MgmtIPNetmask     *string                  `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
-	OfflineReason     *string                  `json:"offlineReason" db:"offline_reason"`
-	PhysLocation      *string                  `json:"physLocation" db:"phys_location"`
-	PhysLocationID    *int                     `json:"physLocationId" db:"phys_location_id"`
-	ProfileNames      []string                 `json:"profileNames" db:"profile_name"`
-	Rack              *string                  `json:"rack" db:"rack"`
-	RevalPending      *bool                    `json:"revalPending" db:"reval_pending"`
-	Status            *string                  `json:"status" db:"status"`
-	StatusID          *int                     `json:"statusId" db:"status_id"`
-	TCPPort           *int                     `json:"tcpPort" db:"tcp_port"`
-	Type              string                   `json:"type" db:"server_type"`
-	TypeID            *int                     `json:"typeId" db:"server_type_id"`
+	MgmtIPNetmask  *string  `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason  *string  `json:"offlineReason" db:"offline_reason"`
+	PhysLocation   *string  `json:"physLocation" db:"phys_location"`
+	PhysLocationID *int     `json:"physLocationId" db:"phys_location_id"`
+	ProfileNames   []string `json:"profileNames" db:"profile_name"`
+	Rack           *string  `json:"rack" db:"rack"`
+	// Deprecated: In APIv5 and later, this extraneous field is not calculated
+	// by Traffic Ops; the information is available by comparing RevalUpdateTime
+	// to RevalApplyTime.
+	RevalPending *bool   `json:"revalPending" db:"reval_pending"`
+	Status       *string `json:"status" db:"status"`
+	StatusID     *int    `json:"statusId" db:"status_id"`
+	TCPPort      *int    `json:"tcpPort" db:"tcp_port"`
+	Type         string  `json:"type" db:"server_type"`
+	TypeID       *int    `json:"typeId" db:"server_type_id"`
+	// Deprecated: In APIv5 and later, this extraneous field is not calculated
+	// by Traffic Ops; the information is available by comparing
+	// ConfigUpdateTime to ConfigApplyTime.
 	UpdPending        *bool                    `json:"updPending" db:"upd_pending"`
 	XMPPID            *string                  `json:"xmppId" db:"xmpp_id"`
 	XMPPPasswd        *string                  `json:"xmppPasswd" db:"xmpp_passwd"`
@@ -1107,6 +1119,63 @@ type ServerV40 struct {
 // ServerV4 is the representation of a Server in the latest minor version of
 // version 4 of the Traffic Ops API.
 type ServerV4 = ServerV40
+
+// Upgrade upgrades to an APIv5 representation of a Server.
+func (s ServerV4) Upgrade() ServerV50 {
+	upgraded := ServerV50{
+		CacheGroup:         util.CoalesceToDefault(s.Cachegroup),
+		CacheGroupID:       util.CoalesceToDefault(s.CachegroupID),
+		CDNID:              util.CoalesceToDefault(s.CDNID),
+		CDN:                util.CoalesceToDefault(s.CDNName),
+		DomainName:         util.CoalesceToDefault(s.DomainName),
+		GUID:               util.CopyIfNotNil(s.GUID),
+		HostName:           util.CoalesceToDefault(s.HostName),
+		HTTPSPort:          util.CopyIfNotNil(s.HTTPSPort),
+		ID:                 util.CoalesceToDefault(s.ID),
+		ILOIPAddress:       util.CopyIfNotNil(s.ILOIPAddress),
+		ILOIPGateway:       util.CopyIfNotNil(s.ILOIPGateway),
+		ILOIPNetmask:       util.CopyIfNotNil(s.ILOIPNetmask),
+		ILOPassword:        util.CopyIfNotNil(s.ILOPassword),
+		ILOUsername:        util.CopyIfNotNil(s.ILOUsername),
+		LastUpdated:        util.CoalesceToDefault(s.LastUpdated).Time,
+		MgmtIPAddress:      util.CopyIfNotNil(s.MgmtIPAddress),
+		MgmtIPGateway:      util.CopyIfNotNil(s.MgmtIPGateway),
+		MgmtIPNetmask:      util.CopyIfNotNil(s.MgmtIPNetmask),
+		OfflineReason:      util.CopyIfNotNil(s.OfflineReason),
+		PhysicalLocation:   util.CoalesceToDefault(s.PhysLocation),
+		PhysicalLocationID: util.CoalesceToDefault(s.PhysLocationID),
+		Profiles:           make([]string, len(s.ProfileNames)),
+		Rack:               util.CopyIfNotNil(s.Rack),
+		Status:             util.CoalesceToDefault(s.Status),
+		StatusID:           util.CoalesceToDefault(s.StatusID),
+		TCPPort:            util.CopyIfNotNil(s.TCPPort),
+		Topologies:         []string{},
+		Type:               s.Type,
+		TypeID:             util.CoalesceToDefault(s.TypeID),
+		XMPPID:             util.CopyIfNotNil(s.XMPPID),
+		XMPPPasswd:         util.CopyIfNotNil(s.XMPPPasswd),
+		Interfaces:         make([]ServerInterfaceInfoV40, len(s.Interfaces)),
+		StatusLastUpdated:  util.CopyIfNotNil(s.StatusLastUpdated),
+		ConfigUpdateTime:   util.CopyIfNotNil(s.ConfigUpdateTime),
+		ConfigApplyTime:    util.CopyIfNotNil(s.ConfigApplyTime),
+		RevalUpdateTime:    util.CopyIfNotNil(s.RevalUpdateTime),
+		RevalApplyTime:     util.CopyIfNotNil(s.RevalApplyTime),
+	}
+
+	copy(upgraded.Profiles, s.ProfileNames)
+
+	if s.DeliveryServices != nil {
+		upgraded.DeliveryServices = util.CopyMap(*s.DeliveryServices)
+	} else {
+		upgraded.DeliveryServices = map[string][]string{}
+	}
+
+	for i, inf := range s.Interfaces {
+		upgraded.Interfaces[i] = inf.Copy()
+	}
+
+	return upgraded
+}
 
 // ServerV30 is the representation of a Server in version 3 of the Traffic Ops API.
 //
@@ -1244,6 +1313,131 @@ func (s *ServerV40) ToServerV2FromV4(csp CommonServerProperties) (ServerNullable
 	return legacyServer, nil
 }
 
+// ServerV50 is the representation of a Server in version 5.0 of the Traffic Ops
+// API.
+type ServerV50 struct {
+	CacheGroup       string     `json:"cacheGroup" db:"cachegroup"`
+	CacheGroupID     int        `json:"cacheGroupID" db:"cachegroup_id"`
+	CDNID            int        `json:"cdnID" db:"cdn_id"`
+	CDN              string     `json:"cdn" db:"cdn_name"`
+	ConfigApplyTime  *time.Time `json:"configApplyTime" db:"config_apply_time"`
+	ConfigUpdateTime *time.Time `json:"configUpdateTime" db:"config_update_time"`
+	// DeliveryServices doesn't include Delivery Services assigned via Topology
+	// usage (use the Topologies property for that). Read-only.
+	DeliveryServices map[string][]string `json:"deliveryServices"`
+	DomainName       string              `json:"domainName" db:"domain_name"`
+	// Deprecated: This property has unknown purpose and should not be used so
+	// that we can get rid of it.
+	GUID         *string                  `json:"guid" db:"guid"`
+	HostName     string                   `json:"hostName" db:"host_name"`
+	HTTPSPort    *int                     `json:"httpsPort" db:"https_port"`
+	ID           int                      `json:"id" db:"id"`
+	ILOIPAddress *string                  `json:"iloIpAddress" db:"ilo_ip_address"`
+	ILOIPGateway *string                  `json:"iloIpGateway" db:"ilo_ip_gateway"`
+	ILOIPNetmask *string                  `json:"iloIpNetmask" db:"ilo_ip_netmask"`
+	ILOPassword  *string                  `json:"iloPassword" db:"ilo_password"`
+	ILOUsername  *string                  `json:"iloUsername" db:"ilo_username"`
+	Interfaces   []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
+	LastUpdated  time.Time                `json:"lastUpdated" db:"last_updated"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
+	MgmtIPAddress *string `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
+	MgmtIPGateway *string `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	// Deprecated: In the future, management interfaces must be configured as
+	// interfaces within the Interfaces of the server, not separately on these
+	// properties.
+	MgmtIPNetmask      *string  `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	OfflineReason      *string  `json:"offlineReason" db:"offline_reason"`
+	PhysicalLocation   string   `json:"physicalLocation" db:"phys_location"`
+	PhysicalLocationID int      `json:"physicalLocationID" db:"phys_location_id"`
+	Profiles           []string `json:"profiles" db:"profile_name"`
+	// Deprecated: This property has unknown purpose and should not be used so
+	// that we can get rid of it.
+	Rack              *string    `json:"rack" db:"rack"`
+	RevalApplyTime    *time.Time `json:"revalApplyTime" db:"revalidate_apply_time"`
+	RevalUpdateTime   *time.Time `json:"revalUpdateTime" db:"revalidate_update_time"`
+	Status            string     `json:"status" db:"status"`
+	StatusID          int        `json:"statusID" db:"status_id"`
+	StatusLastUpdated *time.Time `json:"statusLastUpdated" db:"status_last_updated"`
+	TCPPort           *int       `json:"tcpPort" db:"tcp_port"`
+	// read-only
+	Topologies []string `json:"topologies" db:"topologies"`
+	Type       string   `json:"type" db:"server_type"`
+	TypeID     int      `json:"typeID" db:"server_type_id"`
+	XMPPID     *string  `json:"xmppId" db:"xmpp_id"`
+	// Deprecated: This property has unknown purpose and should not be used so
+	// that we can get rid of it.
+	XMPPPasswd *string `json:"xmppPasswd" db:"xmpp_passwd"`
+}
+
+// Downgrade downgrades to a V4 representation of a Server.
+func (s ServerV50) Downgrade() ServerV4 {
+	downgraded := ServerV40{
+		Cachegroup:        util.Ptr(s.CacheGroup),
+		CachegroupID:      util.Ptr(s.CacheGroupID),
+		CDNID:             util.Ptr(s.CDNID),
+		CDNName:           util.Ptr(s.CDN),
+		DeliveryServices:  nil,
+		DomainName:        util.Ptr(s.DomainName),
+		FQDN:              util.Ptr(s.HostName + "." + s.DomainName),
+		FqdnTime:          time.Time{},
+		GUID:              util.CopyIfNotNil(s.GUID),
+		HostName:          util.Ptr(s.HostName),
+		HTTPSPort:         util.CopyIfNotNil(s.HTTPSPort),
+		ID:                util.Ptr(s.ID),
+		ILOIPAddress:      util.CopyIfNotNil(s.ILOIPAddress),
+		ILOIPGateway:      util.CopyIfNotNil(s.ILOIPGateway),
+		ILOIPNetmask:      util.CopyIfNotNil(s.ILOIPNetmask),
+		ILOPassword:       util.CopyIfNotNil(s.ILOPassword),
+		ILOUsername:       util.CopyIfNotNil(s.ILOUsername),
+		LastUpdated:       &TimeNoMod{Time: s.LastUpdated},
+		MgmtIPAddress:     util.CopyIfNotNil(s.MgmtIPAddress),
+		MgmtIPGateway:     util.CopyIfNotNil(s.MgmtIPGateway),
+		MgmtIPNetmask:     util.CopyIfNotNil(s.MgmtIPNetmask),
+		OfflineReason:     util.CopyIfNotNil(s.OfflineReason),
+		PhysLocation:      util.Ptr(s.PhysicalLocation),
+		PhysLocationID:    util.Ptr(s.PhysicalLocationID),
+		ProfileNames:      make([]string, len(s.Profiles)),
+		Rack:              util.CopyIfNotNil(s.Rack),
+		RevalPending:      util.Ptr(s.RevalApplyTime != nil && s.RevalUpdateTime != nil && !s.RevalApplyTime.Before(*s.RevalUpdateTime)),
+		Status:            util.Ptr(s.Status),
+		StatusID:          util.Ptr(s.StatusID),
+		TCPPort:           util.CopyIfNotNil(s.TCPPort),
+		Type:              s.Type,
+		TypeID:            util.Ptr(s.TypeID),
+		UpdPending:        util.Ptr(s.ConfigApplyTime != nil && s.ConfigUpdateTime != nil && !s.ConfigApplyTime.Before(*s.ConfigUpdateTime)),
+		XMPPID:            util.CopyIfNotNil(s.XMPPID),
+		XMPPPasswd:        util.CopyIfNotNil(s.XMPPPasswd),
+		Interfaces:        make([]ServerInterfaceInfoV40, len(s.Interfaces)),
+		StatusLastUpdated: util.CopyIfNotNil(s.StatusLastUpdated),
+		ConfigUpdateTime:  util.CopyIfNotNil(s.ConfigUpdateTime),
+		ConfigApplyTime:   util.CopyIfNotNil(s.ConfigApplyTime),
+		RevalUpdateTime:   util.CopyIfNotNil(s.RevalUpdateTime),
+		RevalApplyTime:    util.CopyIfNotNil(s.RevalApplyTime),
+	}
+
+	copy(downgraded.ProfileNames, s.Profiles)
+	for i, inf := range s.Interfaces {
+		downgraded.Interfaces[i] = inf.Copy()
+	}
+
+	// For DeliveryServices, specifically, we have to preserve actual nil values
+	// because of how omitempty works.
+	if s.DeliveryServices != nil {
+		downgraded.DeliveryServices = util.Ptr(util.CopyMap(s.DeliveryServices))
+	}
+
+	return downgraded
+}
+
+// ServerV5 is the representation of a Server in the latest minor version of
+// version 5 of the Traffic Ops API.
+type ServerV5 = ServerV50
+
 // ServerUpdateStatusV4 is the type of each entry in the `response` property of
 // the response from Traffic Ops to GET requests made to its
 // /servers/{{host name}}/update_status in the latest minor API
@@ -1254,8 +1448,11 @@ type ServerUpdateStatusV4 ServerUpdateStatusV40
 // the response from Traffic Ops to GET requests made to its
 // /servers/{{host name}}/update_status in API v4.0 endpoint.
 type ServerUpdateStatusV40 struct {
-	HostName             string     `json:"host_name"`
-	UpdatePending        bool       `json:"upd_pending"`
+	HostName      string `json:"host_name"`
+	UpdatePending bool   `json:"upd_pending"`
+	// Deprecated: In APIv5 and later, this extraneous field is not calculated
+	// by Traffic Ops; the information is available by comparing RevalUpdateTime
+	// to RevalApplyTime.
 	RevalPending         bool       `json:"reval_pending"`
 	UseRevalPending      bool       `json:"use_reval_pending"`
 	HostId               int        `json:"host_id"`
@@ -1417,4 +1614,24 @@ type ServerQueueUpdateResponse struct {
 type ServerQueueUpdate struct {
 	ServerID util.JSONIntStr `json:"serverId"`
 	Action   string          `json:"action"`
+}
+
+// ServersV5Response is the format of a response to a GET request to /servers in
+// APIv5.
+type ServersV5Response struct {
+	Response []ServerV5 `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+	Alerts
+}
+
+// ServerV5Response is the format of a response to single-server operations
+// using /servers in APIv5.
+type ServerV5Response struct {
+	Response ServerV5 `json:"response"`
+	Summary  struct {
+		Count uint64 `json:"count"`
+	} `json:"summary"`
+	Alerts
 }
