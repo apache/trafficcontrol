@@ -24,8 +24,8 @@ import (
 const apiLogs = "/logs"
 
 // GetLogs gets a list of logs.
-func (to *Session) GetLogs(opts RequestOptions) (tc.LogsResponse, toclientlib.ReqInf, error) {
-	var data tc.LogsResponse
+func (to *Session) GetLogs(opts RequestOptions) (tc.LogsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.LogsResponseV5
 	reqInf, err := to.get(apiLogs, opts, &data)
 	return data, reqInf, err
 }
