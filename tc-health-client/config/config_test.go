@@ -21,6 +21,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/apache/trafficcontrol/tc-health-client/util"
@@ -111,6 +112,12 @@ func TestLoadConfig(t *testing.T) {
 	bindir := cfg.TrafficServerBinDir
 	if bindir != expect {
 		t.Fatalf("expected '%s', got %s\n", expect, bindir)
+	}
+
+	expect = "true"
+	monitorStrategisPeers := cfg.MonitorStrategiesPeers
+	if expect != strconv.FormatBool(monitorStrategisPeers) {
+		t.Fatalf("expected '%s', got %v\n", expect, monitorStrategisPeers)
 	}
 }
 
