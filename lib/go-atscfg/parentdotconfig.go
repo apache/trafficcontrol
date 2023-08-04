@@ -1195,7 +1195,7 @@ func (dsparams parentDSParams) FillParentSvcRetries(isLastCacheTier bool, atsMaj
 		}
 	}
 
-	// simple retry responses only supported int ATS for 9.1.x and above
+	// simple retry responses only supported int ATS for 9.2.x and above
 	if simpleResponseInts, err := ParseRetryResponses(dsparams.SimpleServerRetryResponses); err == nil {
 		pasvc.ErrorResponseCodes = simpleResponseInts
 	} else {

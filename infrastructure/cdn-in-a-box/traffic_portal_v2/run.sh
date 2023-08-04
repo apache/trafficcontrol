@@ -53,6 +53,7 @@ echo "$(jq "$(<<JQ_FILTERS cat
   .certPath = "$cert" |
   .keyPath = "$key" |
   .port = $TP2_PORT |
+  .tpv1Url = "https://localhost" |
   .insecure = true
 JQ_FILTERS
 )" /etc/traffic-portal/config.json )" > /etc/traffic-portal/config.json

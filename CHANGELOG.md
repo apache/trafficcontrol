@@ -4,6 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+- [#7665](https://github.com/apache/trafficcontrol/pull/7665) *Automation* Changes to Ansible role dataset_loader to add ATS 9 support
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client* Added peer monitor flag while using `strategies.yaml`
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login. 
@@ -67,7 +68,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 - [#7586](https://github.com/apache/trafficcontrol/pull/7586) *Traffic Ops* Add permission to Operations Role to read from dnsseckeys endpoint.
 - [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
+- [##7605](https://github.com/apache/trafficcontrol/pull/#7605) *Traffic Ops* Fixes `cachegroups_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
+- [#7694](https://github.com/apache/trafficcontrol/pull/7694) *t3c*, *Traffic Control Health Client* Upgrade to ATS 9.2
 
 ### Fixed
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
@@ -140,6 +143,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixes `types` v5 apis to respond with `RFC3339` date/time Format.
 - [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixes an issue where certificate chain validation failed based on leading or trailing whitespace.
 - [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixes `federation_resolvers` v5 apis to respond with `RFC3339` date/time Format.
+- [#7660](https://github.com/apache/trafficcontrol/pull/7660) *Traffic Ops* Fixes `deliveryServices` v5 apis to respond with `RFC3339` date/time Format.
 
 ### Removed
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.

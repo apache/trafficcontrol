@@ -568,7 +568,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"CACHE GROUP UPDATE": func(t *testing.T) {
-							cacheGroup := tc.CacheGroupNullable{}
+							cacheGroup := tc.CacheGroupNullableV5{}
 							err = json.Unmarshal(dat, &cacheGroup)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							resp, reqInf, err := testCase.ClientSession.UpdateCacheGroup(testCase.EndpointID(), cacheGroup, testCase.RequestOpts)
@@ -577,7 +577,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"CDN UPDATE": func(t *testing.T) {
-							cdn := tc.CDN{}
+							cdn := tc.CDNV5{}
 							err = json.Unmarshal(dat, &cdn)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.UpdateCDN(testCase.EndpointID(), cdn, testCase.RequestOpts)

@@ -26,6 +26,7 @@ import { MiscAPIsService } from "./misc-apis.service";
 import { PhysicalLocationService } from "./physical-location.service";
 import { ProfileService } from "./profile.service";
 import { ServerService } from "./server.service";
+import { TopologyService } from "./topology.service";
 import { TypeService } from "./type.service";
 import { UserService } from "./user.service";
 
@@ -38,6 +39,7 @@ export * from "./misc-apis.service";
 export * from "./physical-location.service";
 export * from "./profile.service";
 export * from "./server.service";
+export * from "./topology.service";
 export * from "./type.service";
 export * from "./user.service";
 
@@ -59,6 +61,7 @@ export * from "./user.service";
 		PhysicalLocationService,
 		ProfileService,
 		ServerService,
+		TopologyService,
 		TypeService,
 		UserService,
 	]
