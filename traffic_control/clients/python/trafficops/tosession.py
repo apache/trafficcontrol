@@ -2040,7 +2040,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 	
-	@api_request('put', 'service_categories/{service_category_name:s}', ('4.0', '4.1', '5.0'))
+	@api_request('put', 'service_categories/{service_category_name:s}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_service_category(self, service_category_name=None, data=None):
 		"""
 		Update a service category.
