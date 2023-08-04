@@ -1822,4 +1822,38 @@ def service_category_data_post(to_session: TOSession,
 	logger.info("Deleting service_category data... %s", msg)
 	if msg is None:
 		logger.error("service_category returned by Traffic Ops is missing an 'name' property")
+    pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="federation_resolver_post_data")
+def federation_resolver_data_post(to_session: TOSession, request_template_data: list[JSONData]
+				  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for federation_resolver endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get federation_resolver request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+	randstr = str(randint(0, 10))
+	federation_resolver = check_template_data(
+		request_template_data["federation_resolver"], "federation_resolver")
+
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "federation"})
+	federation_resolver["typeId"] = type_object["id"]
+	ipaddress = federation_resolver["ipAddress"]
+	federation_resolver["ipAddress"] = ipaddress + randstr
+
+	logger.info("New federation_resolver data to hit POST method %s", federation_resolver)
+	# Hitting federation_resolver POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_federation_resolver(data=federation_resolver)
+	resp_obj = check_template_data(response, "federation_resolver")
+	yield resp_obj
+	resolver_id = resp_obj.get("id")
+	msg = to_session.delete_federation_resolver(query_params={"id":resolver_id})
+	logger.info("Deleting federation_resolver data... %s", msg)
+	if msg is None:
+		logger.error("federation_resolver returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")

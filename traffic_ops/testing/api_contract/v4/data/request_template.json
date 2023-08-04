@@ -417,7 +417,7 @@
 				37
 			],
 			"replace": true
-      }
+		}
 	],
 	"delivery_service_required_capabilities": [
 		{
@@ -444,6 +444,12 @@
 	"service_category": [
 		{
 			"name": "SERVICE-CATEGORY-NAME"
+      }
+	],
+	"federation_resolver": [
+		{
+			"ipAddress": "::1/1",
+			"typeId": 37
 		}
 	]
 }

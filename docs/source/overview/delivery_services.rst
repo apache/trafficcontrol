@@ -1036,7 +1036,7 @@ parent.config
 """""""""""""
 The following :term:`Parameters` must have the :ref:`Config File <parameter-config-file>` ``parent.config`` to take effect - even if, strictly speaking, they aren't used to modify the contents of the :abbr:`ATS (Apache Traffic Server)` ``parent.config`` configuration file.
 
-.. seealso:: See the `Apache Traffic Server documentation for parent.config <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_ and `their documentation for strategies.yaml <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/strategies.yaml.en.html>`_ for more information on its implementation of parent selection (and in particular Multi-Site Origins).
+.. seealso:: See the `Apache Traffic Server documentation for parent.config <https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html>`_ and `their documentation for strategies.yaml <https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/strategies.yaml.en.html>`_ for more information on its implementation of parent selection (and in particular Multi-Site Origins).
 
 
 - ``try_all_primaries_before_secondary`` - on a Delivery Service :term:`Profile`, if this exists, try all "primary parents" before "failing over" to "secondary parents", which may be ideal if objects are unlikely to be in cache. The default behavior is to immediately fail to a secondary, which is ideal if objects are likely to be in cache, as the first consistent-hashed "secondary parent" will be the "primary parent" in its own :term:`Cache Group` and therefore receive requests for that object from clients near its own :term:`Cache Group`.
@@ -1066,17 +1066,17 @@ The following :term:`Parameters` must have the :ref:`Config File <parameter-conf
 
 Parameters that Affect Multi-Site Origin and Parent Down Behavior
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
-Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html>`_ (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
+Each :term:`Parameter` directly corresponds to a field in a line of the :abbr:`ATS (Apache Traffic Server)` `parent.config file <https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html>`_ (usually by almost the same name), and documentation for these fields is provided in the form of links to their entries in the :abbr:`ATS (Apache Traffic Server)` documentation.
 
-.. _round_robin: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-round-robin
-.. _max_simple_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
-.. _max_unavailable_server_retries: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-max-unavailable-server-retries
-.. _parent_retry: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry
-.. _unavailable_server_retry_responses: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-unavailable-server-retry-responses
-.. _simple_server_retry_responses: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-simple-server-retry-responses
-.. _parent.config: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html
-.. _parent: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-parent
-.. _secondary_parent: https://docs.trafficserver.apache.org/en/9.1.x/admin-guide/files/parent.config.en.html#parent-config-format-secondary-parent
+.. _round_robin: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html#parent-config-format-round-robin
+.. _max_simple_retries: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html#parent-config-format-max-simple-retries
+.. _max_unavailable_server_retries: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html#parent-config-format-max-unavailable-server-retries
+.. _parent_retry: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html#parent-config-format-parent-retry
+.. _unavailable_server_retry_responses: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html#parent-config-format-unavailable-server-retry-responses
+.. _simple_server_retry_responses: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html#parent-config-format-simple-server-retry-responses
+.. _parent.config: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html
+.. _parent: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html#parent-config-format-parent
+.. _secondary_parent: https://docs.trafficserver.apache.org/en/9.2.x/admin-guide/files/parent.config.en.html#parent-config-format-secondary-parent
 
 .. _ds-mso-parameters:
 
@@ -1113,7 +1113,7 @@ The above :term:`Parameters` are supported for ``first``, ``inner`` and ``last``
 	The `parent_retry` parameters are now inferred from the `simple retry` and `unavailable server retry` parameters. To disable "simple retries" for a :term:`Profile`, set the Value of its ``max_simple_retries`` :term:`Parameter` to ``0``, and the Value of its ``max_simple_retry_responses`` :term:`Parameter` to an empty string. "Unavailable server retries" may disabled in much the same way, using the analogous :term:`Parameters`.
 
 .. impl-detail:: With Apache Traffic Server 8.1.x the ``simple_retry_response_codes`` setting is not available.
-.. impl-detail:: With Apache Traffic Server 9.1.x ``unavailable_server_retry_response_codes`` are limited to 5xx responses and ``simple_retry_response_codes`` are limited to 4xx.
+.. impl-detail:: With Apache Traffic Server 9.2.x ``unavailable_server_retry_response_codes`` are limited to 5xx responses and ``simple_retry_response_codes`` are limited to 4xx.
 .. impl-detail:: Apache Traffic Server 9.2.x allows more flexibility with 4xx and 5xx codes available for use with ``simple_retry_response_codes``.
 
 .. seealso:: To see how the :ref:`Values <parameter-value>` of these Parameters are interpreted, refer to the `Apache Traffic Server documentation on the parent.config configuration file <https://docs.trafficserver.apache.org/en/7.1.x/admin-guide/files/parent.config.en.html>`_
