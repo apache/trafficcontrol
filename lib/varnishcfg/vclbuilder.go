@@ -47,6 +47,13 @@ func (vb *VCLBuilder) BuildVCLFile() (string, []string, error) {
 	warnings := make([]string, 0)
 	v := newVCLFile(defaultVCLVersion)
 
+	// access control should be added first to ensure no request processed if it is not allowed
+	aclWarnings, err := vb.configureAccessControl(&v)
+	warnings = append(warnings, aclWarnings...)
+	if err != nil {
+		return "", nil, fmt.Errorf("(warnings: %s) %w", strings.Join(warnings, ", "), err)
+	}
+
 	atsMajorVersion := uint(9)
 
 	parents, dataWarns, err := atscfg.MakeParentDotConfigData(
