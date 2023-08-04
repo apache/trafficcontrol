@@ -1886,7 +1886,7 @@
                 "type": "string"
             },
             "name": {
-              "type": "string"
+                "type": "string"
             }
         }
     },
@@ -1906,6 +1906,25 @@
                 "type": "string"
             },
             "lastUpdated": {
+                "type": "string"
+            },
+            "type": {
+                "type": "string"
+            }
+        }
+    },
+    "federation_federation_resolver": {
+        "type": "object",
+        "required": [
+            "id",
+            "ipAddress",
+            "type"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "ipAddress": {
                 "type": "string"
             },
             "type": {

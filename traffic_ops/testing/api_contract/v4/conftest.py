@@ -1648,6 +1648,7 @@ def delivery_services_regex_data_post(to_session: TOSession, request_template_da
 @pytest.fixture(name="cdn_federation_post_data")
 def cdn_federation_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		  cdn_post_data:dict[str, object], user_post_data:dict[str, object],
+		  federation_resolver_post_data:dict[str, object],
 		  delivery_services_post_data: dict[str, object]) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for cdn_name_federations endpoint.
@@ -1679,6 +1680,13 @@ def cdn_federation_data_post(to_session: TOSession, request_template_data: list[
 	delivery_service_federation["dsIds"][0] = delivery_service_id
 	response: tuple[JSONData, requests.Response] = to_session.assign_delivery_services_to_federations(federation_id=federation_id, data=delivery_service_federation)
 	delivery_service_federation_resp_obj = check_template_data(response, "delivery_service_federation")
+
+	#Assign a federation resolver to created federation
+	federation_resolver_id = federation_resolver_post_data["id"]
+	federation_federation_resolver = check_template_data(request_template_data["federation_federation_resolver"], "federation_federation_resolver")
+	federation_federation_resolver["fedResolverIds"][0] = federation_resolver_id
+	response: tuple[JSONData, requests.Response] = to_session.assign_federation_resolver_to_federations(federation_id=federation_id, data=federation_federation_resolver)
+	federation_federation_resolver_resp_obj = check_template_data(response, "federation_federation_resolver")
 
 	yield [cdn_name, cdn_federation_resp_obj, cdn_federation, federation_id, delivery_service_federation_resp_obj]
 	

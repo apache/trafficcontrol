@@ -419,6 +419,12 @@
 			"replace": true
 		}
 	],
+	"federation_federation_resolver":[
+		{
+			"fedResolverIds": [39],
+			"replace": true
+		}
+	],
 	"delivery_service_required_capabilities": [
 		{
 			"deliveryServiceID": 1,
