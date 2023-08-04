@@ -226,10 +226,10 @@ func GetConfig() (*Cfg, error, bool) {
 	var err error
 	var configFile string
 	var logLocationErr = log.LogLocationStderr
-	var logLocationDebug = log.LogLocationFile
+	var logLocationDebug = log.LogLocationNull
 	var logLocationInfo = log.LogLocationFile
-	var logLocationWarn = log.LogLocationFile
-	var logLocationEvent = log.LogLocationFile
+	var logLocationWarn = log.LogLocationNull
+	var logLocationEvent = log.LogLocationNull
 
 	configFilePtr := getopt.StringLong("config-file", 'f', DefaultConfigFile, "full path to the json config file")
 	logdirPtr := getopt.StringLong("logging-dir", 'l', DefaultLogDirectory, "directory location for log files")
