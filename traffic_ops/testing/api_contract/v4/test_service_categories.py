@@ -61,7 +61,7 @@ def test_service_categories_contract(to_session: TOSession,
 		service_category_response_template = response_template_data.get(
 			"service_category")
 		if not isinstance(service_category_response_template, dict):
-			raise TypeError(f"service_category response template data must be a dict, not '"
+			raise TypeError(f"service_category response template data must be a dict, not'"
 							f"{type(service_category_response_template)}'")
 
 		assert first_service_category["name"] == service_category_post_data["name"]
