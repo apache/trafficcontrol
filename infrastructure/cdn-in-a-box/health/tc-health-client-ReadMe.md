@@ -23,6 +23,14 @@
 
 Build and run cdn-in-a-box `docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`, once up and running, using docker desktop, navigate to terminal tab of an edge or mid. cd into `/var/log/trafficcontrol` and run `tail -f tc-health-client.log`. Click on the `Open in external terminal` on upper right side and cd into `/usr/bin` and run `./tc-health-client`. Wait for the dispersion time to pass and then logs will start in the window where the tail command was ran. After that you may interact with it via Traffic Portal.
 
+## Enable Debug instructions [Different from Production]
+
+Debug is currently going to `/dev/null` to avoid filling up the logs. However, it can be redirect to show in the logs when debugging is needed. Systemd doesn't work well in Docker. Therefore the debbuging can be enabled in CDN-in-a-Box with the following steps:
+
+If `tc-health-client` is already running `control + c` to stop it
+Then run `/usr/bin/tc-health-client -vvv` in the `external terminal` this enables debug messages
+Watch logs in the docker desktop tab where `tail -f tc-health-client.log` was ran
+
 ## Config files for Testing Only
 
 For testing only the `tc-health-client.json` are the settings used to run it locally and can be changed. If changed `purge` all containers and run `docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up` in the `infrastructure/cdn-in-a-box/` folder. Same applies if the `tc-health-client.service` and `to-creds` files are changed. The `tc-health-client.service` is set for `Debug` mode with `vvv` which is different from Production which is `vv`.

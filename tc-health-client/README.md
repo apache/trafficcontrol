@@ -131,6 +131,18 @@ Sample configuarion file:
 
 The name of the CDN that the Traffic Server host is a member of.
 
+### Enable Debug instructions
+
+Debug is currently going to `/dev/null` to avoid filling up the logs. However, it can be redirect to show in the logs when debugging is needed. In the desired machine, please add a 3rd `v` to `tc-health-client.service` resulting in `-vvv` which enables debugging live to trobleshoot an issue and **change it back to `-vv` once debugging is no londer needed**. 
+
+Steps:
+Cd into `/usr/lib/systemd/system/`
+To edit run `sudo vi tc-health-client.service`
+Save and quit with `wq!`
+Reload with `sudo systemctl daemon-reload`
+Run `sudo systemctl stop tc-health-client` and wait for the next prompt to show
+Then run `sudo systemctl start tc-health-client`
+
 ### enable-active-markdowns
 
 When enabled, the client will actively mark down Traffic Server parents.
