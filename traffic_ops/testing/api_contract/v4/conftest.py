@@ -1822,7 +1822,7 @@ def service_category_data_post(to_session: TOSession,
 	logger.info("Deleting service_category data... %s", msg)
 	if msg is None:
 		logger.error("service_category returned by Traffic Ops is missing an 'name' property")
-    pytest.fail("Response from delete request is empty, Failing test_case")
+		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
 @pytest.fixture(name="federation_resolver_post_data")
