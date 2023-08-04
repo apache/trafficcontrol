@@ -1851,8 +1851,8 @@ def federation_resolver_data_post(to_session: TOSession, request_template_data: 
 	type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"useInTable": "federation"})
 	federation_resolver["typeId"] = type_object["id"]
-	ipaddress = federation_resolver["ipAddress"]
-	federation_resolver["ipAddress"] = ipaddress + randstr
+	federation_resolver["ipAddress"] = ".".join(map(str, (randint(0, 255) 
+                        for _ in range(4))))
 
 	logger.info("New federation_resolver data to hit POST method %s", federation_resolver)
 	# Hitting federation_resolver POST methed

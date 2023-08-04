@@ -64,11 +64,11 @@ def test_cdn_federation_contract(to_session: TOSession,
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_federation_delivery_services(federation_id=federation_id)
+
 	federation_resolvers_get_response: tuple[
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_federation_resolvers_by_id(federation_id=federation_id)
-	logger.info("Here %s ", federation_resolvers_get_response)
 	
     # Hitting cdn_federation PUT method
 	cdn_federation_sample_data["description"] = "test" + str(randint(0, 1000)) 
