@@ -20,14 +20,21 @@ package region
  */
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 // we need a type alias to define functions on
@@ -191,4 +198,230 @@ func deleteQueryBase() string {
 func deleteQuery() string {
 	query := deleteQueryBase() + ` WHERE id=:id`
 	return query
+}
+
+// Read is the handler for GET requests to Regions of APIv5
+func Read(w http.ResponseWriter, r *http.Request) {
+	var maxTime time.Time
+	var runSecond bool
+
+	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if sysErr != nil || userErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"division": {Column: "r.division"},
+		"id":       {Column: "r.id", Checker: api.IsInt},
+		"name":     {Column: "r.name"},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+	}
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	query := selectQuery() + where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("region get: error getting region(s): %w", err))
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	typ := tc.RegionV5{}
+	regionList := []tc.RegionV5{}
+	for rows.Next() {
+		if err = rows.Scan(&typ.Division, &typ.DivisionName, &typ.ID, &typ.LastUpdated, &typ.Name); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting region(s): %w", err))
+		}
+		regionList = append(regionList, typ)
+	}
+
+	api.WriteResp(w, r, regionList)
+	return
+}
+
+// Create region with the passed data for APIv5.
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+	rg, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	var exists bool
+	existErr := tx.QueryRow(`SELECT EXISTS(SELECT * from region where name = $1)`, rg.Name).Scan(&exists)
+
+	if existErr != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if region with name %s exists", existErr, rg.Name))
+		return
+	}
+	if exists {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("region name '%s' already exists", rg.Name), nil)
+		return
+	}
+
+	query := `INSERT INTO region ( division, name) VALUES ( $1, $2 ) 
+				RETURNING 
+					id,last_updated,
+					(SELECT d.name FROM division d WHERE d.id = region.division)`
+	err := tx.QueryRow(query, rg.Division, rg.Name).Scan(&rg.ID, &rg.LastUpdated, &rg.DivisionName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating region with name: %s", err, rg.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "region is created.")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, rg)
+	return
+}
+
+// Update a Region for APIv5
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	rg, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	requestedRegionId := inf.IntParams["id"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedRegionId, "region")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	query := `UPDATE region SET division= $1, name= $2 WHERE id= $3 
+				RETURNING 
+					id,last_updated,
+					(SELECT d.name FROM division d WHERE d.id = region.division)`
+
+	err := tx.QueryRow(query, rg.Division, rg.Name, requestedRegionId).Scan(&rg.ID, &rg.LastUpdated, &rg.DivisionName)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("region: %d not found", requestedRegionId), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "region was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, rg)
+	return
+}
+
+// Delete an Region for APIv5
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	requestedRegionId := inf.Params["id"]
+	if requestedRegionId == "" {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no region exists for empty id"), nil)
+		return
+	}
+
+	var exists bool
+	existErr := tx.QueryRow(`SELECT EXISTS(SELECT * from region where id = $1)`, requestedRegionId).Scan(&exists)
+
+	if existErr != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if region with id %s exists", existErr, requestedRegionId))
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no region exists by id: %s", requestedRegionId), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM region WHERE id=$1", requestedRegionId)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete region: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for region"), nil)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "region was deleted.")
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+// readAndValidateJsonStruct reads json body and validates json fields
+func readAndValidateJsonStruct(r *http.Request) (tc.RegionV5, error) {
+	var region tc.RegionV5
+	if err := json.NewDecoder(r.Body).Decode(&region); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into RegionV5 struct %w", err)
+		return region, userErr
+	}
+
+	// validate JSON body
+	errs := tovalidate.ToErrors(validation.Errors{
+		"division": validation.Validate(region.Division, validation.NotNil, validation.Min(0)),
+		"name":     validation.Validate(region.Name, validation.Required),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return region, userErr
+	}
+	return region, nil
+}
+
+// SelectMaxLastUpdatedQuery used for TryIfModifiedSinceQuery()
+func SelectMaxLastUpdatedQuery(where string) string {
+	return `SELECT max(t) from (
+		SELECT max(r.last_updated) as t FROM region r
+JOIN division d ON r.division = d.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='region') as res`
 }
