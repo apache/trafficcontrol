@@ -195,6 +195,7 @@ func reloadConfig(pi *tmagent.ParentInfo) {
 
 	newCfg := &config.Cfg{
 		HealthClientConfigFile: cfg.HealthClientConfigFile,
+		MonitorStrategiesPeers: true,
 	}
 
 	isNew, err := config.LoadConfig(newCfg)

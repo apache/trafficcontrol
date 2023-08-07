@@ -261,6 +261,10 @@ The number of worker microthreads (goroutines) per health poll method.
 
 Note this only applies to Parent L4, Parent L7, and Parent Service health; the Traffic Monitor health poll is a single HTTP request and thus doesn't need workers.
 
+### monitor-strategies-peers ###
+
+In the **strategies.yaml** there are peers, setting this setting to `true`, which is default, it will monitor peers. If setting the value to `false` it will filter out all `&peer#` anchors within the **strategies.yaml** host section of the file.
+
 ### hostname ###
 
 # Files

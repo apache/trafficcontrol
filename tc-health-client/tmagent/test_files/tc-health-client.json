@@ -11,5 +11,6 @@
   "trafficmonitors":{
     "tm-01.foo.com": true,
     "tm-02.foo.com": false
-  }
+  },
+  "monitor-strategies-peers": false
 }

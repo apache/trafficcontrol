@@ -21,10 +21,11 @@ package tmagent
 
 import (
 	"fmt"
-	"github.com/apache/trafficcontrol/tc-health-client/config"
-	"github.com/apache/trafficcontrol/tc-health-client/util"
 	"path/filepath"
 	"testing"
+
+	"github.com/apache/trafficcontrol/tc-health-client/config"
+	"github.com/apache/trafficcontrol/tc-health-client/util"
 )
 
 const (
@@ -88,25 +89,66 @@ func TestReadStrategiesDotYaml(t *testing.T) {
 		Filename:       filepath.Join(cfg.TrafficServerConfigDir, StrategiesFile),
 		LastModifyTime: 1,
 	}
-	pi := ParentInfo{
-		ParentDotConfig:        parents,
-		StrategiesDotYaml:      strategies,
-		TrafficServerBinDir:    cfg.TrafficServerBinDir,
-		TrafficServerConfigDir: cfg.TrafficServerConfigDir,
-	}
 
 	if _, err := config.LoadConfig(cfg); err != nil {
 		t.Fatalf("failed to load %s: %s\n", test_config_file, err.Error())
 	}
 
-	if err := pi.readStrategies(); err != nil {
-		t.Fatalf("failed readStrategies(): %s\n", err.Error())
-	}
+	t.Run("Read Strategies using config file", func(t *testing.T) {
+		pi := ParentInfo{
+			ParentDotConfig:        parents,
+			StrategiesDotYaml:      strategies,
+			TrafficServerBinDir:    cfg.TrafficServerBinDir,
+			TrafficServerConfigDir: cfg.TrafficServerConfigDir,
+		}
+		t.Logf("Monitoring peers value: %v", cfg.MonitorStrategiesPeers)
 
-	numParents := len(pi.GetParents())
-	if numParents != 6 {
-		t.Fatalf("failed readStrategies(): expected 6 parents got %d\n", numParents)
-	}
+		if err := pi.readStrategies(cfg.MonitorStrategiesPeers); err != nil {
+			t.Fatalf("failed readStrategies(): %s\n", err.Error())
+		}
+
+		numParents := len(pi.GetParents())
+		if numParents != 2 && !cfg.MonitorStrategiesPeers {
+			t.Fatalf("failed readStrategies(): expected 2 parents got %d\n", numParents)
+		} else if numParents != 6 && cfg.MonitorStrategiesPeers {
+			t.Fatalf("failed readStrategies(): expected 6 parents got %d\n", numParents)
+		}
+	})
+
+	t.Run("Read Strategies with monitoring peers on", func(t *testing.T) {
+		pi := ParentInfo{
+			ParentDotConfig:        parents,
+			StrategiesDotYaml:      strategies,
+			TrafficServerBinDir:    cfg.TrafficServerBinDir,
+			TrafficServerConfigDir: cfg.TrafficServerConfigDir,
+		}
+		if err := pi.readStrategies(true); err != nil {
+			t.Fatalf("failed readStrategies(): %s\n", err.Error())
+		}
+
+		numParents := len(pi.GetParents())
+		if numParents != 6 {
+			t.Fatalf("failed readStrategies(): expected 6 parents got %d\n", numParents)
+		}
+	})
+
+	t.Run("Read Strategies with monitoring peers off", func(t *testing.T) {
+		pi := ParentInfo{
+			ParentDotConfig:        parents,
+			StrategiesDotYaml:      strategies,
+			TrafficServerBinDir:    cfg.TrafficServerBinDir,
+			TrafficServerConfigDir: cfg.TrafficServerConfigDir,
+		}
+		if err := pi.readStrategies(false); err != nil {
+			t.Fatalf("failed readStrategies(): %s\n", err.Error())
+		}
+
+		numParents := len(pi.GetParents())
+		if numParents != 2 {
+			t.Log(pi.GetParents())
+			t.Fatalf("failed readStrategies(): expected 2 parents got %d\n", numParents)
+		}
+	})
 }
 
 func TestReadHostStatus(t *testing.T) {

@@ -356,6 +356,11 @@ This product bundles yaml, which is available under an Apache-2.0 license.
 ./vendor/gopkg.in/yaml.v2/LICENSE.libyaml
 Refer to the above license for the full text.
 
+This product bundles yaml, which is available under a MIT license.
+@vendor/gopkg.in/yaml.v3/*
+./vendor/gopkg.in/yaml.v3/LICENSE
+Refer to the above license for the full text.
+
 This product bundles pq, which is available under an MIT license.
 @vendor/github.com/lib/pq/*
 ./vendor/github.com/lib/pq/LICENSE.md

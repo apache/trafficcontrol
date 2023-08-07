@@ -457,5 +457,14 @@
 			"ipAddress": "::1/1",
 			"typeId": 37
 		}
+	],
+	"static_dns_entries": [
+		{
+			"address": "2001::cafe:c935",
+			"deliveryserviceId": 37,
+			"host": "test",
+			"ttl": 300,
+			"typeId": 41
+		}
 	]
 }
