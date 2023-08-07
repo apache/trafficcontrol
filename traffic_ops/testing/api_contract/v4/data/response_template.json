@@ -1897,5 +1897,62 @@
                 "type": "string"
             }
         }
+    },
+    "static_dns_entries": {
+        "type": "object",
+        "required": [
+            "address",
+            "cachegroup",
+            "cachegroupId",
+            "deliveryservice",
+            "deliveryserviceId",
+            "host",
+            "id",
+            "lastUpdated",
+            "ttl",
+            "type",
+            "typeId"
+        ],
+        "properties": {
+            "address": {
+                "type": "string"
+            },
+            "cachegroup": {
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            "cachegroupId": {
+                "type": [
+                    "null",
+                    "integer"
+                ]
+            },
+            "deliveryservice": {
+                "type": "string"
+            },
+            "deliveryserviceId": {
+                "type": "integer"
+            },
+            "host": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "ttl": {
+                "type": "integer"
+            },
+            "type": {
+                "type": "string"
+            },
+            "typeId": {
+                "type": "integer"
+            }
+        }
     }
 }
