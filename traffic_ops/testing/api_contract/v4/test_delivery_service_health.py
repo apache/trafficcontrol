@@ -12,7 +12,7 @@
 # limitations under the License.
 #
 
-"""API Contract Test Case for delivery_service_health endpoint."""
+"""API Contract Test Case for delivery_service health, capacity and routing endpoints."""
 import logging
 from typing import Union
 import pytest
@@ -33,7 +33,7 @@ def test_delivery_service_health_contract(to_session: TOSession,
 	delivery_services_post_data: dict[str, object]
 ) -> None:
 	"""
-	Test step to validate keys, values and data types from delivery_service_health endpoint
+	Test step to validate keys, values and data types from delivery_service health, capacity and routing endpoints
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.

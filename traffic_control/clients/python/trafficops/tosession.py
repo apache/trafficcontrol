@@ -426,19 +426,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
-	@api_request('post', 'cachegroups/{cache_group_id:d}/deliveryservices', ('3.0', '4.0', '4.1', '5.0',))
-	def assign_cachegroups_to_deliveryservice(self, cache_group_id=None, data=None):
-		"""
-		Assigns all of the “assignable” servers within a Cache Group to one or more Delivery Services.
-		:ref:`to-api-cachegroups-id-delivery_services`
-		:param cache_group_id: The Cache Group Id
-		:type cache_group_id: int
-		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
-		:type data: Dict[str, Any]
-		:rtype: Tuple[Dict[str, Any], requests.Response]
-		:raises: Union[LoginError, OperationError]
-		"""
+
 
 	#
 	# Capabilities
