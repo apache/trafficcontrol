@@ -1890,5 +1890,5 @@ def server_server_capabilities_data_post(to_session: TOSession, request_template
 	logger.info("Deleting Server Server Capability data... %s", msg)
 	if msg is None:
 		logger.error("Server Server Capability returned by Traffic Ops is missing a 'server_id' property")
-    pytest.fail("Response from delete request is empty, Failing test_case")
+    		pytest.fail("Response from delete request is empty, Failing test_case")
   
