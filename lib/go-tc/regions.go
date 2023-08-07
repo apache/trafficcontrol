@@ -42,7 +42,7 @@ type RegionsResponseV5 = RegionsResponseV50
 
 // RegionsResponseV50 is response made from /regions API endpoint - in the latest minor version APIv50.
 type RegionsResponseV50 struct {
-	Response []Region `json:"response"`
+	Response []RegionV5 `json:"response"`
 	Alerts
 }
 
