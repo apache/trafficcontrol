@@ -49,10 +49,7 @@ def test_server_server_capabilities_contract(
 		raise TypeError(
 			"malformed server server capabilities in prerequisite data; 'serverId' not an integer")
 
-	server_server_capabilities_get_response: tuple[
-		Union[dict[str, object],
-			list[Union[dict[str, object], list[object], Primitive]], Primitive],
-		requests.Response
+	server_server_capabilities_get_response: tuple[Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive], requests.Response
 	] = to_session.get_server_server_capabilities(server_id=server_id, query_params={"server": server_id})
 	try:
 		server_server_capabilities_data = server_server_capabilities_get_response[0]
