@@ -427,6 +427,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+
 	#
 	# Capabilities
 	#
@@ -916,6 +917,17 @@ class TOSession(RestApiSession):
 		Retrieves the capacity percentages of a delivery service. Delivery service must be assigned
 		to user if user is not admin or operations.
 		:ref:`to-api-deliveryservices-id-capacity`
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('get', 'deliveryservices/{delivery_service_id:d}/routing', ('3.0', '4.0', '4.1', '5.0'))
+	def get_delivery_service_routing(self, delivery_service_id=None):
+		"""
+		Retrieves the aggregated routing percentages for a given Delivery Service.
+		:ref:`to-api-deliveryservices-id-routing`
 		:param delivery_service_id: The delivery service Id
 		:type delivery_service_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
