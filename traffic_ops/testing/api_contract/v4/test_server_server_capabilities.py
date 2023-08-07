@@ -65,7 +65,7 @@ def test_server_server_capabilities_contract(
 		if not isinstance(server_server_capabilities_response_template, dict):
 			raise TypeError(
 				f"Server Server Capability response template data must be a dict, not '{type(server_server_capabilities_response_template)}'")
-	
+
 
 		# validate server server capabilities values from prereq data in server server capabilities get response.
 		keys = ["serverId", "serverCapability"]

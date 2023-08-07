@@ -1886,9 +1886,9 @@ def server_server_capabilities_data_post(to_session: TOSession, request_template
 	resp_obj = check_template_data(response, "server_server_capabilities")
 	yield resp_obj
 	server_id = resp_obj.get("serverId")
-	msg = to_session.delete_server_capability_association_to_server(query_params=server_id, server_capability=server_capability)
+	msg = to_session.delete_server_capability_association_to_server(query_params={"serverId":server_id, "serverCapability":server_capability})
 	logger.info("Deleting Server Server Capability data... %s", msg)
 	if msg is None:
 		logger.error("Server Server Capability returned by Traffic Ops is missing a 'server_id' property")
-    		pytest.fail("Response from delete request is empty, Failing test_case")
+		pytest.fail("Response from delete request is empty, Failing test_case")
   
