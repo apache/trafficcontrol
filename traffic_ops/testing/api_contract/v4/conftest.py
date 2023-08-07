@@ -1695,11 +1695,9 @@ def server_server_capabilities_data_post(to_session: TOSession, request_template
 	server_server_capabilities = check_template_data(request_template_data["server_server_capabilities"], "server_server_capabilities")
 
 	# Return new post data and post response from server server capabilities POST request
-	server_get_response = to_session.get_servers()
-	server_data = server_get_response [0][0]
-	server_id = server_data.get("id")
 
-	server_server_capabilities["serverId"] = server_post_data["id"]
+	server_id = server_server_capabilities["serverId"]
+	server_capability = server_server_capabilities["serverCapability"]
 
 	logger.info("New server_server_capabilities data to hit POST method %s", server_server_capabilities)
 
@@ -1708,7 +1706,7 @@ def server_server_capabilities_data_post(to_session: TOSession, request_template
 	resp_obj = check_template_data(response, "server_server_capabilities")
 	yield resp_obj
 	server_id = resp_obj.get("serverId")
-	msg = to_session.delete_server_capability_association_to_server(query_params=server_id)
+	msg = to_session.delete_server_capability_association_to_server(query_params=server_id, server_capability=server_capability)
 	logger.info("Deleting Server Server Capability data... %s", msg)
 	if msg is None:
 		logger.error("Server Server Capability returned by Traffic Ops is missing a 'server_id' property")
