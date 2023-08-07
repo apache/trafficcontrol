@@ -1826,3 +1826,36 @@ def federation_resolver_data_post(to_session: TOSession, request_template_data: 
 	if msg is None:
 		logger.error("federation_resolver returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="static_dns_entries_post_data")
+def static_dns_entries_data_post(to_session: TOSession, request_template_data: list[JSONData],
+				 delivery_services_post_data:dict[str, object]
+				  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for static_dns_entries endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get static_dns_entries request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+	static_dns_entries = check_template_data(
+		request_template_data["static_dns_entries"], "static_dns_entries")
+
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "staticdnsentry"})
+	static_dns_entries["typeId"] = type_object["id"]
+	static_dns_entries["deliveryServiceId"] = delivery_services_post_data["id"]
+
+	logger.info("New static_dns_entries data to hit POST method %s", static_dns_entries)
+	# Hitting static_dns_entries POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_staticdnsentries(data=static_dns_entries)
+	resp_obj = check_template_data(response, "static_dns_entries")
+	yield resp_obj
+	static_dns_entries_id = resp_obj.get("id")
+	msg = to_session.delete_staticdnsentries(query_params={"id":static_dns_entries_id})
+	logger.info("Deleting static_dns_entries data... %s", msg)
+	if msg is None:
+		logger.error("static_dns_entries returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
