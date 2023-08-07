@@ -34,6 +34,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
@@ -239,7 +240,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		log.Debugln("Non IMS request")
 	}
 
-	query := selectQuery() + where + orderBy + pagination
+	query := `SELECT r.division, d.name as divisionname, r.id, r.last_updated, r.name FROM region r
+				JOIN division d ON r.division = d.id` + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("region get: error getting region(s): %w", err))

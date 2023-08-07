@@ -28,7 +28,7 @@ import (
 const apiRegions = "/regions"
 
 // CreateRegion creates the given Region.
-func (to *Session) CreateRegion(region tc.Region, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateRegion(region tc.RegionV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if region.Division == 0 && region.DivisionName != "" {
 		divisionOpts := NewRequestOptions()
 		divisionOpts.QueryParameters.Set("name", region.DivisionName)
@@ -47,7 +47,7 @@ func (to *Session) CreateRegion(region tc.Region, opts RequestOptions) (tc.Alert
 }
 
 // UpdateRegion replaces the Region identified by ID with the one provided.
-func (to *Session) UpdateRegion(id int, region tc.Region, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateRegion(id int, region tc.RegionV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiRegions, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, region, &alerts)
@@ -55,8 +55,8 @@ func (to *Session) UpdateRegion(id int, region tc.Region, opts RequestOptions) (
 }
 
 // GetRegions returns all Regions in Traffic Ops.
-func (to *Session) GetRegions(opts RequestOptions) (tc.RegionsResponse, toclientlib.ReqInf, error) {
-	var data tc.RegionsResponse
+func (to *Session) GetRegions(opts RequestOptions) (tc.RegionsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.RegionsResponseV5
 	reqInf, err := to.get(apiRegions, opts, &data)
 	return data, reqInf, err
 }
