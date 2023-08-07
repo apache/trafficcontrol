@@ -282,8 +282,8 @@ func (to *Session) GetDeliveryServiceSSLKeys(xmlid string, opts RequestOptions) 
 
 // GetDeliveryServicesEligible returns the servers eligible for assignment to the Delivery
 // Service identified by the integral, unique identifier 'dsID'.
-func (to *Session) GetDeliveryServicesEligible(dsID int, opts RequestOptions) (tc.DSServerResponseV4, toclientlib.ReqInf, error) {
-	var resp tc.DSServerResponseV4
+func (to *Session) GetDeliveryServicesEligible(dsID int, opts RequestOptions) (tc.DSServerResponseV5, toclientlib.ReqInf, error) {
+	var resp tc.DSServerResponseV5
 	reqInf, err := to.get(fmt.Sprintf(apiDeliveryServiceEligibleServers, dsID), opts, &resp)
 	return resp, reqInf, err
 }

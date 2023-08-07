@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 import { CommonModule } from "@angular/common";
-import { NgModule } from "@angular/core";
+import { NgModule, Type } from "@angular/core";
 import { RouterModule, type Routes } from "@angular/router";
+
+import { type CertsModule } from "src/app/core/certs/certs.module";
 
 import { AppUIModule } from "../app.ui.module";
 import { AuthenticatedGuard } from "../guards/authenticated-guard.service";
@@ -62,6 +64,7 @@ import { ServersTableComponent } from "./servers/servers-table/servers-table.com
 import { UpdateStatusComponent } from "./servers/update-status/update-status.component";
 import { StatusDetailsComponent } from "./statuses/status-details/status-details.component";
 import { StatusesTableComponent } from "./statuses/statuses-table/statuses-table.component";
+import { TopologyDetailsComponent } from "./topologies/topology-details/topology-details.component";
 import { TypeDetailComponent } from "./types/detail/type-detail.component";
 import { TypesTableComponent } from "./types/table/types-table.component";
 import { RoleDetailComponent } from "./users/roles/detail/role-detail.component";
@@ -73,6 +76,14 @@ import { UserRegistrationDialogComponent } from "./users/user-registration-dialo
 import { UsersComponent } from "./users/users.component";
 
 export const ROUTES: Routes = [
+	{
+		children: [{
+			loadChildren: async (): Promise<Type<CertsModule>> => import("./certs/certs.module")
+				.then(mod => mod.CertsModule),
+			path: ""
+		}],
+		path: "certs"
+	},
 	{ component: DashboardComponent, path: "" },
 	{ component: AsnDetailComponent, path: "asns/:id"},
 	{ component: AsnsTableComponent, path: "asns" },
@@ -114,6 +125,8 @@ export const ROUTES: Routes = [
 	{ component: ISOGenerationFormComponent, path: "iso-gen"},
 	{ component: ProfileDetailComponent, path: "profiles/:id"},
 	{ component: ProfileTableComponent, path: "profiles"},
+	{ component: TopologyDetailsComponent, path: "topologies/:name"},
+	{ component: TopologyDetailsComponent, path: "new-topology"},
 ].map(r => ({...r, canActivate: [AuthenticatedGuard]}));
 
 /**
@@ -167,6 +180,7 @@ export const ROUTES: Routes = [
 		ProfileDetailComponent,
 		CapabilitiesComponent,
 		CapabilityDetailsComponent,
+		TopologyDetailsComponent,
 	],
 	exports: [],
 	imports: [

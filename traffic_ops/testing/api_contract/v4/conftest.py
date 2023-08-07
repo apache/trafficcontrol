@@ -1644,6 +1644,119 @@ def delivery_services_regex_data_post(to_session: TOSession, request_template_da
 		logger.error("delivery_services_regex returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
+
+@pytest.fixture(name="cdn_federation_post_data")
+def cdn_federation_data_post(to_session: TOSession, request_template_data: list[JSONData],
+		  cdn_post_data:dict[str, object], user_post_data:dict[str, object],
+		  delivery_services_post_data: dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for cdn_name_federations endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get federations request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	cdn_federation = check_template_data(request_template_data["cdn_federation"], "cdn_federation")
+	# Return new post data and post response from cdn_federation POST request
+	cdn_name = cdn_post_data["name"]
+
+	logger.info("New federations data to hit POST method %s", cdn_federation)
+	# Hitting cdn_federation POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_federation_in_cdn(cdn_name=cdn_name, data= cdn_federation)
+	cdn_federation_resp_obj = check_template_data(response, "cdn_federation")
+	federation_id = cdn_federation_resp_obj.get("id")
+
+	#Assign created federation to a user
+	user_id = user_post_data["id"]
+	user_federation = check_template_data(request_template_data["user_federation"], "user_federation")
+	user_federation["userIds"][0] = user_id
+	response: tuple[JSONData, requests.Response] = to_session.create_federation_user(federation_id=federation_id, data=user_federation)
+	user_federation_resp_obj = check_template_data(response, "user_federation")
+
+	#Assign the federation to a delivery_service
+	delivery_service_id = delivery_services_post_data["id"]
+	delivery_service_federation = check_template_data(request_template_data["delivery_service_federation"], "delivery_service_federation")
+	delivery_service_federation["dsIds"][0] = delivery_service_id
+	response: tuple[JSONData, requests.Response] = to_session.assign_delivery_services_to_federations(federation_id=federation_id, data=delivery_service_federation)
+	delivery_service_federation_resp_obj = check_template_data(response, "delivery_service_federation")
+
+	yield [cdn_name, cdn_federation_resp_obj, cdn_federation, federation_id, delivery_service_federation_resp_obj]
+	
+	msg = to_session.delete_federation_in_cdn(cdn_name=cdn_name, federation_id=federation_id)
+	logger.info("Deleting cdn_federation dara... %s", msg)
+	if msg is None:
+		logger.error("cdn_federation returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="delivery_service_required_capabilities_post_data")
+def delivery_service_required_capabilities_data_post(to_session: TOSession,
+		request_template_data: list[JSONData], delivery_services_post_data:dict[str, object],
+		server_capabilities_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for delivery_service_required_capabilities endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get delivery_service_required_capabilities request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	delivery_service_required_capabilities = check_template_data(
+		request_template_data["delivery_service_required_capabilities"], "delivery_service_required_capabilities")
+
+	# Return new post data and post response from delivery_service_required_capabilities POST request
+	deliveryServiceID = delivery_services_post_data["id"]
+	requiredCapability = server_capabilities_post_data["name"]
+	delivery_service_required_capabilities["deliveryServiceID"] = deliveryServiceID
+	delivery_service_required_capabilities["requiredCapability"] = requiredCapability
+
+	logger.info("New delivery_service_required_capabilities data to hit POST method %s",
+	     delivery_service_required_capabilities)
+	# Hitting delivery_service_required_capabilities POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservices_required_capabilities(
+		data=delivery_service_required_capabilities)
+	resp_obj = check_template_data(response, "delivery_service_required_capabilities")
+	yield resp_obj
+	msg = to_session.delete_deliveryservices_required_capabilities(
+		query_params={"deliveryServiceID":deliveryServiceID,"requiredCapability":requiredCapability})
+	logger.info("Deleting delivery_service_required_capabilities data... %s", msg)
+	if msg is None:
+		logger.error(
+		"delivery_service_required_capabilities returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="delivery_service_request_comments_post_data")
+def delivery_service_request_comments_data_post(to_session: TOSession,
+		request_template_data: list[JSONData],
+		deliveryservice_request_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for delivery_service_request_comments endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get delivery_service_request_comments request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	delivery_service_request_comments = check_template_data(
+		request_template_data["delivery_service_request_comments"], "delivery_service_request_comments")
+
+	# Return new post data and post response from delivery_service_request_comments POST request
+	delivery_service_request_id = deliveryservice_request_post_data["id"]
+	delivery_service_request_comments["deliveryServiceRequestId"]= delivery_service_request_id
+
+	logger.info("New delivery_service_request_comments data to hit POST method %s",
+	     delivery_service_request_comments)
+	# Hitting delivery_service_request_comments POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_deliveryservice_request_comment(
+		data=delivery_service_request_comments)
+	resp_obj = check_template_data(response, "delivery_service_request_comments")
+	yield resp_obj
+	request_comment_id = resp_obj.get("id")
+	msg = to_session.delete_deliveryservice_request_comment(query_params={"id":request_comment_id})
+	logger.info("Deleting delivery_service_request_comments data... %s", msg)
+	if msg is None:
+		logger.error("delivery_service_request_comments returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
   
 @pytest.fixture(name="profile_parameters_post_data")
 def profile_parameters_post_data(to_session: TOSession, request_template_data: list[JSONData],
@@ -1681,6 +1794,73 @@ def profile_parameters_post_data(to_session: TOSession, request_template_data: l
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
 
+@pytest.fixture(name="federation_resolver_post_data")
+def federation_resolver_data_post(to_session: TOSession, request_template_data: list[JSONData]
+				  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for federation_resolver endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get federation_resolver request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+	randstr = str(randint(0, 10))
+	federation_resolver = check_template_data(
+		request_template_data["federation_resolver"], "federation_resolver")
+
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "federation"})
+	federation_resolver["typeId"] = type_object["id"]
+	ipaddress = federation_resolver["ipAddress"]
+	federation_resolver["ipAddress"] = ipaddress + randstr
+
+	logger.info("New federation_resolver data to hit POST method %s", federation_resolver)
+	# Hitting federation_resolver POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_federation_resolver(data=federation_resolver)
+	resp_obj = check_template_data(response, "federation_resolver")
+	yield resp_obj
+	resolver_id = resp_obj.get("id")
+	msg = to_session.delete_federation_resolver(query_params={"id":resolver_id})
+	logger.info("Deleting federation_resolver data... %s", msg)
+	if msg is None:
+		logger.error("federation_resolver returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="static_dns_entries_post_data")
+def static_dns_entries_data_post(to_session: TOSession, request_template_data: list[JSONData],
+				 delivery_services_post_data:dict[str, object]
+				  ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for static_dns_entries endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get static_dns_entries request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+	static_dns_entries = check_template_data(
+		request_template_data["static_dns_entries"], "static_dns_entries")
+
+	# Check if type already exists, otherwise create it
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"useInTable": "staticdnsentry"})
+	static_dns_entries["typeId"] = type_object["id"]
+	static_dns_entries["deliveryServiceId"] = delivery_services_post_data["id"]
+
+	logger.info("New static_dns_entries data to hit POST method %s", static_dns_entries)
+	# Hitting static_dns_entries POST methed
+	response: tuple[JSONData, requests.Response] = to_session.create_staticdnsentries(data=static_dns_entries)
+	resp_obj = check_template_data(response, "static_dns_entries")
+	yield resp_obj
+	static_dns_entries_id = resp_obj.get("id")
+	msg = to_session.delete_staticdnsentries(query_params={"id":static_dns_entries_id})
+	logger.info("Deleting static_dns_entries data... %s", msg)
+	if msg is None:
+		logger.error("static_dns_entries returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
+
+  
 @pytest.fixture(name="server_server_capabilities_post_data")
 def server_server_capabilities_data_post(to_session: TOSession, request_template_data: list[JSONData],
 		server_post_data:dict[str, object], server_capabilities_post_data:dict[str, object]
@@ -1710,4 +1890,5 @@ def server_server_capabilities_data_post(to_session: TOSession, request_template
 	logger.info("Deleting Server Server Capability data... %s", msg)
 	if msg is None:
 		logger.error("Server Server Capability returned by Traffic Ops is missing a 'server_id' property")
-		pytest.fail("Response from delete request is empty, Failing test_case")
+    pytest.fail("Response from delete request is empty, Failing test_case")
+  

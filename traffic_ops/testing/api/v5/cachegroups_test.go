@@ -38,7 +38,7 @@ func TestCacheGroups(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.CacheGroupNullable]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.CacheGroupNullableV5]{
 			"GET": {
 				"OK when VALID NAME parameter AND Lat/Long are 0": {
 					ClientSession: TOSession,
@@ -152,7 +152,7 @@ func TestCacheGroups(t *testing.T) {
 			"PUT": {
 				"OK when VALID request": {
 					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
-					RequestBody: tc.CacheGroupNullable{
+					RequestBody: tc.CacheGroupNullableV5{
 						Latitude:            util.Ptr(17.5),
 						Longitude:           util.Ptr(17.5),
 						Name:                util.Ptr("cachegroup1"),
@@ -166,7 +166,7 @@ func TestCacheGroups(t *testing.T) {
 				},
 				"OK when updating CG with null Lat/Long": {
 					EndpointID: GetCacheGroupId(t, "nullLatLongCG"), ClientSession: TOSession,
-					RequestBody: tc.CacheGroupNullable{
+					RequestBody: tc.CacheGroupNullableV5{
 						Name:      util.Ptr("nullLatLongCG"),
 						ShortName: util.Ptr("null-ll"),
 						Type:      util.Ptr("EDGE_LOC"),
@@ -177,7 +177,7 @@ func TestCacheGroups(t *testing.T) {
 				},
 				"BAD REQUEST when updating TYPE of CG in TOPOLOGY": {
 					EndpointID: GetCacheGroupId(t, "topology-edge-cg-01"), ClientSession: TOSession,
-					RequestBody: tc.CacheGroupNullable{
+					RequestBody: tc.CacheGroupNullableV5{
 						Latitude:  util.Ptr(0.0),
 						Longitude: util.Ptr(0.0),
 						Name:      util.Ptr("topology-edge-cg-01"),
@@ -190,7 +190,7 @@ func TestCacheGroups(t *testing.T) {
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.CacheGroupNullable{
+					RequestBody: tc.CacheGroupNullableV5{
 						Name:      util.Ptr("cachegroup1"),
 						ShortName: util.Ptr("changeName"),
 						Type:      util.Ptr("EDGE_LOC"),
@@ -201,7 +201,7 @@ func TestCacheGroups(t *testing.T) {
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID: GetCacheGroupId(t, "cachegroup1"), ClientSession: TOSession,
 					RequestOpts: client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-					RequestBody: tc.CacheGroupNullable{
+					RequestBody: tc.CacheGroupNullableV5{
 						Name:      util.Ptr("cachegroup1"),
 						ShortName: util.Ptr("changeName"),
 						Type:      util.Ptr("EDGE_LOC"),
@@ -270,7 +270,7 @@ func TestCacheGroups(t *testing.T) {
 
 func ValidateExpectedField(field string, expected string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		cgResp := resp.([]tc.CacheGroupNullable)
+		cgResp := resp.([]tc.CacheGroupNullableV5)
 		cg := cgResp[0]
 		switch field {
 		case "Name":
@@ -287,7 +287,7 @@ func ValidateExpectedField(field string, expected string) utils.CkReqFunc {
 
 func ValidateResponseFields() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		cgResp := resp.([]tc.CacheGroupNullable)
+		cgResp := resp.([]tc.CacheGroupNullableV5)
 		cg := cgResp[0]
 		assert.NotNil(t, cg.ID, "Expected response id to not be nil")
 		assert.NotNil(t, cg.Latitude, "Expected latitude to not be nil")
@@ -299,7 +299,7 @@ func ValidateResponseFields() utils.CkReqFunc {
 
 func ValidatePagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.CacheGroupNullable)
+		paginationResp := resp.([]tc.CacheGroupNullableV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
@@ -370,7 +370,7 @@ func CreateTestCacheGroups(t *testing.T) {
 }
 
 func DeleteTestCacheGroups(t *testing.T) {
-	var parentlessCacheGroups []tc.CacheGroupNullable
+	var parentlessCacheGroups []tc.CacheGroupNullableV5
 	opts := client.NewRequestOptions()
 
 	// delete the edge caches.

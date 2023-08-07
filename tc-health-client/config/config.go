@@ -122,6 +122,9 @@ type Cfg struct {
 	// Monitor health poll is a single HTTP request and thus doesn't need workers.
 	NumHealthWorkers int `json:"num-health-workers"`
 
+	// Monitor peers inside strategies.yaml file
+	MonitorStrategiesPeers bool `json:"monitor-strategies-peers"`
+
 	TMPollingInterval time.Duration
 	TORequestTimeout  time.Duration
 
@@ -332,6 +335,8 @@ const DefaultMarkdownMinIntervalMS = 5000
 // Users should create and pass a copy of Cfg if changes on error are not acceptable.
 func LoadConfig(cfg *Cfg) (bool, error) {
 	configFile := cfg.HealthClientConfigFile.Filename
+	// Load default value for strategies.yaml
+	cfg.MonitorStrategiesPeers = true
 	modTime, err := util.GetFileModificationTime(configFile)
 	if err != nil {
 		return false, errors.New(err.Error())

@@ -12,11 +12,14 @@
 * limitations under the License.
 */
 
-import {Component, OnInit} from "@angular/core";
+import { isPlatformBrowser } from "@angular/common";
+import { Component, Inject, OnInit, Optional, PLATFORM_ID, TransferState, makeStateKey } from "@angular/core";
 import { Router } from "@angular/router";
 import { ResponseCurrentUser } from "trafficops-types";
 
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+
+export const LOCAL_TPV1_URL = "tp_v1_url";
 
 /**
  * The most basic component that contains everything else. This should be kept pretty simple.
@@ -31,7 +34,19 @@ export class AppComponent implements OnInit {
 	/** The currently logged-in user */
 	public currentUser: ResponseCurrentUser | null = null;
 
-	constructor(private readonly router: Router, private readonly auth: CurrentUserService) {
+	constructor(private readonly router: Router, private readonly auth: CurrentUserService,
+		@Inject(PLATFORM_ID) private readonly platformId: object,
+		@Optional() @Inject("TP_V1_URL") public tpv1url: string,
+		private readonly transferState: TransferState) {
+		const storeKey = makeStateKey<string>("messageKey");
+
+		// get data from transferState if browser side
+		if (isPlatformBrowser(this.platformId)) {
+			this.tpv1url = this.transferState.get(storeKey, "https://localhost");
+			window.localStorage.setItem(LOCAL_TPV1_URL, this.tpv1url);
+		} else { // server side: get provided tpv1 url and store in in transfer state
+			this.transferState.set(storeKey, this.tpv1url);
+		}
 	}
 
 	/**

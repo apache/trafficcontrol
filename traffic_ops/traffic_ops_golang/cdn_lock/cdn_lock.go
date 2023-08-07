@@ -104,7 +104,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning cdn locks: "+err.Error()))
 			return
 		}
-		if inf.Version != nil && inf.Version.Major >= 5 && inf.Version.Minor >= 0 {
+		if inf.Version != nil && inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
 			t, err := util.ConvertTimeFormat(cLock.LastUpdated, time.RFC3339)
 			if err != nil {
 				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("converting time formats: "+err.Error()))

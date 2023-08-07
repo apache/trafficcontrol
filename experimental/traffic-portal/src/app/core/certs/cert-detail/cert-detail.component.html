@@ -1,0 +1,68 @@
+<!--
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<div>
+	<div class="mat-elevation-z2 interior-container">
+		<h2>Issuer</h2>
+		<tp-cert-author [author]="issuer"></tp-cert-author>
+	</div>
+	<div class="mat-elevation-z2 interior-container">
+		<h2>Subject</h2>
+		<tp-cert-author [author]="subject"></tp-cert-author>
+	</div>
+	<div class="mat-elevation-z2 interior-container">
+		<h2>Validity</h2>
+		<div class="content">
+			<div class="double">
+				<mat-form-field>
+					<mat-label>Not Valid Before</mat-label>
+					<input matInput type="datetime-local" [formControl]="validBeforeFormControl" name="validBefore" readonly/>
+					<mat-error *ngIf="validBeforeFormControl.hasError('outOfDate')">Not currently valid</mat-error>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>Not Valid After</mat-label>
+					<input matInput type="datetime-local" [formControl]="validAfterFormControl" name="validAfter" readonly/>
+					<mat-error *ngIf="validAfterFormControl.hasError('outOfDate')">Not currently valid</mat-error>
+				</mat-form-field>
+			</div>
+		</div>
+	</div>
+	<div class="mat-elevation-z2 interior-container">
+		<h2>Misc</h2>
+		<div class="content">
+			<div class="double"></div>
+			<mat-form-field>
+				<mat-label>Signature Algorithm</mat-label>
+				<input matInput type="text" name="sigType" readonly [value]="oidToName(cert.signatureOid)"/>
+			</mat-form-field>
+			<div class="squished">
+				<mat-form-field>
+					<mat-label>Version</mat-label>
+					<input matInput type="number" name="version" readonly [value]="cert.version.toString()"/>
+				</mat-form-field>
+				<mat-form-field>
+					<mat-label>Serial Number</mat-label>
+					<input matInput type="text" name="serialNumber" readonly [value]="cert.serialNumber"/>
+				</mat-form-field>
+			</div>
+			<mat-form-field>
+				<mat-label>SHA 256</mat-label>
+				<input matInput type="text" name="sha256" readonly [value]="sha256"/>
+			</mat-form-field>
+			<mat-form-field>
+				<mat-label>SHA 1</mat-label>
+				<input matInput type="text" name="sha1" readonly [value]="sha1"/>
+			</mat-form-field>
+		</div>
+	</div>
+</div>

@@ -427,6 +427,7 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+
 	#
 	# Capabilities
 	#
@@ -818,6 +819,82 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+
+	#
+	# Delivery Service Request Comments
+	#
+	@api_request('get', 'deliveryservice_request_comments', ('3.0', '4.0', '4.1', '5.0'))
+	def get_deliveryservice_request_comments(self, query_params=None):
+		"""
+		Retrieves all delivery service reuest comments.
+		:ref:`to-api-deliveryservice-request-comments`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'deliveryservice_request_comments', ('3.0', '4.0', '4.1', '5.0'))
+	def create_deliveryservice_request_comment(self, data=None):
+		"""
+		Creates a new delivery service request comment.
+		:ref:`to-api-deliveryservice-request-comments`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('put', 'deliveryservice_request_comments', ('3.0', '4.0', '4.1', '5.0'))
+	def update_deliveryservice_request_comment(self, query_params=None, data=None):
+		"""
+		Updates an existing Delivery Service Request comment.
+		:ref:`to-api-deliveryservice-request-comments`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'deliveryservice_request_comments', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_deliveryservice_request_comment(self, query_params=None):
+		"""
+		Deletes a Delivery Service Request comment.
+		:ref:`to-api-deliveryservice-request-comments`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+    #
+	# Delivery Service Required capabilities
+	#
+	@api_request('get', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def get_deliveryservices_required_capabilities(self, query_params=None):
+		"""
+		Retrieves all delivery service required capabilities.
+		:ref:`to-api-deliveryservice-required-capabilities`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('post', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def create_deliveryservices_required_capabilities(self, data=None):
+		"""
+		Creates a new delivery service required capability.
+		:ref:`to-api-deliveryservice-required-capabilities`
+		:param data: The request data structure for the API request
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_deliveryservices_required_capabilities(self, query_params=None):
+		"""
+		Deletes a Delivery Service Required capability.
+		:ref:`to-api-deliveryservice-required-capabilities`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 	#
 	# Delivery Service Health
@@ -840,6 +917,17 @@ class TOSession(RestApiSession):
 		Retrieves the capacity percentages of a delivery service. Delivery service must be assigned
 		to user if user is not admin or operations.
 		:ref:`to-api-deliveryservices-id-capacity`
+		:param delivery_service_id: The delivery service Id
+		:type delivery_service_id: int
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('get', 'deliveryservices/{delivery_service_id:d}/routing', ('3.0', '4.0', '4.1', '5.0'))
+	def get_delivery_service_routing(self, delivery_service_id=None):
+		"""
+		Retrieves the aggregated routing percentages for a given Delivery Service.
+		:ref:`to-api-deliveryservices-id-routing`
 		:param delivery_service_id: The delivery service Id
 		:type delivery_service_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -1141,6 +1229,15 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request('delete', 'federations', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_federation(self):
+		"""
+		Allows a user to delete federations for their delivery service(s).
+		:ref:`to-api-federations`
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 
 	@api_request('get', 'cdns/{cdn_name:s}/federations', ('3.0', '4.0', '4.1', '5.0'))
 	def get_federations_for_cdn(self, cdn_name=None, query_params=None):
@@ -1168,7 +1265,7 @@ class TOSession(RestApiSession):
 		"""
 
 	@api_request('put', 'cdns/{cdn_name:s}/federations/{federation_id:d}', ('3.0', '4.0', '4.1', '5.0'))
-	def update_federation_in_cdn(self, cdn_name=None, federation_id=None, query_params=None):
+	def update_federation_in_cdn(self, cdn_name=None, federation_id=None, data=None):
 		"""
 		Update a federation.
 		:ref:`to-api-cdns-name-federations-id`
@@ -1274,12 +1371,10 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'federation_resolvers/{federation_resolver_id:d}', ('3.0', '4.0', '4.1', '5.0'))
-	def delete_federation_resolver(self, federation_resolver_id=None):
+	@api_request('delete', 'federation_resolvers', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_federation_resolver(self, query_params=None):
 		"""
 		Delete a federation resolver.
-		:param data: The update action. QueueUpdateRequest() can be used for this argument also.
-		:type data: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""

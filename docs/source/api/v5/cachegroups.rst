@@ -71,7 +71,7 @@ Response Structure
 :fallbacks:                     An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in :ref:`non-rfc-datetime`
+:lastUpdated:                   The time and date at which this entry was last updated in :rfc:`3339`
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
@@ -116,7 +116,7 @@ Response Structure
 			"localizationMethods": [],
 			"typeName": "EDGE_LOC",
 			"typeId": 23,
-			"lastUpdated": "2018-11-07 14:45:43+00",
+			"lastUpdated": "2023-05-30T19:52:58.183642+00:00",
 			"fallbacks": []
 		}
 	]}
@@ -182,7 +182,7 @@ Response Structure
 :fallbacks:                     An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
 :fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in :ref:`non-rfc-datetime`
+:lastUpdated:                   The time and date at which this entry was last updated in :rfc:`3339`
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
@@ -207,7 +207,7 @@ Response Structure
 	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
 	Whole-Content-Sha512: YvZlh3rpfl3nBq6SbNVhbkt3IvckbB9amqGW2JhLxWK9K3cxjBq5J2sIHBUhrLKUhE9afpxtvaYrLRxjt1/YMQ==
 	X-Server-Name: traffic_ops_golang/
-	Date: Wed, 07 Nov 2018 22:11:50 GMT
+	Date: Wed, 07 Nov 2018 19:46:36 GMT
 	Content-Length: 379
 
 	{ "alerts": [
@@ -234,7 +234,7 @@ Response Structure
 		],
 		"typeName": "EDGE_LOC",
 		"typeId": 23,
-		"lastUpdated": "2019-12-02 22:21:08+00",
+		"lastUpdated": "2023-05-30T19:52:58.183642+00:00",
 		"fallbacks": []
 	}}
 

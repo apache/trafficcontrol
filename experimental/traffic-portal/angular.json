@@ -21,7 +21,8 @@
 					"builder": "@angular-builders/custom-webpack:browser",
 					"options": {
 						"allowedCommonJsDependencies": [
-							"chart.js"
+							"chart.js",
+							"node-forge"
 						],
 						"customWebpackConfig": {
 							"path": "src/compress-webpack.config.js"
