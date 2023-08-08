@@ -349,38 +349,41 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusBadRequest)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error reading request body"), nil)
 		return
 	}
 	defer r.Body.Close()
 
+	// Initial Unmarshal to validate request body
 	var data interface{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		http.Error(w, "Invalid JSON format", http.StatusBadRequest)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("invalid request format"), nil)
 		return
 	}
 
+	// This code block decides if the request body is a slice of parameters or a single object.
 	var params []tc.ParameterV5
 	switch reflect.TypeOf(data).Kind() {
 	case reflect.Slice:
 		if err := json.Unmarshal(body, &params); err != nil {
-			http.Error(w, "Error unmarshaling slice", http.StatusBadRequest)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error unmarshalling slice"), nil)
 			return
 		}
 	case reflect.Map:
-		// Single object, convert to a slice of one
+		// If it is a single object it is still converted to a slice for code simplicity.
 		var param tc.ParameterV5
 		if err := json.Unmarshal(body, &param); err != nil {
-			http.Error(w, "Error unmarshaling single object", http.StatusBadRequest)
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error unmarshalling single object"), nil)
 			return
 		}
 		params = append(params, param)
 	default:
-		http.Error(w, "Invalid request format", http.StatusBadRequest)
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("invalid request format"), nil)
 		return
 	}
 
+	// Validate all objects of the every parameter from the request slice
 	for _, parameter := range params {
 		readValErr := validateRequestParameter(parameter)
 		if readValErr != nil {
@@ -389,7 +392,7 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// check if parameter already exists
+	// Check if any of the parameter from the request slice already exists
 	for _, parameter := range params {
 		var count int
 		err = tx.QueryRow("SELECT count(*) from parameter where name = $1", parameter.Name).Scan(&count)
@@ -402,8 +405,8 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	// create phys_location
+	// Create all parameters from the request slice
+	var objParams []tc.ParameterV5
 	for _, parameter := range params {
 		query := `
 			INSERT INTO parameter (
@@ -413,9 +416,9 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 			    secure
 			    ) VALUES (
 			        $1, $2, $3, $4
-			    ) RETURNING id,last_updated
+			    ) RETURNING id, name, config_file, value, last_updated, secure 
 		`
-
+		var objParam tc.ParameterV5
 		err = tx.QueryRow(
 			query,
 			parameter.Name,
@@ -423,8 +426,13 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 			parameter.Value,
 			parameter.Secure,
 		).Scan(
-			&parameter.ID,
-			&parameter.LastUpdated,
+
+			&objParam.ID,
+			&objParam.Name,
+			&objParam.ConfigFile,
+			&objParam.Value,
+			&objParam.LastUpdated,
+			&objParam.Secure,
 		)
 
 		if err != nil {
@@ -436,10 +444,11 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, code, usrErr, sysErr)
 			return
 		}
+
+		objParams = append(objParams, objParam)
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "All Requested Parameters were created.")
-	//w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/parameters?name=%s", inf.Version.Major, inf.Version.Minor, parameter.Name))
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, params)
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, objParams)
 	return
 }
 
@@ -605,6 +614,8 @@ func readAndValidateJsonStruct(r *http.Request) (tc.ParameterV5, error) {
 	return parameter, nil
 }
 
+// Unlike usual readAndValidateJsonStruct function, this function does not decode the JSON data
+// but only validate the JSON objects
 func validateRequestParameter(parameter tc.ParameterV5) error {
 	errs := make(map[string]error)
 
