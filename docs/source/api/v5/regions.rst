@@ -41,7 +41,7 @@ Request Structure
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| name      | no       | Filter :term:`Regions` by name                                                                                |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
-	| orderby   | no       | Choose the ordering of the results - either one of them "division", "id", "name"                                                                                                       |
+	| orderby   | no       | Choose the ordering of the results - either one of them "division", "id", "name"                              |                                                                         |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
@@ -109,7 +109,7 @@ Creates a new region
 
 Request Structure
 -----------------
-:division:     The integral, unique identifier of the division which shall contain the new region\ [1]_
+:division:     The integral, unique identifier of the division which shall contain the new region
 :name:         The name of the region
 
 .. code-block:: http

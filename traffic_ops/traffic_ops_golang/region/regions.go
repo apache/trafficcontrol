@@ -226,6 +226,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
 	}
 	if inf.Config.UseIMS {
 		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, SelectMaxLastUpdatedQuery(where))
@@ -363,26 +364,54 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	requestedRegionId := inf.Params["id"]
-	if requestedRegionId == "" {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no region exists for empty id"), nil)
-		return
-	}
+	requestedRegionName := inf.Params["name"]
 
 	var exists bool
-	existErr := tx.QueryRow(`SELECT EXISTS(SELECT * from region where id = $1)`, requestedRegionId).Scan(&exists)
+	var noExistsErrMsg string
 
-	if existErr != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if region with id %s exists", existErr, requestedRegionId))
+	if requestedRegionId == "" && requestedRegionName == "" {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("refusing to delete all resources of type Region"), nil)
 		return
+	} else if requestedRegionId != "" && requestedRegionName != "" { // checking if both id and name are passed
+		existErr := tx.QueryRow(`SELECT EXISTS(SELECT * from region where id = $1 AND name = $2)`, requestedRegionId, requestedRegionName).Scan(&exists)
+		noExistsErrMsg = fmt.Sprintf("no region exists by id: %s and name: %s", requestedRegionId, requestedRegionName)
+		if existErr != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if region with id %s exists", existErr, requestedRegionId))
+			return
+		}
+	} else if requestedRegionId != "" {
+		existErr := tx.QueryRow(`SELECT EXISTS(SELECT * from region where id = $1)`, requestedRegionId).Scan(&exists)
+		noExistsErrMsg = fmt.Sprintf("no region exists by id: %s", requestedRegionId)
+		if existErr != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if region with id %s exists", existErr, requestedRegionId))
+			return
+		}
+	} else if requestedRegionName != "" {
+		existErr := tx.QueryRow(`SELECT EXISTS(SELECT * from region where name = $1)`, requestedRegionName).Scan(&exists)
+		noExistsErrMsg = fmt.Sprintf("no region exists by name: %s", requestedRegionName)
+		if existErr != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if region with name %s exists", existErr, requestedRegionName))
+			return
+		}
+		if exists {
+			existErr := tx.QueryRow(`SELECT id from region where name = $1`, requestedRegionName).Scan(&requestedRegionId)
+			if existErr != nil {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if region with name %s exists", existErr, requestedRegionName))
+				return
+			}
+		}
 	}
+
 	if !exists {
-		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no region exists by id: %s", requestedRegionId), nil)
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf(noExistsErrMsg), nil)
 		return
 	}
 
-	res, err := tx.Exec("DELETE FROM region WHERE id=$1", requestedRegionId)
+	res, err := tx.Exec("DELETE FROM region WHERE id = $1", requestedRegionId)
+
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
 	}
 	rowsAffected, err := res.RowsAffected()

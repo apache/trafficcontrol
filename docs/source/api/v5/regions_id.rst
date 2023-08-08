@@ -38,7 +38,7 @@ Request Structure
 	|  ID  | The integral, unique identifier of the region to update |
 	+------+---------------------------------------------------------+
 
-:division:     The new integral, unique identifier of the division which shall contain the region\ [1]_
+:division:     The new integral, unique identifier of the division which shall contain the region
 :name:         The new name of the region
 
 .. code-block:: http
