@@ -265,7 +265,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 
 	version := api.Version{Major: 4, Minor: 0}
 
-	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version)
+	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version, false)
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
 	}
@@ -380,7 +380,7 @@ func TestGetMidServers(t *testing.T) {
 
 	user := auth.CurrentUser{}
 	version := api.Version{Major: 4, Minor: 0}
-	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version)
+	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version, false)
 
 	if userErr != nil || sysErr != nil {
 		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
