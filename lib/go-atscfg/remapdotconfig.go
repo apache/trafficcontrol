@@ -757,6 +757,7 @@ func buildEdgeRemapLine(
 	rangeReqTxt := ""
 	if ds.RangeRequestHandling != nil {
 		crr := false
+		addIms := false
 
 		if *ds.RangeRequestHandling == tc.RangeRequestHandlingBackgroundFetch {
 			rangeReqTxt = `@plugin=background_fetch.so @pparam=--config=bg_fetch.config` +
@@ -767,6 +768,7 @@ func buildEdgeRemapLine(
 				paramsStringFor(dsConfigParamsMap["slice.pparam"], &warnings)
 			rangeReqTxt += ` `
 			crr = true
+			addIms = true
 		} else if *ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest {
 			crr = true
 		}
@@ -774,6 +776,9 @@ func buildEdgeRemapLine(
 		if crr {
 			rangeReqTxt += `@plugin=cache_range_requests.so ` +
 				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+		}
+		if addIms {
+			rangeReqTxt += `@pparam=--consider-ims `
 		}
 	}
 
