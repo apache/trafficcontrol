@@ -57,7 +57,7 @@ initBuildArea() {
 	# compile traffic_monitor
 	gcflags=''
 	ldflags="-X main.GitRevision=$(git rev-parse HEAD) -X main.BuildTimestamp=$(date +'%Y-%M-%dT%H:%M:%s') -X main.Version=${TC_VERSION}"
-	tags='osusergo netgo'
+	export CGO_ENABLED=0
 	{ set +o nounset;
 	if [ "$DEBUG_BUILD" = true ]; then
 		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
@@ -66,7 +66,7 @@ initBuildArea() {
 		ldflags="${ldflags} -s -w"; #strip binary
 	fi;
 	set -o nounset; }
-	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" || \
 		{ echo "Could not build traffic_monitor binary"; return 1; }
 
 	cp -av ./ "$tm_dest"/ || \

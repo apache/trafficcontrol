@@ -51,7 +51,7 @@ initBuildArea() {
 
 	gcflags=''
 	ldflags=''
-	tags='osusergo netgo'
+	export CGO_ENABLED=0
 	{ set +o nounset;
 	if [ "$DEBUG_BUILD" = true ]; then
 		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
@@ -62,7 +62,7 @@ initBuildArea() {
 	set -o nounset; }
 
 	(
-		go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.BuildTimestamp=$(date +'%Y-%m-%dT%H:%M:%S') -X main.Version=${TC_VERSION}-${BUILD_NUMBER}" -tags "$tags";
+		go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.BuildTimestamp=$(date +'%Y-%m-%dT%H:%M:%S') -X main.Version=${TC_VERSION}-${BUILD_NUMBER}";
 		buildManpage 'tc-health-client';
 	)
 

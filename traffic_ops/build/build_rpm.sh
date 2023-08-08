@@ -57,7 +57,7 @@ initBuildArea() {
 	cd traffic_ops_golang
 	gcflags=''
 	ldflags=''
-	tags='osusergo netgo'
+	export CGO_ENABLED=0
 	{ set +o nounset;
 	if [ "$DEBUG_BUILD" = true ]; then
 		echo 'DEBUG_BUILD is enabled, building without optimization or inlining...';
@@ -66,18 +66,18 @@ initBuildArea() {
 		ldflags="${ldflags} -s -w"; # strip binary
 	fi;
 	set -o nounset; }
-	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.version=traffic_ops-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION} -B 0x$(git rev-parse HEAD)" -tags "$tags" || \
+	go build -v -gcflags "$gcflags" -ldflags "${ldflags} -X main.version=traffic_ops-${TC_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION} -B 0x$(git rev-parse HEAD)" || \
 								{ echo "Could not build traffic_ops_golang binary"; return 1; }
 	cd -
 
 	# compile db/admin
 	(cd app/db
-	go build -v -o admin -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+	go build -v -o admin -gcflags "$gcflags" -ldflags "$ldflags" || \
 								{ echo "Could not build db/admin binary"; return 1;})
 
 	# compile ToDnssecRefresh.go
 	(cd app/bin/checks/DnssecRefresh
-	go build -v -o ToDnssecRefresh -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
+	go build -v -o ToDnssecRefresh -gcflags "$gcflags" -ldflags "$ldflags" || \
 								{ echo "Could not build ToDnssecRefresh binary"; return 1;})
 
 	# compile db/reencrypt
@@ -92,7 +92,7 @@ initBuildArea() {
 
 	# compile TO profile converter
 	(cd install/bin/convert_profile
-	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags="$tags" || \
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" || \
 								{ echo "Could not build convert_profile binary"; return 1; })
 
 	rsync -av etc install "$dest"/ || \
