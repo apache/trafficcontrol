@@ -40,7 +40,7 @@ type TrafficControl struct {
 	Jobs                                              []tc.InvalidationJobCreateV4            `json:"jobs"`
 	Origins                                           []tc.Origin                             `json:"origins"`
 	Profiles                                          []tc.Profile                            `json:"profiles"`
-	Parameters                                        []tc.Parameter                          `json:"parameters"`
+	Parameters                                        []tc.ParameterV5                        `json:"parameters"`
 	ProfileParameters                                 []tc.ProfileParameterV5                 `json:"profileParameters"`
 	PhysLocations                                     []tc.PhysLocationV5                     `json:"physLocations"`
 	Regions                                           []tc.RegionV5                           `json:"regions"`
