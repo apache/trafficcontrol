@@ -77,7 +77,7 @@ type ParametersResponseV5 = ParametersResponseV50
 // requests made to the /parameters and /profiles/name/{{Name}}/parameters
 // endpoints of its API.
 type ParametersResponseV50 struct {
-	Response []Parameter `json:"response"`
+	Response []ParameterV5 `json:"response"`
 	Alerts
 }
 
