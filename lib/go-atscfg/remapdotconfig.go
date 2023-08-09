@@ -423,6 +423,9 @@ func getServerConfigRemapDotConfigForMid(
 		if ds.RangeRequestHandling != nil && (*ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest || *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice) {
 			remapTags.RangeRequests = `@plugin=cache_range_requests.so` +
 				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			if *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice {
+				remapTags.RangeRequests += ` @pparam=--consider-ims`
+			}
 		}
 
 		isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
