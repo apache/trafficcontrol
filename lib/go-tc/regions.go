@@ -1,7 +1,5 @@
 package tc
 
-import "time"
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -23,6 +21,9 @@ import "time"
 
 // RegionsResponse is the type of responses from Traffic Ops to GET requests
 // made to its /regions API endpoint.
+
+import "time"
+
 type RegionsResponse struct {
 	Response []Region `json:"response"`
 	Alerts
