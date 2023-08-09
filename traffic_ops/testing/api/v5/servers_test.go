@@ -39,6 +39,8 @@ func TestServers(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
+		opsUserSession := utils.CreateV5Session(t, Config.TrafficOps.URL, "operations", Config.TrafficOps.UserPassword, Config.Default.Session.TimeoutInSecs)
+
 		methodTests := utils.V5TestCase{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
@@ -116,6 +118,12 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"dsId": {strconv.Itoa(GetDeliveryServiceId(t, "ds-based-top-with-no-mids")())}}},
 					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1), validateServerTypeIsNotMid()),
+				},
+				"VALUE HIDDEN when OPERATIONS USER views SERVER": {
+					ClientSession: opsUserSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"iloPassword": {"testSecure"}, "xmppPasswd": {"testSecure"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
+						validateServerFields(map[string]interface{}{"ILOPassword": "********", "XMPPPasswd": "********"})),
 				},
 				"EMPTY RESPONSE when INVALID DSID parameter": {
 					ClientSession: TOSession,
@@ -438,6 +446,12 @@ func validateServerFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 				case "TypeID":
 					assert.RequireNotNil(t, server.TypeID, "Expected TypeID to not be nil")
 					assert.Equal(t, expected, *server.TypeID, "Expected Type to be %d, but got %d", expected, *server.TypeID)
+				case "XMPPPasswd":
+					assert.RequireNotNil(t, server.XMPPPasswd, "Expected XMPPPasswd to not be nil")
+					assert.Equal(t, expected, *server.XMPPPasswd, "Expected XMPPPasswd to be %s, but got %s", expected, *server.XMPPPasswd)
+				case "ILOPassword":
+					assert.RequireNotNil(t, server.ILOPassword, "Expected ILOPassword to not be nil")
+					assert.Equal(t, expected, *server.ILOPassword, "Expected ILOPassword to be %s, but got %s", expected, *server.ILOPassword)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
