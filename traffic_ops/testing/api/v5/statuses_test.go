@@ -24,6 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -37,7 +38,7 @@ func TestStatuses(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Status]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.StatusV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -64,9 +65,9 @@ func TestStatuses(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
-					RequestBody: tc.Status{
-						Description: "new description",
-						Name:        "TEST_NULL_DESCRIPTION",
+					RequestBody: tc.StatusV5{
+						Description: util.Ptr("new description"),
+						Name:        util.Ptr("TEST_NULL_DESCRIPTION"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateStatusesUpdateCreateFields("TEST_NULL_DESCRIPTION", map[string]interface{}{"Description": "new description"})),
@@ -75,18 +76,18 @@ func TestStatuses(t *testing.T) {
 					EndpointID:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.Status{
-						Description: "new description",
-						Name:        "TEST_NULL_DESCRIPTION",
+					RequestBody: tc.StatusV5{
+						Description: util.Ptr("new description"),
+						Name:        util.Ptr("TEST_NULL_DESCRIPTION"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetStatusID(t, "TEST_NULL_DESCRIPTION"),
 					ClientSession: TOSession,
-					RequestBody: tc.Status{
-						Description: "new description",
-						Name:        "TEST_NULL_DESCRIPTION",
+					RequestBody: tc.StatusV5{
+						Description: util.Ptr("new description"),
+						Name:        util.Ptr("TEST_NULL_DESCRIPTION"),
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),

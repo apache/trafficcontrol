@@ -69,7 +69,7 @@ Response Structure
 ------------------
 :description: A short description of the status
 :id:          The integral, unique identifier of this status
-:lastUpdated: The date and time at which this status was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this status was last modified, in :rfc:`3339` format
 :name:        The name of the status
 
 .. code-block:: http
@@ -91,7 +91,7 @@ Response Structure
 		{
 			"description": "Server is online and reported in the health protocol.",
 			"id": 3,
-			"lastUpdated": "2018-12-10 19:11:17+00",
+			"lastUpdated": "2023-08-09T14:25:11.017999Z",
 			"name": "REPORTED"
 		}
 	]}
@@ -125,7 +125,7 @@ Response Structure
 ------------------
 :description: A short description of the status
 :id:          The integral, unique identifier of this status
-:lastUpdated: The date and time at which this status was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this status was last modified, in :rfc:`3339` format
 :name:        The name of the status
 
 .. code-block:: http
@@ -153,6 +153,6 @@ Response Structure
 			"description": "test",
 			"name": "example"
 			"id": 3,
-			"lastUpdated": "2018-12-10 19:11:17+00",
+			"lastUpdated": "2023-08-09T14:25:11.017999Z",
 		}
 	]}
