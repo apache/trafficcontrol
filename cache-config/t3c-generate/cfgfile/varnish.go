@@ -1,11 +1,5 @@
 package cfgfile
 
-import (
-	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/varnishcfg"
-)
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -24,6 +18,12 @@ import (
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import (
+	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
+	"github.com/apache/trafficcontrol/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/lib/varnishcfg"
+)
 
 // GetVarnishConfigs returns varnish configuration files
 // TODO: add varnishncsa and hitch configs
