@@ -98,7 +98,7 @@ Response Structure
 :iloIpAddress: The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :iloIpGateway: The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :iloIpNetmask: The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloPassword:  The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+:iloPassword:  The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 :iloUsername:  The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :interfaces:   A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
 
@@ -158,7 +158,7 @@ Response Structure
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (:term:`t3c`, formerly ORT)
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
-:xmppPasswd: The password used in XMPP communications with the server
+:xmppPasswd: The password used in XMPP communications with the server - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 
 .. code-block:: http
 	:caption: Response Example
@@ -254,7 +254,7 @@ Request Structure
 :iloIpAddress: An optional IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :iloIpGateway: An optional IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :iloIpNetmask: An optional IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloPassword:  An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :term:`Role(s) <Role>`
+:iloPassword:  An optional string containing the password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 :iloUsername:  An optional string containing the user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :interfaces:   A set of the network interfaces in use by the server. In most scenarios, only one will be necessary, but it is illegal for this set to be an empty collection.
 
@@ -302,7 +302,7 @@ Request Structure
 
 :typeId:     The integral, unique identifier of the 'type' of this server
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
-:xmppPasswd: An optional password used in XMPP communications with the server
+:xmppPasswd: An optional password used in XMPP communications with the server - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 
 .. code-block:: http
 	:caption: Request Example
@@ -385,7 +385,7 @@ Response Structure
 :iloIpAddress: The IPv4 address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :iloIpGateway: The IPv4 gateway address of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :iloIpNetmask: The IPv4 subnet mask of the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
-:iloPassword:  The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the 'admin' or 'operations' :abbr:`Role(s) <Role>`
+:iloPassword:  The password of the of the server's :abbr:`ILO (Integrated Lights-Out)` service user\ [#ilo]_ - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 :iloUsername:  The user name for the server's :abbr:`ILO (Integrated Lights-Out)` service\ [#ilo]_
 :interfaces:   A set of the network interfaces in use by the server. In most scenarios, only one will be present, but it is illegal for this set to be an empty collection.
 
@@ -445,7 +445,7 @@ Response Structure
 :typeId:     The integral, unique identifier of the 'type' of this server
 :updPending: A boolean value which, if ``true``, indicates that the server has updates of some kind pending, typically to be acted upon by Traffic Control Cache Config (T3C, formerly ORT)
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
-:xmppPasswd: The password used in XMPP communications with the server
+:xmppPasswd: The password used in XMPP communications with the server - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 
 .. code-block:: http
 	:caption: Response Example

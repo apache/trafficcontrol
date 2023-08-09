@@ -43,7 +43,8 @@ RUN dnf -y install epel-release && \
         additional_packages='perl(URI)' || \
         exit 1; \
     else \
-        additional_packages='' || \
+        # cjose is required by the ATS TSB RPM
+        additional_packages='cjose' || \
         exit 1; \
     fi && \
     dnf -y install              \

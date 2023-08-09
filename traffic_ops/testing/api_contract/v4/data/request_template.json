@@ -396,6 +396,29 @@
 			"setNumber": 1
 		}
 	],
+	"cdn_federation": [
+		{
+			"cname": "test.quest.",
+			"ttl": 48,
+			"description": "A test federation"
+		}
+	],
+	"user_federation": [
+		{
+			"userIds": [
+				2
+			],
+			"replace": true
+		}
+	],
+	"delivery_service_federation": [
+		{
+			"dsIds": [
+				37
+			],
+			"replace": true
+		}
+	],
 	"delivery_service_required_capabilities": [
 		{
 			"deliveryServiceID": 1,
@@ -416,6 +439,21 @@
 		{
 			"profileId": 18,
 			"parameterId": 3
+		}
+	],
+	"federation_resolver": [
+		{
+			"ipAddress": "::1/1",
+			"typeId": 37
+		}
+	],
+	"static_dns_entries": [
+		{
+			"address": "2001::cafe:c935",
+			"deliveryserviceId": 37,
+			"host": "test",
+			"ttl": 300,
+			"typeId": 41
 		}
 	]
 }

@@ -17,7 +17,7 @@
 # under the License.
 #
 hosts:
-  - &edge1
+  - &peer1
     host: edge-01.cdn.com
     protocol:
       - scheme: http
@@ -26,7 +26,7 @@ hosts:
       - scheme: https
         port: 443
         health_check_url: https://192.168.1.19:443
-  - &edge2
+  - &peer2
     host: edge-02.cdn.com
     protocol:
       - scheme: http
@@ -35,7 +35,7 @@ hosts:
       - scheme: https
         port: 443
         health_check_url: https://196.168.2.20:443
-  - &edge3
+  - &peer3
     host: edge-03.cdn.com
     protocol:
       - scheme: http
@@ -44,7 +44,7 @@ hosts:
       - scheme: https
         port: 443
         health_check_url: https://192.168.2.30:443
-  - &edge4
+  - &peer4
     host: edge-04.cdn.com
     protocol:
       - scheme: http
@@ -72,14 +72,14 @@ hosts:
         port: 443
         health_check_url: https://192.168.3.95:443
 groups:
-  - &edge-tier
-    - <<: *edge1
+  - &peers_group
+    - <<: *peer1
       weight: 0.25
-    - <<: *edge2
+    - <<: *peer2
       weight: 0.25
-    - <<: *edge3
+    - <<: *peer3
       weight: 0.25
-    - <<: *edge4
+    - <<: *peer4
       weight: 0.25
   - &mid-tier
     - <<: *mid1
@@ -93,7 +93,7 @@ strategies:
     parent_is_proxy: true
     cache_peer_result: false
     groups: 
-      - *edge-tier
+      - *peers_group
       - *mid-tier
     scheme: http 
     failover:

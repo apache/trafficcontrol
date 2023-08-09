@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
+- [#7665](https://github.com/apache/trafficcontrol/pull/7665) *Automation* Changes to Ansible role dataset_loader to add ATS 9 support
 ### Added
+- [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client* Added peer monitor flag while using `strategies.yaml`
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login. 
 - [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops* Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
 - [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
@@ -68,9 +70,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
 - [##7605](https://github.com/apache/trafficcontrol/pull/#7605) *Traffic Ops* Fixes `cachegroups_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
+- [#7694](https://github.com/apache/trafficcontrol/pull/7694) *t3c*, *Traffic Control Health Client* Upgrade to ATS 9.2
 
 ### Fixed
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
+- [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixes Logs V5 apis to respond with RFC3339 tiestamps.
 - [#7631] (https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixes Phys_Location V5 apis to respond with RFC3339 date/time Format
 - [#7623] (https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
 - [#7608](https://github.com/apache/trafficcontrol/pull/7608) *Traffic Monitor* Use stats_over_http(plugin.system_stats.timestamp_ms) timestamp field to calculate bandwidth for TM's caches.
@@ -142,6 +146,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixes `federation_resolvers` v5 apis to respond with `RFC3339` date/time Format.
 - [#7660](https://github.com/apache/trafficcontrol/pull/7660) *Traffic Ops* Fixes `deliveryServices` v5 apis to respond with `RFC3339` date/time Format.
 - [#7686](https://github.com/apache/trafficcontrol/pull/7686) *Traffic Ops* Fixes secured parameters being visible when role has proper permissions.
+- [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops* Fixes `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
 
 ### Removed
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.

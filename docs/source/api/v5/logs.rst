@@ -63,7 +63,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique identifier for the Log entry
-:lastUpdated: Date and time at which the change was made, in :ref:`non-rfc-datetime`
+:lastUpdated: Date and time at which the change was made, in :rfc:`3339` format
 :level:       Log categories for each entry, e.g. 'UICHANGE', 'OPER', 'APICHANGE'
 :message:     Log detail about what occurred
 :ticketNum:   Optional field to cross reference with any bug tracking systems
@@ -91,7 +91,7 @@ Response Structure
 		{
 			"ticketNum": null,
 			"level": "APICHANGE",
-			"lastUpdated": "2018-11-14 21:40:06.493975+00",
+			"lastUpdated": "2018-11-14T21:40:06-06:00",
 			"user": "admin",
 			"id": 444,
 			"message": "User [ test ] unlinked from deliveryservice [ 1 | demo1 ]."
@@ -99,7 +99,7 @@ Response Structure
 		{
 			"ticketNum": null,
 			"level": "APICHANGE",
-			"lastUpdated": "2018-11-14 21:37:30.707571+00",
+			"lastUpdated": "2018-11-14T21:37:30-06:00",
 			"user": "admin",
 			"id": 443,
 			"message": "1 delivery services were assigned to test"

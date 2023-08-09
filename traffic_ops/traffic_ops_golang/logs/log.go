@@ -94,10 +94,24 @@ func Getv40(w http.ResponseWriter, r *http.Request) {
 		api.WriteAlerts(w, r, http.StatusInternalServerError, a)
 		return
 	}
-	if a.HasAlerts() {
-		api.WriteAlertsObj(w, r, 200, a, logs)
+	var result interface{}
+	var logsV5 []tc.LogV5
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{
+		Major: 5,
+		Minor: 0,
+	}) {
+		for _, l := range logs {
+			logV5 := l.Upgrade()
+			logsV5 = append(logsV5, logV5)
+		}
+		result = logsV5
 	} else {
-		api.WriteRespWithSummary(w, r, logs, count)
+		result = logs
+	}
+	if a.HasAlerts() {
+		api.WriteAlertsObj(w, r, 200, a, result)
+	} else {
+		api.WriteRespWithSummary(w, r, result, count)
 	}
 }
 
