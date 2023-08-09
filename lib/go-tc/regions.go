@@ -21,6 +21,9 @@ package tc
 
 // RegionsResponse is the type of responses from Traffic Ops to GET requests
 // made to its /regions API endpoint.
+
+import "time"
+
 type RegionsResponse struct {
 	Response []Region `json:"response"`
 	Alerts
@@ -32,6 +35,27 @@ type Region struct {
 	Division     int       `json:"division" db:"division"`
 	ID           int       `json:"id" db:"id"`
 	LastUpdated  TimeNoMod `json:"lastUpdated" db:"last_updated"`
+	Name         string    `json:"name" db:"name"`
+}
+
+// RegionsResponseV5 is an alias for the latest minor version of the major version 5.
+type RegionsResponseV5 = RegionsResponseV50
+
+// RegionsResponseV50 is response made from /regions API endpoint - in the latest minor version APIv50.
+type RegionsResponseV50 struct {
+	Response []RegionV5 `json:"response"`
+	Alerts
+}
+
+// RegionV5 is an alias for the latest minor version of the major version 5.
+type RegionV5 = RegionV50
+
+// RegionV50 is a named collection of Physical Locations within a Division in the latest minor version APIv50.
+type RegionV50 struct {
+	DivisionName string    `json:"divisionName"`
+	Division     int       `json:"division" db:"division"`
+	ID           int       `json:"id" db:"id"`
+	LastUpdated  time.Time `json:"lastUpdated" db:"last_updated"`
 	Name         string    `json:"name" db:"name"`
 }
 

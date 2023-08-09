@@ -38,8 +38,7 @@ Request Structure
 	|  ID  | The integral, unique identifier of the region to update |
 	+------+---------------------------------------------------------+
 
-:division:     The new integral, unique identifier of the division which shall contain the region\ [1]_
-:divisionName: The new name of the division which shall contain the region\ [1]_
+:division:     The new integral, unique identifier of the division which shall contain the region
 :name:         The new name of the region
 
 .. code-block:: http
@@ -54,20 +53,16 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"name": "Leeds",
 		"division": 3,
-		"divisionName": "England"
+		"name": "Leeds"
 	}
-
-.. [1] The only "division" key that actually matters in the request body is ``division``; ``divisionName`` is not validated and has no effect - particularly not the effect of re-naming the division - beyond changing the name in the API response to this request. Subsequent requests will reveal the true name of the division. Note that if ``divisionName`` is not present in the request body it will be ``null`` in the response, but again further requests will show the true division name (provided it has been assigned to a division).
-
 
 Response Structure
 ------------------
 :divisionName: The name of the division which contains this region
-:divisionId:   The integral, unique identifier of the division which contains this region
+:division:   The integral, unique identifier of the division which contains this region
 :id:           An integral, unique identifier for this region
-:lastUpdated:  The date and time at which this region was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated:  The date and time at which this region was last updated in :rfc:`3339` Format
 :name:         The region name
 
 .. code-block:: http
@@ -95,6 +90,6 @@ Response Structure
 		"divisionName": "England",
 		"division": 3,
 		"id": 5,
-		"lastUpdated": "2018-12-06 02:23:40+00",
+		"lastUpdated": "2023-05-26T15:59:33.7096-06:00",
 		"name": "Leeds"
 	}}

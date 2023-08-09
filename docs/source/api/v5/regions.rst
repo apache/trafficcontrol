@@ -41,8 +41,7 @@ Request Structure
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| name      | no       | Filter :term:`Regions` by name                                                                                |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
-	| orderby   | no       | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
-	|           |          | array                                                                                                         |
+	| orderby   | no       | Choose the ordering of the results - either one of them "division", "id", "name"                              |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
 	| sortOrder | no       | Changes the order of sorting. Either ascending (default or "asc") or descending ("desc")                      |
 	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
@@ -67,9 +66,9 @@ Request Structure
 Response Structure
 -------------------
 :divisionName: The name of the division which contains this region
-:divisionId:   The integral, unique identifier of the division which contains this region
+:division:   The integral, unique identifier of the division which contains this region
 :id:           An integral, unique identifier for this region
-:lastUpdated:  The date and time at which this region was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated:  The date and time at which this region was last updated in :rfc:`3339` Format
 :name:         The region name
 
 .. code-block:: http
@@ -92,7 +91,7 @@ Response Structure
 			"divisionName": "Quebec",
 			"division": 1,
 			"id": 2,
-			"lastUpdated": "2018-12-05 17:50:58+00",
+			"lastUpdated": "2023-05-25T15:59:33.7096-06:00",
 			"name": "Montreal"
 		}
 	]}
@@ -110,8 +109,7 @@ Creates a new region
 
 Request Structure
 -----------------
-:division:     The integral, unique identifier of the division which shall contain the new region\ [1]_
-:divisionName: The name of the division which shall contain the new region\ [1]_
+:division:     The integral, unique identifier of the division which shall contain the new region
 :name:         The name of the region
 
 .. code-block:: http
@@ -126,19 +124,16 @@ Request Structure
 	Content-Type: application/json
 
 	{
-		"name": "Manchester",
-		"division": "4",
-		"divisionName": "England"
+		"division": 4,
+		"name": "Manchester"
 	}
-
-.. [1] The only "division" key that actually matters in the request body is ``division``; ``divisionName`` is not validated and has no effect - particularly not the effect of re-naming the division - beyond changing the name in the API response to this request. Subsequent requests will reveal the true name of the division. Note that if ``divisionName`` is not present in the request body it will be ``null`` in the response, but again further requests will show the true division name (provided it has been assigned to a division).
 
 Response Structure
 ------------------
 :divisionName: The name of the division which contains this region
-:divisionId:   The integral, unique identifier of the division which contains this region
+:division:   The integral, unique identifier of the division which contains this region
 :id:           An integral, unique identifier for this region
-:lastUpdated:  The date and time at which this region was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated:  The date and time at which this region was last updated in :rfc:`3339` Format
 :name:         The region name
 
 .. code-block:: http
@@ -166,7 +161,7 @@ Response Structure
 		"divisionName": "England",
 		"division": 3,
 		"id": 5,
-		"lastUpdated": "2018-12-06 02:14:45+00",
+		"lastUpdated": "2023-05-25T15:59:33.7096-06:00",
 		"name": "Manchester"
 	}}
 

@@ -38,7 +38,7 @@ func TestRegions(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Region]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.RegionV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -121,10 +121,9 @@ func TestRegions(t *testing.T) {
 			"POST": {
 				"NOT FOUND when DIVISION DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: tc.Region{
-						Name:         "invalidDivision",
-						Division:     99999999,
-						DivisionName: "doesntexist",
+					RequestBody: tc.RegionV5{
+						Name:     "invalidDivision",
+						Division: 99999999,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -133,10 +132,9 @@ func TestRegions(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetRegionID(t, "cdn-region2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Region{
-						Name:         "newName",
-						Division:     GetDivisionID(t, "cdn-div2")(),
-						DivisionName: "cdn-div2",
+					RequestBody: tc.RegionV5{
+						Name:     "newName",
+						Division: GetDivisionID(t, "cdn-div2")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateRegionsUpdateCreateFields("newName", map[string]interface{}{"Name": "newName"})),
@@ -145,20 +143,18 @@ func TestRegions(t *testing.T) {
 					EndpointID:    GetRegionID(t, "region1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.Region{
-						Name:         "newName",
-						Division:     GetDivisionID(t, "division1")(),
-						DivisionName: "division1",
+					RequestBody: tc.RegionV5{
+						Name:     "newName",
+						Division: GetDivisionID(t, "division1")(),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetRegionID(t, "region1"),
 					ClientSession: TOSession,
-					RequestBody: tc.Region{
-						Name:         "newName",
-						Division:     GetDivisionID(t, "division1")(),
-						DivisionName: "division1",
+					RequestBody: tc.RegionV5{
+						Name:     "newName",
+						Division: GetDivisionID(t, "division1")(),
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -229,7 +225,7 @@ func TestRegions(t *testing.T) {
 func validateRegionsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Regions response to not be nil.")
-		regionResp := resp.([]tc.Region)
+		regionResp := resp.([]tc.RegionV5)
 		for field, expected := range expectedResp {
 			for _, region := range regionResp {
 				switch field {
@@ -264,7 +260,7 @@ func validateRegionsSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Regions response to not be nil.")
 		var regionNames []string
-		regionResp := resp.([]tc.Region)
+		regionResp := resp.([]tc.RegionV5)
 		for _, region := range regionResp {
 			regionNames = append(regionNames, region.Name)
 		}
@@ -275,7 +271,7 @@ func validateRegionsSort() utils.CkReqFunc {
 func validateRegionsDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Regions response to not be nil.")
-		regionDescResp := resp.([]tc.Region)
+		regionDescResp := resp.([]tc.RegionV5)
 		var descSortedList []string
 		var ascSortedList []string
 		assert.RequireGreaterOrEqual(t, len(regionDescResp), 2, "Need at least 2 Regions in Traffic Ops to test desc sort, found: %d", len(regionDescResp))
@@ -298,7 +294,7 @@ func validateRegionsDescSort() utils.CkReqFunc {
 
 func validateRegionsPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.Region)
+		paginationResp := resp.([]tc.RegionV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
