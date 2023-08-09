@@ -145,6 +145,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixes an issue where certificate chain validation failed based on leading or trailing whitespace.
 - [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixes `federation_resolvers` v5 apis to respond with `RFC3339` date/time Format.
 - [#7660](https://github.com/apache/trafficcontrol/pull/7660) *Traffic Ops* Fixes `deliveryServices` v5 apis to respond with `RFC3339` date/time Format.
+- [#7686](https://github.com/apache/trafficcontrol/pull/7686) *Traffic Ops* Fixes secured parameters being visible when role has proper permissions.
 - [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops* Fixes `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
 
 ### Removed
