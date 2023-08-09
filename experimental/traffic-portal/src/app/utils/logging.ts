@@ -107,7 +107,7 @@ export class Logger {
 		private readonly timestamps: boolean = true,
 	) {
 		if (prefix) {
-			prefix = prefix.trim().replace(/:+$/, "").trimEnd();
+			prefix = prefix.trim().replace(/:$/, "").trimEnd();
 		}
 
 		this.prefix = prefix;
