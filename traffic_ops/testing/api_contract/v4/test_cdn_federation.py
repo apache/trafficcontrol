@@ -64,6 +64,11 @@ def test_cdn_federation_contract(to_session: TOSession,
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
 	] = to_session.get_federation_delivery_services(federation_id=federation_id)
+
+	federation_resolvers_get_response: tuple[
+		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
+		requests.Response
+	] = to_session.get_federation_resolvers_by_id(federation_id=federation_id)
 	
     # Hitting cdn_federation PUT method
 	cdn_federation_sample_data["description"] = "test" + str(randint(0, 1000)) 
@@ -96,6 +101,12 @@ def test_cdn_federation_contract(to_session: TOSession,
 		if not isinstance(cdn_federation_put_data, dict):
 			raise TypeError(
 				"malformed API response; first cdn_federation_put in response is not an dict")
+		
+		federation_federation_resolver= federation_resolvers_get_response[0]
+		if not isinstance(federation_federation_resolver, list):
+			raise TypeError(
+				"malformed API response; first federation_federation_resolver in response is not an dict")
+		first_federation_federation_resolver = federation_federation_resolver[0]
 
 		cdn_federation_response_template = response_template_data.get(
 			"cdn_federation")
@@ -114,6 +125,11 @@ def test_cdn_federation_contract(to_session: TOSession,
 		if not isinstance(delivery_service_federation_response_template, dict):
 			raise TypeError(f"delivery_service_federation response template data must be a dict, not '"
 							f"{type(user_federation_response_template)}'")
+		
+		federation_federation_resolver_response_template = response_template_data.get("federation_federation_resolver")
+		if not isinstance(federation_federation_resolver_response_template, dict):
+			raise TypeError(f"delivery_service_federation response template data must be a dict, not '"
+							f"{type(user_federation_response_template)}'")
 
 		keys = ["cname", "ttl"]
 		prereq_values = [cdn_federation_data_post[key] for key in keys]
@@ -123,6 +139,7 @@ def test_cdn_federation_contract(to_session: TOSession,
 		assert validate(instance=first_user_federation, schema=user_federation_response_template) is None
 		assert validate(instance=first_delivery_service_federation, schema=delivery_service_federation_response_template) is None
 		assert validate(instance=cdn_federation_put_data, schema=cdn_federation_response_template) is None
+		assert validate(instance=first_federation_federation_resolver, schema=federation_federation_resolver_response_template) is None
 		
 		assert get_values == prereq_values
 	except IndexError:

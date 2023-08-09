@@ -1875,6 +1875,21 @@
             }
         }
     },
+    "service_category": {
+        "type": "object",
+        "required": [
+            "lastUpdated",
+            "name"
+        ],
+        "properties": {
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            }
+        }
+    },
     "federation_resolver": {
         "type": "object",
         "required": [
@@ -1897,6 +1912,25 @@
                 "type": "string"
             }
         }
+    },
+    "federation_federation_resolver": {
+        "type": "object",
+        "required": [
+            "id",
+            "ipAddress",
+            "type"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "ipAddress": {
+                "type": "string"
+            },
+            "type": {
+                "type": "string"
+              }
+          }
     },
     "delivery_service_capacity": {
         "type": "object",

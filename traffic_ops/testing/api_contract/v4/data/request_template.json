@@ -419,6 +419,12 @@
 			"replace": true
 		}
 	],
+	"federation_federation_resolver":[
+		{
+			"fedResolverIds": [39],
+			"replace": true
+		}
+	],
 	"delivery_service_required_capabilities": [
 		{
 			"deliveryServiceID": 1,
@@ -440,6 +446,11 @@
 			"profileId": 18,
 			"parameterId": 3
 		}
+	],
+	"service_category": [
+		{
+			"name": "SERVICE-CATEGORY-NAME"
+      }
 	],
 	"federation_resolver": [
 		{
