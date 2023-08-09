@@ -75,11 +75,13 @@ export class ImportJsonTxtComponent {
 	}
 
 	/**
-	 * Creates an instance of import json edit txt component.
+	 * Constructor.
 	 *
-	 * @param dialogRef Dialog manager
-	 * @param alertService Alert service manager
-	 * @param datePipe Default angular date pipe for formatting date
+	 * @param data Data passed as input to the component.
+	 * @param dialogRef Angular dialog service.
+	 * @param alertService Alerts service.
+	 * @param datePipe Default Angular pipe used for formatting dates.
+	 * @param log Logging service.
 	 */
 	constructor(
 		@Inject(MAT_DIALOG_DATA) public readonly data: ImportJsonTxtComponentModel,
