@@ -22,7 +22,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -75,6 +74,7 @@ const LockFilePath = "/var/run/t3c.lock"
 const LockFileRetryInterval = time.Second
 const LockFileRetryTimeout = time.Minute
 
+const CacheConfigFailureExitMsg = `CACHE CONFIG FAILURE`
 const FailureExitMsg = `CRITICAL FAILURE, ABORTING`
 const PostConfigFailureExitMsg = `CRITICAL FAILURE AFTER SETTING CONFIG, ABORTING`
 const SuccessExitMsg = `SUCCESS`
@@ -346,7 +346,11 @@ func Main() int {
 	}
 
 	metaData.Succeeded = true
-	return GitCommitAndExit(ExitCodeSuccess, SuccessExitMsg, cfg, metaData, oldMetaData)
+	if syncdsUpdate == torequest.UpdateTropsFailed {
+		return GitCommitAndExit(ExitCodeSuccess, CacheConfigFailureExitMsg, cfg, metaData, oldMetaData)
+	} else {
+		return GitCommitAndExit(ExitCodeSuccess, SuccessExitMsg, cfg, metaData, oldMetaData)
+	}
 }
 
 func LogPanic(f func() int) (exitCode int) {
@@ -450,7 +454,7 @@ func WriteMetaData(cfg config.Cfg, metaData *t3cutil.ApplyMetaData) {
 
 	metaDataFilePath := GetMetaDataFilePath(cfg)
 
-	if err := ioutil.WriteFile(metaDataFilePath, bts, MetaDataFileMode); err != nil {
+	if err := os.WriteFile(metaDataFilePath, bts, MetaDataFileMode); err != nil {
 		log.Errorln("writing metadata file '" + metaDataFilePath + "': " + err.Error())
 		return
 	}
@@ -459,7 +463,7 @@ func WriteMetaData(cfg config.Cfg, metaData *t3cutil.ApplyMetaData) {
 func LoadMetaData(cfg config.Cfg) (*t3cutil.ApplyMetaData, error) {
 	metaDataFilePath := GetMetaDataFilePath(cfg)
 
-	bts, err := ioutil.ReadFile(metaDataFilePath)
+	bts, err := os.ReadFile(metaDataFilePath)
 	if err != nil {
 		return nil, errors.New("reading metadata file '" + metaDataFilePath + "': " + err.Error())
 	}

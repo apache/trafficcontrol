@@ -111,11 +111,11 @@ func checkConfigLine(line string, lineNumber int, filesAdding map[string]struct{
 					}
 				}
 			} else if strings.HasPrefix(fields[ii], "@pparam") {
-				// any plugin parameters that end in '.config | .cfg | .txt | yml | .yaml'
+				// any plugin parameters that end in '.config | .cfg | .txt | yml | .yaml | .lua'
 				// are assumed to be configuration files and are checked that they
 				// exist in the filesystem at the absolute location in the name
 				// or relative to the ATS configuration files directory.
-				m := regexp.MustCompile(`^*(\.config|\.cfg|\.txt|\.yml|\.yaml)+`)
+				m := regexp.MustCompile(`^*(\.config|\.cfg|\.txt|\.yml|\.yaml|\.lua)+`)
 				sa := strings.Split(fields[ii], "=")
 				if len(sa) != 2 && len(sa) != 3 {
 					log.Errorf("malformed @pparam definition in remap.config on line '%d': %v\n", lineNumber, fields)
@@ -159,11 +159,11 @@ func checkConfigLine(line string, lineNumber int, filesAdding map[string]struct{
 			}
 		}
 		// Check the arguments in a plugin.config file for possible plugin config files.
-		// Any plugin argument that ends in '.config | .cfg | .txt | .yml | .yaml' are
+		// Any plugin argument that ends in '.config | .cfg | .txt | .yml | .yaml | .lua' are
 		// assumed to be configuration files and are checked that they
 		// exist in the filesystem at the absolute location in the name
 		// or relative to the ATS configuration files directory.
-		m := regexp.MustCompile(`([^=]+\.config$|[^=]\.cfg$|[^=]+\.txt$|[^=]+\.yml$|[^=]+\.yaml$)`)
+		m := regexp.MustCompile(`([^=]+\.config$|[^=]\.cfg$|[^=]+\.txt$|[^=]+\.yml$|[^=]+\.yaml$|[^=]+\.lua$)`)
 		for ii := 1; ii < length; ii++ {
 			param := strings.TrimSpace(fields[ii])
 			cfg := m.FindStringSubmatch(param)

@@ -22,7 +22,6 @@ package torequest
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -102,6 +101,7 @@ type ConfigFile struct {
 	TropsBackup       string // location to backup the TrafficOps Version
 	AuditComplete     bool   // audit is complete
 	AuditFailed       bool   // audit failed
+	AuditError        string // Error generated when AuditFailed is true
 	ChangeApplied     bool   // a change has been applied
 	ChangeNeeded      bool   // change required
 	PreReqFailed      bool   // failed plugin prerequiste check
@@ -208,22 +208,33 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 	}
 
 	if cfg.Dir == "" {
+		cfg.AuditFailed = true
 		return errors.New("No location information for " + cfg.Name)
 	}
 	// return if audit has already been done.
-	if cfg.AuditComplete == true {
+	if cfg.AuditComplete {
 		return nil
 	}
 
 	if !util.MkDirWithOwner(cfg.Dir, r.Cfg.ReportOnly, &cfg.Uid, &cfg.Gid) {
+		cfg.AuditFailed = true
 		return errors.New("Unable to create the directory '" + cfg.Dir + " for " + "'" + cfg.Name + "'")
 	}
 
 	log.Debugf("======== Start processing config file: %s ========\n", cfg.Name)
 
+	if cfg.Name == "50-ats.rules" {
+		err := r.processUdevRules(cfg)
+		if err != nil {
+			cfg.AuditFailed = true
+			return errors.New("unable to process udev rules in '" + cfg.Name + "': " + err.Error())
+		}
+	}
+
 	if cfg.Name == "remap.config" {
 		err := r.processRemapOverrides(cfg)
 		if err != nil {
+			cfg.AuditFailed = true
 			return err
 		}
 	}
@@ -232,6 +243,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 	if cfg.Name == "remap.config" || cfg.Name == "plugin.config" {
 		if err := checkRefs(r.Cfg, cfg.Body, filesAdding); err != nil {
 			r.configFileWarnings[cfg.Name] = append(r.configFileWarnings[cfg.Name], "failed to verify '"+cfg.Name+"': "+err.Error())
+			cfg.AuditFailed = true
 			return errors.New("failed to verify '" + cfg.Name + "': " + err.Error())
 		}
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
@@ -251,17 +263,11 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 	changeNeeded, err := diff(r.Cfg, cfg.Body, cfg.Path, r.Cfg.ReportOnly, cfg.Perm, cfg.Uid, cfg.Gid)
 
 	if err != nil {
+		cfg.AuditFailed = true
 		return errors.New("getting diff: " + err.Error())
 	}
 	cfg.ChangeNeeded = changeNeeded
 	cfg.AuditComplete = true
-
-	if cfg.Name == "50-ats.rules" {
-		err := r.processUdevRules(cfg)
-		if err != nil {
-			return errors.New("unable to process udev rules in '" + cfg.Name + "': " + err.Error())
-		}
-	}
 
 	log.Infof("======== End processing config file: %s for service: %s ========\n", cfg.Name, cfg.Service)
 	return nil
@@ -418,7 +424,7 @@ func (r *TrafficOpsReq) processUdevRules(cfg *ConfigFile) error {
 			}
 		}
 	}
-	fs, err := ioutil.ReadDir("/proc/fs/ext4")
+	fs, err := os.ReadDir("/proc/fs/ext4")
 	if err != nil {
 		log.Errorln("unable to read /proc/fs/ext4, cannot audit disks for filesystem usage.")
 	} else {
@@ -811,11 +817,12 @@ func (r *TrafficOpsReq) CheckReloadRestart(data []FileRestartData) RestartData {
 // ProcessConfigFiles processes all config files retrieved from Traffic Ops.
 func (r *TrafficOpsReq) ProcessConfigFiles(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
 	var updateStatus UpdateStatus = UpdateTropsNotNeeded
+	var auditErrors []string
 
 	log.Infoln(" ======== Start processing config files ========")
 
 	filesAdding := []string{} // list of file names being added, needed for verification.
-	for fileName, _ := range r.configFiles {
+	for fileName := range r.configFiles {
 		filesAdding = append(filesAdding, fileName)
 	}
 
@@ -841,6 +848,7 @@ func (r *TrafficOpsReq) ProcessConfigFiles(metaData *t3cutil.ApplyMetaData) (Upd
 		err := r.checkConfigFile(cfg, filesAdding)
 		if err != nil {
 			log.Errorln(err)
+			r.configFiles[cfg.Name].AuditError = err.Error()
 		}
 	}
 
@@ -857,11 +865,11 @@ func (r *TrafficOpsReq) ProcessConfigFiles(metaData *t3cutil.ApplyMetaData) (Upd
 			!cfg.AuditFailed {
 
 			changesRequired++
-			if cfg.Name == "plugin.config" && r.configFiles["remap.config"].PreReqFailed == true {
+			if cfg.Name == "plugin.config" && r.configFiles["remap.config"].PreReqFailed {
 				updateStatus = UpdateTropsFailed
 				log.Errorln("plugin.config changed however, prereqs failed for remap.config so I am skipping updates for plugin.config")
 				continue
-			} else if cfg.Name == "remap.config" && r.configFiles["plugin.config"].PreReqFailed == true {
+			} else if cfg.Name == "remap.config" && r.configFiles["plugin.config"].PreReqFailed {
 				updateStatus = UpdateTropsFailed
 				log.Errorln("remap.config changed however, prereqs failed for plugin.config so I am skipping updates for remap.config")
 				continue
@@ -876,7 +884,15 @@ func (r *TrafficOpsReq) ProcessConfigFiles(metaData *t3cutil.ApplyMetaData) (Upd
 				}
 				shouldRestartReload.ReloadRestart = append(shouldRestartReload.ReloadRestart, *reData)
 			}
+		} else if cfg.AuditFailed {
+			auditErrors = append(auditErrors, cfg.AuditError)
+			log.Warnf("audit failed for config file: %v Error: %s", cfg.Name, cfg.AuditError)
+			updateStatus = UpdateTropsFailed
 		}
+	}
+
+	if updateStatus == UpdateTropsFailed {
+		return UpdateTropsFailed, errors.New(strings.Join(auditErrors, "\n"))
 	}
 
 	r.RestartData = r.CheckReloadRestart(shouldRestartReload.ReloadRestart)
