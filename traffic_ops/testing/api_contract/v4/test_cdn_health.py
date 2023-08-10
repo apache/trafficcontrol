@@ -29,14 +29,13 @@ Primitive = Union[bool, int, float, str, None]
 
 def test_cdn_health_contract(to_session: TOSession,
 	response_template_data: dict[str, Union[Primitive, list[Union[Primitive,
-							dict[str, object], list[object]]], dict[object, object]]]
+			dict[str, object], list[object]]], dict[object, object]]]
 ) -> None:
 	"""
 	Test step to validate keys, values and data types from cdn health, capacity and routing endpoints
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
-	:param cdn_post_data: Fixture to get sample data and response.
 	"""
 	# validate cdn_health keys from api get response
 	logger.info("Accessing /cdn_health endpoints through Traffic ops session.")
