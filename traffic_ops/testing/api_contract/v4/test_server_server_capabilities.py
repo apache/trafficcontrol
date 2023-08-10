@@ -44,13 +44,13 @@ def test_server_server_capabilities_contract(
 	logger.info(
 		"Accessing /server server capabilities endpoint through Traffic ops session.")
 
-	server_id = server_server_capabilities_post_data.get("serverId")
-	if not isinstance(server_id, int):
+	serverCapability = server_server_capabilities_post_data.get("serverCapability")
+	if not isinstance(serverCapability, str):
 		raise TypeError(
 			"malformed server server capabilities in prerequisite data; 'serverId' not an integer")
 
 	server_server_capabilities_get_response: tuple[Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive], requests.Response
-	] = to_session.get_server_server_capabilities(server_id=server_id, query_params={"server": server_id})
+	] = to_session.get_server_server_capabilities(query_params={"serverCapability": serverCapability})
 	try:
 		server_server_capabilities_data = server_server_capabilities_get_response[0]
 		if not isinstance(server_server_capabilities_data, list):
@@ -66,9 +66,8 @@ def test_server_server_capabilities_contract(
 			raise TypeError(
 				f"Server Server Capability response template data must be a dict, not '{type(server_server_capabilities_response_template)}'")
 
-
 		# validate server server capabilities values from prereq data in server server capabilities get response.
-		keys = ["serverId", "serverCapability"]
+		keys = ["serverId","serverCapability"]
 		prereq_values = [server_server_capabilities_post_data[key] for key in keys]
 		get_values = [first_server_server_capability[key] for key in keys]
 

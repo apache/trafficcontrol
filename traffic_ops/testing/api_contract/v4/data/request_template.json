@@ -458,8 +458,8 @@
 	],
   "server_server_capabilities":[
 		{
-			"serverId": 2925,
-			"serverCapability": "Disk_Storage"
-    }
-  ]
+			"serverId": 1,
+			"serverCapability": "disk"
+    	}
+  	]
 }

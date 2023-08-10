@@ -2067,22 +2067,25 @@
         }
     },
     "server_server_capabilities":{
-        "type":"object",
-        "required":[
+        "type": "object",
+        "required": [
             "lastUpdated",
+            "serverHostName",
             "serverId",
             "serverCapability"
         ],
-        "properties":{
-            "lastUpdated":{
+        "properties": {
+            "lastUpdated": {
                 "type": "string"
             },
-            "serverCapability":{
+            "serverHostName": {
                 "type": "string"
-
             },
-            "serverId":{
+            "serverId": {
                 "type": "integer"
+            },
+            "serverCapability": {
+                "type": "string"
             }
         }
     }

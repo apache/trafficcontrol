@@ -1093,10 +1093,15 @@ def server_data_post(to_session: TOSession, request_template_data: list[JSONData
 	type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"useInTable": "server"})
 	type_id = type_object["id"]
-	server["typeId"] = type_id
+	edge_type_id = pytestconfig.cache.get("edgeTypeId", default=None)
+	logger.info("Here %s", edge_type_id)
+	if edge_type_id:
+		server["typeId"] = edge_type_id
+	else:
+		server["typeId"] = type_id
 
 	pytestconfig.cache.set("typeId", type_id)
-
+	
 	server["cachegroupId"]= cache_group_post_data["id"]
 
 	# Check if cdn already exists, otherwise create it
@@ -1860,10 +1865,17 @@ def static_dns_entries_data_post(to_session: TOSession, request_template_data: l
 		logger.error("static_dns_entries returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
-  
+@pytest.fixture(name="edge_type_data")
+def edge_data_type(pytestconfig: pytest.Config, request_template_data: list[JSONData], to_session: TOSession):
+	type_data = check_template_data(request_template_data["types"], "types")
+	type_object = create_or_get_existing(to_session, "types", "type", type_data,
+				      {"name":"EDGE" , "useInTable":"server"})
+	type_id = type_object["id"]
+	pytestconfig.cache.set("edgeTypeId", type_id)
+
 @pytest.fixture(name="server_server_capabilities_post_data")
-def server_server_capabilities_data_post(to_session: TOSession, request_template_data: list[JSONData],
-		server_post_data:dict[str, object], server_capabilities_post_data:dict[str, object]
+def server_server_capabilities_data_post(to_session: TOSession, edge_type_data:None, request_template_data: list[JSONData],
+		server_post_data:dict[str, object], server_capabilities_post_data:dict[str, object], pytestconfig: pytest.Config
 		) -> dict[str, object]:
 	"""
 	PyTest Fixture to create POST data for server server capabilities endpoint.
@@ -1876,8 +1888,11 @@ def server_server_capabilities_data_post(to_session: TOSession, request_template
 
 	# Return new post data and post response from server server capabilities POST request
 
-	server_id = server_server_capabilities["serverId"]
-	server_capability = server_server_capabilities["serverCapability"]
+	server_id = server_post_data.get("id")
+	serverCapability = server_capabilities_post_data.get("name")
+	server_server_capabilities["serverId"] = server_id
+	server_server_capabilities["serverCapability"] = serverCapability
+
 
 	logger.info("New server_server_capabilities data to hit POST method %s", server_server_capabilities)
 
@@ -1886,7 +1901,7 @@ def server_server_capabilities_data_post(to_session: TOSession, request_template
 	resp_obj = check_template_data(response, "server_server_capabilities")
 	yield resp_obj
 	server_id = resp_obj.get("serverId")
-	msg = to_session.delete_server_capability_association_to_server(query_params={"serverId":server_id, "serverCapability":server_capability})
+	msg = to_session.delete_server_capability_association_to_server(query_params={"serverId":server_id, "serverCapability":serverCapability})
 	logger.info("Deleting Server Server Capability data... %s", msg)
 	if msg is None:
 		logger.error("Server Server Capability returned by Traffic Ops is missing a 'server_id' property")
