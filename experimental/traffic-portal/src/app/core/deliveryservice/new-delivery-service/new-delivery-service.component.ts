@@ -31,6 +31,7 @@ import {
 
 import { CDNService, DeliveryServiceService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IPV4, IPV6 } from "src/app/utils";
 
@@ -145,7 +146,8 @@ export class NewDeliveryServiceComponent implements OnInit {
 		private readonly auth: CurrentUserService,
 		private readonly router: Router,
 		private readonly navSvc: NavigationService,
-		@Inject(DOCUMENT) private readonly document: Document
+		@Inject(DOCUMENT) private readonly document: Document,
+		private readonly log: LoggingService,
 	) { }
 
 	/**
@@ -173,7 +175,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 			}
 		);
 		if (!this.auth.currentUser || !this.auth.currentUser.tenantId) {
-			console.error("Cannot set default CDN - user has no tenant");
+			this.log.error("Cannot set default CDN - user has no tenant");
 			return typeP;
 		}
 		const dsP = this.dsAPI.getDeliveryServices().then(
@@ -261,7 +263,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 		try {
 			url = new URL(this.originURL.value ?? "");
 		} catch (e) {
-			console.error("invalid origin URL:", e);
+			this.log.error("invalid origin URL:", e);
 			return;
 		}
 		this.deliveryService.orgServerFqdn = url.origin;
@@ -353,7 +355,7 @@ export class NewDeliveryServiceComponent implements OnInit {
 					try {
 						this.setDNSBypass(this.bypassLoc.value ?? "");
 					} catch (e) {
-						console.error(e);
+						this.log.error("failed to set DNS bypass:", e);
 						const nativeBypassElement = this.document.getElementById("bypass-loc") as HTMLInputElement;
 						nativeBypassElement.setCustomValidity(e instanceof Error ? e.message : String(e));
 						nativeBypassElement.reportValidity();
@@ -370,7 +372,6 @@ export class NewDeliveryServiceComponent implements OnInit {
 
 		this.dsAPI.createDeliveryService(this.deliveryService).then(
 			v => {
-				console.log("New Delivery Service '%s' created", v.displayName);
 				this.router.navigate(["/"], {queryParams: {search: encodeURIComponent(v.displayName)}});
 			}
 		);

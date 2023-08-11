@@ -13,7 +13,9 @@
 */
 import { EventEmitter, Injectable } from "@angular/core";
 import { BehaviorSubject } from "rxjs";
-import { Capability, ResponseCurrentUser } from "trafficops-types";
+import type { Capability, ResponseCurrentUser } from "trafficops-types";
+
+import { LoggingService } from "../logging.service";
 
 /**
  * This is a mock for the {@link CurrentUserService} service for testing.
@@ -57,6 +59,8 @@ export class CurrentUserTestingService {
 	};
 	public permissions: BehaviorSubject<Set<string>> = new BehaviorSubject(new Set(["ALL"]));
 	public readonly loggedIn = true;
+
+	constructor(private readonly log: LoggingService) {}
 
 	/**
 	 * Gets the current user if currentuser is not already set
@@ -132,7 +136,7 @@ export class CurrentUserTestingService {
 	 */
 	public logout(withRedirect?: boolean): void {
 		if (withRedirect) {
-			console.warn("testing service does not navigate!");
+			this.log.warn("testing service does not navigate!");
 		}
 	}
 }

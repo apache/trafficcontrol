@@ -21,6 +21,7 @@ import { LocalizationMethod, localizationMethodToString, TypeFromResponse, type 
 
 import { CacheGroupService, TypeService } from "src/app/api";
 import { DecisionDialogComponent, type DecisionDialogData } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -72,7 +73,8 @@ export class CacheGroupDetailsComponent implements OnInit {
 		private readonly typesAPI: TypeService,
 		private readonly location: Location,
 		private readonly dialog: MatDialog,
-		private readonly navSvc: NavigationService
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
 	) {
 	}
 
@@ -84,7 +86,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 	public async ngOnInit(): Promise<void> {
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
@@ -104,7 +106,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 		await cgsPromise;
 		const idx = this.cacheGroups.findIndex(c => c.id === numID);
 		if (idx < 0) {
-			console.error(`no such Cache Group: #${ID}`);
+			this.log.error(`no such Cache Group: #${ID}`);
 			return;
 		}
 		this.cacheGroup = this.cacheGroups.splice(idx, 1)[0];
@@ -165,7 +167,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 	 */
 	public async delete(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new Cache Group");
+			this.log.error("Unable to delete new Cache Group");
 			return;
 		}
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(
@@ -199,7 +201,7 @@ export class CacheGroupDetailsComponent implements OnInit {
 		}
 		const {value} = this.typeCtrl;
 		if (value === null) {
-			return console.error("cannot create Cache Group of null Type");
+			return this.log.error("cannot create Cache Group of null Type");
 		}
 		this.cacheGroup.typeId = value;
 		this.cacheGroup.shortName = this.cacheGroup.name;

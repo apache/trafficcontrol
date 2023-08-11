@@ -18,6 +18,7 @@ import { ResponseCurrentUser } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
 
@@ -54,7 +55,8 @@ export class CurrentuserComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
 		private readonly navSvc: NavigationService,
-		public readonly themeSvc: ThemeManagerService
+		public readonly themeSvc: ThemeManagerService,
+		private readonly log: LoggingService
 	) {
 		this.currentUser = this.auth.currentUser;
 	}
@@ -141,12 +143,12 @@ export class CurrentuserComponent implements OnInit {
 		if (success) {
 			const updated = await this.auth.updateCurrentUser();
 			if (!updated) {
-				console.warn("Failed to fetch current user after successful update");
+				this.log.warn("Failed to fetch current user after successful update");
 			}
 			this.currentUser = this.auth.currentUser;
 			this.cancelEdit();
 		} else {
-			console.warn("Editing the current user failed");
+			this.log.warn("Editing the current user failed");
 			this.cancelEdit();
 		}
 	}

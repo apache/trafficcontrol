@@ -17,6 +17,7 @@ import { ActivatedRoute } from "@angular/router";
 import { ResponseDeliveryService, ResponseInvalidationJob } from "trafficops-types";
 
 import { DeliveryServiceService, InvalidationJobService } from "src/app/api";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 import {
@@ -51,21 +52,22 @@ export class InvalidationJobsComponent implements OnInit {
 		private readonly jobAPI: InvalidationJobService,
 		private readonly dsAPI: DeliveryServiceService,
 		private readonly dialog: MatDialog,
-		private readonly navSvc: NavigationService
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
 	) {
 		this.jobs = new Array<ResponseInvalidationJob>();
 	}
 
 	/**
 	 * Runs initialization, fetching the jobs and Delivery Service data from
-	 * Traffic Ops and setting the pageload date/time.
+	 * Traffic Ops and setting the date/time on page load.
 	 */
 	public async ngOnInit(): Promise<void> {
 		this.navSvc.headerTitle.next("Loading - Content Invalidation Jobs");
 		this.now = new Date();
 		const idParam = this.route.snapshot.paramMap.get("id");
 		if (!idParam) {
-			console.error("Missing route 'id' parameter");
+			this.log.error("Missing route 'id' parameter");
 			return;
 		}
 		this.dsID = parseInt(idParam, 10);

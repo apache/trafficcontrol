@@ -18,6 +18,7 @@ import { Subject } from "rxjs";
 import { JobType, ResponseInvalidationJob } from "trafficops-types";
 
 import { InvalidationJobService } from "src/app/api";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * Gets the time part of a Date as a string.
@@ -95,7 +96,8 @@ export class NewInvalidationJobDialogComponent {
 	constructor(
 		private readonly dialogRef: MatDialogRef<NewInvalidationJobDialogComponent>,
 		private readonly jobAPI: InvalidationJobService,
-		@Inject(MAT_DIALOG_DATA) data: NewInvalidationJobDialogData
+		@Inject(MAT_DIALOG_DATA) data: NewInvalidationJobDialogData,
+		private readonly log: LoggingService,
 	) {
 		this.job = data.job;
 		if (this.job) {
@@ -152,7 +154,7 @@ export class NewInvalidationJobDialogComponent {
 			await this.jobAPI.updateInvalidationJob(job);
 			this.dialogRef.close(true);
 		} catch (e) {
-			console.error("error:", e);
+			this.log.error(`failed to edit Job #${j.id}:`, e);
 		}
 	}
 
@@ -193,7 +195,7 @@ export class NewInvalidationJobDialogComponent {
 			await this.jobAPI.createInvalidationJob(job);
 			this.dialogRef.close(true);
 		} catch (err) {
-			console.error("error: ", err);
+			this.log.error("failed to create invalidation job: ", err);
 		}
 	}
 

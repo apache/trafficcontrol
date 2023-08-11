@@ -24,9 +24,8 @@ import {
 	DecisionDialogComponent,
 	DecisionDialogData,
 } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
-import {
-	NavigationService
-} from "src/app/shared/navigation/navigation.service";
+import { LoggingService } from "src/app/shared/logging.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * TopologyDetailComponent is the controller for a Topology's "detail" page.
@@ -61,8 +60,8 @@ export class TopologyDetailsComponent implements OnInit {
 		private readonly location: Location,
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
-	) {
-	}
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
@@ -81,7 +80,7 @@ export class TopologyDetailsComponent implements OnInit {
 		await topologiesPromise;
 		const index = this.topologies.findIndex(c => c.name === name);
 		if (index < 0) {
-			console.error(`no such Topology: ${name}`);
+			this.log.error(`no such Topology: ${name}`);
 			this.loading = false;
 			return;
 		}
@@ -116,7 +115,7 @@ export class TopologyDetailsComponent implements OnInit {
 	 */
 	public async delete(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new Topology");
+			this.log.error("Unable to delete new Topology");
 			return;
 		}
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(

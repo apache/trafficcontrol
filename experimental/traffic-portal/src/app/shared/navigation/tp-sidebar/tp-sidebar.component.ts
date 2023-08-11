@@ -20,6 +20,7 @@ import { Router, RouterEvent, Event, NavigationEnd, IsActiveMatchOptions } from 
 import { filter } from "rxjs/operators";
 
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService, TreeNavNode } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -92,10 +93,12 @@ export class TpSidebarComponent implements OnInit, AfterViewInit {
 		return !this.childToParent.has(this.nodeHandle(node));
 	}
 
-	constructor(private readonly navService: NavigationService,
+	constructor(
+		private readonly navService: NavigationService,
 		private readonly route: Router,
-		public readonly user: CurrentUserService) {
-	}
+		public readonly user: CurrentUserService,
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * Adds to childToParent from the given node.
@@ -119,11 +122,11 @@ export class TpSidebarComponent implements OnInit, AfterViewInit {
 		this.navService.sidebarHidden.subscribe(hidden => {
 			if(hidden && this.sidenav.opened) {
 				this.sidenav.close().catch(err => {
-					console.error(`Unable to close sidebar: ${err}`);
+					this.log.error(`Unable to close sidebar: ${err}`);
 				});
 			} else if (!hidden && !this.sidenav.opened) {
 				this.sidenav.open().catch(err => {
-					console.error(`Unable to open sidebar: ${err}`);
+					this.log.error(`Unable to open sidebar: ${err}`);
 				});
 			}
 		});
@@ -157,7 +160,7 @@ export class TpSidebarComponent implements OnInit, AfterViewInit {
 								this.treeCtrl.expand(parent);
 								parent = this.childToParent.get(this.nodeHandle(parent));
 								if(depth++ > 5) {
-									console.error(`Maximum depth ${depth} reached, aborting expand on ${parent?.name ?? "unknown"}`);
+									this.log.error(`Maximum depth ${depth} reached, aborting expand on ${parent?.name ?? "unknown"}`);
 									break;
 								}
 							}

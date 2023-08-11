@@ -29,6 +29,8 @@ import type {
 	ServerQueueResponse,
 } from "trafficops-types";
 
+import { LoggingService } from "../shared/logging.service";
+
 import { APIService } from "./base-api.service";
 
 /**
@@ -37,7 +39,7 @@ import { APIService } from "./base-api.service";
 @Injectable()
 export class ServerService extends APIService {
 
-	constructor(http: HttpClient) {
+	constructor(http: HttpClient, private readonly log: LoggingService) {
 		super(http);
 	}
 
@@ -83,7 +85,7 @@ export class ServerService extends APIService {
 			// This is, unfortunately, possible, despite the many assumptions to
 			// the contrary.
 			if (servers.length > 1) {
-				console.warn(
+				this.log.warn(
 					"Traffic Ops returned",
 					servers.length,
 					`servers with host name '${idOrName}' - selecting the first arbitrarily`

@@ -17,6 +17,7 @@ import { Injectable } from "@angular/core";
 import type { ISORequest, OSVersions } from "trafficops-types";
 
 import { AlertService } from "../shared/alert/alert.service";
+import { LoggingService } from "../shared/logging.service";
 
 import { APIService, hasAlerts } from "./base-api.service";
 
@@ -29,7 +30,7 @@ import { APIService, hasAlerts } from "./base-api.service";
 @Injectable()
 export class MiscAPIsService extends APIService{
 
-	constructor(http: HttpClient, private readonly alertsService: AlertService) {
+	constructor(http: HttpClient, private readonly alertsService: AlertService, private readonly log: LoggingService) {
 		super(http);
 	}
 
@@ -69,7 +70,7 @@ export class MiscAPIsService extends APIService{
 						body.alerts.forEach(a => this.alertsService.newAlert(a));
 					}
 				} catch (innerError) {
-					console.error("during handling request failure, encountered an error trying to parse error-level alerts:", innerError);
+					this.log.error("during handling request failure, encountered an error trying to parse error-level alerts:", innerError);
 				}
 				throw new Error(`POST isos failed with status ${e.status} ${e.statusText}`);
 			}
@@ -79,7 +80,7 @@ export class MiscAPIsService extends APIService{
 			throw new Error(`POST isos returned no response body - ${response.status} ${response.statusText}`);
 		}
 		if (response.body.type !== "application/octet-stream") {
-			console.warn("data returned by TO for ISO generation is of unrecognized MIME type", response.body.type);
+			this.log.warn("data returned by TO for ISO generation is of unrecognized MIME type", response.body.type);
 		}
 		return response.body;
 	}

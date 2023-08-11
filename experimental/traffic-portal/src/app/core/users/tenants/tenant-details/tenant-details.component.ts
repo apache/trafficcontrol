@@ -18,6 +18,7 @@ import { RequestTenant, ResponseTenant, Tenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { TreeData } from "src/app/models";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * TenantsDetailsComponent is the controller for the tenant add/edit form.
@@ -33,8 +34,12 @@ export class TenantDetailsComponent implements OnInit {
 	public tenants = new Array<ResponseTenant>();
 	public displayTenant: TreeData;
 
-	constructor(private readonly route: ActivatedRoute, private readonly userService: UserService,
-		private readonly location: Location) {
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly userService: UserService,
+		private readonly location: Location,
+		private readonly log: LoggingService,
+	) {
 		this.displayTenant = {
 			children: [],
 			id: -1,
@@ -50,7 +55,7 @@ export class TenantDetailsComponent implements OnInit {
 	public update(evt: TreeData): void {
 		const tenant = this.tenants.find(t => t.id === evt.id);
 		if (tenant === undefined) {
-			console.error(`Unknown tenant selected ${evt.id}`);
+			this.log.error(`Unknown tenant selected ${evt.id}`);
 			return;
 		}
 		this.tenant.parentId = tenant.id;
@@ -102,7 +107,7 @@ export class TenantDetailsComponent implements OnInit {
 	public async ngOnInit(): Promise<void> {
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
@@ -119,12 +124,12 @@ export class TenantDetailsComponent implements OnInit {
 		}
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
-			console.error("route parameter 'id' was non-number:", ID);
+			this.log.error("route parameter 'id' was non-number:", ID);
 			return;
 		}
 		const tenant = this.tenants.find(t => t.id === numID);
 		if (!tenant) {
-			console.error(`Unable to find tenant with id ${numID}`);
+			this.log.error(`Unable to find tenant with id ${numID}`);
 			return;
 		}
 		this.tenant = tenant;
@@ -155,7 +160,7 @@ export class TenantDetailsComponent implements OnInit {
 	 */
 	public async deleteTenant(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new tenant");
+			this.log.error("Unable to delete new tenant");
 			return;
 		}
 		await this.userService.deleteTenant((this.tenant as ResponseTenant).id);

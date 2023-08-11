@@ -15,6 +15,8 @@ import { Component, OnDestroy } from "@angular/core";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { Subscription } from "rxjs";
 
+import { LoggingService } from "../logging.service";
+
 import { AlertService } from "./alert.service";
 
 /**
@@ -33,12 +35,10 @@ export class AlertComponent implements OnDestroy {
 	/** The duration for which Alerts will linger until dismissed. `undefined` means forever. */
 	public duration: number | undefined = 10000;
 
-	/**
-	 * Constructor.
-	 */
 	constructor(
 		private readonly alerts: AlertService,
-		private readonly snackBar: MatSnackBar
+		private readonly snackBar: MatSnackBar,
+		log: LoggingService
 	) {
 		this.subscription = this.alerts.alerts.subscribe(
 			a => {
@@ -48,23 +48,23 @@ export class AlertComponent implements OnDestroy {
 					}
 					switch (a.level) {
 						case "success":
-							console.log("alert: ", a.text);
+							log.debug("alert:", a.text);
 							break;
 						case "info":
-							console.log("alert: ", a.text);
+							log.info("alert:", a.text);
 							break;
 						case "warning":
-							console.warn("alert: ", a.text);
+							log.warn("alert:", a.text);
 							break;
 						case "error":
-							console.error("alert: ", a.text);
+							log.error("alert:", a.text);
 							break;
 					}
 					this.snackBar.open(a.text, "dismiss", {duration: this.duration, verticalPosition: "top"});
 				}
 			},
 			e => {
-				console.error("Error in alerts subscription:", e);
+				log.error("Error in alerts subscription:", e);
 			}
 		);
 	}

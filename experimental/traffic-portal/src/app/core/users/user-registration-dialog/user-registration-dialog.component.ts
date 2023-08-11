@@ -17,6 +17,7 @@ import { ResponseRole, ResponseTenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * Controller for a dialog that opens to register a new user.
@@ -38,7 +39,8 @@ export class UserRegistrationDialogComponent implements OnInit {
 	constructor(
 		private readonly userService: UserService,
 		private readonly auth: CurrentUserService,
-		private readonly dialogRef: MatDialogRef<UserRegistrationDialogComponent>
+		private readonly dialogRef: MatDialogRef<UserRegistrationDialogComponent>,
+		private readonly log: LoggingService,
 	) { }
 
 	/**
@@ -81,7 +83,7 @@ export class UserRegistrationDialogComponent implements OnInit {
 			await this.userService.registerUser(this.email, this.role, this.tenant);
 			this.dialogRef.close();
 		} catch (err) {
-			console.error("failed to register user:", err);
+			this.log.error("failed to register user:", err);
 		}
 	}
 }

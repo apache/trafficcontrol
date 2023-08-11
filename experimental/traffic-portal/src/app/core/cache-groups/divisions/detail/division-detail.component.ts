@@ -19,6 +19,7 @@ import { ResponseDivision } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -32,8 +33,14 @@ export class DivisionDetailComponent implements OnInit {
 	public new = false;
 	public division!: ResponseDivision;
 
-	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService) { }
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly cacheGroupService: CacheGroupService,
+		private readonly location: Location,
+		private readonly dialog: MatDialog,
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
@@ -41,7 +48,7 @@ export class DivisionDetailComponent implements OnInit {
 	public async ngOnInit(): Promise<void> {
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
@@ -57,7 +64,7 @@ export class DivisionDetailComponent implements OnInit {
 		}
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
-			console.error("route parameter 'id' was non-number:", ID);
+			this.log.error("route parameter 'id' was non-number:", ID);
 			return;
 		}
 
@@ -70,7 +77,7 @@ export class DivisionDetailComponent implements OnInit {
 	 */
 	public async deleteDivision(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new division");
+			this.log.error("Unable to delete new division");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {

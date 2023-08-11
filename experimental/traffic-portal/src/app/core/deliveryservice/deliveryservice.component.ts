@@ -20,6 +20,7 @@ import { AlertLevel, ResponseDeliveryService } from "trafficops-types";
 import { DeliveryServiceService } from "src/app/api";
 import type { DataPoint, DataSet } from "src/app/models";
 import { AlertService } from "src/app/shared/alert/alert.service";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -77,14 +78,12 @@ export class DeliveryserviceComponent implements OnInit {
 	/** The size of each single interval for data grouping, in seconds. */
 	private bucketSize = 300;
 
-	/**
-	 * Constructor.
-	 */
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly api: DeliveryServiceService,
 		private readonly alerts: AlertService,
-		private readonly navSvc: NavigationService
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
 	) {
 		this.bandwidthData.next([{
 			backgroundColor: "#BA3C57",
@@ -116,7 +115,7 @@ export class DeliveryserviceComponent implements OnInit {
 
 		const DSID = this.route.snapshot.paramMap.get("id");
 		if (!DSID) {
-			console.error("Missing route 'id' parameter");
+			this.log.error("Missing route 'id' parameter");
 			return;
 		}
 
@@ -185,7 +184,7 @@ export class DeliveryserviceComponent implements OnInit {
 			data = await this.api.getDSKBPS(xmlID, this.from, this.to, interval, false, true);
 		} catch (e) {
 			this.alerts.newAlert(AlertLevel.WARNING, "Edge-Tier bandwidth data not found!");
-			console.error(`Failed to get edge KBPS data for '${xmlID}':`, e);
+			this.log.error(`Failed to get edge KBPS data for '${xmlID}':`, e);
 			return;
 		}
 
@@ -232,7 +231,7 @@ export class DeliveryserviceComponent implements OnInit {
 				]);
 			},
 			e => {
-				console.error(`Failed to get edge TPS data for '${this.deliveryservice.xmlId}':`, e);
+				this.log.error(`Failed to get edge TPS data for '${this.deliveryservice.xmlId}':`, e);
 				this.alerts.newAlert(AlertLevel.WARNING, "Edge-Tier transaction data not found!");
 			}
 		);

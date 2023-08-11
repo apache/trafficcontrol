@@ -19,6 +19,7 @@ import { pki } from "node-forge";
 import { type ResponseDeliveryServiceSSLKey } from "trafficops-types";
 
 import { DeliveryServiceService } from "src/app/api";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * What type of cert is it
@@ -63,8 +64,9 @@ export class CertViewerComponent implements OnInit {
 	constructor(
 		private readonly route: ActivatedRoute,
 		private readonly dsAPI: DeliveryServiceService,
-		private readonly router: Router) {
-	}
+		private readonly router: Router,
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * newCert creates a cert from an input string.
@@ -77,7 +79,7 @@ export class CertViewerComponent implements OnInit {
 		try {
 			return pki.certificateFromPem(input) as AugmentedCertificate;
 		} catch (e) {
-			console.error(`ran into issue creating certificate from input ${input}`, e);
+			this.log.error(`ran into issue creating certificate from input ${input}`, e);
 			return NULL_CERT;
 		}
 	}
@@ -143,7 +145,7 @@ export class CertViewerComponent implements OnInit {
 				rootFirst = false;
 			} else {
 				invalid = true;
-				console.error(`Cert chain is invalid, cert ${i-1} and ${i} are not related`);
+				this.log.error(`Cert chain is invalid, cert ${i-1} and ${i} are not related`);
 			}
 		}
 

@@ -24,5 +24,11 @@ if (environment.production) {
 
 document.addEventListener("DOMContentLoaded", () => {
 	platformBrowserDynamic().bootstrapModule(AppModule)
+		// Bootstrap failures will not be combined with logging service
+		// messages, because in that case no logging service could have been
+		// initialized. Therefore, consistency is unbroken, and for ease of
+		// debugging it's probably best not to mess with the format of Angular
+		// framework errors anyhow.
+		// eslint-disable-next-line no-console
 		.catch(err => console.error(err));
 });
