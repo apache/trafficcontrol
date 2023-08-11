@@ -16,6 +16,7 @@ import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import type { ResponseServer, ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api/server.service";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * UpdateStatusComponent is the controller for the "Update Server Status" dialog box.
@@ -53,10 +54,12 @@ export class UpdateStatusComponent implements OnInit {
 		return `${len} servers`;
 	}
 
-	/** Constructor. */
-	constructor(private readonly dialogRef: MatDialogRef<UpdateStatusComponent>,
+	constructor(
+		private readonly dialogRef: MatDialogRef<UpdateStatusComponent>,
 		@Inject(MAT_DIALOG_DATA) private readonly dialogServers: Array<ResponseServer>,
-		private readonly api: ServerService) {
+		private readonly api: ServerService,
+		private readonly log: LoggingService,
+	) {
 		this.servers = this.dialogServers;
 	}
 
@@ -70,7 +73,7 @@ export class UpdateStatusComponent implements OnInit {
 			}
 		).catch(
 			e => {
-				console.error("Failed to get Statuses:", e);
+				this.log.error("Failed to get Statuses:", e);
 			}
 		);
 		if (this.servers.length < 1) {
@@ -110,7 +113,7 @@ export class UpdateStatusComponent implements OnInit {
 			await Promise.all(observables);
 			this.dialogRef.close(true);
 		} catch (err) {
-			console.error("something went wrong trying to update", this.serverName, "servers:", err);
+			this.log.error("something went wrong trying to update", this.serverName, "servers:", err);
 			this.dialogRef.close(false);
 		}
 	}

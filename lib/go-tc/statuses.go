@@ -19,12 +19,35 @@ package tc
  * under the License.
  */
 
+import "time"
+
+// StatusResponseV5 is the type of a response from the
+// /api/5.x/statuses Traffic Ops endpoint.
+// It always points to the type for the latest minor version of APIv5.
+type StatusesResponseV5 = StatusesResponseV50
+
+// StatusesResponseV50 is a list of Statuses as a response that depicts the state
+// of a server.
+type StatusesResponseV50 struct {
+	// in: body
+	Response []StatusV50 `json:"response"`
+	Alerts
+}
+
 // StatusesResponse is a list of Statuses as a response that depicts the state
 // of a server.
 // swagger:response StatusesResponse
 type StatusesResponse struct {
 	// in: body
 	Response []Status `json:"response"`
+	Alerts
+}
+
+// StatusResponseV5 is the type of a response for API endponts
+// returning a single Status in Traffic Ops API version 5.
+type StatusResponseV5 struct {
+	// in: body
+	Response StatusV5 `json:"response"`
 	Alerts
 }
 
@@ -60,6 +83,19 @@ type Status struct {
 
 	// enum: ["OFFLINE", "ONLINE", "ADMIN_DOWN", "REPORTED", "CCR_IGNORE", "PRE_PROD"]
 	Name string `json:"name" db:"name"`
+}
+
+// StatusV5 is a Status as it appears in version 5 of the
+// Traffic Ops API - it always points to the highest minor version in APIv5.
+type StatusV5 = StatusV50
+
+// StatusNullableV5 is a nullable single Status response for Update and Create to
+// depict what changed.
+type StatusV50 struct {
+	Description *string    `json:"description" db:"description"`
+	ID          *int       `json:"id" db:"id"`
+	LastUpdated *time.Time `json:"lastUpdated" db:"last_updated"`
+	Name        *string    `json:"name" db:"name"`
 }
 
 // StatusNullable is a nullable single Status response for Update and Create to

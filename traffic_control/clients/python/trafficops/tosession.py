@@ -1617,6 +1617,39 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	#
+	# Server_server_capabilities
+	#
+	@api_request('get', 'server_server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def get_server_server_capabilities(self, query_params=None):
+		"""
+		Gets all associations of Server Capabilities to cache servers.
+		:ref:`to-api-server_server_capabilities`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+
+	@api_request('post', 'server_server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def associate_server_capability_to_server(self, data=None):
+		"""
+		Associate server capability to server.
+		:ref:`to-api-server_server_capabilities`
+		:param query_params: 'serverId' is a required parameter, identifying which server to associate server capability.
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'server_server_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_server_capability_association_to_server(self, query_params=None):
+		"""
+		Deletes an association of server capability to a server.
+		:ref:`to-api-server_server_capabilities`
+		:param query_params: 'serverId' is a required parameter, identifying where server capability association is being deleted.
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 
 	#
 	# Physical Location

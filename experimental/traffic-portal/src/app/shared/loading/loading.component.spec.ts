@@ -37,10 +37,6 @@ describe("LoadingComponent", () => {
 	});
 
 	afterAll(() => {
-		try{
-			TestBed.resetTestingModule();
-		} catch (e) {
-			console.error("error in LoadingComponent afterAll:", e);
-		}
+		TestBed.resetTestingModule();
 	});
 });

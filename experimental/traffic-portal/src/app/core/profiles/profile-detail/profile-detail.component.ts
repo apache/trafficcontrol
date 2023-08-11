@@ -19,6 +19,7 @@ import { ProfileType, ResponseCDN, ResponseProfile } from "trafficops-types";
 
 import { CDNService, ProfileService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -59,23 +60,14 @@ export class ProfileDetailComponent implements OnInit {
 		{ value: "GROVE_PROFILE" }
 	];
 
-	/**
-	 * Constructor.
-	 *
-	 * @param api The Profiles API which is used to provide functions for create, edit and delete profiles.
-	 * @param cdnService The CDN service API which is used to provide cdns.
-	 * @param dialog Dialog manager
-	 * @param navSvc Manages the header
-	 * @param route A reference to the route of this view which is used to get the 'id' query parameter of profile.
-	 * @param router Angular router
-	 */
 	constructor(
 		private readonly api: ProfileService,
 		private readonly cdnService: CDNService,
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
 		private readonly route: ActivatedRoute,
-		private readonly router: Router
+		private readonly router: Router,
+		private readonly log: LoggingService,
 	) { }
 
 	/**
@@ -133,7 +125,7 @@ export class ProfileDetailComponent implements OnInit {
 	 */
 	public async deleteProfile(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new profile");
+			this.log.error("Unable to delete new profile");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {

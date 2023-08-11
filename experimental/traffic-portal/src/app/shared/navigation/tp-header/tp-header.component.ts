@@ -13,8 +13,9 @@
 */
 import {Component, OnInit} from "@angular/core";
 
-import {HeaderNavigation, HeaderNavType, NavigationService} from "src/app/shared/navigation/navigation.service";
-import {ThemeManagerService} from "src/app/shared/theme-manager/theme-manager.service";
+import { LoggingService } from "src/app/shared/logging.service";
+import { HeaderNavigation, HeaderNavType, NavigationService } from "src/app/shared/navigation/navigation.service";
+import { ThemeManagerService } from "src/app/shared/theme-manager/theme-manager.service";
 
 /**
  * TpHeaderComponent is the controller for the standard Traffic Portal header.
@@ -58,8 +59,11 @@ export class TpHeaderComponent implements OnInit {
 		});
 	}
 
-	constructor(public readonly themeSvc: ThemeManagerService, private readonly headerSvc: NavigationService) {
-	}
+	constructor(
+		public readonly themeSvc: ThemeManagerService,
+		private readonly headerSvc: NavigationService,
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * Calls a navs click function, throws an error if null
@@ -82,7 +86,7 @@ export class TpHeaderComponent implements OnInit {
 	 */
 	public navRouterLink(nav: HeaderNavigation): string {
 		if(nav.routerLink === undefined) {
-			console.error(`nav ${nav.text} does not have a routerLink`);
+			this.log.error(`nav ${nav.text} does not have a routerLink`);
 			return "";
 		}
 		return nav.routerLink;

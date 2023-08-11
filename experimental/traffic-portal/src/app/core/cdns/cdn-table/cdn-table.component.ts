@@ -31,6 +31,7 @@ import type {
 	ContextMenuItem,
 	DoubleClickLink
 } from "src/app/shared/generic-table/generic-table.component";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * CDNTableComponent is the controller for the "CDNs" table.
@@ -164,6 +165,7 @@ export class CDNTableComponent implements OnInit {
 		public readonly auth: CurrentUserService,
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,
+		private readonly log: LoggingService,
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.cdns = this.api.getCDNs();
@@ -250,27 +252,27 @@ export class CDNTableComponent implements OnInit {
 		switch (a.action) {
 			case "queue":
 				if (Array.isArray(a.data)) {
-					console.error("cannot queue multiple cdns at once:", a.data);
+					this.log.error("cannot queue multiple cdns at once:", a.data);
 					return;
 				}
 				this.queueUpdates(a.data);
 				break;
 			case "dequeue":
 				if (Array.isArray(a.data)) {
-					console.error("cannot dequeue multiple cdns at once:", a.data);
+					this.log.error("cannot dequeue multiple cdns at once:", a.data);
 					return;
 				}
 				this.queueUpdates(a.data, false);
 				break;
 			case "delete":
 				if (Array.isArray(a.data)) {
-					console.error("cannot delete multiple cdns at once:", a.data);
+					this.log.error("cannot delete multiple cdns at once:", a.data);
 					return;
 				}
 				this.delete(a.data);
 				break;
 			default:
-				console.error("unrecognized context menu action:", a.action);
+				this.log.error("unrecognized context menu action:", a.action);
 		}
 	}
 }

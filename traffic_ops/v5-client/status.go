@@ -26,14 +26,14 @@ import (
 const apiStatuses = "/statuses"
 
 // CreateStatus creates the given Status.
-func (to *Session) CreateStatus(status tc.StatusNullable, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateStatus(status tc.StatusV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiStatuses, opts, status, &alerts)
 	return alerts, reqInf, err
 }
 
 // UpdateStatus replaces the Status identified by 'id' with the one provided.
-func (to *Session) UpdateStatus(id int, status tc.Status, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateStatus(id int, status tc.StatusV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiStatuses, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, status, &alerts)

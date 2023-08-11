@@ -19,6 +19,7 @@ import { ResponseRole } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -39,10 +40,15 @@ export class RoleDetailComponent implements OnInit {
 	 */
 	private name = "";
 
-	constructor(private readonly route: ActivatedRoute, private readonly router: Router,
-		private readonly userService: UserService, private readonly location: Location,
-		private readonly dialog: MatDialog, private readonly header: NavigationService) {
-	}
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly router: Router,
+		private readonly userService: UserService,
+		private readonly location: Location,
+		private readonly dialog: MatDialog,
+		private readonly header: NavigationService,
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * Angular lifecycle hook where data is initialized.
@@ -82,7 +88,7 @@ export class RoleDetailComponent implements OnInit {
 	 */
 	public async deleteRole(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new role");
+			this.log.error("Unable to delete new role");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {

@@ -96,8 +96,7 @@
 					"error",
 					{
 						"allow": [
-							"log",
-							"warn",
+							"trace",
 							"dir",
 							"timeLog",
 							"assert",
@@ -107,8 +106,6 @@
 							"group",
 							"groupEnd",
 							"table",
-							"dirxml",
-							"error",
 							"groupCollapsed",
 							"Console",
 							"profile",

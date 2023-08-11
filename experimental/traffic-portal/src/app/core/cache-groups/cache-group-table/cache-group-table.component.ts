@@ -39,6 +39,7 @@ import type {
 	ContextMenuItem,
 	DoubleClickLink
 } from "src/app/shared/generic-table/generic-table.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -200,7 +201,8 @@ export class CacheGroupTableComponent implements OnInit {
 		private readonly dialog: MatDialog,
 		private readonly alerts: AlertService,
 		public readonly auth: CurrentUserService,
-		private readonly navSvc: NavigationService
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.cacheGroups = this.api.getCacheGroups();
@@ -292,13 +294,13 @@ export class CacheGroupTableComponent implements OnInit {
 				break;
 			case "delete":
 				if (Array.isArray(a.data)) {
-					console.error("cannot delete multiple cache groups at once:", a.data);
+					this.log.error("cannot delete multiple cache groups at once:", a.data);
 					return;
 				}
 				this.delete(a.data);
 				break;
 			default:
-				console.error("unrecognized context menu action:", a.action);
+				this.log.error("unrecognized context menu action:", a.action);
 		}
 	}
 }

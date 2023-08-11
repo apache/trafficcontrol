@@ -18,19 +18,19 @@ import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
 
 import { APITestingModule } from "src/app/api/testing";
-import { AsnDetailComponent } from "src/app/core/cache-groups/asns/detail/asn-detail.component";
+import { ASNDetailComponent } from "src/app/core/cache-groups/asns/detail/asn-detail.component";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 describe("AsnDetailComponent", () => {
-	let component: AsnDetailComponent;
-	let fixture: ComponentFixture<AsnDetailComponent>;
+	let component: ASNDetailComponent;
+	let fixture: ComponentFixture<ASNDetailComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
 
 	const headerSvc = jasmine.createSpyObj([],{headerHidden: new ReplaySubject<boolean>(), headerTitle: new ReplaySubject<string>()});
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ AsnDetailComponent ],
+			declarations: [ ASNDetailComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ],
 			providers: [ { provide: NavigationService, useValue: headerSvc } ]
 		})
@@ -39,7 +39,7 @@ describe("AsnDetailComponent", () => {
 		route = TestBed.inject(ActivatedRoute);
 		paramMap = spyOn(route.snapshot.paramMap, "get");
 		paramMap.and.returnValue(null);
-		fixture = TestBed.createComponent(AsnDetailComponent);
+		fixture = TestBed.createComponent(ASNDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});
@@ -52,7 +52,7 @@ describe("AsnDetailComponent", () => {
 	it("new asn", async () => {
 		paramMap.and.returnValue("new");
 
-		fixture = TestBed.createComponent(AsnDetailComponent);
+		fixture = TestBed.createComponent(ASNDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();
@@ -65,7 +65,7 @@ describe("AsnDetailComponent", () => {
 	it("existing asn", async () => {
 		paramMap.and.returnValue("1");
 
-		fixture = TestBed.createComponent(AsnDetailComponent);
+		fixture = TestBed.createComponent(ASNDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		await fixture.whenStable();

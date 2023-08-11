@@ -19,6 +19,7 @@ import type { PostRequestUser, ResponseRole, ResponseTenant, ResponseUser, User 
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * UserDetailsComponent is the controller for the page for viewing/editing a
@@ -39,9 +40,9 @@ export class UserDetailsComponent implements OnInit {
 	constructor(
 		private readonly userService: UserService,
 		private readonly route: ActivatedRoute,
-		private readonly currentUserService: CurrentUserService
-	) {
-	}
+		private readonly currentUserService: CurrentUserService,
+		private readonly log: LoggingService
+	) { }
 
 	/** Angular lifecycle hook */
 	public async ngOnInit(): Promise<void> {
@@ -51,7 +52,7 @@ export class UserDetailsComponent implements OnInit {
 		]);
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 		await rolesAndTenants;
@@ -70,7 +71,7 @@ export class UserDetailsComponent implements OnInit {
 		}
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
-			console.error("route parameter 'id' was non-number:", ID);
+			this.log.error("route parameter 'id' was non-number:", ID);
 			return;
 		}
 		this.user = await this.userService.getUsers(numID);

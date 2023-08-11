@@ -23,6 +23,7 @@ import {
 	DecisionDialogComponent,
 	DecisionDialogData,
 } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -50,7 +51,8 @@ export class CDNDetailComponent implements OnInit {
 		private readonly api: CDNService,
 		private readonly location: Location,
 		private readonly dialog: MatDialog,
-		private readonly navSvc: NavigationService
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
 	) {
 	}
 
@@ -60,7 +62,7 @@ export class CDNDetailComponent implements OnInit {
 	public async ngOnInit(): Promise<void> {
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
@@ -78,7 +80,7 @@ export class CDNDetailComponent implements OnInit {
 		await cdnsPromise;
 		const index = this.cdns.findIndex(c => c.id === numID);
 		if (index < 0) {
-			console.error(`no such CDN: #${ID}`);
+			this.log.error(`no such CDN: #${ID}`);
 			return;
 		}
 		this.cdn = this.cdns.splice(index, 1)[0];
@@ -99,7 +101,7 @@ export class CDNDetailComponent implements OnInit {
 	 */
 	public async delete(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new CDN");
+			this.log.error("Unable to delete new CDN");
 			return;
 		}
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(

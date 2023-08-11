@@ -12,6 +12,10 @@
 * limitations under the License.
 */
 
+import { environment } from "src/environments/environment";
+
+import { LogLevel, Logger } from "./logging";
+
 /**
  * Implements a single comparison between two values
  *
@@ -72,6 +76,7 @@ function cmpr(a: unknown, b: unknown): number {
  * @returns The sorted array
  */
 export function orderBy<T extends any>(value: Array<T>, property: string | Array<string>): Array<T> {
+	const logger = new Logger(console, environment.production ? LogLevel.INFO : LogLevel.DEBUG, "orderBy call", false);
 	return value.sort((a: any, b: any) => {
 		/* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -86,11 +91,11 @@ export function orderBy<T extends any>(value: Array<T>, property: string | Array
 
 			let bail = false;
 			if (!Object.prototype.hasOwnProperty.call(a, p)) {
-				console.error("object", a, `has no property "${p}"!`);
+				logger.debug("object", a, `has no property "${p}"!`);
 				bail = true;
 			}
 			if (!Object.prototype.hasOwnProperty.call(b, p)) {
-				console.error("object", b, `has no property "${p}"!`);
+				logger.debug("object", b, `has no property "${p}"!`);
 				bail = true;
 			}
 
@@ -105,7 +110,7 @@ export function orderBy<T extends any>(value: Array<T>, property: string | Array
 			try {
 				result = cmpr(aProp, bProp);
 			} catch (e) {
-				console.error("property", p, "is not the same type on objects", a, "and", b, `! (${e})`);
+				logger.debug("property", p, "is not the same type on objects", a, "and", b, `! (${e})`);
 				return 0;
 			}
 

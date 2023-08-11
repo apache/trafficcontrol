@@ -133,7 +133,10 @@
 					"options": {
 						"outputPath": "dist/traffic-portal/server",
 						"main": "server.ts",
-						"tsConfig": "tsconfig.server.json"
+						"tsConfig": "tsconfig.server.json",
+						"sourceMap": true,
+						"buildOptimizer": false,
+						"optimization": false
 					},
 					"configurations": {
 						"production": {
@@ -145,8 +148,8 @@
 								}
 							],
 							"sourceMap": false,
-              "optimization": true,
-              "buildOptimizer": true
+							"optimization": true,
+							"buildOptimizer": true
 						}
 					}
 				},

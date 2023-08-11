@@ -16,6 +16,7 @@ import { AbstractControl, FormControl, ValidationErrors, ValidatorFn } from "@an
 import { pki, Hex } from "node-forge";
 
 import { oidToName, pkiCertToSHA1, pkiCertToSHA256 } from "src/app/core/certs/cert.util";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * Author contains the information about an author from a cert issuer/subject
@@ -75,6 +76,8 @@ export class CertDetailComponent implements OnChanges {
 	public sha1: Hex = "";
 	public sha256: Hex = "";
 
+	constructor(private readonly log: LoggingService) { }
+
 	/**
 	 * processAttributes converts attributes into an author
 	 *
@@ -86,7 +89,7 @@ export class CertDetailComponent implements OnChanges {
 		for (const attr of attrs) {
 			if (attr.name && attr.value) {
 				if (typeof attr.value !== "string") {
-					console.warn(`Unknown attribute value ${attr.value}`);
+					this.log.warn(`Unknown attribute value ${attr.value}`);
 					continue;
 				}
 				switch (attr.name) {

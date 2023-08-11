@@ -17,20 +17,20 @@ import { MatDialogModule } from "@angular/material/dialog";
 import { RouterTestingModule } from "@angular/router/testing";
 
 import { APITestingModule } from "src/app/api/testing";
-import { AsnsTableComponent } from "src/app/core/cache-groups/asns/table/asns-table.component";
+import { ASNsTableComponent } from "src/app/core/cache-groups/asns/table/asns-table.component";
 
 describe("CacheGroupTableComponent", () => {
-	let component: AsnsTableComponent;
-	let fixture: ComponentFixture<AsnsTableComponent>;
+	let component: ASNsTableComponent;
+	let fixture: ComponentFixture<ASNsTableComponent>;
 
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
-			declarations: [ AsnsTableComponent ],
+			declarations: [ ASNsTableComponent ],
 			imports: [ APITestingModule, RouterTestingModule, MatDialogModule ]
 		})
 			.compileComponents();
 
-		fixture = TestBed.createComponent(AsnsTableComponent);
+		fixture = TestBed.createComponent(ASNsTableComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 	});

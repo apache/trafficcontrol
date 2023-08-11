@@ -19,6 +19,7 @@ import { ResponsePhysicalLocation, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService, PhysicalLocationService } from "src/app/api";
 import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -35,10 +36,15 @@ export class PhysLocDetailComponent implements OnInit {
 	public physLocation!: ResponsePhysicalLocation;
 	public regions!: Array<ResponseRegion>;
 
-	constructor(private readonly route: ActivatedRoute, private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location, private readonly dialog: MatDialog, private readonly navSvc: NavigationService,
-		private readonly physLocService: PhysicalLocationService) {
-	}
+	constructor(
+		private readonly route: ActivatedRoute,
+		private readonly cacheGroupService: CacheGroupService,
+		private readonly location: Location,
+		private readonly dialog: MatDialog,
+		private readonly navSvc: NavigationService,
+		private readonly physLocService: PhysicalLocationService,
+		private readonly log: LoggingService,
+	) { }
 
 	/**
 	 * Angular lifecycle hook.
@@ -47,7 +53,7 @@ export class PhysLocDetailComponent implements OnInit {
 		this.regions = await this.cacheGroupService.getRegions();
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
@@ -74,7 +80,7 @@ export class PhysLocDetailComponent implements OnInit {
 		}
 		const numID = parseInt(ID, 10);
 		if (Number.isNaN(numID)) {
-			console.error("route parameter 'id' was non-number:", ID);
+			this.log.error("route parameter 'id' was non-number:", ID);
 			return;
 		}
 
@@ -87,7 +93,7 @@ export class PhysLocDetailComponent implements OnInit {
 	 */
 	public async deletePhysicalLocation(): Promise<void> {
 		if (this.new) {
-			console.error("Unable to delete new physLocation");
+			this.log.error("Unable to delete new physLocation");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {

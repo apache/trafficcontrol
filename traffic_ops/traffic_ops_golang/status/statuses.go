@@ -35,6 +35,115 @@ import (
 )
 
 // we need a type alias to define functions on
+type TOStatusV5 struct {
+	api.APIInfoImpl `json:"-"`
+	tc.StatusV5
+}
+
+func (v *TOStatusV5) GetLastUpdated() (*time.Time, bool, error) {
+	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "status")
+}
+
+func (v *TOStatusV5) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(last_updated) as t from ` + tableName + ` s ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
+}
+
+func (v *TOStatusV5) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t.Time }
+func (v *TOStatusV5) InsertQuery() string           { return insertQuery() }
+func (v *TOStatusV5) NewReadObj() interface{}       { return &TOStatusV5{} }
+func (v *TOStatusV5) SelectQuery() string           { return selectQuery() }
+func (v *TOStatusV5) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id":          dbhelpers.WhereColumnInfo{Column: "id", Checker: api.IsInt},
+		"description": dbhelpers.WhereColumnInfo{Column: "description"},
+		"name":        dbhelpers.WhereColumnInfo{Column: "name"},
+	}
+}
+func (v *TOStatusV5) UpdateQuery() string { return updateQuery() }
+func (v *TOStatusV5) DeleteQuery() string { return deleteQuery() }
+
+func (status TOStatusV5) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
+}
+
+// Implementation of the Identifier, Validator interface functions
+func (status TOStatusV5) GetKeys() (map[string]interface{}, bool) {
+	if status.ID == nil {
+		return map[string]interface{}{"id": 0}, false
+	}
+	return map[string]interface{}{"id": *status.ID}, true
+}
+
+func (status *TOStatusV5) SetKeys(keys map[string]interface{}) {
+	i, _ := keys["id"].(int) //this utilizes the non panicking type assertion, if the thrown away ok variable is false i will be the zero of the type, 0 here.
+	status.ID = &i
+}
+
+func (status TOStatusV5) GetAuditName() string {
+	if status.Name != nil {
+		return *status.Name
+	}
+	if status.ID != nil {
+		return strconv.Itoa(*status.ID)
+	}
+	return "unknown"
+}
+
+func (status TOStatusV5) GetType() string { return "status" }
+
+func (status TOStatusV5) Validate() (error, error) {
+	errs := validation.Errors{
+		"name": validation.Validate(status.Name, validation.NotNil, validation.Required),
+	}
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
+}
+
+func (st *TOStatusV5) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	errCode := http.StatusOK
+	api.DefaultSort(st.APIInfo(), "name")
+	readVals, userErr, sysErr, errCode, maxTime := api.GenericRead(h, st, useIMS)
+	if userErr != nil || sysErr != nil {
+		return nil, userErr, sysErr, errCode, nil
+	}
+
+	for _, iStatus := range readVals {
+		_, ok := iStatus.(*TOStatusV5)
+		if !ok {
+			return nil, nil, fmt.Errorf("TOStatusV5.Read: api.GenericRead returned unexpected type %T\n", iStatus), http.StatusInternalServerError, nil
+		}
+	}
+
+	return readVals, nil, nil, errCode, maxTime
+}
+
+func (st *TOStatusV5) Update(h http.Header) (error, error, int) {
+	var statusName string
+	err := st.APIInfo().Tx.QueryRow(`SELECT name from status WHERE id = $1`, *st.ID).Scan(&statusName)
+	if err != nil {
+		return nil, fmt.Errorf("error querying status name from ID: %w", err), http.StatusInternalServerError
+	}
+	if tc.IsReservedStatus(statusName) {
+		return fmt.Errorf("cannot modify %s status", statusName), nil, http.StatusForbidden
+	}
+	return api.GenericUpdate(h, st)
+}
+func (st *TOStatusV5) Create() (error, error, int) { return api.GenericCreate(st) }
+func (st *TOStatusV5) Delete() (error, error, int) {
+	var statusName string
+	err := st.APIInfo().Tx.QueryRow(`SELECT name from status WHERE id = $1`, *st.ID).Scan(&statusName)
+	if err != nil {
+		return nil, fmt.Errorf("error querying status name from ID: %w", err), http.StatusInternalServerError
+	}
+	if tc.IsReservedStatus(statusName) {
+		return fmt.Errorf("cannot delete %s status", statusName), nil, http.StatusForbidden
+	}
+	return api.GenericDelete(st)
+}
+
+// we need a type alias to define functions on
 type TOStatus struct {
 	api.APIInfoImpl `json:"-"`
 	tc.StatusNullable
