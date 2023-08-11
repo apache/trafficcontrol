@@ -1094,7 +1094,7 @@ def server_data_post(to_session: TOSession, request_template_data: list[JSONData
 				      {"useInTable": "server"})
 	type_id = type_object["id"]
 	edge_type_id = pytestconfig.cache.get("edgeTypeId", default=None)
-	logger.info("Here %s", edge_type_id)
+
 	if edge_type_id:
 		server["typeId"] = edge_type_id
 	else:
