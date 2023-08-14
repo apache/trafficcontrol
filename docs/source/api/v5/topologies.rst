@@ -51,7 +51,7 @@ Request Structure
 Response Structure
 ------------------
 :description:           A short sentence that describes the :term:`Topology`.
-:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
+:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
 :name:                  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the :term:`Topology`
 
@@ -142,7 +142,7 @@ Response Structure
 						]
 					}
 				],
-				"lastUpdated": "2020-04-13 17:12:34+00"
+				"lastUpdated": "2020-04-13T17:12:34-06:00"
 			}
 		]
 	}
@@ -248,7 +248,7 @@ Request Structure
 Response Structure
 ------------------
 :description:           A short sentence that describes the topology.
-:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
+:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
 :name:                  The name of the topology. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the :term:`Topology`
 
@@ -344,7 +344,7 @@ Response Structure
 					]
 				}
 			],
-			"lastUpdated": "2020-04-13 17:12:34+00"
+			"lastUpdated": "2020-04-13T17:12:34-06:00"
 		}
 	}
 
@@ -449,7 +449,7 @@ Request Structure
 Response Structure
 ------------------
 :description:           A short sentence that describes the :term:`Topology`.
-:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in ISO-like format
+:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
 :name:                  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
 :nodes:                 An array of nodes in the :term:`Topology`
 
@@ -537,7 +537,7 @@ Response Structure
 					]
 				}
 			],
-			"lastUpdated": "2020-04-13 17:33:13+00"
+			"lastUpdated": "2020-04-13T17:33:13-06:00"
 		}
 	}
 
