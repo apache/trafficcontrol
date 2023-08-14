@@ -62,6 +62,7 @@ type Cfg struct {
 	DefaultTLSVersions []atscfg.TLSVersion
 	Version            string
 	GitRevision        string
+	Cache              string
 }
 
 func (cfg Cfg) ErrorLog() log.LogLocation   { return log.LogLocation(cfg.LogLocationErr) }
@@ -88,6 +89,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	atsVersion := getopt.StringLong("ats-version", 'a', "", "The ATS version, e.g. 9.1.2-42.abc123.el7.x86_64. If omitted, generation will attempt to get the ATS version from the Server Parameters, and fall back to lib/go-atscfg.DefaultATSVersion")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
 	silentPtr := getopt.BoolLong("silent", 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
+	cache := getopt.StringLong("cache", 'C', "ats", "Cache server type. Generate configuration files for specific cache server type, e.g. 'ats', 'varnish'.")
 
 	const useStrategiesFlagName = "use-strategies"
 	const defaultUseStrategies = t3cutil.UseStrategiesFlagFalse
@@ -185,6 +187,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		GitRevision:        gitRevision,
 		UseStrategies:      t3cutil.UseStrategiesFlag(*useStrategiesPtr),
 		GoDirect:           *goDirectPtr,
+		Cache:              *cache,
 	}
 	if err := log.InitCfg(cfg); err != nil {
 		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")

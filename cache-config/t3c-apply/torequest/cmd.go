@@ -72,6 +72,7 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	args := []string{
 		`generate`,
 		"--dir=" + cfg.TsConfigDir,
+		"--cache=" + cfg.CacheType,
 	}
 
 	if cfg.LogLocationErr == log.LogLocationNull {
