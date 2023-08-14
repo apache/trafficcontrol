@@ -78,9 +78,9 @@ initBuildArea() {
 buildRpmGrove() {
 	# build
 	ldflags='-s -w'
-	tags='osusergo netgo'
+	export CGO_ENABLED=0
 	go mod vendor -v || { echo "Failed to vendor go dependencies: $?" >&2; return 1; }
-	go build -v -ldflags "${ldflags} -X main.Version=$GROVE_VERSION" -tags "$tags" || { echo "Failed to build $PACKAGE: $?" >&2; return 1; }
+	go build -v -ldflags "${ldflags} -X main.Version=$GROVE_VERSION" || { echo "Failed to build $PACKAGE: $?" >&2; return 1; }
 
 	# tar
 	tar -cvzf "${RPMBUILD}/SOURCES/${PACKAGE}-${GROVE_VERSION}.tgz" ${PACKAGE}|| { echo "Failed to create archive for rpmbuild: $?" >&2; return 1; }

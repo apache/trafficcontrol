@@ -18,11 +18,6 @@
 # alpine:3.13
 FROM alpine@sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
 
-RUN architecture=$(uname -m) && \
-    mkdir lib64 && \
-    # Use musl libc where the go binary expects glibc
-    # Less-generalized: ln -s /lib/ld-musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
-    ln -s /lib/ld-musl-${architecture}.so.[0-9] /lib64/ld-linux-${architecture//_/-}.so.2
 ENV GOROOT=/usr/local/go \
     CGO_ENABLED=0
 

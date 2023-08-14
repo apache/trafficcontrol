@@ -21,6 +21,7 @@ FROM alpine:3.13 AS base
 
 COPY --from=get-go /usr/local/go /usr/local/go
 ENV PATH=/usr/local/go/bin:${PATH} \
+    CGO_ENABLED=0 \
     GOPATH=/go
 
 RUN set -o errexit; \

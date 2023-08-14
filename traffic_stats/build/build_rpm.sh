@@ -57,25 +57,25 @@ initBuildArea() {
 	cd "$TS_DIR" || \
 		 { echo "Could not cd to $TS_DIR: $?"; return 1; }
 
-				echo "PATH: $PATH"
-				echo "GOPATH: $GOPATH"
-				go version
-				go env
-				tags='osusergo netgo'
+	echo "PATH: $PATH"
+	echo "GOPATH: $GOPATH"
+	go version
+	go env
+	export CGO_ENABLED=0
 
-				# get x/* packages (everything else should be properly vendored)
-				go mod vendor -v || \
-								{ echo "Could not vendor go module dependencies"; return 1; }
+	# get x/* packages (everything else should be properly vendored)
+	go mod vendor -v || \
+					{ echo "Could not vendor go module dependencies"; return 1; }
 
-				# compile traffic_stats
-				go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags "$tags" || \
-								{ echo "Could not build traffic_stats binary"; return 1; }
+	# compile traffic_stats
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" || \
+					{ echo "Could not build traffic_stats binary"; return 1; }
 
 	# compile influx_db_tools
 	(cd influxdb_tools
-	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags="$tags" sync/sync_ts_databases.go || \
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" sync/sync_ts_databases.go || \
 								{ echo "Could not build sync_ts_databases binary"; return 1; }
-	go build -v -gcflags "$gcflags" -ldflags "$ldflags" -tags="$tags" create/create_ts_databases.go || \
+	go build -v -gcflags "$gcflags" -ldflags "$ldflags" create/create_ts_databases.go || \
 								{ echo "Could not build create_ts_databases binary"; return 1; })
 
 	rsync -aLv ./ "$ts_dest"/ || \
