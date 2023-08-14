@@ -469,13 +469,13 @@ func TestTopologies(t *testing.T) {
 					topology := testCase.RequestBody
 
 					switch method {
-					//case "GET", "GET AFTER CHANGES":
-					//	t.Run(name, func(t *testing.T) {
-					//		resp, reqInf, err := testCase.ClientSession.GetTopologies(testCase.RequestOpts)
-					//		for _, check := range testCase.Expectations {
-					//			check(t, reqInf, resp.Response, resp.Alerts, err)
-					//		}
-					//	})
+					case "GET", "GET AFTER CHANGES":
+						t.Run(name, func(t *testing.T) {
+							resp, reqInf, err := testCase.ClientSession.GetTopologies(testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.CreateTopology(topology, testCase.RequestOpts)
@@ -483,28 +483,28 @@ func TestTopologies(t *testing.T) {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
-					//case "PUT":
-					//	t.Run(name, func(t *testing.T) {
-					//		if _, ok := testCase.RequestOpts.QueryParameters["name"]; !ok {
-					//			t.Fatalf("Query Parameter: \"name\" is required for PUT method tests.")
-					//		}
-					//		resp, reqInf, err := testCase.ClientSession.UpdateTopology(testCase.RequestOpts.QueryParameters["name"][0], topology, testCase.RequestOpts)
-					//		for _, check := range testCase.Expectations {
-					//			check(t, reqInf, resp.Response, resp.Alerts, err)
-					//		}
-					//	})
-					//case "DELETE":
-					//	t.Run(name, func(t *testing.T) {
-					//		if _, ok := testCase.RequestOpts.QueryParameters["name"]; !ok {
-					//			t.Fatalf("Query Parameter: \"name\" is required for DELETE method tests.")
-					//		}
-					//		alerts, reqInf, err := testCase.ClientSession.DeleteTopology(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestOpts)
-					//		for _, check := range testCase.Expectations {
-					//			check(t, reqInf, nil, alerts, err)
-					//		}
-					//	})
+					case "PUT":
+						t.Run(name, func(t *testing.T) {
+							if _, ok := testCase.RequestOpts.QueryParameters["name"]; !ok {
+								t.Fatalf("Query Parameter: \"name\" is required for PUT method tests.")
+							}
+							resp, reqInf, err := testCase.ClientSession.UpdateTopology(testCase.RequestOpts.QueryParameters["name"][0], topology, testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, resp.Response, resp.Alerts, err)
+							}
+						})
+					case "DELETE":
+						t.Run(name, func(t *testing.T) {
+							if _, ok := testCase.RequestOpts.QueryParameters["name"]; !ok {
+								t.Fatalf("Query Parameter: \"name\" is required for DELETE method tests.")
+							}
+							alerts, reqInf, err := testCase.ClientSession.DeleteTopology(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestOpts)
+							for _, check := range testCase.Expectations {
+								check(t, reqInf, nil, alerts, err)
+							}
+						})
 					default:
-						//t.Errorf("Method: %s, is not a valid test method.", method)
+						t.Errorf("Method: %s, is not a valid test method.", method)
 					}
 				}
 			})
@@ -515,7 +515,7 @@ func TestTopologies(t *testing.T) {
 func validateTopologiesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Topology response to not be nil.")
-		topologyResp := resp.([]tc.Topology)
+		topologyResp := resp.([]tc.TopologyV5)
 		for field, expected := range expectedResp {
 			for _, topology := range topologyResp {
 				switch field {
@@ -534,8 +534,8 @@ func validateTopologiesFields(expectedResp map[string]interface{}) utils.CkReqFu
 func validateTopologiesUpdateCreateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Topology response to not be nil.")
-		topology := resp.(tc.Topology)
-		topologyResp := []tc.Topology{topology}
+		topology := resp.(tc.TopologyV5)
+		topologyResp := []tc.TopologyV5{topology}
 		validateTopologiesFields(expectedResp)(t, toclientlib.ReqInf{}, topologyResp, tc.Alerts{}, nil)
 	}
 }

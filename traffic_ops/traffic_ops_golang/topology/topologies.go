@@ -547,7 +547,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, statusCode := addNodes(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := addNodes(tx, topology.Name, &topology); userErr != nil || sysErr != nil {
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 			return
@@ -847,12 +847,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userErr, sysErr, statusCode := setTopologyDetails(tx, &topology); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := setTopologyDetails(tx, &topology, oldTopology.Name); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 
-	if userErr, sysErr, statusCode := addNodes(tx, topology.Name, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode := addNodes(tx, topology.Name, &topology); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
@@ -989,10 +989,10 @@ func (topology *TOTopology) addNodes() (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func addNodes(tx *sql.Tx, name string, nodes []tc.TopologyNodeV5) (error, error, int) {
+func addNodes(tx *sql.Tx, name string, topology *tc.TopologyV5) (error, error, int) {
 	var cachegroupsToInsert []string
 	var indices = make([]int, 0)
-	for index, node := range nodes {
+	for index, node := range topology.Nodes {
 		if node.Id == 0 {
 			cachegroupsToInsert = append(cachegroupsToInsert, node.Cachegroup)
 			indices = append(indices, index)
@@ -1003,12 +1003,12 @@ func addNodes(tx *sql.Tx, name string, nodes []tc.TopologyNodeV5) (error, error,
 	}
 	rows, err := tx.Query(nodeInsertQuery(), name, pq.Array(cachegroupsToInsert))
 	if err != nil {
-		return nil, errors.New("error adding nodes 2: " + err.Error()), http.StatusInternalServerError
+		return nil, errors.New("error adding nodes: " + err.Error()), http.StatusInternalServerError
 	}
 	defer log.Close(rows, "unable to close DB connection")
 	for _, index := range indices {
 		rows.Next()
-		err = rows.Scan(&nodes[index].Id, &name, &nodes[index].Cachegroup)
+		err = rows.Scan(&topology.Nodes[index].Id, &name, &topology.Nodes[index].Cachegroup)
 		if err != nil {
 			return api.ParseDBError(err)
 		}
@@ -1080,8 +1080,8 @@ func addParents(tx *sql.Tx, nodes []tc.TopologyNodeV5) (error, error, int) {
 	return nil, nil, http.StatusOK
 }
 
-func setTopologyDetails(tx *sql.Tx, topology *tc.TopologyV5) (error, error, int) {
-	rows, err := tx.Query(updateQuery(), topology.Name, topology.Description, topology.Name)
+func setTopologyDetails(tx *sql.Tx, topology *tc.TopologyV5, oldTopologyName string) (error, error, int) {
+	rows, err := tx.Query(updateQuery(), topology.Name, topology.Description, oldTopologyName)
 	if err != nil {
 		return nil, fmt.Errorf("topology update: error setting the name and/or description for topology %v: %v", topology.Name, err.Error()), http.StatusInternalServerError
 	}
