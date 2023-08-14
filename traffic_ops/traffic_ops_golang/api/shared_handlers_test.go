@@ -388,7 +388,16 @@ func TestWrap(t *testing.T) {
 	r = wrapContext(r, PathParamsKey, make(map[string]string))
 
 	mock.ExpectBegin()
+	mock.ExpectRollback()
+	h(w, r)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("wrong status code when the trivial handler is used without an API version; want: %d, got: %d", http.StatusInternalServerError, w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	mock.ExpectBegin()
 	mock.ExpectCommit()
+	r.URL.Path = "/api/1.0/something"
 	h(w, r)
 	if w.Code != http.StatusOK {
 		t.Errorf("wrong status code from a normal run of the trivial handler; want: %d, got: %d", http.StatusOK, w.Code)

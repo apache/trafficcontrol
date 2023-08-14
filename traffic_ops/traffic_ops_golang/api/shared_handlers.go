@@ -37,6 +37,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
+const nilVersionErrorMsg = "a wrapped handler was called without an API version"
+
 type KeyFieldInfo struct {
 	Field string
 	Func  func(string) (interface{}, error)
@@ -692,6 +694,8 @@ type Handler = func(*APIInfo) (int, error, error)
 // authentication and context setup.
 // Also note that handlers utilizing this need not defer closing of the provided
 // APIInfo, as this will handle that for them.
+// Finally, make sure this is ONLY used on versioned endpoints; this will return
+// an internal error if there is no associated API version.
 func Wrap(h Handler, requiredParams, intParams []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		inf, userErr, sysErr, errCode := NewInfo(r, requiredParams, intParams)
@@ -700,6 +704,9 @@ func Wrap(h Handler, requiredParams, intParams []string) http.HandlerFunc {
 			return
 		}
 		defer inf.Close()
+		if inf.Version == nil {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New(nilVersionErrorMsg))
+		}
 		inf.w = w
 
 		errCode, userErr, sysErr = h(inf)
