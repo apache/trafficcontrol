@@ -72,6 +72,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
 - [#7694](https://github.com/apache/trafficcontrol/pull/7694) *t3c*, *Traffic Control Health Client* Upgrade to ATS 9.2
 - [#7966](https://github.com/apache/trafficcontrol/pull/7696) *t3c* will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit. 
+- [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server* Use GCC 11 for building.
 
 ### Fixed
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
