@@ -24,12 +24,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -92,19 +92,19 @@ func (topology *TOTopology) GetType() string {
 
 // DowngradeTopologyNodes downgrades v5 topology nodes into legacy topology node structures.
 func DowngradeTopologyNodes(nodes []tc.TopologyNodeV5) []tc.TopologyNode {
-	var legacyNodes []tc.TopologyNode
-	for _, n := range nodes {
+	legacyNodes := make([]tc.TopologyNode, len(nodes))
+	for i, n := range nodes {
 		var legacyNode tc.TopologyNode
 		legacyNode.Id = n.Id
 		legacyNode.Cachegroup = n.Cachegroup
-		legacyNode.Parents = make([]int, 0)
-		for _, p := range n.Parents {
-			legacyNode.Parents = append(legacyNode.Parents, p)
+		legacyNode.Parents = make([]int, len(n.Parents))
+		for i, p := range n.Parents {
+			legacyNode.Parents[i] = p
 		}
 		if n.LastUpdated != nil {
 			legacyNode.LastUpdated = tc.TimeNoModFromTime(*n.LastUpdated)
 		}
-		legacyNodes = append(legacyNodes, legacyNode)
+		legacyNodes[i] = legacyNode
 	}
 	return legacyNodes
 }
@@ -535,7 +535,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	err := tx.QueryRow(insertQuery(), topology.Name, topology.Description).Scan(&topology.Name, &topology.Description, &topology.LastUpdated)
 	if err != nil {
-		userErr, sysErr, statusCode := api.ParseDBError(err)
+		userErr, sysErr, statusCode = api.ParseDBError(err)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 			return
@@ -547,14 +547,14 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if userErr, sysErr, statusCode := addNodes(tx, topology.Name, &topology); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode = addNodes(tx, topology.Name, &topology); userErr != nil || sysErr != nil {
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 			return
 		}
 	}
 
-	if userErr, sysErr, statusCode := addParents(tx, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode = addParents(tx, topology.Nodes); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
 		return
 	}
@@ -596,7 +596,6 @@ func readTopologies(r *http.Request, useIMS bool) ([]interface{}, error, error, 
 	var runSecond bool
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
-		//api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return nil, userErr, sysErr, errCode, &maxTime
 	}
 	defer inf.Close()
@@ -629,7 +628,6 @@ func readTopologies(r *http.Request, useIMS bool) ([]interface{}, error, error, 
 	query := selectQuery() + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
-		//api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("topology read: querying: "+err.Error()))
 		return nil, nil, errors.New("topology read: querying: " + err.Error()), http.StatusInternalServerError, &maxTime
 	}
 	defer log.Close(rows, "unable to close DB connection")
@@ -652,7 +650,6 @@ func readTopologies(r *http.Request, useIMS bool) ([]interface{}, error, error, 
 			&topologyNode.Cachegroup,
 			&parents,
 		); err != nil {
-			//api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("topology read: scanning: "+err.Error()))
 			return nil, nil, errors.New("topology read: scanning: " + err.Error()), http.StatusInternalServerError, &maxTime
 		}
 		for _, id := range parents {
@@ -666,7 +663,6 @@ func readTopologies(r *http.Request, useIMS bool) ([]interface{}, error, error, 
 			topology.Description = description
 			topology.LastUpdated, err = util.ConvertTimeFormat(lastUpdated, time.RFC3339)
 			if err != nil {
-				//api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("couldn't convert last updated time to rfc3339 format: "+err.Error()))
 				return nil, nil, errors.New("couldn't convert last updated time to rfc3339 format: " + err.Error()), http.StatusInternalServerError, &maxTime
 			}
 		}
@@ -847,16 +843,16 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if userErr, sysErr, statusCode := setTopologyDetails(tx, &topology, oldTopology.Name); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode = setTopologyDetails(tx, &topology, oldTopology.Name); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
 
-	if userErr, sysErr, statusCode := addNodes(tx, topology.Name, &topology); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode = addNodes(tx, topology.Name, &topology); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}
-	if userErr, sysErr, statusCode := addParents(tx, topology.Nodes); userErr != nil || sysErr != nil {
+	if userErr, sysErr, statusCode = addParents(tx, topology.Nodes); userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
 		return
 	}

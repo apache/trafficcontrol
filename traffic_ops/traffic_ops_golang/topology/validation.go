@@ -56,7 +56,7 @@ func checkForSelfParents(nodes []tc.TopologyNode, index int) error {
 	return nil
 }
 
-// checkForEdgeParents returns an error if an index given in the parents array, adds a warning + returns a nil error if
+// checkForEdgeParents adds a warning + returns a nil error if
 // an edge parents an edge, and returns an error if an edge parents a non-edge cachegroup.
 func checkForEdgeParents(topology tc.TopologyV5, cacheGroups []tc.CacheGroupNullable, nodeIndex int) (tc.Alerts, error) {
 	var alerts tc.Alerts
