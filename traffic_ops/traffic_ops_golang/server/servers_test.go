@@ -1004,7 +1004,7 @@ func TestUpdateServer(t *testing.T) {
 	db := sqlx.NewDb(mockDB, "sqlmock")
 	defer db.Close()
 
-	s4 := getTestServers()[0].Server.Downgrade()
+	server := getTestServers()[0].Server
 
 	mock.ExpectBegin()
 	rows := sqlmock.NewRows([]string{
@@ -1039,55 +1039,55 @@ func TestUpdateServer(t *testing.T) {
 		"status_last_updated",
 	})
 	rows.AddRow(
-		*s4.Cachegroup,
-		*s4.CachegroupID,
-		*s4.CDNID,
-		*s4.CDNName,
-		*s4.DomainName,
-		*s4.GUID,
-		*s4.HostName,
-		*s4.HTTPSPort,
-		*s4.ID,
-		*s4.ILOIPAddress,
-		*s4.ILOIPGateway,
-		*s4.ILOIPNetmask,
-		*s4.ILOPassword,
-		*s4.ILOUsername,
-		*s4.LastUpdated,
-		*s4.MgmtIPAddress,
-		*s4.MgmtIPGateway,
-		*s4.MgmtIPNetmask,
-		*s4.OfflineReason,
-		*s4.PhysLocation,
-		*s4.PhysLocationID,
-		fmt.Sprintf("{%s}", strings.Join(s4.ProfileNames, ",")),
-		*s4.Rack,
-		*s4.Status,
-		*s4.StatusID,
-		*s4.TCPPort,
-		s4.Type,
-		*s4.TypeID,
-		*s4.StatusLastUpdated,
+		server.CacheGroup,
+		server.CacheGroupID,
+		server.CDNID,
+		server.CDN,
+		server.DomainName,
+		*server.GUID,
+		server.HostName,
+		*server.HTTPSPort,
+		server.ID,
+		*server.ILOIPAddress,
+		*server.ILOIPGateway,
+		*server.ILOIPNetmask,
+		*server.ILOPassword,
+		*server.ILOUsername,
+		server.LastUpdated,
+		*server.MgmtIPAddress,
+		*server.MgmtIPGateway,
+		*server.MgmtIPNetmask,
+		*server.OfflineReason,
+		server.PhysicalLocation,
+		server.PhysicalLocationID,
+		fmt.Sprintf("{%s}", strings.Join(server.Profiles, ",")),
+		*server.Rack,
+		server.Status,
+		server.StatusID,
+		*server.TCPPort,
+		server.Type,
+		server.TypeID,
+		*server.StatusLastUpdated,
 	)
 	mock.ExpectQuery("UPDATE server SET").
-		WithArgs(*s4.CachegroupID, *s4.CDNID, *s4.DomainName, *s4.HostName, *s4.HTTPSPort, *s4.ILOIPAddress,
-			*s4.ILOIPNetmask, *s4.ILOIPGateway, *s4.ILOUsername, *s4.ILOPassword, *s4.MgmtIPAddress,
-			*s4.MgmtIPNetmask, *s4.MgmtIPGateway, *s4.OfflineReason, *s4.PhysLocationID, 1, *s4.Rack,
-			*s4.StatusID, *s4.TCPPort, *s4.TypeID, *s4.XMPPPasswd, *s4.StatusLastUpdated, *s4.ID).
+		WithArgs(server.CacheGroupID, server.CDNID, server.DomainName, server.HostName, *server.HTTPSPort, *server.ILOIPAddress,
+			*server.ILOIPNetmask, *server.ILOIPGateway, *server.ILOUsername, *server.ILOPassword, *server.MgmtIPAddress,
+			*server.MgmtIPNetmask, *server.MgmtIPGateway, *server.OfflineReason, server.PhysicalLocationID, 1, *server.Rack,
+			server.StatusID, *server.TCPPort, server.TypeID, *server.XMPPPasswd, *server.StatusLastUpdated, server.ID).
 		WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	sid, code, usrErr, sysErr := updateServer(db.MustBegin(), s4.Upgrade())
+	sid, code, usrErr, sysErr := updateServer(db.MustBegin(), server)
 	if usrErr != nil {
 		t.Errorf("unable to update v4 server, user error: %v", usrErr)
 	}
 	if sysErr != nil {
 		t.Errorf("unable to update v4 server, system error: %v", sysErr)
 	}
-	if sid != int64(*s4.ID) {
-		t.Errorf("updated incorrect server, expected:%d, got:%d", *s4.ID, sid)
+	if sid != int64(server.ID) {
+		t.Errorf("updated incorrect server, expected: %d, got: %d", server.ID, sid)
 	}
 	if code != http.StatusOK {
-		t.Errorf("failed to update server with id:%d, expected: %d, got: %d", *s4.ID, http.StatusOK, code)
+		t.Errorf("failed to update server with id: %d, expected: %d, got: %d", server.ID, http.StatusOK, code)
 	}
 }
