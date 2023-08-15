@@ -436,7 +436,7 @@ func TestAPIInfo_RequestHeaders(t *testing.T) {
 func TestAPIInfo_SetLastModified(t *testing.T) {
 	w := httptest.NewRecorder()
 	inf := APIInfo{w: w}
-	tm := time.Now().Truncate(time.Second)
+	tm := time.Now().Truncate(time.Second).UTC()
 	inf.SetLastModified(tm)
 
 	wLMHdr := w.Header().Get(rfc.LastModified)
@@ -449,7 +449,7 @@ func TestAPIInfo_SetLastModified(t *testing.T) {
 	// value for LastModified headers. I suspect it's a poor attempt at rounding
 	// - for which the `Round` method ought to be used instead.
 	if expected := tm.Add(time.Second); lm != expected {
-		t.Errorf("Incorrect time set as '%s' header; want: %v, got: %v", rfc.LastModified, expected, lm)
+		t.Errorf("Incorrect time set as '%s' header; want: %s, got: %s", rfc.LastModified, expected.Format(time.RFC3339Nano), lm.Format(time.RFC3339Nano))
 	}
 }
 
