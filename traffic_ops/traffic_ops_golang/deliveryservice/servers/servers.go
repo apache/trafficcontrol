@@ -170,7 +170,30 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 	if err == nil && results == nil {
 		w.WriteHeader(http.StatusNotModified)
 	}
-	api.WriteRespRaw(w, r, results)
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{
+		Major: 5,
+		Minor: 0,
+	}) {
+		var resultsV5 tc.DeliveryServiceServerResponseV5
+		resultsV5.Limit = results.Limit
+		resultsV5.Orderby = results.Orderby
+		resultsV5.Size = results.Size
+		resultsV5.Alerts = results.Alerts
+		resultsV5.Response = *upgrade(results.Response)
+		api.WriteRespRaw(w, r, resultsV5)
+	} else {
+		api.WriteRespRaw(w, r, results)
+	}
+}
+
+func upgrade(dsServers []tc.DeliveryServiceServer) *[]tc.DeliveryServiceServerV5 {
+	dsServersV5 := make([]tc.DeliveryServiceServerV5, len(dsServers))
+	for i, s := range dsServers {
+		dsServersV5[i].Server = s.Server
+		dsServersV5[i].DeliveryService = s.DeliveryService
+		dsServersV5[i].LastUpdated, _ = util.ConvertTimeFormat(s.LastUpdated.Time, time.RFC3339)
+	}
+	return &dsServersV5
 }
 
 func (dss *TODeliveryServiceServer) readDSS(h http.Header, tx *sqlx.Tx, user *auth.CurrentUser, params map[string]string, intParams map[string]int, dsIDs []int64, serverIDs []int64, useIMS bool) (*tc.DeliveryServiceServerResponse, error, *time.Time) {
