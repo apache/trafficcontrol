@@ -61,17 +61,16 @@ RUN if [[ ${OS_VERSION%%.*} -ge 8 ]]; then \
 			brotli \
 			brotli-devel \
 			curl \
-			gcc-toolset-9 \
-			gcc-toolset-9-runtime \
+			gcc-toolset-11 \
+			gcc-toolset-11-runtime \
 			geoip \
 			jansson \
 			jansson-devel \
 			libmaxminddb \
 			libmaxminddb-devel \
 			libuuid ); \
-		os_toolset="gcc-toolset-9"; \
 	else \
-		os_pkgs=(devtoolset-9); \
+		os_pkgs=(devtoolset-11); \
 	fi \
 	&& yum install -y \
 		${os_pkgs[*]} \
