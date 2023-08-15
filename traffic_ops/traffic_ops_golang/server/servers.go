@@ -743,6 +743,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	// see the fields mapped in the SQL query
 	queryParamsToSQLCols := map[string]dbhelpers.WhereColumnInfo{
 		"cachegroup":         {Column: "s.cachegroup", Checker: api.IsInt},
+		"cacheGroup":         {Column: "cg.name", Checker: nil},
 		"parentCachegroup":   {Column: "cg.parent_cachegroup_id", Checker: api.IsInt},
 		"cachegroupName":     {Column: "cg.name", Checker: nil},
 		"cdn":                {Column: "s.cdn_id", Checker: api.IsInt},
