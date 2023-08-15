@@ -23,7 +23,6 @@ package server
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -1636,24 +1635,21 @@ func insertServerProfile(id int, pName []string, tx *sql.Tx) (error, error, int)
 	return nil, nil, http.StatusOK
 }
 
-func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+func createV3(inf *api.APIInfo) (int, error, error) {
 	var server tc.ServerV30
 
-	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
+	if err := inf.DecodeBody(&server); err != nil {
+		return http.StatusBadRequest, err, nil
 	}
 
 	if server.ID != nil {
 		var prevID int
 		err := inf.Tx.Tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
-		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
-			return
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID)
 		}
 		if prevID != 0 {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
-			return
+			return http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil
 		}
 	}
 
@@ -1661,12 +1657,10 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	_, userErr, sysErr := validateV3(&server, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
-		code := http.StatusBadRequest
 		if sysErr != nil {
-			code = http.StatusInternalServerError
+			return http.StatusInternalServerError, userErr, sysErr
 		}
-		api.HandleErr(w, r, inf.Tx.Tx, code, userErr, sysErr)
-		return
+		return http.StatusBadRequest, userErr, sysErr
 	}
 
 	currentTime := time.Now()
@@ -1675,56 +1669,50 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
+			return statusCode, userErr, sysErr
 		}
 	} else if server.CDNID != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
+			return statusCode, userErr, sysErr
 		}
 	}
 
 	serverID, err := createServerV3(inf.Tx, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
+		return errCode, userErr, sysErr
 	}
 
 	interfaces, err := tc.ToInterfacesV4(server.Interfaces, server.RouterHostName, server.RouterPortName)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
+		return http.StatusInternalServerError, nil, err
 	}
 	userErr, sysErr, errCode := createInterfaces(int(serverID), interfaces, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
+		return errCode, userErr, sysErr
 	}
 
 	var origProfile string
 	err = inf.Tx.Tx.QueryRow("SELECT name from profile where id = $1", server.ProfileID).Scan(&origProfile)
 	if err != nil && err != sql.ErrNoRows {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("retreiving profile with id %d", *server.ProfileID))
-		return
+		return http.StatusInternalServerError, nil, fmt.Errorf("retreiving profile with id %d", *server.ProfileID)
 	}
-	var origProfiles = []string{origProfile}
 
+	var origProfiles = []string{origProfile}
 	userErr, sysErr, statusCode := insertServerProfile(int(serverID), origProfiles, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-		return
+		return statusCode, userErr, sysErr
 	}
 
 	where := `WHERE s.id = $1`
 	selquery := selectQuery + where
-	var s4 tc.ServerV40
-	err = inf.Tx.QueryRow(selquery, serverID).Scan(&s4.Cachegroup,
-		&s4.CachegroupID,
+	var s4 tc.ServerV5
+	err = inf.Tx.QueryRow(selquery, serverID).Scan(
+		&s4.CacheGroup,
+		&s4.CacheGroupID,
 		&s4.CDNID,
-		&s4.CDNName,
+		&s4.CDN,
 		&s4.DomainName,
 		&s4.GUID,
 		&s4.HostName,
@@ -1740,11 +1728,10 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		&s4.MgmtIPGateway,
 		&s4.MgmtIPNetmask,
 		&s4.OfflineReason,
-		&s4.PhysLocation,
-		&s4.PhysLocationID,
-		pq.Array(&s4.ProfileNames),
+		&s4.PhysicalLocation,
+		&s4.PhysicalLocationID,
+		pq.Array(&s4.Profiles),
 		&s4.Rack,
-		&s4.RevalPending,
 		&s4.RevalUpdateTime,
 		&s4.RevalApplyTime,
 		&s4.Status,
@@ -1752,54 +1739,146 @@ func createV3(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		&s4.TCPPort,
 		&s4.Type,
 		&s4.TypeID,
-		&s4.UpdPending,
 		&s4.ConfigUpdateTime,
 		&s4.ConfigApplyTime,
 		&s4.XMPPID,
 		&s4.XMPPPasswd,
-		&s4.StatusLastUpdated)
+		&s4.StatusLastUpdated,
+	)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
+		return http.StatusInternalServerError, nil, err
 	}
 
 	s4.Interfaces = interfaces
 
-	csp, err := dbhelpers.GetCommonServerPropertiesFromV4(s4, inf.Tx.Tx)
+	downgraded := s4.Downgrade()
+	csp, err := dbhelpers.GetCommonServerPropertiesFromV4(downgraded, inf.Tx.Tx)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
+		return http.StatusInternalServerError, nil, err
 	}
-	srvr, err := s4.ToServerV3FromV4(csp)
+	server, err = downgraded.ToServerV3FromV4(csp)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
+		return http.StatusInternalServerError, nil, err
 	}
 
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
-
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *srvr.HostName, *srvr.DomainName, *srvr.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
+	inf.WriteCreatedResponse(server, "Server created", fmt.Sprintf("servers?id=%d", server.ID))
+	inf.CreateChangeLog(fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *server.HostName, *server.DomainName, *server.ID))
+	return http.StatusCreated, nil, nil
 }
 
-func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
+func createV5(inf *api.APIInfo) (int, error, error) {
+	var server tc.ServerV5
+
+	if err := inf.DecodeBody(&server); err != nil {
+		return http.StatusBadRequest, err, nil
+	}
+
+	server.XMPPID = newUUID()
+
+	tmp := server.Downgrade()
+	_, userErr, sysErr := validateV4(&tmp, inf.Tx.Tx)
+	if userErr != nil || sysErr != nil {
+		if sysErr != nil {
+			return http.StatusInternalServerError, userErr, sysErr
+		}
+		return http.StatusBadRequest, userErr, sysErr
+	}
+
+	currentTime := time.Now()
+	server.StatusLastUpdated = &currentTime
+
+	if server.CDN != "" {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, server.CDN, inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return statusCode, userErr, sysErr
+		}
+	} else {
+		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(server.CDNID), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			return statusCode, userErr, sysErr
+		}
+	}
+
+	origProfiles := server.Profiles
+	serverID, err := createServerV5(inf.Tx, server)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return errCode, userErr, sysErr
+	}
+
+	userErr, sysErr, errCode := createInterfaces(int(serverID), server.Interfaces, inf.Tx.Tx)
+	if userErr != nil || sysErr != nil {
+		return errCode, userErr, sysErr
+	}
+
+	userErr, sysErr, statusCode := insertServerProfile(int(serverID), origProfiles, inf.Tx.Tx)
+	if userErr != nil || sysErr != nil {
+		return statusCode, userErr, sysErr
+	}
+
+	where := `WHERE s.id = $1`
+	selquery := selectQuery + joinProfileV4 + where
+	err = inf.Tx.QueryRow(selquery, serverID).Scan(
+		&server.CacheGroup,
+		&server.CacheGroupID,
+		&server.CDNID,
+		&server.CDN,
+		&server.DomainName,
+		&server.GUID,
+		&server.HostName,
+		&server.HTTPSPort,
+		&server.ID,
+		&server.ILOIPAddress,
+		&server.ILOIPGateway,
+		&server.ILOIPNetmask,
+		&server.ILOPassword,
+		&server.ILOUsername,
+		&server.LastUpdated,
+		&server.MgmtIPAddress,
+		&server.MgmtIPGateway,
+		&server.MgmtIPNetmask,
+		&server.OfflineReason,
+		&server.PhysicalLocation,
+		&server.PhysicalLocationID,
+		pq.Array(&server.Profiles),
+		&server.Rack,
+		&server.RevalUpdateTime,
+		&server.RevalApplyTime,
+		&server.Status,
+		&server.StatusID,
+		&server.TCPPort,
+		&server.Type,
+		&server.TypeID,
+		&server.ConfigUpdateTime,
+		&server.ConfigApplyTime,
+		&server.XMPPID,
+		&server.XMPPPasswd,
+		&server.StatusLastUpdated,
+	)
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+
+	code, userErr, sysErr := inf.WriteCreatedResponse(server, "Server created", fmt.Sprintf("servers?id=%d", server.ID))
+	inf.CreateChangeLog(fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", server.HostName, server.DomainName, server.ID))
+	return code, userErr, sysErr
+}
+
+func createV4(inf *api.APIInfo) (int, error, error) {
 	var server tc.ServerV40
 
-	if err := json.NewDecoder(r.Body).Decode(&server); err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
-		return
+	if err := inf.DecodeBody(&server); err != nil {
+		return http.StatusBadRequest, err, nil
 	}
 
 	if server.ID != nil {
 		var prevID int
 		err := inf.Tx.Tx.QueryRow("SELECT id from server where id = $1", server.ID).Scan(&prevID)
-		if err != nil && err != sql.ErrNoRows {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID))
-			return
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return http.StatusInternalServerError, nil, fmt.Errorf("checking if server with id %d exists", *server.ID)
 		}
 		if prevID != 0 {
-			api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil)
-			return
+			return http.StatusBadRequest, fmt.Errorf("server with id %d already exists. Please do not provide an id", *server.ID), nil
 		}
 	}
 
@@ -1807,12 +1886,10 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 
 	_, userErr, sysErr := validateV4(&server, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
-		errCode := http.StatusBadRequest
 		if sysErr != nil {
-			errCode = http.StatusInternalServerError
+			return http.StatusInternalServerError, userErr, sysErr
 		}
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
+		return http.StatusBadRequest, userErr, sysErr
 	}
 
 	currentTime := time.Now()
@@ -1821,14 +1898,12 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	if server.CDNName != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, *server.CDNName, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
+			return statusCode, userErr, sysErr
 		}
 	} else if server.CDNID != nil {
 		userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(*server.CDNID), inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-			return
+			return statusCode, userErr, sysErr
 		}
 	}
 
@@ -1836,29 +1911,27 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 	serverID, err := createServerV4(inf.Tx, server)
 	if err != nil {
 		userErr, sysErr, errCode := api.ParseDBError(err)
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
+		return errCode, userErr, sysErr
 	}
 
 	userErr, sysErr, errCode := createInterfaces(int(serverID), server.Interfaces, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
+		return errCode, userErr, sysErr
 	}
 
 	userErr, sysErr, statusCode := insertServerProfile(int(serverID), origProfiles, inf.Tx.Tx)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
-		return
+		return statusCode, userErr, sysErr
 	}
 
 	where := `WHERE s.id = $1`
 	selquery := selectQuery + joinProfileV4 + where
-	var srvr tc.ServerV40
-	err = inf.Tx.QueryRow(selquery, serverID).Scan(&srvr.Cachegroup,
-		&srvr.CachegroupID,
+	var srvr tc.ServerV5
+	err = inf.Tx.QueryRow(selquery, serverID).Scan(
+		&srvr.CacheGroup,
+		&srvr.CacheGroupID,
 		&srvr.CDNID,
-		&srvr.CDNName,
+		&srvr.CDN,
 		&srvr.DomainName,
 		&srvr.GUID,
 		&srvr.HostName,
@@ -1874,11 +1947,10 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		&srvr.MgmtIPGateway,
 		&srvr.MgmtIPNetmask,
 		&srvr.OfflineReason,
-		&srvr.PhysLocation,
-		&srvr.PhysLocationID,
-		pq.Array(&srvr.ProfileNames),
+		&srvr.PhysicalLocation,
+		&srvr.PhysicalLocationID,
+		pq.Array(&srvr.Profiles),
 		&srvr.Rack,
-		&srvr.RevalPending,
 		&srvr.RevalUpdateTime,
 		&srvr.RevalApplyTime,
 		&srvr.Status,
@@ -1886,25 +1958,106 @@ func createV4(inf *api.APIInfo, w http.ResponseWriter, r *http.Request) {
 		&srvr.TCPPort,
 		&srvr.Type,
 		&srvr.TypeID,
-		&srvr.UpdPending,
 		&srvr.ConfigUpdateTime,
 		&srvr.ConfigApplyTime,
 		&srvr.XMPPID,
 		&srvr.XMPPPasswd,
-		&srvr.StatusLastUpdated)
+		&srvr.StatusLastUpdated,
+	)
 	if err != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
-		return
+		return http.StatusInternalServerError, nil, err
 	}
 
 	// TODO: Use returned values from SQL insert to ensure inserted values match
 	srvr.Interfaces = server.Interfaces
 
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "Server created")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, srvr)
+	code, userErr, sysErr := inf.WriteCreatedResponse(srvr.Downgrade(), "Server created", fmt.Sprintf("servers?id=%d", srvr.ID))
+	inf.CreateChangeLog(fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", srvr.HostName, srvr.DomainName, srvr.ID))
+	return code, userErr, sysErr
+}
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: created", *srvr.HostName, *srvr.DomainName, *srvr.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, inf.Tx.Tx)
+func createServerV5(tx *sqlx.Tx, server tc.ServerV5) (int64, error) {
+	var profileID int
+	err := tx.QueryRow("SELECT id FROM profile p WHERE name=$1", (server.Profiles)[0]).Scan(&profileID)
+	if err != nil {
+		return 0, fmt.Errorf("unable to get profileID for a profile name: %w", err)
+	}
+
+	rows, err := tx.Query(insertQueryV4,
+		server.CacheGroupID,
+		server.CDNID,
+		server.DomainName,
+		server.HostName,
+		server.HTTPSPort,
+		server.ILOIPAddress,
+		server.ILOIPNetmask,
+		server.ILOIPGateway,
+		server.ILOUsername,
+		server.ILOPassword,
+		server.MgmtIPAddress,
+		server.MgmtIPNetmask,
+		server.MgmtIPGateway,
+		server.OfflineReason,
+		server.PhysicalLocationID,
+		profileID,
+		server.Rack,
+		server.StatusID,
+		server.TCPPort,
+		server.TypeID,
+		server.XMPPID,
+		server.XMPPPasswd,
+	)
+	if err != nil {
+		return 0, err
+	}
+	defer log.Close(rows, "failed to close rows for createServerV4")
+
+	rowsAffected := 0
+	var serverID int64
+	for rows.Next() {
+		rowsAffected++
+		err := rows.Scan(
+			&server.CacheGroup,
+			&server.CacheGroupID,
+			&server.CDNID,
+			&server.CDN,
+			&server.DomainName,
+			&server.GUID,
+			&server.HostName,
+			&server.HTTPSPort,
+			&serverID,
+			&server.ILOIPAddress,
+			&server.ILOIPGateway,
+			&server.ILOIPNetmask,
+			&server.ILOPassword,
+			&server.ILOUsername,
+			&server.LastUpdated,
+			&server.MgmtIPAddress,
+			&server.MgmtIPGateway,
+			&server.MgmtIPNetmask,
+			&server.OfflineReason,
+			&server.PhysicalLocation,
+			&server.PhysicalLocationID,
+			pq.Array(&server.Profiles),
+			&server.Rack,
+			&server.Status,
+			&server.StatusID,
+			&server.TCPPort,
+			&server.Type,
+			&server.TypeID,
+		)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	if rowsAffected == 0 {
+		return 0, errors.New("server create: no server was inserted, no id was returned")
+	} else if rowsAffected > 1 {
+		return 0, fmt.Errorf("too many ids returned from server insert: %d", rowsAffected)
+	}
+
+	return serverID, nil
 }
 
 func createServerV4(tx *sqlx.Tx, server tc.ServerV40) (int64, error) {
@@ -1997,19 +2150,14 @@ func createServerV3(tx *sqlx.Tx, server tc.ServerV30) (int64, error) {
 }
 
 // Create is the handler for POST requests to /servers.
-func Create(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	switch {
-	case inf.Version.Major == 3:
-		createV3(inf, w, r)
+func Create(inf *api.APIInfo) (int, error, error) {
+	switch inf.Version.Major {
+	case 3:
+		return createV3(inf)
+	case 4:
+		return createV4(inf)
 	default:
-		createV4(inf, w, r)
+		return createV5(inf)
 	}
 }
 
