@@ -1489,3 +1489,37 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 		t.Errorf("Incorrect XMPPPasswd after upgraded conversion; want: '%s', got: '%s'", *nullable.XMPPPasswd, *upgraded.XMPPPasswd)
 	}
 }
+
+func ExampleServerV50_UpdatePending() {
+	s := ServerV50{
+		ConfigApplyTime:  new(time.Time),
+		ConfigUpdateTime: new(time.Time),
+	}
+
+	*s.ConfigApplyTime = time.Now()
+	*s.ConfigUpdateTime = s.ConfigApplyTime.Add(-time.Hour)
+	fmt.Println(s.UpdatePending())
+
+	*s.ConfigUpdateTime = s.ConfigUpdateTime.Add(2 * time.Hour)
+	fmt.Println(s.UpdatePending())
+
+	// Output: true
+	// false
+}
+
+func ExampleServerV50_RevalidationPending() {
+	s := ServerV50{
+		RevalApplyTime:  new(time.Time),
+		RevalUpdateTime: new(time.Time),
+	}
+
+	*s.RevalApplyTime = time.Now()
+	*s.RevalUpdateTime = s.RevalApplyTime.Add(-time.Hour)
+	fmt.Println(s.RevalidationPending())
+
+	*s.RevalUpdateTime = s.RevalUpdateTime.Add(2 * time.Hour)
+	fmt.Println(s.RevalidationPending())
+
+	// Output: true
+	// false
+}

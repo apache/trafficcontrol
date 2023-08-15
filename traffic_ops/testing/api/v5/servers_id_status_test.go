@@ -175,9 +175,9 @@ func validateUpdPending(hostName string) utils.CkReqFunc {
 		for _, server := range allServers.Response {
 			_, ok := descendants[server.CacheGroup]
 			if ok && server.CDN == updatedServer.CDN {
-				assert.Equal(t, true, *server.Downgrade().UpdPending, "Expected server %s with cachegroup %s to have updates pending.", server.HostName, server.CacheGroup)
+				assert.Equal(t, true, server.UpdatePending(), "Expected server %s with cachegroup %s to have updates pending.", server.HostName, server.CacheGroup)
 			} else {
-				assert.Equal(t, false, *server.Downgrade().UpdPending, "Expected server %s with cachegroup %s to NOT have updates pending.", server.HostName, server.CacheGroup)
+				assert.Equal(t, false, server.UpdatePending(), "Expected server %s with cachegroup %s to NOT have updates pending.", server.HostName, server.CacheGroup)
 			}
 		}
 	}

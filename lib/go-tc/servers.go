@@ -1396,13 +1396,13 @@ func (s ServerV50) Downgrade() ServerV4 {
 		PhysLocationID:    util.Ptr(s.PhysicalLocationID),
 		ProfileNames:      make([]string, len(s.Profiles)),
 		Rack:              util.CopyIfNotNil(s.Rack),
-		RevalPending:      util.Ptr(s.RevalApplyTime != nil && s.RevalUpdateTime != nil && !s.RevalApplyTime.Before(*s.RevalUpdateTime)),
+		RevalPending:      util.Ptr(s.RevalidationPending()),
 		Status:            util.Ptr(s.Status),
 		StatusID:          util.Ptr(s.StatusID),
 		TCPPort:           util.CopyIfNotNil(s.TCPPort),
 		Type:              s.Type,
 		TypeID:            util.Ptr(s.TypeID),
-		UpdPending:        util.Ptr(s.ConfigApplyTime != nil && s.ConfigUpdateTime != nil && !s.ConfigApplyTime.Before(*s.ConfigUpdateTime)),
+		UpdPending:        util.Ptr(s.UpdatePending()),
 		XMPPID:            util.CopyIfNotNil(s.XMPPID),
 		XMPPPasswd:        util.CopyIfNotNil(s.XMPPPasswd),
 		Interfaces:        make([]ServerInterfaceInfoV40, len(s.Interfaces)),
@@ -1419,6 +1419,16 @@ func (s ServerV50) Downgrade() ServerV4 {
 	}
 
 	return downgraded
+}
+
+// UpdatePending tells whether the Server has pending updates.
+func (s ServerV50) UpdatePending() bool {
+	return s.ConfigApplyTime != nil && s.ConfigUpdateTime != nil && !s.ConfigApplyTime.Before(*s.ConfigUpdateTime)
+}
+
+// RevalidationPending tells whether the Server has pending revalidations.
+func (s ServerV50) RevalidationPending() bool {
+	return s.RevalApplyTime != nil && s.RevalUpdateTime != nil && !s.RevalApplyTime.Before(*s.RevalUpdateTime)
 }
 
 // ServerV5 is the representation of a Server in the latest minor version of

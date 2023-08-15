@@ -136,7 +136,7 @@ func validateServerUpdatesAreQueued(topologyDS string) utils.CkReqFunc {
 			if server.CDNID != int(topQueueUpdateResp.CDNID) {
 				continue
 			}
-			assert.Equal(t, true, *server.Downgrade().UpdPending, "Expected Server %s to have pending updates.", server.HostName)
+			assert.Equal(t, true, server.UpdatePending(), "Expected Server %s to have pending updates.", server.HostName)
 		}
 	}
 }

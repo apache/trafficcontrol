@@ -87,7 +87,7 @@ func validateServersUpdatePending(cdnID int, params map[string]string) utils.CkR
 		assert.RequireGreaterOrEqual(t, len(servers.Response), 1, "expected atleast one server in response, got %d", len(servers.Response))
 
 		for _, server := range servers.Response {
-			assert.Equal(t, true, *server.Downgrade().UpdPending, "Expected updates to be queued on all the servers filtered by CDN and parameter, but %s didn't queue updates", server.HostName)
+			assert.Equal(t, true, server.UpdatePending(), "Expected updates to be queued on all the servers filtered by CDN and parameter, but %s didn't queue updates", server.HostName)
 			serverIDMap[server.ID] = true
 		}
 
@@ -97,7 +97,7 @@ func validateServersUpdatePending(cdnID int, params map[string]string) utils.CkR
 
 		for _, server := range allServersResp.Response {
 			if _, ok := serverIDMap[server.ID]; !ok {
-				assert.Equal(t, false, *server.Downgrade().UpdPending, "Did not expect server %s to have queued updates", server.HostName)
+				assert.Equal(t, false, server.UpdatePending(), "Did not expect server %s to have queued updates", server.HostName)
 			}
 		}
 	}
