@@ -39,7 +39,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/routing/middleware"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/topology/topology_validation"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
@@ -2203,7 +2202,7 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType 
 		var topology *string
 		err = rows.Scan(&dsID, &mso, &topology)
 		if err != nil {
-			return ids, fmt.Errorf("scanning: %v", err)
+			return ids, fmt.Errorf("scanning: %w", err)
 		}
 		if (isEdge && topology == nil) || (isOrigin && mso) {
 			ids = append(ids, dsID)
@@ -2214,123 +2213,90 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType 
 }
 
 // Delete is the handler for DELETE requests to the /servers API endpoint.
-func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
-	tx := inf.Tx.Tx
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
-	}
-	defer inf.Close()
-
-	// Middleware should've already handled this, so idk why this is a pointer at all tbh
-	version := inf.Version
-	if version == nil {
-		middleware.NotImplementedHandler().ServeHTTP(w, r)
-		return
-	}
-
+func Delete(inf *api.APIInfo) (int, error, error) {
 	id := inf.IntParams["id"]
+	tx := inf.Tx.Tx
 	serverInfo, exists, err := dbhelpers.GetServerInfo(id, tx)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
+		return http.StatusInternalServerError, nil, err
 	}
 	if !exists {
-		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no server exists by id #%d", id), nil)
-		return
+		return http.StatusNotFound, fmt.Errorf("no server exists by id #%d", id), nil
 	}
 
 	if dsIDs, err := getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id, serverInfo.Type, tx); err != nil {
-		sysErr = fmt.Errorf("checking if server #%d is the last server assigned to any Delivery Services: %v", id, err)
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
-		return
+		return http.StatusInternalServerError, nil, fmt.Errorf("checking if server #%d is the last server assigned to any Delivery Services: %w", id, err)
 	} else if len(dsIDs) > 0 {
-		alertText := fmt.Sprintf("deleting server #%d would leave Active Delivery Service", id)
-		alertText = InvalidStatusForDeliveryServicesAlertText(alertText, serverInfo.Type, dsIDs)
-
-		api.WriteAlerts(w, r, http.StatusConflict, tc.CreateAlerts(tc.ErrorLevel, alertText))
-		return
+		return http.StatusConflict, fmt.Errorf("deleting server #%d would leave Active Delivery Service", id), nil
 	}
 
-	servers, _, userErr, sysErr, errCode, _ := getServers(r.Header, map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, *version, inf.Config.RoleBasedPermissions)
+	servers, _, userErr, sysErr, errCode, _ := getServers(inf.RequestHeaders(), map[string]string{"id": inf.Params["id"]}, inf.Tx, inf.User, false, *inf.Version, inf.Config.RoleBasedPermissions)
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
+		return errCode, userErr, sysErr
 	}
 
 	if len(servers) < 1 {
-		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no server exists by id #%d", id), nil)
-		return
+		return http.StatusNotFound, fmt.Errorf("no server exists by id #%d", id), nil
 	}
 	if len(servers) > 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("there are somehow two servers with id %d - cannot delete", id))
-		return
+		return http.StatusInternalServerError, nil, fmt.Errorf("there are somehow two servers with id %d - cannot delete", id)
 	}
 	server := servers[0]
 	if server.CDN != "" {
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, server.CDN, inf.User.UserName)
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, server.CDN, inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
+			return errCode, userErr, sysErr
 		}
 	} else {
 		// when would this happen?
-		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(inf.Tx.Tx, int64(server.CDNID), inf.User.UserName)
+		userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDNWithID(tx, int64(server.CDNID), inf.User.UserName)
 		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
-			return
+			return errCode, userErr, sysErr
 		}
 	}
 	cacheGroupIds := []int{server.CacheGroupID}
 	serverIds := []int{server.ID}
-	hasDSOnCDN, err := dbhelpers.CachegroupHasTopologyBasedDeliveryServicesOnCDN(inf.Tx.Tx, server.CacheGroupID, server.CDNID)
+	hasDSOnCDN, err := dbhelpers.CachegroupHasTopologyBasedDeliveryServicesOnCDN(tx, server.CacheGroupID, server.CDNID)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-		return
+		return http.StatusInternalServerError, nil, err
 	}
 	CDNIDs := []int{}
 	if hasDSOnCDN {
 		CDNIDs = append(CDNIDs, server.CDNID)
 	}
 	if err := topology_validation.CheckForEmptyCacheGroups(inf.Tx, cacheGroupIds, CDNIDs, true, serverIds); err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("server is the last one in its cachegroup, which is used by a topology: %w", err), nil)
-		return
+		return http.StatusBadRequest, fmt.Errorf("server is the last one in its cachegroup, which is used by a topology: %w", err), nil
 	}
 
 	if result, err := tx.Exec(deleteServerQuery, id); err != nil {
 		log.Errorf("Raw error: %v", err)
 		userErr, sysErr, errCode = api.ParseDBError(err)
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-		return
+		return errCode, userErr, sysErr
 	} else if rowsAffected, err := result.RowsAffected(); err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("getting rows affected by server delete: %w", err))
-		return
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting rows affected by server delete: %w", err)
 	} else if rowsAffected != 1 {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("incorrect number of rows affected: %d", rowsAffected))
-		return
+		return http.StatusInternalServerError, nil, fmt.Errorf("incorrect number of rows affected: %d", rowsAffected)
 	}
 
+	inf.CreateChangeLog(fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", server.HostName, server.DomainName, server.ID))
 	if inf.Version.Major >= 5 {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server)
-	} else if inf.Version.Major >= 4 {
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", server.Downgrade())
-	} else {
-		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(server.Downgrade(), tx)
-		if err != nil {
-			userErr, sysErr, errCode := api.ParseDBError(err)
-			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
-		downgraded := server.Downgrade()
-		serverv3, err := downgraded.ToServerV3FromV4(csp)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
-			return
-		}
-		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Server deleted", serverv3)
+		return inf.WriteSuccessResponse(server, "Server deleted")
 	}
 
-	changeLogMsg := fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", server.HostName, server.DomainName, server.ID)
-	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
+	downgraded := server.Downgrade()
+	if inf.Version.Major >= 4 {
+		return inf.WriteSuccessResponse(downgraded, "Server deleted")
+	}
+
+	csp, err := dbhelpers.GetCommonServerPropertiesFromV4(downgraded, tx)
+	if err != nil {
+		userErr, sysErr, errCode := api.ParseDBError(err)
+		return errCode, userErr, sysErr
+	}
+
+	serverv3, err := downgraded.ToServerV3FromV4(csp)
+	if err != nil {
+		return http.StatusInternalServerError, nil, err
+	}
+	return inf.WriteSuccessResponse(serverv3, "Server deleted")
 }
