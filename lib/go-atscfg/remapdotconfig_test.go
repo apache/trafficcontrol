@@ -1686,7 +1686,9 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	txt := cfg.Text
 
 	txt = strings.TrimSpace(txt)
-
+	if !strings.Contains(txt, "@pparam=--consider-ims") {
+		t.Fatalf("expected '--consider-ims' param with 'cache_range_requests.so' when using slice plugin to enable self healing, actual: %s", txt)
+	}
 	testComment(t, txt, hdr)
 
 	txtLines := strings.Split(txt, "\n")
@@ -5562,6 +5564,10 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain cache_range_requests plugin, actual '%v'", txt)
 	}
 
+	if !strings.Contains(remapLine, "@pparam=--consider-ims") {
+		t.Errorf("expected remap on edge server with ds slice range request handling to contain parameter --consider-ims for self healing, actual '%s", txt)
+	}
+
 	if !strings.Contains(remapLine, "pparam=--blockbytes=262144") {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
 	}
@@ -5700,6 +5706,10 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 
 	if !strings.Contains(remapLine, "--consider-ims") {
 		t.Errorf("expected remap on mid server with ds slice range request handling to contain cache_range_requests plugin arg --consider-ims, actual '%v'", txt)
+	}
+
+	if strings.Count(remapLine, "--consider-ims") > 1 {
+		t.Errorf("expected remap on mid server with ds slice range request handling to contain one occurance of plugin arg --consider-ims, actual '%s'", txt)
 	}
 
 	if strings.Contains(remapLine, "pparam=--blockbytes") {
@@ -5850,6 +5860,10 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 
 	if !strings.Contains(remapLine, "--consider-ims") {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain cache_range_requests plugin arg --consider-ims, actual '%v'", txt)
+	}
+
+	if strings.Count(remapLine, "--consider-ims") > 1 {
+		t.Errorf("expected remap on edge server with ds slice range request handling to contain one occurance of plugin arg --consider-ims, actual '%s'", txt)
 	}
 
 	if !strings.Contains(remapLine, "--no-modify-cachekey") {
