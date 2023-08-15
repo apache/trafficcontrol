@@ -74,6 +74,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7966](https://github.com/apache/trafficcontrol/pull/7696) *t3c* will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit. 
 
 ### Fixed
+- [#7639](https://github.com/apache/trafficcontrol/pull/7639) *T3C* Fixed `parent_is_proxy` not being written to `strategies.yaml` and fixed `strategiesdotconfig` functions not being consistent with file usage; now it is `strategiesdotyaml`.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
 - [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixes Logs V5 apis to respond with RFC3339 tiestamps.
 - [#7631] (https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixes Phys_Location V5 apis to respond with RFC3339 date/time Format
