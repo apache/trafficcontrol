@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7665](https://github.com/apache/trafficcontrol/pull/7665) *Automation* Changes to Ansible role dataset_loader to add ATS 9 support
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client* Added peer monitor flag while using `strategies.yaml`
-- [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login. 
+- [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login.
 - [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops* Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
 - [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
 - [#7291](https://github.com/apache/trafficcontrol/pull/7291) *Traffic Ops* Extended Layered Profile feature to aggregate parameters for all server profiles.
@@ -72,9 +72,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [##7605](https://github.com/apache/trafficcontrol/pull/#7605) *Traffic Ops* Fixes `cachegroups_request_comments` v5 apis to respond with `RFC3339` date/time Format.
 - [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
 - [#7694](https://github.com/apache/trafficcontrol/pull/7694) *t3c*, *Traffic Control Health Client* Upgrade to ATS 9.2
-- [#7966](https://github.com/apache/trafficcontrol/pull/7696) *t3c* will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit. 
+- [#7966](https://github.com/apache/trafficcontrol/pull/7696) *t3c* will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit.
 - [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server* Use GCC 11 for building.
 - [#7742](https://github.com/apache/trafficcontrol/pull/7742) *Traffic Ops* Changed api tests to supply the absolute path of certs.
+- [#7718](https://github.com/apache/trafficcontrol/pull/7718) *Traffic Ops* `/servers` endpoint now responds with RFC3339 timestamps for all timestamp fields. Cleaned up naming conventions and superfluous data.
 
 ### Fixed
 - [#7708] (https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixes Parameters V5 apis to respond with RFC3339 date/time Format
@@ -91,7 +92,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* *Traffic Ops* Fixed `ASN` V5 apis to respond with `RFC3339` date/time Format.
 - [#7598](https://github.com/apache/trafficcontrol/pull/7598)  *Traffic Ops* Fixes Server Capability V5 Type Name Minor version
 - [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixes `deliveryservice_request_comments` v5 apis to respond with `RFC3339` date/time Format.
-- [#7312](https://github.com/apache/trafficcontrol/issues/7312) *Docs* Changing docs for CDN locks for DELETE response structure v4 and v5. 
+- [#7312](https://github.com/apache/trafficcontrol/issues/7312) *Docs* Changing docs for CDN locks for DELETE response structure v4 and v5.
 - [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixes Delivery Service Requests V5 apis docs with RFC3339 date/time Format
 - [#7544](https://github.com/apache/trafficcontrol/issues/7544) *Traffic Ops* Fixes stats_summary v5 apis to respond with RFC3339 date/time Format.
 - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
