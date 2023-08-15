@@ -87,12 +87,8 @@ func validateServersUpdatePending(cdnID int, params map[string]string) utils.CkR
 		assert.RequireGreaterOrEqual(t, len(servers.Response), 1, "expected atleast one server in response, got %d", len(servers.Response))
 
 		for _, server := range servers.Response {
-			assert.RequireNotNil(t, server.HostName, "Expected server hostname to not be nil.")
-			assert.RequireNotNil(t, server.UpdPending, "Expected Update Pending field for server %s to not be nil.", *server.HostName)
-			assert.Equal(t, true, *server.UpdPending, "Expected updates to be queued on all the servers filtered by CDN and parameter, but %s didn't queue updates", *server.HostName)
-			if server.ID != nil {
-				serverIDMap[*server.ID] = true
-			}
+			assert.Equal(t, true, *server.Downgrade().UpdPending, "Expected updates to be queued on all the servers filtered by CDN and parameter, but %s didn't queue updates", server.HostName)
+			serverIDMap[server.ID] = true
 		}
 
 		// Make sure that the servers that are not filtered by the above criteria do not have updates queued
@@ -100,12 +96,8 @@ func validateServersUpdatePending(cdnID int, params map[string]string) utils.CkR
 		assert.RequireNoError(t, err, "Couldn't get all servers: %v", err)
 
 		for _, server := range allServersResp.Response {
-			if server.ID != nil {
-				if _, ok := serverIDMap[*server.ID]; !ok {
-					assert.RequireNotNil(t, server.HostName, "Expected server hostname to not be nil.")
-					assert.RequireNotNil(t, server.UpdPending, "Expected Update Pending field for server %s to not be nil.", *server.HostName)
-					assert.Equal(t, false, *server.UpdPending, "Did not expect server %s to have queued updates", *server.HostName)
-				}
+			if _, ok := serverIDMap[server.ID]; !ok {
+				assert.Equal(t, false, *server.Downgrade().UpdPending, "Did not expect server %s to have queued updates", server.HostName)
 			}
 		}
 	}

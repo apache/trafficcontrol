@@ -344,7 +344,7 @@ func TestServers(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					server := tc.ServerV4{}
+					var server tc.ServerV5
 
 					if testCase.RequestBody != nil {
 						dat, err := json.Marshal(testCase.RequestBody)
@@ -556,8 +556,7 @@ func GetServerID(t *testing.T, hostName string) func() int {
 		serversResp, _, err := TOSession.GetServers(opts)
 		assert.RequireNoError(t, err, "Get Servers Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(serversResp.Response), "Expected response object length 1, but got %d", len(serversResp.Response))
-		assert.RequireNotNil(t, serversResp.Response[0].ID, "Expected id to not be nil")
-		return *serversResp.Response[0].ID
+		return serversResp.Response[0].ID
 	}
 }
 
@@ -573,8 +572,8 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 	originalServer := resp.Response[0]
 
 	// Perform an update with no changes to status
-	alerts, _, err := TOSession.UpdateServer(*originalServer.ID, originalServer, client.RequestOptions{})
-	assert.RequireNoError(t, err, "Cannot UPDATE Server by ID %d (hostname '%s'): %v - alerts: %+v", *originalServer.ID, hostName, err, alerts)
+	alerts, _, err := TOSession.UpdateServer(originalServer.ID, originalServer, client.RequestOptions{})
+	assert.RequireNoError(t, err, "Cannot UPDATE Server by ID %d (hostname '%s'): %v - alerts: %+v", originalServer.ID, hostName, err, alerts)
 
 	resp, _, err = TOSession.GetServers(opts)
 	assert.RequireNoError(t, err, "Cannot get Server by hostname '%s': %v - alerts %+v", hostName, err, resp.Alerts)
@@ -586,10 +585,10 @@ func UpdateTestServerStatusLastUpdated(t *testing.T) {
 
 	// Changing the status, perform an update and make sure that statusLastUpdated changed
 	newStatusID := GetStatusID(t, "ONLINE")()
-	originalServer.StatusID = &newStatusID
+	originalServer.StatusID = newStatusID
 
-	alerts, _, err = TOSession.UpdateServer(*originalServer.ID, originalServer, client.RequestOptions{})
-	assert.RequireNoError(t, err, "Cannot UPDATE Server by ID %d (hostname '%s'): %v - alerts: %+v", *originalServer.ID, hostName, err, alerts)
+	alerts, _, err = TOSession.UpdateServer(originalServer.ID, originalServer, client.RequestOptions{})
+	assert.RequireNoError(t, err, "Cannot UPDATE Server by ID %d (hostname '%s'): %v - alerts: %+v", originalServer.ID, hostName, err, alerts)
 
 	resp, _, err = TOSession.GetServers(opts)
 	assert.RequireNoError(t, err, "Cannot get Server by hostname '%s': %v - alerts %+v", hostName, err, resp.Alerts)
@@ -613,7 +612,7 @@ func UpdateDSGetServerDSID(t *testing.T) {
 	servers, _, err := TOSession.GetServers(opts)
 	assert.RequireNoError(t, err, "Failed to get Servers: %v - alerts: %+v", err, servers.Alerts)
 	assert.RequireGreaterOrEqual(t, len(servers.Response), 1, "Failed to get at least one Server")
-	assert.RequireEqual(t, hostName, *servers.Response[0].HostName, "Expected delivery service assignment between xmlId: %v and server: %v. Got server: %v", xmlId, hostName, servers.Response[0].HostName)
+	assert.RequireEqual(t, hostName, servers.Response[0].HostName, "Expected delivery service assignment between xmlId: %v and server: %v. Got server: %v", xmlId, hostName, servers.Response[0].HostName)
 
 	opts.QueryParameters.Set("xmlId", xmlId)
 	dses, _, err := TOSession.GetDeliveryServices(opts)
@@ -636,14 +635,14 @@ func UpdateDSGetServerDSID(t *testing.T) {
 	assert.RequireNoError(t, err, "Failed to get servers by Topology-based Delivery Service ID with xmlId %s: %v - alerts: %+v", xmlId, err, servers.Alerts)
 	assert.RequireGreaterOrEqual(t, len(servers.Response), 1, "Expected at least one server")
 	for _, server := range servers.Response {
-		assert.NotEqual(t, hostName, *server.HostName, "Server: %v was not expected to be returned.")
+		assert.NotEqual(t, hostName, server.HostName, "Server: %v was not expected to be returned.")
 	}
 }
 
 func CreateTestServers(t *testing.T) {
 	for _, server := range testData.Servers {
 		resp, _, err := TOSession.CreateServer(server, client.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create server '%s': %v - alerts: %+v", *server.HostName, err, resp.Alerts)
+		assert.RequireNoError(t, err, "Could not create server '%s': %v - alerts: %+v", server.HostName, err, resp.Alerts)
 	}
 }
 
@@ -652,14 +651,13 @@ func DeleteTestServers(t *testing.T) {
 	assert.NoError(t, err, "Cannot get Servers: %v - alerts: %+v", err, servers.Alerts)
 
 	for _, server := range servers.Response {
-		delResp, _, err := TOSession.DeleteServer(*server.ID, client.RequestOptions{})
+		delResp, _, err := TOSession.DeleteServer(server.ID, client.RequestOptions{})
 		assert.NoError(t, err, "Could not delete Server: %v - alerts: %+v", err, delResp.Alerts)
 		// Retrieve Server to see if it got deleted
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(*server.ID))
+		opts.QueryParameters.Set("id", strconv.Itoa(server.ID))
 		getServer, _, err := TOSession.GetServers(opts)
-		assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
-		assert.NoError(t, err, "Error deleting Server for '%s' : %v - alerts: %+v", *server.HostName, err, getServer.Alerts)
-		assert.Equal(t, 0, len(getServer.Response), "Expected Server '%s' to be deleted", *server.HostName)
+		assert.NoError(t, err, "Error deleting Server for '%s' : %v - alerts: %+v", server.HostName, err, getServer.Alerts)
+		assert.Equal(t, 0, len(getServer.Response), "Expected Server '%s' to be deleted", server.HostName)
 	}
 }
