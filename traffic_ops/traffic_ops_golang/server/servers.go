@@ -921,7 +921,8 @@ JOIN server_profile sp ON s.id = sp.server`
 			&s.ConfigApplyTime,
 			&s.XMPPID,
 			&s.XMPPPasswd,
-			&s.StatusLastUpdated)
+			&s.StatusLastUpdated,
+		)
 		if err != nil {
 			return nil, serverCount, nil, fmt.Errorf("getting servers: %w", err), http.StatusInternalServerError, nil
 		}

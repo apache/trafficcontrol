@@ -1425,12 +1425,12 @@ func (s ServerV50) Downgrade() ServerV4 {
 
 // UpdatePending tells whether the Server has pending updates.
 func (s ServerV50) UpdatePending() bool {
-	return s.ConfigApplyTime != nil && s.ConfigUpdateTime != nil && !s.ConfigApplyTime.After(*s.ConfigUpdateTime)
+	return s.ConfigApplyTime != nil && s.ConfigUpdateTime != nil && s.ConfigApplyTime.Before(*s.ConfigUpdateTime)
 }
 
 // RevalidationPending tells whether the Server has pending revalidations.
 func (s ServerV50) RevalidationPending() bool {
-	return s.RevalApplyTime != nil && s.RevalUpdateTime != nil && !s.RevalApplyTime.After(*s.RevalUpdateTime)
+	return s.RevalApplyTime != nil && s.RevalUpdateTime != nil && s.RevalApplyTime.Before(*s.RevalUpdateTime)
 }
 
 // ServerV5 is the representation of a Server in the latest minor version of
