@@ -18,6 +18,7 @@
 # under the License.
 
 VARNISHD_EXECUTABLE="/usr/sbin/varnishd"
+HITCH_EXECUTABLE="/usr/sbin/hitch"
 
 is_varnishd_running() {
   pgrep -x "$(basename "$VARNISHD_EXECUTABLE")" >/dev/null
@@ -28,7 +29,7 @@ start_varnishd() {
     echo "varnishd is already running."
   else
     echo "Starting varnishd..."
-    "$VARNISHD_EXECUTABLE" -f /opt/cache/etc/varnish/default.vcl
+    "$VARNISHD_EXECUTABLE" -f /opt/cache/etc/varnish/default.vcl -a :80 -a :6081,PROXY
     echo "varnishd is now running."
   fi
 }
@@ -67,28 +68,90 @@ restart_varnishd() {
   start_varnishd
 }
 
-case "$1" in
-  enable)
-    exit 0
-    ;;
-  start)
-    start_varnishd
-    ;;
-  stop)
-    stop_varnishd
-    ;;
-  restart)
-    restart_varnishd
-    ;;
-  status)
-    if is_varnishd_running; then
-      exit 0
-    fi
-    exit 3
-    ;;
-  *)
-    echo "Usage: $0 {start|stop|restart|enable|status}"
+is_hitch_running() {
+  pgrep -x "$(basename "$HITCH_EXECUTABLE")" >/dev/null
+}
+
+
+start_hitch() {
+  if is_hitch_running; then
+    echo "hitch is already running."
+  else
+    echo "Starting hitch..."
+    "$HITCH_EXECUTABLE" --config /opt/cache/etc/varnish/hitch.conf --daemon
+    echo "hitch is now running."
+  fi
+
+}
+
+reload_hitch() {
+  if is_hitch_running; then
+    pkill -HUP "$(basename "$HITCH_EXECUTABLE")"
+  else
+    echo "hitch is not running"
     exit 1
-esac
+  fi
+}
+
+handle_varnish_service() {
+  case "$1" in
+    enable)
+      exit 0
+      ;;
+    start)
+      start_varnishd
+      ;;
+    stop)
+      stop_varnishd
+      ;;
+    restart)
+      restart_varnishd
+      ;;
+    status)
+      if is_varnishd_running; then
+        # t3c-apply looks for this specific string
+        echo "Active: active"
+        exit 0
+      fi
+      exit 3
+      ;;
+    *)
+      echo "Usage: $0 {start|stop|restart|enable|status}"
+      exit 1
+  esac
+}
+
+handle_hitch_service() {
+  case "$1" in
+    enable)
+      exit 0
+      ;;
+    start)
+      start_hitch
+      ;;
+    reload)
+      reload_hitch
+      ;;
+    status)
+      if is_hitch_running; then
+        # t3c-apply looks for this specific string
+        echo "Active: active"
+        exit 0
+      fi
+      exit 3
+      ;;
+    *)
+      echo "Usage: $0 {start|stop|restart|reload|enable|status}"
+      exit 1
+  esac
+}
+
+if [[ $2 == "varnish.service" ]]
+then
+  handle_varnish_service $1
+elif [[ $2 == "hitch.service" ]]
+then
+  handle_hitch_service $1
+fi
 
 exit 0
