@@ -714,6 +714,26 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
+	
+	@api_request('post', 'logs', ('3.0','4.0', '4.1', '5.0'))
+	def create_change_logs(self, data=None):
+		"""
+		Create a new change log entry.
+		:ref:`to-api-logs`
+		:param data: The parameter data to use for change_log creation.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
+	@api_request('delete', 'logs', ('4.0', '4.1', '5.0'))
+	def delete_change_logs(self, query_params=None):
+		"""
+		Deletes an existing change_log entry.
+		:ref:`to-api-logs`
+		:rtype: Tuple[Dict[str, Any], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
 
 	#
 	# Delivery Service
