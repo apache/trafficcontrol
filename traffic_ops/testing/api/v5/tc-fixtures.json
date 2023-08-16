@@ -2674,7 +2674,7 @@
     "servers": [
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-01",
@@ -2721,7 +2721,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "cdn2-test-edge",
@@ -2763,7 +2763,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "guid": null,
             "hostName": "influxdb02",
@@ -2810,7 +2810,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-router-01",
@@ -2857,7 +2857,7 @@
         },
         {
             "cacheGroup": "cachegroup2",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-03",
@@ -2904,7 +2904,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-14",
@@ -2951,7 +2951,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-15",
@@ -2999,7 +2999,7 @@
         },
         {
             "cacheGroup": "parentCachegroup",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-mid-16",
@@ -3046,7 +3046,7 @@
         },
         {
             "cacheGroup": "parentCachegroup",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-mid-17",
@@ -3093,7 +3093,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-org-1",
@@ -3140,7 +3140,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-org-2",
@@ -3187,7 +3187,7 @@
         },
         {
             "cacheGroup": "parentCachegroup",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-mid-01",
@@ -3234,7 +3234,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "guid": null,
             "hostName": "rascal01",
@@ -3281,7 +3281,7 @@
         },
         {
             "cacheGroup": "cachegroup2",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown2.net",
             "guid": null,
             "hostName": "edge1-cdn2",
@@ -3328,7 +3328,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "infra.ciab.test",
             "guid": null,
             "hostName": "trafficvault",
@@ -3375,7 +3375,7 @@
         },
         {
             "cacheGroup": "multiOriginCachegroup",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.denver.kabletown.net",
             "guid": null,
             "hostName": "denver-mso-org-01",
@@ -3422,7 +3422,7 @@
         },
         {
             "cacheGroup": "multiOriginCachegroup",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.denver.kabletown.net",
             "guid": null,
             "hostName": "test-mso-org-01",
@@ -3469,7 +3469,7 @@
         },
         {
             "cacheGroup": "multiOriginCachegroup",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "ga.denver.kabletown.net",
             "guid": null,
             "hostName": "denver-mso-org-02",
@@ -3516,7 +3516,7 @@
         },
         {
             "cacheGroup": "cachegroup3",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown2.net",
             "guid": null,
             "hostName": "edge1-cdn1-cg3",
@@ -3563,7 +3563,7 @@
         },
         {
             "cacheGroup": "cachegroup3",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown2.net",
             "guid": null,
             "hostName": "edge2-cdn1-cg3",
@@ -3610,7 +3610,7 @@
         },
         {
             "cacheGroup": "topology-edge-cg-01",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "edge-01.forked-topology.kabletown.net",
             "hostName": "topology-edge-01",
             "httpsPort": 443,
@@ -3644,7 +3644,7 @@
         },
         {
             "cacheGroup": "topology-edge-cg-02",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "edge-02.forked-topology.kabletown.net",
             "hostName": "topology-edge-02",
             "httpsPort": 443,
@@ -3678,7 +3678,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-04",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "mid-04.forked-topology.kabletown.net",
             "hostName": "topology-mid-04",
             "httpsPort": 443,
@@ -3712,7 +3712,7 @@
         },
         {
             "cacheGroup": "dtrc1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-mid-01",
             "httpsPort": 443,
@@ -3746,7 +3746,7 @@
         },
         {
             "cacheGroup": "dtrc1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-mid-02",
             "httpsPort": 443,
@@ -3780,7 +3780,7 @@
         },
         {
             "cacheGroup": "dtrc1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-mid-03",
             "httpsPort": 443,
@@ -3814,7 +3814,7 @@
         },
         {
             "cacheGroup": "dtrc2",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-edge-01",
             "httpsPort": 443,
@@ -3848,7 +3848,7 @@
         },
         {
             "cacheGroup": "dtrc2",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-edge-02",
             "httpsPort": 443,
@@ -3882,7 +3882,7 @@
         },
         {
             "cacheGroup": "dtrc2",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-edge-03",
             "httpsPort": 443,
@@ -3916,7 +3916,7 @@
         },
         {
             "cacheGroup": "dtrc3",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-edge-04",
             "httpsPort": 443,
@@ -3950,7 +3950,7 @@
         },
         {
             "cacheGroup": "dtrc3",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-edge-05",
             "httpsPort": 443,
@@ -3984,7 +3984,7 @@
         },
         {
             "cacheGroup": "dtrc3",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "dtrc-edge-06",
             "httpsPort": 443,
@@ -4018,7 +4018,7 @@
         },
         {
             "cacheGroup": "dtrc2",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "dtrc-edge-07",
             "httpsPort": 443,
@@ -4052,7 +4052,7 @@
         },
         {
             "cacheGroup": "dtrc3",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "dtrc-edge-08",
             "httpsPort": 443,
@@ -4086,7 +4086,7 @@
         },
         {
             "cacheGroup": "dtrc1",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "dtrc-mid-04",
             "httpsPort": 443,
@@ -4120,7 +4120,7 @@
         },
         {
             "cacheGroup": "cachegroup3",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "edgeInCachegroup3",
             "httpsPort": 443,
@@ -4154,7 +4154,7 @@
         },
         {
             "cacheGroup": "parentCachegroup",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInParentCachegroup",
             "httpsPort": 443,
@@ -4188,7 +4188,7 @@
         },
         {
             "cacheGroup": "secondaryCachegroup",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInSecondaryCachegroup",
             "httpsPort": 443,
@@ -4222,7 +4222,7 @@
         },
         {
             "cacheGroup": "secondaryCachegroup",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "midInSecondaryCachegroupInCDN1",
             "httpsPort": 443,
@@ -4256,7 +4256,7 @@
         },
         {
             "cacheGroup": "cdn1-only",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "foo.kabletown.net",
             "guid": null,
             "hostName": "edge-in-cdn1-only",
@@ -4303,7 +4303,7 @@
         },
         {
             "cacheGroup": "fallback1",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "edgeInFallback1",
             "httpsPort": 443,
@@ -4337,7 +4337,7 @@
         },
         {
             "cacheGroup": "fallback2",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "edgeInFallback2",
             "httpsPort": 443,
@@ -4371,7 +4371,7 @@
         },
         {
             "cacheGroup": "parentCachegroup2",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInParentCachegroup2",
             "httpsPort": 443,
@@ -4405,7 +4405,7 @@
         },
         {
             "cacheGroup": "topology-edge-cg-01",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "edgeInTopologyEdgeCg01",
             "httpsPort": 443,
@@ -4439,7 +4439,7 @@
         },
         {
             "cacheGroup": "topology-edge-cg-02",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "edgeInTopologyEdgeCg02",
             "httpsPort": 443,
@@ -4473,7 +4473,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-01",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInTopologyMidCg01",
             "httpsPort": 443,
@@ -4507,7 +4507,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-01",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "kabletown.net",
             "hostName": "midInTopologyMidCg01InCDN1",
             "httpsPort": 443,
@@ -4541,7 +4541,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-02",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInTopologyMidCg02",
             "httpsPort": 443,
@@ -4575,7 +4575,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-03",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInTopologyMidCg03",
             "httpsPort": 443,
@@ -4609,7 +4609,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-04",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInTopologyMidCg04",
             "httpsPort": 443,
@@ -4643,7 +4643,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-05",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInTopologyMidCg05",
             "httpsPort": 443,
@@ -4677,7 +4677,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-06",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInTopologyMidCg06",
             "httpsPort": 443,
@@ -4711,7 +4711,7 @@
         },
         {
             "cacheGroup": "topology-mid-cg-07",
-            "cdnName": "cdn2",
+            "cdn": "cdn2",
             "domainName": "kabletown.net",
             "hostName": "midInTopologyMidCg07",
             "httpsPort": 443,
@@ -4745,7 +4745,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "test-ds-server-assignments",
             "hostName": "test-ds-server-assignments",
             "httpsPort": 443,
@@ -4771,7 +4771,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-edge-16",
@@ -4818,7 +4818,7 @@
         },
         {
             "cacheGroup": "parentCachegroup3",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "atlanta-mid-02",
@@ -4865,7 +4865,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "revalpnd-legacy-true",
@@ -4912,7 +4912,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "updatepnd-legacy-true",
@@ -4959,7 +4959,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "configUpdateTime": "2022-01-01T17:00:00-07:00",
             "configApplyTime": "1969-12-31T17:00:00-07:00",
             "domainName": "ga.atlanta.kabletown.net",
@@ -5008,7 +5008,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "configUpdateTime": "2022-01-01T17:00:00-07:00",
             "configApplyTime": "1969-12-31T17:00:00-07:00",
             "domainName": "ga.atlanta.kabletown.net",
@@ -5057,7 +5057,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "reval-update-time",
@@ -5106,7 +5106,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "reval-update-time-no-revalpend",
@@ -5155,7 +5155,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "configUpdateTime": "2022-01-01T17:00:00-07:00",
             "configApplyTime": "1969-12-31T17:00:00-07:00",
             "domainName": "ga.atlanta.kabletown.net",
@@ -5206,7 +5206,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "configUpdateTime": "2022-01-01T17:00:00-07:00",
             "configApplyTime": "1969-12-31T17:00:00-07:00",
             "domainName": "ga.atlanta.kabletown.net",
@@ -5257,7 +5257,7 @@
         },
         {
             "cacheGroup": "cachegroup1",
-            "cdnName": "cdn1",
+            "cdn": "cdn1",
             "domainName": "ga.atlanta.kabletown.net",
             "guid": null,
             "hostName": "admin-down-server",
