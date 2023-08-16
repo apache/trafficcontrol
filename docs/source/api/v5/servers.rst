@@ -88,10 +88,26 @@ Request Structure
 
 Response Structure
 ------------------
-:cacheGroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
-:cacheGroupID:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
-:cdnId:            The integral, unique identifier of the CDN to which the server belongs
-:cdn:          Name of the CDN to which the server belongs
+:cacheGroup: A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cachegroup`` - improperly formatted camelCase.
+
+:cacheGroupID: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cachegroupId`` - improperly formatted camelCase.
+
+:cdnID: The integral, unique identifier of the CDN to which the server belongs
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cdnId`` - improperly formatted camelCase.
+
+:cdn: Name of the CDN to which the server belongs
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cdnName``. It has been changed for consistency with others e.g. ``type``, ``status``, etc.
+
 :configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
 :configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
 :domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
@@ -125,7 +141,11 @@ Response Structure
 	:routerPortName:    The human-readable name of the router responsible for reaching this server's interface.
 	:routerPortName:    The human-readable name of the port used by the router responsible for reaching this server's interface.
 
-:lastUpdated:   The date and time at which this server description was last modified
+:lastUpdated: The date and time at which this server description was last modified, in :RFC:3339 format
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.
+
 :mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
 
 	.. deprecated:: 3.0
@@ -141,10 +161,22 @@ Response Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:offlineReason:   A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physicalLocation:    The name of the physical location where the server resides
-:physicalLocationID:  An integral, unique identifier for the physical location where the server resides
-:profiles:    List of :ref:`profile-name` of the :term:`Profiles` used by this server
+:offlineReason:    A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
+:physicalLocation: The name of the physical location where the server resides
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``physLocation`` - improperly formatted camelCase.
+
+:physicalLocationID: An integral, unique identifier for the physical location where the server resides
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``physLocationId`` - improperly formatted camelCase.
+
+:profiles: List of :ref:`profile-name` of the :term:`Profiles` used by this server
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``profileNames`` - it has been changed because now that this is the only identifying information for a :term:Profile that exists on a server, there is no need to distinguish it from, say, an ID.
+
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
 :rack:            A string indicating "server rack" location
@@ -152,16 +184,23 @@ Response Structure
 
 	.. seealso:: :ref:`health-proto`
 
-:statusId: The integral, unique identifier of the status of this server
+:statusID: The integral, unique identifier of the status of this server
 
 	.. seealso:: :ref:`health-proto`
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``statusID`` - improperly formatted camelCase.
 
 :tcpPort: The port on which this server listens for incoming TCP connections
 
 	.. note:: This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
 
-:type:       The name of the :term:`Type` of this server
-:typeId:     The integral, unique identifier of the 'type' of this server
+:type:   The name of the :term:`Type` of this server
+:typeID: The integral, unique identifier of the 'type' of this server
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``typeID`` - improperly formatted camelCase.
+
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 
@@ -180,7 +219,7 @@ Response Structure
 	{ "response": [{
 		"cacheGroup": "CDN_in_a_Box_Mid",
 		"cacheGroupID": 6,
-		"cdnId": 2,
+		"cdnID": 2,
 		"cdn": "CDN-in-a-Box",
 		"configUpdateTime": "1969-12-31T17:00:00-07:00",
 		"configApplyTime": "1969-12-31T17:00:00-07:00",
@@ -206,10 +245,10 @@ Response Structure
 		"revalUpdateTime": "1969-12-31T17:00:00-07:00",
 		"revalApplyTime": "1969-12-31T17:00:00-07:00",
 		"status": "REPORTED",
-		"statusId": 3,
+		"statusID": 3,
 		"tcpPort": 80,
 		"type": "MID",
-		"typeId": 12,
+		"typeID": 12,
 		"xmppId": "",
 		"xmppPasswd": "",
 		"interfaces": [
@@ -243,7 +282,11 @@ Allows a user to create a new server.
 Request Structure
 -----------------
 :cacheGroupID: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server shall belong
-:cdnId:        The integral, unique identifier of the CDN to which the server shall belong
+:cdnID:        The integral, unique identifier of the CDN to which the server shall belong
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cdnId`` - improperly formatted camelCase.
+
 :domainName:   The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :hostName:     The (short) hostname of the server
 :httpsPort:    An optional port number on which the server listens for incoming HTTPS connections/requests
@@ -286,17 +329,32 @@ Request Structure
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
 :physicalLocationID: An integral, unique identifier for the physical location where the server resides
-:profiles:   List of :ref:`profile-name` of the :term:`Profiles` that shall be used by this server
-:rack:           An optional string indicating "server rack" location
-:statusId:       The integral, unique identifier of the status of this server
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``physLocationId`` - improperly formatted camelCase.
+
+:profiles: List of :ref:`profile-name` of the :term:`Profiles` that shall be used by this server
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``profileNames`` - it has been changed because now that this is the only identifying information for a :term:Profile that exists on a server, there is no need to distinguish it from, say, an ID.
+
+:rack:     An optional string indicating "server rack" location
+:statusID: The integral, unique identifier of the status of this server
 
 	.. seealso:: :ref:`health-proto`
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``statusId`` - improperly formatted camelCase.
 
 :tcpPort: An optional port number on which this server listens for incoming TCP connections
 
 	.. note:: This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
 
-:typeId:     The integral, unique identifier of the 'type' of this server
+:typeID: The integral, unique identifier of the 'type' of this server
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``typeId`` - improperly formatted camelCase.
+
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: An optional password used in XMPP communications with the server - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 
@@ -313,7 +371,7 @@ Request Structure
 
 	{
 		"cacheGroupID": 6,
-		"cdnId": 2,
+		"cdnID": 2,
 		"domainName": "infra.ciab.test",
 		"hostName": "test",
 		"httpsPort": 443,
@@ -357,17 +415,33 @@ Request Structure
 		"offlineReason": "",
 		"physicalLocationID": 1,
 		"profiles": ["ATS_MID_TIER_CACHE"],
-		"statusId": 3,
+		"statusID": 3,
 		"tcpPort": 80,
-		"typeId": 12
+		"typeID": 12
 	}
 
 Response Structure
 ------------------
-:cacheGroup:       A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
-:cacheGroupID:     An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
-:cdnId:            The integral, unique identifier of the CDN to which the server belongs
-:cdn:          Name of the CDN to which the server belongs
+:cacheGroup: A string that is the :ref:`name of the Cache Group <cache-group-name>` to which the server belongs
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cachegroup`` - improperly formatted camelCase.
+
+:cacheGroupID: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cachegroupId`` - improperly formatted camelCase.
+
+:cdnID: The integral, unique identifier of the CDN to which the server belongs
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cdnId`` - improperly formatted camelCase.
+
+:cdn: Name of the CDN to which the server belongs
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``cdnName``. It has been changed for consistency with others e.g. ``type``, ``status``, etc.
+
 :configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
 :configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
 :domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
@@ -401,7 +475,11 @@ Response Structure
 	:routerPortName:    The human-readable name of the router responsible for reaching this server's interface.
 	:routerPortName:    The human-readable name of the port used by the router responsible for reaching this server's interface.
 
-:lastUpdated:   The date and time at which this server description was last modified
+:lastUpdated: The date and time at which this server description was last modified, in :RFC:3339 format
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.
+
 :mgmtIpAddress: The IPv4 address of some network interface on the server used for 'management'
 
 	.. deprecated:: 3.0
@@ -417,10 +495,22 @@ Response Structure
 	.. deprecated:: 3.0
 		This field is deprecated and will be removed in a future API version. Operators should migrate this data into the ``interfaces`` property of the server.
 
-:offlineReason:   A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
-:physicalLocation:    The name of the :term:`Physical Location` where the server resides
-:physicalLocationID:  An integral, unique identifier for the :term:`Physical Location` where the server resides
-:profiles:    List of :ref:`profile-name` of the :term:`Profiles` used by this server
+:offlineReason:    A user-entered reason why the server is in ADMIN_DOWN or OFFLINE status
+:physicalLocation: The name of the :term:`Physical Location` where the server resides
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``physLocation`` - improperly formatted camelCase.
+
+:physicalLocationID: An integral, unique identifier for the :term:`Physical Location` where the server resides
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``physLocationId`` - improperly formatted camelCase.
+
+:profiles: List of :ref:`profile-name` of the :term:`Profiles` used by this server
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``profileNames`` - it has been changed because now that this is the only identifying information for a :term:Profile that exists on a server, there is no need to distinguish it from, say, an ID.
+
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
 :rack:            A string indicating "server rack" location
@@ -428,16 +518,23 @@ Response Structure
 
 	.. seealso:: :ref:`health-proto`
 
-:statusId: The integral, unique identifier of the status of this server
+:statusID: The integral, unique identifier of the status of this server
 
 	.. seealso:: :ref:`health-proto`
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``statusId`` - improperly formatted camelCase.
 
 :tcpPort: The port on which this server listens for incoming TCP connections
 
 	.. note:: This is typically thought of as synonymous with "HTTP port", as the port specified by ``httpsPort`` may also be used for incoming TCP connections.
 
-:type:       The name of the 'type' of this server
-:typeId:     The integral, unique identifier of the 'type' of this server
+:type:   The name of the 'type' of this server
+:typeID: The integral, unique identifier of the 'type' of this server
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was known by the name ``typeId`` - improperly formatted camelCase.
+
 :xmppId:     A system-generated UUID used to generate a server hashId for use in Traffic Router's consistent hashing algorithm. This value is set when a server is created and cannot be changed afterwards.
 :xmppPasswd: The password used in XMPP communications with the server - displays as simply ``******`` if the currently logged-in user does not have the SECURE-SERVER:READ permission.
 
@@ -462,7 +559,7 @@ Response Structure
 	"response": {
 		"cacheGroup": "CDN_in_a_Box_Mid",
 		"cacheGroupID": 6,
-		"cdnId": 2,
+		"cdnID": 2,
 		"cdn": "CDN-in-a-Box",
 		"configUpdateTime": "1969-12-31T17:00:00-07:00",
 		"configApplyTime": "1969-12-31T17:00:00-07:00",
@@ -488,10 +585,10 @@ Response Structure
 		"revalUpdateTime": "1969-12-31T17:00:00-07:00",
 		"revalApplyTime": "1969-12-31T17:00:00-07:00",
 		"status": "REPORTED",
-		"statusId": 3,
+		"statusID": 3,
 		"tcpPort": 80,
 		"type": "MID",
-		"typeId": 12,
+		"typeID": 12,
 		"xmppId": null,
 		"xmppPasswd": null,
 		"interfaces": [
