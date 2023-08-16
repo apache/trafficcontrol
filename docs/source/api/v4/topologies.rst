@@ -56,7 +56,7 @@ Response Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
 	:caption: Response Example
@@ -150,6 +150,7 @@ Response Structure
 ``POST``
 ========
 Create a new :term:`Topology`.
+
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
 :Permissions Required: TOPOLOGY:CREATE, TOPOLOGY:READ, CACHE-GROUP:READ
@@ -162,7 +163,7 @@ Request Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
 	:caption: Request Example
@@ -252,7 +253,7 @@ Response Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
 	:caption: Response Example
@@ -371,7 +372,7 @@ Request Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
 	:caption: Request Example
@@ -453,7 +454,7 @@ Response Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 2 parents max
 
 .. code-block:: http
 	:caption: Response Example
