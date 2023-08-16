@@ -1503,8 +1503,8 @@ func ExampleServerV50_UpdatePending() {
 	*s.ConfigUpdateTime = s.ConfigUpdateTime.Add(2 * time.Hour)
 	fmt.Println(s.UpdatePending())
 
-	// Output: true
-	// false
+	// Output: false
+	// true
 }
 
 func ExampleServerV50_RevalidationPending() {
@@ -1520,6 +1520,6 @@ func ExampleServerV50_RevalidationPending() {
 	*s.RevalUpdateTime = s.RevalUpdateTime.Add(2 * time.Hour)
 	fmt.Println(s.RevalidationPending())
 
-	// Output: true
-	// false
+	// Output: false
+	// true
 }

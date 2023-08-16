@@ -1312,11 +1312,14 @@ func (s *ServerV40) ToServerV2FromV4(csp CommonServerProperties) (ServerNullable
 // ServerV50 is the representation of a Server in version 5.0 of the Traffic Ops
 // API.
 type ServerV50 struct {
-	CacheGroup       string     `json:"cacheGroup" db:"cachegroup"`
-	CacheGroupID     int        `json:"cacheGroupID" db:"cachegroup_id"`
-	CDNID            int        `json:"cdnID" db:"cdn_id"`
-	CDN              string     `json:"cdn" db:"cdn_name"`
-	ConfigApplyTime  *time.Time `json:"configApplyTime" db:"config_apply_time"`
+	CacheGroup   string `json:"cacheGroup" db:"cachegroup"`
+	CacheGroupID int    `json:"cacheGroupID" db:"cachegroup_id"`
+	CDNID        int    `json:"cdnID" db:"cdn_id"`
+	CDN          string `json:"cdn" db:"cdn_name"`
+	// The time at which configuration updates were last applied for this server
+	// by t3c.
+	ConfigApplyTime *time.Time `json:"configApplyTime" db:"config_apply_time"`
+	// The time at which configuration updates were last queued for this server.
 	ConfigUpdateTime *time.Time `json:"configUpdateTime" db:"config_update_time"`
 	DomainName       string     `json:"domainName" db:"domain_name"`
 	// Deprecated: This property has unknown purpose and should not be used so
@@ -1350,8 +1353,10 @@ type ServerV50 struct {
 	Profiles           []string `json:"profiles" db:"profile_name"`
 	// Deprecated: This property has unknown purpose and should not be used so
 	// that we can get rid of it.
-	Rack              *string    `json:"rack" db:"rack"`
-	RevalApplyTime    *time.Time `json:"revalApplyTime" db:"revalidate_apply_time"`
+	Rack *string `json:"rack" db:"rack"`
+	// The time at which revalidations for this server were last updated by t3c.
+	RevalApplyTime *time.Time `json:"revalApplyTime" db:"revalidate_apply_time"`
+	// The time at which revalidations were last queued for this server.
 	RevalUpdateTime   *time.Time `json:"revalUpdateTime" db:"revalidate_update_time"`
 	Status            string     `json:"status" db:"status"`
 	StatusID          int        `json:"statusID" db:"status_id"`
@@ -1423,12 +1428,12 @@ func (s ServerV50) Downgrade() ServerV4 {
 
 // UpdatePending tells whether the Server has pending updates.
 func (s ServerV50) UpdatePending() bool {
-	return s.ConfigApplyTime != nil && s.ConfigUpdateTime != nil && !s.ConfigApplyTime.Before(*s.ConfigUpdateTime)
+	return s.ConfigApplyTime != nil && s.ConfigUpdateTime != nil && !s.ConfigApplyTime.After(*s.ConfigUpdateTime)
 }
 
 // RevalidationPending tells whether the Server has pending revalidations.
 func (s ServerV50) RevalidationPending() bool {
-	return s.RevalApplyTime != nil && s.RevalUpdateTime != nil && !s.RevalApplyTime.Before(*s.RevalUpdateTime)
+	return s.RevalApplyTime != nil && s.RevalUpdateTime != nil && !s.RevalApplyTime.After(*s.RevalUpdateTime)
 }
 
 // ServerV5 is the representation of a Server in the latest minor version of
