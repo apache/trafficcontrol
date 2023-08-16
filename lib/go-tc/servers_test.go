@@ -160,7 +160,6 @@ func TestServerV5DowngradeUpgrade(t *testing.T) {
 		Status:             "Status",
 		StatusID:           5,
 		TCPPort:            nil,
-		Topologies:         []string{},
 		Type:               "type",
 		TypeID:             6,
 		XMPPID:             nil,

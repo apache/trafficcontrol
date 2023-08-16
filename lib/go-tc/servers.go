@@ -1151,7 +1151,6 @@ func (s ServerV4) Upgrade() ServerV50 {
 		Status:             util.CoalesceToDefault(s.Status),
 		StatusID:           util.CoalesceToDefault(s.StatusID),
 		TCPPort:            util.CopyIfNotNil(s.TCPPort),
-		Topologies:         []string{},
 		Type:               s.Type,
 		TypeID:             util.CoalesceToDefault(s.TypeID),
 		XMPPID:             util.CopyIfNotNil(s.XMPPID),
@@ -1362,11 +1361,9 @@ type ServerV50 struct {
 	StatusID          int        `json:"statusID" db:"status_id"`
 	StatusLastUpdated *time.Time `json:"statusLastUpdated" db:"status_last_updated"`
 	TCPPort           *int       `json:"tcpPort" db:"tcp_port"`
-	// read-only
-	Topologies []string `json:"topologies" db:"topologies"`
-	Type       string   `json:"type" db:"server_type"`
-	TypeID     int      `json:"typeID" db:"server_type_id"`
-	XMPPID     *string  `json:"xmppId" db:"xmpp_id"`
+	Type              string     `json:"type" db:"server_type"`
+	TypeID            int        `json:"typeID" db:"server_type_id"`
+	XMPPID            *string    `json:"xmppId" db:"xmpp_id"`
 	// Deprecated: This property has unknown purpose and should not be used so
 	// that we can get rid of it.
 	XMPPPasswd *string `json:"xmppPasswd" db:"xmpp_passwd"`
