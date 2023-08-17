@@ -328,11 +328,19 @@ public class NameServer {
 			if (record instanceof SOARecord) {
 				final SOARecord soa = (SOARecord) record;
 
+				// Set the "minimum" attribute to be the maximum of the current minimum value and 900 (seconds)
+				// This is done to increase the negative caching TTL, so as to maximize the time interval between
+				// successive NXDOMAIN or NXRRSET responses.
+				final long minimum = Math.max(soa.getMinimum(), 900L);
+				record = new SOARecord(soa.getName(), DClass.IN, soa.getTTL(), soa.getHost(), soa.getAdmin(),
+						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(),
+						minimum);
+
 				// the value of the minimum field is less than the actual TTL; adjust
 				if (soa.getMinimum() != 0 || soa.getTTL() > soa.getMinimum()) {
 					record = new SOARecord(soa.getName(), DClass.IN, soa.getMinimum(), soa.getHost(), soa.getAdmin(),
 							soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(),
-							soa.getMinimum());
+							minimum);
 				} // else use the unmodified record
 			}
 
