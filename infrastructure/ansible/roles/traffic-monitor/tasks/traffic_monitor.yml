@@ -28,7 +28,7 @@
 - name: Copy traffic_monitor config
   template:
     src: traffic_monitor.cfg.j2
-    dest: /opt/traffic_monitor/conf/traffic_monitor.cfg
+    dest: "{{ tm_config }}"
     mode: 0600
     owner: traffic_monitor
     group: traffic_monitor
@@ -38,12 +38,20 @@
 - name: Copy traffic_ops config
   template:
     src: traffic_ops.cfg.j2
-    dest: /opt/traffic_monitor/conf/traffic_ops.cfg
+    dest: "{{ tm_to_config }}"
     mode: 0600
     owner: traffic_monitor
     group: traffic_monitor
   notify: Restart Traffic Monitor
   become: yes
+
+- name: Copy the traffic-monitor systemd unit file
+  template:
+    src: traffic_monitor.service.j2
+    dest: /etc/systemd/system/traffic_monitor.service
+    owner: root
+    group: root
+    mode: 0644
 
 - name: Enable traffic_monitor
   service:

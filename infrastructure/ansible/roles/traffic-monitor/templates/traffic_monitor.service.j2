@@ -1,0 +1,18 @@
+[Unit]
+Description=Traffic Monitor is a HTTP service that polls the health of caches and provide status to Trafffic Routers.
+Wants=systemd-udev-settle.service
+After=syslog.target network.target systemd-udev-settle.service
+
+[Service]
+Type=simple
+ExecStart={{ tm_exec_path }} --opsCfg {{ tm_to_config }} --config {{ tm_config }}
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=1000000
+PIDFile={{ tm_pid_file }}
+TimeoutStopSec=5s
+ExecReload={{ tm_exec_path }} config reload
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
