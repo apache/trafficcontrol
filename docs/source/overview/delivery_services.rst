@@ -676,6 +676,8 @@ Describes how HTTP "Range Requests" should be handled by the Delivery Service at
 3
 	Use the `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin to slice range based requests into deterministic chunks. (Aliased as "3 - Use slice plugin" in Traffic Portal forms)
 
+	.. note:: The ``-–consider-ims`` parameter will automatically be added to the remap line by :term:`t3c` for self healing. If any other range request parameters are being used you must also include ``--consider-ims`` to enable self healing.
+
 		.. versionadded:: ATCv4.1
 
 .. note:: Range Request Handling can only be implemented on :term:`cache servers` using :abbr:`ATS (Apache Traffic Server)` because of its dependence on :abbr:`ATS (Apache Traffic Server)` plugins. The value may be set on any Delivery Service, but will have no effect when the :term:`cache servers` that ultimately end up serving the content are e.g. Grove, Nginx, etc.
