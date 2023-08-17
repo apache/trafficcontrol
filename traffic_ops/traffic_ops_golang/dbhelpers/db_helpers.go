@@ -2278,6 +2278,13 @@ func ParameterExists(tx *sql.Tx, id string) (bool, error) {
 	return true, nil
 }
 
+func ProfileExists(tx *sql.Tx, id string) (bool, error) {
+	row := tx.QueryRow(`SELECT EXISTS(SELECT * FROM profile WHERE profile.id=$1)`, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 // GetCoordinateID obtains coordinateID, and an error (if one occurs)
 func GetCoordinateID(tx *sql.Tx, id int) (*int, error) {
 	q := `SELECT coordinate FROM cachegroup WHERE id = $1`

@@ -97,14 +97,13 @@ type Profile struct {
 // which it is assigned. Note: Field LastUpdated represents RFC3339
 type ProfileV5 struct {
 	ID              int                 `json:"id" db:"id"`
-	LastUpdated     time.Time           `json:"lastUpdated"`
-	Name            string              `json:"name"`
-	Parameter       string              `json:"param"`
-	Description     string              `json:"description"`
-	CDNName         string              `json:"cdnName"`
-	CDNID           int                 `json:"cdn"`
-	RoutingDisabled bool                `json:"routingDisabled"`
-	Type            string              `json:"type"`
+	LastUpdated     time.Time           `json:"lastUpdated" db:"last_updated"`
+	Name            string              `json:"name" db:"name"`
+	Description     string              `json:"description" db:"description"`
+	CDNName         string              `json:"cdnName" db:"cdn_name"`
+	CDNID           int                 `json:"cdn" db:"cdn"`
+	RoutingDisabled bool                `json:"routingDisabled" db:"routing_disabled"`
+	Type            string              `json:"type" db:"type"`
 	Parameters      []ParameterNullable `json:"params,omitempty"`
 }
 
