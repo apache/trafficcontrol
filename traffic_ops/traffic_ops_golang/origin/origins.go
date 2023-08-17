@@ -21,6 +21,7 @@ package origin
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -486,4 +487,212 @@ func deleteQuery() string {
 	query := `DELETE FROM origin
 WHERE id=:id`
 	return query
+}
+
+// Get is the handler for GET requests to Origins of APIv5
+func Get(w http.ResponseWriter, r *http.Request) {
+
+	var useIMS bool
+
+	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
+	if sysErr != nil || userErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	origins, userErr, sysErr, errCode, maxTime := getOrigins(w.Header(), inf.Params, inf.Tx, inf.User, useIMS)
+	var returnable []tc.OriginV5
+	for _, origin := range origins {
+		returnable = append(returnable, origin.ToOriginV5())
+	}
+	_ = maxTime // consider removing maxTime if it's not used in getOrigins in future
+
+	api.WriteResp(w, r, returnable)
+	return
+}
+
+// Create Origin with the passed data for APIv5.
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, sysError, userError, errorCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if sysError != nil || userError != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errorCode, userError, sysError)
+		return
+	}
+	defer inf.Close()
+	org, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	userErr, sysErr, errCode := checkTenancy(org.TenantID, org.DeliveryServiceID, tx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, *org.DeliveryServiceID)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("Error checking the database for delivery service name and cdn, whether it existed, and any error"), nil)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	resultRows, err := tx.NamedQuery(insertQuery(), org)
+	if err != nil {
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx.Tx, code, usrErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&org.ID, &org.LastUpdated); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: scanning: "+err.Error()), nil)
+			return
+		}
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: no rows returned"), nil)
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: multiple rows returned"), nil)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was created.")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, org)
+}
+
+// Update a Origin for APIv5.
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, sysError, userError, errorCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx
+	if sysError != nil || userError != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errorCode, userError, sysError)
+		return
+	}
+	defer inf.Close()
+
+	origin, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, tx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	isPrimary := false
+	ds := 0
+
+	requestedOriginId := inf.IntParams["id"]
+
+	q := `SELECT is_primary, deliveryservice FROM origin WHERE id = $1`
+	if err := tx.QueryRow(q, requestedOriginId).Scan(&isPrimary, &ds); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin not found"), nil)
+			return
+		}
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if origin with id %s exists", err.Error(), requestedOriginId))
+		return
+	}
+
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedOriginId, "region")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if isPrimary && *origin.DeliveryServiceID != ds {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, fmt.Errorf("cannot update the delivery service of a primary origin"), nil)
+		return
+	}
+
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(tx.Tx, *origin.DeliveryServiceID)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, err, nil)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	var lastUpdated time.Time
+	query := `UPDATE origin SET
+					cachegroup=$1,
+					coordinate=$2,
+					deliveryservice=$3,
+					fqdn=$4,
+					ip6_address=$5,
+					ip_address=$6,
+					name=$7,
+					port=$8,
+					profile=$9,
+					protocol=$10,
+					tenant=$11
+					WHERE id=$12 RETURNING last_updated`
+	errUpdate := tx.QueryRow(query, origin.CachegroupID, origin.CoordinateID, origin.DeliveryServiceID,
+		origin.FQDN, origin.IP6Address, origin.IPAddress, origin.Name,
+		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&lastUpdated)
+	if errUpdate != nil {
+		if errors.Is(errUpdate, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, fmt.Errorf("origin: %d not found", requestedOriginId), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(errUpdate)
+		api.HandleErr(w, r, tx.Tx, code, usrErr, sysErr)
+		return
+	}
+
+	origin.LastUpdated = &lastUpdated
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was updated.")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, origin)
+	return
+}
+
+// readAndValidateJsonStruct reads json body and validates json fields
+func readAndValidateJsonStruct(r *http.Request) (tc.OriginV5, error) {
+	var origin tc.OriginV5
+	if err := json.NewDecoder(r.Body).Decode(&origin); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into RegionV5 struct %w", err)
+		return origin, userErr
+	}
+
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	validProtocol := validation.NewStringRule(tovalidate.IsOneOfStringICase("http", "https"), "must be http or https")
+	portErr := "must be a valid integer between 1 and 65535"
+
+	// validate JSON body
+	errs := tovalidate.ToErrors(validation.Errors{
+		"cachegroupId":      validation.Validate(origin.CachegroupID, validation.Min(1)),
+		"coordinateId":      validation.Validate(origin.CoordinateID, validation.Min(1)),
+		"deliveryServiceId": validation.Validate(origin.DeliveryServiceID, validation.NotNil),
+		"fqdn":              validation.Validate(origin.FQDN, validation.Required, is.DNSName),
+		"ip6Address":        validation.Validate(origin.IP6Address, validation.NilOrNotEmpty, is.IPv6),
+		"ipAddress":         validation.Validate(origin.IPAddress, validation.NilOrNotEmpty, is.IPv4),
+		"name":              validation.Validate(origin.Name, validation.Required, noSpaces),
+		"port":              validation.Validate(origin.Port, validation.NilOrNotEmpty.Error(portErr), validation.Min(1).Error(portErr), validation.Max(65535).Error(portErr)),
+		"profileId":         validation.Validate(origin.ProfileID, validation.Min(1)),
+		"protocol":          validation.Validate(origin.Protocol, validation.Required, validProtocol),
+		"tenantId":          validation.Validate(origin.TenantID, validation.Min(1)),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return origin, userErr
+	}
+	return origin, nil
 }
