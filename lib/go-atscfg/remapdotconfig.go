@@ -421,9 +421,11 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if ds.RangeRequestHandling != nil && (*ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest || *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice) {
-			remapTags.RangeRequests = `@plugin=cache_range_requests.so` +
-				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
-			if !strings.Contains(remapTags.RangeRequests, `@pparam=--consider-ims`) && *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice {
+			rqParam := paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			remapTags.RangeRequests = `@plugin=cache_range_requests.so`
+			if rqParam != "" {
+				remapTags.RangeRequests += rqParam
+			} else if !strings.Contains(remapTags.RangeRequests, `@pparam=--consider-ims`) && *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice {
 				remapTags.RangeRequests += ` @pparam=--consider-ims`
 			}
 		}
@@ -775,10 +777,12 @@ func buildEdgeRemapLine(
 		}
 
 		if crr {
-			rangeReqTxt += `@plugin=cache_range_requests.so ` +
-				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
-			if !strings.Contains(rangeReqTxt, `@pparam=--consider-ims`) && *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && ds.RangeSliceBlockSize != nil {
-				rangeReqTxt += ` @pparam=--consider-ims`
+			rqParam := paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			rangeReqTxt += `@plugin=cache_range_requests.so `
+			if rqParam != "" {
+				rangeReqTxt += rqParam
+			} else if !strings.Contains(rangeReqTxt, `@pparam=--consider-ims`) && *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && ds.RangeSliceBlockSize != nil {
+				rangeReqTxt += `@pparam=--consider-ims`
 			}
 		}
 	}
