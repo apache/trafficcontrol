@@ -32,7 +32,7 @@ const (
 )
 
 // CreateProfile creates the passed Profile.
-func (to *Session) CreateProfile(pl tc.Profile, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateProfile(pl tc.ProfileV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if pl.CDNID == 0 && pl.CDNName != "" {
 		cdnOpts := NewRequestOptions()
 		cdnOpts.QueryParameters.Set("name", pl.CDNName)
@@ -61,7 +61,7 @@ func (to *Session) CreateProfile(pl tc.Profile, opts RequestOptions) (tc.Alerts,
 }
 
 // UpdateProfile replaces the Profile identified by ID with the one provided.
-func (to *Session) UpdateProfile(id int, pl tc.Profile, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateProfile(id int, pl tc.ProfileV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiProfiles, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, pl, &alerts)

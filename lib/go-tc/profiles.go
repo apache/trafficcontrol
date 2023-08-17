@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -81,6 +82,22 @@ type ProfileResponse struct {
 type Profile struct {
 	ID              int                 `json:"id" db:"id"`
 	LastUpdated     TimeNoMod           `json:"lastUpdated"`
+	Name            string              `json:"name"`
+	Parameter       string              `json:"param"`
+	Description     string              `json:"description"`
+	CDNName         string              `json:"cdnName"`
+	CDNID           int                 `json:"cdn"`
+	RoutingDisabled bool                `json:"routingDisabled"`
+	Type            string              `json:"type"`
+	Parameters      []ParameterNullable `json:"params,omitempty"`
+}
+
+// A ProfileV5 represents a set of configuration for a server or Delivery Service
+// which may be reused to allow sharing configuration across the objects to
+// which it is assigned. Note: Field LastUpdated represents RFC3339
+type ProfileV5 struct {
+	ID              int                 `json:"id" db:"id"`
+	LastUpdated     time.Time           `json:"lastUpdated"`
 	Name            string              `json:"name"`
 	Parameter       string              `json:"param"`
 	Description     string              `json:"description"`
