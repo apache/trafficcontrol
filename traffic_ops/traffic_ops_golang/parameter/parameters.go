@@ -544,15 +544,6 @@ func DeleteParameter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//assignedProfile := 0
-	//if err := inf.Tx.Get(&assignedProfile, "SELECT count(profile) FROM profile_parameter pp WHERE pp.parameter=$1", id); err != nil {
-	//	api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("parameter delete error, could not count assigned profiles: %w", err))
-	//	return
-	//} else if assignedProfile != 0 {
-	//	api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("can not delete a parameter with %d assigned profile", assignedProfile), nil)
-	//	return
-	//}
-
 	res, err := tx.Exec("DELETE FROM parameter AS p WHERE p.id=$1", id)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
