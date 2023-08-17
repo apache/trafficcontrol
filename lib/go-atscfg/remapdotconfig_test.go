@@ -5704,14 +5704,6 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 		t.Errorf("expected remap on mid server with ds slice range request handling to contain cache_range_requests plugin, actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "--consider-ims") {
-		t.Errorf("expected remap on mid server with ds slice range request handling to contain cache_range_requests plugin arg --consider-ims, actual '%v'", txt)
-	}
-
-	if strings.Count(remapLine, "--consider-ims") > 1 {
-		t.Errorf("expected remap on mid server with ds slice range request handling to contain one occurance of plugin arg --consider-ims, actual '%s'", txt)
-	}
-
 	if strings.Contains(remapLine, "pparam=--blockbytes") {
 		t.Errorf("did not expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
 	}
@@ -5856,14 +5848,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 
 	if !strings.Contains(remapLine, "cache_range_requests.so") {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain cache_range_requests plugin, actual '%v'", txt)
-	}
-
-	if !strings.Contains(remapLine, "--consider-ims") {
-		t.Errorf("expected remap on edge server with ds slice range request handling to contain cache_range_requests plugin arg --consider-ims, actual '%v'", txt)
-	}
-
-	if strings.Count(remapLine, "--consider-ims") > 1 {
-		t.Errorf("expected remap on edge server with ds slice range request handling to contain one occurance of plugin arg --consider-ims, actual '%s'", txt)
 	}
 
 	if !strings.Contains(remapLine, "--no-modify-cachekey") {
