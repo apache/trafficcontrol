@@ -50,6 +50,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7652](https://github.com/apache/trafficcontrol/pull/7652) *t3c* added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt
 
 ### Changed
+- [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
 - [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
 - [#7521](https://github.com/apache/trafficcontrol/pull/7521) *Traffic Ops* Returns empty array instead of null when no permissions are given for roles endpoint using POST or PUT request.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Adds better labels to routing methods widget on the TP dashboard.
