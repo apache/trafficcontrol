@@ -57,14 +57,20 @@ type Origin struct {
 	TenantID          *int       `json:"tenantId" db:"tenant_id"`
 }
 
-// OriginsResponseV5 is a list of Origins as a response for APIv5.
-type OriginsResponseV5 struct {
+// OriginsResponseV5 is an alias for the latest minor version of the major version 5.
+type OriginsResponseV5 = OriginsResponseV50
+
+// OriginsResponseV50 is a list of Origins as a response for APIv5.
+type OriginsResponseV50 struct {
 	Response []OriginV5 `json:"response"`
 	Alerts
 }
 
-// OriginDetailResponseV5 is the JSON object returned for a single origin in APIv5.
-type OriginDetailResponseV5 struct {
+// OriginDetailResponseV5 is an alias for the latest minor version of the major version 5.
+type OriginDetailResponseV5 = OriginDetailResponseV50
+
+// OriginDetailResponseV50 is the JSON object returned for a single origin in APIv5.
+type OriginDetailResponseV50 struct {
 	Response OriginV5 `json:"response"`
 	Alerts
 }
