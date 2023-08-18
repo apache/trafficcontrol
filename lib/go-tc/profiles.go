@@ -92,6 +92,12 @@ type Profile struct {
 	Parameters      []ParameterNullable `json:"params,omitempty"`
 }
 
+// ProfilesResponseV5 is a list of profiles returned by GET requests.
+type ProfilesResponseV5 struct {
+	Response []ProfileV5 `json:"response"`
+	Alerts
+}
+
 // A ProfileV5 represents a set of configuration for a server or Delivery Service
 // which may be reused to allow sharing configuration across the objects to
 // which it is assigned. Note: Field LastUpdated represents RFC3339

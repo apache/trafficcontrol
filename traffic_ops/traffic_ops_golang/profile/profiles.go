@@ -436,7 +436,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 		profileInterfaces = append(profileInterfaces, profile)
 	}
 
-	api.WriteResp(w, r, profileList)
+	api.WriteResp(w, r, profileInterfaces)
 	return
 }
 

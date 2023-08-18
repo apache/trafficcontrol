@@ -618,7 +618,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"PROFILE POST": func(t *testing.T) {
-							profile := tc.Profile{}
+							profile := tc.ProfileV5{}
 							err = json.Unmarshal(dat, &profile)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.CreateProfile(profile, testCase.RequestOpts)
@@ -627,7 +627,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"PROFILE PUT": func(t *testing.T) {
-							profile := tc.Profile{}
+							profile := tc.ProfileV5{}
 							err = json.Unmarshal(dat, &profile)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.UpdateProfile(testCase.EndpointID(), profile, testCase.RequestOpts)

@@ -664,3 +664,54 @@ func TestDivisionExists(t *testing.T) {
 		})
 	}
 }
+
+func TestProfileExists(t *testing.T) {
+	var testCases = []struct {
+		description   string
+		id            string
+		expectedError error
+		exists        bool
+	}{
+		{
+			description:   "Success: Get valid Profile",
+			id:            "1",
+			expectedError: nil,
+			exists:        true,
+		},
+		{
+			description:   "Failure: Profile not in DB",
+			id:            "5",
+			expectedError: sql.ErrNoRows,
+			exists:        false,
+		},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.description, func(t *testing.T) {
+			mockDB, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+			}
+			defer mockDB.Close()
+
+			db := sqlx.NewDb(mockDB, "sqlmock")
+			defer db.Close()
+
+			mock.ExpectBegin()
+			rows := sqlmock.NewRows([]string{"EXISTS"})
+			if testCase.exists {
+				rows = rows.AddRow(1)
+			}
+			mock.ExpectQuery("SELECT").WillReturnRows(rows)
+			mock.ExpectCommit()
+
+			profileExists, err := ASNExists(db.MustBegin().Tx, testCase.id)
+			if testCase.exists != profileExists {
+				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, profileExists)
+			}
+
+			if !errors.Is(err, testCase.expectedError) {
+				t.Errorf("getSCInfo expected: %s, actual: %s", testCase.expectedError, err)
+			}
+		})
+	}
+}

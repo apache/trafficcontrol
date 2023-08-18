@@ -78,8 +78,8 @@ func (to *Session) GetParametersByProfileName(profileName string, opts RequestOp
 }
 
 // GetProfiles returns all Profiles stored in Traffic Ops.
-func (to *Session) GetProfiles(opts RequestOptions) (tc.ProfilesResponse, toclientlib.ReqInf, error) {
-	var data tc.ProfilesResponse
+func (to *Session) GetProfiles(opts RequestOptions) (tc.ProfilesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.ProfilesResponseV5
 	reqInf, err := to.get(apiProfiles, opts, &data)
 	return data, reqInf, err
 }
