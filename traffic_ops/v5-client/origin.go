@@ -29,7 +29,7 @@ import (
 // apiOrigins is the full path to the /origins API route.
 const apiOrigins = "/origins"
 
-func (to *Session) originIDs(origin *tc.Origin) error {
+func (to *Session) originIDs(origin *tc.OriginV5) error {
 	if origin == nil {
 		return errors.New("invalid call to originIDs; nil origin")
 	}
@@ -101,8 +101,8 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 }
 
 // CreateOrigin creates the given Origin.
-func (to *Session) CreateOrigin(origin tc.Origin, opts RequestOptions) (tc.OriginDetailResponse, toclientlib.ReqInf, error) {
-	var originResp tc.OriginDetailResponse
+func (to *Session) CreateOrigin(origin tc.OriginV5, opts RequestOptions) (tc.OriginDetailResponseV5, toclientlib.ReqInf, error) {
+	var originResp tc.OriginDetailResponseV5
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
@@ -115,8 +115,8 @@ func (to *Session) CreateOrigin(origin tc.Origin, opts RequestOptions) (tc.Origi
 }
 
 // UpdateOrigin replaces the Origin identified by 'id' with the passed Origin.
-func (to *Session) UpdateOrigin(id int, origin tc.Origin, opts RequestOptions) (tc.OriginDetailResponse, toclientlib.ReqInf, error) {
-	var originResp tc.OriginDetailResponse
+func (to *Session) UpdateOrigin(id int, origin tc.OriginV5, opts RequestOptions) (tc.OriginDetailResponseV5, toclientlib.ReqInf, error) {
+	var originResp tc.OriginDetailResponseV5
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
@@ -133,8 +133,8 @@ func (to *Session) UpdateOrigin(id int, origin tc.Origin, opts RequestOptions) (
 }
 
 // GetOrigins retrieves Origins from Traffic Ops.
-func (to *Session) GetOrigins(opts RequestOptions) (tc.OriginsResponse, toclientlib.ReqInf, error) {
-	var data tc.OriginsResponse
+func (to *Session) GetOrigins(opts RequestOptions) (tc.OriginsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.OriginsResponseV5
 	reqInf, err := to.get(apiOrigins, opts, &data)
 	return data, reqInf, err
 }

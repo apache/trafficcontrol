@@ -40,7 +40,7 @@ func TestOrigins(t *testing.T) {
 
 		tenant4UserSession := utils.CreateV5Session(t, Config.TrafficOps.URL, "tenant4user", "pa$$word", Config.Default.Session.TimeoutInSecs)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Origin]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.OriginV5]{
 			"GET": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
@@ -162,7 +162,7 @@ func TestOrigins(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:            util.Ptr("origin1"),
 						Cachegroup:      util.Ptr("originCachegroup"),
 						Coordinate:      util.Ptr("coordinate1"),
@@ -180,7 +180,7 @@ func TestOrigins(t *testing.T) {
 				},
 				"FORBIDDEN when CHILD TENANT CREATES ORIGIN OUTSIDE TENANCY": {
 					ClientSession: tenant4UserSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("originTenancyTest"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
@@ -192,7 +192,7 @@ func TestOrigins(t *testing.T) {
 				},
 				"NOT FOUND when CACHEGROUP DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testcg"),
 						CachegroupID:      util.Ptr(10000000),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
@@ -204,7 +204,7 @@ func TestOrigins(t *testing.T) {
 				},
 				"NOT FOUND when PROFILEID DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testprofile"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
 						FQDN:              util.Ptr("test.profileId.com"),
@@ -216,7 +216,7 @@ func TestOrigins(t *testing.T) {
 				},
 				"NOT FOUND when COORDINATE DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testcoordinate"),
 						CoordinateID:      util.Ptr(10000000),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
@@ -228,7 +228,7 @@ func TestOrigins(t *testing.T) {
 				},
 				"FORBIDDEN when INVALID TENANT": {
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testtenant"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
 						FQDN:              util.Ptr("test.tenant.com"),
@@ -239,7 +239,7 @@ func TestOrigins(t *testing.T) {
 				},
 				"BAD REQUEST when INVALID PROTOCOL": {
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testprotocol"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
 						FQDN:              util.Ptr("test.protocol.com"),
@@ -250,7 +250,7 @@ func TestOrigins(t *testing.T) {
 				},
 				"BAD REQUEST when INVALID IPV4 ADDRESS": {
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testip"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
 						FQDN:              util.Ptr("test.ip.com"),
@@ -262,7 +262,7 @@ func TestOrigins(t *testing.T) {
 				},
 				"BAD REQUEST when INVALID IPV6 ADDRESS": {
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testipv6"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
 						FQDN:              util.Ptr("origin1.example.com"),
@@ -277,7 +277,7 @@ func TestOrigins(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:            util.Ptr("origin2"),
 						Cachegroup:      util.Ptr("multiOriginCachegroup"),
 						Coordinate:      util.Ptr("coordinate2"),
@@ -296,7 +296,7 @@ func TestOrigins(t *testing.T) {
 				"FORBIDDEN when CHILD TENANT updates PARENT TENANT ORIGIN": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: tenant4UserSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testtenancy"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
 						FQDN:              util.Ptr("testtenancy.example.com"),
@@ -308,7 +308,7 @@ func TestOrigins(t *testing.T) {
 				"NOT FOUND when ORIGIN DOESNT EXIST": {
 					EndpointID:    func() int { return 1111111 },
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("testid"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
 						FQDN:              util.Ptr("testid.example.com"),
@@ -320,7 +320,7 @@ func TestOrigins(t *testing.T) {
 				"BAD REQUEST when DELIVERY SERVICE DOESNT EXIST": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin2"),
 						DeliveryServiceID: util.Ptr(11111111),
 						FQDN:              util.Ptr("origin2.example.com"),
@@ -332,7 +332,7 @@ func TestOrigins(t *testing.T) {
 				"NOT FOUND when CACHEGROUP DOESNT EXIST": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin2"),
 						CachegroupID:      util.Ptr(1111111),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
@@ -345,7 +345,7 @@ func TestOrigins(t *testing.T) {
 				"NOT FOUND when PROFILEID DOESNT EXIST": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
@@ -359,7 +359,7 @@ func TestOrigins(t *testing.T) {
 				"NOT FOUND when COORDINATE DOESNT EXIST": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						CoordinateID:      util.Ptr(1111111),
@@ -373,7 +373,7 @@ func TestOrigins(t *testing.T) {
 				"FORBIDDEN when INVALID TENANT": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin1"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
@@ -386,7 +386,7 @@ func TestOrigins(t *testing.T) {
 				"BAD REQUEST when INVALID PROTOCOL": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
@@ -399,7 +399,7 @@ func TestOrigins(t *testing.T) {
 				"BAD REQUEST when INVALID IPV4 ADDRESS": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
@@ -413,7 +413,7 @@ func TestOrigins(t *testing.T) {
 				"BAD REQUEST when INVALID IPV6 ADDRESS": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
@@ -427,7 +427,7 @@ func TestOrigins(t *testing.T) {
 				"BAD REQUEST when INVALID PORT": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:              util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
@@ -442,7 +442,7 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:            util.Ptr("origin2"),
 						Cachegroup:      util.Ptr("originCachegroup"),
 						DeliveryService: util.Ptr("ds2"),
@@ -455,7 +455,7 @@ func TestOrigins(t *testing.T) {
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Origin{
+					RequestBody: tc.OriginV5{
 						Name:            util.Ptr("origin2"),
 						Cachegroup:      util.Ptr("originCachegroup"),
 						DeliveryService: util.Ptr("ds2"),
@@ -523,7 +523,7 @@ func TestOrigins(t *testing.T) {
 func validateOriginsFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Origin response to not be nil.")
-		originResp := resp.([]tc.Origin)
+		originResp := resp.([]tc.OriginV5)
 		for field, expected := range expectedResp {
 			for _, origin := range originResp {
 				switch field {
@@ -602,7 +602,7 @@ func validateOriginsUpdateCreateFields(name string, expectedResp map[string]inte
 
 func validateOriginsPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.Origin)
+		paginationResp := resp.([]tc.OriginV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")

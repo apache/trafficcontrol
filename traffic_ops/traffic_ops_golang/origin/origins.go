@@ -503,6 +503,11 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	origins, userErr, sysErr, errCode, maxTime := getOrigins(w.Header(), inf.Params, inf.Tx, inf.User, useIMS)
 	var returnable []tc.OriginV5
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
 	for _, origin := range origins {
 		returnable = append(returnable, origin.ToOriginV5())
 	}
@@ -595,11 +600,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	isPrimary := false
 	ds := 0
+	var existingLastUpdated time.Time
 
 	requestedOriginId := inf.IntParams["id"]
 
-	q := `SELECT is_primary, deliveryservice FROM origin WHERE id = $1`
-	if err := tx.QueryRow(q, requestedOriginId).Scan(&isPrimary, &ds); err != nil {
+	q := `SELECT is_primary, deliveryservice, last_updated FROM origin WHERE id = $1`
+	if err := tx.QueryRow(q, requestedOriginId).Scan(&isPrimary, &ds, &existingLastUpdated); err != nil {
 		if err == sql.ErrNoRows {
 			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin not found"), nil)
 			return
@@ -609,7 +615,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if the entity was already updated
-	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedOriginId, "region")
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedOriginId, "origin")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
@@ -660,7 +666,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	origin.LastUpdated = &lastUpdated
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was updated.")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, origin)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, origin)
 	return
 }
 
