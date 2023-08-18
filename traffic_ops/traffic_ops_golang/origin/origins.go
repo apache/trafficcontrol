@@ -674,7 +674,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 func readAndValidateJsonStruct(r *http.Request) (tc.OriginV5, error) {
 	var origin tc.OriginV5
 	if err := json.NewDecoder(r.Body).Decode(&origin); err != nil {
-		userErr := fmt.Errorf("error decoding POST request body into RegionV5 struct %w", err)
+		userErr := fmt.Errorf("error decoding POST request body into OriginV5 struct %w", err)
 		return origin, userErr
 	}
 
