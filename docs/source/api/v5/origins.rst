@@ -89,7 +89,7 @@ Response Structure
 :ip6Address:        The IPv6 address of the :term:`Origin`
 :ipAddress:         The IPv4 address of the :term:`Origin`
 :isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
-:lastUpdated:       The date and time at which this :term:`Origin` was last modified
+:lastUpdated:       The date and time at which this :term:`Origin` was last modified in :rfc:`3339` Format
 :name:              The name of the :term:`Origin`
 :port:              The TCP port on which the :term:`Origin` listens
 :profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
@@ -126,7 +126,7 @@ Response Structure
 			"ip6Address": null,
 			"ipAddress": null,
 			"isPrimary": true,
-			"lastUpdated": "2018-12-10 19:11:32+00",
+			"lastUpdated": "2018-12-10T15:59:33.7096-06:00",
 			"name": "demo1",
 			"port": null,
 			"profile": null,
@@ -201,7 +201,7 @@ Response Structure
 :ip6Address:        The IPv6 address of the :term:`Origin`
 :ipAddress:         The IPv4 address of the :term:`Origin`
 :isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
-:lastUpdated:       The date and time at which this :term:`Origin` was last modified
+:lastUpdated:       The date and time at which this :term:`Origin` was last modified in :rfc:`3339` Format
 :name:              The name of the :term:`Origin`
 :port:              The TCP port on which the :term:`Origin` listens
 :profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
@@ -243,7 +243,7 @@ Response Structure
 		"ip6Address": null,
 		"ipAddress": null,
 		"isPrimary": null,
-		"lastUpdated": "2018-12-11 15:14:27+00",
+		"lastUpdated": "2018-12-11T15:59:33.7096-06:00",
 		"name": "example",
 		"port": 80,
 		"profile": null,
@@ -320,7 +320,7 @@ Response Structure
 :ip6Address:        The IPv6 address of the :term:`Origin`
 :ipAddress:         The IPv4 address of the :term:`Origin`
 :isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
-:lastUpdated:       The date and time at which this :term:`Origin` was last modified
+:lastUpdated:       The date and time at which this :term:`Origin` was last modified in :rfc:`3339` Format
 :name:              The name of the :term:`Origin`
 :port:              The TCP port on which the :term:`Origin` listens
 :profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
@@ -362,7 +362,7 @@ Response Structure
 		"ip6Address": null,
 		"ipAddress": null,
 		"isPrimary": true,
-		"lastUpdated": "2018-12-11 15:40:53+00",
+		"lastUpdated": "2018-12-11T17:59:33.7096-06:00",
 		"name": "example",
 		"port": 443,
 		"profile": null,
