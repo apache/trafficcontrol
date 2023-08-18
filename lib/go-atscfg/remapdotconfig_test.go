@@ -1599,7 +1599,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	ds.Active = tc.DSActiveStateActive
 
 	ds2 := DeliveryService{}
-	ds2.ID = util.Ptr(48)
+	ds2.ID = util.Ptr(50)
 	dsType2 := "HTTP_LIVE_NATNL"
 	ds2.Type = &dsType2
 	ds2.OrgServerFQDN = util.Ptr("origin.example.test")
@@ -1628,6 +1628,10 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 		DeliveryServiceServer{
 			Server:          server.ID,
 			DeliveryService: *ds.ID,
+		},
+		DeliveryServiceServer{
+			Server:          *server.ID,
+			DeliveryService: *ds2.ID,
 		},
 	}
 
@@ -6414,6 +6418,10 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	if !strings.Contains(remapLine, "pparam=--blockbytes=262144") {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
+	}
+
+	if !strings.Contains(remapLine, "@pparam=--consider-ims") {
+		t.Errorf("expected remap on edge server with ds slice range request handling to contain --consider-ims for self-healing, actual '%v'", txt)
 	}
 
 	if !strings.HasSuffix(remapLine, "@plugin=tslua.so @pparam=my-range-manipulator.lua # ds 'mydsname' topology ''") {
