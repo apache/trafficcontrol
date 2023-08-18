@@ -42,7 +42,7 @@ import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManage
 
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public class NameServer {
-	private long negativeCachingTTL = 0L;
+	private static long negativeCachingTTL = 0L;
 	private static final int MAX_SUPPORTED_EDNS_VERS = 0;
 	private static final int MAX_ITERATIONS = 6;
 	private static final int NUM_SECTIONS = 4;
@@ -193,7 +193,7 @@ public class NameServer {
 		response.getHeader().setFlag(Flags.AA);
 	}
 
-	private static void addSOA(final Zone zone, final Message response, final int section, final int flags, final long negativeCachingTTL) {
+	private static void addSOA(final Zone zone, final Message response, final int section, final int flags) {
 		// we locate the SOA this way so that we can ensure we get the RRSIGs rather than just the one SOA Record
 		final SetResponse fsoa = zone.findRecords(zone.getOrigin(), Type.SOA);
 
@@ -202,7 +202,7 @@ public class NameServer {
 		}
 
 		for (final RRset answer : fsoa.answers()) {
-			addRRset(zone.getOrigin(), response, setNegativeTTL(answer, flags, negativeCachingTTL), section, flags);
+			addRRset(zone.getOrigin(), response, setNegativeTTL(answer, flags), section, flags);
 		}
 	}
 
@@ -302,7 +302,7 @@ public class NameServer {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static RRset setNegativeTTL(final RRset original, final int flags, final long negativeCachingTTL) {
+	private static RRset setNegativeTTL(final RRset original, final int flags) {
 		/*
 		 * If DNSSEC is enabled/requested, use the SOA and sigs, otherwise
 		 * lower the TTL on the SOA record to the minimum/ncache TTL,
@@ -407,7 +407,7 @@ public class NameServer {
 			response.getHeader().setRcode(Rcode.NXDOMAIN);
 			response.getHeader().setFlag(Flags.AA);
 			addDenialOfExistence(qname, zone, response, flags);
-			addSOA(zone, response, Section.AUTHORITY, flags, getNegativeCachingTTL());
+			addSOA(zone, response, Section.AUTHORITY, flags);
 		} else if (sr.isNXRRSET()) {
 			/*
 			 * Per RFC 2308 NODATA is inferred by having no records;
@@ -429,7 +429,7 @@ public class NameServer {
 				}
 			}
 
-			addSOA(zone, response, Section.AUTHORITY, flags, getNegativeCachingTTL());
+			addSOA(zone, response, Section.AUTHORITY, flags);
 			response.getHeader().setFlag(Flags.AA);
 		}
 	}
@@ -440,10 +440,6 @@ public class NameServer {
 
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
-	}
-
-	public long getNegativeCachingTTL() {
-		return negativeCachingTTL;
 	}
 
 	public void setNegativeCachingTTL(final long negativeCachingTTL) {
