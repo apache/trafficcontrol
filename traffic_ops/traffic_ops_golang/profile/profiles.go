@@ -608,7 +608,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 func readAndValidateJsonStruct(r *http.Request) (tc.ProfileV5, error) {
 	var profile tc.ProfileV5
 	if err := json.NewDecoder(r.Body).Decode(&profile); err != nil {
-		userErr := fmt.Errorf("error decoding POST request body into ASNV5 struct %w", err)
+		userErr := fmt.Errorf("error decoding POST request body into ProfilesV5 struct %w", err)
 		return profile, userErr
 	}
 

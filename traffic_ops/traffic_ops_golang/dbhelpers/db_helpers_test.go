@@ -704,7 +704,7 @@ func TestProfileExists(t *testing.T) {
 			mock.ExpectQuery("SELECT").WillReturnRows(rows)
 			mock.ExpectCommit()
 
-			profileExists, err := ASNExists(db.MustBegin().Tx, testCase.id)
+			profileExists, err := ProfileExists(db.MustBegin().Tx, testCase.id)
 			if testCase.exists != profileExists {
 				t.Errorf("Expected return exists: %t, actual %t", testCase.exists, profileExists)
 			}
