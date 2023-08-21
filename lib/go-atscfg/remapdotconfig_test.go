@@ -5666,6 +5666,12 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
+		tc.Parameter{
+			Name:       "cache_range_requests.pparam",
+			ConfigFile: "remap.config",
+			Value:      "",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
 	}
 
 	cdn := &tc.CDNV5{
@@ -5696,7 +5702,7 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 	}
 
 	remapLine := txtLines[2]
-
+	words := strings.Fields(remapLine)
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
 	}
@@ -5715,6 +5721,11 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 
 	if strings.Contains(remapLine, "pparam=--blockbytes") {
 		t.Errorf("did not expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
+	}
+	for _, word := range words {
+		if word == "@pparam=" {
+			t.Errorf("expected remap on mid server with empty 'cache_range_requests.pparam' to be skipped and not have empty '@pparam=' on remapline, actual %s", txt)
+		}
 	}
 }
 
@@ -5812,6 +5823,12 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
+		tc.Parameter{
+			Name:       "cache_range_requests.pparam",
+			ConfigFile: "remap.config",
+			Value:      "",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
 	}
 
 	cdn := &tc.CDNV5{
@@ -5842,6 +5859,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 	}
 
 	remapLine := txtLines[2]
+	words := strings.Fields(remapLine)
 
 	if !strings.HasPrefix(remapLine, "map") {
 		t.Errorf("expected to start with 'map', actual '%v'", txt)
@@ -5869,6 +5887,11 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 
 	if !strings.Contains(remapLine, "pparam=--blockbytes=262144") {
 		t.Errorf("expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
+	}
+	for _, word := range words {
+		if word == "@pparam=" {
+			t.Errorf("expected remap on edge server with empty 'cache_range_requests.pparam' to be skipped and not have empty '@pparam=' on remapline, actual %s", txt)
+		}
 	}
 }
 
