@@ -58,13 +58,13 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cachegroup": {strconv.Itoa(GetCacheGroupId(t, "cachegroup1")())}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateServerFields(map[string]interface{}{"CachegroupID": GetCacheGroupId(t, "cachegroup1")()})),
+						validateServerFields(map[string]interface{}{"CacheGroupID": GetCacheGroupId(t, "cachegroup1")()})),
 				},
 				"OK when VALID CACHEGROUPNAME parameter": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"cachegroupName": {"topology-mid-cg-01"}}},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), utils.ResponseLengthGreaterOrEqual(1),
-						validateServerFields(map[string]interface{}{"Cachegroup": "topology-mid-cg-01"})),
+						validateServerFields(map[string]interface{}{"CacheGroup": "topology-mid-cg-01"})),
 				},
 				"OK when VALID CDN parameter": {
 					ClientSession: TOSession,
@@ -164,7 +164,7 @@ func TestServers(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when BLANK PROFILENAMES": {
 					ClientSession: TOSession,
-					RequestBody:   generateServer(t, map[string]interface{}{"profileNames": []string{""}}),
+					RequestBody:   generateServer(t, map[string]interface{}{"profiles": []string{""}}),
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 			},
@@ -174,8 +174,8 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
 						"id":           GetServerID(t, "atlanta-edge-03")(),
-						"cdnId":        GetCDNID(t, "cdn1")(),
-						"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
+						"cdnID":        GetCDNID(t, "cdn1")(),
+						"cacheGroupID": GetCacheGroupId(t, "cachegroup1")(),
 						"domainName":   "updateddomainname",
 						"hostName":     "atl-edge-01",
 						"httpsPort":    8080,
@@ -198,18 +198,18 @@ func TestServers(t *testing.T) {
 							"routerHostName": "router5",
 							"routerPort":     "9004",
 						}},
-						"physLocationId": GetPhysicalLocationID(t, "Denver")(),
-						"profileNames":   []string{"EDGE1"},
-						"rack":           "RR 119.03",
-						"statusId":       GetStatusID(t, "REPORTED")(),
-						"tcpPort":        8080,
-						"typeId":         GetTypeId(t, "EDGE"),
-						"updPending":     true,
+						"physicalLocationID": GetPhysicalLocationID(t, "Denver")(),
+						"profiles":           []string{"EDGE1"},
+						"rack":               "RR 119.03",
+						"statusID":           GetStatusID(t, "REPORTED")(),
+						"tcpPort":            8080,
+						"typeID":             GetTypeId(t, "EDGE"),
+						"updPending":         true,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServerFieldsForUpdate("atl-edge-01", map[string]interface{}{
-							"CDNName": "cdn1", "Cachegroup": "cachegroup1", "DomainName": "updateddomainname", "HostName": "atl-edge-01",
-							"HTTPSPort": 8080, "InterfaceName": "bond1", "MTU": uint64(1280), "PhysLocation": "Denver", "Rack": "RR 119.03",
+							"CDN": "cdn1", "CacheGroup": "cachegroup1", "DomainName": "updateddomainname", "HostName": "atl-edge-01",
+							"HTTPSPort": 8080, "InterfaceName": "bond1", "MTU": uint64(1280), "PhysicalLocation": "Denver", "Rack": "RR 119.03",
 							"TCPPort": 8080, "TypeID": GetTypeId(t, "EDGE"),
 						})),
 				},
@@ -227,8 +227,8 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "test-ds-server-assignments")(),
-						"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
-						"typeId":       GetTypeId(t, "MID"),
+						"cacheGroupID": GetCacheGroupId(t, "cachegroup1")(),
+						"typeID":       GetTypeId(t, "MID"),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -237,7 +237,7 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":       GetServerID(t, "test-ds-server-assignments")(),
-						"statusId": GetStatusID(t, "ADMIN_DOWN")(),
+						"statusID": GetStatusID(t, "ADMIN_DOWN")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -246,7 +246,7 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":       GetServerID(t, "test-mso-org-01")(),
-						"statusId": GetStatusID(t, "ADMIN_DOWN")(),
+						"statusID": GetStatusID(t, "ADMIN_DOWN")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),
 				},
@@ -255,9 +255,9 @@ func TestServers(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "midInTopologyMidCg01")(),
-						"cdnId":        GetCDNID(t, "cdn1")(),
-						"profileNames": []string{"MID1"},
-						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-01")(),
+						"cdnID":        GetCDNID(t, "cdn1")(),
+						"profiles":     []string{"MID1"},
+						"cacheGroupID": GetCacheGroupId(t, "topology-mid-cg-01")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -267,9 +267,9 @@ func TestServers(t *testing.T) {
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "midInTopologyMidCg01")(),
 						"hostName":     "midInTopologyMidCg01",
-						"cdnId":        GetCDNID(t, "cdn2")(),
-						"profileNames": []string{"CDN2_MID"},
-						"cachegroupId": GetCacheGroupId(t, "topology-mid-cg-02")(),
+						"cdnID":        GetCDNID(t, "cdn2")(),
+						"profiles":     []string{"CDN2_MID"},
+						"cacheGroupID": GetCacheGroupId(t, "topology-mid-cg-02")(),
 					}),
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -277,7 +277,7 @@ func TestServers(t *testing.T) {
 					EndpointID:    GetServerID(t, "atlanta-edge-16"),
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"profileNames": []string{"EDGE1"},
+						"profiles": []string{"EDGE1"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
 								"address":        "127.0.0.11/22",
@@ -395,28 +395,22 @@ func TestServers(t *testing.T) {
 func validateServerFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV4)
+		serverResp := resp.([]tc.ServerV5)
 		for field, expected := range expectedResp {
 			for _, server := range serverResp {
 				switch field {
-				case "CachegroupID":
-					assert.RequireNotNil(t, server.CachegroupID, "Expected CachegroupID to not be nil")
-					assert.Equal(t, expected, *server.CachegroupID, "Expected CachegroupID to be %d, but got %d", expected, *server.CachegroupID)
-				case "Cachegroup":
-					assert.RequireNotNil(t, server.Cachegroup, "Expected Cachegroup to not be nil")
-					assert.Equal(t, expected, *server.Cachegroup, "Expected Cachegroup to be %s, but got %s", expected, *server.Cachegroup)
-				case "CDNName":
-					assert.RequireNotNil(t, server.CDNName, "Expected CDNName to not be nil")
-					assert.Equal(t, expected, *server.CDNName, "Expected CDNName to be %s, but got %s", expected, *server.CDNName)
+				case "CacheGroupID":
+					assert.Equal(t, expected, server.CacheGroupID, "Expected CacheGroupID to be %d, but got %d", expected, server.CacheGroupID)
+				case "CacheGroup":
+					assert.Equal(t, expected, server.CacheGroup, "Expected CacheGroup to be %s, but got %s", expected, server.CacheGroup)
+				case "CDN":
+					assert.Equal(t, expected, server.CDN, "Expected CDN to be %s, but got %s", expected, server.CDN)
 				case "CDNID":
-					assert.RequireNotNil(t, server.CDNID, "Expected CDNID to not be nil")
-					assert.Equal(t, expected, *server.CDNID, "Expected CDNID to be %d, but got %d", expected, *server.CDNID)
+					assert.Equal(t, expected, server.CDNID, "Expected CDNID to be %d, but got %d", expected, server.CDNID)
 				case "DomainName":
-					assert.RequireNotNil(t, server.DomainName, "Expected DomainName to not be nil")
-					assert.Equal(t, expected, *server.DomainName, "Expected DomainName to be %s, but got %s", expected, *server.DomainName)
+					assert.Equal(t, expected, server.DomainName, "Expected DomainName to be %s, but got %s", expected, server.DomainName)
 				case "HostName":
-					assert.RequireNotNil(t, server.HostName, "Expected HostName to not be nil")
-					assert.Equal(t, expected, *server.HostName, "Expected HostName to be %s, but got %s", expected, *server.HostName)
+					assert.Equal(t, expected, server.HostName, "Expected HostName to be %s, but got %s", expected, server.HostName)
 				case "HTTPSPort":
 					assert.RequireNotNil(t, server.HTTPSPort, "Expected HTTPSPort to not be nil")
 					assert.Equal(t, expected, *server.HTTPSPort, "Expected HTTPSPort to be %d, but got %d", expected, *server.HTTPSPort)
@@ -427,25 +421,22 @@ func validateServerFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 					assert.RequireGreaterOrEqual(t, len(server.Interfaces), 1, "Expected Interfaces to have at least 1 interface")
 					assert.RequireNotNil(t, server.Interfaces[0].MTU, "Expected MTU to not be nil")
 					assert.Equal(t, expected, *server.Interfaces[0].MTU, "Expected MTU to be %d, but got %d", expected, *server.Interfaces[0].MTU)
-				case "PhysLocation":
-					assert.RequireNotNil(t, server.PhysLocation, "Expected PhysLocation to not be nil")
-					assert.Equal(t, expected, *server.PhysLocation, "Expected PhysLocation to be %s, but got %s", expected, *server.PhysLocation)
-				case "ProfileNames":
-					assert.Exactly(t, expected, server.ProfileNames, "Expected ProfileNames to be %v, but got %v", expected, server.ProfileNames)
+				case "PhysicalLocation":
+					assert.Equal(t, expected, server.PhysicalLocation, "Expected Physical Location to be %s, but got %s", expected, server.PhysicalLocation)
+				case "Profiles":
+					assert.Exactly(t, expected, server.Profiles, "Expected Profiles to be %v, but got %v", expected, server.Profiles)
 				case "Rack":
 					assert.RequireNotNil(t, server.Rack, "Expected Rack to not be nil")
 					assert.Equal(t, expected, *server.Rack, "Expected Rack to be %s, but got %s", expected, *server.Rack)
 				case "Status":
-					assert.RequireNotNil(t, server.Status, "Expected Status to not be nil")
-					assert.Equal(t, expected, *server.Status, "Expected Status to be %s, but got %s", expected, *server.Status)
+					assert.Equal(t, expected, server.Status, "Expected Status to be %s, but got %s", expected, server.Status)
 				case "TCPPort":
 					assert.RequireNotNil(t, server.TCPPort, "Expected TCPPort to not be nil")
 					assert.Equal(t, expected, *server.TCPPort, "Expected TCPPort to be %d, but got %d", expected, *server.TCPPort)
 				case "Type":
 					assert.Equal(t, expected, server.Type, "Expected Type to be %s, but got %s", expected, server.Type)
 				case "TypeID":
-					assert.RequireNotNil(t, server.TypeID, "Expected TypeID to not be nil")
-					assert.Equal(t, expected, *server.TypeID, "Expected Type to be %d, but got %d", expected, *server.TypeID)
+					assert.Equal(t, expected, server.TypeID, "Expected Type to be %d, but got %d", expected, server.TypeID)
 				case "XMPPPasswd":
 					assert.RequireNotNil(t, server.XMPPPasswd, "Expected XMPPPasswd to not be nil")
 					assert.Equal(t, expected, *server.XMPPPasswd, "Expected XMPPPasswd to be %s, but got %s", expected, *server.XMPPPasswd)
@@ -474,12 +465,11 @@ func validateServerFieldsForUpdate(hostname string, expectedResp map[string]inte
 func validateExpectedServers(expectedHostnames []string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV4)
+		serverResp := resp.([]tc.ServerV5)
 		var notInResponse []string
 		serverMap := make(map[string]struct{})
 		for _, server := range serverResp {
-			assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
-			serverMap[*server.HostName] = struct{}{}
+			serverMap[server.HostName] = struct{}{}
 		}
 		for _, expected := range expectedHostnames {
 			if _, exists := serverMap[expected]; !exists {
@@ -493,10 +483,9 @@ func validateExpectedServers(expectedHostnames []string) utils.CkReqFunc {
 func validateServerTypeIsNotMid() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		serverResp := resp.([]tc.ServerV4)
+		serverResp := resp.([]tc.ServerV5)
 		for _, server := range serverResp {
-			assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
-			assert.NotEqual(t, server.Type, tc.CacheTypeMid.String(), "Expected to find no %s-typed servers but found server %s", tc.CacheTypeMid, *server.HostName)
+			assert.NotEqual(t, server.Type, tc.CacheTypeMid.String(), "Expected to find no %s-typed servers but found server %s", tc.CacheTypeMid, server.HostName)
 		}
 	}
 }
@@ -504,7 +493,7 @@ func validateServerTypeIsNotMid() utils.CkReqFunc {
 func validateServerPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected response to not be nil.")
-		paginationResp := resp.([]tc.ServerV4)
+		paginationResp := resp.([]tc.ServerV5)
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
 		respBase, _, err := TOSession.GetServers(opts)
@@ -526,8 +515,8 @@ func validateServerPagination(paginationParam string) utils.CkReqFunc {
 func generateServer(t *testing.T, requestServer map[string]interface{}) map[string]interface{} {
 	// map for the most basic Server a user can create
 	genericServer := map[string]interface{}{
-		"cdnId":        GetCDNID(t, "cdn1")(),
-		"cachegroupId": GetCacheGroupId(t, "cachegroup1")(),
+		"cdnID":        GetCDNID(t, "cdn1")(),
+		"cacheGroupID": GetCacheGroupId(t, "cachegroup1")(),
 		"domainName":   "localhost",
 		"hostName":     "testserver",
 		"interfaces": []map[string]interface{}{{
@@ -537,10 +526,10 @@ func generateServer(t *testing.T, requestServer map[string]interface{}) map[stri
 			}},
 			"name": "eth0",
 		}},
-		"physLocationId": GetPhysicalLocationID(t, "Denver")(),
-		"profileNames":   []string{"EDGE1"},
-		"statusId":       GetStatusID(t, "REPORTED")(),
-		"typeId":         GetTypeId(t, "EDGE"),
+		"physicalLocationID": GetPhysicalLocationID(t, "Denver")(),
+		"profiles":           []string{"EDGE1"},
+		"statusID":           GetStatusID(t, "REPORTED")(),
+		"typeID":             GetTypeId(t, "EDGE"),
 	}
 
 	for k, v := range requestServer {
