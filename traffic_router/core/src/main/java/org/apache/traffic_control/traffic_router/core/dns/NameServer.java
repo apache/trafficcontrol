@@ -333,16 +333,14 @@ public class NameServer {
 				// This is done to increase the negative caching TTL, so as to maximize the time interval between
 				// successive NXDOMAIN or NXRRSET responses.
 				final long minimum = Math.max(soa.getMinimum(), negativeCachingTTL);
-				record = new SOARecord(soa.getName(), DClass.IN, soa.getTTL(), soa.getHost(), soa.getAdmin(),
-						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(),
-						minimum);
-
+				long ttl = soa.getTTL();
 				// the value of the minimum field is less than the actual TTL; adjust
 				if (soa.getMinimum() != 0 || soa.getTTL() > soa.getMinimum()) {
-					record = new SOARecord(soa.getName(), DClass.IN, soa.getMinimum(), soa.getHost(), soa.getAdmin(),
-							soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(),
-							minimum);
-				} // else use the unmodified record
+					ttl = soa.getMinimum();
+				}
+				record = new SOARecord(soa.getName(), DClass.IN, ttl, soa.getHost(), soa.getAdmin(),
+						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(),
+						minimum);
 			}
 
 			rrset.addRR(record);
@@ -440,6 +438,10 @@ public class NameServer {
 
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
+	}
+
+	public long getNegativeCachingTTL() {
+		return negativeCachingTTL;
 	}
 
 	public void setNegativeCachingTTL(final long negativeCachingTTL) {
