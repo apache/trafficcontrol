@@ -16,6 +16,7 @@ package v5
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"net/http"
 	"net/url"
 	"sort"
@@ -37,7 +38,7 @@ func TestStaticDNSEntries(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.StaticDNSEntry]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.StaticDNSEntryV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -60,13 +61,13 @@ func TestStaticDNSEntries(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetStaticDNSEntryID(t, "host2"),
 					ClientSession: TOSession,
-					RequestBody: tc.StaticDNSEntry{
-						Address:         "192.168.0.2",
-						CacheGroupName:  "cachegroup2",
-						DeliveryService: "ds2",
-						Host:            "host2",
-						Type:            "A_RECORD",
-						TTL:             10,
+					RequestBody: tc.StaticDNSEntryV5{
+						Address:         util.Ptr("192.168.0.2"),
+						CacheGroupName:  util.Ptr("cachegroup2"),
+						DeliveryService: util.Ptr("ds2"),
+						Host:            util.Ptr("host2"),
+						Type:            util.Ptr("A_RECORD"),
+						TTL:             util.Ptr(int64(10)),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateStaticDNSEntriesUpdateCreateFields("host2", map[string]interface{}{"Address": "192.168.0.2"})),
@@ -74,52 +75,52 @@ func TestStaticDNSEntries(t *testing.T) {
 				"BAD REQUEST when INVALID IPV4 ADDRESS for A_RECORD": {
 					EndpointID:    GetStaticDNSEntryID(t, "host2"),
 					ClientSession: TOSession,
-					RequestBody: tc.StaticDNSEntry{
-						Address:         "test.testdomain.net.",
-						CacheGroupName:  "cachegroup2",
-						DeliveryService: "ds2",
-						Host:            "host2",
-						Type:            "A_RECORD",
-						TTL:             10,
+					RequestBody: tc.StaticDNSEntryV5{
+						Address:         util.Ptr("test.testdomain.net."),
+						CacheGroupName:  util.Ptr("cachegroup2"),
+						DeliveryService: util.Ptr("ds2"),
+						Host:            util.Ptr("host2"),
+						Type:            util.Ptr("A_RECORD"),
+						TTL:             util.Ptr(int64(10)),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID DNS for CNAME_RECORD": {
 					EndpointID:    GetStaticDNSEntryID(t, "host1"),
 					ClientSession: TOSession,
-					RequestBody: tc.StaticDNSEntry{
-						Address:         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-						CacheGroupName:  "cachegroup1",
-						DeliveryService: "ds1",
-						Host:            "host1",
-						Type:            "CNAME_RECORD",
-						TTL:             0,
+					RequestBody: tc.StaticDNSEntryV5{
+						Address:         util.Ptr("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
+						CacheGroupName:  util.Ptr("cachegroup1"),
+						DeliveryService: util.Ptr("ds1"),
+						Host:            util.Ptr("host1"),
+						Type:            util.Ptr("CNAME_RECORD"),
+						TTL:             util.Ptr(int64(0)),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING TRAILING PERIOD for CNAME_RECORD": {
 					EndpointID:    GetStaticDNSEntryID(t, "host1"),
 					ClientSession: TOSession,
-					RequestBody: tc.StaticDNSEntry{
-						Address:         "cdn.test.com",
-						CacheGroupName:  "cachegroup1",
-						DeliveryService: "ds1",
-						Host:            "host1",
-						Type:            "CNAME_RECORD",
-						TTL:             0,
+					RequestBody: tc.StaticDNSEntryV5{
+						Address:         util.Ptr("cdn.test.com"),
+						CacheGroupName:  util.Ptr("cachegroup1"),
+						DeliveryService: util.Ptr("ds1"),
+						Host:            util.Ptr("host1"),
+						Type:            util.Ptr("CNAME_RECORD"),
+						TTL:             util.Ptr(int64(0)),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV6 ADDRESS for AAAA_RECORD": {
 					EndpointID:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: TOSession,
-					RequestBody: tc.StaticDNSEntry{
-						Address:         "192.168.0.1",
-						CacheGroupName:  "cachegroup2",
-						DeliveryService: "ds1",
-						Host:            "host3",
-						TTL:             10,
-						Type:            "AAAA_RECORD",
+					RequestBody: tc.StaticDNSEntryV5{
+						Address:         util.Ptr("192.168.0.1"),
+						CacheGroupName:  util.Ptr("cachegroup2"),
+						DeliveryService: util.Ptr("ds1"),
+						Host:            util.Ptr("host3"),
+						TTL:             util.Ptr(int64(10)),
+						Type:            util.Ptr("AAAA_RECORD"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -127,26 +128,26 @@ func TestStaticDNSEntries(t *testing.T) {
 					EndpointID:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.StaticDNSEntry{
-						Address:         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-						CacheGroupName:  "cachegroup2",
-						DeliveryService: "ds1",
-						Host:            "host3",
-						TTL:             10,
-						Type:            "AAAA_RECORD",
+					RequestBody: tc.StaticDNSEntryV5{
+						Address:         util.Ptr("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
+						CacheGroupName:  util.Ptr("cachegroup2"),
+						DeliveryService: util.Ptr("ds1"),
+						Host:            util.Ptr("host3"),
+						TTL:             util.Ptr(int64(10)),
+						Type:            util.Ptr("AAAA_RECORD"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetStaticDNSEntryID(t, "host3"),
 					ClientSession: TOSession,
-					RequestBody: tc.StaticDNSEntry{
-						Address:         "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
-						CacheGroupName:  "cachegroup2",
-						DeliveryService: "ds1",
-						Host:            "host3",
-						TTL:             10,
-						Type:            "AAAA_RECORD",
+					RequestBody: tc.StaticDNSEntryV5{
+						Address:         util.Ptr("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
+						CacheGroupName:  util.Ptr("cachegroup2"),
+						DeliveryService: util.Ptr("ds1"),
+						Host:            util.Ptr("host3"),
+						TTL:             util.Ptr(int64(10)),
+						Type:            util.Ptr("AAAA_RECORD"),
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -242,7 +243,7 @@ func GetStaticDNSEntryID(t *testing.T, host string) func() int {
 		staticDNSEntries, _, err := TOSession.GetStaticDNSEntries(opts)
 		assert.RequireNoError(t, err, "Get Static DNS Entries Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(staticDNSEntries.Response), "Expected response object length 1, but got %d", len(staticDNSEntries.Response))
-		return staticDNSEntries.Response[0].ID
+		return *staticDNSEntries.Response[0].ID
 	}
 }
 
@@ -258,11 +259,11 @@ func DeleteTestStaticDNSEntries(t *testing.T) {
 	assert.NoError(t, err, "Cannot get Static DNS Entries: %v - alerts: %+v", err, staticDNSEntries.Alerts)
 
 	for _, staticDNSEntry := range staticDNSEntries.Response {
-		alerts, _, err := TOSession.DeleteStaticDNSEntry(staticDNSEntry.ID, client.RequestOptions{})
+		alerts, _, err := TOSession.DeleteStaticDNSEntry(*staticDNSEntry.ID, client.RequestOptions{})
 		assert.NoError(t, err, "Unexpected error deleting Static DNS Entry '%s' (#%d): %v - alerts: %+v", staticDNSEntry.Host, staticDNSEntry.ID, err, alerts.Alerts)
 		// Retrieve the Static DNS Entry to see if it got deleted
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("host", staticDNSEntry.Host)
+		opts.QueryParameters.Set("host", *staticDNSEntry.Host)
 		getStaticDNSEntry, _, err := TOSession.GetStaticDNSEntries(opts)
 		assert.NoError(t, err, "Error getting Static DNS Entry '%s' after deletion: %v - alerts: %+v", staticDNSEntry.Host, err, getStaticDNSEntry.Alerts)
 		assert.Equal(t, 0, len(getStaticDNSEntry.Response), "Expected Static DNS Entry '%s' to be deleted, but it was found in Traffic Ops", staticDNSEntry.Host)

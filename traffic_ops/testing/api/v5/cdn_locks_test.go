@@ -680,7 +680,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"STATIC DNS ENTRIES POST": func(t *testing.T) {
-							staticDNSEntry := tc.StaticDNSEntry{}
+							staticDNSEntry := tc.StaticDNSEntryV5{}
 							err = json.Unmarshal(dat, &staticDNSEntry)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.CreateStaticDNSEntry(staticDNSEntry, testCase.RequestOpts)
@@ -689,7 +689,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"STATIC DNS ENTRIES PUT": func(t *testing.T) {
-							staticDNSEntry := tc.StaticDNSEntry{}
+							staticDNSEntry := tc.StaticDNSEntryV5{}
 							err = json.Unmarshal(dat, &staticDNSEntry)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.UpdateStaticDNSEntry(testCase.EndpointID(), staticDNSEntry, testCase.RequestOpts)
