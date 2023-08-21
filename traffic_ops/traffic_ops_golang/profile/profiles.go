@@ -271,13 +271,13 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, int) {
+func checkIfProfileCanBeAlteredByCurrentUser(inf *api.APIInfo, cName string, cdnID int) (error, error, int) {
 	var cdnName string
-	if pr.CDNName != nil {
-		cdnName = *pr.CDNName
+	if cName != "" {
+		cdnName = cName
 	} else {
-		if pr.CDNID != nil {
-			cdn, ok, err := dbhelpers.GetCDNNameFromID(pr.ReqInfo.Tx.Tx, int64(*pr.CDNID))
+		if cdnID != 0 {
+			cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(cdnID))
 			if err != nil {
 				return nil, err, http.StatusInternalServerError
 			} else if !ok {
@@ -288,7 +288,7 @@ func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, in
 			return errors.New("no cdn found for this profile"), nil, http.StatusBadRequest
 		}
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pr.ReqInfo.Tx.Tx, cdnName, pr.ReqInfo.User.UserName)
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}
@@ -297,7 +297,7 @@ func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, in
 
 func (pr *TOProfile) Update(h http.Header) (error, error, int) {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(pr.ReqInfo, *pr.CDNName, *pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -307,7 +307,7 @@ func (pr *TOProfile) Update(h http.Header) (error, error, int) {
 
 func (pr *TOProfile) Create() (error, error, int) {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(pr.ReqInfo, *pr.CDNName, *pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -324,7 +324,7 @@ func (pr *TOProfile) Delete() (error, error, int) {
 		pr.CDNName = util.StrPtr(string(cdnName))
 	}
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(pr.ReqInfo, *pr.CDNName, *pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -409,6 +409,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query += where + orderBy + pagination
+	fmt.Println(where + orderBy + pagination)
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error getting profile(s): %w", err))
@@ -426,8 +427,8 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	rows.Close()
 	profileInterfaces := []interface{}{}
 	for _, p := range profileList {
-		// Attach Parameters if the 'id' parameter is sent
-		if _, ok := inf.Params["id"]; ok {
+		// Attach Parameters if the 'param' parameter is sent
+		if _, ok := inf.Params["param"]; ok {
 			profile.Parameters, err = ReadParameters(inf.Tx, inf.User, &p.ID)
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
@@ -454,6 +455,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	if readValErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
 		return
+	}
+
+	if profile.CDNName != "" || profile.CDNID != 0 {
+		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(inf, profile.CDNName, profile.CDNID)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		}
 	}
 
 	// check if profile already exists
@@ -513,6 +521,14 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
+	}
+
+	//check if user can modify.
+	if profile.CDNName != "" || profile.CDNID != 0 {
+		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(inf, profile.CDNName, profile.CDNID)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+		}
 	}
 
 	//update profile
@@ -599,9 +615,9 @@ func readAndValidateJsonStruct(r *http.Request) (tc.ProfileV5, error) {
 	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
 	// validate JSON body
 	errs := tovalidate.ToErrors(validation.Errors{
-		"name":            validation.Validate(profile.Name, validation.NotNil, rule),
-		"cdn":             validation.Validate(profile.CDNID, validation.NotNil, validation.Min(0)),
-		"type":            validation.Validate(profile.Type, validation.NotNil),
+		"name":            validation.Validate(profile.Name, validation.Required, rule),
+		"cdn":             validation.Validate(profile.CDNID, validation.NotNil),
+		"type":            validation.Validate(profile.Type, validation.Required, validation.NotNil),
 		"routingDisabled": validation.Validate(profile.RoutingDisabled, validation.NotNil),
 		"description":     validation.Validate(profile.Description, validation.Required),
 	})
