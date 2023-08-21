@@ -77,6 +77,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7742](https://github.com/apache/trafficcontrol/pull/7742) *Traffic Ops* Changed api tests to supply the absolute path of certs.
 
 ### Fixed
+- [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops* *Traffic Ops* Fixed `/profiles` V5 APIs to respond with `RFC3339` date/time format.
 - [#7708] (https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixes Parameters V5 apis to respond with RFC3339 date/time Format
 - [#7738](https://github.com/apache/trafficcontrol/pull/7738) *Traffic Ops* Fixes ProfileParameters V5 apis to respond with RFC3339 date/time Format
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
