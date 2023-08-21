@@ -416,7 +416,7 @@ func validateCommonV40(s *tc.ServerV40, tx *sql.Tx) ([]error, error) {
 	}
 
 	if len(s.ProfileNames) == 0 {
-		errs = append(errs, fmt.Errorf("no profiles exists"))
+		errs = append(errs, fmt.Errorf("a server must have at least one Profile"))
 	}
 
 	var cdnID int
