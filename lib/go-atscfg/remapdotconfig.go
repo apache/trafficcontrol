@@ -240,6 +240,9 @@ func paramsStringFor(parameters []tc.ParameterV5, warnings *[]string) (paramsStr
 	uniquemap := map[string]int{}
 
 	for _, param := range parameters {
+		if strings.TrimSpace(param.Value) == "" {
+			continue
+		}
 		paramsString += " @pparam=" + param.Value
 
 		// Try to extract argument
