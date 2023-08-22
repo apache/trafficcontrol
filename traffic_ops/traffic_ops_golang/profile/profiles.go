@@ -576,7 +576,10 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	id := inf.Params["id"]
-	idInt, _ := strconv.Atoi(id)
+	idInt, idConvErr := strconv.Atoi(id)
+	if idConvErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("profile delete error: %w, while converting from string to int", idConvErr), nil)
+	}
 	cdnName, err := dbhelpers.GetCDNNameFromProfileID(tx, idInt)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
