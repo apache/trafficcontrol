@@ -335,8 +335,8 @@ public class NameServer {
 				final long minimum = Math.max(soa.getMinimum(), negativeCachingTTL);
 				final long ttl;
 				// the value of the minimum field is less than the actual TTL; adjust
-				if (soa.getMinimum() != 0 || soa.getTTL() > soa.getMinimum()) {
-					ttl = soa.getMinimum();
+				if (minimum != 0 || soa.getTTL() > minimum) {
+					ttl = minimum;
 				} else {
 					ttl = soa.getTTL();
 				}
