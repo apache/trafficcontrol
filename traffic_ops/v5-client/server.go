@@ -31,10 +31,6 @@ const (
 	apiServers = "/servers"
 )
 
-func needAndCanFetch(id *int, name *string) bool {
-	return (id == nil || *id == 0) && name != nil && *name != ""
-}
-
 // CreateServer creates the given Server.
 func (to *Session) CreateServer(server tc.ServerV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
