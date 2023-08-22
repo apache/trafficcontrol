@@ -187,11 +187,14 @@ func ReadDSSHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func upgrade(dsServers []tc.DeliveryServiceServer) *[]tc.DeliveryServiceServerV5 {
+	var err error
 	dsServersV5 := make([]tc.DeliveryServiceServerV5, len(dsServers))
 	for i, s := range dsServers {
 		dsServersV5[i].Server = s.Server
 		dsServersV5[i].DeliveryService = s.DeliveryService
-		dsServersV5[i].LastUpdated, _ = util.ConvertTimeFormat(s.LastUpdated.Time, time.RFC3339)
+		if dsServersV5[i].LastUpdated, err = util.ConvertTimeFormat(s.LastUpdated.Time, time.RFC3339); err != nil {
+			dsServersV5[i].LastUpdated = &s.LastUpdated.Time
+		}
 	}
 	return &dsServersV5
 }
