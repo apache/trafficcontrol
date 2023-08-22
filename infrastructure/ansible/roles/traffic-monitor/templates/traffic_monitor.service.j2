@@ -1,0 +1,31 @@
+{#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#}
+[Unit]
+Description=Traffic Monitor is a HTTP service that polls the health of caches and provide status to Trafffic Routers.
+Wants=systemd-udev-settle.service
+After=syslog.target network.target systemd-udev-settle.service
+
+[Service]
+Type=simple
+ExecStart={{ tm_exec_path }} --opsCfg {{ tm_to_config }} --config {{ tm_config }}
+Restart=on-failure
+RestartSec=5s
+LimitNOFILE=1000000
+PIDFile={{ tm_pid_file }}
+TimeoutStopSec=5s
+ExecReload={{ tm_exec_path }} config reload
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
