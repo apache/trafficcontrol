@@ -417,6 +417,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
 	}
 
 	if inf.Config.UseIMS {
@@ -454,7 +455,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	for _, p := range profileList {
 		// Attach Parameters if the 'param' parameter is sent
 		if _, ok := inf.Params["param"]; ok {
-			profile.Parameters, err = ReadParameters(inf.Tx, inf.User, &p.ID)
+			p.Parameters, err = ReadParameters(inf.Tx, inf.User, &p.ID)
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
 				return
@@ -662,7 +663,7 @@ func readAndValidateJsonStruct(r *http.Request) (tc.ProfileV5, error) {
 	// validate JSON body
 	errs := tovalidate.ToErrors(validation.Errors{
 		"name":            validation.Validate(profile.Name, validation.Required, rule),
-		"cdn":             validation.Validate(profile.CDNID, validation.NotNil),
+		"cdn":             validation.Validate(profile.CDNID, validation.NilOrNotEmpty),
 		"type":            validation.Validate(profile.Type, validation.Required, validation.NotNil),
 		"routingDisabled": validation.Validate(profile.RoutingDisabled, validation.NotNil),
 		"description":     validation.Validate(profile.Description, validation.Required),
