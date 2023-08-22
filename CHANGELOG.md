@@ -158,7 +158,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7698](https://github.com/apache/trafficcontrol/pull/7698) *Traffic Ops* Fixes `region` v5 apis to respond with `RFC3339` date/time Format.
 - [#7686](https://github.com/apache/trafficcontrol/pull/7686) *Traffic Ops* Fixes secured parameters being visible when role has proper permissions.
 - [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops* Fixes `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
-- [#7740](https://github.com/apache/trafficcontrol/pull/7740) *Traffic Ops* Fixes `staticDNSEntries` v5 apis to respond with `RFC3339` date/time Format.
+
 ### Removed
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove`misc/jira_github_issue_import.py`, the project does not use JIRA.
