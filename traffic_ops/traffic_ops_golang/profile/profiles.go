@@ -271,30 +271,6 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, int) {
-	var cdnName string
-	if pr.CDNName != nil {
-		cdnName = *pr.CDNName
-	} else {
-		if pr.CDNID != nil {
-			cdn, ok, err := dbhelpers.GetCDNNameFromID(pr.ReqInfo.Tx.Tx, int64(*pr.CDNID))
-			if err != nil {
-				return nil, err, http.StatusInternalServerError
-			} else if !ok {
-				return nil, nil, http.StatusNotFound
-			}
-			cdnName = string(cdn)
-		} else {
-			return errors.New("no cdn found for this profile"), nil, http.StatusBadRequest
-		}
-	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pr.ReqInfo.Tx.Tx, cdnName, pr.ReqInfo.User.UserName)
-	if userErr != nil || sysErr != nil {
-		return userErr, sysErr, statusCode
-	}
-	return nil, nil, http.StatusOK
-}
-
 func canProfileBeAlteredByCurrentUser(user string, tx *sql.Tx, cName *string, cdnID *int) (error, error, int) {
 	var cdnName string
 	if cName != nil {
@@ -321,7 +297,7 @@ func canProfileBeAlteredByCurrentUser(user string, tx *sql.Tx, cName *string, cd
 
 func (pr *TOProfile) Update(h http.Header) (error, error, int) {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(pr.ReqInfo.User.UserName, pr.ReqInfo.Tx.Tx, pr.CDNName, pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -331,7 +307,7 @@ func (pr *TOProfile) Update(h http.Header) (error, error, int) {
 
 func (pr *TOProfile) Create() (error, error, int) {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(pr.ReqInfo.User.UserName, pr.ReqInfo.Tx.Tx, pr.CDNName, pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -348,7 +324,7 @@ func (pr *TOProfile) Delete() (error, error, int) {
 		pr.CDNName = util.StrPtr(string(cdnName))
 	}
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(pr.ReqInfo.User.UserName, pr.ReqInfo.Tx.Tx, pr.CDNName, pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
