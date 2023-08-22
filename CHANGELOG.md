@@ -75,6 +75,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server* Use GCC 11 for building.
 
 ### Fixed
+- [#7738](https://github.com/apache/trafficcontrol/pull/7738) *Traffic Ops* Fixes ProfileParameters V5 apis to respond with RFC3339 date/time Format
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
 - [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixes Logs V5 apis to respond with RFC3339 tiestamps.
