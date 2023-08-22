@@ -52,7 +52,7 @@ Request Structure
 
 Response Structure
 ------------------
-:lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in :rfc:`3339`
 :parameter:   The :ref:`parameter-id` of a :term:`Parameter` assigned to ``profile``
 :profile:     The :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameter`` is assigned
 
@@ -73,12 +73,12 @@ Response Structure
 
 	{ "response": [
 		{
-			"lastUpdated": "2018-12-05 17:50:49+00",
+			"lastUpdated": "2018-12-05T21:44:14.410503+05:30",
 			"profile": "GLOBAL",
 			"parameter": 4
 		},
 		{
-			"lastUpdated": "2018-12-05 17:50:49+00",
+			"lastUpdated": "2018-12-05T21:44:14.410503+05:30",
 			"profile": "GLOBAL",
 			"parameter": 5
 		}
@@ -152,7 +152,7 @@ Array Format
 
 Response Structure
 ------------------
-:lastUpdated: The date and time at which the :term:`Profile`/:term:`Parameter` assignment was last modified, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which the :term:`Profile`/:term:`Parameter` assignment was last modified, in :rfc:`3339`
 :parameter:   :ref:`parameter-name` of the :term:`Parameter` which is assigned to ``profile``
 :parameterId: The :ref:`parameter-id` of the assigned :term:`Parameter`
 :profile:     :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` is assigned
@@ -175,14 +175,14 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "profileParameter was created.",
+			"text": "All Requested ProfileParameters were created.",
 			"level": "success"
 		}
 	],
 	"response": {
-		"lastUpdated": null,
-		"profile": null,
+		"lastUpdated": "2018-12-05T21:44:14.410503+05:30",
+		"profile": "testProfile1",
 		"profileId": 18,
-		"parameter": null,
+		"parameter": "testParam1",
 		"parameterId": 1
 	}}
