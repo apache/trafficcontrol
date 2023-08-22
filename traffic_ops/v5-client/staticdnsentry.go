@@ -80,58 +80,6 @@ func staticDNSEntryIDsV5(to *Session, sdns *tc.StaticDNSEntryV5) error {
 	return nil
 }
 
-//func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
-//	if sdns == nil {
-//		return errors.New("cannot resolve names to IDs for nil StaticDNSEntry")
-//	}
-//	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
-//		opts := NewRequestOptions()
-//		opts.QueryParameters.Set("name", sdns.CacheGroupName)
-//		p, _, err := to.GetCacheGroups(opts)
-//		if err != nil {
-//			return err
-//		}
-//		if len(p.Response) == 0 {
-//			return errors.New("no CacheGroup named " + sdns.CacheGroupName)
-//		}
-//		if p.Response[0].ID == nil {
-//			return errors.New("CacheGroup named " + sdns.CacheGroupName + " has a nil ID")
-//		}
-//		sdns.CacheGroupID = *p.Response[0].ID
-//	}
-//
-//	if sdns.DeliveryServiceID == 0 && sdns.DeliveryService != "" {
-//		opts := NewRequestOptions()
-//		opts.QueryParameters.Set("xmlId", sdns.DeliveryService)
-//		dses, _, err := to.GetDeliveryServices(opts)
-//		if err != nil {
-//			return err
-//		}
-//		if len(dses.Response) == 0 {
-//			return errors.New("no deliveryservice with name " + sdns.DeliveryService)
-//		}
-//		if dses.Response[0].ID == nil {
-//			return errors.New("Deliveryservice with name " + sdns.DeliveryService + " has a nil ID")
-//		}
-//		sdns.DeliveryServiceID = *dses.Response[0].ID
-//	}
-//
-//	if sdns.TypeID == 0 && sdns.Type != "" {
-//		opts := NewRequestOptions()
-//		opts.QueryParameters.Set("name", sdns.Type)
-//		types, _, err := to.GetTypes(opts)
-//		if err != nil {
-//			return err
-//		}
-//		if len(types.Response) == 0 {
-//			return errors.New("no type with name " + sdns.Type)
-//		}
-//		sdns.TypeID = types.Response[0].ID
-//	}
-//
-//	return nil
-//}
-
 // CreateStaticDNSEntry creates the given Static DNS Entry.
 func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntryV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	// fill in missing IDs from names
