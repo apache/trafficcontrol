@@ -176,16 +176,8 @@ func (param *TOParameter) Read(h http.Header, useIMS bool) ([]interface{}, error
 			return nil, nil, errors.New("scanning " + param.GetType() + ": " + err.Error()), http.StatusInternalServerError, nil
 		}
 		if p.Secure != nil && *p.Secure {
-			if param.ReqInfo.Version.Major >= 5 {
+			if (param.ReqInfo.Version.Major == 4 && param.ReqInfo.Config.RoleBasedPermissions) || param.ReqInfo.Version.Major >= 5 {
 				if !param.ReqInfo.User.Can("PARAMETER-SECURE:READ") {
-					p.Value = &HiddenField
-				}
-			} else if param.ReqInfo.Version.Major == 4 {
-				if param.ReqInfo.Config.RoleBasedPermissions {
-					if !param.ReqInfo.User.Can("PARAMETER-SECURE:READ") {
-						p.Value = &HiddenField
-					}
-				} else if param.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
 					p.Value = &HiddenField
 				}
 			} else if param.ReqInfo.User.PrivLevel < auth.PrivLevelAdmin {
