@@ -127,16 +127,27 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 
 	api.CreateChangeLogRawTx(api.ApiChange, "DS: "+*req.DeliveryService+", ID: "+strconv.Itoa(dsID)+", ACTION: Added/Updated SSL keys", inf.User, inf.Tx.Tx)
 
+	var alerts tc.Alerts
+
 	if isUnknownAuth {
-		api.WriteRespAlert(w, r, tc.WarnLevel, "WARNING: SSL keys were successfully added for '"+*req.DeliveryService+"', but the input certificate may be invalid (certificate is signed by an unknown authority)")
-		return
+		alerts.AddAlert(tc.Alert{
+			Text:  "WARNING: SSL keys were successfully added for '" + *req.DeliveryService + "', but the input certificate may be invalid (certificate is signed by an unknown authority)",
+			Level: tc.WarnLevel.String(),
+		})
 	}
 	if isVerifiedChainNotEqual {
-		api.WriteRespAlert(w, r, tc.WarnLevel, "WARNING: SSL keys were successfully added for '"+*req.DeliveryService+"', but the input certificate may be invalid (certificate verification produced a different chain)")
-		return
+		alerts.AddAlert(tc.Alert{
+			Text:  "WARNING: SSL keys were successfully added for '" + *req.DeliveryService + "', but the input certificate may be invalid (certificate verification produced a different chain)",
+			Level: tc.WarnLevel.String(),
+		})
 	}
 
-	api.WriteRespAlert(w, r, tc.SuccessLevel, "Successfully added ssl keys for "+*req.DeliveryService)
+	alerts.AddAlert(tc.Alert{
+		Text:  "Successfully added ssl keys for " + *req.DeliveryService,
+		Level: tc.SuccessLevel.String(),
+	})
+
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
 }
 
 // GetSSlKeyExpirationInformation gets expiration information for all SSL certificates.
