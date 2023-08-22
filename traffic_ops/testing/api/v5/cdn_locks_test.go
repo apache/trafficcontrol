@@ -463,6 +463,7 @@ func TestCDNLocks(t *testing.T) {
 						"deliveryservice": "basic-ds-in-cdn2",
 						"host":            "host2",
 						"type":            "A_RECORD",
+						"ttl":             int64(0),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
 				},
@@ -475,6 +476,7 @@ func TestCDNLocks(t *testing.T) {
 						"deliveryservice": "basic-ds-in-cdn2",
 						"host":            "host2",
 						"type":            "A_RECORD",
+						"ttl":             int64(0),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -683,6 +685,7 @@ func TestCDNLocks(t *testing.T) {
 							staticDNSEntry := tc.StaticDNSEntryV5{}
 							err = json.Unmarshal(dat, &staticDNSEntry)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							staticDNSEntry.TTL = util.Ptr(int64(0))
 							alerts, reqInf, err := testCase.ClientSession.CreateStaticDNSEntry(staticDNSEntry, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
@@ -692,6 +695,7 @@ func TestCDNLocks(t *testing.T) {
 							staticDNSEntry := tc.StaticDNSEntryV5{}
 							err = json.Unmarshal(dat, &staticDNSEntry)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
+							staticDNSEntry.TTL = util.Ptr(int64(0))
 							alerts, reqInf, err := testCase.ClientSession.UpdateStaticDNSEntry(testCase.EndpointID(), staticDNSEntry, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)

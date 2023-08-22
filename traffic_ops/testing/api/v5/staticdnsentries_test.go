@@ -197,14 +197,14 @@ func TestStaticDNSEntries(t *testing.T) {
 func validateStaticDNSEntriesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Static DNS Entries response to not be nil.")
-		staticDNSEntriesResp := resp.([]tc.StaticDNSEntry)
+		staticDNSEntriesResp := resp.([]tc.StaticDNSEntryV5)
 		for field, expected := range expectedResp {
 			for _, staticDNSEntry := range staticDNSEntriesResp {
 				switch field {
 				case "Address":
-					assert.Equal(t, expected, staticDNSEntry.Address, "Expected Address to be %v, but got %s", expected, staticDNSEntry.Address)
+					assert.Equal(t, expected, *staticDNSEntry.Address, "Expected Address to be %v, but got %s", expected, *staticDNSEntry.Address)
 				case "Host":
-					assert.Equal(t, expected, staticDNSEntry.Host, "Expected Host to be %v, but got %s", expected, staticDNSEntry.Host)
+					assert.Equal(t, expected, *staticDNSEntry.Host, "Expected Host to be %v, but got %s", expected, *staticDNSEntry.Host)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -228,9 +228,9 @@ func validateStaticDNSEntriesSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Static DNS Entries response to not be nil.")
 		var staticDNSEntryHosts []string
-		staticDNSEntryResp := resp.([]tc.StaticDNSEntry)
+		staticDNSEntryResp := resp.([]tc.StaticDNSEntryV5)
 		for _, staticDNSEntry := range staticDNSEntryResp {
-			staticDNSEntryHosts = append(staticDNSEntryHosts, staticDNSEntry.Host)
+			staticDNSEntryHosts = append(staticDNSEntryHosts, *staticDNSEntry.Host)
 		}
 		assert.Equal(t, true, sort.StringsAreSorted(staticDNSEntryHosts), "List is not sorted by their hosts: %v", staticDNSEntryHosts)
 	}

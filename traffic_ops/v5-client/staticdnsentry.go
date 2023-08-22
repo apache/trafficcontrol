@@ -32,7 +32,7 @@ func staticDNSEntryIDsV5(to *Session, sdns *tc.StaticDNSEntryV5) error {
 	if sdns == nil {
 		return errors.New("cannot resolve names to IDs for nil StaticDNSEntry")
 	}
-	if sdns.CacheGroupID != nil && *sdns.CacheGroupID == 0 && sdns.CacheGroupName != nil && *sdns.CacheGroupName != "" {
+	if (sdns.CacheGroupID == nil || *sdns.CacheGroupID == 0) && (sdns.CacheGroupName != nil && *sdns.CacheGroupName != "") {
 		opts := NewRequestOptions()
 		opts.QueryParameters.Set("name", *sdns.CacheGroupName)
 		p, _, err := to.GetCacheGroups(opts)
@@ -48,7 +48,7 @@ func staticDNSEntryIDsV5(to *Session, sdns *tc.StaticDNSEntryV5) error {
 		sdns.CacheGroupID = p.Response[0].ID
 	}
 
-	if sdns.DeliveryServiceID != nil && *sdns.DeliveryServiceID == 0 && sdns.DeliveryService != nil && *sdns.DeliveryService != "" {
+	if (sdns.DeliveryServiceID == nil || *sdns.DeliveryServiceID == 0) && (sdns.DeliveryService != nil && *sdns.DeliveryService != "") {
 		opts := NewRequestOptions()
 		opts.QueryParameters.Set("xmlId", *sdns.DeliveryService)
 		dses, _, err := to.GetDeliveryServices(opts)
@@ -64,7 +64,7 @@ func staticDNSEntryIDsV5(to *Session, sdns *tc.StaticDNSEntryV5) error {
 		sdns.DeliveryServiceID = dses.Response[0].ID
 	}
 
-	if sdns.TypeID != nil && *sdns.TypeID == 0 && sdns.Type != nil && *sdns.Type != "" {
+	if (sdns.TypeID == nil || *sdns.TypeID == 0) && (sdns.Type != nil && *sdns.Type != "") {
 		opts := NewRequestOptions()
 		opts.QueryParameters.Set("name", *sdns.Type)
 		types, _, err := to.GetTypes(opts)

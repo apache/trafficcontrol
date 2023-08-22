@@ -265,7 +265,7 @@ WHERE id=:id`
 	return query
 }
 
-// Validate fulfills the api.Validator interface.
+// Validate validates a statisDNSEntry entity and makes sure that all the supplied fields are valid.
 func Validate(staticDNSEntry tc.StaticDNSEntryV5, tx *sql.Tx) (error, error) {
 	typeStr, err := tc.ValidateTypeID(tx, staticDNSEntry.TypeID, "staticdnsentry")
 	if err != nil {
@@ -309,6 +309,7 @@ func Validate(staticDNSEntry tc.StaticDNSEntryV5, tx *sql.Tx) (error, error) {
 	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
 }
 
+// Update will modify an existing StaticDNSEntry entity in the database, for api v5.0.
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -406,6 +407,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Create will add a new StaticDNSEntry entity into the database, for api v5.0.
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -479,12 +481,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	staticDNSEntry.LastUpdated = &lastUpdated
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "staticDNSEntry was created.")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, staticDNSEntry)
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, staticDNSEntry)
 	changeLogMsg := fmt.Sprintf("STATICDNSENTRY: %s, ID: %d, ACTION: Created staticDNSEntry", *staticDNSEntry.Host, *staticDNSEntry.ID)
 	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 	return
 }
 
+// Delete removes a staticDNSEntry from the database, for api v5.0.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -554,7 +557,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Get [Version : V5] function to read the staticDNSEntries.
+// Get : function to read the staticDNSEntries, for api version 5.0.
 func Get(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
