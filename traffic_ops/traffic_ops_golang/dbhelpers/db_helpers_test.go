@@ -697,7 +697,7 @@ func TestProfileExists(t *testing.T) {
 			defer db.Close()
 
 			mock.ExpectBegin()
-			rows := sqlmock.NewRows([]string{"EXISTS"})
+			rows := sqlmock.NewRows([]string{"SELECT count(name)"})
 			if testCase.exists {
 				rows = rows.AddRow(1)
 			}

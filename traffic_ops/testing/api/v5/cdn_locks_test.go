@@ -264,7 +264,7 @@ func TestCDNLocks(t *testing.T) {
 						"routing_disabled": false,
 						"type":             "ATS_PROFILE",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,

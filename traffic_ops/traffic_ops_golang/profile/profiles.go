@@ -271,13 +271,13 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func checkIfProfileCanBeAlteredByCurrentUser(inf *api.APIInfo, cName string, cdnID int) (error, error, int) {
+func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, int) {
 	var cdnName string
-	if cName != "" {
-		cdnName = cName
+	if pr.CDNName != nil {
+		cdnName = *pr.CDNName
 	} else {
-		if cdnID != 0 {
-			cdn, ok, err := dbhelpers.GetCDNNameFromID(inf.Tx.Tx, int64(cdnID))
+		if pr.CDNID != nil {
+			cdn, ok, err := dbhelpers.GetCDNNameFromID(pr.ReqInfo.Tx.Tx, int64(*pr.CDNID))
 			if err != nil {
 				return nil, err, http.StatusInternalServerError
 			} else if !ok {
@@ -288,7 +288,31 @@ func checkIfProfileCanBeAlteredByCurrentUser(inf *api.APIInfo, cName string, cdn
 			return errors.New("no cdn found for this profile"), nil, http.StatusBadRequest
 		}
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(inf.Tx.Tx, cdnName, inf.User.UserName)
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pr.ReqInfo.Tx.Tx, cdnName, pr.ReqInfo.User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, statusCode
+	}
+	return nil, nil, http.StatusOK
+}
+
+func canProfileBeAlteredByCurrentUser(user string, tx *sql.Tx, cName *string, cdnID *int) (error, error, int) {
+	var cdnName string
+	if cName != nil {
+		cdnName = *cName
+	} else {
+		if cdnID != nil {
+			cdn, ok, err := dbhelpers.GetCDNNameFromID(tx, int64(*cdnID))
+			if err != nil {
+				return nil, err, http.StatusInternalServerError
+			} else if !ok {
+				return nil, nil, http.StatusNotFound
+			}
+			cdnName = string(cdn)
+		} else {
+			return errors.New("no cdn found for this profile"), nil, http.StatusBadRequest
+		}
+	}
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, cdnName, user)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}
@@ -297,7 +321,7 @@ func checkIfProfileCanBeAlteredByCurrentUser(inf *api.APIInfo, cName string, cdn
 
 func (pr *TOProfile) Update(h http.Header) (error, error, int) {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(pr.ReqInfo, *pr.CDNName, *pr.CDNID)
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -307,7 +331,7 @@ func (pr *TOProfile) Update(h http.Header) (error, error, int) {
 
 func (pr *TOProfile) Create() (error, error, int) {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(pr.ReqInfo, *pr.CDNName, *pr.CDNID)
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -324,7 +348,7 @@ func (pr *TOProfile) Delete() (error, error, int) {
 		pr.CDNName = util.StrPtr(string(cdnName))
 	}
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(pr.ReqInfo, *pr.CDNName, *pr.CDNID)
+		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -409,18 +433,19 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query += where + orderBy + pagination
-	fmt.Println(where + orderBy + pagination)
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error getting profile(s): %w", err))
+		return
 	}
 	defer log.Close(rows, "unable to close DB connection")
 
 	profile := tc.ProfileV5{}
-	profileList := []tc.ProfileV5{}
+	var profileList []tc.ProfileV5
 	for rows.Next() {
-		if err = rows.StructScan(&profile); err != nil {
+		if err = rows.Scan(&profile.Description, &profile.ID, &profile.LastUpdated, &profile.Name, &profile.RoutingDisabled, &profile.Type, &profile.CDNID, &profile.CDNName); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting profile(s): %w", err))
+			return
 		}
 		profileList = append(profileList, profile)
 	}
@@ -432,9 +457,10 @@ func Read(w http.ResponseWriter, r *http.Request) {
 			profile.Parameters, err = ReadParameters(inf.Tx, inf.User, &p.ID)
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
+				return
 			}
 		}
-		profileInterfaces = append(profileInterfaces, profile)
+		profileInterfaces = append(profileInterfaces, p)
 	}
 
 	api.WriteResp(w, r, profileInterfaces)
@@ -457,10 +483,12 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if profile.CDNName != "" || profile.CDNID != 0 {
-		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(inf, profile.CDNName, profile.CDNID)
+	//check if user can modify.
+	if len(strings.TrimSpace(profile.CDNName)) != 0 || profile.CDNID != 0 {
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(inf.User.UserName, inf.Tx.Tx, &profile.CDNName, &profile.CDNID)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+			return
 		}
 	}
 
@@ -515,20 +543,21 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//check if user can modify.
+	if len(strings.TrimSpace(profile.CDNName)) != 0 || profile.CDNID != 0 {
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(inf.User.UserName, inf.Tx.Tx, &profile.CDNName, &profile.CDNID)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
 	requestedProfileId := inf.IntParams["id"]
 	// check if the entity was already updated
 	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedProfileId, "profile")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 		return
-	}
-
-	//check if user can modify.
-	if profile.CDNName != "" || profile.CDNID != 0 {
-		userErr, sysErr, statusCode := checkIfProfileCanBeAlteredByCurrentUser(inf, profile.CDNName, profile.CDNID)
-		if userErr != nil || sysErr != nil {
-			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
-		}
 	}
 
 	//update profile
@@ -570,6 +599,23 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	id := inf.Params["id"]
+	idInt, _ := strconv.Atoi(id)
+	cdnName, err := dbhelpers.GetCDNNameFromProfileID(tx, idInt)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	//check if user can modify
+	if len(strings.TrimSpace(string(cdnName))) != 0 {
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(inf.User.UserName, inf.Tx.Tx, util.StrPtr(string(cdnName)), nil)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
+	// check if profile exists
 	exists, err := dbhelpers.ProfileExists(tx, id)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
