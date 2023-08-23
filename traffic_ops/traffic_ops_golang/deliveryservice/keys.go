@@ -131,19 +131,19 @@ func AddSSLKeys(w http.ResponseWriter, r *http.Request) {
 
 	if isUnknownAuth {
 		alerts.AddAlert(tc.Alert{
-			Text:  "WARNING: SSL keys were successfully added for '" + *req.DeliveryService + "', but the input certificate may be invalid (certificate is signed by an unknown authority)",
+			Text:  "The input certificate may be invalid for '" + *req.DeliveryService + "' (certificate is signed by an unknown authority)",
 			Level: tc.WarnLevel.String(),
 		})
 	}
 	if isVerifiedChainNotEqual {
 		alerts.AddAlert(tc.Alert{
-			Text:  "WARNING: SSL keys were successfully added for '" + *req.DeliveryService + "', but the input certificate may be invalid (certificate verification produced a different chain)",
+			Text:  "The input certificate may be invalid for '" + *req.DeliveryService + "' (certificate verification produced a different chain)",
 			Level: tc.WarnLevel.String(),
 		})
 	}
 
 	alerts.AddAlert(tc.Alert{
-		Text:  "Successfully added ssl keys for " + *req.DeliveryService,
+		Text:  "Added ssl keys for " + *req.DeliveryService,
 		Level: tc.SuccessLevel.String(),
 	})
 
