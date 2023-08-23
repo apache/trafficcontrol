@@ -610,7 +610,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin not found"), nil)
 			return
 		}
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if origin with id %s exists", err.Error(), requestedOriginId))
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %s, when checking if origin with id %s exists", err.Error(), requestedOriginId))
 		return
 	}
 
