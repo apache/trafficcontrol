@@ -243,6 +243,7 @@ func GetProfileParameter(w http.ResponseWriter, r *http.Request) {
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
 	if len(errs) > 0 {
 		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
 	}
 
 	if inf.Config.UseIMS {

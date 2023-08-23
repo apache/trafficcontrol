@@ -95,16 +95,3 @@ type ProfileParameterV50 struct {
 	Parameter   string    `json:"parameter"`
 	ParameterID int       `json:"parameterId"`
 }
-
-// ProfileParameterNullableV5 is the latest minor version of the major version 5
-type ProfileParameterNullableV5 ProfileParameterNullableV50
-
-// ProfileParameterNullableV50 is identical to ProfileParameter, except that its
-// fields are reference values, which allows them to be nil.
-type ProfileParameterNullableV50 struct {
-	LastUpdated *time.Time `json:"lastUpdated" db:"last_updated"`
-	Profile     *string    `json:"profile" db:"profile"`
-	ProfileID   *int       `json:"profileId" db:"profile_id"`
-	Parameter   *string    `json:"parameter" db:"parameter"`
-	ParameterID *int       `json:"parameterId" db:"parameter_id"`
-}
