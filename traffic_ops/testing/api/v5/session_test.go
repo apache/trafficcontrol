@@ -16,6 +16,8 @@ package v5
 */
 
 import (
+	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -56,14 +58,21 @@ func SwitchSession(toReqTimeout time.Duration, toURL string, toOldUser string, t
 }
 
 func TestLoginWithCert(t *testing.T) {
-	session, _, err := client.LoginWithCert(Config.TrafficOps.URL, true, time.Second*60,
-		"./client-intermediate-chain.crt.pem",
-		"./client.key.pem", "")
+	if includeSystemTests {
+		pwd, err := os.Getwd()
+		if err != nil {
+			t.Fatalf("couldn't get current working directory: %s", err.Error())
+		}
 
-	if err != nil {
-		t.Fatalf("expected no error while logging in with cert, but got %v", err)
-	}
-	if session == nil {
-		t.Fatalf("expected a valid session, but got nothing")
+		session, _, err := client.LoginWithCert(Config.TrafficOps.URL, true, time.Second*60,
+			fmt.Sprintf("%s/client-intermediate-chain.crt.pem", pwd),
+			fmt.Sprintf("%s/client.key.pem", pwd), "")
+
+		if err != nil {
+			t.Fatalf("expected no error while logging in with cert, but got %v", err)
+		}
+		if session == nil {
+			t.Fatalf("expected a valid session, but got nothing")
+		}
 	}
 }
