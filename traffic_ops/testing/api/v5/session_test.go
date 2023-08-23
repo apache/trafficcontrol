@@ -56,16 +56,14 @@ func SwitchSession(toReqTimeout time.Duration, toURL string, toOldUser string, t
 }
 
 func TestLoginWithCert(t *testing.T) {
-	if includeSystemTests {
-		session, _, err := client.LoginWithCert(Config.TrafficOps.URL, true, time.Second*60,
-			"./client-intermediate-chain.crt.pem",
-			"./client.key.pem", "")
+	session, _, err := client.LoginWithCert(Config.TrafficOps.URL, true, time.Second*60,
+		"./client-intermediate-chain.crt.pem",
+		"./client.key.pem", "")
 
-		if err != nil {
-			t.Fatalf("expected no error while logging in with cert, but got %v", err)
-		}
-		if session == nil {
-			t.Fatalf("expected a valid session, but got nothing")
-		}
+	if err != nil {
+		t.Fatalf("expected no error while logging in with cert, but got %v", err)
+	}
+	if session == nil {
+		t.Fatalf("expected a valid session, but got nothing")
 	}
 }
