@@ -19,6 +19,33 @@ import (
 	"time"
 )
 
+// DeliveryServiceServerV5 is the struct used to represent a delivery service server, in the latest minor version for
+// API 5.x.
+type DeliveryServiceServerV5 = DeliveryServiceServerV50
+
+// DeliveryServiceServerV50 is the type of each entry in the `response` array
+// property of responses from Traffic Ops to GET requests made to the
+// /deliveryserviceservers endpoint of its API, for api version 5.0.
+type DeliveryServiceServerV50 struct {
+	Server          *int       `json:"server" db:"server"`
+	DeliveryService *int       `json:"deliveryService" db:"deliveryservice"`
+	LastUpdated     *time.Time `json:"lastUpdated" db:"last_updated"`
+}
+
+// DeliveryServiceServerResponseV5 is the type of a response from Traffic Ops
+// to a GET request to the /deliveryserviceserver endpoint, for the latest minor version of api v5.x.
+type DeliveryServiceServerResponseV5 = DeliveryServiceServerResponseV50
+
+// DeliveryServiceServerResponseV50 is the type of a response from Traffic Ops
+// to a GET request to the /deliveryserviceserver endpoint for API v5.0.
+type DeliveryServiceServerResponseV50 struct {
+	Orderby  string                    `json:"orderby"`
+	Response []DeliveryServiceServerV5 `json:"response"`
+	Size     int                       `json:"size"`
+	Limit    int                       `json:"limit"`
+	Alerts
+}
+
 // DeliveryServiceServerResponse is the type of a response from Traffic Ops
 // to a GET request to the /deliveryserviceserver endpoint.
 type DeliveryServiceServerResponse struct {

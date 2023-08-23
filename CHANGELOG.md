@@ -78,7 +78,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
-- [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixes Logs V5 apis to respond with RFC3339 tiestamps.
+- [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixes Logs V5 api to respond with RFC3339 timestamps.
+- [#7720](https://github.com/apache/trafficcontrol/pull/7720) *Traffic Ops* Fixes Delivery Service Servers V5 api to respond with RFC3339 timestamps.
 - [#7631] (https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixes Phys_Location V5 apis to respond with RFC3339 date/time Format
 - [#7623] (https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
 - [#7608](https://github.com/apache/trafficcontrol/pull/7608) *Traffic Monitor* Use stats_over_http(plugin.system_stats.timestamp_ms) timestamp field to calculate bandwidth for TM's caches.
