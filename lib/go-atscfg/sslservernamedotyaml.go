@@ -217,7 +217,7 @@ func GetServerSSLData(
 		return nil, warnings, errors.New("this server missing Profiles")
 	}
 
-	dsRegexes := makeDSRegexMap(dsRegexArr)
+	dsRegexes := MakeDSRegexMap(dsRegexArr)
 
 	parentConfigParamsWithProfiles, err := tcParamsToParamsWithProfiles(tcParentConfigParams)
 	if err != nil {
@@ -241,7 +241,7 @@ func GetServerSSLData(
 	}
 
 	nameTopologies := makeTopologyNameMap(topologies)
-	anyCastPartners := getAnyCastPartners(server, servers)
+	anyCastPartners := GetAnyCastPartners(server, servers)
 
 	sort.Sort(dsesSortByName(dses))
 
@@ -262,7 +262,7 @@ func GetServerSSLData(
 			dsParentConfigParams = profileParentConfigParams[*ds.ProfileName]
 		}
 
-		requestFQDNs, err := getDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, anyCastPartners, cdn.DomainName)
+		requestFQDNs, err := GetDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, anyCastPartners, cdn.DomainName)
 		if err != nil {
 			warnings = append(warnings, "error getting ds '"+*ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
 			continue

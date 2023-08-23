@@ -153,7 +153,7 @@ func MakeRemapDotConfig(
 	}
 
 	cdnDomain := cdn.DomainName
-	dsRegexes := makeDSRegexMap(dsRegexArr)
+	dsRegexes := MakeDSRegexMap(dsRegexArr)
 	// Returned DSes are guaranteed to have a non-nil XMLID, Type, DSCP, ID, and Active.
 	dses, dsWarns := remapFilterDSes(server, dss, unfilteredDSes)
 	warnings = append(warnings, dsWarns...)
@@ -174,7 +174,7 @@ func MakeRemapDotConfig(
 	}
 
 	nameTopologies := makeTopologyNameMap(topologies)
-	anyCastPartners := getAnyCastPartners(server, servers)
+	anyCastPartners := GetAnyCastPartners(server, servers)
 
 	hdr := makeHdrComment(opt.HdrComment)
 	txt := ""
@@ -543,7 +543,7 @@ func getServerConfigRemapDotConfigForEdge(
 			continue
 		}
 
-		requestFQDNs, err := getDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, anyCastPartners, cdnDomain)
+		requestFQDNs, err := GetDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, anyCastPartners, cdnDomain)
 		if err != nil {
 			warnings = append(warnings, "error getting ds '"+*ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
 			continue
@@ -1053,7 +1053,7 @@ func (r deliveryServiceRegexesSortByTypeThenSetNum) Less(i, j int) bool {
 }
 func (r deliveryServiceRegexesSortByTypeThenSetNum) Swap(i, j int) { r[i], r[j] = r[j], r[i] }
 
-func makeDSRegexMap(regexes []tc.DeliveryServiceRegexes) map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex {
+func MakeDSRegexMap(regexes []tc.DeliveryServiceRegexes) map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex {
 	dsRegexMap := map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex{}
 	for _, dsRegex := range regexes {
 		sort.Sort(deliveryServiceRegexesSortByTypeThenSetNum(dsRegex.Regexes))
@@ -1062,7 +1062,7 @@ func makeDSRegexMap(regexes []tc.DeliveryServiceRegexes) map[tc.DeliveryServiceN
 	return dsRegexMap
 }
 
-func getAnyCastPartners(server *Server, servers []Server) map[string][]string {
+func GetAnyCastPartners(server *Server, servers []Server) map[string][]string {
 	anyCastIPs := make(map[string][]string)
 	for _, int := range server.Interfaces {
 		if int.Name == "lo" {
@@ -1104,8 +1104,8 @@ func (ks keyVals) Less(i, j int) bool {
 	return ks[i].Val < ks[j].Val
 }
 
-// getDSRequestFQDNs returns the FQDNs that clients will request from the edge.
-func getDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, server *Server, anyCastPartners map[string][]string, cdnDomain string) ([]string, error) {
+// GetDSRequestFQDNs returns the FQDNs that clients will request from the edge.
+func GetDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, server *Server, anyCastPartners map[string][]string, cdnDomain string) ([]string, error) {
 	if server.HostName == nil {
 		return nil, errors.New("server missing hostname")
 	}

@@ -85,6 +85,20 @@ func main() {
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
+	if cfg.Cache == "varnish" {
+		configs, err := cfgfile.GetVarnishConfigs(toData, cfg)
+		if err != nil {
+			log.Errorln("Generating varnish config for'" + *toData.Server.HostName + "': " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
+		err = cfgfile.WriteConfigs(configs, os.Stdout)
+		if err != nil {
+			log.Errorln("Writing configs for '" + *toData.Server.HostName + "': " + err.Error())
+			os.Exit(config.ExitCodeErrGeneric)
+		}
+		os.Exit(config.ExitCodeSuccess)
+	}
+
 	configs, err := cfgfile.GetAllConfigs(toData, cfg)
 	if err != nil {
 		log.Errorln("Getting config for'" + *toData.Server.HostName + "': " + err.Error())

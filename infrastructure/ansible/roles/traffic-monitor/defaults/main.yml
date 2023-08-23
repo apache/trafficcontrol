@@ -18,6 +18,10 @@ tm_pkg_name: "{% if tm_version is defined and tm_version != omit %}{{ 'traffic_m
 # Traffic Monitor installation information
 tm_base_dir: '/opt/traffic_monitor'
 tm_log_dir: "{{ tm_base_dir}}/var/log"
+tm_exec_path: "{{ tm_base_dir}}/bin/traffic_monitor"
+tm_to_config: "{{ tm_base_dir}}/conf/traffic_ops.cfg"
+tm_config: "{{ tm_base_dir}}/conf/traffic_monitor.cfg"
+tm_pid_file: "{{ tm_base_dir}}/var/run/traffic_monitor"
 
 # Local OS User for the Traffic Monitor process
 tm_user: traffic_monitor

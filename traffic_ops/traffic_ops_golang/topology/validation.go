@@ -21,9 +21,11 @@ package topology
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	"strings"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 )
 
 func checkUniqueCacheGroupNames(nodes []tc.TopologyNode) error {
@@ -52,6 +54,45 @@ func checkForSelfParents(nodes []tc.TopologyNode, index int) error {
 		}
 	}
 	return nil
+}
+
+// checkForEdgeParents adds a warning + returns a nil error if
+// an edge parents an edge, and returns an error if an edge parents a non-edge cachegroup.
+func checkForEdgeParents(topology tc.TopologyV5, cacheGroups []tc.CacheGroupNullable, nodeIndex int) (tc.Alerts, error) {
+	var alerts tc.Alerts
+	node := topology.Nodes[nodeIndex]
+	errs := make([]error, len(node.Parents))
+	for parentIndex, parentCacheGroupIndex := range node.Parents {
+		if parentCacheGroupIndex < 0 || parentCacheGroupIndex >= len(topology.Nodes) {
+			errs = append(errs, fmt.Errorf("parent %d of cachegroup %s refers to a cachegroup at index %d, but no such cachegroup exists", parentIndex, node.Cachegroup, parentCacheGroupIndex))
+			break
+		}
+		parentCacheGroupType := *cacheGroups[parentCacheGroupIndex].Type
+		if parentCacheGroupType != tc.CacheGroupEdgeTypeName {
+			continue
+		}
+		switch cacheGroupType := *cacheGroups[nodeIndex].Type; cacheGroupType {
+		case tc.CacheGroupEdgeTypeName:
+			parentTerm := "parent"
+			if parentIndex == 1 {
+				parentTerm = "secondary " + parentTerm
+			}
+			alerts.AddNewAlert(tc.WarnLevel, fmt.Sprintf(
+				"%s-typed cachegroup %s is a %s of %s, unexpected behavior may result",
+				parentCacheGroupType,
+				topology.Nodes[parentCacheGroupIndex].Cachegroup,
+				parentTerm,
+				node.Cachegroup))
+		default:
+			errs = append(errs, fmt.Errorf(
+				"cachegroup %s's type is %s; it cannot parent a %s-typed cachegroup %s",
+				topology.Nodes[parentCacheGroupIndex].Cachegroup,
+				parentCacheGroupType,
+				cacheGroupType,
+				node.Cachegroup))
+		}
+	}
+	return alerts, util.JoinErrs(errs)
 }
 
 // checkForEdgeParents returns an error if an index given in the parents array, adds a warning + returns a nil error if
@@ -145,21 +186,21 @@ func checkForCycles(nodes []tc.TopologyNode) ([]string, error) {
 	return cacheGroups, util.JoinErrs(errs)
 }
 
-func (topology *TOTopology) checkForCyclesAcrossTopologies() error {
+func checkForCyclesAcrossTopologies(info *api.APIInfo, topologyNodes []tc.TopologyNode, name string) error {
 	var (
 		nodes                  []tc.TopologyNode
 		topologiesByCacheGroup map[string][]string
 		cacheGroups            []string
 		err                    error
 	)
-	if nodes, topologiesByCacheGroup, err = topology.nodesInOtherTopologies(); err != nil {
+	if nodes, topologiesByCacheGroup, err = nodesInOtherTopologies(info, topologyNodes); err != nil {
 		return err
 	}
 	if cacheGroups, err = checkForCycles(nodes); err == nil {
 		return nil
 	}
 	if cacheGroups == nil {
-		return fmt.Errorf("unable to check topology %s for cycles across all topologies", topology.Name)
+		return fmt.Errorf("unable to check topology %s for cycles across all topologies", name)
 	}
 	var involvedTopologies []string
 	includedTopology := map[string]bool{}
@@ -173,5 +214,5 @@ func (topology *TOTopology) checkForCyclesAcrossTopologies() error {
 			includedTopology[topology] = true
 		}
 	}
-	return fmt.Errorf("cycles exist between topology %s and topologies [%s]: %v", topology.Name, strings.Join(involvedTopologies, ", "), err)
+	return fmt.Errorf("cycles exist between topology %s and topologies [%s]: %v", name, strings.Join(involvedTopologies, ", "), err)
 }

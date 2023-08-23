@@ -24,6 +24,7 @@ load() {
 		docker image load -i "$archive_filename"
 	else
 		echo "No tarred image found named ${archive_filename}"
+		docker pull "alpine@${alpine_digest}"
 	fi
 }
 

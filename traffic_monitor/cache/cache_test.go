@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"reflect"
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
@@ -126,10 +127,23 @@ func TestParseAndDecode(t *testing.T) {
 	}
 
 	if val, ok := miscStats["plugin.system_stats.timestamp_ms"]; ok {
-		if val.(string) != "1684784877939" {
+		valType := reflect.TypeOf(val)
+		if valType.Kind() != reflect.String {
+			t.Errorf("type mismatch, expected: string, got:%s", valType)
+		}
+		val1, _ := parseNumericStat(val)
+		if val1 != uint64(1684784877939) {
 			t.Errorf("unable to read `plugin.system_stats.timestamp_ms`")
 		}
-	} else {
-		t.Errorf("plugin.system_stats.timestamp_ms field was not found in the json file")
+	}
+	if val, ok := miscStats["plugin.system_stats.timestamp_ms_float64"]; ok {
+		valType := reflect.TypeOf(val)
+		if valType.Kind() != reflect.Float64 {
+			t.Errorf("type mismatch, expected: float64, got:%s", valType)
+		}
+		val1, _ := parseNumericStat(val)
+		if val1 != uint64(1684784877939) {
+			t.Errorf("unable to read `plugin.system_stats.timestamp_ms_float64`")
+		}
 	}
 }

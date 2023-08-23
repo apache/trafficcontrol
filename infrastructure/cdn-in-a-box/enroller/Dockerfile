@@ -42,6 +42,9 @@ COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic
 COPY ./traffic_ops/v4-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v4-client/
 COPY ./infrastructure/cdn-in-a-box/ /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/
 
+# varnishcfg requires t3c for ToData struct and not needed for enroller
+RUN rm -rf /go/src/github.com/apache/trafficcontrol/lib/varnishcfg
+
 WORKDIR /go/src/github.com/apache/trafficcontrol/infrastructure/cdn-in-a-box/enroller
 RUN set -o errexit -o nounset; \
     go clean; \

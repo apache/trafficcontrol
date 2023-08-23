@@ -110,7 +110,7 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 	server.Interfaces = []tc.ServerInterfaceInfoV40{}
 	setIPInfo(server, "lo", "192.168.2.6", "fdf8:f53b:82e4::53")
 	servers := makeTestAnyCastServers()
-	for _, anyCsstServer := range getAnyCastPartners(server, servers) {
+	for _, anyCsstServer := range GetAnyCastPartners(server, servers) {
 		if len(anyCsstServer) != 2 {
 			t.Errorf("expected 2 edges in anycast group, actual '%v'", len(anyCsstServer))
 		}

@@ -76,11 +76,11 @@ echo "Building a RPM for ATS version: $ATS_VERSION and OS version: $OS_VERSION"
 # add the 'ats' user
 id ats &>/dev/null || /usr/sbin/useradd -u 176 -r ats -s /sbin/nologin -d /
 
-# setup the environment to use the devtoolset-9 tools.
+# setup the environment to use the devtoolset-11 tools.
 if [ "${OS_VERSION%%.*}" -le 7 ]; then 
-  source scl_source enable devtoolset-9
+  source scl_source enable devtoolset-11
 else
-  source scl_source enable gcc-toolset-9
+  source scl_source enable gcc-toolset-11
 fi
 
 cd /root

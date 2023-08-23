@@ -748,7 +748,7 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 
 // CheckSyncDSState retrieves and returns the DS Update status from Traffic Ops.
 // The metaData is this run's metadata. It must not be nil, and this function may add to it.
-func (r *TrafficOpsReq) CheckSyncDSState(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
+func (r *TrafficOpsReq) CheckSyncDSState(metaData *t3cutil.ApplyMetaData, cfg config.Cfg) (UpdateStatus, error) {
 	updateStatus := UpdateTropsNotNeeded
 	randDispSec := time.Duration(0)
 	log.Debugln("Checking syncds state.")
@@ -785,7 +785,7 @@ func (r *TrafficOpsReq) CheckSyncDSState(metaData *t3cutil.ApplyMetaData) (Updat
 			}
 		} else if !r.Cfg.IgnoreUpdateFlag {
 			log.Errorln("no queued update needs to be applied.  Running revalidation before exiting.")
-			r.RevalidateWhileSleeping(metaData)
+			r.RevalidateWhileSleeping(metaData, cfg)
 			return UpdateTropsNotNeeded, nil
 		} else {
 			log.Errorln("Traffic Ops is signaling that no update is waiting to be applied.")
@@ -1091,7 +1091,7 @@ func (r *TrafficOpsReq) ProcessPackagesWithMetaData(packageMetaData []string) er
 	return nil
 }
 
-func (r *TrafficOpsReq) RevalidateWhileSleeping(metaData *t3cutil.ApplyMetaData) (UpdateStatus, error) {
+func (r *TrafficOpsReq) RevalidateWhileSleeping(metaData *t3cutil.ApplyMetaData, cfg config.Cfg) (UpdateStatus, error) {
 	updateStatus, err := r.CheckRevalidateState(true)
 	if err != nil {
 		return updateStatus, err
@@ -1115,7 +1115,7 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping(metaData *t3cutil.ApplyMetaData)
 			t3cutil.WriteActionLog(t3cutil.ActionLogActionUpdateFilesReval, t3cutil.ActionLogStatusSuccess, metaData)
 		}
 
-		if err := r.StartServices(&updateStatus, metaData); err != nil {
+		if err := r.StartServices(&updateStatus, metaData, cfg); err != nil {
 			return updateStatus, errors.New("failed to start services: " + err.Error())
 		}
 
@@ -1132,7 +1132,7 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping(metaData *t3cutil.ApplyMetaData)
 // StartServices reloads, restarts, or starts ATS as necessary,
 // according to the changed config files and run mode.
 // Returns nil on success or any error.
-func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cutil.ApplyMetaData) error {
+func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cutil.ApplyMetaData, cfg config.Cfg) error {
 	serviceNeeds := t3cutil.ServiceNeedsNothing
 	if r.Cfg.ServiceAction == t3cutil.ApplyServiceActionFlagRestart {
 		serviceNeeds = t3cutil.ServiceNeedsRestart
@@ -1154,13 +1154,17 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 			serviceNeeds = t3cutil.ServiceNeedsReload
 		}
 	}
-
-	if (serviceNeeds == t3cutil.ServiceNeedsRestart || serviceNeeds == t3cutil.ServiceNeedsReload) && !r.IsPackageInstalled("trafficserver") {
-		// TODO try to reload/restart anyway? To allow non-RPM installs?
-		return errors.New("trafficserver needs " + serviceNeeds.String() + " but is not installed.")
+	packageName := "trafficserver"
+	if cfg.CacheType == "varnish" {
+		packageName = "varnish"
 	}
 
-	svcStatus, _, err := util.GetServiceStatus("trafficserver")
+	if (serviceNeeds == t3cutil.ServiceNeedsRestart || serviceNeeds == t3cutil.ServiceNeedsReload) && !r.IsPackageInstalled(packageName) {
+		// TODO try to reload/restart anyway? To allow non-RPM installs?
+		return errors.New(packageName + " needs " + serviceNeeds.String() + " but is not installed.")
+	}
+
+	svcStatus, _, err := util.GetServiceStatus(packageName)
 	if err != nil {
 		return errors.New("getting trafficserver service status: " + err.Error())
 	}
@@ -1177,7 +1181,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 		if svcStatus != util.SvcRunning {
 			startStr = "start"
 		}
-		if _, err := util.ServiceStart("trafficserver", startStr); err != nil {
+		if _, err := util.ServiceStart(packageName, startStr); err != nil {
 			t3cutil.WriteActionLog(t3cutil.ActionLogActionATSRestart, t3cutil.ActionLogStatusFailure, metaData)
 			return errors.New("failed to restart trafficserver")
 		}
@@ -1204,7 +1208,13 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 			log.Errorln("ATS configuration has changed.  The new config will be picked up the next time ATS is started.")
 		} else if serviceNeeds == t3cutil.ServiceNeedsReload {
 			log.Infoln("ATS configuration has changed, Running 'traffic_ctl config reload' now.")
-			if _, _, err := util.ExecCommand(config.TSHome+config.TrafficCtl, "config", "reload"); err != nil {
+			reloadCommand := config.TSHome + config.TrafficCtl
+			reloadArgs := []string{"config", "reload"}
+			if cfg.CacheType == "varnish" {
+				reloadCommand = "varnishreload"
+				reloadArgs = []string{}
+			}
+			if _, _, err := util.ExecCommand(reloadCommand, reloadArgs...); err != nil {
 				t3cutil.WriteActionLog(t3cutil.ActionLogActionATSReload, t3cutil.ActionLogStatusFailure, metaData)
 
 				if *syncdsUpdate == UpdateTropsNeeded {
