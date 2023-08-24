@@ -489,7 +489,7 @@ WHERE id=:id`
 	return query
 }
 
-// Get is the handler for GET requests to Origins of APIv5
+// Get is the handler for GET requests to Origins of APIv5.
 func Get(w http.ResponseWriter, r *http.Request) {
 
 	var useIMS bool
@@ -501,7 +501,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	origins, userErr, sysErr, errCode, maxTime := getOrigins(w.Header(), inf.Params, inf.Tx, inf.User, useIMS)
+	origins, userErr, sysErr, errCode, _ := getOrigins(w.Header(), inf.Params, inf.Tx, inf.User, useIMS)
 	var returnable []tc.OriginV5
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
@@ -511,7 +511,11 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	for _, origin := range origins {
 		returnable = append(returnable, origin.ToOriginV5())
 	}
-	_ = maxTime // consider removing maxTime if it's not used in getOrigins in future
+
+	// Assign an empty array if no origin is found instead of null.
+	if len(returnable) == 0 {
+		returnable = []tc.OriginV5{}
+	}
 
 	api.WriteResp(w, r, returnable)
 	return
@@ -532,15 +536,15 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userErr, sysErr, errCode := checkTenancy(org.TenantID, org.DeliveryServiceID, tx, inf.User)
+	userErr, sysErr, errCode := checkTenancy(&org.TenantID, &org.DeliveryServiceID, tx, inf.User)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 
-	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, *org.DeliveryServiceID)
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, org.DeliveryServiceID)
 	if err != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("Error checking the database for delivery service name and cdn, whether it existed, and any error"), nil)
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database error: unable to retrieve delivery service name and cdn: %w", err))
 		return
 	}
 	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), inf.User.UserName)
@@ -566,7 +570,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if rowsAffected == 0 {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: no rows returned"), nil)
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: scanning: %w", err), nil)
 		return
 	} else if rowsAffected > 1 {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: multiple rows returned"), nil)
@@ -574,6 +578,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was created.")
+	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/origins?id=%d", inf.Version.Major, inf.Version.Minor, org.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, org)
 }
 
@@ -592,7 +597,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, readValErr, nil)
 		return
 	}
-	userErr, sysErr, errCode := checkTenancy(origin.TenantID, origin.DeliveryServiceID, tx, inf.User)
+	userErr, sysErr, errCode := checkTenancy(&origin.TenantID, &origin.DeliveryServiceID, tx, inf.User)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
@@ -605,15 +610,15 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	requestedOriginId := inf.IntParams["id"]
 
 	q := `SELECT is_primary, deliveryservice, last_updated FROM origin WHERE id = $1`
-	if err := tx.QueryRow(q, requestedOriginId).Scan(&isPrimary, &ds, &existingLastUpdated); err != nil {
-		if err == sql.ErrNoRows {
+	errLookup := tx.QueryRow(q, requestedOriginId).Scan(&isPrimary, &ds, &existingLastUpdated)
+	if errLookup != nil {
+		if errors.Is(errLookup, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin not found"), nil)
 			return
 		}
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %s, when checking if origin with id %s exists", err.Error(), requestedOriginId))
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database error: %w, when checking if origin with id %d exists", errLookup, requestedOriginId))
 		return
 	}
-
 	// check if the entity was already updated
 	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedOriginId, "origin")
 	if userErr != nil || sysErr != nil {
@@ -621,12 +626,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isPrimary && *origin.DeliveryServiceID != ds {
+	if isPrimary && origin.DeliveryServiceID != ds {
 		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, fmt.Errorf("cannot update the delivery service of a primary origin"), nil)
 		return
 	}
 
-	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(tx.Tx, *origin.DeliveryServiceID)
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(tx.Tx, origin.DeliveryServiceID)
 	if err != nil {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, err, nil)
 		return
@@ -664,13 +669,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	origin.LastUpdated = &lastUpdated
+	origin.LastUpdated = lastUpdated
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was updated.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, origin)
 	return
 }
 
-// readAndValidateJsonStruct reads json body and validates json fields
+// readAndValidateJsonStruct reads json body and validates json fields.
 func readAndValidateJsonStruct(r *http.Request) (tc.OriginV5, error) {
 	var origin tc.OriginV5
 	if err := json.NewDecoder(r.Body).Decode(&origin); err != nil {
