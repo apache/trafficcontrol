@@ -427,7 +427,7 @@ func CreateProfileParameter(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteProfileParameter(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"profileId"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -437,15 +437,11 @@ func DeleteProfileParameter(w http.ResponseWriter, r *http.Request) {
 
 	profileID := inf.Params["profileId"]
 	parameterID := inf.Params["parameterId"]
+	intProfileID := inf.IntParams["profileId"]
 
 	if profileID == "" || parameterID == "" {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("couldn't delete Profile_Parameter. profileID  & parameterID Cannot be empty for Delete Operation"), nil)
 		return
-	}
-
-	intProfileID, convErrProfile := strconv.Atoi(profileID)
-	if convErrProfile != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("profile_parameter delete error: %w, while converting from string to int", convErrProfile), nil)
 	}
 
 	cdnName, err := dbhelpers.GetCDNNameFromProfileID(tx, intProfileID)
