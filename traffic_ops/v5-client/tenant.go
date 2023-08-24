@@ -47,7 +47,7 @@ func (to *Session) CreateTenant(t tc.TenantV5, opts RequestOptions) (tc.TenantRe
 		if len(tenant.Response) < 1 {
 			return tc.TenantResponseV5{Alerts: tenant.Alerts}, reqInf, fmt.Errorf("no Tenant could be found for Parent Tenant '%s'", t.ParentName)
 		}
-		t.ParentID = &tenant.Response[0].ID
+		t.ParentID = tenant.Response[0].ID
 	}
 
 	var data tc.TenantResponseV5

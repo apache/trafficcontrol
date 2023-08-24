@@ -77,14 +77,14 @@ type TenantAlert struct {
 
 // GetTenantsResponseV50 is the response for a request for a group of tenants.
 type GetTenantsResponseV50 struct {
-	Response []Tenant `json:"response"`
+	Response []TenantV5 `json:"response"`
 	Alerts
 }
 
 // TenantResponseV50 is the type of response from Traffic Ops to a PUT, POST,
 // or DELETE request made to its /tenants.
 type TenantResponseV50 struct {
-	Response Tenant `json:"response"`
+	Response TenantV5 `json:"response"`
 	Alerts
 }
 

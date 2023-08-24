@@ -17,11 +17,13 @@ package v5
 
 import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 	"net/http"
+	"net/url"
 	"sort"
 	"strconv"
 	"testing"
@@ -46,32 +48,32 @@ func TestTenants(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						utils.ResponseLengthGreaterOrEqual(1), validateTenantSort()),
 				},
-				//"OK when VALID ACTIVE parameter": {
-				//	ClientSession: TOSession,
-				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"active": {"true"}}},
-				//	Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-				//		validateTenantFields(map[string]interface{}{"Active": true})),
-				//},
-				//"VALID when SORTORDER param is DESC": {
-				//	ClientSession: TOSession,
-				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
-				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantDescSort()),
-				//},
-				//"FIRST RESULT when LIMIT=1": {
-				//	ClientSession: TOSession,
-				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
-				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("limit")),
-				//},
-				//"SECOND RESULT when LIMIT=1 OFFSET=1": {
-				//	ClientSession: TOSession,
-				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
-				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("offset")),
-				//},
-				//"SECOND RESULT when LIMIT=1 PAGE=2": {
-				//	ClientSession: TOSession,
-				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
-				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("page")),
-				//},
+				"OK when VALID ACTIVE parameter": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"active": {"true"}}},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateTenantFields(map[string]interface{}{"Active": true})),
+				},
+				"VALID when SORTORDER param is DESC": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantDescSort()),
+				},
+				"FIRST RESULT when LIMIT=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("limit")),
+				},
+				"SECOND RESULT when LIMIT=1 OFFSET=1": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("offset")),
+				},
+				"SECOND RESULT when LIMIT=1 PAGE=2": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("page")),
+				},
 				//"BAD REQUEST when INVALID LIMIT parameter": {
 				//	ClientSession: TOSession,
 				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
@@ -88,74 +90,74 @@ func TestTenants(t *testing.T) {
 				//	Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				//},
 			},
-			//"POST": {
-			//	"OK when VALID request": {
-			//		ClientSession: TOSession,
-			//		RequestBody: tc.TenantV5{
-			//			Active:     true,
-			//			Name:       "tenant5",
-			//			ParentName: "root",
-			//			ParentID:   GetTenantID(t, "root")(),
-			//		},
-			//		Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-			//			validateTenantCreateUpdateFields(map[string]interface{}{"Name": "tenant5"})),
-			//	},
-			//},
+			"POST": {
+				"OK when VALID request": {
+					ClientSession: TOSession,
+					RequestBody: tc.TenantV5{
+						Active:     util.Ptr(true),
+						Name:       util.Ptr("tenant5"),
+						ParentName: util.Ptr("root"),
+						ParentID:   util.Ptr(GetTenantID(t, "root")()),
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validateTenantCreateUpdateFields(map[string]interface{}{"Name": "tenant5"})),
+				},
+			},
 			//"PUT": {
 			//	"OK when VALID request": {
 			//		EndpointID:    GetTenantID(t, "tenant4"),
 			//		ClientSession: TOSession,
 			//		RequestBody: tc.TenantV5{
-			//			Active:     false,
-			//			Name:       "newname",
-			//			ParentName: "root",
-			//			ParentID:   GetTenantID(t, "root")(),
+			//			Active:     util.Ptr(false),
+			//			Name:       util.Ptr("newname"),
+			//			ParentName: util.Ptr("root"),
+			//			ParentID:   util.Ptr(GetTenantID(t, "root")()),
 			//		},
 			//		Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 			//			validateTenantCreateUpdateFields(map[string]interface{}{"Name": "newname", "Active": false})),
 			//	},
-			//	"BAD REQUEST when ROOT TENANT": {
-			//		EndpointID:    GetTenantID(t, "root"),
-			//		ClientSession: TOSession,
-			//		RequestBody: tc.TenantV5{
-			//			Active:     false,
-			//			Name:       "tenant1",
-			//			ParentName: "root",
+			//		"BAD REQUEST when ROOT TENANT": {
+			//			EndpointID:    GetTenantID(t, "root"),
+			//			ClientSession: TOSession,
+			//			RequestBody: tc.TenantV5{
+			//				Active:     util.Ptr(false),
+			//				Name:       util.Ptr("tenant1"),
+			//				ParentName: util.Ptr("root"),
+			//			},
+			//			Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 			//		},
-			//		Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-			//	},
-			//	"PRECONDITION FAILED when updating with IMS & IUS Headers": {
-			//		EndpointID:    GetTenantID(t, "tenant2"),
-			//		ClientSession: TOSession,
-			//		RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-			//		RequestBody: tc.TenantV5{
-			//			Active:     false,
-			//			Name:       "tenant2",
-			//			ParentName: "root",
-			//			ParentID:   GetTenantID(t, "root")(),
+			//		"PRECONDITION FAILED when updating with IMS & IUS Headers": {
+			//			EndpointID:    GetTenantID(t, "tenant2"),
+			//			ClientSession: TOSession,
+			//			RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
+			//			RequestBody: tc.TenantV5{
+			//				Active:     util.Ptr(false),
+			//				Name:       util.Ptr("tenant2"),
+			//				ParentName: util.Ptr("root"),
+			//				ParentID:   util.Ptr(GetTenantID(t, "root")()),
+			//			},
+			//			Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 			//		},
-			//		Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-			//	},
-			//	"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
-			//		EndpointID:    GetTenantID(t, "tenant2"),
-			//		ClientSession: TOSession,
-			//		RequestBody: tc.TenantV5{
-			//			Active:     false,
-			//			Name:       "tenant2",
-			//			ParentName: "root",
-			//			ParentID:   GetTenantID(t, "root")(),
+			//		"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
+			//			EndpointID:    GetTenantID(t, "tenant2"),
+			//			ClientSession: TOSession,
+			//			RequestBody: tc.TenantV5{
+			//				Active:     util.Ptr(false),
+			//				Name:       util.Ptr("tenant2"),
+			//				ParentName: util.Ptr("root"),
+			//				ParentID:   util.Ptr(GetTenantID(t, "root")()),
+			//			},
+			//			RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
+			//			Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 			//		},
-			//		RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
-			//		Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
-			//	},
 			//},
-			//"DELETE": {
-			//	"BAD REQUEST when TENANT HAS CHILDREN": {
-			//		EndpointID:    GetTenantID(t, "tenant1"),
-			//		ClientSession: TOSession,
-			//		Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-			//	},
-			//},
+			"DELETE": {
+				"BAD REQUEST when TENANT HAS CHILDREN": {
+					EndpointID:    GetTenantID(t, "tenant1"),
+					ClientSession: TOSession,
+					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
+			},
 		}
 
 		for method, testCases := range methodTests {
@@ -205,11 +207,11 @@ func validateTenantFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 			for _, tenant := range tenantResp {
 				switch field {
 				case "Active":
-					assert.Equal(t, expected, tenant.Active, "Expected Active to be %v, but got %b", expected, tenant.Active)
+					assert.Equal(t, expected, *tenant.Active, "Expected Active to be %v, but got %b", expected, tenant.Active)
 				case "Name":
-					assert.Equal(t, expected, tenant.Name, "Expected Name to be %v, but got %s", expected, tenant.Name)
+					assert.Equal(t, expected, *tenant.Name, "Expected Name to be %v, but got %s", expected, tenant.Name)
 				case "ParentName":
-					assert.Equal(t, expected, tenant.ParentName, "Expected ParentName to be %v, but got %s", expected, tenant.ParentName)
+					assert.Equal(t, expected, *tenant.ParentName, "Expected ParentName to be %v, but got %s", expected, tenant.ParentName)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -257,7 +259,7 @@ func validateTenantDescSort() utils.CkReqFunc {
 		}
 		// Insert Tenant names by appending to a new list, so they stay in ascending order.
 		for _, tenant := range tenantsAscResp.Response {
-			ascSortedList = append(ascSortedList, tenant.Name)
+			ascSortedList = append(ascSortedList, *tenant.Name)
 		}
 		assert.Exactly(t, ascSortedList, descSortedList, "Tenant responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
 	}
@@ -292,7 +294,7 @@ func GetTenantID(t *testing.T, name string) func() int {
 		tenants, _, err := TOSession.GetTenants(opts)
 		assert.RequireNoError(t, err, "Get Tenants Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(tenants.Response), "Expected response object length 1, but got %d", len(tenants.Response))
-		return tenants.Response[0].ID
+		return *tenants.Response[0].ID
 	}
 }
 
@@ -310,13 +312,13 @@ func DeleteTestTenants(t *testing.T) {
 	assert.NoError(t, err, "Cannot get Tenants: %v - alerts: %+v", err, tenants.Alerts)
 
 	for _, tenant := range tenants.Response {
-		if tenant.Name == "root" {
+		if *tenant.Name == "root" {
 			continue
 		}
-		alerts, _, err := TOSession.DeleteTenant(tenant.ID, client.RequestOptions{})
+		alerts, _, err := TOSession.DeleteTenant(*tenant.ID, client.RequestOptions{})
 		assert.NoError(t, err, "Unexpected error deleting Tenant '%s' (#%d): %v - alerts: %+v", tenant.Name, tenant.ID, err, alerts.Alerts)
 		// Retrieve the Tenant to see if it got deleted
-		opts.QueryParameters.Set("id", strconv.Itoa(tenant.ID))
+		opts.QueryParameters.Set("id", strconv.Itoa(*tenant.ID))
 		getTenants, _, err := TOSession.GetTenants(opts)
 		assert.NoError(t, err, "Error getting Tenant '%s' after deletion: %v - alerts: %+v", tenant.Name, err, getTenants.Alerts)
 		assert.Equal(t, 0, len(getTenants.Response), "Expected Tenant '%s' to be deleted, but it was found in Traffic Ops", tenant.Name)
