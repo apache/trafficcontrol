@@ -593,14 +593,14 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if profile exists
-	exists, err := dbhelpers.ProfileExists(tx, id)
+	exists, err := dbhelpers.ProfileExists(tx, strconv.Itoa(id))
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	if !exists {
 		if id != 0 {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no profile exists by id: %s", id), nil)
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no profile exists by id: %d", id), nil)
 			return
 		} else {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no profile exists for empty id"), nil)

@@ -2279,7 +2279,7 @@ func ParameterExists(tx *sql.Tx, id string) (bool, error) {
 }
 
 // ProfileExists confirms whether the profile exists, and an error (if one occurs).
-func ProfileExists(tx *sql.Tx, id int) (bool, error) {
+func ProfileExists(tx *sql.Tx, id string) (bool, error) {
 	var count int
 	if err := tx.QueryRow(`SELECT count(name) FROM profile WHERE id=$1`, id).Scan(&count); err != nil {
 		return false, fmt.Errorf("error getting profile info: %w", err)
