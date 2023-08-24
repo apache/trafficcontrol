@@ -68,7 +68,7 @@ func TestProfileParameters(t *testing.T) {
 							},
 						},
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
 				},
 				"BAD REQUEST when INVALID PROFILEID and PARAMETERID": {
 					ClientSession: TOSession,
