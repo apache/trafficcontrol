@@ -35,6 +35,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -499,7 +500,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/profiles?id=%d", inf.Version.Major, inf.Version.Minor, profile.ID))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/profiles?id=%d", inf.Version, profile.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, profile)
 	return
 }
@@ -567,7 +568,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete an profile for APIv5
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -575,12 +576,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	id := inf.Params["id"]
-	idInt, idConvErr := strconv.Atoi(id)
-	if idConvErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("profile delete error: %w, while converting from string to int", idConvErr), nil)
-	}
-	cdnName, err := dbhelpers.GetCDNNameFromProfileID(tx, idInt)
+	id := inf.IntParams["id"]
+	cdnName, err := dbhelpers.GetCDNNameFromProfileID(tx, id)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
 		return
@@ -602,7 +599,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !exists {
-		if id != "" {
+		if id != 0 {
 			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no profile exists by id: %s", id), nil)
 			return
 		} else {
