@@ -29,35 +29,35 @@ const apiTenants = "/tenants"
 const apiTenantID = apiTenants + "/%d"
 
 // GetTenants retrieves all Tenants stored in Traffic Ops.
-func (to *Session) GetTenants(opts RequestOptions) (tc.GetTenantsResponse, toclientlib.ReqInf, error) {
-	var data tc.GetTenantsResponse
+func (to *Session) GetTenants(opts RequestOptions) (tc.GetTenantsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.GetTenantsResponseV5
 	reqInf, err := to.get(apiTenants, opts, &data)
 	return data, reqInf, err
 }
 
 // CreateTenant creates the Tenant it's passed.
-func (to *Session) CreateTenant(t tc.Tenant, opts RequestOptions) (tc.TenantResponse, toclientlib.ReqInf, error) {
-	if t.ParentID == 0 && t.ParentName != "" {
+func (to *Session) CreateTenant(t tc.TenantV5, opts RequestOptions) (tc.TenantResponseV5, toclientlib.ReqInf, error) {
+	if (t.ParentID == nil || *t.ParentID == 0) && (t.ParentName != nil || *t.ParentName != "") {
 		parentOpts := NewRequestOptions()
-		parentOpts.QueryParameters.Set("name", t.ParentName)
+		parentOpts.QueryParameters.Set("name", *t.ParentName)
 		tenant, reqInf, err := to.GetTenants(parentOpts)
 		if err != nil {
-			return tc.TenantResponse{Alerts: tenant.Alerts}, reqInf, err
+			return tc.TenantResponseV5{Alerts: tenant.Alerts}, reqInf, err
 		}
 		if len(tenant.Response) < 1 {
-			return tc.TenantResponse{Alerts: tenant.Alerts}, reqInf, fmt.Errorf("no Tenant could be found for Parent Tenant '%s'", t.ParentName)
+			return tc.TenantResponseV5{Alerts: tenant.Alerts}, reqInf, fmt.Errorf("no Tenant could be found for Parent Tenant '%s'", t.ParentName)
 		}
-		t.ParentID = tenant.Response[0].ID
+		t.ParentID = &tenant.Response[0].ID
 	}
 
-	var data tc.TenantResponse
+	var data tc.TenantResponseV5
 	reqInf, err := to.post(apiTenants, opts, t, &data)
 	return data, reqInf, err
 }
 
 // UpdateTenant replaces the Tenant identified by 'id' with the one provided.
-func (to *Session) UpdateTenant(id int, t tc.Tenant, opts RequestOptions) (tc.TenantResponse, toclientlib.ReqInf, error) {
-	var data tc.TenantResponse
+func (to *Session) UpdateTenant(id int, t tc.TenantV5, opts RequestOptions) (tc.TenantResponseV5, toclientlib.ReqInf, error) {
+	var data tc.TenantResponseV5
 	reqInf, err := to.put(fmt.Sprintf(apiTenantID, id), opts, t, &data)
 	return data, reqInf, err
 }

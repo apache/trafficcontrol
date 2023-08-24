@@ -1,5 +1,7 @@
 package tc
 
+import "time"
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -72,3 +74,41 @@ type TenantAlert struct {
 	Level string `json:"level"`
 	Text  string `json:"text"`
 }
+
+// GetTenantsResponseV50 is the response for a request for a group of tenants.
+type GetTenantsResponseV50 struct {
+	Response []Tenant `json:"response"`
+	Alerts
+}
+
+// TenantResponseV50 is the type of response from Traffic Ops to a PUT, POST,
+// or DELETE request made to its /tenants.
+type TenantResponseV50 struct {
+	Response Tenant `json:"response"`
+	Alerts
+}
+
+// A TenantV50 is a scope that can be applied to groups of users to limit their
+// Delivery Service-related actions to specific sets of similarly "Tenanted"
+// Delivery Services.
+type TenantV50 struct {
+	ID          *int       `json:"id" db:"id"`
+	Name        *string    `json:"name" db:"name"`
+	Active      *bool      `json:"active" db:"active"`
+	LastUpdated *time.Time `json:"lastUpdated" db:"last_updated"`
+	ParentID    *int       `json:"parentId" db:"parent_id"`
+	ParentName  *string    `json:"parentName,omitempty" db:"parent_name"`
+}
+
+// GetTenantsResponseV5 is the type of response from the tenants
+// Traffic Ops endpoint.
+// It always points to the type for the latest minor version of GetTenantsResponseV5x APIv5.
+type GetTenantsResponseV5 = GetTenantsResponseV50
+
+// TenantResponseV5 is the type of response from Traffic Ops to a PUT, POST,
+// // or DELETE request made to its /tenants.
+// It always points to the type for the latest minor version of TenantResponseV5x APIv5.
+type TenantResponseV5 = TenantResponseV50
+
+// TenantV5 always points to the type for the latest minor version of TenantV5x APIv5.
+type TenantV5 = TenantV50

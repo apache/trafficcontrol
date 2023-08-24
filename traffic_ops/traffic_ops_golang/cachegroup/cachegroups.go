@@ -1007,7 +1007,6 @@ func GetCacheGroup(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]interface{}, time.Time, int, error, error) {
-	//func getCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
 	var runSecond bool
 	var maxTime time.Time
 	cgList := []interface{}{}
@@ -1434,6 +1433,15 @@ func readAndValidateJsonStruct(r *http.Request) (tc.CacheGroupNullableV5, error)
 	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
 	errs := tovalidate.ToErrors(validation.Errors{
 		"name": validation.Validate(cg.Name, validation.Required, rule),
+		//TODO add all validation
+		//"name":                        validation.Validate(cg.Name, validation.Required, validName),
+		//"shortName":                   validation.Validate(cg.ShortName, validation.Required, validShortName),
+		//"latitude":                    validation.Validate(cg.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
+		//"longitude":                   validation.Validate(cg.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
+		//"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
+		//"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
+		//"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
+		//"type":                        cg.ValidateTypeInTopology(),
 	})
 	if len(errs) > 0 {
 		userErr := util.JoinErrs(errs)
