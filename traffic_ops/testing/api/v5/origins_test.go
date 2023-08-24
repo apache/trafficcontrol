@@ -163,112 +163,112 @@ func TestOrigins(t *testing.T) {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:            util.Ptr("origin1"),
+						Name:            *util.Ptr("origin1"),
 						Cachegroup:      util.Ptr("originCachegroup"),
 						Coordinate:      util.Ptr("coordinate1"),
-						DeliveryService: util.Ptr("ds1"),
-						FQDN:            util.Ptr("origin1.example.com"),
+						DeliveryService: *util.Ptr("ds1"),
+						FQDN:            *util.Ptr("origin1.example.com"),
 						IPAddress:       util.Ptr("1.2.3.4"),
 						IP6Address:      util.Ptr("dead:beef:cafe::42"),
 						Port:            util.Ptr(1234),
 						Profile:         util.Ptr("ATS_EDGE_TIER_CACHE"),
-						Protocol:        util.Ptr("http"),
-						TenantID:        util.Ptr(GetTenantID(t, "tenant1")()),
-						IsPrimary:       util.Ptr(true),
+						Protocol:        *util.Ptr("http"),
+						TenantID:        *util.Ptr(GetTenantID(t, "tenant1")()),
+						IsPrimary:       *util.Ptr(true),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"FORBIDDEN when CHILD TENANT CREATES ORIGIN OUTSIDE TENANCY": {
 					ClientSession: tenant4UserSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("originTenancyTest"),
+						Name:              *util.Ptr("originTenancyTest"),
 						Cachegroup:        util.Ptr("originCachegroup"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("origintenancy.example.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant3")()),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("origintenancy.example.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant3")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"NOT FOUND when CACHEGROUP DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testcg"),
+						Name:              *util.Ptr("testcg"),
 						CachegroupID:      util.Ptr(10000000),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("test.cachegroupId.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("test.cachegroupId.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when PROFILEID DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testprofile"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("test.profileId.com"),
+						Name:              *util.Ptr("testprofile"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("test.profileId.com"),
 						ProfileID:         util.Ptr(1000000),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"NOT FOUND when COORDINATE DOESNT EXIST": {
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testcoordinate"),
+						Name:              *util.Ptr("testcoordinate"),
 						CoordinateID:      util.Ptr(10000000),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("test.coordinate.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("test.coordinate.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
 				"FORBIDDEN when INVALID TENANT": {
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testtenant"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("test.tenant.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(11111111),
+						Name:              *util.Ptr("testtenant"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("test.tenant.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(11111111),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
 				"BAD REQUEST when INVALID PROTOCOL": {
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testprotocol"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("test.protocol.com"),
-						Protocol:          util.Ptr("httttpppss"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Name:              *util.Ptr("testprotocol"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("test.protocol.com"),
+						Protocol:          *util.Ptr("httttpppss"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV4 ADDRESS": {
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testip"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("test.ip.com"),
+						Name:              *util.Ptr("testip"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("test.ip.com"),
 						IPAddress:         util.Ptr("311.255.323.412"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID IPV6 ADDRESS": {
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testipv6"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("origin1.example.com"),
+						Name:              *util.Ptr("testipv6"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("origin1.example.com"),
 						IP6Address:        util.Ptr("badipv6::addresss"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -278,16 +278,16 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:            util.Ptr("origin2"),
+						Name:            *util.Ptr("origin2"),
 						Cachegroup:      util.Ptr("multiOriginCachegroup"),
 						Coordinate:      util.Ptr("coordinate2"),
-						DeliveryService: util.Ptr("ds3"),
-						FQDN:            util.Ptr("originupdated.example.com"),
+						DeliveryService: *util.Ptr("ds3"),
+						FQDN:            *util.Ptr("originupdated.example.com"),
 						IPAddress:       util.Ptr("1.2.3.4"),
 						IP6Address:      util.Ptr("0000::1111"),
 						Port:            util.Ptr(1234),
-						Protocol:        util.Ptr("http"),
-						TenantID:        util.Ptr(GetTenantID(t, "tenant2")()),
+						Protocol:        *util.Ptr("http"),
+						TenantID:        *util.Ptr(GetTenantID(t, "tenant2")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateOriginsUpdateCreateFields("origin2", map[string]interface{}{"Cachegroup": "multiOriginCachegroup", "Coordinate": "coordinate2", "DeliveryService": "ds3",
@@ -297,11 +297,11 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: tenant4UserSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testtenancy"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("testtenancy.example.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Name:              *util.Ptr("testtenancy"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("testtenancy.example.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -309,11 +309,11 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    func() int { return 1111111 },
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("testid"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("testid.example.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Name:              *util.Ptr("testid"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("testid.example.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -321,11 +321,11 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin2"),
-						DeliveryServiceID: util.Ptr(11111111),
-						FQDN:              util.Ptr("origin2.example.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Name:              *util.Ptr("origin2"),
+						DeliveryServiceID: *util.Ptr(11111111),
+						FQDN:              *util.Ptr("origin2.example.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -333,12 +333,12 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin2"),
+						Name:              *util.Ptr("origin2"),
 						CachegroupID:      util.Ptr(1111111),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("origin2.example.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("origin2.example.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -346,13 +346,13 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin2"),
+						Name:              *util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("origin2.example.com"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("origin2.example.com"),
 						ProfileID:         util.Ptr(11111111),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -360,13 +360,13 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin2"),
+						Name:              *util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
 						CoordinateID:      util.Ptr(1111111),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("origin2.example.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("origin2.example.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusNotFound)),
 				},
@@ -374,12 +374,12 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin1"),
+						Name:              *util.Ptr("origin1"),
 						Cachegroup:        util.Ptr("originCachegroup"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("origin1.example.com"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(1111111),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("origin1.example.com"),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(1111111),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusForbidden)),
 				},
@@ -387,12 +387,12 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin2"),
+						Name:              *util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds1")()),
-						FQDN:              util.Ptr("origin2.example.com"),
-						Protocol:          util.Ptr("htttttpssss"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds1")()),
+						FQDN:              *util.Ptr("origin2.example.com"),
+						Protocol:          *util.Ptr("htttttpssss"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -400,13 +400,13 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin2"),
+						Name:              *util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
-						FQDN:              util.Ptr("origin2.example.com"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds2")()),
+						FQDN:              *util.Ptr("origin2.example.com"),
 						IPAddress:         util.Ptr("300.254.123.1"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -414,13 +414,13 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin2"),
+						Name:              *util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
-						FQDN:              util.Ptr("origin2.example.com"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds2")()),
+						FQDN:              *util.Ptr("origin2.example.com"),
 						IP6Address:        util.Ptr("test::42"),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -428,13 +428,13 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              util.Ptr("origin2"),
+						Name:              *util.Ptr("origin2"),
 						Cachegroup:        util.Ptr("originCachegroup"),
-						DeliveryServiceID: util.Ptr(GetDeliveryServiceId(t, "ds2")()),
-						FQDN:              util.Ptr("origin2.example.com"),
+						DeliveryServiceID: *util.Ptr(GetDeliveryServiceId(t, "ds2")()),
+						FQDN:              *util.Ptr("origin2.example.com"),
 						Port:              util.Ptr(80000),
-						Protocol:          util.Ptr("http"),
-						TenantID:          util.Ptr(GetTenantID(t, "tenant1")()),
+						Protocol:          *util.Ptr("http"),
+						TenantID:          *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -443,12 +443,12 @@ func TestOrigins(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.OriginV5{
-						Name:            util.Ptr("origin2"),
+						Name:            *util.Ptr("origin2"),
 						Cachegroup:      util.Ptr("originCachegroup"),
-						DeliveryService: util.Ptr("ds2"),
-						FQDN:            util.Ptr("origin2.example.com"),
-						Protocol:        util.Ptr("http"),
-						TenantID:        util.Ptr(GetTenantID(t, "tenant1")()),
+						DeliveryService: *util.Ptr("ds2"),
+						FQDN:            *util.Ptr("origin2.example.com"),
+						Protocol:        *util.Ptr("http"),
+						TenantID:        *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
@@ -456,12 +456,12 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:            util.Ptr("origin2"),
+						Name:            *util.Ptr("origin2"),
 						Cachegroup:      util.Ptr("originCachegroup"),
-						DeliveryService: util.Ptr("ds2"),
-						FQDN:            util.Ptr("origin2.example.com"),
-						Protocol:        util.Ptr("http"),
-						TenantID:        util.Ptr(GetTenantID(t, "tenant1")()),
+						DeliveryService: *util.Ptr("ds2"),
+						FQDN:            *util.Ptr("origin2.example.com"),
+						Protocol:        *util.Ptr("http"),
+						TenantID:        *util.Ptr(GetTenantID(t, "tenant1")()),
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -541,16 +541,16 @@ func validateOriginsFields(expectedResp map[string]interface{}) utils.CkReqFunc 
 					assert.Equal(t, expected, *origin.CoordinateID, "Expected CoordinateID to be %v, but got %d", expected, *origin.CoordinateID)
 				case "DeliveryService":
 					assert.RequireNotNil(t, origin.DeliveryService, "Expected DeliveryService to not be nil.")
-					assert.Equal(t, expected, *origin.DeliveryService, "Expected DeliveryService to be %v, but got %s", expected, *origin.DeliveryService)
+					assert.Equal(t, expected, origin.DeliveryService, "Expected DeliveryService to be %v, but got %s", expected, origin.DeliveryService)
 				case "DeliveryServiceID":
 					assert.RequireNotNil(t, origin.DeliveryServiceID, "Expected DeliveryServiceID to not be nil.")
-					assert.Equal(t, expected, *origin.DeliveryServiceID, "Expected DeliveryServiceID to be %v, but got %d", expected, *origin.DeliveryServiceID)
+					assert.Equal(t, expected, origin.DeliveryServiceID, "Expected DeliveryServiceID to be %v, but got %d", expected, origin.DeliveryServiceID)
 				case "FQDN":
 					assert.RequireNotNil(t, origin.FQDN, "Expected FQDN to not be nil.")
-					assert.Equal(t, expected, *origin.FQDN, "Expected FQDN to be %v, but got %s", expected, *origin.FQDN)
+					assert.Equal(t, expected, origin.FQDN, "Expected FQDN to be %v, but got %s", expected, origin.FQDN)
 				case "ID":
 					assert.RequireNotNil(t, origin.ID, "Expected ID to not be nil.")
-					assert.Equal(t, expected, *origin.ID, "Expected ID to be %v, but got %d", expected, *origin.ID)
+					assert.Equal(t, expected, origin.ID, "Expected ID to be %v, but got %d", expected, origin.ID)
 				case "IPAddress":
 					assert.RequireNotNil(t, origin.IPAddress, "Expected IPAddress to not be nil.")
 					assert.Equal(t, expected, *origin.IPAddress, "Expected IPAddress to be %v, but got %s", expected, *origin.IPAddress)
@@ -559,10 +559,10 @@ func validateOriginsFields(expectedResp map[string]interface{}) utils.CkReqFunc 
 					assert.Equal(t, expected, *origin.IP6Address, "Expected IP6Address to be %v, but got %s", expected, *origin.IP6Address)
 				case "IsPrimary":
 					assert.RequireNotNil(t, origin.IsPrimary, "Expected IsPrimary to not be nil.")
-					assert.Equal(t, expected, *origin.IsPrimary, "Expected IsPrimary to be %v, but got %v", expected, *origin.IsPrimary)
+					assert.Equal(t, expected, origin.IsPrimary, "Expected IsPrimary to be %v, but got %v", expected, origin.IsPrimary)
 				case "Name":
 					assert.RequireNotNil(t, origin.Name, "Expected Name to not be nil.")
-					assert.Equal(t, expected, *origin.Name, "Expected Name to be %v, but got %s", expected, *origin.Name)
+					assert.Equal(t, expected, origin.Name, "Expected Name to be %v, but got %s", expected, origin.Name)
 				case "Port":
 					assert.RequireNotNil(t, origin.Port, "Expected Port to not be nil.")
 					assert.Equal(t, expected, *origin.Port, "Expected Port to be %v, but got %d", expected, *origin.Port)
@@ -574,13 +574,13 @@ func validateOriginsFields(expectedResp map[string]interface{}) utils.CkReqFunc 
 					assert.Equal(t, expected, *origin.ProfileID, "Expected ProfileID to be %v, but got %d", expected, *origin.ProfileID)
 				case "Protocol":
 					assert.RequireNotNil(t, origin.Protocol, "Expected Protocol to not be nil.")
-					assert.Equal(t, expected, *origin.Protocol, "Expected Tenant to be %v, but got %s", expected, *origin.Protocol)
+					assert.Equal(t, expected, origin.Protocol, "Expected Tenant to be %v, but got %s", expected, origin.Protocol)
 				case "Tenant":
 					assert.RequireNotNil(t, origin.Tenant, "Expected Tenant to not be nil.")
-					assert.Equal(t, expected, *origin.Tenant, "Expected Tenant to be %v, but got %s", expected, *origin.Tenant)
+					assert.Equal(t, expected, origin.Tenant, "Expected Tenant to be %v, but got %s", expected, origin.Tenant)
 				case "TenantID":
 					assert.RequireNotNil(t, origin.TenantID, "Expected TenantID to not be nil.")
-					assert.Equal(t, expected, *origin.TenantID, "Expected TenantID to be %v, but got %d", expected, *origin.TenantID)
+					assert.Equal(t, expected, origin.TenantID, "Expected TenantID to be %v, but got %d", expected, origin.TenantID)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -630,7 +630,7 @@ func GetOriginID(t *testing.T, name string) func() int {
 		assert.RequireNoError(t, err, "Get Origins Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(origins.Response), "Expected response object length 1, but got %d", len(origins.Response))
 		assert.RequireNotNil(t, origins.Response[0].ID, "Expected ID to not be nil.")
-		return *origins.Response[0].ID
+		return origins.Response[0].ID
 	}
 }
 
@@ -649,15 +649,15 @@ func DeleteTestOrigins(t *testing.T) {
 		assert.RequireNotNil(t, origin.ID, "Expected origin ID to not be nil.")
 		assert.RequireNotNil(t, origin.Name, "Expected origin ID to not be nil.")
 		assert.RequireNotNil(t, origin.IsPrimary, "Expected origin ID to not be nil.")
-		if !*origin.IsPrimary {
-			alerts, _, err := TOSession.DeleteOrigin(*origin.ID, client.RequestOptions{})
-			assert.NoError(t, err, "Unexpected error deleting Origin '%s' (#%d): %v - alerts: %+v", *origin.Name, *origin.ID, err, alerts.Alerts)
+		if !origin.IsPrimary {
+			alerts, _, err := TOSession.DeleteOrigin(origin.ID, client.RequestOptions{})
+			assert.NoError(t, err, "Unexpected error deleting Origin '%s' (#%d): %v - alerts: %+v", origin.Name, origin.ID, err, alerts.Alerts)
 			// Retrieve the Origin to see if it got deleted
 			opts := client.NewRequestOptions()
-			opts.QueryParameters.Set("id", strconv.Itoa(*origin.ID))
+			opts.QueryParameters.Set("id", strconv.Itoa(origin.ID))
 			getOrigin, _, err := TOSession.GetOrigins(opts)
-			assert.NoError(t, err, "Error getting Origin '%s' after deletion: %v - alerts: %+v", *origin.Name, err, getOrigin.Alerts)
-			assert.Equal(t, 0, len(getOrigin.Response), "Expected Origin '%s' to be deleted, but it was found in Traffic Ops", *origin.Name)
+			assert.NoError(t, err, "Error getting Origin '%s' after deletion: %v - alerts: %+v", origin.Name, err, getOrigin.Alerts)
+			assert.Equal(t, 0, len(getOrigin.Response), "Expected Origin '%s' to be deleted, but it was found in Traffic Ops", origin.Name)
 		}
 	}
 }

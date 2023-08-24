@@ -48,17 +48,17 @@ func (to *Session) originIDs(origin *tc.OriginV5) error {
 		origin.CachegroupID = p.Response[0].ID
 	}
 
-	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
-		opts.QueryParameters.Set("xmlId", *origin.DeliveryService)
+	if &origin.DeliveryServiceID == nil && &origin.DeliveryService != nil {
+		opts.QueryParameters.Set("xmlId", origin.DeliveryService)
 		dses, _, err := to.GetDeliveryServices(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Delivery Service XMLID '%s' to an ID: %w - alerts: %+v", *origin.DeliveryService, err, dses.Alerts)
+			return fmt.Errorf("resolving Delivery Service XMLID '%s' to an ID: %w - alerts: %+v", origin.DeliveryService, err, dses.Alerts)
 		}
 		if len(dses.Response) == 0 {
-			return fmt.Errorf("no Delivery Service with XMLID '%s'", *origin.DeliveryService)
+			return fmt.Errorf("no Delivery Service with XMLID '%s'", origin.DeliveryService)
 		}
 		opts.QueryParameters.Del("xmlId")
-		origin.DeliveryServiceID = dses.Response[0].ID
+		origin.DeliveryServiceID = *dses.Response[0].ID
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
@@ -85,16 +85,16 @@ func (to *Session) originIDs(origin *tc.OriginV5) error {
 		origin.CoordinateID = coordinates.Response[0].ID
 	}
 
-	if origin.TenantID == nil && origin.Tenant != nil {
-		opts.QueryParameters.Set("name", *origin.Tenant)
+	if &origin.TenantID == nil && &origin.Tenant != nil {
+		opts.QueryParameters.Set("name", origin.Tenant)
 		tenant, _, err := to.GetTenants(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Tenant name '%s' to an ID: %w - alerts: %+v", *origin.Tenant, err, tenant.Alerts)
+			return fmt.Errorf("resolving Tenant name '%s' to an ID: %w - alerts: %+v", origin.Tenant, err, tenant.Alerts)
 		}
 		if len(tenant.Response) == 0 {
-			return fmt.Errorf("no Tenant with name '%s'", *origin.Tenant)
+			return fmt.Errorf("no Tenant with name '%s'", origin.Tenant)
 		}
-		origin.TenantID = &tenant.Response[0].ID
+		origin.TenantID = tenant.Response[0].ID
 	}
 
 	return nil
