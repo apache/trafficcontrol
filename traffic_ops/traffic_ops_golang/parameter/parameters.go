@@ -440,7 +440,7 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateParameter(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
@@ -455,11 +455,8 @@ func UpdateParameter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	requestedID := inf.Params["id"]
+	intRequestId := inf.IntParams["id"]
 
-	intRequestId, convErr := strconv.Atoi(requestedID)
-	if convErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, fmt.Errorf("parameter update error: %w, while converting from string to int", convErr), nil)
-	}
 	// check if the entity was already updated
 	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, intRequestId, "parameter")
 	if userErr != nil || sysErr != nil {
