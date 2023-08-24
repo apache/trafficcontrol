@@ -392,19 +392,6 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Check if any of the parameter from the request slice already exists
-	for _, parameter := range params {
-		var count int
-		err = tx.QueryRow("SELECT count(*) from parameter where name = $1", parameter.Name).Scan(&count)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if parameter with name %s exists", err, parameter.Name))
-			return
-		}
-		if count == 1 {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("parameter name '%s' already exists", parameter.Name), nil)
-			return
-		}
-	}
 	// Create all parameters from the request slice
 	var objParams []tc.ParameterV5
 	for _, parameter := range params {
