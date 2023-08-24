@@ -80,25 +80,25 @@ type OriginV5 = OriginV50
 
 // OriginV50 contains information relating to an Origin, in the latest minor version APIv50.
 type OriginV50 struct {
-	Cachegroup        *string    `json:"cachegroup" db:"cachegroup"`
-	CachegroupID      *int       `json:"cachegroupId" db:"cachegroup_id"`
-	Coordinate        *string    `json:"coordinate" db:"coordinate"`
-	CoordinateID      *int       `json:"coordinateId" db:"coordinate_id"`
-	DeliveryService   *string    `json:"deliveryService" db:"deliveryservice"`
-	DeliveryServiceID *int       `json:"deliveryServiceId" db:"deliveryservice_id"`
-	FQDN              *string    `json:"fqdn" db:"fqdn"`
-	ID                *int       `json:"id" db:"id"`
-	IP6Address        *string    `json:"ip6Address" db:"ip6_address"`
-	IPAddress         *string    `json:"ipAddress" db:"ip_address"`
-	IsPrimary         *bool      `json:"isPrimary" db:"is_primary"`
-	LastUpdated       *time.Time `json:"lastUpdated" db:"last_updated"`
-	Name              *string    `json:"name" db:"name"`
-	Port              *int       `json:"port" db:"port"`
-	Profile           *string    `json:"profile" db:"profile"`
-	ProfileID         *int       `json:"profileId" db:"profile_id"`
-	Protocol          *string    `json:"protocol" db:"protocol"`
-	Tenant            *string    `json:"tenant" db:"tenant"`
-	TenantID          *int       `json:"tenantId" db:"tenant_id"`
+	Cachegroup        *string   `json:"cachegroup" db:"cachegroup"`
+	CachegroupID      *int      `json:"cachegroupId" db:"cachegroup_id"`
+	Coordinate        *string   `json:"coordinate" db:"coordinate"`
+	CoordinateID      *int      `json:"coordinateId" db:"coordinate_id"`
+	DeliveryService   string    `json:"deliveryService" db:"deliveryservice"`
+	DeliveryServiceID int       `json:"deliveryServiceId" db:"deliveryservice_id"`
+	FQDN              string    `json:"fqdn" db:"fqdn"`
+	ID                int       `json:"id" db:"id"`
+	IP6Address        *string   `json:"ip6Address" db:"ip6_address"`
+	IPAddress         *string   `json:"ipAddress" db:"ip_address"`
+	IsPrimary         bool      `json:"isPrimary" db:"is_primary"`
+	LastUpdated       time.Time `json:"lastUpdated" db:"last_updated"`
+	Name              string    `json:"name" db:"name"`
+	Port              *int      `json:"port" db:"port"`
+	Profile           *string   `json:"profile" db:"profile"`
+	ProfileID         *int      `json:"profileId" db:"profile_id"`
+	Protocol          string    `json:"protocol" db:"protocol"`
+	Tenant            string    `json:"tenant" db:"tenant"`
+	TenantID          int       `json:"tenantId" db:"tenant_id"`
 }
 
 // ToOriginV5 upgrades from Origin to APIv5
@@ -110,20 +110,21 @@ func (old Origin) ToOriginV5() OriginV5 {
 	originV5.CachegroupID = old.CachegroupID
 	originV5.Coordinate = old.Coordinate
 	originV5.CoordinateID = old.CoordinateID
-	originV5.DeliveryService = old.DeliveryService
-	originV5.DeliveryServiceID = old.DeliveryServiceID
-	originV5.FQDN = old.FQDN
-	originV5.ID = old.ID
+	originV5.DeliveryService = *old.DeliveryService
+	originV5.DeliveryServiceID = *old.DeliveryServiceID
+	originV5.FQDN = *old.FQDN
+	originV5.ID = *old.ID
 	originV5.IP6Address = old.IP6Address
 	originV5.IPAddress = old.IPAddress
-	originV5.IsPrimary = old.IsPrimary
-	originV5.LastUpdated = &r
-	originV5.Name = old.Name
+	originV5.IsPrimary = *old.IsPrimary
+	originV5.LastUpdated = r
+	originV5.Name = *old.Name
 	originV5.Port = old.Port
 	originV5.Profile = old.Profile
 	originV5.ProfileID = old.ProfileID
-	originV5.Protocol = old.Protocol
-	originV5.Tenant = old.Tenant
-	originV5.TenantID = old.TenantID
+	originV5.Protocol = *old.Protocol
+	originV5.Tenant = *old.Tenant
+	originV5.TenantID = *old.TenantID
+
 	return originV5
 }
