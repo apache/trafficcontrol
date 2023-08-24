@@ -173,16 +173,61 @@ Response Structure
 	Date: Mon, 10 Dec 2018 13:50:11 GMT
 	Content-Length: 166
 
-	{ "alerts": [
-		{
-			"text": "All Requested ProfileParameters were created.",
-			"level": "success"
-		}
-	],
-	"response": {
-		"lastUpdated": "2018-12-05T21:44:14.410503+05:30",
-		"profile": "testProfile1",
-		"profileId": 18,
-		"parameter": "testParam1",
-		"parameterId": 1
-	}}
+    {
+      "alerts": [
+        {
+          "text": "All Requested ProfileParameters were created.",
+          "level": "success"
+        }
+      ],
+      "response": [
+        {
+          "lastUpdated": "2018-12-05T21:44:14.410503+05:30",
+          "profile": "testProfile1",
+          "profileId": 18,
+          "parameter": "testParam1",
+          "parameterId": 1
+        }
+      ]
+    }
+
+.. code-block:: http
+	:caption: Response Example - Array Format
+
+	HTTP/1.1 200 OK
+	Access-Control-Allow-Credentials: true
+	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE
+	Access-Control-Allow-Origin: *
+	Content-Type: application/json
+	Set-Cookie: mojolicious=...; Path=/; Expires=Mon, 18 Nov 2019 17:40:54 GMT; Max-Age=3600; HttpOnly
+	Whole-Content-Sha512: eDmIwlzX44fZdxLRPHMNa8aoGAK5fQv9Y70A2eeQHfEkliU4evwcsQ4WeHcH0l3/wPTGlpyC0gwLo8LQQpUxWQ==
+	X-Server-Name: traffic_ops_golang/
+	Date: Mon, 10 Dec 2018 13:50:11 GMT
+	Content-Length: 166
+
+
+    {
+      "alerts": [
+        {
+          "text": "All Requested Profile_Parameters were created.",
+          "level": "success"
+        }
+      ],
+      "response": [
+        {
+          "lastUpdated": "2018-12-05T21:44:14.410503+05:30",
+          "profile": "test1",
+          "profileId": 17,
+          "parameter": "tm.toolname",
+          "parameterId": 1091
+        },
+        {
+          "lastUpdated": "2018-12-05T21:44:14.410503+05:30",
+          "profile": "test2",
+          "profileId": 18,
+          "parameter": "maxRevalDurationDays",
+          "parameterId": 1091
+        }
+      ]
+    }
