@@ -156,7 +156,7 @@ func TestParameters(t *testing.T) {
 							},
 						},
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
 				},
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
@@ -273,8 +273,8 @@ func TestParameters(t *testing.T) {
 		for method, testCases := range methodTests {
 			t.Run(method, func(t *testing.T) {
 				for name, testCase := range testCases {
-					parameter := tc.Parameter{}
-					parameters := []tc.Parameter{}
+					parameter := tc.ParameterV5{}
+					parameters := []tc.ParameterV5{}
 
 					if testCase.RequestBody != nil {
 						if params, ok := testCase.RequestBody["parameters"]; ok {
@@ -335,7 +335,7 @@ func TestParameters(t *testing.T) {
 func validateParametersFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Parameters response to not be nil.")
-		parameterResp := resp.([]tc.Parameter)
+		parameterResp := resp.([]tc.ParameterV5)
 		for field, expected := range expectedResp {
 			for _, parameter := range parameterResp {
 				switch field {
@@ -370,7 +370,7 @@ func validateParametersUpdateCreateFields(name string, expectedResp map[string]i
 
 func validateParametersPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.Parameter)
+		paginationResp := resp.([]tc.ParameterV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")

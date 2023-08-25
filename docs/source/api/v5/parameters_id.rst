@@ -65,7 +65,7 @@ Response Structure
 ------------------
 :configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 :id:          The :term:`Parameter`'s :ref:`parameter-id`
-:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :rfc:`3339` Format
 :name:        :ref:`parameter-name` of the :term:`Parameter`
 :profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
 :secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
@@ -95,7 +95,7 @@ Response Structure
 	"response": {
 		"configFile": "records.config",
 		"id": 125,
-		"lastUpdated": "2018-12-05 20:21:07+00",
+		"lastUpdated": "2018-12-05T20:21:07.563406+05:30",
 		"name": "foo",
 		"profiles": null,
 		"secure": false,

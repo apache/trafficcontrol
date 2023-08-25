@@ -26,14 +26,14 @@ import (
 const apiParameters = "/parameters"
 
 // CreateParameter performs a POST to create a Parameter.
-func (to *Session) CreateParameter(pl tc.Parameter, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateParameter(pl tc.ParameterV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiParameters, opts, pl, &alerts)
 	return alerts, reqInf, err
 }
 
 // CreateMultipleParameters performs a POST to create multiple Parameters at once.
-func (to *Session) CreateMultipleParameters(pls []tc.Parameter, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateMultipleParameters(pls []tc.ParameterV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiParameters, opts, pls, &alerts)
 	return alerts, reqInf, err
@@ -41,7 +41,7 @@ func (to *Session) CreateMultipleParameters(pls []tc.Parameter, opts RequestOpti
 
 // UpdateParameter replaces the Parameter identified by 'id' with the one
 // provided.
-func (to *Session) UpdateParameter(id int, pl tc.Parameter, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateParameter(id int, pl tc.ParameterV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf("%s/%d", apiParameters, id)
 	var alerts tc.Alerts
 	reqInf, err := to.put(route, opts, pl, &alerts)
@@ -49,8 +49,8 @@ func (to *Session) UpdateParameter(id int, pl tc.Parameter, opts RequestOptions)
 }
 
 // GetParameters returns all Parameters in Traffic Ops.
-func (to *Session) GetParameters(opts RequestOptions) (tc.ParametersResponse, toclientlib.ReqInf, error) {
-	var data tc.ParametersResponse
+func (to *Session) GetParameters(opts RequestOptions) (tc.ParametersResponseV5, toclientlib.ReqInf, error) {
+	var data tc.ParametersResponseV5
 	reqInf, err := to.get(apiParameters, opts, &data)
 	return data, reqInf, err
 }

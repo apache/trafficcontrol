@@ -245,7 +245,7 @@ func CreateTestProfileParameters(t *testing.T) {
 			getParameter, _, err := TOSession.GetParameters(parameterOpts)
 			assert.RequireNoError(t, err, "Could not get Parameter %s: %v - alerts: %+v", *parameter.Name, err, getParameter.Alerts)
 			if len(getParameter.Response) == 0 {
-				alerts, _, err := TOSession.CreateParameter(tc.Parameter{Name: *parameter.Name, Value: *parameter.Value, ConfigFile: *parameter.ConfigFile}, client.RequestOptions{})
+				alerts, _, err := TOSession.CreateParameter(tc.ParameterV5{Name: *parameter.Name, Value: *parameter.Value, ConfigFile: *parameter.ConfigFile}, client.RequestOptions{})
 				assert.RequireNoError(t, err, "Could not create Parameter %s: %v - alerts: %+v", parameter.Name, err, alerts.Alerts)
 				getParameter, _, err = TOSession.GetParameters(parameterOpts)
 				assert.RequireNoError(t, err, "Could not get Parameter %s: %v - alerts: %+v", *parameter.Name, err, getParameter.Alerts)
