@@ -16,6 +16,13 @@ package v5
 */
 
 import (
+	"net/http"
+	"net/url"
+	"sort"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -23,12 +30,6 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
-	"net/http"
-	"net/url"
-	"sort"
-	"strconv"
-	"testing"
-	"time"
 )
 
 func TestTenants(t *testing.T) {
