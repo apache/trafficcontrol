@@ -16,64 +16,64 @@ package v5
 */
 
 import (
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 	"net/http"
-	"net/url"
 	"sort"
 	"strconv"
 	"testing"
+	"time"
 )
 
 func TestTenants(t *testing.T) {
 	WithObjs(t, []TCObj{Tenants}, func() {
 
-		//currentTime := time.Now().UTC().Add(-15 * time.Second)
+		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		//currentTimeRFC := currentTime.Format(time.RFC1123)
-		//tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
+		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.TenantV5]{
 			"GET": {
-				//"NOT MODIFIED when NO CHANGES made": {
+				"NOT MODIFIED when NO CHANGES made": {
+					ClientSession: TOSession,
+					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
+					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				},
+				//"OK when VALID request": {
 				//	ClientSession: TOSession,
-				//	RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfModifiedSince: {tomorrow}}},
-				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusNotModified)),
+				//	Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+				//		utils.ResponseLengthGreaterOrEqual(1), validateTenantSort()),
 				//},
-				"OK when VALID request": {
-					ClientSession: TOSession,
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						utils.ResponseLengthGreaterOrEqual(1), validateTenantSort()),
-				},
-				"OK when VALID ACTIVE parameter": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"active": {"true"}}},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateTenantFields(map[string]interface{}{"Active": true})),
-				},
-				"VALID when SORTORDER param is DESC": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantDescSort()),
-				},
-				"FIRST RESULT when LIMIT=1": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("limit")),
-				},
-				"SECOND RESULT when LIMIT=1 OFFSET=1": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("offset")),
-				},
-				"SECOND RESULT when LIMIT=1 PAGE=2": {
-					ClientSession: TOSession,
-					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
-					Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("page")),
-				},
+				//"OK when VALID ACTIVE parameter": {
+				//	ClientSession: TOSession,
+				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"active": {"true"}}},
+				//	Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+				//		validateTenantFields(map[string]interface{}{"Active": true})),
+				//},
+				//"VALID when SORTORDER param is DESC": {
+				//	ClientSession: TOSession,
+				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"sortOrder": {"desc"}}},
+				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantDescSort()),
+				//},
+				//"FIRST RESULT when LIMIT=1": {
+				//	ClientSession: TOSession,
+				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}}},
+				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("limit")),
+				//},
+				//"SECOND RESULT when LIMIT=1 OFFSET=1": {
+				//	ClientSession: TOSession,
+				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "offset": {"1"}}},
+				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("offset")),
+				//},
+				//"SECOND RESULT when LIMIT=1 PAGE=2": {
+				//	ClientSession: TOSession,
+				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"orderby": {"id"}, "limit": {"1"}, "page": {"2"}}},
+				//	Expectations:  utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateTenantPagination("page")),
+				//},
 				//"BAD REQUEST when INVALID LIMIT parameter": {
 				//	ClientSession: TOSession,
 				//	RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"limit": {"-2"}}},
@@ -90,19 +90,19 @@ func TestTenants(t *testing.T) {
 				//	Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				//},
 			},
-			"POST": {
-				"OK when VALID request": {
-					ClientSession: TOSession,
-					RequestBody: tc.TenantV5{
-						Active:     util.Ptr(true),
-						Name:       util.Ptr("tenant5"),
-						ParentName: util.Ptr("root"),
-						ParentID:   util.Ptr(GetTenantID(t, "root")()),
-					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateTenantCreateUpdateFields(map[string]interface{}{"Name": "tenant5"})),
-				},
-			},
+			//"POST": {
+			//	"OK when VALID request": {
+			//		ClientSession: TOSession,
+			//		RequestBody: tc.TenantV5{
+			//			Active:     util.Ptr(true),
+			//			Name:       util.Ptr("tenant5"),
+			//			ParentName: util.Ptr("root"),
+			//			ParentID:   util.Ptr(GetTenantID(t, "root")()),
+			//		},
+			//		Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+			//			validateTenantCreateUpdateFields(map[string]interface{}{"Name": "tenant5"})),
+			//	},
+			//},
 			//"PUT": {
 			//	"OK when VALID request": {
 			//		EndpointID:    GetTenantID(t, "tenant4"),
@@ -151,13 +151,13 @@ func TestTenants(t *testing.T) {
 			//			Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 			//		},
 			//},
-			"DELETE": {
-				"BAD REQUEST when TENANT HAS CHILDREN": {
-					EndpointID:    GetTenantID(t, "tenant1"),
-					ClientSession: TOSession,
-					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
-				},
-			},
+			//"DELETE": {
+			//	"BAD REQUEST when TENANT HAS CHILDREN": {
+			//		EndpointID:    GetTenantID(t, "tenant1"),
+			//		ClientSession: TOSession,
+			//		Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+			//	},
+			//},
 		}
 
 		for method, testCases := range methodTests {

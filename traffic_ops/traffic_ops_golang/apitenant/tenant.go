@@ -434,6 +434,8 @@ func CreateTenant(w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "tenant was created.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, tenant)
+	changeLogMsg := fmt.Sprintf("TENANT: %s, ID: %d, ACTION: Created tenant", *tenant.Name, *tenant.ID)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -558,74 +560,97 @@ func getTenants(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.
 	return tenants, nil, nil, http.StatusOK, maxTime
 }
 
-// UpdateTenant [Version : V5] function updates the name of the tenant passed.
 func UpdateTenant(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
-	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
 	defer inf.Close()
 
-	t, readValErr := readAndValidateJsonStruct(r)
+	tx := inf.Tx.Tx
+
+	defer r.Body.Close()
+	var tenant tc.TenantV5
+
+	tenant, readValErr := readAndValidateJsonStruct(r)
 	if readValErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
 		return
 	}
 
-	dgT := Downgrade(t)
-
-	// Check that tenant can be updated
-	userErr, sysErr, statusCode := dgT.isUpdatable()
-	if userErr != nil || sysErr != nil {
-		api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
-	}
-
-	existingLastUpdated, found, err := dgT.GetLastUpdated()
-	if err == nil && found == false {
-		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("update tenant: find last updated: no "+dgT.GetType()+" found with this id"), nil)
-	}
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("update tenant: find last updated: "+err.Error()), nil)
-	}
-	if !api.IsUnmodified(r.Header, *existingLastUpdated) {
-		api.HandleErr(w, r, tx, http.StatusPreconditionFailed, fmt.Errorf(string("update tenant: check if unmodified: "+api.ResourceModifiedError)), nil)
-	}
-
-	rows, err := dgT.APIInfo().Tx.NamedQuery(dgT.UpdateQuery(), dgT)
-	if err != nil {
-		userErr, sysErr, errCode = api.ParseDBError(err)
-		if userErr != nil {
-			api.HandleErr(w, r, tx, errCode, fmt.Errorf("update tenant: get rows: "+userErr.Error()), nil)
+	if id, ok := inf.Params["id"]; !ok {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("missing key: id"), nil)
+		return
+	} else {
+		idNum, err := strconv.Atoi(id)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("couldn't convert ID into a numeric value: "+err.Error()), nil)
+			return
 		}
-		if sysErr != nil {
-			api.HandleErr(w, r, tx, errCode, nil, fmt.Errorf("update tenant: get rows: "+sysErr.Error()))
+		tenant.ID = &idNum
+
+		existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, idNum, "tenants")
+		if err == nil && found == false {
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no tenant found with this id"), nil)
+			return
 		}
-	}
-	defer rows.Close()
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusNotFound, nil, err)
+			return
+		}
+		if !api.IsUnmodified(r.Header, *existingLastUpdated) {
+			api.HandleErr(w, r, tx, http.StatusPreconditionFailed, api.ResourceModifiedError, nil)
+			return
+		}
 
-	if !rows.Next() {
-		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("update tenant: get rows: no "+dgT.GetType()+" found with this id"), nil)
-	}
-	lastUpdated := tc.TimeNoMod{}
-	if err := rows.Scan(&lastUpdated); err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("update tenant: get rows: scanning lastUpdated from "+dgT.GetType()+" insert: "+err.Error()))
-	}
-	dgT.SetLastUpdated(lastUpdated)
-	if rows.Next() {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("update tenant: get rows: "+dgT.GetType()+" update affected too many rows: >1"))
-	}
+		// Check if tenant is tenable
+		authorized, err := isTenantAuthorizedV5(&tenant, inf.User, tx)
+		if err != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+			return
+		}
+		if !authorized {
+			api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
+			return
+		}
 
-	t, err = dgT.Upgrade()
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("converting cachegroup: converting cache group upgrade: "+err.Error()), nil)
+		//Check if tenant is updatable
+		userErr, sysErr, statusCode := isUpdatableV5(&tenant, inf.Tx)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, inf.Tx.Tx, statusCode, userErr, sysErr)
+			return
+		}
+
+		rows, err := inf.Tx.NamedQuery(updateQuery(), tenant)
+		if err != nil {
+			userErr, sysErr, errCode = api.ParseDBError(err)
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+		defer rows.Close()
+
+		if !rows.Next() {
+			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no tenant found with this id"), nil)
+			return
+		}
+		lastUpdated := time.Time{}
+		if err := rows.Scan(&lastUpdated); err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning lastUpdated from tenant insert: "+err.Error()))
+			return
+		}
+		tenant.LastUpdated = &lastUpdated
+		if rows.Next() {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("tenant update affected too many rows: >1"))
+			return
+		}
+
+		alerts := tc.CreateAlerts(tc.SuccessLevel, "tenant was updated.")
+		api.WriteAlertsObj(w, r, http.StatusOK, alerts, tenant)
+		changeLogMsg := fmt.Sprintf("TENANT: %s, ID: %d, ACTION: Updated tenant", *tenant.Name, *tenant.ID)
+		api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 		return
 	}
-
-	alerts := tc.CreateAlerts(tc.SuccessLevel, "tenant was updated")
-	api.WriteAlertsObj(w, r, http.StatusOK, alerts, t)
-	return
 }
 
 // DeleteTenant [Version : V5] function deletes the tenant passed.
@@ -664,7 +689,86 @@ func DeleteTenant(w http.ResponseWriter, r *http.Request) {
 	alertMessage := fmt.Sprint("tenant was deleted.")
 	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("TENANT: ID: %d, ACTION: Deleted tenant", id)
+	api.CreateChangeLogRawTx(api.ApiChange, changeLogMsg, inf.User, tx)
 	return
+}
+
+// IsTenantAuthorized implements the Tenantable interface for TOTenant
+// returns true if the user has access on this tenant and on the ParentID if changed.
+func isTenantAuthorizedV5(tenantV5 *tc.TenantV5, user *auth.CurrentUser, tx *sql.Tx) (bool, error) {
+	var ok = false
+	var err error
+
+	if tenantV5 == nil {
+		// should never happen
+		return ok, err
+	}
+
+	if tenantV5.ID != nil && *tenantV5.ID != 0 {
+		// modifying an existing tenant
+		ok, err = tenant.IsResourceAuthorizedToUserTx(*tenantV5.ID, user, tx)
+		if !ok || err != nil {
+			return ok, err
+		}
+
+		if tenantV5.ParentID == nil || *tenantV5.ParentID == 0 {
+			// not changing parent
+			return ok, err
+		}
+
+		// get current parentID to check if it's being changed
+		var parentID int
+		// If it's the root tenant, don't check for parent
+		if tenantV5.Name != nil && *tenantV5.Name != rootName {
+			err = tx.QueryRow(`SELECT parent_id FROM tenant WHERE id = ` + strconv.Itoa(*tenantV5.ID)).Scan(&parentID)
+			if err != nil {
+				return false, err
+			}
+			if parentID == *tenantV5.ParentID {
+				// parent not being changed
+				return ok, err
+			}
+		}
+	}
+
+	// creating new tenant -- must specify a parent
+	if tenantV5.ParentID == nil || *tenantV5.ParentID == 0 {
+		return false, err
+	}
+
+	return tenant.IsResourceAuthorizedToUserTx(*tenantV5.ParentID, user, tx)
+}
+
+func isUpdatableV5(tenantV5 *tc.TenantV5, tx *sqlx.Tx) (error, error, int) {
+	if tenantV5.Name != nil && *tenantV5.Name == rootName {
+		return errors.New("trying to change the root tenant, which is immutable"), nil, http.StatusBadRequest
+	}
+
+	// Perform SelectQuery
+	vals := []tc.TenantNullable{}
+	query := selectQuery(*tenantV5.ID)
+	rows, err := tx.Queryx(query)
+	if err != nil {
+		return nil, errors.New("querying tenant: " + err.Error()), http.StatusInternalServerError
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var v tc.TenantNullable
+		if err = rows.StructScan(&v); err != nil {
+			return nil, errors.New("scanning tenant: " + err.Error()), http.StatusInternalServerError
+		}
+		vals = append(vals, v)
+	}
+
+	// Ensure the new desired ParentID does not exist in the susequent list of Children
+	for _, val := range vals {
+		if *tenantV5.ParentID == *val.ID {
+			return errors.New("trying to set existing child as new parent"), nil, http.StatusBadRequest
+		}
+	}
+	return nil, nil, http.StatusOK
 }
 
 // readAndValidateJsonStruct populates select missing fields and validates JSON body
