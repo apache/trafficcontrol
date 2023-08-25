@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"strconv"
 	"time"
 
@@ -308,23 +307,25 @@ func CreateProfileParameter(w http.ResponseWriter, r *http.Request) {
 
 	// This code block decides if the request body is a slice of parameters or a single object.
 	var profileParams []tc.ProfileParameterCreationRequest
-	switch reflect.TypeOf(data).Kind() {
-	case reflect.Slice:
-		if err := json.Unmarshal(body, &profileParams); err != nil {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error unmarshalling slice"), nil)
-			return
+
+	// Try to unmarshal the data as a slice
+	var sliceData []map[string]interface{}
+	if err := json.Unmarshal(body, &sliceData); err == nil {
+		for _, item := range sliceData {
+			profileParam := tc.ProfileParameterCreationRequest{
+				ParameterID: int(item["parameterId"].(float64)),
+				ProfileID:   int(item["profileId"].(float64)),
+			}
+			profileParams = append(profileParams, profileParam)
 		}
-	case reflect.Map:
-		// If it is a single object it is still converted to a slice for code simplicity.
+	} else {
+		// Try to unmarshal the data as a single object
 		var profileParam tc.ProfileParameterCreationRequest
 		if err := json.Unmarshal(body, &profileParam); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error unmarshalling single object"), nil)
 			return
 		}
 		profileParams = append(profileParams, profileParam)
-	default:
-		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("invalid request format"), nil)
-		return
 	}
 
 	// Validate all objects of the every profile parameter from the request slice
