@@ -28,63 +28,63 @@ import (
 // endpoint.
 const apiStaticDNSEntries = "/staticdnsentries"
 
-func staticDNSEntryIDs(to *Session, sdns *tc.StaticDNSEntry) error {
+func staticDNSEntryIDsV5(to *Session, sdns *tc.StaticDNSEntryV5) error {
 	if sdns == nil {
 		return errors.New("cannot resolve names to IDs for nil StaticDNSEntry")
 	}
-	if sdns.CacheGroupID == 0 && sdns.CacheGroupName != "" {
+	if (sdns.CacheGroupID == nil || *sdns.CacheGroupID == 0) && (sdns.CacheGroupName != nil && *sdns.CacheGroupName != "") {
 		opts := NewRequestOptions()
-		opts.QueryParameters.Set("name", sdns.CacheGroupName)
+		opts.QueryParameters.Set("name", *sdns.CacheGroupName)
 		p, _, err := to.GetCacheGroups(opts)
 		if err != nil {
 			return err
 		}
 		if len(p.Response) == 0 {
-			return errors.New("no CacheGroup named " + sdns.CacheGroupName)
+			return errors.New("no CacheGroup named " + *sdns.CacheGroupName)
 		}
 		if p.Response[0].ID == nil {
-			return errors.New("CacheGroup named " + sdns.CacheGroupName + " has a nil ID")
+			return errors.New("CacheGroup named " + *sdns.CacheGroupName + " has a nil ID")
 		}
-		sdns.CacheGroupID = *p.Response[0].ID
+		sdns.CacheGroupID = p.Response[0].ID
 	}
 
-	if sdns.DeliveryServiceID == 0 && sdns.DeliveryService != "" {
+	if (sdns.DeliveryServiceID == nil || *sdns.DeliveryServiceID == 0) && (sdns.DeliveryService != nil && *sdns.DeliveryService != "") {
 		opts := NewRequestOptions()
-		opts.QueryParameters.Set("xmlId", sdns.DeliveryService)
+		opts.QueryParameters.Set("xmlId", *sdns.DeliveryService)
 		dses, _, err := to.GetDeliveryServices(opts)
 		if err != nil {
 			return err
 		}
 		if len(dses.Response) == 0 {
-			return errors.New("no deliveryservice with name " + sdns.DeliveryService)
+			return errors.New("no deliveryservice with name " + *sdns.DeliveryService)
 		}
 		if dses.Response[0].ID == nil {
-			return errors.New("Deliveryservice with name " + sdns.DeliveryService + " has a nil ID")
+			return errors.New("Deliveryservice with name " + *sdns.DeliveryService + " has a nil ID")
 		}
-		sdns.DeliveryServiceID = *dses.Response[0].ID
+		sdns.DeliveryServiceID = dses.Response[0].ID
 	}
 
-	if sdns.TypeID == 0 && sdns.Type != "" {
+	if (sdns.TypeID == nil || *sdns.TypeID == 0) && (sdns.Type != nil && *sdns.Type != "") {
 		opts := NewRequestOptions()
-		opts.QueryParameters.Set("name", sdns.Type)
+		opts.QueryParameters.Set("name", *sdns.Type)
 		types, _, err := to.GetTypes(opts)
 		if err != nil {
 			return err
 		}
 		if len(types.Response) == 0 {
-			return errors.New("no type with name " + sdns.Type)
+			return errors.New("no type with name " + *sdns.Type)
 		}
-		sdns.TypeID = types.Response[0].ID
+		sdns.TypeID = &types.Response[0].ID
 	}
 
 	return nil
 }
 
 // CreateStaticDNSEntry creates the given Static DNS Entry.
-func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntry, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntryV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	// fill in missing IDs from names
 	var alerts tc.Alerts
-	err := staticDNSEntryIDs(to, &sdns)
+	err := staticDNSEntryIDsV5(to, &sdns)
 	if err != nil {
 		return alerts, toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}, err
 	}
@@ -94,10 +94,10 @@ func (to *Session) CreateStaticDNSEntry(sdns tc.StaticDNSEntry, opts RequestOpti
 
 // UpdateStaticDNSEntry replaces the Static DNS Entry identified by 'id' with
 // the one provided.
-func (to *Session) UpdateStaticDNSEntry(id int, sdns tc.StaticDNSEntry, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateStaticDNSEntry(id int, sdns tc.StaticDNSEntryV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	// fill in missing IDs from names
 	var alerts tc.Alerts
-	err := staticDNSEntryIDs(to, &sdns)
+	err := staticDNSEntryIDsV5(to, &sdns)
 	if err != nil {
 		return alerts, toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}, err
 	}
@@ -110,8 +110,8 @@ func (to *Session) UpdateStaticDNSEntry(id int, sdns tc.StaticDNSEntry, opts Req
 }
 
 // GetStaticDNSEntries retrieves all Static DNS Entries stored in Traffic Ops.
-func (to *Session) GetStaticDNSEntries(opts RequestOptions) (tc.StaticDNSEntriesResponse, toclientlib.ReqInf, error) {
-	var data tc.StaticDNSEntriesResponse
+func (to *Session) GetStaticDNSEntries(opts RequestOptions) (tc.StaticDNSEntriesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.StaticDNSEntriesResponseV5
 	reqInf, err := to.get(apiStaticDNSEntries, opts, &data)
 	return data, reqInf, err
 }
