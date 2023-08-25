@@ -32,6 +32,7 @@ RUN go install github.com/jstemmer/go-junit-report@latest
 COPY ./vendor/ /go/src/github.com/apache/trafficcontrol/vendor/
 
 # integration source and dependencies
+COPY ./cache-config/t3cutil/ /go/src/github.com/apache/trafficcontrol/cache-config/t3cutil/
 COPY ./lib/ /go/src/github.com/apache/trafficcontrol/lib/
 COPY ./traffic_ops/toclientlib/ /go/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/
 COPY ./traffic_ops/v3-client/ /go/src/github.com/apache/trafficcontrol/traffic_ops/v3-client/

@@ -81,7 +81,7 @@ func MakeStrategiesDotYAML(
 
 	atsMajorVersion := getATSMajorVersion(opt.ATSMajorVersion, tcServerParams, &warnings)
 
-	parentAbstraction, dataWarns, err := makeParentDotConfigData(
+	parentAbstraction, dataWarns, err := MakeParentDotConfigData(
 		dses,
 		server,
 		servers,
@@ -99,7 +99,7 @@ func MakeStrategiesDotYAML(
 			ATSMajorVersion: opt.ATSMajorVersion,
 			GoDirect:        opt.GoDirect,
 			ParentIsProxy:   opt.ParentIsProxy,
-		}, // TODO change makeParentDotConfigData to its own opt?
+		}, // TODO change MakeParentDotConfigData to its own opt?
 		atsMajorVersion,
 	)
 	warnings = append(warnings, dataWarns...)

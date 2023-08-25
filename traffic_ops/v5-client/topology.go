@@ -26,26 +26,26 @@ import (
 const apiTopologies = "/topologies"
 
 // CreateTopology creates the passed Topology.
-func (to *Session) CreateTopology(top tc.Topology, opts RequestOptions) (tc.TopologyResponse, toclientlib.ReqInf, error) {
-	var resp tc.TopologyResponse
+func (to *Session) CreateTopology(top tc.TopologyV5, opts RequestOptions) (tc.TopologyResponseV5, toclientlib.ReqInf, error) {
+	var resp tc.TopologyResponseV5
 	reqInf, err := to.post(apiTopologies, opts, top, &resp)
 	return resp, reqInf, err
 }
 
 // GetTopologies returns all Topologies stored in Traffic Ops.
-func (to *Session) GetTopologies(opts RequestOptions) (tc.TopologiesResponse, toclientlib.ReqInf, error) {
-	var data tc.TopologiesResponse
+func (to *Session) GetTopologies(opts RequestOptions) (tc.TopologiesResponseV5, toclientlib.ReqInf, error) {
+	var data tc.TopologiesResponseV5
 	reqInf, err := to.get(apiTopologies, opts, &data)
 	return data, reqInf, err
 }
 
 // UpdateTopology updates a Topology by name.
-func (to *Session) UpdateTopology(name string, t tc.Topology, opts RequestOptions) (tc.TopologyResponse, toclientlib.ReqInf, error) {
+func (to *Session) UpdateTopology(name string, t tc.TopologyV5, opts RequestOptions) (tc.TopologyResponseV5, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
 	opts.QueryParameters.Set("name", name)
-	var response tc.TopologyResponse
+	var response tc.TopologyResponseV5
 	reqInf, err := to.put(apiTopologies, opts, t, &response)
 	return response, reqInf, err
 }

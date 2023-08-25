@@ -13,7 +13,7 @@
 */
 import "zone.js/node";
 
-import { existsSync, readdirSync, readFileSync, statSync } from "fs";
+import { readFileSync } from "fs";
 import { createServer as createRedirectServer } from "http";
 import { createServer, request, RequestOptions } from "https";
 import { join } from "path";
@@ -27,71 +27,103 @@ import {
 	defaultConfigFile,
 	getConfig,
 	getVersion,
-	ServerConfig,
+	type ServerConfig,
 	versionToString
 } from "server.config";
 
-import { AppServerModule } from "./src/main.server";
+import { hasProperty, Logger, LogLevel } from "src/app/utils";
+import { environment } from "src/environments/environment";
+import { AppServerModule } from "src/main.server";
+
+import { errorMiddleWare, loggingMiddleWare, type TPResponseWriter } from "./middleware";
+
+const typeMap = new Map([
+	["js", "application/javascript"],
+	["css", "text/css"],
+	["ttf", "font/ttf"],
+	["svg", "image/svg+xml"]
+]);
 
 /**
- * StaticFile defines what compression files are available.
- */
-interface StaticFile {
-	compressions: Array<CompressionType>;
-}
-
-/**
- * CompressionType defines the different compression algorithms.
- */
-interface CompressionType {
-	fileExt: string;
-	headerEncoding: string;
-	name: string;
-}
-
-const gzip = {
-	fileExt: "gz",
-	headerEncoding: "gzip",
-	name: "gzip"
-};
-const br = {
-	fileExt: "br",
-	headerEncoding: "br",
-	name: "brotli"
-};
-
-/**
- * getFiles recursively gets all the files in a directory.
+ * A handler for serving files from compressed variants.
  *
- * @param path The path to get files from.
- * @returns Files found in the directory.
+ * @param req The client request.
+ * @param res Response writer.
+ * @param next A delegation to the next handler, to be called if this handler
+ * determines it can't write a response (which is always because this handler
+ * doesn't do that).
+ * @returns nothing. This is just required because we're returning void function
+ * calls. Not actually sure why, seems like a bug to me.
  */
-function getFiles(path: string): string[] {
-	const all = readdirSync(path)
-		.map(file => join(path, file));
-	const dirs = all
-		.filter(file => statSync(file).isDirectory());
-	let files = all
-		.filter(file => !statSync(file).isDirectory());
-	for (const dir of dirs) {
-		files = files.concat(getFiles(dir));
+function compressedFileHandler(req: express.Request, res: TPResponseWriter, next: express.NextFunction): void {
+	const type = req.path.split(".").pop();
+	if (type === undefined || !typeMap.has(type)) {
+		res.locals.logger.debug("unrecognized/non-compress-able file extension:", type);
+		return next();
 	}
-	return files;
+	const path = join(res.locals.config.browserFolder, req.path.substring(1));
+	const file = res.locals.foundFiles.get(path);
+	if(!file || file.compressions.length === 0) {
+		res.locals.logger.debug("file", path, "doesn't have any available compression");
+		return next();
+	}
+	const acceptedEncodings = req.acceptsEncodings();
+	for(const compression of file.compressions) {
+		if (!acceptedEncodings.includes(compression.headerEncoding)) {
+			continue;
+		}
+		req.url = req.url.replace(`${req.path}`, `${req.path}.${compression.fileExt}`);
+		res.set("Content-Encoding", compression.headerEncoding);
+		res.set("Content-Type", typeMap.get(type));
+		res.locals.logger.info("Serving", compression.name, "compressed file", req.path);
+		return next();
+	}
+
+	res.locals.logger.debug("no file found that matches an encoding the client accepts - serving uncompressed");
+	next();
 }
 
-let config: ServerConfig;
+/**
+ * A handler for proxy-ing the Traffic Ops API.
+ *
+ * @param req The client's request.
+ * @param res The server's response writer.
+ */
+function toProxyHandler(req: express.Request, res: TPResponseWriter): void {
+	const {logger, config} = res.locals;
+
+	logger.debug(`Making TO API request to \`${req.originalUrl}\``);
+
+	const fwdRequest: RequestOptions = {
+		headers: req.headers,
+		host: config.trafficOps.hostname,
+		method: req.method,
+		path: req.originalUrl,
+		port: config.trafficOps.port,
+		rejectUnauthorized: !config.insecure,
+	};
+
+	try {
+		const proxyRequest = request(fwdRequest, r => {
+			res.writeHead(r.statusCode ?? 502, r.headers);
+			r.pipe(res);
+		});
+		req.pipe(proxyRequest);
+	} catch (e) {
+		logger.error("proxy-ing request:", e);
+	}
+	res.locals.endTime = new Date();
+}
+
 /**
  * The Express app is exported so that it can be used by serverless Functions.
  *
- * @param serverConfig Server configuration
+ * @param serverConfig Server configuration.
  * @returns The Express.js application.
  */
-export function app(serverConfig: ServerConfig): express.Express {
+export async function app(serverConfig: ServerConfig): Promise<express.Express> {
 	const server = express();
 	const indexHtml = join(serverConfig.browserFolder, "index.html");
-	if (!existsSync(indexHtml)) {
-		throw new Error(`Unable to start TP server, unable to find browser index.html at: ${indexHtml}`);
-	}
 
 	// Our Universal express-engine (found @ https://github.com/angular/universal/tree/master/modules/express-engine)
 	server.engine("html", ngExpressEngine({
@@ -101,101 +133,57 @@ export function app(serverConfig: ServerConfig): express.Express {
 	server.set("view engine", "html");
 	server.set("views", "./");
 
-	const allFiles = getFiles(serverConfig.browserFolder);
-	const compressedFiles = new Map(allFiles
-		.filter(file => file.match(/\.(br|gz)$/))
-		.map(file => [file, undefined]));
-	const foundFiles = new Map<string, StaticFile>(allFiles
-		.filter(file => file.match(/\.(js|css|tff|svg)$/))
-		.map(file => {
-			const staticFile: StaticFile = {
-				compressions: []
-			};
-			if (compressedFiles.has(`${file}.${br.fileExt}`)) {
-				staticFile.compressions.push(br);
-			}
-			if (compressedFiles.has(`${file}.${gzip.fileExt}`)) {
-				staticFile.compressions.push(gzip);
-			}
-			return [file, staticFile];
-		}));
-
-	const typeMap = new Map([
-		["js", "application/javascript"],
-		["css", "text/css"],
-		["ttf", "font/ttf"],
-		["svg", "image/svg+xml"]
-	]);
+	// Express 4.x doesn't handle Promise rejections (need to be manually
+	// propagated with `next`), so it's not technically accurate to say that
+	// void Promises are the same as void. Using `async`, though, is so much
+	// easier than not doing that, so we're gonna go ahead and pretend that
+	// `Promise<void>` is the same as `void`, in this one case.
+	//
+	// Note: Express 5.x fully supports async handlers - including seamless
+	// rejections - but it's still in beta at the time of this writing.
+	const loggingMW: express.RequestHandler = await loggingMiddleWare(serverConfig) as express.RequestHandler;
+	server.use(loggingMW);
 
 	// Could just use express compression `server.use(compression())` but that is calculated for each request
-	server.get("*.(js|css|ttf|svg)", function(req, res, next) {
-		const type = req.path.split(".").pop();
-		if (type === undefined || !typeMap.has(type)) {
-			return next();
-		}
-		const path = join(serverConfig.browserFolder, req.path.substring(1, req.path.length));
-		const file = foundFiles.get(path);
-		if(!file || file.compressions.length === 0) {
-			return next();
-		}
-		const acceptedEncodings = req.acceptsEncodings();
-		for(const compression of file.compressions) {
-			if (acceptedEncodings.indexOf(compression.headerEncoding) === -1) {
-				continue;
-			}
-			req.url = req.url.replace(`${req.path}`, `${req.path}.${compression.fileExt}`);
-			res.set("Content-Encoding", compression.headerEncoding);
-			res.set("Content-Type", typeMap.get(type));
-			console.log(`Serving ${compression.name} compressed file ${req.path}`);
-			return next();
-		}
-		next();
-	});
-	// Example Express Rest API endpoints
-	// server.get('/api/**', (req, res) => { });
-	// Serve static files from /browser
-	server.get("*.*", express.static(serverConfig.browserFolder, {
-		maxAge: "1y"
-	}));
+	server.get("*.(js|css|ttf|svg)", compressedFileHandler);
 
-	/**
-	 * A handler for proxying the Traffic Ops API.
-	 *
-	 * @param req The client's request.
-	 * @param res The server's response writer.
-	 */
-	function toProxyHandler(req: express.Request, res: express.Response): void {
-		console.log(`Making TO API request to \`${req.originalUrl}\``);
-
-		const fwdRequest: RequestOptions = {
-			headers: req.headers,
-			host: config.trafficOps.hostname,
-			method: req.method,
-			path: req.originalUrl,
-			port: config.trafficOps.port,
-			rejectUnauthorized: !config.insecure,
-		};
-
-		try {
-			const proxiedRequest = request(fwdRequest, (r) => {
-				res.writeHead(r.statusCode ?? 502, r.headers);
-				r.pipe(res);
-			});
-			req.pipe(proxiedRequest);
-		} catch (e) {
-			console.error("proxying request:", e);
+	server.get(
+		"*.*",
+		(req, res: TPResponseWriter, next) => {
+			express.static(res.locals.config.browserFolder, {maxAge: "1y"})(req, res, next);
+			// Express's static handler doesn't call `next` and calling it
+			// yourself will break it for some reason, so we need to do this by
+			// hand here.
+			const elapsed = (new Date()).valueOf() - res.locals.startTime.valueOf();
+			res.locals.logger.info("handled in", elapsed, "milliseconds with code", res.statusCode);
 		}
-	}
+	);
 
 	server.use("api/**", toProxyHandler);
 	server.use("/api/**", toProxyHandler);
 
 	// All regular routes use the Universal engine
-	server.get("*", (req, res) => {
-		res.render(indexHtml, {providers: [
-			{provide: APP_BASE_HREF, useValue: req.baseUrl},
-			{provide: "TP_V1_URL", useValue: config.tpv1Url}
-		], req});
+	server.get("*", (req, res: TPResponseWriter) => {
+		res.render(
+			indexHtml,
+			{
+				providers: [
+					{provide: APP_BASE_HREF, useValue: req.baseUrl},
+					{provide: "TP_V1_URL", useValue: res.locals.config.tpv1Url},
+				],
+				req
+			},
+		);
+		res.locals.endTime = new Date();
+	});
+
+	server.use(errorMiddleWare);
+	server.use((_, resp: TPResponseWriter) => {
+		if (!resp.locals.endTime) {
+			resp.locals.endTime = new Date();
+		}
+		const elapsed = resp.locals.endTime.valueOf() - resp.locals.startTime.valueOf();
+		resp.locals.logger.info("handled in", elapsed, "milliseconds with code", resp.statusCode);
 	});
 
 	server.enable("trust proxy");
@@ -207,8 +195,8 @@ export function app(serverConfig: ServerConfig): express.Express {
  *
  * @returns An exit code for the process.
  */
-function run(): number {
-	const version = getVersion();
+async function run(): Promise<number> {
+	const version = await getVersion();
 	const parser = new ArgumentParser({
 		// Nothing I can do about this, library specifies its interface.
 		/* eslint-disable @typescript-eslint/naming-convention */
@@ -283,15 +271,20 @@ function run(): number {
 		version: versionToString(version)
 	});
 
+	let config: ServerConfig;
 	try {
-		config = getConfig(parser.parse_args(), version);
+		config = await getConfig(parser.parse_args(), version);
 	} catch (e) {
+		// Logger cannot be initialized before reading server configuration
+		// eslint-disable-next-line no-console
 		console.error(`Failed to initialize server configuration: ${e}`);
 		return 1;
 	}
 
+	const logger = new Logger(console, environment.production ? LogLevel.INFO : LogLevel.DEBUG);
+
 	// Start up the Node server
-	const server = app(config);
+	const server = await app(config);
 
 	if (config.useSSL) {
 		let cert: string;
@@ -302,7 +295,10 @@ function run(): number {
 			key = readFileSync(config.keyPath, {encoding: "utf8"});
 			ca = config.certificateAuthPaths.map(c => readFileSync(c, {encoding: "utf8"}));
 		} catch (e) {
-			console.error("reading SSL key/cert:", e);
+			logger.error("reading SSL key/cert:", String(e));
+			if (!environment.production) {
+				console.trace(e);
+			}
 			return 1;
 		}
 		createServer(
@@ -314,14 +310,14 @@ function run(): number {
 			},
 			server
 		).listen(config.port, () => {
-			console.log(`Node Express server listening on port ${config.port}`);
+			logger.debug(`Node Express server listening on port ${config.port}`);
 		});
 		try {
 			const redirectServer = createRedirectServer(
 				(req, res) => {
 					if (!req.url) {
 						res.statusCode = 500;
-						console.error("got HTTP request for redirect that had no URL");
+						logger.error("got HTTP request for redirect that had no URL");
 						res.end();
 						return;
 					}
@@ -332,20 +328,18 @@ function run(): number {
 			);
 			redirectServer.listen(80);
 			redirectServer.on("error", e => {
-				console.error(`redirect server encountered error: ${e}`);
-				if (Object.prototype.hasOwnProperty.call(e, "code") && (e as typeof e & {
-					code: unknown;
-				}).code === "EACCES") {
-					console.warn("access to port 80 not allowed; closing redirect server");
+				logger.error("redirect server encountered error:", String(e));
+				if (hasProperty(e, "code", "string") && e.code === "EACCES") {
+					logger.warn("access to port 80 not allowed; closing redirect server");
 					redirectServer.close();
 				}
 			});
 		} catch (e) {
-			console.warn("Failed to initialize HTTP-to-HTTPS redirect listener:", e);
+			logger.warn("Failed to initialize HTTP-to-HTTPS redirect listener:", e);
 		}
 	} else {
 		server.listen(config.port, () => {
-			console.log(`Node Express server listening on port ${config.port}`);
+			logger.debug(`Node Express server listening on port ${config.port}`);
 		});
 	}
 	return 0;
@@ -362,12 +356,17 @@ try {
 	const mainModule = __non_webpack_require__.main;
 	const moduleFilename = mainModule && mainModule.filename || "";
 	if (moduleFilename === __filename || moduleFilename.includes("iisnode")) {
-		const code = run();
-		if (code) {
-			process.exit(code);
-		}
+		run().then(
+			code => {
+				if (code) {
+					process.exit(code);
+				}
+			}
+		);
 	}
 } catch (e) {
+	// Logger cannot be initialized before reading server configuration
+	// eslint-disable-next-line no-console
 	console.error("Encountered error while running server:", e);
 	process.exit(1);
 }

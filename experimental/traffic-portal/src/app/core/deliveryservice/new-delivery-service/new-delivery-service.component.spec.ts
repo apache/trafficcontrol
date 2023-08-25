@@ -110,27 +110,23 @@ describe("NewDeliveryServiceComponent", () => {
 	});
 
 	it("should set meta info properly", async () => {
-		try {
-			const stepper = await loader.getHarness(MatStepperHarness);
-			const steps = await stepper.getSteps();
-			await steps[1].select();
-			component.displayName.setValue("test._QUEST");
-			component.infoURL.setValue("ftp://this-is-a-weird.url/");
-			component.description.setValue("test description");
-			component.setMetaInformation();
+		const stepper = await loader.getHarness(MatStepperHarness);
+		const steps = await stepper.getSteps();
+		await steps[1].select();
+		component.displayName.setValue("test._QUEST");
+		component.infoURL.setValue("ftp://this-is-a-weird.url/");
+		component.description.setValue("test description");
+		component.setMetaInformation();
 
-			expect(component.deliveryService.displayName).toEqual("test._QUEST", "test._QUEST");
-			expect(component.deliveryService.xmlId).toEqual("test-quest", "test-quest");
-			expect(component.deliveryService.longDesc).toEqual("test description", "test description");
-			expect(component.deliveryService.infoUrl).toEqual("ftp://this-is-a-weird.url/", "ftp://this-is-a-weird.url/");
-			expect(await parallel(() => steps.map(async step => step.isSelected()))).toEqual([
-				false,
-				false,
-				true
-			]);
-		} catch (e) {
-			console.error("Error occurred:", e);
-		}
+		expect(component.deliveryService.displayName).toEqual("test._QUEST", "test._QUEST");
+		expect(component.deliveryService.xmlId).toEqual("test-quest", "test-quest");
+		expect(component.deliveryService.longDesc).toEqual("test description", "test description");
+		expect(component.deliveryService.infoUrl).toEqual("ftp://this-is-a-weird.url/", "ftp://this-is-a-weird.url/");
+		expect(await parallel(() => steps.map(async step => step.isSelected()))).toEqual([
+			false,
+			false,
+			true
+		]);
 	});
 
 	it("should set infrastructure info properly for HTTP Delivery Services", () => {

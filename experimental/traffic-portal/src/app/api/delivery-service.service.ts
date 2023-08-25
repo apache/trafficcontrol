@@ -30,6 +30,8 @@ import type {
 	TPSData,
 } from "src/app/models";
 
+import { LoggingService } from "../shared/logging.service";
+
 import { APIService } from "./base-api.service";
 
 /**
@@ -61,7 +63,9 @@ function defaultDataSet(label: string): DataSetWithSummary {
  */
 export function constructDataSetFromResponse(r: DSStats): DataSetWithSummary {
 	if (!r.series) {
-		console.error("raw DS stats response:", r);
+		// logging service not accessible in this scope
+		// eslint-disable-next-line no-console
+		console.debug("raw DS stats response:", r);
 		throw new Error("invalid data set response");
 	}
 
@@ -115,12 +119,7 @@ export class DeliveryServiceService extends APIService {
 	/** This is where DS Types are cached, as they are presumed to not change (often). */
 	private deliveryServiceTypes: Array<TypeFromResponse>;
 
-	/**
-	 * Injects the Angular HTTP client service into the parent constructor.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
-	constructor(http: HttpClient) {
+	constructor(http: HttpClient, private readonly log: LoggingService) {
 		super(http);
 		this.deliveryServiceTypes = new Array<TypeFromResponse>();
 	}
@@ -308,7 +307,7 @@ export class DeliveryServiceService extends APIService {
 				}
 				return series;
 			}
-			console.error("data response:", r);
+			this.log.debug("data response:", r);
 			throw new Error("no data series found");
 		}
 		return this.get<DSStats>(path, undefined, params).toPromise();

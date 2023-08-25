@@ -18,6 +18,7 @@ import { Router, ActivatedRoute, DefaultUrlSerializer } from "@angular/router";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
+import { LoggingService } from "../shared/logging.service";
 import { AutocompleteValue } from "../utils";
 
 import { ResetPasswordDialogComponent } from "./reset-password-dialog/reset-password-dialog.component";
@@ -50,7 +51,8 @@ export class LoginComponent implements OnInit {
 		private readonly router: Router,
 		private readonly auth: CurrentUserService,
 		private readonly dialog: MatDialog,
-		private readonly navSvc: NavigationService
+		private readonly navSvc: NavigationService,
+		private readonly log: LoggingService,
 	) {
 		this.navSvc.headerHidden.next(true);
 		this.navSvc.sidebarHidden.next(true);
@@ -74,7 +76,7 @@ export class LoginComponent implements OnInit {
 					this.router.navigate(["/core/me"], {queryParams: {edit: true, updatePassword: true}});
 				}
 			} catch (e) {
-				console.error("token login failed:", e);
+				this.log.error("token login failed:", e);
 			}
 		}
 	}
@@ -99,7 +101,7 @@ export class LoginComponent implements OnInit {
 				this.router.navigate(tree.root.children.primary.segments.map(s=>s.path), {queryParams: tree.queryParams});
 			}
 		} catch (err) {
-			console.error("login failed:", err);
+			this.log.error("login failed:", err);
 		}
 	}
 

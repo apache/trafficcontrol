@@ -12,9 +12,10 @@
 * limitations under the License.
 */
 import { Component } from "@angular/core";
-// import { FormControl } from "@angular/forms";
 import { AgFilterComponent } from "ag-grid-angular";
 import { IDoesFilterPassParams, IFilterParams } from "ag-grid-community";
+
+import { LoggingService } from "src/app/shared/logging.service";
 
 /** A model that fully describes the state of a Boolean Filter. */
 interface BooleanFilterModel {
@@ -44,6 +45,8 @@ export class BooleanFilterComponent implements AgFilterComponent {
 
 	/** Initialization parameters. */
 	private params!: IFilterParams;
+
+	constructor(private readonly log: LoggingService) {}
 
 	/**
 	 * Called by AG-Grid to check if the filter is in effect.
@@ -130,7 +133,7 @@ export class BooleanFilterComponent implements AgFilterComponent {
 	public agInit(params: IFilterParams): void {
 		this.params = params;
 		if (!params.colDef.field) {
-			console.error("No column name found on boolean-filter parameters");
+			this.log.error("No column name found on boolean-filter parameters");
 			return;
 		}
 		this.field = params.colDef.field;

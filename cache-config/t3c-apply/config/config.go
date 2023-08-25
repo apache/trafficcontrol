@@ -123,6 +123,7 @@ type Cfg struct {
 	Version           string
 	GitRevision       string
 	LocalATSVersion   string
+	CacheType         string
 }
 
 func (cfg Cfg) AppVersion() string { return t3cutil.VersionStr(AppName, cfg.Version, cfg.GitRevision) }
@@ -277,6 +278,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	defaultClientTLSVersions := getopt.StringLong("default-client-tls-versions", 'V', "", "Comma-delimited list of default TLS versions for Delivery Services with no Parameter, e.g. --default-tls-versions='1.1,1.2,1.3'. If omitted, all versions are enabled.")
 	maxmindLocationPtr := getopt.StringLong("maxmind-location", 'M', "", "URL of a maxmind gzipped database file, to be installed into the trafficserver etc directory.")
 	verbosePtr := getopt.CounterLong("verbose", 'v', `Log verbosity. Logging is output to stderr. By default, errors are logged. To log warnings, pass '-v'. To log info, pass '-vv'. To omit error logging, see '-s'`)
+	cache := getopt.StringLong("cache", 'T', "ats", "Cache server type. Generate configuration files for specific cache server type, e.g. 'ats', 'varnish'.")
 	const silentFlagName = "silent"
 	silentPtr := getopt.BoolLong(silentFlagName, 's', `Silent. Errors are not logged, and the 'verbose' flag is ignored. If a fatal error occurs, the return code will be non-zero but no text will be output to stderr`)
 
@@ -533,6 +535,9 @@ If any of the related flags are also set, they override the mode's default behav
 	if tsHome != "" {
 		TSHome = tsHome
 		tsConfigDir = tsHome + "/etc/trafficserver"
+		if cache != nil && *cache == "varnish" {
+			tsConfigDir = tsHome + "/etc/varnish"
+		}
 		toInfoLog = append(toInfoLog, fmt.Sprintf("TSHome: %s, TSConfigDir: %s\n", TSHome, tsConfigDir))
 	}
 
@@ -612,6 +617,7 @@ If any of the related flags are also set, they override the mode's default behav
 		Version:                     appVersion,
 		GitRevision:                 gitRevision,
 		LocalATSVersion:             atsVersionStr,
+		CacheType:                   *cache,
 	}
 
 	if err = log.InitCfg(cfg); err != nil {

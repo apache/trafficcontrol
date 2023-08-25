@@ -2182,6 +2182,29 @@
             },
             "staticRoute": {
                 "type": "integer"
+              }
+        }
+    },
+    "server_server_capabilities":{
+        "type": "object",
+        "required": [
+            "lastUpdated",
+            "serverHostName",
+            "serverId",
+            "serverCapability"
+        ],
+        "properties": {
+            "lastUpdated": {
+                "type": "string"
+            },
+            "serverHostName": {
+                "type": "string"
+            },
+            "serverId": {
+                "type": "integer"
+            },
+            "serverCapability": {
+                "type": "string"
             }
         }
     }

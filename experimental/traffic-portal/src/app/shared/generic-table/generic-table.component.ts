@@ -45,6 +45,7 @@ import type { BehaviorSubject, Subscription } from "rxjs";
 
 import { fuzzyScore } from "src/app/utils";
 
+import { LoggingService } from "../logging.service";
 import { BooleanFilterComponent } from "../table-components/boolean-filter/boolean-filter.component";
 import { EmailCellRendererComponent } from "../table-components/email-cell-renderer/email-cell-renderer.component";
 import { SSHCellRendererComponent } from "../table-components/ssh-cell-renderer/ssh-cell-renderer.component";
@@ -405,7 +406,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		return (this.columnAPI.getColumns() ?? []).reverse();
 	}
 
-	constructor(private readonly router: Router, private readonly route: ActivatedRoute) {
+	constructor(private readonly router: Router, private readonly route: ActivatedRoute, private readonly log: LoggingService) {
 		this.gridOptions = {
 			defaultColDef: {
 				filter: true,
@@ -478,7 +479,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 					this.gridAPI.setFilterModel(JSON.parse(filterState));
 				}
 			} catch (e) {
-				console.error(`Failed to retrieve stored column sort info from localStorage (key=${this.context}_table_filter:`, e);
+				this.log.error(`Failed to retrieve stored column sort info from localStorage (key=${this.context}_table_filter:`, e);
 			}
 			setUpQueryParamFilter(this.route.snapshot.queryParamMap, this.cols, this.gridAPI);
 			this.gridAPI.onFilterChanged();
@@ -494,13 +495,13 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 			const colstates = localStorage.getItem(`${this.context}_table_columns`);
 			if (colstates) {
 				if (!this.columnAPI.applyColumnState(JSON.parse(colstates))) {
-					console.error("Failed to load stored column state: one or more columns not found");
+					this.log.error("Failed to load stored column state: one or more columns not found");
 				}
 			} else {
 				this.gridAPI.sizeColumnsToFit();
 			}
 		} catch (e) {
-			console.error(`Failure to retrieve required column info from localStorage (key=${this.context}_table_columns):`, e);
+			this.log.error(`Failure to retrieve required column info from localStorage (key=${this.context}_table_columns):`, e);
 		}
 
 	}
@@ -681,7 +682,7 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		if (this.columnAPI) {
 			const column = this.columnAPI.getColumn(col);
 			if (!column) {
-				console.error(`Failed to set visibility for column '${col}': no such column`);
+				this.log.error(`Failed to set visibility for column '${col}': no such column`);
 				return;
 			}
 			const visible = column.isVisible();
@@ -725,12 +726,12 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 */
 	public onCellContextMenu(params: CellContextMenuEvent): void {
 		if (!params.event || !(params.event instanceof MouseEvent)) {
-			console.warn("cellContextMenu fired with no underlying event");
+			this.log.warn("cellContextMenu fired with no underlying event");
 			return;
 		}
 
 		if (!this.contextmenu) {
-			console.warn("element reference to 'contextmenu' still null after view init");
+			this.log.warn("element reference to 'contextmenu' still null after view init");
 			return;
 		}
 

@@ -32,6 +32,7 @@ import { AlertInterceptor } from "./interceptor/alerts.interceptor";
 import { DateReviverInterceptor } from "./interceptor/date-reviver.interceptor";
 import { ErrorInterceptor } from "./interceptor/error.interceptor";
 import { LoadingComponent } from "./loading/loading.component";
+import { LoggingService } from "./logging.service";
 import { ObscuredTextInputComponent } from "./obscured-text-input/obscured-text-input.component";
 import { BooleanFilterComponent } from "./table-components/boolean-filter/boolean-filter.component";
 import { EmailCellRendererComponent } from "./table-components/email-cell-renderer/email-cell-renderer.component";
@@ -88,7 +89,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: AlertInterceptor },
 		{ multi: true, provide: HTTP_INTERCEPTORS, useClass: DateReviverInterceptor },
 		FileUtilsService,
-		DatePipe
+		DatePipe,
+		LoggingService
 	]
 })
 export class SharedModule { }

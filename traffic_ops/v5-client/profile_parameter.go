@@ -56,8 +56,8 @@ func (to *Session) CreateProfileWithMultipleParameters(pps tc.PostProfileParam, 
 }
 
 // GetProfileParameters retrieves associations between Profiles and Parameters.
-func (to *Session) GetProfileParameters(opts RequestOptions) (tc.ProfileParametersAPIResponse, toclientlib.ReqInf, error) {
-	var data tc.ProfileParametersAPIResponse
+func (to *Session) GetProfileParameters(opts RequestOptions) (tc.ProfileParametersAPIResponseV5, toclientlib.ReqInf, error) {
+	var data tc.ProfileParametersAPIResponseV5
 	reqInf, err := to.get(apiProfileParameters, opts, &data)
 	return data, reqInf, err
 }

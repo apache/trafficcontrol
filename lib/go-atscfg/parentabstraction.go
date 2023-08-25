@@ -130,6 +130,9 @@ type ParentAbstractionService struct {
 	// Becomes parent.config weight directive
 	// Becomes strategies.yaml TODO
 	Weight float64
+
+	// DS is the delivery service associated with the service
+	DS DeliveryService
 }
 
 // ParentAbstractionServices implements sort.Interface

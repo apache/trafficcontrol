@@ -16,6 +16,7 @@ import { MatDialogRef } from "@angular/material/dialog";
 import { Subject } from "rxjs";
 
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
+import { LoggingService } from "src/app/shared/logging.service";
 
 /**
  * This is the controller for the "Update Password" dialog box/form.
@@ -36,8 +37,9 @@ export class UpdatePasswordDialogComponent {
 
 	constructor(
 		private readonly dialog: MatDialogRef<UpdatePasswordDialogComponent>,
-		private readonly auth: CurrentUserService
-	) { }
+		private readonly auth: CurrentUserService,
+		private readonly log: LoggingService,
+	) {}
 
 	/**
 	 * Cancels the password update, closing the dialog box.
@@ -63,7 +65,7 @@ export class UpdatePasswordDialogComponent {
 		}
 
 		if (!this.auth.currentUser) {
-			console.error("Cannot update null user");
+			this.log.error("Cannot update null user");
 			return;
 		}
 

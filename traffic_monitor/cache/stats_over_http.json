@@ -1,6 +1,7 @@
 {
 	"global": {
 		"plugin.system_stats.timestamp_ms": "1684784877939",
+		"plugin.system_stats.timestamp_ms_float64": 1684784877939,
 		"proxy.process.http.completed_requests": 26220072200,
 		"proxy.process.http.total_incoming_connections": 770802777,
 		"proxy.process.http.total_client_connections": 770802777,

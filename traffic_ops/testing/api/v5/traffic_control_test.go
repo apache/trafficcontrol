@@ -41,7 +41,7 @@ type TrafficControl struct {
 	Origins                                           []tc.Origin                             `json:"origins"`
 	Profiles                                          []tc.Profile                            `json:"profiles"`
 	Parameters                                        []tc.Parameter                          `json:"parameters"`
-	ProfileParameters                                 []tc.ProfileParameter                   `json:"profileParameters"`
+	ProfileParameters                                 []tc.ProfileParameterV5                 `json:"profileParameters"`
 	PhysLocations                                     []tc.PhysLocationV5                     `json:"physLocations"`
 	Regions                                           []tc.RegionV5                           `json:"regions"`
 	Roles                                             []tc.RoleV4                             `json:"roles"`
@@ -49,12 +49,12 @@ type TrafficControl struct {
 	ServerServerCapabilities                          []tc.ServerServerCapability             `json:"serverServerCapabilities"`
 	ServerCapabilities                                []tc.ServerCapabilityV5                 `json:"serverCapabilities"`
 	ServiceCategories                                 []tc.ServiceCategoryV5                  `json:"serviceCategories"`
-	Statuses                                          []tc.StatusNullable                     `json:"statuses"`
-	StaticDNSEntries                                  []tc.StaticDNSEntry                     `json:"staticdnsentries"`
+	Statuses                                          []tc.StatusV5                           `json:"statuses"`
+	StaticDNSEntries                                  []tc.StaticDNSEntryV5                   `json:"staticdnsentries"`
 	StatsSummaries                                    []tc.StatsSummaryV5                     `json:"statsSummaries"`
 	Tenants                                           []tc.Tenant                             `json:"tenants"`
 	ServerCheckExtensions                             []tc.ServerCheckExtensionNullable       `json:"servercheck_extensions"`
-	Topologies                                        []tc.Topology                           `json:"topologies"`
+	Topologies                                        []tc.TopologyV5                         `json:"topologies"`
 	Types                                             []tc.TypeV5                             `json:"types"`
 	SteeringTargets                                   []tc.SteeringTargetNullable             `json:"steeringTargets"`
 	Serverchecks                                      []tc.ServercheckRequestNullable         `json:"serverchecks"`

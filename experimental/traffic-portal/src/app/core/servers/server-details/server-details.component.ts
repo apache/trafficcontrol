@@ -34,6 +34,7 @@ import {
 	DecisionDialogComponent,
 	DecisionDialogData
 } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { IP, IP_WITH_CIDR, AutocompleteValue } from "src/app/utils";
 
@@ -118,7 +119,8 @@ export class ServerDetailsComponent implements OnInit {
 		private readonly typeService: TypeService,
 		private readonly physlocService: PhysicalLocationService,
 		private readonly navSvc: NavigationService,
-		private readonly dialog: MatDialog
+		private readonly dialog: MatDialog,
+		private readonly log: LoggingService,
 	) {
 	}
 
@@ -128,7 +130,7 @@ export class ServerDetailsComponent implements OnInit {
 	public ngOnInit(): void {
 		const handleErr = (obj: string): (e: unknown) => void =>
 			(e: unknown): void => {
-				console.error(`Failed to get ${obj}:`, e);
+				this.log.error(`Failed to get ${obj}:`, e);
 			};
 
 		this.cacheGroupService.getCacheGroups().then(
@@ -164,7 +166,7 @@ export class ServerDetailsComponent implements OnInit {
 
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
-			console.error("missing required route parameter 'id'");
+			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
@@ -178,7 +180,7 @@ export class ServerDetailsComponent implements OnInit {
 				}
 			).catch(
 				e => {
-					console.error(`Failed to get server #${ID}:`, e);
+					this.log.error(`Failed to get server #${ID}:`, e);
 				}
 			);
 		} else {
@@ -265,7 +267,7 @@ export class ServerDetailsComponent implements OnInit {
 					this.router.navigate(["server", s.id]);
 				},
 				err => {
-					console.error("failed to create server:", err);
+					this.log.error("failed to create server:", err);
 				}
 			);
 		} else {
@@ -275,7 +277,7 @@ export class ServerDetailsComponent implements OnInit {
 					this.updateTitlebar();
 				},
 				err => {
-					console.error(`failed to update server: ${err}`);
+					this.log.error(`failed to update server: ${err}`);
 				}
 			);
 		}
@@ -285,7 +287,7 @@ export class ServerDetailsComponent implements OnInit {
 	 */
 	public delete(): void {
 		if (this.isNew) {
-			console.error("Unable to delete new Cache Group");
+			this.log.error("Unable to delete new Cache Group");
 			return;
 		}
 		const ref = this.dialog.open<DecisionDialogComponent, DecisionDialogData, boolean>(
@@ -324,7 +326,7 @@ export class ServerDetailsComponent implements OnInit {
 			}
 		},
 		err => {
-			console.error(`failed to queue updates: ${err}`);
+			this.log.error(`failed to queue updates: ${err}`);
 		});
 	}
 
@@ -338,7 +340,7 @@ export class ServerDetailsComponent implements OnInit {
 			}
 		},
 		err => {
-			console.error(`failed to dequeue updates: ${err}`);
+			this.log.error(`failed to dequeue updates: ${err}`);
 		});
 	}
 
@@ -450,7 +452,7 @@ export class ServerDetailsComponent implements OnInit {
 					s => this.server = s
 				).catch(
 					err => {
-						console.error("Failed to reload servers:", err);
+						this.log.error("Failed to reload servers:", err);
 					}
 				);
 			}

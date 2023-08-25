@@ -466,5 +466,11 @@
 			"ttl": 300,
 			"typeId": 41
 		}
-	]
+	],
+  "server_server_capabilities":[
+		{
+			"serverId": 1,
+			"serverCapability": "disk"
+    	}
+  	]
 }

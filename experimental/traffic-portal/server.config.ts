@@ -12,10 +12,52 @@
 * limitations under the License.
 */
 
+// Logging cannot be initialized until after the job of the routines in this
+// file are complete.
+/* eslint-disable no-console */
+
 import { execSync } from "child_process";
-import { existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { access, constants, readFile, readdir, realpath } from "fs/promises";
+import { join, sep } from "path";
+
 import { hasProperty } from "src/app/utils";
+
+/**
+ * A Node system error. I don't know why but this isn't exposed by Node - it's a
+ * class but you won't be able to use `instanceof` - and isn't present in Node
+ * typings. I copied the properties and their descriptions from the NodeJS
+ * documentation.
+ */
+type SystemError = Error & {
+	/** If present, the address to which a network connection failed. */
+	readonly address?: string;
+	/** The string error code. */
+	readonly code: string;
+	/** If present, the file path destination when reporting a file system error. */
+	readonly dest?: string;
+	/** The system-provided error number. */
+	readonly errno: number;
+	/** If present, extra details about the error condition. */
+	readonly info?: unknown;
+	/** A system-provided human-readable description of the error. */
+	readonly message: string;
+	/** If present, the file path when reporting a file system error. */
+	readonly path?: string;
+	/** If present, the network connection port that is not available. */
+	readonly port?: number;
+	/** The name of the system call that triggered the error. */
+	readonly syscall: string;
+};
+
+/**
+ * Checks if an {@link Error} is a {@link SystemError}.
+ *
+ * @param e The {@link Error} to check.
+ * @returns Whether `e` is a {@link SystemError}.
+ */
+function isSystemError(e: Error): e is SystemError {
+	return hasProperty(e, "code");
+}
 
 /**
  * ServerVersion contains versioning information for the server,
@@ -95,30 +137,25 @@ function isServerVersion(v: unknown): v is ServerVersion {
 		return false;
 	}
 
-	if (!Object.prototype.hasOwnProperty.call(v, "version")) {
-		console.error("version missing required field 'version'");
-		return false;
-	}
-	if (typeof((v as {version: unknown}).version) !== "string") {
+	if (!hasProperty(v, "version", "string")) {
+		console.error("version required field 'version' missing or invalid");
 		return false;
 	}
 
-	if (Object.prototype.hasOwnProperty.call(v, "commits") && (typeof((v as {commits: unknown}).commits)) !== "string") {
-		console.error(`version property 'commits' has incorrect type; want: string, got: ${typeof((v as {commits: unknown}).commits)}`);
+	if (hasProperty(v, "commits") && typeof(v.commits) !== "string") {
+		console.error(`version property 'commits' has incorrect type; want: string, got: ${typeof(v.commits)}`);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "hash") && (typeof((v as {hash: unknown}).hash)) !== "string") {
-		console.error(`version property 'hash' has incorrect type; want: string, got: ${typeof((v as {hash: unknown}).hash)}`);
+	if (hasProperty(v, "hash") && typeof(v.hash) !== "string") {
+		console.error(`version property 'hash' has incorrect type; want: string, got: ${typeof(v.hash)}`);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "elRelease") && (typeof((v as {elRelease: unknown}).elRelease)) !== "string") {
-		console.error(
-			`version property 'elRelease' has incorrect type; want: string, got: ${typeof (v as {elRelease: unknown}).elRelease}`
-		);
+	if (hasProperty(v, "elRelease") && typeof(v.elRelease) !== "string") {
+		console.error(`version property 'elRelease' has incorrect type; want: string, got: ${typeof(v.elRelease)}`);
 		return false;
 	}
-	if (Object.prototype.hasOwnProperty.call(v, "arch") && (typeof((v as {arch: unknown}).arch)) !== "string") {
-		console.error(`version property 'arch' has incorrect type; want: string, got: ${typeof((v as {arch: unknown}).arch)}`);
+	if (hasProperty(v, "arch") && typeof(v.arch) !== "string") {
+		console.error(`version property 'arch' has incorrect type; want: string, got: ${typeof(v.arch)}`);
 		return false;
 	}
 	return true;
@@ -193,39 +230,27 @@ function isConfig(c: unknown): c is ServerConfig {
 	} else {
 		(c as {insecure: boolean}).insecure = false;
 	}
-	if (!hasProperty(c, "port")) {
-		throw new Error("'port' is required");
+	if (!hasProperty(c, "port", "number")) {
+		throw new Error("required configuration for 'port' is missing or not a valid number");
 	}
-	if (typeof(c.port) !== "number") {
-		throw new Error("'port' must be a number");
+	if (!hasProperty(c, "trafficOps", "string")) {
+		throw new Error("required configuration for 'trafficOps' is missing or not a string");
 	}
-	if (!hasProperty(c, "trafficOps")){
-		throw new Error("'trafficOps' is required");
+	if (!hasProperty(c, "browserFolder", "string")) {
+		throw new Error("required configuration for 'browserFolder' is missing or not a string");
 	}
-	if (typeof(c.trafficOps) !== "string") {
-		throw new Error("'trafficOps' must be a string");
-	}
-	if(!hasProperty(c, "tpv1Url")){
-		throw new Error("'tpv1Url' is required");
-	}
-	if (typeof(c.tpv1Url) !== "string") {
-		throw new Error("'tpv1Url' must be a string");
-	}
-	if (!hasProperty(c, "browserFolder")) {
-		throw new Error("'browserFolder' is required");
-	}
-	if (typeof(c.browserFolder) !== "string") {
-		throw new Error("'browserFolder' must be a string");
+	if(!hasProperty(c, "tpv1Url", "string")){
+		throw new Error("required configuration for 'tpv1Url' is missing or not a string");
 	}
 
 	try {
-		c.trafficOps = new URL(c.trafficOps);
+		(c as {trafficOps: URL | string}).trafficOps = new URL(c.trafficOps);
 	} catch (e) {
 		throw new Error(`'trafficOps' is not a valid URL: ${e}`);
 	}
 
 	try {
-		c.tpv1Url = new URL(c.tpv1Url);
+		(c as {tpv1Url: URL | string}).tpv1Url = new URL(c.tpv1Url);
 	} catch (e) {
 		throw new Error(`'tpv1Url' is not a valid URL: ${e}`);
 	}
@@ -235,17 +260,11 @@ function isConfig(c: unknown): c is ServerConfig {
 			throw new Error("'useSSL' must be a boolean");
 		}
 		if (c.useSSL) {
-			if (!hasProperty(c, "certPath")) {
-				throw new Error("'certPath' is required to use SSL");
+			if (!hasProperty(c, "certPath", "string")) {
+				throw new Error("missing or invalid 'certPath' - required to use SSL");
 			}
-			if (typeof(c.certPath) !== "string") {
-				throw new Error("'certPath' must be a string");
-			}
-			if (!hasProperty(c, "keyPath")) {
-				throw new Error("'keyPath' is required to use SSL");
-			}
-			if (typeof(c.keyPath) !== "string") {
-				throw new Error("'keyPath' must be a string");
+			if (!hasProperty(c, "keyPath", "string")) {
+				throw new Error("missing or invalid 'keyPath' - required to use SSL");
 			}
 		}
 	}
@@ -256,6 +275,30 @@ function isConfig(c: unknown): c is ServerConfig {
 const defaultVersionFile = "/etc/traffic-portal/version.json";
 
 /**
+ * Searches recursively upward through the filesystem to find a file named
+ * "VERSION" and returns the real, absolute path to that file.
+ *
+ * @param path The path from which to begin the search.
+ * @returns The path to the VERSION file, assuming it was found.
+ * @throws {Error} If no VERSION file could be found in `path` or any of its
+ * ancestor directories.
+ * @throws {SystemError} If the given path isn't a directory, or directory
+ * traversal fails for some reason.
+ */
+async function findVersionFile(path: string = "."): Promise<string> {
+	for (const ent of await readdir(path)) {
+		if (ent === "VERSION") {
+			return realpath(join(path, ent));
+		}
+	}
+	path = await realpath(join(path, ".."));
+	if (path === sep) {
+		throw new Error("VERSION file not found");
+	}
+	return findVersionFile(path);
+}
+
+/**
  * Retrieves the server's version from the file path provided.
  *
  * @param path The path to a version file containing a ServerVersion object.
@@ -264,24 +307,36 @@ const defaultVersionFile = "/etc/traffic-portal/version.json";
  * looking for the ATC VERSION file.
  * @returns The parsed server version.
  */
-export function getVersion(path?: string): ServerVersion {
+export async function getVersion(path?: string): Promise<ServerVersion> {
 	if (!path) {
 		path = defaultVersionFile;
 	}
 
-	if (existsSync(path)) {
-		const v = JSON.parse(readFileSync(path, {encoding: "utf8"}));
+	try {
+		const v = JSON.parse(await readFile(path, {encoding: "utf8"}));
 		if (isServerVersion(v)) {
 			return v;
 		}
 		throw new Error(`contents of version file '${path}' does not represent an ATC version`);
+	} catch (e) {
+		if (e instanceof Error && isSystemError(e)) {
+			if (e.code !== "ENOENT") {
+				throw new Error(`file at "${path}" could not be read: ${e.message}`);
+			}
+		} else {
+			throw new Error(`file at "${path}" could not be read: ${e}`);
+		}
 	}
 
-	if (!existsSync("../../../../VERSION")) {
-		throw new Error(`'${path}' doesn't exist and '../../../../VERSION' doesn't exist`);
+	let versionFilePath: string;
+	try {
+		versionFilePath = await findVersionFile();
+	} catch (e) {
+		throw new Error(`'${path}' doesn't exist and couldn't find a VERSION file from which to read a server version: ${e}`);
 	}
+
 	const ver: ServerVersion = {
-		version: readFileSync("../../../../VERSION", {encoding: "utf8"}).trimEnd()
+		version: (await readFile(versionFilePath, {encoding: "utf8"})).trimEnd()
 	};
 
 	try {
@@ -326,8 +381,8 @@ export const defaultConfig: ServerConfig = {
 	browserFolder: "/opt/traffic-portal/browser",
 	insecure: false,
 	port: 4200,
-	trafficOps: new URL("https://example.com"),
 	tpv1Url: new URL("https://example.com"),
+	trafficOps: new URL("https://example.com"),
 	version: { version: "" }
 };
 /**
@@ -337,35 +392,41 @@ export const defaultConfig: ServerConfig = {
  * @param ver The version to use for the server.
  * @returns A full configuration for the server.
  */
-export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
+export async function getConfig(args: Args, ver: ServerVersion): Promise<ServerConfig> {
 	let cfg = defaultConfig;
 	cfg.version = ver;
 
 	let readFromFile = false;
-	if (existsSync(args.configFile)) {
-		const cfgFromFile = JSON.parse(readFileSync(args.configFile, {encoding: "utf8"}));
-		try {
-			if (isConfig(cfgFromFile)) {
-				cfg = cfgFromFile;
-				cfg.version = ver;
-			}
-		} catch (err) {
-			throw new Error(`invalid configuration file at '${args.configFile}': ${err}`);
+	try {
+		const cfgFromFile = JSON.parse(await readFile(args.configFile, {encoding: "utf8"}));
+		if (isConfig(cfgFromFile)) {
+			cfg = cfgFromFile;
+			cfg.version = ver;
+		} else {
+			throw new Error("bad contents; doesn't represent a configuration file");
 		}
 		readFromFile = true;
-	} else if (args.configFile !== defaultConfigFile) {
-		throw new Error(`no such configuration file: ${args.configFile}`);
+	} catch (err) {
+		const msg = `invalid configuration file at '${args.configFile}'`;
+		if (err instanceof Error) {
+			if (!isSystemError(err) || (err.code !== "ENOENT" || args.configFile !== defaultConfigFile)) {
+				throw new Error(`${msg}: ${err.message}`);
+			}
+		} else {
+			throw new Error(`${msg}: ${err}`);
+		}
 	}
 
-	let folder = cfg.browserFolder;
 	if(args.browserFolder !== defaultConfig.browserFolder) {
-		folder = args.browserFolder;
+		cfg.browserFolder = args.browserFolder;
 	}
-	if(!existsSync(folder)) {
-		throw new Error(`no such folder: ${folder}`);
-	}
-	if(!existsSync(join(folder, "index.html"))) {
-		throw new Error(`no such browser file: ${join(folder, "index.html")}`);
+
+	try {
+		if (!(await readdir(cfg.browserFolder)).includes("index.html")) {
+			throw new Error("directory doesn't include an 'index.html' file");
+		}
+	} catch (e) {
+		throw new Error(`setting browser directory: ${e instanceof Error ? e.message : e}`);
 	}
 
 	if(args.port !== defaultConfig.port) {
@@ -412,8 +473,8 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 				insecure: cfg.insecure,
 				keyPath: args.keyPath,
 				port: cfg.port,
-				trafficOps: cfg.trafficOps,
 				tpv1Url: cfg.tpv1Url,
+				trafficOps: cfg.trafficOps,
 				useSSL: true,
 				version: ver
 			};
@@ -427,11 +488,15 @@ export function getConfig(args: Args, ver: ServerVersion): ServerConfig {
 	}
 
 	if (cfg.useSSL) {
-		if (!existsSync(cfg.certPath)) {
-			throw new Error(`no such certificate file: ${cfg.certPath}`);
+		try {
+			await access(cfg.certPath, constants.R_OK);
+		} catch (e) {
+			throw new Error(`checking certificate file "${cfg.certPath}": ${e instanceof Error ? e.message : e}`);
 		}
-		if (!existsSync(cfg.keyPath)) {
-			throw new Error(`no such key file: ${cfg.keyPath}`);
+		try {
+			await access(cfg.keyPath, constants.R_OK);
+		} catch (e) {
+			throw new Error(`checking key file "${cfg.keyPath}": ${e instanceof Error ? e.message : e}`);
 		}
 	}
 

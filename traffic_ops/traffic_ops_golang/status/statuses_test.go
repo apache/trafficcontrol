@@ -24,11 +24,93 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/test"
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
+
+func getTestStatusesV5() []tc.StatusV5 {
+	cdns := []tc.StatusV5{}
+	testStatus := tc.StatusV5{
+		Description: util.Ptr("description"),
+		ID:          util.Ptr(1),
+		Name:        util.Ptr("cdn1"),
+		LastUpdated: util.Ptr(time.Now()),
+	}
+	cdns = append(cdns, testStatus)
+
+	testStatus2 := testStatus
+	testStatus2.Name = util.Ptr("cdn2")
+	testStatus2.Description = util.Ptr("description2")
+	cdns = append(cdns, testStatus2)
+
+	return cdns
+}
+
+func TestReadStatusesV5(t *testing.T) {
+
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mockDB.Close()
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+	defer db.Close()
+
+	testStatuses := getTestStatusesV5()
+	cols := test.ColsFromStructByTag("db", tc.StatusV5{})
+	rows := sqlmock.NewRows(cols)
+
+	for _, ts := range testStatuses {
+		rows = rows.AddRow(
+			*ts.Description,
+			*ts.ID,
+			*ts.LastUpdated,
+			*ts.Name,
+		)
+	}
+	mock.ExpectBegin()
+	mock.ExpectQuery("SELECT").WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+
+	obj := TOStatusV5{
+		APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo},
+	}
+	statuses, userErr, sysErr, _, _ := obj.Read(nil, false)
+	if userErr != nil || sysErr != nil {
+		t.Errorf("Read expected: no errors, actual: %v %v", userErr, sysErr)
+	}
+
+	if len(statuses) != 2 {
+		t.Errorf("status.Read expected: len(statuses) == 2, actual: %v", len(statuses))
+	}
+}
+
+func TestInterfacesV5(t *testing.T) {
+	var i interface{}
+	i = &TOStatusV5{}
+
+	if _, ok := i.(api.Creator); !ok {
+		t.Errorf("Status must be Creator")
+	}
+	if _, ok := i.(api.Reader); !ok {
+		t.Errorf("Status must be Reader")
+	}
+	if _, ok := i.(api.Updater); !ok {
+		t.Errorf("Status must be Updater")
+	}
+	if _, ok := i.(api.Deleter); !ok {
+		t.Errorf("Status must be Deleter")
+	}
+	if _, ok := i.(api.Identifier); !ok {
+		t.Errorf("Status must be Identifier")
+	}
+}
 
 func getTestStatuses() []tc.Status {
 	cdns := []tc.Status{}

@@ -267,6 +267,7 @@
 
 	<bean id="NameServer" class="org.apache.traffic_control.traffic_router.core.dns.NameServer">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
+		<property name="negativeCachingTTL" value="$[dns.negative.caching.ttl:900]" />
 	</bean>
 
 	<bean id="UDPBlockingQueue" class="java.util.concurrent.LinkedBlockingQueue" />

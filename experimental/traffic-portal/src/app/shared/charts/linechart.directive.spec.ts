@@ -16,6 +16,8 @@ import { BehaviorSubject } from "rxjs";
 
 import type { DataSet } from "src/app/models";
 
+import { LoggingService } from "../logging.service";
+
 import { LinechartDirective } from "./linechart.directive";
 
 describe("LinechartDirective", () => {
@@ -24,7 +26,7 @@ describe("LinechartDirective", () => {
 
 	beforeEach(()=>{
 		dataSets =  new BehaviorSubject<Array<DataSet | null>|null>(null);
-		directive = new LinechartDirective(new ElementRef(document.createElement("canvas")));
+		directive = new LinechartDirective(new ElementRef(document.createElement("canvas")), new LoggingService());
 		directive.chartDataSets = dataSets;
 		directive.ngAfterViewInit();
 	});

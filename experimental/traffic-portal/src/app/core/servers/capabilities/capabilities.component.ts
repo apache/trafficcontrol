@@ -26,6 +26,7 @@ import type {
 	ContextMenuItem,
 	DoubleClickLink
 } from "src/app/shared/generic-table/generic-table.component";
+import { LoggingService } from "src/app/shared/logging.service";
 import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
@@ -124,7 +125,8 @@ export class CapabilitiesComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly navSvc: NavigationService,
 		private readonly dialog: MatDialog,
-		public readonly auth: CurrentUserService
+		public readonly auth: CurrentUserService,
+		private readonly log: LoggingService
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.capabilities = this.api.getCapabilities();
@@ -173,7 +175,7 @@ export class CapabilitiesComponent implements OnInit {
 				}
 				break;
 			default:
-				console.warn("unrecognized context menu action:", evt.action);
+				this.log.warn("unrecognized context menu action:", evt.action);
 		}
 	}
 }

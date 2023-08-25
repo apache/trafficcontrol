@@ -2304,3 +2304,18 @@ func DeleteCoordinate(tx *sql.Tx, cacheGroupID int, coordinateID int) error {
 	}
 	return nil
 }
+
+// ProfileParameterExists confirms whether the ProfileParameter exists, and an error (if one occurs).
+func ProfileParameterExists(tx *sql.Tx, profileID string, parameterID string) (bool, error) {
+	var count int
+	if err := tx.QueryRow("SELECT count(*) FROM profile_parameter WHERE profile=$1 and parameter=$2", profileID, parameterID).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting profile_parameter info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting profile_parameter info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
+}

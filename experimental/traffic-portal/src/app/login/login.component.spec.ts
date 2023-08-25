@@ -83,11 +83,7 @@ describe("LoginComponent", () => {
 	});
 
 	it("should exist", () => {
-		try{
-			expect(component).toBeTruthy();
-		} catch (e) {
-			console.error("error in 'should exist' for LoginComponent:", e);
-		}
+		expect(component).toBeTruthy();
 	});
 
 	it("submits a login request", async () => {
