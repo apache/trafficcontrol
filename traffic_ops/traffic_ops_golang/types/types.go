@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -323,7 +324,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "type was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/type?name=%s", inf.Version.Major, inf.Version.Minor, typ.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/type?name=%s", inf.Version, typ.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, typ)
 	return
 }

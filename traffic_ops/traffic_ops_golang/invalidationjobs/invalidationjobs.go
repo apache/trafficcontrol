@@ -832,7 +832,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set(http.CanonicalHeaderKey("location"), fmt.Sprintf("%s://%s/api/%d.%d/jobs?id=%d", inf.Config.URL.Scheme, r.Host, inf.Version.Major, inf.Version.Minor, *result.ID))
+	w.Header().Set(http.CanonicalHeaderKey("location"), fmt.Sprintf("%s://%s/api/%s/jobs?id=%d", inf.Config.URL.Scheme, r.Host, inf.Version, *result.ID))
 	w.WriteHeader(http.StatusOK)
 	api.WriteAndLogErr(w, r, append(resp, '\n'))
 
