@@ -361,24 +361,9 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// This code block decides if the request body is a slice of parameters or a single object.
+	//// This code block decides if the request body is a slice of parameters or a single object and unmarshal it.
 	var params []tc.ParameterV5
-
-	// Try to unmarshal the data as a slice
-	var sliceData []map[string]interface{}
-	if err := json.Unmarshal(body, &sliceData); err == nil {
-		for _, item := range sliceData {
-			param := tc.ParameterV5{
-				ConfigFile: item["configFile"].(string),
-				Name:       item["name"].(string),
-				Secure:     item["secure"].(bool),
-				Value:      item["value"].(string),
-			}
-
-			params = append(params, param)
-		}
-	} else {
-		// Try to unmarshal the data as a single object
+	if err := json.Unmarshal(body, &params); err != nil {
 		var param tc.ParameterV5
 		if err := json.Unmarshal(body, &param); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error unmarshalling single object"), nil)
@@ -386,7 +371,6 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 		}
 		params = append(params, param)
 	}
-
 	// Validate all objects of the every parameter from the request slice
 	for _, parameter := range params {
 		readValErr := validateRequestParameter(parameter)
