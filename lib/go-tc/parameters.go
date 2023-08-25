@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 
@@ -295,6 +296,16 @@ type ProfileParametersNullable struct {
 	Parameter   *int       `json:"parameter" db:"parameter_id"`
 }
 
+// ProfileParametersNullableV5 is the latest minor version of the major version 5
+type ProfileParametersNullableV5 ProfileParametersNullableV50
+
+// ProfileParametersNullableV50 is an object of the form returned by the Traffic Ops /profileparameters endpoint.
+type ProfileParametersNullableV50 struct {
+	LastUpdated *time.Time `json:"lastUpdated" db:"last_updated"`
+	Profile     *string    `json:"profile" db:"profile"`
+	Parameter   *int       `json:"parameter" db:"parameter_id"`
+}
+
 // ProfileParametersNullableResponse is the structure of a response from
 // Traffic Ops to GET requests made to its /profileparameters API endpoint.
 //
@@ -315,6 +326,18 @@ type ProfileParam struct {
 	LastUpdated *TimeNoMod `json:"lastUpdated"`
 }
 
+// ProfileParamV5 is the latest minor version of the major version 5
+type ProfileParamV5 ProfileParamV50
+
+// ProfileParamV50 is a relationship between a Profile and some Parameter
+// assigned to it as it appears in the Traffic Ops API's responses to the
+// /profileparameters endpoint.
+type ProfileParamV50 struct {
+	Parameter   int        `json:"parameter"`
+	Profile     string     `json:"profile"`
+	LastUpdated *time.Time `json:"lastUpdated"`
+}
+
 // ProfileParameterCreationRequest is the type of data accepted by Traffic
 // Ops as payloads in POST requests to its /profileparameters endpoint.
 type ProfileParameterCreationRequest struct {
@@ -326,6 +349,16 @@ type ProfileParameterCreationRequest struct {
 // requests made to its /profileparameters endpoint.
 type ProfileParametersAPIResponse struct {
 	Response []ProfileParam `json:"response"`
+	Alerts
+}
+
+// ProfileParametersAPIResponseV5 is the latest minor version of the major version 5
+type ProfileParametersAPIResponseV5 ProfileParametersAPIResponseV50
+
+// ProfileParametersAPIResponseV50 is the type of a response from Traffic Ops to
+// requests made to its /profileparameters endpoint.
+type ProfileParametersAPIResponseV50 struct {
+	Response []ProfileParamV5 `json:"response"`
 	Alerts
 }
 

@@ -68,8 +68,8 @@ func (to *Session) GetServersByDeliveryService(id int, opts RequestOptions) (tc.
 
 // GetDeliveryServiceServers returns associations between Delivery Services and
 // servers.
-func (to *Session) GetDeliveryServiceServers(opts RequestOptions) (tc.DeliveryServiceServerResponse, toclientlib.ReqInf, error) {
-	var resp tc.DeliveryServiceServerResponse
+func (to *Session) GetDeliveryServiceServers(opts RequestOptions) (tc.DeliveryServiceServerResponseV5, toclientlib.ReqInf, error) {
+	var resp tc.DeliveryServiceServerResponseV5
 	reqInf, err := to.get(apiDeliveryServiceServer, opts, &resp)
 	return resp, reqInf, err
 }
