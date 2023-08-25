@@ -39,7 +39,7 @@ type TrafficControl struct {
 	FederationResolvers                               []tc.FederationResolverV5               `json:"federation_resolvers"`
 	Jobs                                              []tc.InvalidationJobCreateV4            `json:"jobs"`
 	Origins                                           []tc.Origin                             `json:"origins"`
-	Profiles                                          []tc.ProfileV5                            `json:"profiles"`
+	Profiles                                          []tc.ProfileV5                          `json:"profiles"`
 	Parameters                                        []tc.ParameterV5                        `json:"parameters"`
 	ProfileParameters                                 []tc.ProfileParameterV5                 `json:"profileParameters"`
 	PhysLocations                                     []tc.PhysLocationV5                     `json:"physLocations"`
