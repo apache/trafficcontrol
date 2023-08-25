@@ -675,6 +675,61 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// Delete an Origin for APIv5.
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.Params["id"]
+	errsValid := tovalidate.ToErrors(validation.Errors{
+		"id": validation.Validate(id, validation.NilOrNotEmpty),
+	})
+
+	if len(errsValid) > 0 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("missing key: id"), nil)
+		return
+	}
+
+	isPrimary := false
+	if err := tx.QueryRow(`SELECT is_primary FROM origin WHERE id = $1`, id).Scan(&isPrimary); err != nil {
+		if err == sql.ErrNoRows {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no origin exists by id: %s", id), nil)
+			return
+		}
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("origin delete: is_primary scanning: %w", err), nil)
+		return
+	}
+
+	if isPrimary {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cannot delete a primary origin"), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM origin WHERE id=$1", id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("origin delete: query: %w", err), nil)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("origin delete: getting rows affected: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for origin"), nil)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was deleted.")
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
 // readAndValidateJsonStruct reads json body and validates json fields.
 func readAndValidateJsonStruct(r *http.Request) (tc.OriginV5, error) {
 	var origin tc.OriginV5
