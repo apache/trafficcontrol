@@ -105,7 +105,6 @@ type ProfileV5 struct {
 	ID              int                 `json:"id" db:"id"`
 	LastUpdated     time.Time           `json:"lastUpdated" db:"last_updated"`
 	Name            string              `json:"name" db:"name"`
-	Parameter       string              `json:"param"`
 	Description     string              `json:"description" db:"description"`
 	CDNName         string              `json:"cdnName" db:"cdn_name"`
 	CDNID           int                 `json:"cdn" db:"cdn"`
