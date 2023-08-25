@@ -33,7 +33,7 @@ func TestMonitoring(t *testing.T) {
 // This MUST NOT be run after a different function in the same Test creates a Snapshot, or the test will be invalid.
 // This prevents a critical bug of upgrading to 4.x bringing a CDN down until a Snapshot is performed.
 func GetTestMonitoringConfigNoSnapshotOnTheFly(t *testing.T) {
-	var server tc.ServerV4
+	var server tc.ServerV5
 	for _, sv := range testData.Servers {
 		if sv.Type != "EDGE" {
 			continue
@@ -41,28 +41,24 @@ func GetTestMonitoringConfigNoSnapshotOnTheFly(t *testing.T) {
 		server = sv
 		break
 	}
-	if server.CDNName == nil || *server.CDNName == "" {
+	if server.CDN == "" {
 		t.Fatal("No edge server found in test data, cannot test")
 	}
 
-	resp, _, err := TOSession.GetTrafficMonitorConfig(*server.CDNName, client.RequestOptions{})
+	resp, _, err := TOSession.GetTrafficMonitorConfig(server.CDN, client.RequestOptions{})
 	if err != nil {
 		t.Errorf("getting monitoring: %v - alerts: %+v", err, resp.Alerts)
 	} else if len(resp.Response.TrafficServers) == 0 {
-		t.Errorf("Expected Monitoring without a snapshot to generate on-the-fly, actual: empty monitoring object for CDN '%s'", *server.CDNName)
+		t.Errorf("Expected Monitoring without a snapshot to generate on-the-fly, actual: empty monitoring object for CDN '%s'", server.CDN)
 	}
 }
 
 func AllCDNsCanSnapshot(t *testing.T) {
 
-	serversByHost := make(map[string]tc.ServerV4, len(testData.Servers))
+	serversByHost := make(map[string]tc.ServerV5, len(testData.Servers))
 
 	for _, server := range testData.Servers {
-		if server.HostName == nil {
-			t.Error("Found server in test data with null or undefined hostName")
-			continue
-		}
-		serversByHost[*server.HostName] = server
+		serversByHost[server.HostName] = server
 	}
 
 	opts := client.NewRequestOptions()

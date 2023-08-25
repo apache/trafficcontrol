@@ -359,16 +359,16 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNID(t, "cdn2")(),
-						"profileNames": []string{"EDGEInCDN2"},
+						"cdnID":    GetCDNID(t, "cdn2")(),
+						"profiles": []string{"EDGEInCDN2"},
 					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNID(t, "cdn2")(),
-						"profileNames": []string{"EDGEInCDN2"},
+						"cdnID":    GetCDNID(t, "cdn2")(),
+						"profiles": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
 								"address":        "127.0.0.2/30",
@@ -385,9 +385,9 @@ func TestCDNLocks(t *testing.T) {
 					EndpointID:    GetServerID(t, "edge1-cdn2"),
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerID(t, "edge1-cdn2")(),
-						"cdnId":        GetCDNID(t, "cdn2")(),
-						"profileNames": []string{"EDGEInCDN2"},
+						"id":       GetServerID(t, "edge1-cdn2")(),
+						"cdnID":    GetCDNID(t, "cdn2")(),
+						"profiles": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
 								"address":        "0.0.0.1",
@@ -403,9 +403,9 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "dtrc-edge-07")(),
-						"cdnId":        GetCDNID(t, "cdn2")(),
+						"cdnID":        GetCDNID(t, "cdn2")(),
 						"cachegroupId": GetCacheGroupId(t, "dtrc2")(),
-						"profileNames": []string{"CDN2_EDGE"},
+						"profiles":     []string{"CDN2_EDGE"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
 								"address":        "192.0.2.11/24",
@@ -658,7 +658,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"SERVER POST": func(t *testing.T) {
-							server := tc.ServerV4{}
+							var server tc.ServerV5
 							err = json.Unmarshal(dat, &server)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.CreateServer(server, testCase.RequestOpts)
@@ -667,7 +667,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"SERVER PUT": func(t *testing.T) {
-							server := tc.ServerV4{}
+							var server tc.ServerV5
 							err = json.Unmarshal(dat, &server)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.UpdateServer(testCase.EndpointID(), server, testCase.RequestOpts)
