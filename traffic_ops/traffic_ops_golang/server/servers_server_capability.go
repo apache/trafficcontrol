@@ -48,6 +48,288 @@ const (
 	ServerHostNameQueryParam   = "serverHostName"
 )
 
+type TOServerServerCapabilityV5 struct {
+	api.APIInfoImpl `json:"-"`
+	tc.ServerServerCapabilityV5
+}
+
+func (ssc *TOServerServerCapabilityV5) SetLastUpdated(t tc.TimeNoMod) { ssc.LastUpdated = &t.Time }
+func (ssc *TOServerServerCapabilityV5) NewReadObj() interface{} {
+	return &tc.ServerServerCapabilityV5{}
+}
+func (ssc *TOServerServerCapabilityV5) SelectQuery() string { return scSelectQuery() }
+func (ssc *TOServerServerCapabilityV5) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return map[string]dbhelpers.WhereColumnInfo{
+		ServerCapabilityQueryParam: dbhelpers.WhereColumnInfo{Column: "sc.server_capability"},
+		ServerQueryParam:           dbhelpers.WhereColumnInfo{Column: "s.id", Checker: api.IsInt},
+		ServerHostNameQueryParam:   dbhelpers.WhereColumnInfo{Column: "s.host_name"},
+	}
+
+}
+func (ssc *TOServerServerCapabilityV5) DeleteQuery() string { return scDeleteQuery() }
+func (ssc TOServerServerCapabilityV5) GetKeyFieldsInfo() []api.KeyFieldInfo {
+	return []api.KeyFieldInfo{
+		{Field: ServerQueryParam, Func: api.GetIntKey},
+		{Field: ServerCapabilityQueryParam, Func: api.GetStringKey},
+	}
+}
+
+// Need to satisfy Identifier interface but is a no-op as path does not have Update
+func (ssc TOServerServerCapabilityV5) GetKeys() (map[string]interface{}, bool) {
+	if ssc.ServerID == nil {
+		return map[string]interface{}{ServerQueryParam: 0}, false
+	}
+	if ssc.ServerCapability == nil {
+		return map[string]interface{}{ServerCapabilityQueryParam: 0}, false
+	}
+	return map[string]interface{}{
+		ServerQueryParam:           *ssc.ServerID,
+		ServerCapabilityQueryParam: *ssc.ServerCapability,
+	}, true
+}
+
+func (ssc *TOServerServerCapabilityV5) SetKeys(keys map[string]interface{}) {
+	sID, _ := keys[ServerQueryParam].(int)
+	ssc.ServerID = &sID
+
+	sc, _ := keys[ServerCapabilityQueryParam].(string)
+	ssc.ServerCapability = &sc
+}
+
+func (ssc *TOServerServerCapabilityV5) GetAuditName() string {
+	if ssc.ServerCapability != nil {
+		return *ssc.ServerCapability
+	}
+	return "unknown"
+}
+
+func (ssc *TOServerServerCapabilityV5) GetType() string {
+	return "server server_capability"
+}
+
+// Validate fulfills the api.Validator interface.
+func (ssc TOServerServerCapabilityV5) Validate() (error, error) {
+	errs := validation.Errors{
+		ServerQueryParam:           validation.Validate(ssc.ServerID, validation.Required),
+		ServerCapabilityQueryParam: validation.Validate(ssc.ServerCapability, validation.Required),
+	}
+
+	return util.JoinErrs(tovalidate.ToErrors(errs)), nil
+}
+
+func (ssc *TOServerServerCapabilityV5) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
+	api.DefaultSort(ssc.APIInfo(), "serverHostName")
+	return api.GenericRead(h, ssc, useIMS)
+}
+func (v *TOServerServerCapabilityV5) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+	return `SELECT max(t) from (
+		SELECT max(sc.last_updated) as t from server_server_capability sc
+JOIN server s ON sc.server = s.id ` + where + orderBy + pagination +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='server_server_capability') as res`
+}
+
+func (ssc *TOServerServerCapabilityV5) Delete() (error, error, int) {
+	tenantIDs, err := tenant.GetUserTenantIDListTx(ssc.APIInfo().Tx.Tx, ssc.APIInfo().User.TenantID)
+	if err != nil {
+		return nil, fmt.Errorf("deleting servers_server_capability: %v", err), http.StatusInternalServerError
+	}
+	accessibleTenants := make(map[int]struct{}, len(tenantIDs))
+	for _, id := range tenantIDs {
+		accessibleTenants[id] = struct{}{}
+	}
+	userErr, sysErr, status := checkTopologyBasedDSRequiredCapabilitiesV5(ssc, accessibleTenants)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, status
+	}
+
+	userErr, sysErr, status = checkDSRequiredCapabilitiesV5(ssc, accessibleTenants)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, status
+	}
+
+	if ssc.ServerID != nil {
+		cdnName, err := dbhelpers.GetCDNNameFromServerID(ssc.APIInfo().Tx.Tx, int64(*ssc.ServerID))
+		if err != nil {
+			return nil, err, http.StatusInternalServerError
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(ssc.APIInfo().Tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
+		if userErr != nil || sysErr != nil {
+			return userErr, sysErr, errCode
+		}
+	}
+	return api.GenericDelete(ssc)
+}
+
+func checkTopologyBasedDSRequiredCapabilitiesV5(ssc *TOServerServerCapabilityV5, accessibleTenants map[int]struct{}) (error, error, int) {
+	dsRows, err := ssc.APIInfo().Tx.Tx.Query(getTopologyBasedDSesReqCapQuery(), ssc.ServerID, ssc.ServerCapability)
+	if err != nil {
+		return nil, fmt.Errorf("querying topology-based DSes with the required capability %s: %v", *ssc.ServerCapability, err), http.StatusInternalServerError
+	}
+	defer log.Close(dsRows, "closing dsRows in checkTopologyBasedDSRequiredCapabilitiesV5")
+
+	xmlidToTopology := make(map[string]string)
+	xmlidToTenantID := make(map[string]int)
+	xmlidToReqCaps := make(map[string][]string)
+	for dsRows.Next() {
+		xmlID := ""
+		topology := ""
+		tenantID := 0
+		reqCaps := []string{}
+		if err := dsRows.Scan(&xmlID, &topology, &tenantID, pq.Array(&reqCaps)); err != nil {
+			return nil, fmt.Errorf("scanning dsRows in checkTopologyBasedDSRequiredCapabilitiesV5: %v", err), http.StatusInternalServerError
+		}
+		xmlidToTenantID[xmlID] = tenantID
+		xmlidToTopology[xmlID] = topology
+		xmlidToReqCaps[xmlID] = reqCaps
+	}
+	if len(xmlidToTopology) == 0 {
+		return nil, nil, http.StatusOK
+	}
+
+	serverRows, err := ssc.APIInfo().Tx.Tx.Query(getServerCapabilitiesOfCachegoupQuery(), ssc.ServerID, ssc.ServerCapability)
+	if err != nil {
+		return nil, fmt.Errorf("querying server capabilitites of server %d's cachegroup: %v", *ssc.ServerID, err), http.StatusInternalServerError
+	}
+	defer log.Close(serverRows, "closing serverRows in checkTopologyBasedDSRequiredCapabilitiesV5")
+
+	serverIDToCapabilities := make(map[int]map[string]struct{})
+	for serverRows.Next() {
+		serverID := 0
+		capabilities := []string{}
+		if err := serverRows.Scan(&serverID, pq.Array(&capabilities)); err != nil {
+			return nil, fmt.Errorf("scanning serverRows in checkTopologyBasedDSRequiredCapabilitiesV5: %v", err), http.StatusInternalServerError
+		}
+		serverIDToCapabilities[serverID] = make(map[string]struct{})
+		for _, c := range capabilities {
+			serverIDToCapabilities[serverID][c] = struct{}{}
+		}
+	}
+
+	unsatisfiedDSes := []string{}
+	for ds, dsReqCaps := range xmlidToReqCaps {
+		dsIsSatisfied := false
+		for _, serverCaps := range serverIDToCapabilities {
+			serverHasCapabilities := true
+			for _, dsReqCap := range dsReqCaps {
+				if _, ok := serverCaps[dsReqCap]; !ok {
+					serverHasCapabilities = false
+					break
+				}
+			}
+			if serverHasCapabilities {
+				dsIsSatisfied = true
+				break
+			}
+		}
+		if !dsIsSatisfied {
+			unsatisfiedDSes = append(unsatisfiedDSes, ds)
+		}
+	}
+	if len(unsatisfiedDSes) == 0 {
+		return nil, nil, http.StatusOK
+	}
+
+	dsStrings := make([]string, 0, len(unsatisfiedDSes))
+	for _, ds := range unsatisfiedDSes {
+		if _, ok := accessibleTenants[xmlidToTenantID[ds]]; ok {
+			dsStrings = append(dsStrings, "(xml_id = "+ds+", topology = "+xmlidToTopology[ds]+")")
+		}
+	}
+	return fmt.Errorf("this capability is required by delivery services, but there are no other servers in this server's cachegroup to satisfy them %s", strings.Join(dsStrings, ", ")), nil, http.StatusBadRequest
+}
+
+func checkDSRequiredCapabilitiesV5(ssc *TOServerServerCapabilityV5, accessibleTenants map[int]struct{}) (error, error, int) {
+	// Ensure that the user is not removing a server capability from the server
+	// that is required by the delivery services the server is assigned to (if applicable)
+	dsIDs := []int64{}
+	if err := ssc.APIInfo().Tx.Tx.QueryRow(checkDSReqCapQuery(), ssc.ServerID, ssc.ServerCapability).Scan(pq.Array(&dsIDs)); err != nil {
+		return nil, fmt.Errorf("checking removing server server capability would still suffice delivery service requried capabilites: %v", err), http.StatusInternalServerError
+	}
+
+	if len(dsIDs) > 0 {
+		return ssc.buildDSReqCapError(dsIDs, accessibleTenants)
+	}
+	return nil, nil, http.StatusOK
+}
+
+func (ssc *TOServerServerCapabilityV5) buildDSReqCapError(dsIDs []int64, accessibleTenants map[int]struct{}) (error, error, int) {
+
+	dsTenantIDs, err := getDSTenantIDsByIDs(ssc.APIInfo().Tx, dsIDs)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+
+	authDSIDs := []string{}
+
+	for _, dsTenantID := range dsTenantIDs {
+		if _, ok := accessibleTenants[dsTenantID.TenantID]; ok {
+			if ok {
+				authDSIDs = append(authDSIDs, strconv.Itoa(dsTenantID.ID))
+			}
+			continue
+		}
+	}
+
+	dsStr := "delivery services"
+	if len(authDSIDs) > 0 {
+		dsStr = fmt.Sprintf("the delivery services %v", strings.Join(authDSIDs, ","))
+	}
+	return fmt.Errorf("cannot remove the capability %v from the server %v as the server is assigned to %v that require it", *ssc.ServerCapability, *ssc.ServerID, dsStr), nil, http.StatusBadRequest
+}
+
+func (ssc *TOServerServerCapabilityV5) Create() (error, error, int) {
+	tx := ssc.APIInfo().Tx
+
+	// Check existence prior to checking type
+	_, exists, err := dbhelpers.GetServerNameFromID(tx.Tx, int64(*ssc.ServerID))
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	if !exists {
+		return fmt.Errorf("server %v does not exist", *ssc.ServerID), nil, http.StatusNotFound
+	}
+
+	// Ensure type is correct
+	var sidList []int64
+	sidList = append(sidList, int64(*ssc.ServerID))
+	errCode, userErr, sysErr := checkServerType(tx.Tx, sidList)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+
+	}
+
+	cdnName, err := dbhelpers.GetCDNNameFromServerID(tx.Tx, int64(*ssc.ServerID))
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), ssc.APIInfo().User.UserName)
+	if userErr != nil || sysErr != nil {
+		return userErr, sysErr, errCode
+	}
+
+	resultRows, err := tx.NamedQuery(scInsertQuery(), ssc)
+	if err != nil {
+		return api.ParseDBError(err)
+	}
+	defer resultRows.Close()
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.StructScan(&ssc); err != nil {
+			return nil, errors.New(ssc.GetType() + " create scanning: " + err.Error()), http.StatusInternalServerError
+		}
+	}
+	if rowsAffected == 0 {
+		return nil, errors.New(ssc.GetType() + " create: no " + ssc.GetType() + " was inserted, no rows was returned"), http.StatusInternalServerError
+	} else if rowsAffected > 1 {
+		return nil, errors.New("too many rows returned from " + ssc.GetType() + " insert"), http.StatusInternalServerError
+	}
+
+	return nil, nil, http.StatusOK
+}
+
 type (
 	TOServerServerCapability struct {
 		api.APIInfoImpl `json:"-"`

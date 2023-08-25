@@ -31,14 +31,14 @@ const apiServerServerCapabilities = "/server_server_capabilities"
 // apiMultipleServersCapabilities is the API version-relative path to the /multiple_servers_capabilities API endpoint.
 const apiMultipleServersCapabilities = "/multiple_servers_capabilities"
 
-// CreateServerServerCapability assigns a Server Capability to a Server.
-func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+// CreateServerServerCapabilityV5 assigns a Server Capability to a Server.
+func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapabilityV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiServerServerCapabilities, opts, ssc, &alerts)
 	return alerts, reqInf, err
 }
 
-// DeleteServerServerCapability unassigns a Server Capability from a Server.
+// DeleteServerServerCapabilityV5 unassigns a Server Capability from a Server.
 func (to *Session) DeleteServerServerCapability(serverID int, serverCapability string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
@@ -52,8 +52,8 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 
 // GetServerServerCapabilities retrieves a list of Server Capabilities that are
 // assigned to Servers.
-func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerServerCapabilitiesResponse, toclientlib.ReqInf, error) {
-	var resp tc.ServerServerCapabilitiesResponse
+func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerServerCapabilitiesResponseV5, toclientlib.ReqInf, error) {
+	var resp tc.ServerServerCapabilitiesResponseV5
 	reqInf, err := to.get(apiServerServerCapabilities, opts, &resp)
 	return resp, reqInf, err
 }
