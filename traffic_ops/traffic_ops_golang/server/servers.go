@@ -681,7 +681,7 @@ func Read(inf *api.APIInfo) (int, error, error) {
 	if userErr != nil || sysErr != nil {
 		return errCode, userErr, sysErr
 	}
-	if version.Major >= 5 {
+	if version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
 		return inf.WriteOKResponse(servers)
 	}
 
@@ -758,7 +758,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 		"dsId":               {Column: "dss.deliveryservice", Checker: nil},
 	}
 
-	if version.Major >= 4 {
+	if version.GreaterThanOrEqualTo(&api.Version{Major: 4}) {
 		queryParamsToSQLCols["profileName"] = dbhelpers.WhereColumnInfo{
 			Column:  "sp.profile_name",
 			Checker: nil,
@@ -834,7 +834,7 @@ func getServers(h http.Header, params map[string]string, tx *sqlx.Tx, user *auth
 	var queryString, countQueryString string
 	queryString = selectQuery
 	countQueryString = serverCountQuery
-	if version.Major >= 4 {
+	if version.GreaterThanOrEqualTo(&api.Version{Major: 4}) {
 		if _, ok := params["profileName"]; ok {
 			queryString = queryString + `
 JOIN server_profile sp ON s.id = sp.server`
@@ -1305,7 +1305,7 @@ func Update(inf *api.APIInfo) (int, error, error) {
 	var statusLastUpdatedTime time.Time
 	tx := inf.Tx.Tx
 
-	if inf.Version.Major >= 5 {
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
 		server.ID = inf.IntParams["id"]
 		if err := inf.DecodeBody(&server); err != nil {
 			return http.StatusBadRequest, err, nil
@@ -1327,7 +1327,7 @@ func Update(inf *api.APIInfo) (int, error, error) {
 			return http.StatusBadRequest, userErr, sysErr
 		}
 		server = tmp.Upgrade()
-	} else if inf.Version.Major >= 4 {
+	} else if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) {
 		var serverV4 tc.ServerV4
 		serverV4.ID = util.Ptr(inf.IntParams["id"])
 		if err := inf.DecodeBody(&serverV4); err != nil {
@@ -1451,7 +1451,7 @@ func Update(inf *api.APIInfo) (int, error, error) {
 		}
 	}
 
-	if inf.Version.Major >= 4 {
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) {
 		if err = dbhelpers.UpdateServerProfilesForV4(server.ID, server.Profiles, tx); err != nil {
 			userErr, sysErr, errCode := api.ParseDBError(err)
 			return errCode, userErr, sysErr
@@ -1477,7 +1477,7 @@ func Update(inf *api.APIInfo) (int, error, error) {
 
 	where := `WHERE s.id = $1`
 	var selquery string
-	if inf.Version.Major <= 4 {
+	if inf.Version.Major == 4 || inf.Version.LessThan(&api.Version{Major: 4}) {
 		selquery = selectQuery + joinProfileV4 + where
 	} else {
 		selquery = selectQuery + where
@@ -1537,11 +1537,11 @@ func Update(inf *api.APIInfo) (int, error, error) {
 	if userErr, sysErr, errCode = updateStatusLastUpdatedTime(id, &statusLastUpdatedTime, tx); userErr != nil || sysErr != nil {
 		return errCode, userErr, sysErr
 	}
-	if inf.Version.Major >= 5 {
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
 		inf.WriteSuccessResponse(server, "Server updated")
-	} else if inf.Version.Major >= 4 {
+	} else if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) {
 		inf.WriteSuccessResponse(server.Downgrade(), "Server updated")
-	} else if inf.Version.Major >= 3 {
+	} else if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 3}) {
 		downgraded := server.Downgrade()
 		csp, err := dbhelpers.GetCommonServerPropertiesFromV4(downgraded, inf.Tx.Tx)
 		if err != nil {
@@ -2281,12 +2281,12 @@ func Delete(inf *api.APIInfo) (int, error, error) {
 	}
 
 	inf.CreateChangeLog(fmt.Sprintf("SERVER: %s.%s, ID: %d, ACTION: deleted", server.HostName, server.DomainName, server.ID))
-	if inf.Version.Major >= 5 {
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
 		return inf.WriteSuccessResponse(server, "Server deleted")
 	}
 
 	downgraded := server.Downgrade()
-	if inf.Version.Major >= 4 {
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) {
 		return inf.WriteSuccessResponse(downgraded, "Server deleted")
 	}
 
