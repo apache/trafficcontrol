@@ -361,7 +361,7 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//// This code block decides if the request body is a slice of parameters or a single object and unmarshal it.
+	// This code block decides if the request body is a slice of parameters or a single object and unmarshal it.
 	var params []tc.ParameterV5
 	if err := json.Unmarshal(body, &params); err != nil {
 		var param tc.ParameterV5
