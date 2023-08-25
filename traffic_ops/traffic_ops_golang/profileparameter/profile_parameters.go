@@ -305,21 +305,9 @@ func CreateProfileParameter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// This code block decides if the request body is a slice of parameters or a single object.
+	// This code block decides if the request body is a slice of parameters or a single object and unmarshal it.
 	var profileParams []tc.ProfileParameterCreationRequest
-
-	// Try to unmarshal the data as a slice
-	var sliceData []map[string]interface{}
-	if err := json.Unmarshal(body, &sliceData); err == nil {
-		for _, item := range sliceData {
-			profileParam := tc.ProfileParameterCreationRequest{
-				ParameterID: int(item["parameterId"].(float64)),
-				ProfileID:   int(item["profileId"].(float64)),
-			}
-			profileParams = append(profileParams, profileParam)
-		}
-	} else {
-		// Try to unmarshal the data as a single object
+	if err := json.Unmarshal(body, &profileParams); err != nil {
 		var profileParam tc.ProfileParameterCreationRequest
 		if err := json.Unmarshal(body, &profileParam); err != nil {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error unmarshalling single object"), nil)
