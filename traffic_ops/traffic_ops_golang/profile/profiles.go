@@ -192,7 +192,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent
 		if _, ok := prof.APIInfo().Params[IDQueryParam]; ok {
-			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.ReqInfo.User, profile.ID)
+			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.ReqInfo.User, *profile.ID)
 			if err != nil {
 				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError, nil
 			}
@@ -229,7 +229,7 @@ LEFT JOIN cdn c ON prof.cdn = c.id`
 	return query
 }
 
-func ReadParameters(tx *sqlx.Tx, user *auth.CurrentUser, profileID *int) ([]tc.ParameterNullable, error) {
+func ReadParameters(tx *sqlx.Tx, user *auth.CurrentUser, profileID int) ([]tc.ParameterNullable, error) {
 	privLevel := user.PrivLevel
 	queryValues := make(map[string]interface{})
 	queryValues["profile_id"] = profileID
@@ -364,7 +364,7 @@ func deleteQuery() string {
 	return `DELETE FROM profile WHERE id = :id`
 }
 
-// Read gets list of Profiles for APIv5
+// Read gets a list of Profiles for APIv5.
 func Read(w http.ResponseWriter, r *http.Request) {
 	var runSecond bool
 	var maxTime time.Time
@@ -432,7 +432,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	for _, p := range profileList {
 		// Attach Parameters if the 'param' parameter is sent
 		if _, ok := inf.Params["param"]; ok {
-			p.Parameters, err = ReadParameters(inf.Tx, inf.User, &p.ID)
+			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID)
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
 				return
@@ -445,7 +445,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// Create a Profile for APIv5
+// Create a Profile for APIv5.
 func Create(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -505,7 +505,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// Update a profile for APIv5
+// Update a profile for APIv5.
 func Update(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	if userErr != nil || sysErr != nil {
@@ -566,7 +566,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// Delete an profile for APIv5
+// Delete a profile in APIv5.
 func Delete(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
