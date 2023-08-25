@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
@@ -88,6 +89,27 @@ type Profile struct {
 	CDNID           int                 `json:"cdn"`
 	RoutingDisabled bool                `json:"routingDisabled"`
 	Type            string              `json:"type"`
+	Parameters      []ParameterNullable `json:"params,omitempty"`
+}
+
+// ProfilesResponseV5 is a list of profiles returned by GET requests.
+type ProfilesResponseV5 struct {
+	Response []ProfileV5 `json:"response"`
+	Alerts
+}
+
+// A ProfileV5 represents a set of configuration for a server or Delivery Service
+// which may be reused to allow sharing configuration across the objects to
+// which it is assigned. Note: Field LastUpdated represents RFC3339
+type ProfileV5 struct {
+	ID              int                 `json:"id" db:"id"`
+	LastUpdated     time.Time           `json:"lastUpdated" db:"last_updated"`
+	Name            string              `json:"name" db:"name"`
+	Description     string              `json:"description" db:"description"`
+	CDNName         string              `json:"cdnName" db:"cdn_name"`
+	CDNID           int                 `json:"cdn" db:"cdn"`
+	RoutingDisabled bool                `json:"routingDisabled" db:"routing_disabled"`
+	Type            string              `json:"type" db:"type"`
 	Parameters      []ParameterNullable `json:"params,omitempty"`
 }
 

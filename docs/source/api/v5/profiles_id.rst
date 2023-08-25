@@ -71,7 +71,7 @@ Response Structure
 :cdnName:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
 :description:     The :term:`Profile`'s :ref:`profile-description`
 :id:              The :term:`Profile`'s :ref:`profile-id`
-:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated:     The date and time at which this :term:`Profile` was last updated, in :rfc:`3339` Format
 :name:            The :term:`Profile`'s :ref:`profile-name`
 :routingDisabled: The :term:`Profile`'s :ref:`profile-routing-disabled` setting
 :type:            The :term:`Profile`'s :ref:`profile-type`
@@ -99,7 +99,7 @@ Response Structure
 	],
 	"response": {
 		"id": 16,
-		"lastUpdated": "2018-12-07 21:45:06+00",
+		"lastUpdated": "2023-08-17T09:06:18-06:00",
 		"name": "test",
 		"description": "A test profile for API examples",
 		"cdnName": null,
