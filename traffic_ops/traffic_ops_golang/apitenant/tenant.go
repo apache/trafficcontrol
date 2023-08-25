@@ -26,13 +26,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-	"github.com/jmoiron/sqlx"
 	"net/http"
 	"strconv"
-	time "time"
+	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -40,8 +38,10 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
 )
 
@@ -342,46 +342,12 @@ WHERE id=:id`
 	return query
 }
 
-// Downgrade will convert an instance of CacheGroupNullableV5 to CacheGroupNullable.
-// Note that this function does a shallow copy of the requested and original Cache Group structures.
-func Downgrade(tV5 tc.TenantV5) TOTenant {
-	var t TOTenant
-	t.ID = util.CopyIfNotNil(tV5.ID)
-	t.Name = util.CopyIfNotNil(tV5.Name)
-	t.Active = util.CopyIfNotNil(tV5.Active)
-	if tV5.LastUpdated != nil {
-		t.LastUpdated = tc.TimeNoModFromTime(*tV5.LastUpdated)
-	}
-	t.ParentID = util.CopyIfNotNil(tV5.ParentID)
-	t.ParentName = util.CopyIfNotNil(tV5.ParentName)
-	return t
-}
-
-// Upgrade will convert an instance of CacheGroupNullable to CacheGroupNullableV5.
-// Note that this function does a shallow copy of the requested and original Cache Group structures.
-func (t TOTenant) Upgrade() (tc.TenantV5, error) {
-	var tV5 tc.TenantV5
-	tV5.ID = util.CopyIfNotNil(t.ID)
-	tV5.Name = util.CopyIfNotNil(t.Name)
-	tV5.Active = util.CopyIfNotNil(t.Active)
-	if t.LastUpdated != nil {
-		tV5.LastUpdated = &t.LastUpdated.Time
-		t, err := util.ConvertTimeFormat(*tV5.LastUpdated, time.RFC3339)
-		if err != nil {
-			return tV5, err
-		}
-		tV5.LastUpdated = t
-	}
-	tV5.ParentID = util.CopyIfNotNil(t.ParentID)
-	tV5.ParentName = util.CopyIfNotNil(t.ParentName)
-	return tV5, nil
-}
-
 func selectMaxLastUpdatedQuery(where string) string {
+	tableName := "tenant"
 	return `SELECT max(t) from (
-		SELECT max(tenant.last_updated) as t from tenant + q ` + where +
+		SELECT max(last_updated) as t from ` + tableName + ` q ` + where +
 		` UNION ALL
-	select max(last_updated) as t from last_deleted l where l.table_name='tenant') as res`
+	select max(last_updated) as t from last_deleted l where l.table_name='` + tableName + `') as res`
 }
 
 // CreateTenant [Version : V5] function Process the *http.Request and creates new tenant
@@ -400,6 +366,17 @@ func CreateTenant(w http.ResponseWriter, r *http.Request) {
 	tenant, readValErr := readAndValidateJsonStruct(r)
 	if readValErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	// Check if tenant is tenable
+	authorized, err := isTenantAuthorizedV5(&tenant, inf.User, tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 		return
 	}
 
@@ -464,7 +441,7 @@ func GetTenant(w http.ResponseWriter, r *http.Request) {
 		log.Warnf("Couldn't get config %v", e)
 	}
 
-	var maxTime time.Time
+	var maxTime *time.Time
 	var usrErr error
 	var syErr error
 
@@ -472,14 +449,16 @@ func GetTenant(w http.ResponseWriter, r *http.Request) {
 
 	api.DefaultSort(inf, "name")
 	tenants, usrErr, syErr, code, maxTime = getTenants(inf.Tx, inf.Params, useIMS, r.Header, tenantID)
-	if userErr != nil {
+	if usrErr != nil {
 		api.HandleErr(w, r, tx, code, fmt.Errorf("read tenant: get tenant: "+usrErr.Error()), nil)
 	}
-	if sysErr != nil {
+	if syErr != nil {
 		api.HandleErr(w, r, tx, code, nil, fmt.Errorf("read tenant: get tenant: "+syErr.Error()))
 	}
-	if maxTime != (time.Time{}) && api.SetLastModifiedHeader(r, useIMS) {
-		api.AddLastModifiedHdr(w, maxTime)
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+		api.AddLastModifiedHdr(w, *maxTime)
+		w.WriteHeader(http.StatusNotModified)
+		return
 	}
 
 	tenantNames := map[int]*string{}
@@ -497,7 +476,7 @@ func GetTenant(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, tenants)
 }
 
-func getTenants(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header, id int) ([]tc.TenantV5, error, error, int, time.Time) {
+func getTenants(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header, id int) ([]tc.TenantV5, error, error, int, *time.Time) {
 	tenants := make([]tc.TenantV5, 0)
 	code := http.StatusOK
 
@@ -518,7 +497,7 @@ func getTenants(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToQueryCols)
 	if len(errs) > 0 {
-		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, time.Time{}
+		return nil, util.JoinErrs(errs), nil, http.StatusBadRequest, nil
 	}
 
 	if useIMS {
@@ -526,7 +505,7 @@ func getTenants(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.
 		if !runSecond {
 			log.Debugln("IMS HIT")
 			code = http.StatusNotModified
-			return tenants, nil, nil, code, maxTime
+			return tenants, nil, nil, code, &maxTime
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -537,7 +516,7 @@ func getTenants(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.
 	query := selectQuery(id) + where + orderBy + pagination
 	rows, err := tx.NamedQuery(query, queryValues)
 	if err != nil {
-		return nil, nil, err, http.StatusInternalServerError, time.Time{}
+		return nil, nil, err, http.StatusInternalServerError, nil
 	}
 	defer rows.Close()
 
@@ -552,14 +531,15 @@ func getTenants(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.
 			&t.LastUpdated,
 			&t.ParentName,
 		); err != nil {
-			return nil, nil, err, http.StatusInternalServerError, time.Time{}
+			return nil, nil, err, http.StatusInternalServerError, nil
 		}
 		tenants = append(tenants, t)
 	}
 
-	return tenants, nil, nil, http.StatusOK, maxTime
+	return tenants, nil, nil, http.StatusOK, nil
 }
 
+// UpdateTenant [Version : V5] function Process the *http.Request and updates the tenant.
 func UpdateTenant(w http.ResponseWriter, r *http.Request) {
 	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
 	if userErr != nil || sysErr != nil {
@@ -590,7 +570,7 @@ func UpdateTenant(w http.ResponseWriter, r *http.Request) {
 		}
 		tenant.ID = &idNum
 
-		existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, idNum, "tenants")
+		existingLastUpdated, found, err := api.GetLastUpdated(inf.Tx, idNum, "tenant")
 		if err == nil && found == false {
 			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no tenant found with this id"), nil)
 			return
@@ -667,6 +647,33 @@ func DeleteTenant(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(ID)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusUnprocessableEntity, fmt.Errorf("delete cachegroup: converted to type int: "+err.Error()), nil)
+		return
+	}
+
+	useIMS := false
+	var tenantV5 []tc.TenantV5
+
+	tenantV5, usrErr, syErr, code, maxTime := getTenants(inf.Tx, inf.Params, useIMS, r.Header, id)
+	if userErr != nil {
+		api.HandleErr(w, r, tx, code, fmt.Errorf("delete tenant: get tenant: "+usrErr.Error()), nil)
+	}
+	if sysErr != nil {
+		api.HandleErr(w, r, tx, code, nil, fmt.Errorf("delete tenant: get tenant: "+syErr.Error()))
+	}
+	if maxTime != nil && api.SetLastModifiedHeader(r, useIMS) {
+		api.AddLastModifiedHdr(w, *maxTime)
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+
+	// Check if tenant is tenable
+	authorized, err := isTenantAuthorizedV5(&tenantV5[0], inf.User, tx)
+	if err != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, errors.New("checking tenant authorized: "+err.Error()))
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusForbidden, errors.New("not authorized on this tenant"), nil)
 		return
 	}
 

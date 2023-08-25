@@ -1152,6 +1152,12 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = dgCg.ValidateTypeInTopology()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("update cachegroup: validating type in topology: "+err.Error()), err)
+		return
+	}
+
 	checkLastUpdated := `UPDATE cachegroup SET coordinate=$1 WHERE id=$2 RETURNING last_updated`
 
 	err = tx.QueryRow(
@@ -1431,17 +1437,16 @@ func readAndValidateJsonStruct(r *http.Request) (tc.CacheGroupNullableV5, error)
 
 	// validate JSON body
 	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	latitudeErr := "Must be a floating point number within the range +-90"
+	longitudeErr := "Must be a floating point number within the range +-180"
 	errs := tovalidate.ToErrors(validation.Errors{
-		"name": validation.Validate(cg.Name, validation.Required, rule),
-		//TODO add all validation
-		//"name":                        validation.Validate(cg.Name, validation.Required, validName),
-		//"shortName":                   validation.Validate(cg.ShortName, validation.Required, validShortName),
-		//"latitude":                    validation.Validate(cg.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
-		//"longitude":                   validation.Validate(cg.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
-		//"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
-		//"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
-		//"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
-		//"type":                        cg.ValidateTypeInTopology(),
+		"name":                        validation.Validate(cg.Name, validation.Required, rule),
+		"shortName":                   validation.Validate(cg.ShortName, validation.Required, rule),
+		"latitude":                    validation.Validate(cg.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
+		"longitude":                   validation.Validate(cg.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
+		"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
+		"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
+		"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
 	})
 	if len(errs) > 0 {
 		userErr := util.JoinErrs(errs)
