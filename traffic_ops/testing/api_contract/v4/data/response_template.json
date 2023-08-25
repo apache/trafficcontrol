@@ -2138,29 +2138,6 @@
             }
         }
     },
-    "cdn_capacity" : {
-        "type": "object",
-        "required": [
-            "availablePercent",
-            "unavailablePercent",
-            "utilizedPercent",
-            "maintenancePercent"
-        ],
-        "properties": {
-            "availablePercent": {
-                "type": "number"
-            },
-            "unavailablePercent": {
-                "type": "integer"
-            },
-            "utilizedPercent": {
-                "type": "number"
-            },
-            "maintenancePercent": {
-                "type": "number"
-            }
-        }
-    },
     "cdn_routing" : {
         "type": "object",
         "required": [
