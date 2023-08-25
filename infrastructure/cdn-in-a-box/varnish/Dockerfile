@@ -17,6 +17,13 @@
 
 ARG BASE_IMAGE=rockylinux \
     RHEL_VERSION=8
+
+FROM golang:1.20-alpine AS vstats-builder
+
+COPY infrastructure/cdn-in-a-box/varnish/vstats.go /
+
+RUN go build -o /vstats /vstats.go
+
 FROM ${BASE_IMAGE}:${RHEL_VERSION} AS common-varnish-cache-config-layers
 ARG RHEL_VERSION=8
 # Makes RHEL_VERSION available at runtime
@@ -50,6 +57,8 @@ RUN rpm -Uvh /$(basename $ORT_RPM) &&\
     rm /$(basename $ORT_RPM)
 
 COPY infrastructure/cdn-in-a-box/varnish/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
+
+COPY --from=vstats-builder /vstats /usr/local/bin
 
 ENV CACHE_SERVER_TYPE=VARNISH
 CMD /run.sh

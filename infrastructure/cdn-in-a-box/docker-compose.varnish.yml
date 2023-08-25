@@ -14,5 +14,22 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
+#
+# This compose file will run cache servers as Varnish instead of ATS.
+#
+#      docker-compose -f docker-compose.yml -f docker-compose.varnish.yml up
+#
 
-*/1 * * * * root t3c apply --cache=varnish --run-mode=syncds --traffic-ops-url=$TO_URL --trafficserver-home=/opt/cache --traffic-ops-user=$TO_USER --traffic-ops-password=$TO_PASSWORD --git=yes -vv --cache-host-name=$(hostname -s) >> /var/log/ort.log 2>&1
+---
+version: '3.8'
+
+services:
+  edge:
+    build:
+      dockerfile: infrastructure/cdn-in-a-box/varnish/Dockerfile
+  mid-01:
+    build:
+      dockerfile: infrastructure/cdn-in-a-box/varnish/Dockerfile
+  mid-02:
+    build:
+      dockerfile: infrastructure/cdn-in-a-box/varnish/Dockerfile
