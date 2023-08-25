@@ -1098,9 +1098,7 @@ def server_data_post(to_session: TOSession, request_template_data: list[JSONData
 		server["typeId"] = edge_type_id
 	else:
 		server["typeId"] = type_id
-
-=======
->>>>>>> da37f24d2 (removed cdn/capacity)
+	
 	if edge_type_id:
 		server["typeId"] = edge_type_id
 	else:
