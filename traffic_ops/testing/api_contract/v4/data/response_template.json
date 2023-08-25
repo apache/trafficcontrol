@@ -1929,8 +1929,8 @@
             },
             "type": {
                 "type": "string"
-              }
-          }
+            }
+        }
     },
     "delivery_service_capacity": {
         "type": "object",
@@ -2100,7 +2100,7 @@
             }
         }
     },
-    "cdn_health" : {
+    "cdn_health": {
         "type": "object",
         "required": [
             "totalOffline",
@@ -2115,30 +2115,37 @@
                 "type": "integer"
             },
             "cachegroups": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "required": [
-                        "offline",
-                        "name",
-                        "online"
-                    ],
-                    "properties": {
-                        "offline": {
-                            "type": "integer"
-                        },
-                        "name": {
-                            "type": "string"
-                        },
-                        "online": {
-                            "type": "integer"
+                "anyOf": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "offline",
+                                "name",
+                                "online"
+                            ],
+                            "properties": {
+                                "offline": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "online": {
+                                    "type": "integer"
+                                }
+                            }
                         }
+                    },
+                    {
+                        "type": "null"
                     }
-                }
+                ]
             }
         }
     },
-    "cdn_routing" : {
+    "cdn_routing": {
         "type": "object",
         "required": [
             "cz",
@@ -2182,10 +2189,10 @@
             },
             "staticRoute": {
                 "type": "integer"
-              }
+            }
         }
     },
-    "server_server_capabilities":{
+    "server_server_capabilities": {
         "type": "object",
         "required": [
             "lastUpdated",
