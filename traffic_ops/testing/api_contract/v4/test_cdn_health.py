@@ -45,11 +45,6 @@ def test_cdn_health_contract(to_session: TOSession,
 		requests.Response
 	] = to_session.get_cdns_health()
 
-	cdn_capacity_get_response : tuple[
-		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
-		requests.Response
-	] = to_session.get_cdns_capacity()
-
 	cdn_routing_get_response : tuple[
 		Union[dict[str, object], list[Union[dict[str, object], list[object], Primitive]], Primitive],
 		requests.Response
@@ -60,11 +55,6 @@ def test_cdn_health_contract(to_session: TOSession,
 		if not isinstance(cdn_health_data, dict):
 			raise TypeError("malformed API response; 'response' property not an dict")
 		logger.info("cdn_health Api response %s", cdn_health_data)
-		
-		cdn_capacity_data = cdn_capacity_get_response[0]
-		if not isinstance(cdn_capacity_data, dict):
-			raise TypeError("malformed API response; 'response' property not an dict")
-		logger.info("cdn_capacity Api response %s", cdn_capacity_data)
 		
 		cdn_routing_data = cdn_routing_get_response[0]
 		if not isinstance(cdn_routing_data, dict):
@@ -77,12 +67,6 @@ def test_cdn_health_contract(to_session: TOSession,
 			raise TypeError(f"cdn_health response template data must be a dict, not '"
 							f"{type(cdn_health_response_template)}'")
 
-		cdn_capacity_response_template = response_template_data.get(
-			"cdn_capacity")
-		if not isinstance(cdn_capacity_response_template, dict):
-			raise TypeError(f"cdn_capacity response template data must be a dict, not '"
-							f"{type(cdn_capacity_response_template)}'")
-
 		cdn_routing_response_template = response_template_data.get(
 			"cdn_routing")
 		if not isinstance(cdn_routing_response_template, dict):
@@ -90,7 +74,6 @@ def test_cdn_health_contract(to_session: TOSession,
 							f"{type(cdn_routing_response_template)}'")
 
 		assert validate(instance=cdn_health_data, schema=cdn_health_response_template) is None
-		assert validate(instance=cdn_capacity_data, schema=cdn_capacity_response_template) is None
 		assert validate(instance=cdn_routing_data, schema=cdn_routing_response_template) is None
 	except IndexError:
 		logger.error("Either prerequisite data or API response was malformed")

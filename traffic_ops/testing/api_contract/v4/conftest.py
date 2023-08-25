@@ -1093,7 +1093,11 @@ def server_data_post(to_session: TOSession, request_template_data: list[JSONData
 	type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"useInTable": "server"})
 	type_id = type_object["id"]
-	server["typeId"] = type_id
+	edge_type_id = pytestconfig.cache.get("edgeTypeId", default=None)
+	if edge_type_id:
+		server["typeId"] = edge_type_id
+	else:
+		server["typeId"] = type_id
 
 	pytestconfig.cache.set("typeId", type_id)
 
