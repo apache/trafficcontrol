@@ -33,6 +33,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -221,7 +222,7 @@ func CreateV50(w http.ResponseWriter, r *http.Request) {
 	alerts := res.TLSVersionsAlerts()
 	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service creation was successful")
 
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservices?id=%d", inf.Version.Major, inf.Version.Minor, *res.ID))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/deliveryservices?id=%d", inf.Version, *res.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, *res)
 }
 
@@ -249,7 +250,7 @@ func CreateV40(w http.ResponseWriter, r *http.Request) {
 	alerts := res.TLSVersionsAlerts()
 	alerts.AddNewAlert(tc.SuccessLevel, "Delivery Service creation was successful")
 
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservices?id=%d", inf.Version.Major, inf.Version.Minor, *res.ID))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/deliveryservices?id=%d", inf.Version, *res.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, []tc.DeliveryServiceV40{*res})
 }
 

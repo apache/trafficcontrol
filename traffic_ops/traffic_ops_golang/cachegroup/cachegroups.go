@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -1185,7 +1186,7 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/cachegroups?name=%s", inf.Version.Major, inf.Version.Minor, *cg.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/cachegroups?name=%s", inf.Version, *cg.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cg)
 	return
 }

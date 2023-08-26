@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -281,7 +282,7 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/server_capabilities?name=%s", inf.Version.Major, inf.Version.Minor, sc.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/server_capabilities?name=%s", inf.Version, sc.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
 	return
 }
@@ -453,7 +454,7 @@ func CreateServerCapabilityV5(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/server_capabilities?name=%s", inf.Version.Major, inf.Version.Minor, sc.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/server_capabilities?name=%s", inf.Version, sc.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
 	return
 }
