@@ -6,14 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [unreleased]
 - [#7665](https://github.com/apache/trafficcontrol/pull/7665) *Automation* Changes to Ansible role dataset_loader to add ATS 9 support
 ### Added
-- [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client* Added peer monitor flag while using `strategies.yaml`
+- [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client* Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login.
 - [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops* Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
-- [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address
+- [#7290](https://github.com/apache/trafficcontrol/pull/7302) *Traffic Monitor* Update TM results with hostname from via header, syncronize health on caches with same service address.
 - [#7291](https://github.com/apache/trafficcontrol/pull/7291) *Traffic Ops* Extended Layered Profile feature to aggregate parameters for all server profiles.
 - [#7314](https://github.com/apache/trafficcontrol/pull/7314) *Traffic Portal* Added capability feature to Delivery Service Form (HTTP, DNS).
 - [#7295](https://github.com/apache/trafficcontrol/pull/7295) *Traffic Portal* Added description and priority order for Layered Profile on server form.
-- [#6234](https://github.com/apache/trafficcontrol/issues/6234) *Traffic Ops, Traffic Portal* Added description field to Server Capabilities
+- [#6234](https://github.com/apache/trafficcontrol/issues/6234) *Traffic Ops, Traffic Portal* Added description field to Server Capabilities.
 - [#6033](https://github.com/apache/trafficcontrol/issues/6033) *Traffic Ops, Traffic Portal* Added ability to assign multiple servers per capability.
 - [#7081](https://github.com/apache/trafficcontrol/issues/7081) *Traffic Router* Added better log messages for TR connection exceptions.
 - [#7089](https://github.com/apache/trafficcontrol/issues/7089) *Traffic Router* Added the ability to specify HTTPS certificate attributes.
@@ -21,33 +21,33 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7075](https://github.com/apache/trafficcontrol/pull/7075) *Traffic Portal* Added the `lastUpdated` field to all delivery service forms.
 - [#7055](https://github.com/apache/trafficcontrol/issues/7055) *Traffic Portal* Made `Clear Table Filters` option visible to the user.
 - [#7024](https://github.com/apache/trafficcontrol/pull/7024) *Traffic Monitor* Added logging for `ipv4Availability` and `ipv6Availability` in TM.
-- [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Added API version 5.0 (IN DEVELOPMENT)
+- [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Added API version 5.0 (IN DEVELOPMENT).
 - [#7645](https://github.com/apache/trafficcontrol/pull/7645) *Traffic Ops* Added a client method to be able to login with certificates.
 - [#2101](https://github.com/apache/trafficcontrol/issues/2101) *Traffic Portal* Added the ability to tell if a Delivery Service is the target of another steering DS.
 - [#6021](https://github.com/apache/trafficcontrol/issues/6021) *Traffic Portal* Added the ability to view a change logs message in it's entirety by clicking on it.
 - [#7078](https://github.com/apache/trafficcontrol/issues/7078) *Traffic Ops, Traffic Portal* Added ability to assign multiple server capabilities to a server.
-- [#7096](https://github.com/apache/trafficcontrol/issues/7096) *Traffic Control Health Client* Added health client parent health
+- [#7096](https://github.com/apache/trafficcontrol/issues/7096) *Traffic Control Health Client* Added health client parent health.
 - [#7032](https://github.com/apache/trafficcontrol/issues/7032) *Traffic Control Cache Config (t3c)* Add t3c-apply flag to use local ATS version for config generation rather than Server package Parameter, to allow managing the ATS OS package via external tools. See 'man t3c-apply' and 'man t3c-generate' for details.
-- [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, Traffic Control Cache Config (t3c)* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group
-- [#2388](https://github.com/apache/trafficcontrol/issues/2388) *Trafic Ops, Traffic Portal* Added the `TTLOverride` field to CDNs, which lets you override all TTLs in all Delivery Services of a CDN's snapshot with a single value
-- [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture
-- [#7113](https://github.com/apache/trafficcontrol/pull/7113) *Traffic Portal* Minimize the Server Server Capability part of the *Traffic Servers* section of the Snapshot Diff
-- [#7273](https://github.com/apache/trafficcontrol/pull/7273) *Traffic Ops* Adds SSL-KEY-EXPIRATION:READ permission to operations, portal, read-only, federation and steering roles
-- [#7343](https://github.com/apache/trafficcontrol/pull/7343) *Traffic Ops* Adds ACME:READ, CDNI-ADMIN:READ and CDNI-CAPACITY:READ permissions to operations, portal, read-only, federation and steering roles
+- [#7097](https://github.com/apache/trafficcontrol/issues/7097) *Traffic Ops, Traffic Portal, Traffic Control Cache Config (t3c)* Added the `regional` field to Delivery Services, which affects whether `maxOriginConnections` should be per Cache Group.
+- [#2388](https://github.com/apache/trafficcontrol/issues/2388) *Trafic Ops, Traffic Portal* Added the `TTLOverride` field to CDNs, which lets you override all TTLs in all Delivery Services of a CDN's snapshot with a single value.
+- [#7176](https://github.com/apache/trafficcontrol/pull/7176) *ATC Build system* Support building ATC for the `aarch64` CPU architecture.
+- [#7113](https://github.com/apache/trafficcontrol/pull/7113) *Traffic Portal* Minimize the Server Server Capability part of the *Traffic Servers* section of the Snapshot Diff.
+- [#7273](https://github.com/apache/trafficcontrol/pull/7273) *Traffic Ops* Adds SSL-KEY-EXPIRATION:READ permission to operations, portal, read-only, federation and steering roles.
+- [#7343](https://github.com/apache/trafficcontrol/pull/7343) *Traffic Ops* Adds ACME:READ, CDNI-ADMIN:READ and CDNI-CAPACITY:READ permissions to operations, portal, read-only, federation and steering roles.
 - [#7296](https://github.com/apache/trafficcontrol/pull/7296) *Traffic Portal* New configuration option in `traffic_portal_properties.json` at `deliveryServices.exposeInactive` controls exposing APIv5 DS Active State options in the TP UI.
 - [#7332](https://github.com/apache/trafficcontrol/pull/7332) *Traffic Ops* Creates new role needed for TR to watch TO resources.
 - [#7322](https://github.com/apache/trafficcontrol/issues/7322) *t3c Adds support for anycast on http routed edges.
 - [#7367](https://github.com/apache/trafficcontrol/pull/7367) *Traffic Ops* Adds ACME:CREATE, ACME:DELETE, ACME:DELETE, and ACME:READ permissions to operations role.
 - [#7380](https://github.com/apache/trafficcontrol/pull/7380) *Traffic Portal* Adds strikethrough (expired), red (7 days until expiration) and yellow (30 days until expiration) visuals to delivery service cert expiration grid rows.
-- [#7388](https://github.com/apache/trafficcontrol/pull/7388) *TC go Client* Adds sslkey_expiration methodology in v4 and v5 clients
-- [#7543](https://github.com/apache/trafficcontrol/pull/7543) *Traffic Portal* New Ansible Role to use Traffic Portal v2
-- [#7516](https://github.com/apache/trafficcontrol/pull/7516) *t3c* added command line arg to control go_direct in parent.config
-- [#7602](https://github.com/apache/trafficcontrol/pull/7602) *t3c* added installed package data to t3c-apply-metadata.json
+- [#7388](https://github.com/apache/trafficcontrol/pull/7388) *TC go Client* Adds sslkey_expiration methodology in v4 and v5 clients.
+- [#7543](https://github.com/apache/trafficcontrol/pull/7543) *Traffic Portal* New Ansible Role to use Traffic Portal v2.
+- [#7516](https://github.com/apache/trafficcontrol/pull/7516) *t3c* added command line arg to control go_direct in parent.config.
+- [#7602](https://github.com/apache/trafficcontrol/pull/7602) *t3c* added installed package data to t3c-apply-metadata.json.
 - [#7618](https://github.com/apache/trafficcontrol/pull/7618) *Traffic Portal* Add the ability to inspect a user provider cert, or the cert chain on DS SSL keys.
-- [#7619](https://github.com/apache/trafficcontrol/pull/7619) Traffic Ops* added optional field `oauth_user_attribute` for OAuth login credentials
+- [#7619](https://github.com/apache/trafficcontrol/pull/7619) Traffic Ops* added optional field `oauth_user_attribute` for OAuth login credentials.
 - [#7641](https://github.com/apache/trafficcontrol/pull/7641) *Traffic Router* Added further optimization to TR's algorithm of figuring out the zone for an incoming request.
 - [#7646](https://github.com/apache/trafficcontrol/pull/7646) *Traffic Portal* Add the ability to delete a cert.
-- [#7652](https://github.com/apache/trafficcontrol/pull/7652) *t3c* added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt
+- [#7652](https://github.com/apache/trafficcontrol/pull/7652) *t3c* added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt.
 
 ### Changed
 - [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
@@ -58,8 +58,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7224](https://github.com/apache/trafficcontrol/pull/7224) *Traffic Ops* Required Capabilities are now a part of the `DeliveryService` structure.
 - [#7063](https://github.com/apache/trafficcontrol/pull/7063) *Traffic Ops* Python client now uses Traffic Ops API 4.1 by default.
 - [#6981](https://github.com/apache/trafficcontrol/pull/6981) *Traffic Portal* Obscures sensitive text in Delivery Service "Raw Remap" fields, private SSL keys, "Header Rewrite" rules, and ILO interface passwords by default.
-- [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default
-- [#7191](https://github.com/apache/trafficcontrol/issues/7191) *tc-health-client* Uses Traffic Ops API 4.0. Also added reload option to systemd service file
+- [#7037](https://github.com/apache/trafficcontrol/pull/7037) *Traffic Router* Uses Traffic Ops API 4.0 by default.
+- [#7191](https://github.com/apache/trafficcontrol/issues/7191) *tc-health-client* Uses Traffic Ops API 4.0. Also added reload option to systemd service file.
 - [#4654](https://github.com/apache/trafficcontrol/pull/4654) *Traffic Ops, Traffic Portal* Switched Delivery Service active state to a three-value system, adding a state that will be used to prevent cache servers from deploying DS configuration.
 - [#7242](https://github.com/apache/trafficcontrol/pull/7276) *Traffic Portal* Now depends on NodeJS version 16 or later.
 - [#7120](https://github.com/apache/trafficcontrol/pull/7120) *Docs* Update t3c documentation regarding parent.config parent_retry.
@@ -69,50 +69,56 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 - [#7586](https://github.com/apache/trafficcontrol/pull/7586) *Traffic Ops* Add permission to Operations Role to read from dnsseckeys endpoint.
 - [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
-- [##7605](https://github.com/apache/trafficcontrol/pull/#7605) *Traffic Ops* Fixes `cachegroups_request_comments` v5 apis to respond with `RFC3339` date/time Format.
-- [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token
-- [#7694](https://github.com/apache/trafficcontrol/pull/7694) *t3c*, *Traffic Control Health Client* Upgrade to ATS 9.2
+- [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token.
+- [#7694](https://github.com/apache/trafficcontrol/pull/7694) *t3c*, *Traffic Control Health Client* Upgrade to ATS 9.2.
 - [#7966](https://github.com/apache/trafficcontrol/pull/7696) *t3c* will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit.
 - [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server* Use GCC 11 for building.
 - [#7742](https://github.com/apache/trafficcontrol/pull/7742) *Traffic Ops* Changed api tests to supply the absolute path of certs.
 - [#7718](https://github.com/apache/trafficcontrol/pull/7718) *Traffic Ops* `/servers` endpoint now responds with RFC3339 timestamps for all timestamp fields. Cleaned up naming conventions and superfluous data.
 
 ### Fixed
-- [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops* Fixed `/profiles` V5 APIs to respond with `RFC3339` date/time format.
-- [#7708] (https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixes Parameters V5 apis to respond with RFC3339 date/time Format
-- [#7738](https://github.com/apache/trafficcontrol/pull/7738) *Traffic Ops* Fixes ProfileParameters V5 apis to respond with RFC3339 date/time Format
+- [RFC3339](https://github.com/apache/trafficcontrol/issues/5911)
+    - [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops* Fixed `/profiles` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7708](https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixed `/parameters` v5 APIs to respond with `RFC3339` timestamps
+    - [#7740](https://github.com/apache/trafficcontrol/pull/7740) *Traffic Ops* Fixed `/staticDNSEntries` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7738](https://github.com/apache/trafficcontrol/pull/7738) *Traffic Ops* Fixed `/profileparameters` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixed `/logs` v5 api to respond with RFC3339 timestamps.
+    - [#7605](https://github.com/apache/trafficcontrol/pull/7605) *Traffic Ops* Fixed `/cachegroups_request_comments` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7720](https://github.com/apache/trafficcontrol/pull/7720) *Traffic Ops* Fixed Delivery Service Servers v5 API to respond with `RFC3339` timestamps.
+    - [#7631](https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixed `/phys_location` V5 APIs to respond with `RFC3339` timestamps.
+    - [#7612](https://github.com/apache/trafficcontrol/pull/7612) *Traffic Ops* Fixed `/divisions` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* Fixed `/asns` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixed `/types` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7698](https://github.com/apache/trafficcontrol/pull/7698) *Traffic Ops* Fixed `/region` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7660](https://github.com/apache/trafficcontrol/pull/7660) *Traffic Ops* Fixed `/deliveryServices` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixed `/deliveryservice_request_comments` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixed `/federation_resolvers` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixed `/deliveryservice_requests` v5 APIs docs with `RFC3339` timestamps
+    - [#7544](https://github.com/apache/trafficcontrol/issues/7544) *Traffic Ops* Fixed `/stats_summary` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `cdn_locks` documentation to reflect the correct `RFC3339` timestamps.
+    - [#7465](https://github.com/apache/trafficcontrol/issues/7465) *Traffic Ops* Fixed `/server_capabilities` v5 APIs to respond with RFC3339 timestamps.
+    - [#7691](https://github.com/apache/trafficcontrol/pull/7691) *Traffic Ops* Fixed `/topologies` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixed `/service_category` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7413](https://github.com/apache/trafficcontrol/issues/7706) *Traffic Ops* Fixed `/statuses` v5 APIs to respond with `RFC3339` timestamps.
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
-- [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixes Logs V5 api to respond with RFC3339 timestamps.
-- [#7720](https://github.com/apache/trafficcontrol/pull/7720) *Traffic Ops* Fixes Delivery Service Servers V5 api to respond with RFC3339 timestamps.
-- [#7631] (https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixes Phys_Location V5 apis to respond with RFC3339 date/time Format
-- [#7623] (https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
+- [#7623](https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
 - [#7608](https://github.com/apache/trafficcontrol/pull/7608) *Traffic Monitor* Use stats_over_http(plugin.system_stats.timestamp_ms) timestamp field to calculate bandwidth for TM's caches.
-- [#7612](https://github.com/apache/trafficcontrol/pull/7612) *Traffic Ops* Fixes Divisions V5 apis to respond with RFC3339 date/time Format
-- [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}
-- [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* *Traffic Ops* Fixed `ASN` V5 apis to respond with `RFC3339` date/time Format.
-- [#7598](https://github.com/apache/trafficcontrol/pull/7598)  *Traffic Ops* Fixes Server Capability V5 Type Name Minor version
-- [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixes `deliveryservice_request_comments` v5 apis to respond with `RFC3339` date/time Format.
-- [#7312](https://github.com/apache/trafficcontrol/issues/7312) *Docs* Changing docs for CDN locks for DELETE response structure v4 and v5.
-- [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixes Delivery Service Requests V5 apis docs with RFC3339 date/time Format
-- [#7544](https://github.com/apache/trafficcontrol/issues/7544) *Traffic Ops* Fixes stats_summary v5 apis to respond with RFC3339 date/time Format.
-- [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `CDN Locks` documentation to reflect the correct RFC3339 timestamps.
+- [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}.
+- [#7598](https://github.com/apache/trafficcontrol/pull/7598) *Traffic Ops* Fixed Server Capability V5 Type Name Minor version.
+- [#7312](https://github.com/apache/trafficcontrol/issues/7312) *Docs* Changing docs for `cdn_locks` for DELETE response structure v4 and v5.
 - [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
 - [#7519](https://github.com/apache/trafficcontrol/issues/7519) *Traffic Ops* Fixed TO API /servers/{id}/deliveryservices endpoint to responding with all DS's on cache that are directly assigned and inherited through topology.
 - [#7511](https://github.com/apache/trafficcontrol/pull/7511) *Traffic Ops* Fixed the changelog registration message to include the username instead of duplicate email entry.
-- [#7465](https://github.com/apache/trafficcontrol/issues/7465) *Traffic Ops* Fixes server_capabilities v5 apis to respond with RFC3339 date/time Format
-- [#7691](https://github.com/apache/trafficcontrol/pull/7691) *Traffic Ops* Fixes Topologies V5 apis to respond with RFC3339 date/time Format
 - [#7441](https://github.com/apache/trafficcontrol/pull/7441) *Traffic Ops* Fixed the invalidation jobs endpoint to respect CDN locks.
-- [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixes service_category apis to respond with RFC3339 date/time Format
-- [#7413](https://github.com/apache/trafficcontrol/issues/7706) *Traffic Ops* Fixes /statuses apis to respond with RFC3339 date/time format
-- [#7414](https://github.com/apache/trafficcontrol/pull/7414) * Traffic Portal* Fixed DSR difference for DS required capability.
+- [#7414](https://github.com/apache/trafficcontrol/pull/7414) *Traffic Portal* Fixed DSR difference for DS required capability.
 - [#7130](https://github.com/apache/trafficcontrol/issues/7130) *Traffic Ops* Fixes service_categories response to POST API.
 - [#7340](https://github.com/apache/trafficcontrol/pull/7340) *Traffic Router* Fixed TR logging for the `cqhv` field when absent.
 - [#5557](https://github.com/apache/trafficcontrol/issues/5557) *Traffic Portal* Moved `Fair Queueing Pacing Rate Bps` DS field to `Cache Configuration Settings` section.
 - [#7252](https://github.com/apache/trafficcontrol/issues/7252) *Traffic Router* Fixed integer overflow for `czCount`, by resetting the count to max value when it overflows.
 - [#7221](https://github.com/apache/trafficcontrol/issues/7221) *Docs* Fixed request structure spec in cdn locks description in APIv4.
-- [#7225](https://github.com/apache/trafficcontrol/issues/7225) *Docs* Fixed docs for /roles response description in APIv4.
-- [#7246](https://github.com/apache/trafficcontrol/issues/7246) *Docs* Fixed docs for /jobs response description in APIv4 and APIv5.
+- [#7225](https://github.com/apache/trafficcontrol/issues/7225) *Docs* Fixed docs for `/roles` response description in APIv4.
+- [#7246](https://github.com/apache/trafficcontrol/issues/7246) *Docs* Fixed docs for `/jobs` response description in APIv4 and APIv5.
 - [#6229](https://github.com/apache/trafficcontrol/issues/6229) *Traffic Ops* Fixed error message for assignment of non-existent parameters to a profile.
 - [#7231](https://github.com/apache/trafficcontrol/pull/7231) *Traffic Ops, Traffic Portal* Fixed `sharedUserNames` display while retrieving CDN locks.
 - [#7216](https://github.com/apache/trafficcontrol/pull/7216) *Traffic Portal* Fixed sort for Server's Capabilities Table
@@ -139,7 +145,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Traffic Control Cache Config (t3c)* parent.config simulate topology for non topo delivery services.
 - [#7153](https://github.com/apache/trafficcontrol/pull/7153) *Traffic Control Cache Config (t3c)* Adds an extra T3C check for validity of an ssl cert (crash fix).
 - [#3965](https://github.com/apache/trafficcontrol/pull/3965) *Traffic Router* Traffic Router now always includes a `Content-Length` header in the response.
-- [#6533](https://github.com/apache/trafficcontrol/issues/6533) *TR should not rename/recreate log files on rollover
+- [#6533](https://github.com/apache/trafficcontrol/issues/6533) *Traffic Router* TR should not rename/recreate log files on rollover
 - [#7182](https://github.com/apache/trafficcontrol/pull/7182) *Traffic Control Cache Config (t3c)* Sort peers used in strategy.yaml to prevent false positive for reload.
 - [#7204](https://github.com/apache/trafficcontrol/pull/7204) *Traffic Control Cache Config (t3c)* strategies.yaml hash_key only for consistent_hash
 - [#7277](https://github.com/apache/trafficcontrol/pull/7277) *Traffic Control Cache Config (t3c)* remapdotconfig: remove skip check at mids for nocache/live
@@ -153,19 +159,15 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#6385](https://github.com/apache/trafficcontrol/issues/6385) *Traffic Ops* Reserved consistentHashQueryParameters cause internal server error
 - [#7471](https://github.com/apache/trafficcontrol/pull/7471) *Traffic Control Cache Config (t3c)* Fixed issue with MSO non topo origins from multiple cache groups.
 - [#7590](https://github.com/apache/trafficcontrol/issues/7590) *Traffic Control Cache Config (t3c)* Fixed issue with git detected dubious ownership in repository.
-- [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixes `types` v5 apis to respond with `RFC3339` date/time Format.
-- [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixes an issue where certificate chain validation failed based on leading or trailing whitespace.
-- [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixes `federation_resolvers` v5 apis to respond with `RFC3339` date/time Format.
-- [#7660](https://github.com/apache/trafficcontrol/pull/7660) *Traffic Ops* Fixes `deliveryServices` v5 apis to respond with `RFC3339` date/time Format.
-- [#7698](https://github.com/apache/trafficcontrol/pull/7698) *Traffic Ops* Fixes `region` v5 apis to respond with `RFC3339` date/time Format.
-- [#7686](https://github.com/apache/trafficcontrol/pull/7686) *Traffic Ops* Fixes secured parameters being visible when role has proper permissions.
-- [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops* Fixes `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
-- [#7740](https://github.com/apache/trafficcontrol/pull/7740) *Traffic Ops* Fixes `staticDNSEntries` v5 apis to respond with `RFC3339` date/time Format.
+- [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixed an issue where certificate chain validation failed based on leading or trailing whitespace.
+- [#7686](https://github.com/apache/trafficcontrol/pull/7686) *Traffic Ops* Fixed secured parameters being visible when role has proper permissions.
+- [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops* Fixed `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
+
 ### Removed
-- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
-- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove`misc/jira_github_issue_import.py`, the project does not use JIRA.
-- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version.
-- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Remove `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed`misc/jira_github_issue_import.py`, the project does not use JIRA.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use.
 
 ## [7.0.0] - 2022-07-19
 ### Added
