@@ -186,10 +186,10 @@ func TestServerV5DowngradeUpgrade(t *testing.T) {
 		StatusLastUpdated:  nil,
 		ConfigUpdateTime:   nil,
 		ConfigApplyTime:    nil,
-		ConfigUpdateFailed: nil,
+		ConfigUpdateFailed: false,
 		RevalUpdateTime:    nil,
 		RevalApplyTime:     nil,
-		RevalUpdateFailed:  nil,
+		RevalUpdateFailed:  false,
 	}
 
 	serverV4 := serverV5.Downgrade()

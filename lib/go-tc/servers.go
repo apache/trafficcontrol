@@ -1321,7 +1321,7 @@ type ServerV50 struct {
 	// The time at which configuration updates were last queued for this server.
 	ConfigUpdateTime *time.Time `json:"configUpdateTime" db:"config_update_time"`
 	// If the last config apply failed for this server
-	ConfigUpdateFailed *bool  `json:"configUpdateFailed" db:"config_update_failed"`
+	ConfigUpdateFailed bool   `json:"configUpdateFailed" db:"config_update_failed"`
 	DomainName         string `json:"domainName" db:"domain_name"`
 	// Deprecated: This property has unknown purpose and should not be used so
 	// that we can get rid of it.
@@ -1360,7 +1360,7 @@ type ServerV50 struct {
 	// The time at which revalidations were last queued for this server.
 	RevalUpdateTime *time.Time `json:"revalUpdateTime" db:"revalidate_update_time"`
 	// If the last reval apply failed for this server
-	RevalUpdateFailed *bool      `json:"revalUpdateFailed" db:"revalidate_update_failed"`
+	RevalUpdateFailed bool       `json:"revalUpdateFailed" db:"revalidate_update_failed"`
 	Status            string     `json:"status" db:"status"`
 	StatusID          int        `json:"statusID" db:"status_id"`
 	StatusLastUpdated *time.Time `json:"statusLastUpdated" db:"status_last_updated"`

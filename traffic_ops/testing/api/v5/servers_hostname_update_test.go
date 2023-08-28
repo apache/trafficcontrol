@@ -139,13 +139,13 @@ func validateServerApplyTimes(hostName string, expectedResp map[string]interface
 					assert.Equal(t, true, server.ConfigApplyTime.Equal(expected.(time.Time)), "Expected ConfigApplyTime to be %v, but got %v", expected, server.ConfigApplyTime)
 				case "ConfigUpdateFailed":
 					assert.RequireNotNil(t, resp.Response[0].ConfigUpdateFailed, "Expected ConfigUpdateFailed to not be nil.")
-					assert.Equal(t, expected.(bool), *resp.Response[0].ConfigUpdateFailed, "Expected ConfigUpdateFailed to be %v, but got %v", expected, *server.ConfigUpdateFailed)
+					assert.Equal(t, expected.(bool), resp.Response[0].ConfigUpdateFailed, "Expected ConfigUpdateFailed to be %v, but got %v", expected, server.ConfigUpdateFailed)
 				case "RevalApplyTime":
 					assert.RequireNotNil(t, resp.Response[0].RevalApplyTime, "Expected RevalApplyTime to not be nil.")
 					assert.Equal(t, true, server.RevalApplyTime.Equal(expected.(time.Time)), "Expected RevalApplyTime to be %v, but got %v", expected, server.RevalApplyTime)
 				case "RevalUpdateFailed":
 					assert.RequireNotNil(t, resp.Response[0].RevalUpdateFailed, "Expected RevalUpdateFailed to not be nil.")
-					assert.Equal(t, expected.(bool), *resp.Response[0].RevalUpdateFailed, "Expected RevalUpdateFailed to be %v, but got %v", expected, *server.RevalUpdateFailed)
+					assert.Equal(t, expected.(bool), resp.Response[0].RevalUpdateFailed, "Expected RevalUpdateFailed to be %v, but got %v", expected, server.RevalUpdateFailed)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
