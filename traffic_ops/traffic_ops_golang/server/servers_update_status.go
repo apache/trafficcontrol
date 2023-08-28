@@ -47,12 +47,12 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	if inf.Version.LessThan(&api.Version{5, 0}) {
+	if inf.Version.LessThan(&api.Version{Major: 5}) {
 		downgradedStatusesV4 := make([]tc.ServerUpdateStatusV40, len(serverUpdateStatuses))
 		for i, status := range serverUpdateStatuses {
 			downgradedStatusesV4[i] = status.Downgrade()
 		}
-		if inf.Version.LessThan(&api.Version{4, 0}) {
+		if inf.Version.LessThan(&api.Version{Major: 4}) {
 			downgradedStatuses := make([]tc.ServerUpdateStatus, len(downgradedStatusesV4))
 			for i, status := range downgradedStatusesV4 {
 				downgradedStatuses[i] = status.Downgrade()

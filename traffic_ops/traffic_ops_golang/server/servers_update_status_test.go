@@ -21,12 +21,12 @@ package server
 
 import (
 	"context"
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 
 	"github.com/jmoiron/sqlx"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"

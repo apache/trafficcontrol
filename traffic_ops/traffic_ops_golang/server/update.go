@@ -159,7 +159,7 @@ func parseQueryParams(params map[string]string, version api.Version) (*updateVal
 	revalidateApplyTimeParam, hasRevalidateApplyTimeParam := params["revalidate_apply_time"]
 	configUpdateFailedParam, hasConfigUpdateFailedParam := params["config_update_failed"]
 	revalidateUpdateFailedParam, hasRevalidateUpdateFailedParam := params["revalidate_update_failed"]
-	isAfterApi5 := version.GreaterThanOrEqualTo(&api.Version{5, 0})
+	isAfterApi5 := version.GreaterThanOrEqualTo(&api.Version{Major: 5})
 
 	if !(hasConfigApplyTimeParam || (hasConfigUpdateFailedParam && isAfterApi5)) && !(hasRevalidateApplyTimeParam || (hasRevalidateUpdateFailedParam && isAfterApi5)) &&
 		!hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam {
@@ -340,7 +340,7 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 	_, hasConfigApplyTimeParam := inf.Params["config_apply_time"]
 	_, hasRevalidateApplyTimeParam := inf.Params["revalidate_apply_time"]
 	hasRevalUpdateFailParam, hasConfigUpdateFailParam := false, false
-	if inf.Version.GreaterThanOrEqualTo(&api.Version{5, 0}) {
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
 		_, hasRevalUpdateFailParam = inf.Params["revalidate_update_failed"]
 		_, hasConfigUpdateFailParam = inf.Params["config_update_failed"]
 	}

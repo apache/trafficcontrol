@@ -44,25 +44,27 @@ func TestServersHostnameUpdate(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"atlanta-edge-01"}}},
 					RequestBody: map[string]interface{}{
-						"config_apply_time": util.TimePtr(now),
+						"config_update_failed": util.Ptr(true),
+						"config_apply_time":    util.Ptr(now),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerApplyTimes("atlanta-edge-01", map[string]interface{}{"ConfigApplyTime": now})),
+						validateServerApplyTimes("atlanta-edge-01", map[string]interface{}{"ConfigApplyTime": now, "ConfigUpdateFailed": true})),
 				},
 				"OK when VALID REVALIDATE_APPLY_TIME PARAMETER": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"cdn2-test-edge"}}},
 					RequestBody: map[string]interface{}{
-						"revalidate_apply_time": util.TimePtr(now),
+						"revalidate_update_failed": util.Ptr(true),
+						"revalidate_apply_time":    util.Ptr(now),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"RevalApplyTime": now})),
+						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"RevalApplyTime": now, "RevalUpdateFailed": true})),
 				},
 				"BAD REQUEST when UPDATED AND CONFIG_APPLY_TIME PARAMETER": {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"atlanta-edge-01"}, "updated": {"true"}}},
 					RequestBody: map[string]interface{}{
-						"config_apply_time": util.TimePtr(now),
+						"config_apply_time": util.Ptr(now),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -70,7 +72,7 @@ func TestServersHostnameUpdate(t *testing.T) {
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"atlanta-edge-01"}, "reval_updated": {"true"}}},
 					RequestBody: map[string]interface{}{
-						"revalidate_apply_time": util.TimePtr(now),
+						"revalidate_apply_time": util.Ptr(now),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -83,6 +85,8 @@ func TestServersHostnameUpdate(t *testing.T) {
 					var hostName string
 					var configApplyTime *time.Time
 					var revalApplyTime *time.Time
+					var revalUpdateFailed *bool
+					var configUpdateFailed *bool
 
 					if hostNameParam, ok := testCase.RequestOpts.QueryParameters["hostName"]; ok {
 						hostName = hostNameParam[0]
@@ -96,10 +100,18 @@ func TestServersHostnameUpdate(t *testing.T) {
 						revalApplyTime = revalApplyTimeVal.(*time.Time)
 					}
 
+					if val, ok := testCase.RequestBody["config_update_failed"]; ok {
+						configUpdateFailed = val.(*bool)
+					}
+
+					if val, ok := testCase.RequestBody["revalidate_update_failed"]; ok {
+						revalUpdateFailed = val.(*bool)
+					}
+
 					switch method {
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							alerts, reqInf, err := testCase.ClientSession.SetUpdateServerStatusTimes(hostName, configApplyTime, revalApplyTime, testCase.RequestOpts)
+							alerts, reqInf, err := testCase.ClientSession.SetUpdateServerStatusTimes(hostName, configApplyTime, revalApplyTime, configUpdateFailed, revalUpdateFailed, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
@@ -125,9 +137,15 @@ func validateServerApplyTimes(hostName string, expectedResp map[string]interface
 				case "ConfigApplyTime":
 					assert.RequireNotNil(t, resp.Response[0].ConfigApplyTime, "Expected ConfigApplyTime to not be nil.")
 					assert.Equal(t, true, server.ConfigApplyTime.Equal(expected.(time.Time)), "Expected ConfigApplyTime to be %v, but got %v", expected, server.ConfigApplyTime)
+				case "ConfigUpdateFailed":
+					assert.RequireNotNil(t, resp.Response[0].ConfigUpdateFailed, "Expected ConfigUpdateFailed to not be nil.")
+					assert.Equal(t, expected.(bool), *resp.Response[0].ConfigUpdateFailed, "Expected ConfigUpdateFailed to be %v, but got %v", expected, *server.ConfigUpdateFailed)
 				case "RevalApplyTime":
 					assert.RequireNotNil(t, resp.Response[0].RevalApplyTime, "Expected RevalApplyTime to not be nil.")
 					assert.Equal(t, true, server.RevalApplyTime.Equal(expected.(time.Time)), "Expected RevalApplyTime to be %v, but got %v", expected, server.RevalApplyTime)
+				case "RevalUpdateFailed":
+					assert.RequireNotNil(t, resp.Response[0].RevalUpdateFailed, "Expected RevalUpdateFailed to not be nil.")
+					assert.Equal(t, expected.(bool), *resp.Response[0].RevalUpdateFailed, "Expected RevalUpdateFailed to be %v, but got %v", expected, *server.RevalUpdateFailed)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
