@@ -1,7 +1,5 @@
 package tc
 
-import "time"
-
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -20,6 +18,8 @@ import "time"
  * specific language governing permissions and limitations
  * under the License.
  */
+
+import "time"
 
 // GetTenantsResponse is the response for a request for a group of tenants.
 type GetTenantsResponse struct {
