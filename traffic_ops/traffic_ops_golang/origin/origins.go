@@ -727,6 +727,20 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var i interface{}
+	// Check authorization for the origin's tenant
+	if t, ok := i.(api.Tenantable); ok {
+		authorized, err := t.IsTenantAuthorized(inf.User)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("checking tenant authorized: %w", err), nil)
+			return
+		}
+		if !authorized {
+			api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("not authorized on this tenant"), nil)
+			return
+		}
+	}
+
 	res, err := tx.Exec("DELETE FROM origin WHERE id=$1", id)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
