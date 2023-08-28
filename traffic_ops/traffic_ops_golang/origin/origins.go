@@ -512,11 +512,6 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		returnable = append(returnable, origin.ToOriginV5())
 	}
 
-	// Assign an empty array if no origin is found instead of null.
-	if len(returnable) == 0 {
-		returnable = []tc.OriginV5{}
-	}
-
 	api.WriteResp(w, r, returnable)
 	return
 }
@@ -565,12 +560,13 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	for resultRows.Next() {
 		rowsAffected++
 		if err := resultRows.Scan(&org.ID, &org.LastUpdated); err != nil {
-			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: scanning: "+err.Error()), nil)
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: scanning: %w", err), nil)
 			return
 		}
 	}
+
 	if rowsAffected == 0 {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: scanning: %w", err), nil)
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: no rows inserted"), nil)
 		return
 	} else if rowsAffected > 1 {
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: multiple rows returned"), nil)
@@ -578,7 +574,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/origins?id=%d", inf.Version.Major, inf.Version.Minor, org.ID))
+	w.Header().Set("Location", fmt.Sprintf("/api/%s/origins?id=%d", inf.Version, org.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, org)
 }
 
@@ -613,7 +609,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	errLookup := tx.QueryRow(q, requestedOriginId).Scan(&isPrimary, &ds, &existingLastUpdated)
 	if errLookup != nil {
 		if errors.Is(errLookup, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin not found"), nil)
+			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("no origin exists by id: %d", requestedOriginId), nil)
 			return
 		}
 		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database error: %w, when checking if origin with id %d exists", errLookup, requestedOriginId))
@@ -661,7 +657,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&lastUpdated)
 	if errUpdate != nil {
 		if errors.Is(errUpdate, sql.ErrNoRows) {
-			api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, fmt.Errorf("origin: %d not found", requestedOriginId), nil)
+			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin: %d not found", requestedOriginId), nil)
 			return
 		}
 		usrErr, sysErr, code := api.ParseDBError(errUpdate)
@@ -685,20 +681,17 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	id := inf.Params["id"]
-	errsValid := tovalidate.ToErrors(validation.Errors{
-		"id": validation.Validate(id, validation.NilOrNotEmpty),
-	})
-
-	if len(errsValid) > 0 {
+	idStr := inf.Params["id"]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("missing key: id"), nil)
 		return
 	}
 
 	isPrimary := false
 	if err := tx.QueryRow(`SELECT is_primary FROM origin WHERE id = $1`, id).Scan(&isPrimary); err != nil {
-		if err == sql.ErrNoRows {
-			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no origin exists by id: %s", id), nil)
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no origin exists by id: %d", id), nil)
 			return
 		}
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("origin delete: is_primary scanning: %w", err), nil)
