@@ -94,7 +94,7 @@ func (to *Session) originIDs(origin *tc.OriginV5) error {
 		if len(tenant.Response) == 0 {
 			return fmt.Errorf("no Tenant with name '%s'", origin.Tenant)
 		}
-		origin.TenantID = tenant.Response[0].ID
+		origin.TenantID = *tenant.Response[0].ID
 	}
 
 	return nil
