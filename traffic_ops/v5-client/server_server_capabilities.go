@@ -31,14 +31,14 @@ const apiServerServerCapabilities = "/server_server_capabilities"
 // apiMultipleServersCapabilities is the API version-relative path to the /multiple_servers_capabilities API endpoint.
 const apiMultipleServersCapabilities = "/multiple_servers_capabilities"
 
-// CreateServerServerCapabilityV5 assigns a Server Capability to a Server.
+// CreateServerServerCapability assigns a Server Capability to a Server.
 func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapabilityV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiServerServerCapabilities, opts, ssc, &alerts)
 	return alerts, reqInf, err
 }
 
-// DeleteServerServerCapabilityV5 unassigns a Server Capability from a Server.
+// DeleteServerServerCapability unassigns a Server Capability from a Server.
 func (to *Session) DeleteServerServerCapability(serverID int, serverCapability string, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
