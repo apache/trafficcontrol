@@ -638,6 +638,19 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+	var i interface{}
+	// Check authorization for the origin's tenant
+	if t, ok := i.(api.Tenantable); ok {
+		authorized, err := t.IsTenantAuthorized(inf.User)
+		if err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("checking tenant authorized: %w", err), nil)
+			return
+		}
+		if !authorized {
+			api.HandleErr(w, r, tx.Tx, http.StatusForbidden, fmt.Errorf("not authorized on this tenant"), nil)
+			return
+		}
+	}
 
 	query := `UPDATE origin SET
 					cachegroup=$1,
