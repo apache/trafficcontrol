@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -332,7 +333,7 @@ func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "service category was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/service_category?name=%s", inf.Version.Major, inf.Version.Minor, sc.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/service_category?name=%s", inf.Version, sc.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
 	return
 }
