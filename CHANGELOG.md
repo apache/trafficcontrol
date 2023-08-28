@@ -77,39 +77,40 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7718](https://github.com/apache/trafficcontrol/pull/7718) *Traffic Ops* `/servers` endpoint now responds with RFC3339 timestamps for all timestamp fields. Cleaned up naming conventions and superfluous data.
 
 ### Fixed
-- [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops* Fixed `/profiles` v5 APIs to respond with `RFC3339` date/time format.
-- [#7708](https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixed `/parameters` v5 APIs to respond with `RFC3339` date/time format
-- [#7740](https://github.com/apache/trafficcontrol/pull/7740) *Traffic Ops* Fixed `/staticDNSEntries` v5 APIs to respond with `RFC3339` date/time format.
-- [#7738](https://github.com/apache/trafficcontrol/pull/7738) *Traffic Ops* Fixed `/profileparameters` v5 APIs to respond with `RFC3339` date/time format.
+- [RFC3339](https://github.com/apache/trafficcontrol/issues/5911)
+    - [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops* Fixed `/profiles` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7708](https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixed `/parameters` v5 APIs to respond with `RFC3339` timestamps
+    - [#7740](https://github.com/apache/trafficcontrol/pull/7740) *Traffic Ops* Fixed `/staticDNSEntries` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7738](https://github.com/apache/trafficcontrol/pull/7738) *Traffic Ops* Fixed `/profileparameters` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixed `/logs` v5 api to respond with RFC3339 timestamps.
+    - [#7605](https://github.com/apache/trafficcontrol/pull/7605) *Traffic Ops* Fixed `/cachegroups_request_comments` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7720](https://github.com/apache/trafficcontrol/pull/7720) *Traffic Ops* Fixed Delivery Service Servers v5 API to respond with `RFC3339` timestamps.
+    - [#7631](https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixed `/phys_location` V5 APIs to respond with `RFC3339` timestamps.
+    - [#7612](https://github.com/apache/trafficcontrol/pull/7612) *Traffic Ops* Fixed `/divisions` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* Fixed `/asns` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixed `/types` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7698](https://github.com/apache/trafficcontrol/pull/7698) *Traffic Ops* Fixed `/region` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7660](https://github.com/apache/trafficcontrol/pull/7660) *Traffic Ops* Fixed `/deliveryServices` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixed `/deliveryservice_request_comments` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixed `/federation_resolvers` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixed `/deliveryservice_requests` v5 APIs docs with `RFC3339` timestamps
+    - [#7544](https://github.com/apache/trafficcontrol/issues/7544) *Traffic Ops* Fixed `/stats_summary` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `cdn_locks` documentation to reflect the correct `RFC3339` timestamps.
+    - [#7465](https://github.com/apache/trafficcontrol/issues/7465) *Traffic Ops* Fixed `/server_capabilities` v5 APIs to respond with RFC3339 timestamps.
+    - [#7691](https://github.com/apache/trafficcontrol/pull/7691) *Traffic Ops* Fixed `/topologies` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixed `/service_category` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7413](https://github.com/apache/trafficcontrol/issues/7706) *Traffic Ops* Fixed `/statuses` v5 APIs to respond with `RFC3339` timestamps.
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
-- [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixed `/logs` v5 api to respond with RFC3339 timestamps.
-- [#7605](https://github.com/apache/trafficcontrol/pull/7605) *Traffic Ops* Fixed `/cachegroups_request_comments` v5 APIs to respond with `RFC3339` date/time format.
-- [#7720](https://github.com/apache/trafficcontrol/pull/7720) *Traffic Ops* Fixed Delivery Service Servers V5 API to respond with `RFC3339` timestamps.
-- [#7631](https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixed `/phys_location` V5 APIs to respond with `RFC3339` date/time format.
 - [#7623](https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
 - [#7608](https://github.com/apache/trafficcontrol/pull/7608) *Traffic Monitor* Use stats_over_http(plugin.system_stats.timestamp_ms) timestamp field to calculate bandwidth for TM's caches.
-- [#7612](https://github.com/apache/trafficcontrol/pull/7612) *Traffic Ops* Fixed `/divisions` v5 APIs to respond with `RFC3339` date/time Format
-- [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}
-- [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* Fixed `/asns` v5 APIs to respond with `RFC3339` date/time format.
-- [#7598](https://github.com/apache/trafficcontrol/pull/7598) *Traffic Ops* Fixed Server Capability V5 Type Name Minor version
-- [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixed `/types` v5 APIs to respond with `RFC3339` date/time Format.
-- [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixed `/federation_resolvers` v5 APIs to respond with `RFC3339` date/time format.
-- [#7698](https://github.com/apache/trafficcontrol/pull/7698) *Traffic Ops* Fixed `/region` v5 APIs to respond with `RFC3339` date/time format.
-- [#7660](https://github.com/apache/trafficcontrol/pull/7660) *Traffic Ops* Fixed `/deliveryServices` v5 APIs to respond with `RFC3339` date/time format.
-- [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixed `/deliveryservice_request_comments` v5 APIs to respond with `RFC3339` date/time format.
+- [#6318](https://github.com/apache/trafficcontrol/issues/6318) *Docs* Included docs for POST, PUT, DELETE (v3,v4,v5) for statuses and statuses{id}.
+- [#7598](https://github.com/apache/trafficcontrol/pull/7598) *Traffic Ops* Fixed Server Capability V5 Type Name Minor version.
 - [#7312](https://github.com/apache/trafficcontrol/issues/7312) *Docs* Changing docs for `cdn_locks` for DELETE response structure v4 and v5.
-- [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixed `/deliveryservice_requests` v5 APIs docs with `RFC3339` date/time format
-- [#7544](https://github.com/apache/trafficcontrol/issues/7544) *Traffic Ops* Fixed `/stats_summary` v5 APIs to respond with `RFC3339` date/time format.
-- [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `cdn_locks` documentation to reflect the correct `RFC3339` timestamps.
 - [#6340](https://github.com/apache/trafficcontrol/issues/6340) *Traffic Ops* Fixed alert messages for POST and PUT invalidation job APIs.
 - [#7519](https://github.com/apache/trafficcontrol/issues/7519) *Traffic Ops* Fixed TO API /servers/{id}/deliveryservices endpoint to responding with all DS's on cache that are directly assigned and inherited through topology.
 - [#7511](https://github.com/apache/trafficcontrol/pull/7511) *Traffic Ops* Fixed the changelog registration message to include the username instead of duplicate email entry.
-- [#7465](https://github.com/apache/trafficcontrol/issues/7465) *Traffic Ops* Fixed `/server_capabilities` v5 APIs to respond with RFC3339 date/time format.
-- [#7691](https://github.com/apache/trafficcontrol/pull/7691) *Traffic Ops* Fixed `/topologies` v5 APIs to respond with `RFC3339` date/time format.
 - [#7441](https://github.com/apache/trafficcontrol/pull/7441) *Traffic Ops* Fixed the invalidation jobs endpoint to respect CDN locks.
-- [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixed `/service_category` v5 APIs to respond with `RFC3339` date/time format.
-- [#7413](https://github.com/apache/trafficcontrol/issues/7706) *Traffic Ops* Fixed `/statuses` v5 APIs to respond with `RFC3339` date/time format.
 - [#7414](https://github.com/apache/trafficcontrol/pull/7414) *Traffic Portal* Fixed DSR difference for DS required capability.
 - [#7130](https://github.com/apache/trafficcontrol/issues/7130) *Traffic Ops* Fixes service_categories response to POST API.
 - [#7340](https://github.com/apache/trafficcontrol/pull/7340) *Traffic Router* Fixed TR logging for the `cqhv` field when absent.
