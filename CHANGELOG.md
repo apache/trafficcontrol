@@ -101,7 +101,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixed `/service_category` v5 APIs to respond with `RFC3339` timestamps.
     - [#7413](https://github.com/apache/trafficcontrol/issues/7706) *Traffic Ops* Fixed `/statuses` v5 APIs to respond with `RFC3339` timestamps.
     - [#7733](https://github.com/apache/trafficcontrol/pull/7733) *Traffic Ops* Fixes `origins` v5 apis to respond with `RFC3339` date/time Format.
-
 - [#7743](https://github.com/apache/trafficcontrol/issues/7743) *Traffic Ops* Fixes /server_server_capabilities apis to respond with RFC3339 date/time format
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
