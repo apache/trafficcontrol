@@ -17,6 +17,8 @@ package tc
 
 import (
 	"time"
+
+	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 // DeliveryServiceServerV5 is the struct used to represent a delivery service server, in the latest minor version for
@@ -48,6 +50,9 @@ type DeliveryServiceServerResponseV50 struct {
 
 // DeliveryServiceServerResponse is the type of a response from Traffic Ops
 // to a GET request to the /deliveryserviceserver endpoint.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DeliveryServiceServerResponse struct {
 	Orderby  string                  `json:"orderby"`
 	Response []DeliveryServiceServer `json:"response"`
@@ -59,6 +64,9 @@ type DeliveryServiceServerResponse struct {
 // DSSMapResponse is the type of the `response` property of a response from
 // Traffic Ops to a PUT request made to the /deliveryserviceserver endpoint of
 // its API.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSSMapResponse struct {
 	DsId    int   `json:"dsId"`
 	Replace bool  `json:"replace"`
@@ -67,6 +75,9 @@ type DSSMapResponse struct {
 
 // DSSReplaceResponse is the type of a response from Traffic Ops to a PUT
 // request made to the /deliveryserviceserver endpoint of its API.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSSReplaceResponse struct {
 	Alerts
 	Response DSSMapResponse `json:"response"`
@@ -75,6 +86,9 @@ type DSSReplaceResponse struct {
 // DSServersResponse is the type of a response from Traffic Ops to a POST
 // request made to the /deliveryservices/{{XML ID}}/servers endpoint of its
 // API.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServersResponse struct {
 	Response DeliveryServiceServers `json:"response"`
 	Alerts
@@ -82,6 +96,9 @@ type DSServersResponse struct {
 
 // DeliveryServiceServers structures represent the servers assigned to a
 // Delivery Service.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DeliveryServiceServers struct {
 	ServerNames []string `json:"serverNames"`
 	XmlId       string   `json:"xmlId"`
@@ -90,6 +107,9 @@ type DeliveryServiceServers struct {
 // DeliveryServiceServer is the type of each entry in the `response` array
 // property of responses from Traffic Ops to GET requests made to the
 // /deliveryserviceservers endpoint of its API.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DeliveryServiceServer struct {
 	Server          *int       `json:"server" db:"server"`
 	DeliveryService *int       `json:"deliveryService" db:"deliveryservice"`
@@ -116,6 +136,9 @@ const (
 )
 
 // DSServerBase contains the base information for a Delivery Service Server.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerBase struct {
 	Cachegroup                  *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID                *int                 `json:"cachegroupId" db:"cachegroup_id"`
@@ -158,6 +181,9 @@ type DSServerBase struct {
 }
 
 // DSServerBaseV4 contains the base information for a Delivery Service Server.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerBaseV4 struct {
 	Cachegroup                  *string              `json:"cachegroup" db:"cachegroup"`
 	CachegroupID                *int                 `json:"cachegroupId" db:"cachegroup_id"`
@@ -196,12 +222,18 @@ type DSServerBaseV4 struct {
 }
 
 // DSServerV11 contains the legacy format for a Delivery Service Server.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerV11 struct {
 	DSServerBase
 	LegacyInterfaceDetails
 }
 
 // DSServer contains information for a Delivery Service Server.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServer struct {
 	DSServerBase
 	ServerInterfaces *[]ServerInterfaceInfo `json:"interfaces" db:"interfaces"`
@@ -209,12 +241,18 @@ type DSServer struct {
 
 // DSServerResponseV30 is the type of a response from Traffic Ops to a request
 // for servers assigned to a Delivery Service - in API version 3.0.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerResponseV30 struct {
 	Response []DSServer `json:"response"`
 	Alerts
 }
 
 // DSServerV4 contains information for a V4.x Delivery Service Server.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerV4 struct {
 	DSServerBaseV4
 	ServerInterfaces *[]ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
@@ -222,6 +260,9 @@ type DSServerV4 struct {
 
 // DSServerResponseV40 is the type of a response from Traffic Ops to a request
 // for servers assigned to a Delivery Service - in API version 4.0.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerResponseV40 struct {
 	Response []DSServerV4 `json:"response"`
 	Alerts
@@ -230,23 +271,39 @@ type DSServerResponseV40 struct {
 // DSServerResponseV4 is the type of a response from Traffic Ops to a request
 // for servers assigned to a Delivery Service - in the latest minor version of
 // API version 4.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerResponseV4 = DSServerResponseV40
 
 // DSServerV5 is an alias for the latest minor version of the major version 5.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerV5 = DSServerV50
 
-// DSServerV50 contains information for a Delivery Service Server.
+// DSServerV50 contains information about a server associated with some Delivery
+// Service Server.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerV50 struct {
-	ServerV4                               // Please replace me when ServerV50 is born
-	LastUpdated                 *time.Time `json:"lastUpdated" db:"last_updated"`
-	ServerCapabilities          []string   `json:"-" db:"server_capabilities"`
-	DeliveryServiceCapabilities []string   `json:"-" db:"deliveryservice_capabilities"`
+	ServerV5
+	DeliveryServices            map[string][]string `json:"deliveryServices,omitempty"`
+	ServerCapabilities          []string            `json:"-" db:"server_capabilities"`
+	DeliveryServiceCapabilities []string            `json:"-" db:"deliveryservice_capabilities"`
 }
 
 // DSServerResponseV5 is an alias for the latest minor version of the major version 5.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerResponseV5 = DSServerResponseV50
 
 // DSServerResponseV50 is response from Traffic Ops to a request for servers assigned to a Delivery Service - in  the latest minor version APIv50.
+//
+// Deprecated: Direct server-to-DS assignments are deprecated in favor of
+// Topology usage.
 type DSServerResponseV50 struct {
 	Response []DSServerV50 `json:"response"`
 	Alerts
@@ -340,44 +397,49 @@ func (baseV4 DSServerBaseV4) ToDSServerBase(routerHostName, routerPort, pDesc *s
 
 // ToDSServerV5 convert DSServerV4 lastUpdated time format to RFC3339 for DSServerV5
 // and also assign V4 values to V5
-func (server DSServerV4) ToDSServerV5() DSServerV5 {
-	r := time.Unix(server.LastUpdated.Unix(), 0)
+func (server DSServerV4) Upgrade() DSServerV5 {
+	var t time.Time
+	if server.LastUpdated != nil {
+		t = server.LastUpdated.Time
+	}
+
+	var dses map[string][]string
+	if server.DeliveryServices != nil {
+		dses = *server.DeliveryServices
+	}
 
 	return DSServerV5{
-		ServerV4: ServerV4{
-			Cachegroup:       server.Cachegroup,
-			CachegroupID:     server.CachegroupID,
-			CDNID:            server.CDNID,
-			CDNName:          server.CDNName,
-			DeliveryServices: server.DeliveryServices,
-			DomainName:       server.DomainName,
-			FQDN:             server.FQDN,
-			FqdnTime:         server.FqdnTime,
-			GUID:             server.GUID,
-			HostName:         server.HostName,
-			HTTPSPort:        server.HTTPSPort,
-			ID:               server.ID,
-			ILOIPAddress:     server.ILOIPAddress,
-			ILOIPGateway:     server.ILOIPGateway,
-			ILOIPNetmask:     server.ILOIPNetmask,
-			ILOPassword:      server.ILOPassword,
-			ILOUsername:      server.ILOUsername,
-			MgmtIPAddress:    server.MgmtIPAddress,
-			MgmtIPGateway:    server.MgmtIPGateway,
-			MgmtIPNetmask:    server.MgmtIPNetmask,
-			OfflineReason:    server.OfflineReason,
-			PhysLocation:     server.PhysLocation,
-			PhysLocationID:   server.PhysLocationID,
-			Rack:             server.Rack,
-			Status:           server.Status,
-			StatusID:         server.StatusID,
-			TCPPort:          server.TCPPort,
-			Type:             server.Type,
-			TypeID:           server.TypeID,
-			UpdPending:       server.UpdPending,
-			Interfaces:       *server.ServerInterfaces,
+		DeliveryServices: dses,
+		ServerV5: ServerV5{
+			CacheGroup:         util.CoalesceToDefault(server.Cachegroup),
+			CacheGroupID:       util.CoalesceToDefault(server.CachegroupID),
+			CDNID:              util.CoalesceToDefault(server.CDNID),
+			CDN:                util.CoalesceToDefault(server.CDNName),
+			DomainName:         util.CoalesceToDefault(server.DomainName),
+			GUID:               server.GUID,
+			HostName:           util.CoalesceToDefault(server.HostName),
+			HTTPSPort:          server.HTTPSPort,
+			ID:                 util.CoalesceToDefault(server.ID),
+			ILOIPAddress:       server.ILOIPAddress,
+			ILOIPGateway:       server.ILOIPGateway,
+			ILOIPNetmask:       server.ILOIPNetmask,
+			ILOPassword:        server.ILOPassword,
+			ILOUsername:        server.ILOUsername,
+			LastUpdated:        t,
+			MgmtIPAddress:      server.MgmtIPAddress,
+			MgmtIPGateway:      server.MgmtIPGateway,
+			MgmtIPNetmask:      server.MgmtIPNetmask,
+			OfflineReason:      server.OfflineReason,
+			PhysicalLocation:   util.CoalesceToDefault(server.PhysLocation),
+			PhysicalLocationID: util.CoalesceToDefault(server.PhysLocationID),
+			Rack:               server.Rack,
+			Status:             util.CoalesceToDefault(server.Status),
+			StatusID:           util.CoalesceToDefault(server.StatusID),
+			TCPPort:            server.TCPPort,
+			Type:               server.Type,
+			TypeID:             util.CoalesceToDefault(server.TypeID),
+			Interfaces:         *server.ServerInterfaces,
 		},
-		LastUpdated:                 &r,
 		ServerCapabilities:          server.ServerCapabilities,
 		DeliveryServiceCapabilities: server.DeliveryServiceCapabilities,
 	}

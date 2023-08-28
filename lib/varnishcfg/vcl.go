@@ -61,7 +61,7 @@ func (v vclFile) String() string {
 	for name, acl := range v.acls {
 		txt += fmt.Sprintf("acl %s {\n", name)
 		for _, entry := range acl {
-			txt += fmt.Sprintf("\t%s\n", entry)
+			txt += fmt.Sprintf("\t%s;\n", entry)
 		}
 		txt += fmt.Sprint("}\n")
 	}

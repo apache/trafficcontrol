@@ -37,7 +37,7 @@ func TestProfiles(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Profile]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ProfileV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -110,7 +110,7 @@ func TestProfiles(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when NAME has SPACES": {
 					ClientSession: TOSession,
-					RequestBody: tc.Profile{
+					RequestBody: tc.ProfileV5{
 						CDNID:       GetCDNID(t, "cdn1")(),
 						Description: "name has spaces test",
 						Name:        "name has space",
@@ -120,12 +120,12 @@ func TestProfiles(t *testing.T) {
 				},
 				"BAD REQUEST when MISSING ALL FIELDS": {
 					ClientSession: TOSession,
-					RequestBody:   tc.Profile{},
+					RequestBody:   tc.ProfileV5{},
 					Expectations:  utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when INVALID CDN ID": {
 					ClientSession: TOSession,
-					RequestBody: tc.Profile{
+					RequestBody: tc.ProfileV5{
 						CDNID:       0,
 						Description: "description",
 						Name:        "badprofile",
@@ -135,7 +135,7 @@ func TestProfiles(t *testing.T) {
 				},
 				"BAD REQUEST when MISSING DESCRIPTION FIELD": {
 					ClientSession: TOSession,
-					RequestBody: tc.Profile{
+					RequestBody: tc.ProfileV5{
 						CDNID: GetCDNID(t, "cdn1")(),
 						Name:  "missing_description",
 						Type:  tc.CacheServerProfileType,
@@ -144,7 +144,7 @@ func TestProfiles(t *testing.T) {
 				},
 				"BAD REQUEST when MISSING NAME FIELD": {
 					ClientSession: TOSession,
-					RequestBody: tc.Profile{
+					RequestBody: tc.ProfileV5{
 						CDNID:       GetCDNID(t, "cdn1")(),
 						Description: "missing name",
 						Type:        tc.CacheServerProfileType,
@@ -153,7 +153,7 @@ func TestProfiles(t *testing.T) {
 				},
 				"BAD REQUEST when MISSING TYPE FIELD": {
 					ClientSession: TOSession,
-					RequestBody: tc.Profile{
+					RequestBody: tc.ProfileV5{
 						CDNID:       GetCDNID(t, "cdn1")(),
 						Description: "missing type",
 						Name:        "missing_type",
@@ -165,7 +165,7 @@ func TestProfiles(t *testing.T) {
 				"OK when VALID REQUEST": {
 					EndpointID:    GetProfileID(t, "EDGE2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Profile{
+					RequestBody: tc.ProfileV5{
 						CDNID:           GetCDNID(t, "cdn2")(),
 						Description:     "edge2 description updated",
 						Name:            "EDGE2UPDATED",
@@ -181,7 +181,7 @@ func TestProfiles(t *testing.T) {
 					EndpointID:    GetProfileID(t, "CCR1"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.Profile{
+					RequestBody: tc.ProfileV5{
 						CDNID:           GetCDNID(t, "cdn1")(),
 						Description:     "cdn1 description",
 						Name:            "CCR1",
@@ -193,7 +193,7 @@ func TestProfiles(t *testing.T) {
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetProfileID(t, "CCR1"),
 					ClientSession: TOSession,
-					RequestBody: tc.Profile{
+					RequestBody: tc.ProfileV5{
 						CDNID:           GetCDNID(t, "cdn1")(),
 						Description:     "cdn1 description",
 						Name:            "CCR1",
@@ -248,7 +248,7 @@ func TestProfiles(t *testing.T) {
 func validateProfilesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Profiles response to not be nil.")
-		profileResp := resp.([]tc.Profile)
+		profileResp := resp.([]tc.ProfileV5)
 		for field, expected := range expectedResp {
 			for _, profile := range profileResp {
 				switch field {
@@ -291,7 +291,7 @@ func validateProfilesUpdateCreateFields(name string, expectedResp map[string]int
 
 func validateProfilesPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.Profile)
+		paginationResp := resp.([]tc.ProfileV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")

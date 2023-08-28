@@ -184,7 +184,7 @@ func (to *Session) CreateDeliveryService(ds tc.DeliveryServiceV5, opts RequestOp
 		if len(ten.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
 		}
-		ds.TenantID = ten.Response[0].ID
+		ds.TenantID = *ten.Response[0].ID
 	}
 
 	reqInf, err := to.post(apiDeliveryServices, RequestOptions{Header: opts.Header}, ds, &resp)

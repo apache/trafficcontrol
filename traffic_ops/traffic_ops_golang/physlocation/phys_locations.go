@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -370,7 +371,7 @@ func CreatePhysLocation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "physLocation was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/phys_locations?name=%s", inf.Version.Major, inf.Version.Minor, physLocation.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/phys_locations?name=%s", inf.Version, physLocation.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, physLocation)
 	return
 }

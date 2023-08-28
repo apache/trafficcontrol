@@ -66,7 +66,7 @@ Response Structure
 ------------------
 :serverHostName:   The server's host name
 :serverId:         The server's integral, unique identifier
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :rfc:`3339` format
 :serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http
@@ -87,13 +87,13 @@ Response Structure
 	{
 		"response": [
 			{
-				"lastUpdated": "2019-10-07 22:05:31+00",
+				"lastUpdated": "2023-08-09T14:25:11.017999Z",
 				"serverHostName": "atlanta-org-1",
 				"serverId": 260,
 				"serverCapability": "ram"
 			},
 			{
-				"lastUpdated": "2019-10-07 22:05:31+00",
+				"lastUpdated": "2023-08-09T14:25:11.017999Z",
 				"serverHostName": "atlanta-org-2",
 				"serverId": 261,
 				"serverCapability": "disk"
@@ -136,7 +136,7 @@ Request Structure
 Response Structure
 ------------------
 :serverId:         The integral, unique identifier of the newly associated server
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :rfc:`3339` format
 :serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http
@@ -162,7 +162,7 @@ Response Structure
 			}
 		],
 		"response": {
-			"lastUpdated": "2019-10-07 22:15:11+00",
+			"lastUpdated": "2023-08-09T14:25:11.017999Z",
 			"serverId": 1,
 			"serverCapability": "disk"
 		}

@@ -757,7 +757,7 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 		newServerList := make([]tc.DSServerV5, len(servers))
 
 		for i, server := range servers {
-			newServerList[i] = server.ToDSServerV5()
+			newServerList[i] = server.Upgrade()
 		}
 
 		api.WriteAlertsObj(w, r, http.StatusOK, alerts, newServerList)
@@ -940,13 +940,13 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 ds.id in (
 	SELECT deliveryService FROM deliveryservice_server WHERE server = :server
 ) OR ds.id in (
-	SELECT id FROM deliveryservice 
-	WHERE topology in ( 
-		SELECT topology FROM topology_cachegroup 
-		WHERE cachegroup = ( 
-			SELECT name FROM cachegroup 
-			WHERE id = ( 
-				SELECT cachegroup FROM server WHERE id = :server 
+	SELECT id FROM deliveryservice
+	WHERE topology in (
+		SELECT topology FROM topology_cachegroup
+		WHERE cachegroup = (
+			SELECT name FROM cachegroup
+			WHERE id = (
+				SELECT cachegroup FROM server WHERE id = :server
 			))))
 `
 

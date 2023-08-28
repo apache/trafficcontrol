@@ -2248,7 +2248,7 @@ func DivisionExists(tx *sql.Tx, id string) (bool, error) {
 	return true, nil
 }
 
-// PhysLocationExists confirms whether the PhysLocationExists exists, and an error (if one occurs).
+// PhysLocationExists confirms whether the PhysLocation exists, and an error (if one occurs).
 func PhysLocationExists(tx *sql.Tx, id string) (bool, error) {
 	var count int
 	if err := tx.QueryRow("SELECT count(name) FROM phys_location WHERE id=$1", id).Scan(&count); err != nil {
@@ -2259,6 +2259,36 @@ func PhysLocationExists(tx *sql.Tx, id string) (bool, error) {
 	}
 	if count != 1 {
 		return false, fmt.Errorf("getting PhysLocation info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
+}
+
+// ParameterExists confirms whether the Parameter exists, and an error (if one occurs).
+func ParameterExists(tx *sql.Tx, id string) (bool, error) {
+	var count int
+	if err := tx.QueryRow("SELECT count(name) FROM parameter WHERE id=$1", id).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting Parameter info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting Parameter info - expected row count: 1, actual: %d", count)
+	}
+	return true, nil
+}
+
+// ProfileExists confirms whether the profile exists, and an error (if one occurs).
+func ProfileExists(tx *sql.Tx, id string) (bool, error) {
+	var count int
+	if err := tx.QueryRow(`SELECT count(name) FROM profile WHERE id=$1`, id).Scan(&count); err != nil {
+		return false, fmt.Errorf("error getting profile info: %w", err)
+	}
+	if count == 0 {
+		return false, nil
+	}
+	if count != 1 {
+		return false, fmt.Errorf("getting profile info - expected row count: 1, actual: %d", count)
 	}
 	return true, nil
 }

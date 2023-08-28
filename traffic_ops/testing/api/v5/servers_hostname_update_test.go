@@ -118,8 +118,6 @@ func validateServerApplyTimes(hostName string, expectedResp map[string]interface
 		resp, _, err := TOSession.GetServers(opts)
 		assert.RequireNoError(t, err, "Cannot GET Server by name '%s': %v - alerts: %+v", hostName, err, resp.Alerts)
 		assert.RequireEqual(t, 1, len(resp.Response), "GET Server expected 1, actual %v", len(resp.Response))
-		assert.RequireNotNil(t, resp.Response[0].UpdPending, "Server '%s' had nil UpdPending after update status change", hostName)
-		assert.RequireNotNil(t, resp.Response[0].RevalPending, "Server '%s' had nil RevalPending after update status change", hostName)
 
 		for field, expected := range expectedResp {
 			for _, server := range resp.Response {
