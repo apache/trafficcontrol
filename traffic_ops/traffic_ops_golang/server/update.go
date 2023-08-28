@@ -141,13 +141,15 @@ func UpdateHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type updateValues struct {
-	configUpdateBool *bool // Deprecated, prefer timestamps
-	revalUpdateBool  *bool // Deprecated, prefer timestamps
-	configApplyTime  *time.Time
-	revalApplyTime   *time.Time
+	configUpdateBool   *bool // Deprecated, prefer timestamps
+	revalUpdateBool    *bool // Deprecated, prefer timestamps
+	configApplyTime    *time.Time
+	revalApplyTime     *time.Time
+	configUpdateFailed *bool
+	revalUpdateFailed  *bool
 }
 
-func parseQueryParams(params map[string]string) (*updateValues, error) {
+func parseQueryParams(params map[string]string, version api.Version) (*updateValues, error) {
 	var paramValues updateValues
 
 	// Verify query string parameters
@@ -155,20 +157,22 @@ func parseQueryParams(params map[string]string) (*updateValues, error) {
 	revalUpdatedBoolParam, hasRevalUpdatedBoolParam := params["reval_updated"] // Deprecated, but still required for backwards compatibility
 	configApplyTimeParam, hasConfigApplyTimeParam := params["config_apply_time"]
 	revalidateApplyTimeParam, hasRevalidateApplyTimeParam := params["revalidate_apply_time"]
+	configUpdateFailedParam, hasConfigUpdateFailedParam := params["config_update_failed"]
+	revalidateUpdateFailedParam, hasRevalidateUpdateFailedParam := params["revalidate_update_failed"]
+	isAfterApi5 := version.GreaterThanOrEqualTo(&api.Version{5, 0})
 
-	if !hasConfigApplyTimeParam && !hasRevalidateApplyTimeParam &&
+	if !(hasConfigApplyTimeParam || (hasConfigUpdateFailedParam && isAfterApi5)) && !(hasRevalidateApplyTimeParam || (hasRevalidateUpdateFailedParam && isAfterApi5)) &&
 		!hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam {
 		return nil, errors.New("must pass at least one of the following query parameters: 'config_apply_time', 'revalidate_apply_time' ,'updated', 'reval_updated'")
 
 	}
 	// Prevent collision between booleans and timestamps
-	if hasConfigApplyTimeParam && hasConfigUpdatedBoolParam {
+	if (hasConfigApplyTimeParam || (hasConfigUpdateFailedParam && isAfterApi5)) && hasConfigUpdatedBoolParam {
 		return nil, errors.New("conflicting parameters. may not pass 'updated' along with 'config_apply_time'")
 
 	}
-	if hasRevalidateApplyTimeParam && hasRevalUpdatedBoolParam {
+	if (hasRevalidateApplyTimeParam || (hasConfigUpdateFailedParam && isAfterApi5)) && hasRevalUpdatedBoolParam {
 		return nil, errors.New("conflicting parameters. may not pass 'reval_updated' along with 'revalidate_apply_time'")
-
 	}
 
 	// Validate and parse parameters before attempting to apply them (don't want to partially apply various status before an error)
@@ -204,6 +208,20 @@ func parseQueryParams(params map[string]string) (*updateValues, error) {
 		}
 		paramValues.revalUpdateBool = &revalUpdatedBool
 	}
+	if hasConfigUpdateFailedParam && isAfterApi5 {
+		configUpdateFailedBool, err := strconv.ParseBool(configUpdateFailedParam)
+		if err != nil {
+			return nil, errors.New("query parameter 'config_update_failed' must be a boolean")
+		}
+		paramValues.configUpdateFailed = &configUpdateFailedBool
+	}
+	if hasRevalidateUpdateFailedParam && isAfterApi5 {
+		revalUpdateFailedBool, err := strconv.ParseBool(revalidateUpdateFailedParam)
+		if err != nil {
+			return nil, errors.New("query parameter 'revalidate_update_failed' must be a boolean")
+		}
+		paramValues.revalUpdateFailed = &revalUpdateFailedBool
+	}
 	return &paramValues, nil
 }
 
@@ -216,9 +234,21 @@ func setUpdateStatuses(tx *sql.Tx, serverID int64, values updateValues) error {
 		}
 	}
 
+	if values.configUpdateFailed != nil {
+		if err := dbhelpers.SetUpdateFailedForServer(tx, serverID, *values.configUpdateFailed); err != nil {
+			return fmt.Errorf("setting config update status: %v", err)
+		}
+	}
+
 	if values.revalApplyTime != nil {
 		if err := dbhelpers.SetApplyRevalForServerWithTime(tx, serverID, *values.revalApplyTime); err != nil {
 			return fmt.Errorf("setting reval apply time: %w", err)
+		}
+	}
+
+	if values.revalUpdateFailed != nil {
+		if err := dbhelpers.SetRevalFailedForServer(tx, serverID, *values.revalUpdateFailed); err != nil {
+			return fmt.Errorf("setting reval update status: %v", err)
 		}
 	}
 
@@ -265,6 +295,14 @@ func responseMessage(idOrName string, values updateValues) string {
 		respMsg += " revalidate_apply_time=" + (*values.revalApplyTime).Format(time.RFC3339Nano)
 	}
 
+	if values.configUpdateFailed != nil {
+		respMsg += " config_update_failed=" + strconv.FormatBool(*values.configUpdateFailed)
+	}
+
+	if values.revalUpdateFailed != nil {
+		respMsg += " revalidate_update_failed=" + strconv.FormatBool(*values.revalUpdateFailed)
+	}
+
 	return respMsg
 }
 
@@ -301,8 +339,13 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 	_, hasRevalUpdatedBoolParam := inf.Params["reval_updated"]
 	_, hasConfigApplyTimeParam := inf.Params["config_apply_time"]
 	_, hasRevalidateApplyTimeParam := inf.Params["revalidate_apply_time"]
+	hasRevalUpdateFailParam, hasConfigUpdateFailParam := false, false
+	if inf.Version.GreaterThanOrEqualTo(&api.Version{5, 0}) {
+		_, hasRevalUpdateFailParam = inf.Params["revalidate_update_failed"]
+		_, hasConfigUpdateFailParam = inf.Params["config_update_failed"]
+	}
 	// Allow `apply_time` changes when the CDN is locked, but not `updated`
-	canIgnoreLock := (hasConfigApplyTimeParam || hasRevalidateApplyTimeParam) && !hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam
+	canIgnoreLock := (hasConfigApplyTimeParam || hasRevalidateApplyTimeParam) && !hasConfigUpdatedBoolParam && !hasRevalUpdatedBoolParam && !hasConfigUpdateFailParam && !hasRevalUpdateFailParam
 	if !canIgnoreLock {
 		userDoesntHaveLockErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserHasCdnLock(inf.Tx.Tx, string(cdnName), inf.User.UserName)
 		if sysErr != nil || userDoesntHaveLockErr != nil {
@@ -312,7 +355,7 @@ func UpdateHandlerV4(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO parse JSON body to trump Query Params?
-	updateValues, err := parseQueryParams(inf.Params)
+	updateValues, err := parseQueryParams(inf.Params, *inf.Version)
 	if err != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, err, nil)
 		return

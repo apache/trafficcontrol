@@ -183,11 +183,13 @@ func TestServerV5DowngradeUpgrade(t *testing.T) {
 				RouterPortName: "router port",
 			},
 		},
-		StatusLastUpdated: nil,
-		ConfigUpdateTime:  nil,
-		ConfigApplyTime:   nil,
-		RevalUpdateTime:   nil,
-		RevalApplyTime:    nil,
+		StatusLastUpdated:  nil,
+		ConfigUpdateTime:   nil,
+		ConfigApplyTime:    nil,
+		ConfigUpdateFailed: nil,
+		RevalUpdateTime:    nil,
+		RevalApplyTime:     nil,
+		RevalUpdateFailed:  nil,
 	}
 
 	serverV4 := serverV5.Downgrade()

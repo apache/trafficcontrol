@@ -1320,7 +1320,9 @@ type ServerV50 struct {
 	ConfigApplyTime *time.Time `json:"configApplyTime" db:"config_apply_time"`
 	// The time at which configuration updates were last queued for this server.
 	ConfigUpdateTime *time.Time `json:"configUpdateTime" db:"config_update_time"`
-	DomainName       string     `json:"domainName" db:"domain_name"`
+	// If the last config apply failed for this server
+	ConfigUpdateFailed *bool  `json:"configUpdateFailed" db:"config_update_failed"`
+	DomainName         string `json:"domainName" db:"domain_name"`
 	// Deprecated: This property has unknown purpose and should not be used so
 	// that we can get rid of it.
 	GUID         *string                  `json:"guid" db:"guid"`
@@ -1356,7 +1358,9 @@ type ServerV50 struct {
 	// The time at which revalidations for this server were last updated by t3c.
 	RevalApplyTime *time.Time `json:"revalApplyTime" db:"revalidate_apply_time"`
 	// The time at which revalidations were last queued for this server.
-	RevalUpdateTime   *time.Time `json:"revalUpdateTime" db:"revalidate_update_time"`
+	RevalUpdateTime *time.Time `json:"revalUpdateTime" db:"revalidate_update_time"`
+	// If the last reval apply failed for this server
+	RevalUpdateFailed *bool      `json:"revalUpdateFailed" db:"revalidate_update_failed"`
 	Status            string     `json:"status" db:"status"`
 	StatusID          int        `json:"statusID" db:"status_id"`
 	StatusLastUpdated *time.Time `json:"statusLastUpdated" db:"status_last_updated"`
@@ -1437,6 +1441,45 @@ func (s ServerV50) RevalidationPending() bool {
 // version 5 of the Traffic Ops API.
 type ServerV5 = ServerV50
 
+type ServerUpdateStatusV5 ServerUpdateStatusV50
+
+type ServerUpdateStatusV50 struct {
+	HostName      string `json:"host_name"`
+	UpdatePending bool   `json:"upd_pending"`
+	// Deprecated: In APIv5 and later, this extraneous field is not calculated
+	// by Traffic Ops; the information is available by comparing RevalUpdateTime
+	// to RevalApplyTime.
+	RevalPending           bool       `json:"reval_pending"`
+	UseRevalPending        bool       `json:"use_reval_pending"`
+	HostId                 int        `json:"host_id"`
+	Status                 string     `json:"status"`
+	ParentPending          bool       `json:"parent_pending"`
+	ParentRevalPending     bool       `json:"parent_reval_pending"`
+	ConfigUpdateTime       *time.Time `json:"config_update_time"`
+	ConfigApplyTime        *time.Time `json:"config_apply_time"`
+	ConfigUpdateFailed     *bool      `json:"config_update_failed"`
+	RevalidateUpdateTime   *time.Time `json:"revalidate_update_time"`
+	RevalidateApplyTime    *time.Time `json:"revalidate_apply_time"`
+	RevalidateUpdateFailed *bool      `json:"revalidate_update_failed"`
+}
+
+func (sus ServerUpdateStatusV5) Downgrade() ServerUpdateStatusV40 {
+	return ServerUpdateStatusV40{
+		sus.HostName,
+		sus.UpdatePending,
+		sus.RevalPending,
+		sus.UseRevalPending,
+		sus.HostId,
+		sus.Status,
+		sus.ParentPending,
+		sus.ParentRevalPending,
+		sus.ConfigUpdateTime,
+		sus.ConfigApplyTime,
+		sus.RevalidateUpdateTime,
+		sus.RevalidateApplyTime,
+	}
+}
+
 // ServerUpdateStatusV4 is the type of each entry in the `response` property of
 // the response from Traffic Ops to GET requests made to its
 // /servers/{{host name}}/update_status in the latest minor API
@@ -1516,6 +1559,19 @@ func (sus ServerUpdateStatus) Upgrade() ServerUpdateStatusV4 {
 		ParentRevalPending: sus.ParentRevalPending,
 	}
 }
+
+// ServerUpdateStatusResponseV50 is the type of a response from the Traffic
+// Ops API to a request to its /servers/{{host name}}/update_status endpoint
+// in API version 5.0.
+type ServerUpdateStatusResponseV50 struct {
+	Response []ServerUpdateStatusV50 `json:"response"`
+	Alerts
+}
+
+// ServerUpdateStatusResponseV5 is the type of a response from the Traffic
+// Ops API to a request to its /servers/{{host name}}/update_status endpoint
+// in the latest minor version of API version 5.
+type ServerUpdateStatusResponseV5 = ServerUpdateStatusResponseV50
 
 // ServerUpdateStatusResponseV40 is the type of a response from the Traffic
 // Ops API to a request to its /servers/{{host name}}/update_status endpoint

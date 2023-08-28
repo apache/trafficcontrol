@@ -1975,6 +1975,28 @@ WHERE server.id = $2;`
 	return nil
 }
 
+func SetUpdateFailedForServer(tx *sql.Tx, serverID int64, failed bool) error {
+	query := `
+UPDATE public.server
+SET config_update_failed = $1
+WHERE server.id = $2`
+	if _, err := tx.Exec(query, failed, serverID); err != nil {
+		return fmt.Errorf("setting config update failed for ServerID %d with value %v: %v", serverID, failed, err)
+	}
+	return nil
+}
+
+func SetRevalFailedForServer(tx *sql.Tx, serverID int64, failed bool) error {
+	query := `
+UPDATE public.server
+SET revalidate_update_failed = $1
+WHERE server.id = $2`
+	if _, err := tx.Exec(query, failed, serverID); err != nil {
+		return fmt.Errorf("setting reval update failed for ServerID %d with value %v: %v", serverID, failed, err)
+	}
+	return nil
+}
+
 // QueueRevalForServer sets the revalidate update time for the server to now.
 func QueueRevalForServer(tx *sql.Tx, serverID int64) error {
 	query := `

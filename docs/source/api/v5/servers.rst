@@ -108,8 +108,9 @@ Response Structure
 	.. versionchanged:: 5.0
 		In earlier versions of the API, this field was known by the name ``cdnName``. It has been changed for consistency with others e.g. ``type``, ``status``, etc.
 
-:configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
-:configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
+:configUpdateTime:   The last time an update was requested for this server. This field defaults to standard epoch
+:configApplyTime:    The last time an update was applied for this server. This field defaults to standard epoch
+:configUpdateFailed: If the last update applied for this server was applied successfully. Defaults to false.
 :domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :guid:             An identifier used to uniquely identify the server
 
@@ -177,10 +178,11 @@ Response Structure
 	.. versionchanged:: 5.0
 		In earlier versions of the API, this field was known by the name ``profileNames`` - it has been changed because now that this is the only identifying information for a :term:Profile that exists on a server, there is no need to distinguish it from, say, an ID.
 
-:revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
-:revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
-:rack:            A string indicating "server rack" location
-:status:          The :term:`Status` of the server
+:revalUpdateTime:   The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
+:revalApplyTime:    The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
+:revalUpdateFailed: If the last content invalidation/revalidation applied for this server was applied successfully. Defaults to false.
+:rack:              A string indicating "server rack" location
+:status:            The :term:`Status` of the server
 
 	.. seealso:: :ref:`health-proto`
 
@@ -223,6 +225,7 @@ Response Structure
 		"cdn": "CDN-in-a-Box",
 		"configUpdateTime": "1969-12-31T17:00:00-07:00",
 		"configApplyTime": "1969-12-31T17:00:00-07:00",
+		"configUpdateFailed": false,
 		"domainName": "infra.ciab.test",
 		"guid": null,
 		"hostName": "mid",
@@ -244,6 +247,7 @@ Response Structure
 		"rack": "",
 		"revalUpdateTime": "1969-12-31T17:00:00-07:00",
 		"revalApplyTime": "1969-12-31T17:00:00-07:00",
+		"revalUpdateFailed": false,
 		"status": "REPORTED",
 		"statusID": 3,
 		"tcpPort": 80,
@@ -444,6 +448,7 @@ Response Structure
 
 :configUpdateTime: The last time an update was requested for this server. This field defaults to standard epoch
 :configApplyTime:  The last time an update was applied for this server. This field defaults to standard epoch
+:configUpdateFailed: If the last update applied for this server was applied successfully. Defaults to false.
 :domainName:       The domain part of the server's :abbr:`FQDN (Fully Qualified Domain Name)`
 :guid:             An identifier used to uniquely identify the server
 
@@ -513,6 +518,7 @@ Response Structure
 
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
+:revalUpdateFailed: If the last content invalidation/revalidation applied for this server was applied successfully. Defaults to false.
 :rack:            A string indicating "server rack" location
 :status:          The status of the server
 
@@ -563,6 +569,7 @@ Response Structure
 		"cdn": "CDN-in-a-Box",
 		"configUpdateTime": "1969-12-31T17:00:00-07:00",
 		"configApplyTime": "1969-12-31T17:00:00-07:00",
+		"configUpdateFailed": false,
 		"domainName": "infra.ciab.test",
 		"guid": null,
 		"hostName": "test",
@@ -584,6 +591,7 @@ Response Structure
 		"rack": null,
 		"revalUpdateTime": "1969-12-31T17:00:00-07:00",
 		"revalApplyTime": "1969-12-31T17:00:00-07:00",
+		"revalUpdateFailed": false,
 		"status": "REPORTED",
 		"statusID": 3,
 		"tcpPort": 80,

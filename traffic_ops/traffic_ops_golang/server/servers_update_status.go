@@ -47,23 +47,31 @@ func GetServerUpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		return
 	}
-	if inf.Version == nil || inf.Version.Major < 4 {
-		var downgradedStatuses []tc.ServerUpdateStatus
-		for _, status := range serverUpdateStatuses {
-			downgradedStatuses = append(downgradedStatuses, status.Downgrade())
+	if inf.Version.LessThan(&api.Version{5, 0}) {
+		downgradedStatusesV4 := make([]tc.ServerUpdateStatusV40, len(serverUpdateStatuses))
+		for i, status := range serverUpdateStatuses {
+			downgradedStatusesV4[i] = status.Downgrade()
 		}
-		api.WriteRespRaw(w, r, downgradedStatuses)
+		if inf.Version.LessThan(&api.Version{4, 0}) {
+			downgradedStatuses := make([]tc.ServerUpdateStatus, len(downgradedStatusesV4))
+			for i, status := range downgradedStatusesV4 {
+				downgradedStatuses[i] = status.Downgrade()
+			}
+			api.WriteRespRaw(w, r, downgradedStatuses)
+		} else {
+			api.WriteResp(w, r, downgradedStatusesV4)
+		}
 	} else {
 		api.WriteResp(w, r, serverUpdateStatuses)
 	}
 }
 
-func getServerUpdateStatus(tx *sql.Tx, hostName string) ([]tc.ServerUpdateStatusV40, error, error) {
+func getServerUpdateStatus(tx *sql.Tx, hostName string) ([]tc.ServerUpdateStatusV5, error, error) {
 	if serverUpdateStatusCacheIsInitialized() {
 		return getServerUpdateStatusFromCache(hostName), nil, nil
 	}
 
-	updateStatuses := []tc.ServerUpdateStatusV40{}
+	updateStatuses := []tc.ServerUpdateStatusV5{}
 
 	selectQuery := `
 /* topology_ancestors finds the ancestor topology nodes of the topology node for
@@ -147,8 +155,10 @@ SELECT
 	) AS parent_reval_pending,
 	s.config_update_time,
 	s.config_apply_time,
+	s.config_update_failed,
 	s.revalidate_update_time,
-	s.revalidate_apply_time
+	s.revalidate_apply_time,
+	s.revalidate_update_failed
 	FROM use_reval_pending,
 		 server s
 LEFT JOIN status ON s.status = status.id
@@ -171,9 +181,9 @@ ORDER BY s.id
 	defer log.Close(rows, "getServerUpdateStatus(): unable to close db connection")
 
 	for rows.Next() {
-		var us tc.ServerUpdateStatusV40
+		var us tc.ServerUpdateStatusV5
 		var serverType string
-		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending, &us.ConfigUpdateTime, &us.ConfigApplyTime, &us.RevalidateUpdateTime, &us.RevalidateApplyTime); err != nil {
+		if err := rows.Scan(&us.HostId, &us.HostName, &serverType, &us.RevalPending, &us.UseRevalPending, &us.UpdatePending, &us.Status, &us.ParentPending, &us.ParentRevalPending, &us.ConfigUpdateTime, &us.ConfigApplyTime, &us.ConfigUpdateFailed, &us.RevalidateUpdateTime, &us.RevalidateApplyTime, &us.RevalidateUpdateFailed); err != nil {
 			return nil, nil, fmt.Errorf("could not scan server update status: %w", err)
 		}
 		updateStatuses = append(updateStatuses, us)
@@ -182,7 +192,7 @@ ORDER BY s.id
 }
 
 type serverUpdateStatuses struct {
-	serverMap map[string][]tc.ServerUpdateStatusV40
+	serverMap map[string][]tc.ServerUpdateStatusV5
 	*sync.RWMutex
 	initialized bool
 	enabled     bool // note: enabled is only written to once at startup, before serving requests, so it doesn't need synchronized access
@@ -199,7 +209,7 @@ func serverUpdateStatusCacheIsInitialized() bool {
 	return false
 }
 
-func getServerUpdateStatusFromCache(hostname string) []tc.ServerUpdateStatusV40 {
+func getServerUpdateStatusFromCache(hostname string) []tc.ServerUpdateStatusV5 {
 	serverUpdateStatusCache.RLock()
 	defer serverUpdateStatusCache.RUnlock()
 	return serverUpdateStatusCache.serverMap[hostname]
@@ -241,16 +251,18 @@ func refreshServerUpdateStatusCache(db *sql.DB, timeout time.Duration) {
 }
 
 type serverInfo struct {
-	id               int
-	hostName         string
-	typeName         string
-	cdnId            int
-	status           string
-	cachegroup       int
-	configUpdateTime *time.Time
-	configApplyTime  *time.Time
-	revalUpdateTime  *time.Time
-	revalApplyTime   *time.Time
+	id                 int
+	hostName           string
+	typeName           string
+	cdnId              int
+	status             string
+	cachegroup         int
+	configUpdateTime   *time.Time
+	configApplyTime    *time.Time
+	configUpdateFailed bool
+	revalUpdateTime    *time.Time
+	revalApplyTime     *time.Time
+	revalUpdateFailed  bool
 }
 
 const getUseRevalPendingQuery = `
@@ -270,8 +282,10 @@ const getServerInfoQuery = `
 		s.cachegroup,
 		s.config_update_time,
 		s.config_apply_time,
+		s.config_update_failed,
 		s.revalidate_update_time,
-		s.revalidate_apply_time
+		s.revalidate_apply_time,
+		s.revalidate_update_failed
 	FROM server s
 	JOIN type t ON t.id = s.type
 	JOIN status st ON st.id = s.status
@@ -297,7 +311,7 @@ const getTopologyCacheGroupParentsQuery = `
 	GROUP BY cg_child.id
 `
 
-func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc.ServerUpdateStatusV40, error) {
+func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc.ServerUpdateStatusV5, error) {
 	dbCtx, dbClose := context.WithTimeout(context.Background(), timeout)
 	defer dbClose()
 	serversByID := make(map[int]serverInfo)
@@ -326,7 +340,7 @@ func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc
 	defer log.Close(serverRows, "closing server rows")
 	for serverRows.Next() {
 		s := serverInfo{}
-		if err := serverRows.Scan(&s.id, &s.hostName, &s.typeName, &s.cdnId, &s.status, &s.cachegroup, &s.configUpdateTime, &s.configApplyTime, &s.revalUpdateTime, &s.revalApplyTime); err != nil {
+		if err := serverRows.Scan(&s.id, &s.hostName, &s.typeName, &s.cdnId, &s.status, &s.cachegroup, &s.configUpdateTime, &s.configApplyTime, &s.configUpdateFailed, &s.revalUpdateTime, &s.revalApplyTime, &s.revalUpdateFailed); err != nil {
 			return nil, fmt.Errorf("scanning servers: %w", err)
 		}
 		serversByID[s.id] = s
@@ -396,21 +410,23 @@ func getServerUpdateStatuses(db *sql.DB, timeout time.Duration) (map[string][]tc
 		return nil, fmt.Errorf("iterating over topology cachegroup rows: %w", err)
 	}
 
-	serverUpdateStatuses := make(map[string][]tc.ServerUpdateStatusV40, len(serversByID))
+	serverUpdateStatuses := make(map[string][]tc.ServerUpdateStatusV5, len(serversByID))
 	for serverID, server := range serversByID {
-		updateStatus := tc.ServerUpdateStatusV40{
-			HostName:             server.hostName,
-			UpdatePending:        server.configUpdateTime.After(*server.configApplyTime),
-			RevalPending:         server.revalUpdateTime.After(*server.revalApplyTime),
-			UseRevalPending:      useRevalPending,
-			HostId:               serverID,
-			Status:               server.status,
-			ParentPending:        getParentPending(cacheGroupParents[server.cachegroup], updatePendingByCDNCachegroup[server.cdnId]),
-			ParentRevalPending:   getParentPending(cacheGroupParents[server.cachegroup], revalPendingByCDNCachegroup[server.cdnId]),
-			ConfigUpdateTime:     server.configUpdateTime,
-			ConfigApplyTime:      server.configApplyTime,
-			RevalidateUpdateTime: server.revalUpdateTime,
-			RevalidateApplyTime:  server.revalApplyTime,
+		updateStatus := tc.ServerUpdateStatusV5{
+			HostName:               server.hostName,
+			UpdatePending:          server.configUpdateTime.After(*server.configApplyTime),
+			RevalPending:           server.revalUpdateTime.After(*server.revalApplyTime),
+			UseRevalPending:        useRevalPending,
+			HostId:                 serverID,
+			Status:                 server.status,
+			ParentPending:          getParentPending(cacheGroupParents[server.cachegroup], updatePendingByCDNCachegroup[server.cdnId]),
+			ParentRevalPending:     getParentPending(cacheGroupParents[server.cachegroup], revalPendingByCDNCachegroup[server.cdnId]),
+			ConfigUpdateTime:       server.configUpdateTime,
+			ConfigApplyTime:        server.configApplyTime,
+			ConfigUpdateFailed:     &server.configUpdateFailed,
+			RevalidateUpdateTime:   server.revalUpdateTime,
+			RevalidateApplyTime:    server.revalApplyTime,
+			RevalidateUpdateFailed: &server.revalUpdateFailed,
 		}
 		serverUpdateStatuses[server.hostName] = append(serverUpdateStatuses[server.hostName], updateStatus)
 	}
