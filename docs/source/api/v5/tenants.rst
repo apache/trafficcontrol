@@ -95,7 +95,7 @@ Response Structure
 			"id": 1,
 			"name": "root",
 			"active": true,
-			"lastUpdated": "2018-12-10 19:11:17+00",
+			"lastUpdated": "2023-05-30T19:52:58.183642+00:00",
 			"parentId": null
 		}
 	]}
@@ -164,6 +164,6 @@ Response Structure
 		"id": 9,
 		"name": "test",
 		"active": true,
-		"lastUpdated": "2018-12-11 19:37:16+00",
+		"lastUpdated": "2023-05-30T19:52:58.183642+00:00",
 		"parentId": 1
 	}}

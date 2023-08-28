@@ -102,7 +102,7 @@ func (to *Session) CreateDeliveryServiceRequest(dsr tc.DeliveryServiceRequestV5,
 		if err != nil || len(ten.Response) == 0 {
 			return resp, reqInf, fmt.Errorf("no Tenant named '%s'", *ds.Tenant)
 		}
-		ds.TenantID = ten.Response[0].ID
+		ds.TenantID = *ten.Response[0].ID
 	}
 
 	reqInf, err := to.post(apiDSRequests, opts, dsr, &resp)

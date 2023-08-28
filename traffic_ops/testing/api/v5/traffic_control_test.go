@@ -52,7 +52,7 @@ type TrafficControl struct {
 	Statuses                                          []tc.StatusV5                           `json:"statuses"`
 	StaticDNSEntries                                  []tc.StaticDNSEntryV5                   `json:"staticdnsentries"`
 	StatsSummaries                                    []tc.StatsSummaryV5                     `json:"statsSummaries"`
-	Tenants                                           []tc.Tenant                             `json:"tenants"`
+	Tenants                                           []tc.TenantV5                           `json:"tenants"`
 	ServerCheckExtensions                             []tc.ServerCheckExtensionNullable       `json:"servercheck_extensions"`
 	Topologies                                        []tc.TopologyV5                         `json:"topologies"`
 	Types                                             []tc.TypeV5                             `json:"types"`

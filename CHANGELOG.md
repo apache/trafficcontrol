@@ -162,6 +162,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops* Fixed an issue where certificate chain validation failed based on leading or trailing whitespace.
 - [#7686](https://github.com/apache/trafficcontrol/pull/7686) *Traffic Ops* Fixed secured parameters being visible when role has proper permissions.
 - [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops* Fixed `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
+- [#7749](https://github.com/apache/trafficcontrol/pull/7749) *Traffic Ops* Fixes `tenants` v5 apis to respond with `RFC3339` date/time Format.
 
 ### Removed
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
