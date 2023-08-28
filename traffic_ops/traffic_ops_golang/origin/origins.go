@@ -525,9 +525,10 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	org, readValErr := readAndValidateJsonStruct(r)
+
+	org, errorCode, readValErr := readAndValidateJsonStruct(r, tx)
 	if readValErr != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, readValErr, nil)
+		api.HandleErr(w, r, tx.Tx, errorCode, readValErr, nil)
 		return
 	}
 
@@ -588,9 +589,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	origin, readValErr := readAndValidateJsonStruct(r)
+	origin, errorCode, readValErr := readAndValidateJsonStruct(r, tx)
 	if readValErr != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, readValErr, nil)
+		api.HandleErr(w, r, tx.Tx, errorCode, readValErr, nil)
 		return
 	}
 	userErr, sysErr, errCode := checkTenancy(&origin.TenantID, &origin.DeliveryServiceID, tx, inf.User)
@@ -638,7 +639,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var lastUpdated time.Time
 	query := `UPDATE origin SET
 					cachegroup=$1,
 					coordinate=$2,
@@ -651,10 +651,12 @@ func Update(w http.ResponseWriter, r *http.Request) {
 					profile=$9,
 					protocol=$10,
 					tenant=$11
-					WHERE id=$12 RETURNING last_updated`
+					WHERE id=$12 RETURNING cachegroup, coordinate, deliveryservice, fqdn, ip6_address, ip_address, port, protocol, tenant`
 	errUpdate := tx.QueryRow(query, origin.CachegroupID, origin.CoordinateID, origin.DeliveryServiceID,
 		origin.FQDN, origin.IP6Address, origin.IPAddress, origin.Name,
-		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&lastUpdated)
+		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&origin.Cachegroup, &origin.Coordinate, &origin.DeliveryService,
+		&origin.FQDN, &origin.IP6Address, &origin.IPAddress,
+		&origin.Port, &origin.Protocol, &origin.Tenant)
 	if errUpdate != nil {
 		if errors.Is(errUpdate, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin: %d not found", requestedOriginId), nil)
@@ -665,7 +667,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	origin.LastUpdated = lastUpdated
+	origin.ID = requestedOriginId
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was updated.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, origin)
 	return
@@ -673,7 +675,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 // Delete an Origin for APIv5.
 func Delete(w http.ResponseWriter, r *http.Request) {
-	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
 	tx := inf.Tx.Tx
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
@@ -681,15 +683,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
-	idStr := inf.Params["id"]
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("missing key: id"), nil)
-		return
-	}
+	id := inf.IntParams["id"]
 
 	isPrimary := false
-	if err := tx.QueryRow(`SELECT is_primary FROM origin WHERE id = $1`, id).Scan(&isPrimary); err != nil {
+	var deliveryServiceID *int
+	if err := tx.QueryRow(`SELECT is_primary, deliveryservice FROM origin WHERE id = $1`, id).Scan(&isPrimary, &deliveryServiceID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no origin exists by id: %d", id), nil)
 			return
@@ -703,9 +701,22 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if deliveryServiceID != nil {
+		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(tx, *deliveryServiceID)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, err, nil)
+			return
+		}
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+
 	res, err := tx.Exec("DELETE FROM origin WHERE id=$1", id)
 	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("origin delete: query: %w", err), nil)
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
 		return
 	}
 	rowsAffected, err := res.RowsAffected()
@@ -717,6 +728,10 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for origin"), nil)
 		return
 	}
+	if rowsAffected != 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("origin delete: multiple rows affected"), nil)
+		return
+	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
@@ -724,11 +739,43 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 // readAndValidateJsonStruct reads json body and validates json fields.
-func readAndValidateJsonStruct(r *http.Request) (tc.OriginV5, error) {
+func readAndValidateJsonStruct(r *http.Request, tx *sqlx.Tx) (tc.OriginV5, int, error) {
 	var origin tc.OriginV5
 	if err := json.NewDecoder(r.Body).Decode(&origin); err != nil {
 		userErr := fmt.Errorf("error decoding POST request body into OriginV5 struct %w", err)
-		return origin, userErr
+		return origin, http.StatusBadRequest, userErr
+	}
+
+	if origin.TenantID == 0 {
+		if origin.Tenant != "" {
+			if errLookup := tx.QueryRow(`SELECT id FROM tenant where name = $1`, origin.Tenant).Scan(&origin.TenantID); errLookup != nil {
+				if errors.Is(errLookup, sql.ErrNoRows) {
+					return origin, http.StatusNotFound, fmt.Errorf("no tentant exists with name %s", origin.Tenant)
+				}
+				return origin, http.StatusInternalServerError, fmt.Errorf("database error: %w, when checking if tenant id with name %s", errLookup, origin.Tenant)
+			}
+		} else {
+			return origin, http.StatusForbidden, tc.NilTenantError
+		}
+	}
+
+	if origin.DeliveryServiceID == 0 {
+		if origin.DeliveryService != "" {
+			dsId, exists, err := dbhelpers.GetDSIDFromXMLID(tx.Tx, origin.DeliveryService)
+			if err != nil {
+				sysErr := fmt.Errorf("failed to match XML ID to int ID for Delivery Service %s: %w", origin.DeliveryService, err)
+				errCode := http.StatusInternalServerError
+				return origin, errCode, sysErr
+			}
+			if !exists {
+				userErr := fmt.Errorf("delivery service %s does not exist", origin.DeliveryService)
+				errCode := http.StatusNotFound
+				return origin, errCode, userErr
+			}
+			origin.DeliveryServiceID = dsId
+		} else {
+			return origin, http.StatusForbidden, tc.NilTenantError
+		}
 	}
 
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
@@ -751,7 +798,8 @@ func readAndValidateJsonStruct(r *http.Request) (tc.OriginV5, error) {
 	})
 	if len(errs) > 0 {
 		userErr := util.JoinErrs(errs)
-		return origin, userErr
+		return origin, http.StatusBadRequest, userErr
 	}
-	return origin, nil
+
+	return origin, http.StatusBadRequest, nil
 }

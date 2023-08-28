@@ -636,6 +636,8 @@ func GetOriginID(t *testing.T, name string) func() int {
 
 func CreateTestOrigins(t *testing.T) {
 	for _, origin := range testData.Origins {
+		origin.TenantID = GetTenantID(t, "root")()
+		origin.DeliveryServiceID = GetDeliveryServiceId(t, origin.DeliveryService)()
 		resp, _, err := TOSession.CreateOrigin(origin, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Could not create Origins: %v - alerts: %+v", err, resp.Alerts)
 	}
