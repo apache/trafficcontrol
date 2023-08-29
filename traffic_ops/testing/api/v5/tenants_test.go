@@ -25,6 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
@@ -38,7 +39,7 @@ func TestTenants(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.Tenant]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.TenantV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -95,11 +96,11 @@ func TestTenants(t *testing.T) {
 			"POST": {
 				"OK when VALID request": {
 					ClientSession: TOSession,
-					RequestBody: tc.Tenant{
-						Active:     true,
-						Name:       "tenant5",
-						ParentName: "root",
-						ParentID:   GetTenantID(t, "root")(),
+					RequestBody: tc.TenantV5{
+						Active:     util.Ptr(true),
+						Name:       util.Ptr("tenant5"),
+						ParentName: util.Ptr("root"),
+						ParentID:   util.Ptr(GetTenantID(t, "root")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateTenantCreateUpdateFields(map[string]interface{}{"Name": "tenant5"})),
@@ -109,11 +110,11 @@ func TestTenants(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetTenantID(t, "tenant4"),
 					ClientSession: TOSession,
-					RequestBody: tc.Tenant{
-						Active:     false,
-						Name:       "newname",
-						ParentName: "root",
-						ParentID:   GetTenantID(t, "root")(),
+					RequestBody: tc.TenantV5{
+						Active:     util.Ptr(false),
+						Name:       util.Ptr("newname"),
+						ParentName: util.Ptr("root"),
+						ParentID:   util.Ptr(GetTenantID(t, "root")()),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateTenantCreateUpdateFields(map[string]interface{}{"Name": "newname", "Active": false})),
@@ -121,10 +122,10 @@ func TestTenants(t *testing.T) {
 				"BAD REQUEST when ROOT TENANT": {
 					EndpointID:    GetTenantID(t, "root"),
 					ClientSession: TOSession,
-					RequestBody: tc.Tenant{
-						Active:     false,
-						Name:       "tenant1",
-						ParentName: "root",
+					RequestBody: tc.TenantV5{
+						Active:     util.Ptr(false),
+						Name:       util.Ptr("tenant1"),
+						ParentName: util.Ptr("root"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
@@ -132,22 +133,22 @@ func TestTenants(t *testing.T) {
 					EndpointID:    GetTenantID(t, "tenant2"),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.Tenant{
-						Active:     false,
-						Name:       "tenant2",
-						ParentName: "root",
-						ParentID:   GetTenantID(t, "root")(),
+					RequestBody: tc.TenantV5{
+						Active:     util.Ptr(false),
+						Name:       util.Ptr("tenant2"),
+						ParentName: util.Ptr("root"),
+						ParentID:   util.Ptr(GetTenantID(t, "root")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetTenantID(t, "tenant2"),
 					ClientSession: TOSession,
-					RequestBody: tc.Tenant{
-						Active:     false,
-						Name:       "tenant2",
-						ParentName: "root",
-						ParentID:   GetTenantID(t, "root")(),
+					RequestBody: tc.TenantV5{
+						Active:     util.Ptr(false),
+						Name:       util.Ptr("tenant2"),
+						ParentName: util.Ptr("root"),
+						ParentID:   util.Ptr(GetTenantID(t, "root")()),
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -204,16 +205,16 @@ func TestTenants(t *testing.T) {
 func validateTenantFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
-		tenantResp := resp.([]tc.Tenant)
+		tenantResp := resp.([]tc.TenantV5)
 		for field, expected := range expectedResp {
 			for _, tenant := range tenantResp {
 				switch field {
 				case "Active":
-					assert.Equal(t, expected, tenant.Active, "Expected Active to be %v, but got %b", expected, tenant.Active)
+					assert.Equal(t, expected, *tenant.Active, "Expected Active to be %v, but got %b", expected, tenant.Active)
 				case "Name":
-					assert.Equal(t, expected, tenant.Name, "Expected Name to be %v, but got %s", expected, tenant.Name)
+					assert.Equal(t, expected, *tenant.Name, "Expected Name to be %v, but got %s", expected, tenant.Name)
 				case "ParentName":
-					assert.Equal(t, expected, tenant.ParentName, "Expected ParentName to be %v, but got %s", expected, tenant.ParentName)
+					assert.Equal(t, expected, *tenant.ParentName, "Expected ParentName to be %v, but got %s", expected, tenant.ParentName)
 				default:
 					t.Errorf("Expected field: %v, does not exist in response", field)
 				}
@@ -225,8 +226,8 @@ func validateTenantFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 func validateTenantCreateUpdateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
-		tenantResp := resp.(tc.Tenant)
-		tenants := []tc.Tenant{tenantResp}
+		tenantResp := resp.(tc.TenantV5)
+		tenants := []tc.TenantV5{tenantResp}
 		validateTenantFields(expectedResp)(t, toclientlib.ReqInf{}, tenants, tc.Alerts{}, nil)
 	}
 }
@@ -235,9 +236,9 @@ func validateTenantSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
 		var tenants []string
-		tenantResp := resp.([]tc.Tenant)
+		tenantResp := resp.([]tc.TenantV5)
 		for _, tenant := range tenantResp {
-			tenants = append(tenants, tenant.Name)
+			tenants = append(tenants, *tenant.Name)
 		}
 		assert.Equal(t, true, sort.StringsAreSorted(tenants), "List is not sorted by their names: %v", tenants)
 	}
@@ -246,7 +247,7 @@ func validateTenantSort() utils.CkReqFunc {
 func validateTenantDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Tenant response to not be nil.")
-		tenantDescResp := resp.([]tc.Tenant)
+		tenantDescResp := resp.([]tc.TenantV5)
 		var descSortedList []string
 		var ascSortedList []string
 		assert.RequireGreaterOrEqual(t, len(tenantDescResp), 2, "Need at least 2 Tenants in Traffic Ops to test desc sort, found: %d", len(tenantDescResp))
@@ -257,11 +258,11 @@ func validateTenantDescSort() utils.CkReqFunc {
 		assert.RequireEqual(t, len(tenantsAscResp.Response), len(tenantDescResp), "Expected descending order response length: %v, to match ascending order response length %v", len(tenantsAscResp.Response), len(tenantDescResp))
 		// Insert Tenant names to the front of a new list, so they are now reversed to be in ascending order.
 		for _, tenant := range tenantDescResp {
-			descSortedList = append([]string{tenant.Name}, descSortedList...)
+			descSortedList = append([]string{*tenant.Name}, descSortedList...)
 		}
 		// Insert Tenant names by appending to a new list, so they stay in ascending order.
 		for _, tenant := range tenantsAscResp.Response {
-			ascSortedList = append(ascSortedList, tenant.Name)
+			ascSortedList = append(ascSortedList, *tenant.Name)
 		}
 		assert.Exactly(t, ascSortedList, descSortedList, "Tenant responses are not equal after reversal: %v - %v", ascSortedList, descSortedList)
 	}
@@ -269,7 +270,7 @@ func validateTenantDescSort() utils.CkReqFunc {
 
 func validateTenantPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.Tenant)
+		paginationResp := resp.([]tc.TenantV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
@@ -296,7 +297,7 @@ func GetTenantID(t *testing.T, name string) func() int {
 		tenants, _, err := TOSession.GetTenants(opts)
 		assert.RequireNoError(t, err, "Get Tenants Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(tenants.Response), "Expected response object length 1, but got %d", len(tenants.Response))
-		return tenants.Response[0].ID
+		return *tenants.Response[0].ID
 	}
 }
 
@@ -314,13 +315,13 @@ func DeleteTestTenants(t *testing.T) {
 	assert.NoError(t, err, "Cannot get Tenants: %v - alerts: %+v", err, tenants.Alerts)
 
 	for _, tenant := range tenants.Response {
-		if tenant.Name == "root" {
+		if *tenant.Name == "root" {
 			continue
 		}
-		alerts, _, err := TOSession.DeleteTenant(tenant.ID, client.RequestOptions{})
+		alerts, _, err := TOSession.DeleteTenant(*tenant.ID, client.RequestOptions{})
 		assert.NoError(t, err, "Unexpected error deleting Tenant '%s' (#%d): %v - alerts: %+v", tenant.Name, tenant.ID, err, alerts.Alerts)
 		// Retrieve the Tenant to see if it got deleted
-		opts.QueryParameters.Set("id", strconv.Itoa(tenant.ID))
+		opts.QueryParameters.Set("id", strconv.Itoa(*tenant.ID))
 		getTenants, _, err := TOSession.GetTenants(opts)
 		assert.NoError(t, err, "Error getting Tenant '%s' after deletion: %v - alerts: %+v", tenant.Name, err, getTenants.Alerts)
 		assert.Equal(t, 0, len(getTenants.Response), "Expected Tenant '%s' to be deleted, but it was found in Traffic Ops", tenant.Name)

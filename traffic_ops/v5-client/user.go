@@ -62,7 +62,7 @@ func (to *Session) CreateUser(user tc.UserV4, opts RequestOptions) (tc.CreateUse
 		if len(tenant.Response) < 1 {
 			return tc.CreateUserResponseV4{Alerts: tenant.Alerts}, toclientlib.ReqInf{}, fmt.Errorf("no such Tenant: '%s'", *user.Tenant)
 		}
-		user.TenantID = tenant.Response[0].ID
+		user.TenantID = *tenant.Response[0].ID
 	}
 
 	if user.Role != "" {

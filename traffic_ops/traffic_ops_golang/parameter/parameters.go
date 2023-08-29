@@ -382,6 +382,7 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 
 	// Create all parameters from the request slice
 	var objParams []tc.ParameterV5
+	var objParam tc.ParameterV5
 	for _, parameter := range params {
 		query := `
 			INSERT INTO parameter (
@@ -393,7 +394,6 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 			        $1, $2, $3, $4
 			    ) RETURNING id, name, config_file, value, last_updated, secure 
 		`
-		var objParam tc.ParameterV5
 		err = tx.QueryRow(
 			query,
 			parameter.Name,
@@ -423,7 +423,7 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 		objParams = append(objParams, objParam)
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "All Requested Parameters were created.")
-	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, objParams)
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, objParam)
 	return
 }
 

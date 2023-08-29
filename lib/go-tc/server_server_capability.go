@@ -19,6 +19,20 @@ package tc
  * under the License.
  */
 
+import "time"
+
+// ServerServerCapabilityV5 is a ServerServerCapability as it appears in version 5 of the
+// Traffic Ops API - it always points to the highest minor version in APIv5.
+type ServerServerCapabilityV5 = ServerServerCapabilityV50
+
+// ServerServerCapabilityV50 represents an association between a server capability and a server.
+type ServerServerCapabilityV50 struct {
+	LastUpdated      *time.Time `json:"lastUpdated" db:"last_updated"`
+	Server           *string    `json:"serverHostName,omitempty" db:"host_name"`
+	ServerID         *int       `json:"serverId" db:"server"`
+	ServerCapability *string    `json:"serverCapability" db:"server_capability"`
+}
+
 // ServerServerCapability represents an association between a server capability and a server.
 type ServerServerCapability struct {
 	LastUpdated      *TimeNoMod `json:"lastUpdated" db:"last_updated"`
@@ -33,6 +47,18 @@ type MultipleServersCapabilities struct {
 	ServerCapabilities []string `json:"serverCapabilities" db:"server_capability"`
 	ServerIDs          []int64  `json:"serverIds" db:"server"`
 	PageType           string   `json:"pageType"`
+}
+
+// ServerServerCapabilitiesResponseV5 is the type of a response from the
+// /api/5.x/server_server_capabilities Traffic Ops endpoint.
+// It always points to the type for the latest minor version of APIv5.
+type ServerServerCapabilitiesResponseV5 = ServerServerCapabilitiesResponseV50
+
+// ServerServerCapabilitiesResponseV50 is the type of a response from Traffic
+// Ops to a request made to its /api/5.0/server_server_capabilities.
+type ServerServerCapabilitiesResponseV50 struct {
+	Response []ServerServerCapabilityV5 `json:"response"`
+	Alerts
 }
 
 // ServerServerCapabilitiesResponse is the type of a response from Traffic
