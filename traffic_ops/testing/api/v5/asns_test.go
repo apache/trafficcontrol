@@ -77,6 +77,16 @@ func TestASN(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
+				"BAD REQUEST when ASN is not unique": {
+					ClientSession: TOSession,
+					EndpointID:    GetASNId(t, "5555"),
+					RequestBody: map[string]interface{}{
+						"asn":            9999,
+						"cachegroupName": "originCachegroup",
+						"cachegroupId":   -1,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 			},
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
