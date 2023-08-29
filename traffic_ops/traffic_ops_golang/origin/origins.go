@@ -766,38 +766,6 @@ func readAndValidateJsonStruct(r *http.Request, tx *sqlx.Tx) (tc.OriginV5, int, 
 		return origin, http.StatusBadRequest, userErr
 	}
 
-	if origin.TenantID == 0 {
-		if origin.Tenant != "" {
-			if errLookup := tx.QueryRow(`SELECT id FROM tenant where name = $1`, origin.Tenant).Scan(&origin.TenantID); errLookup != nil {
-				if errors.Is(errLookup, sql.ErrNoRows) {
-					return origin, http.StatusNotFound, fmt.Errorf("no tentant exists with name %s", origin.Tenant)
-				}
-				return origin, http.StatusInternalServerError, fmt.Errorf("database error: %w, when checking if tenant id with name %s", errLookup, origin.Tenant)
-			}
-		} else {
-			return origin, http.StatusForbidden, tc.NilTenantError
-		}
-	}
-
-	if origin.DeliveryServiceID == 0 {
-		if origin.DeliveryService != "" {
-			dsId, exists, err := dbhelpers.GetDSIDFromXMLID(tx.Tx, origin.DeliveryService)
-			if err != nil {
-				sysErr := fmt.Errorf("failed to match XML ID to int ID for Delivery Service %s: %w", origin.DeliveryService, err)
-				errCode := http.StatusInternalServerError
-				return origin, errCode, sysErr
-			}
-			if !exists {
-				userErr := fmt.Errorf("delivery service %s does not exist", origin.DeliveryService)
-				errCode := http.StatusNotFound
-				return origin, errCode, userErr
-			}
-			origin.DeliveryServiceID = dsId
-		} else {
-			return origin, http.StatusForbidden, tc.NilTenantError
-		}
-	}
-
 	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
 	validProtocol := validation.NewStringRule(tovalidate.IsOneOfStringICase("http", "https"), "must be http or https")
 	portErr := "must be a valid integer between 1 and 65535"

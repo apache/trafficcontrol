@@ -648,6 +648,8 @@ func DeleteTestOrigins(t *testing.T) {
 	assert.NoError(t, err, "Cannot get Origins : %v - alerts: %+v", err, origins.Alerts)
 
 	for _, origin := range origins.Response {
+		origin.TenantID = GetTenantID(t, "root")()
+		origin.DeliveryServiceID = GetDeliveryServiceId(t, origin.DeliveryService)()
 		assert.RequireNotNil(t, origin.ID, "Expected origin ID to not be nil.")
 		assert.RequireNotNil(t, origin.Name, "Expected origin ID to not be nil.")
 		assert.RequireNotNil(t, origin.IsPrimary, "Expected origin ID to not be nil.")
