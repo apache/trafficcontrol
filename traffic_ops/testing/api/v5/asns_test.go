@@ -79,9 +79,9 @@ func TestASN(t *testing.T) {
 				},
 				"BAD REQUEST when ASN is not unique": {
 					ClientSession: TOSession,
-					EndpointID:    GetASNName(t),
+					EndpointID:    GetASNId(t, "5555"),
 					RequestBody: map[string]interface{}{
-						"asn":            8888,
+						"asn":            9999,
 						"cachegroupName": "originCachegroup",
 						"cachegroupId":   -1,
 					},
@@ -170,18 +170,6 @@ func GetASNId(t *testing.T, ASN string) func() int {
 		assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
 
 		return resp.Response[0].ID
-	}
-}
-
-func GetASNName(t *testing.T) func() int {
-	return func() int {
-		opts := client.NewRequestOptions()
-		resp, _, err := TOSession.GetASNs(opts)
-		assert.RequireNoError(t, err, "Get ASNs Request failed with error: %v", err)
-		assert.RequireGreaterOrEqual(t, len(resp.Response), 1, "Expected response object length 1, but got %d", len(resp.Response))
-		assert.RequireNotNil(t, &resp.Response[0].ASN, "Expected ASN to not be nil")
-
-		return resp.Response[0].ASN
 	}
 }
 
