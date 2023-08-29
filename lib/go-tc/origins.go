@@ -101,7 +101,7 @@ type OriginV50 struct {
 	TenantID          int       `json:"tenantId" db:"tenant_id"`
 }
 
-// ToOriginV5 upgrades from Origin to APIv5
+// ToOriginV5 upgrades from Origin to APIv5.
 func (old Origin) ToOriginV5() OriginV5 {
 	r := time.Unix(old.LastUpdated.Unix(), 0)
 

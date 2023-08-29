@@ -28,9 +28,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -38,7 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
@@ -508,10 +507,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	returnable := make([]tc.OriginV5, 0) // Initialize as an empty slice
-
-	for _, origin := range origins {
-		returnable = append(returnable, origin.ToOriginV5())
+	returnable := make([]tc.OriginV5, len(origins))
+	for i, origin := range origins {
+		returnable[i] = origin.ToOriginV5()
 	}
 
 	api.WriteResp(w, r, returnable)
@@ -577,7 +575,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%s/origins?id=%d", inf.Version, org.ID))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/origins?id=%d", inf.Version, org.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, org)
 }
 
