@@ -590,21 +590,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	requestedOriginId := inf.IntParams["id"]
-	authorized, err := tenant.IsResourceAuthorizedToUserTx(requestedOriginId, inf.User, tx.Tx)
-	if err != nil {
-		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("checking tenant authorized: %w", err), nil)
-		return
-	}
-	if !authorized {
-		api.HandleErr(w, r, tx.Tx, http.StatusForbidden, fmt.Errorf("not authorized on this tenant"), nil)
-		return
-	}
 
 	origin, errorCode, readValErr := readAndValidateJsonStruct(r, tx)
 	if readValErr != nil {
 		api.HandleErr(w, r, tx.Tx, errorCode, readValErr, nil)
 		return
 	}
+
 	userErr, sysErr, errCode := checkTenancy(&origin.TenantID, &origin.DeliveryServiceID, tx, inf.User)
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
@@ -694,19 +686,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
-	authorized, err := tenant.IsResourceAuthorizedToUserTx(id, inf.User, tx)
-	if err != nil {
-		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("checking tenant authorized: %w", err), nil)
-		return
-	}
-	if !authorized {
-		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("not authorized on this tenant"), nil)
-		return
-	}
-
-	isPrimary := false
-	var deliveryServiceID *int
-	if err := tx.QueryRow(`SELECT is_primary, deliveryservice FROM origin WHERE id = $1`, id).Scan(&isPrimary, &deliveryServiceID); err != nil {
+	var origin tc.OriginV5
+	if err := tx.QueryRow(`SELECT is_primary, deliveryservice, tenant FROM origin WHERE id = $1`, id).Scan(&origin.IsPrimary, &origin.DeliveryServiceID, &origin.TenantID); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no origin exists by id: %d", id), nil)
 			return
@@ -715,13 +696,13 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if isPrimary {
+	if origin.IsPrimary {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cannot delete a primary origin"), nil)
 		return
 	}
 
-	if deliveryServiceID != nil {
-		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(tx, *deliveryServiceID)
+	if &origin.DeliveryServiceID != nil {
+		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(tx, origin.DeliveryServiceID)
 		if err != nil {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, err, nil)
 			return
@@ -732,6 +713,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
 			return
 		}
+	}
+
+	userErr, sysErr, errCode = checkTenancy(&origin.TenantID, &origin.DeliveryServiceID, inf.Tx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
 	}
 
 	res, err := tx.Exec("DELETE FROM origin WHERE id=$1", id)
