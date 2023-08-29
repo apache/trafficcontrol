@@ -48,7 +48,7 @@ func (to *Session) originIDs(origin *tc.OriginV5) error {
 		origin.CachegroupID = p.Response[0].ID
 	}
 
-	if &origin.DeliveryServiceID == nil && &origin.DeliveryService != nil {
+	if origin.DeliveryServiceID == 0 && origin.DeliveryService != "" {
 		opts.QueryParameters.Set("xmlId", origin.DeliveryService)
 		dses, _, err := to.GetDeliveryServices(opts)
 		if err != nil {
@@ -85,7 +85,7 @@ func (to *Session) originIDs(origin *tc.OriginV5) error {
 		origin.CoordinateID = coordinates.Response[0].ID
 	}
 
-	if &origin.TenantID == nil && &origin.Tenant != nil {
+	if origin.TenantID == 0 && origin.Tenant != "" {
 		opts.QueryParameters.Set("name", origin.Tenant)
 		tenant, _, err := to.GetTenants(opts)
 		if err != nil {

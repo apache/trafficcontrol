@@ -502,11 +502,13 @@ func Get(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	origins, userErr, sysErr, errCode, _ := getOrigins(w.Header(), inf.Params, inf.Tx, inf.User, useIMS)
-	var returnable []tc.OriginV5
+
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
 		return
 	}
+
+	returnable := make([]tc.OriginV5, 0) // Initialize as an empty slice
 
 	for _, origin := range origins {
 		returnable = append(returnable, origin.ToOriginV5())
