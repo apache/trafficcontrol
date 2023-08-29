@@ -77,6 +77,16 @@ func TestASN(t *testing.T) {
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
 				},
+				"BAD REQUEST when ASN is not unique": {
+					ClientSession: TOSession,
+					EndpointID:    GetASNName(t, "7777"),
+					RequestBody: map[string]interface{}{
+						"asn":            7777,
+						"cachegroupName": "originCachegroup",
+						"cachegroupId":   -1,
+					},
+					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
+				},
 			},
 			"GET AFTER CHANGES": {
 				"OK when CHANGES made": {
@@ -160,6 +170,20 @@ func GetASNId(t *testing.T, ASN string) func() int {
 		assert.RequireNotNil(t, &resp.Response[0].ID, "Expected id to not be nil")
 
 		return resp.Response[0].ID
+	}
+}
+
+func GetASNName(t *testing.T, ASN string) func() int {
+	return func() int {
+		opts := client.NewRequestOptions()
+		opts.QueryParameters.Set("asn", ASN)
+
+		resp, _, err := TOSession.GetASNs(opts)
+		assert.RequireNoError(t, err, "Get ASNs Request failed with error: %v", err)
+		assert.RequireEqual(t, len(resp.Response), 1, "Expected response object length 1, but got %d", len(resp.Response))
+		assert.RequireNotNil(t, &resp.Response[0].ASN, "Expected ASN to not be nil")
+
+		return resp.Response[0].ASN
 	}
 }
 
