@@ -663,12 +663,15 @@ func (pi *ParentInfo) GetTOData(cfg *config.Cfg) error {
 		}
 	}
 
-	srvs, _, err := toData.TOClient.GetServers(toclient.NewRequestOptions())
+	srvs, reqInf, err := toData.TOClient.GetServers(toclient.NewRequestOptions())
 	if err != nil {
 		// next time we'll login again and get a new session.
 		toData.TOClient = nil
 		pi.TOData.Set(toData)
 		return errors.New("error fetching Trafficmonitor server list: " + err.Error())
+	} else if reqInf.StatusCode >= 300 || reqInf.StatusCode < 200 {
+		// Provide logging around a potential issue
+		log.Errorf("Traffic Ops returned a non 2xx status code. Expected 2xx, got %v", reqInf.StatusCode, 0)
 	}
 
 	toData.Monitors = map[string]struct{}{}
