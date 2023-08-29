@@ -589,6 +589,17 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	defer inf.Close()
 
+	requestedOriginId := inf.IntParams["id"]
+	authorized, err := tenant.IsResourceAuthorizedToUserTx(requestedOriginId, inf.User, tx.Tx)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("checking tenant authorized: %w", err), nil)
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, tx.Tx, http.StatusForbidden, fmt.Errorf("not authorized on this tenant"), nil)
+		return
+	}
+
 	origin, errorCode, readValErr := readAndValidateJsonStruct(r, tx)
 	if readValErr != nil {
 		api.HandleErr(w, r, tx.Tx, errorCode, readValErr, nil)
@@ -603,8 +614,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	isPrimary := false
 	ds := 0
 	var existingLastUpdated time.Time
-
-	requestedOriginId := inf.IntParams["id"]
 
 	q := `SELECT is_primary, deliveryservice, last_updated FROM origin WHERE id = $1`
 	errLookup := tx.QueryRow(q, requestedOriginId).Scan(&isPrimary, &ds, &existingLastUpdated)
@@ -637,19 +646,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
 		return
-	}
-	var i interface{}
-	// Check authorization for the origin's tenant
-	if t, ok := i.(api.Tenantable); ok {
-		authorized, err := t.IsTenantAuthorized(inf.User)
-		if err != nil {
-			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("checking tenant authorized: %w", err), nil)
-			return
-		}
-		if !authorized {
-			api.HandleErr(w, r, tx.Tx, http.StatusForbidden, fmt.Errorf("not authorized on this tenant"), nil)
-			return
-		}
 	}
 
 	query := `UPDATE origin SET
@@ -698,6 +694,16 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	id := inf.IntParams["id"]
 
+	authorized, err := tenant.IsResourceAuthorizedToUserTx(id, inf.User, tx)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("checking tenant authorized: %w", err), nil)
+		return
+	}
+	if !authorized {
+		api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("not authorized on this tenant"), nil)
+		return
+	}
+
 	isPrimary := false
 	var deliveryServiceID *int
 	if err := tx.QueryRow(`SELECT is_primary, deliveryservice FROM origin WHERE id = $1`, id).Scan(&isPrimary, &deliveryServiceID); err != nil {
@@ -720,23 +726,10 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 			api.HandleErr(w, r, tx, http.StatusInternalServerError, err, nil)
 			return
 		}
+
 		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), inf.User.UserName)
 		if userErr != nil || sysErr != nil {
 			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
-			return
-		}
-	}
-
-	var i interface{}
-	// Check authorization for the origin's tenant
-	if t, ok := i.(api.Tenantable); ok {
-		authorized, err := t.IsTenantAuthorized(inf.User)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("checking tenant authorized: %w", err), nil)
-			return
-		}
-		if !authorized {
-			api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("not authorized on this tenant"), nil)
 			return
 		}
 	}
