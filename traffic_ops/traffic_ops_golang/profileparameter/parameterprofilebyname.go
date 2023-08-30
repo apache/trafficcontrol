@@ -37,10 +37,17 @@ func GetProfileName(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	name := inf.Params["name"]
-	api.RespWriter(w, r, inf.Tx.Tx)(getParametersByProfileName(inf.Tx.Tx, name))
+
+	params, paramsV5, err := getParametersByProfileName(inf.Tx.Tx, name, inf.Version)
+
+	if inf.Version.Major >= 5 {
+		api.RespWriter(w, r, inf.Tx.Tx)(paramsV5, err)
+	} else {
+		api.RespWriter(w, r, inf.Tx.Tx)(params, err)
+	}
 }
 
-func getParametersByProfileName(tx *sql.Tx, profileName string) ([]tc.ProfileParameterByName, error) {
+func getParametersByProfileName(tx *sql.Tx, profileName string, version *api.Version) ([]tc.ProfileParameterByName, []tc.ProfileParameterByNameV5, error) {
 	q := `
 SELECT
 parameter.id, parameter.name, parameter.value, parameter.config_file, parameter.secure, parameter.last_updated
@@ -51,16 +58,31 @@ WHERE profile.name = $1
 `
 	rows, err := tx.Query(q, profileName)
 	if err != nil {
-		return nil, errors.New("querying profile name parameters: " + err.Error())
+		return nil, nil, errors.New("querying profile name parameters: " + err.Error())
 	}
 	defer rows.Close()
-	params := []tc.ProfileParameterByName{}
-	for rows.Next() {
-		p := tc.ProfileParameterByName{}
-		if err := rows.Scan(&p.ID, &p.Name, &p.Value, &p.ConfigFile, &p.Secure, &p.LastUpdated); err != nil {
-			return nil, errors.New("scanning profile name parameters: " + err.Error())
+
+	if version.GreaterThanOrEqualTo(&api.Version{Major: 5, Minor: 0}) {
+		params := []tc.ProfileParameterByNameV5{}
+		for rows.Next() {
+			p := tc.ProfileParameterByNameV5{}
+			if err := rows.Scan(&p.ID, &p.Name, &p.Value, &p.ConfigFile, &p.Secure, &p.LastUpdated); err != nil {
+				return nil, nil, errors.New("scanning profile name parameters: " + err.Error())
+			}
+			params = append(params, p)
 		}
-		params = append(params, p)
+		return nil, params, nil
+
+	} else {
+		params := []tc.ProfileParameterByName{}
+		for rows.Next() {
+			p := tc.ProfileParameterByName{}
+			if err := rows.Scan(&p.ID, &p.Name, &p.Value, &p.ConfigFile, &p.Secure, &p.LastUpdated); err != nil {
+				return nil, nil, errors.New("scanning profile name parameters: " + err.Error())
+			}
+			params = append(params, p)
+		}
+		return params, nil, nil
 	}
-	return params, nil
+
 }
