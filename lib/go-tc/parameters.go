@@ -127,6 +127,21 @@ type ProfileParameterByName struct {
 	Value       string    `json:"value"`
 }
 
+// ProfileParameterByNameV5 is the alias to the latest minor version of major version 5
+type ProfileParameterByNameV5 ProfileParameterByNameV50
+
+// ProfileParameterByNameV50 is a structure that's used to represent a Parameter
+// in a context where they are associated with some Profile specified by a
+// client of the Traffic Ops API by its Name.
+type ProfileParameterByNameV50 struct {
+	ConfigFile  string    `json:"configFile"`
+	ID          int       `json:"id"`
+	LastUpdated time.Time `json:"lastUpdated"`
+	Name        string    `json:"name"`
+	Secure      bool      `json:"secure"`
+	Value       string    `json:"value"`
+}
+
 // ProfileParameterByNamePost is a structure that's only used internally to
 // represent a Parameter that has been requested by a client of the Traffic Ops
 // API to be associated with some Profile which was specified by Name.
