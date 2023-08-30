@@ -1982,7 +1982,7 @@ UPDATE public.server
 SET config_update_failed = $1
 WHERE server.id = $2`
 	if _, err := tx.Exec(query, failed, serverID); err != nil {
-		return fmt.Errorf("setting config update failed for ServerID %d with value %v: %v", serverID, failed, err)
+		return fmt.Errorf("setting config update failed for ServerID %d with value %v: %w", serverID, failed, err)
 	}
 	return nil
 }
@@ -1994,7 +1994,7 @@ UPDATE public.server
 SET revalidate_update_failed = $1
 WHERE server.id = $2`
 	if _, err := tx.Exec(query, failed, serverID); err != nil {
-		return fmt.Errorf("setting reval update failed for ServerID %d with value %v: %v", serverID, failed, err)
+		return fmt.Errorf("setting reval update failed for ServerID %d with value %v: %w", serverID, failed, err)
 	}
 	return nil
 }

@@ -1441,11 +1441,21 @@ func (s ServerV50) RevalidationPending() bool {
 // version 5 of the Traffic Ops API.
 type ServerV5 = ServerV50
 
+// ServerUpdateStatusV5 is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status in the latest minor API
+// v5.0 endpoint.
 type ServerUpdateStatusV5 ServerUpdateStatusV50
 
+// ServerUpdateStatusV50 is the type of each entry in the `response` property of
+// the response from Traffic Ops to GET requests made to its
+// /servers/{{host name}}/update_status in API v5.0 endpoint.
 type ServerUpdateStatusV50 struct {
-	HostName      string `json:"host_name"`
-	UpdatePending bool   `json:"upd_pending"`
+	HostName string `json:"host_name"`
+	// Deprecated: In APIv5 and later, this extraneous field is not calculated
+	// by Traffic Ops; the information is available by comparing ConfigUpdateTime
+	// to ConfigApplyTime.
+	UpdatePending bool `json:"upd_pending"`
 	// Deprecated: In APIv5 and later, this extraneous field is not calculated
 	// by Traffic Ops; the information is available by comparing RevalUpdateTime
 	// to RevalApplyTime.
