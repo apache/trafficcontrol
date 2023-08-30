@@ -25,9 +25,10 @@ last_squashed_migration="$(<<<"$migrations_to_squash" tail -n1)"
 last_squashed_migration_timestamp="$(<<<"$last_squashed_migration" sed -E 's|migrations/([0-9]+).*|\1|')"
 first_migration="$(ls migrations/*.sql | grep -A1 "/${last_squashed_migration_timestamp}_" | tail -n1)"
 first_migration_timestamp="$(<<<"$first_migration" sed -E 's|migrations/([0-9]+).*|\1|')"
-sed -i.bak '/^--/,$d' create_tables.sql # keeps the Apache License 2.0 header
-sed -Ei.bak "s|(LastSquashedMigrationTimestamp\s+uint\s+= ).*|\1${last_squashed_migration_timestamp} // ${last_squashed_migration}|" admin.go
-sed -Ei.bak "s|(FirstMigrationTimestamp\s+uint\s+= ).*|\1${first_migration_timestamp} // ${first_migration}|" admin.go
+# If running on mac, you need BSD version of sed. So, change -i to -i.bak for the below three sed statements.
+sed -i '/^--/,$d' create_tables.sql # keeps the Apache License 2.0 header
+sed -Ei "s|(LastSquashedMigrationTimestamp\s+uint\s+= ).*|\1${last_squashed_migration_timestamp} // ${last_squashed_migration}|" admin.go
+sed -Ei "s|(FirstMigrationTimestamp\s+uint\s+= ).*|\1${first_migration_timestamp} // ${first_migration}|" admin.go
 
 dump_db_with_migrations() {
   trap 'echo "Error on line ${LINENO} of dump_db_with_migrations" >/dev/stderr; exit 1' ERR
@@ -55,6 +56,6 @@ echo "$migrations_to_squash" | xargs git rm
 git commit -m "Remove migrations that existed at ${last_release}"
 
 git add -p admin.go
-#git commit -m 'Update LastSquashedMigrationTimestamp and FirstMigrationTimestamp'
+git commit -m 'Update LastSquashedMigrationTimestamp and FirstMigrationTimestamp'
 
 echo 'Migrations squashed successfully!'
