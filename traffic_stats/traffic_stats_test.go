@@ -27,13 +27,14 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/lib/go-util"
 	influx "github.com/influxdata/influxdb/client/v2"
 )
 
 func TestCalcCacheValuesWithInvalidValue(t *testing.T) {
 	stats := make(map[string][]tc.ResultStatVal)
 	caches := make(map[tc.CacheName]map[string][]tc.ResultStatVal)
-	cacheMap := make(map[string]tc.Server)
+	cacheMap := make(map[string]tc.ServerV5)
 	resultSatsVal := []tc.ResultStatVal{
 		{
 			Span: 0,
@@ -43,7 +44,7 @@ func TestCalcCacheValuesWithInvalidValue(t *testing.T) {
 	}
 	stats["maxKbps"] = resultSatsVal
 	caches["cache1"] = stats
-	cacheMap["cache1"] = tc.Server{}
+	cacheMap["cache1"] = tc.ServerV5{}
 	config := StartupConfig{
 		BpsChan: make(chan influx.BatchPoints),
 	}
@@ -76,7 +77,7 @@ func TestCalcCacheValuesWithInvalidValue(t *testing.T) {
 func TestCalcCacheValuesWithEmptyInterface(t *testing.T) {
 	stats := make(map[string][]tc.ResultStatVal)
 	caches := make(map[tc.CacheName]map[string][]tc.ResultStatVal)
-	cacheMap := make(map[string]tc.Server)
+	cacheMap := make(map[string]tc.ServerV5)
 	resultSatsVal := []tc.ResultStatVal{
 		{
 			Span: 0,
@@ -85,7 +86,7 @@ func TestCalcCacheValuesWithEmptyInterface(t *testing.T) {
 	}
 	stats["maxKbps"] = resultSatsVal
 	caches["cache1"] = stats
-	cacheMap["cache1"] = tc.Server{}
+	cacheMap["cache1"] = tc.ServerV5{}
 	config := StartupConfig{
 		BpsChan: make(chan influx.BatchPoints),
 	}
@@ -118,7 +119,7 @@ func TestCalcCacheValuesWithEmptyInterface(t *testing.T) {
 func TestCalcCacheValues(t *testing.T) {
 	stats := make(map[string][]tc.ResultStatVal)
 	caches := make(map[tc.CacheName]map[string][]tc.ResultStatVal)
-	cacheMap := make(map[string]tc.Server)
+	cacheMap := make(map[string]tc.ServerV5)
 	resultSatsVal := []tc.ResultStatVal{
 		{
 			Span: 0,
@@ -128,7 +129,7 @@ func TestCalcCacheValues(t *testing.T) {
 	}
 	stats["maxKbps"] = resultSatsVal
 	caches["cache1"] = stats
-	cacheMap["cache1"] = tc.Server{}
+	cacheMap["cache1"] = tc.ServerV5{}
 	config := StartupConfig{
 		BpsChan: make(chan influx.BatchPoints),
 	}
@@ -163,61 +164,61 @@ func TestSetHealthURLs(t *testing.T) {
 		StatusToMon: tc.CacheStatusOffline.String(),
 	}
 	runningCfg := RunningConfig{}
-	runningCfg.CacheMap = map[string]tc.Server{
+	runningCfg.CacheMap = map[string]tc.ServerV5{
 		"tm1": {
-			CDNName:    "foo",
+			CDN:        "foo",
 			DomainName: "example.org",
 			HostName:   "tm1",
 			Status:     tc.CacheStatusOffline.String(),
-			TCPPort:    8080,
+			TCPPort:    util.Ptr(8080),
 			Type:       tc.MonitorTypeName,
 		},
 		"tm2": {
-			CDNName:    "bar",
+			CDN:        "bar",
 			DomainName: "example.org",
 			HostName:   "tm2",
 			Status:     tc.CacheStatusOffline.String(),
-			TCPPort:    8080,
+			TCPPort:    util.Ptr(8080),
 			Type:       tc.MonitorTypeName,
 		},
 		"tm3": {
-			CDNName:    "foo",
+			CDN:        "foo",
 			DomainName: "example.org",
 			HostName:   "tm3",
 			Status:     tc.CacheStatusOffline.String(),
-			TCPPort:    8080,
+			TCPPort:    util.Ptr(8080),
 			Type:       tc.MonitorTypeName,
 		},
 		"tm4": {
-			CDNName:    "bar",
+			CDN:        "bar",
 			DomainName: "example.org",
 			HostName:   "tm4",
 			Status:     tc.CacheStatusOffline.String(),
-			TCPPort:    8080,
+			TCPPort:    util.Ptr(8080),
 			Type:       tc.MonitorTypeName,
 		},
 		"tm5": {
-			CDNName:    "foo",
+			CDN:        "foo",
 			DomainName: "example.org",
 			HostName:   "tm5",
 			Status:     tc.CacheStatusOnline.String(),
-			TCPPort:    8080,
+			TCPPort:    util.Ptr(8080),
 			Type:       tc.MonitorTypeName,
 		},
 		"tm6": {
-			CDNName:    "bar",
+			CDN:        "bar",
 			DomainName: "example.org",
 			HostName:   "tm6",
 			Status:     tc.CacheStatusOnline.String(),
-			TCPPort:    8080,
+			TCPPort:    util.Ptr(8080),
 			Type:       tc.MonitorTypeName,
 		},
 		"cache1": {
-			CDNName:    "foo",
+			CDN:        "foo",
 			DomainName: "example.org",
 			HostName:   "cache1",
 			Status:     tc.CacheStatusOffline.String(),
-			TCPPort:    8080,
+			TCPPort:    util.Ptr(8080),
 			Type:       tc.CacheTypeEdge.String(),
 		},
 	}
