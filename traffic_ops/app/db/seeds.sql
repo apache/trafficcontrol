@@ -19,6 +19,47 @@
 -- cdns
 INSERT INTO public.cdn ("name", dnssec_enabled, domain_name) VALUES ('ALL', FALSE, '-') ON CONFLICT ("name") DO NOTHING;
 
+-- cdni_limit
+INSERT INTO public.cdni_limits (limit_id,
+                                scope_type,
+                                scope_value,
+                                limit_type,
+                                maximum_hard,
+                                maximum_soft,
+                                telemetry_id,
+                                telemetry_metric,
+                                capability_id)
+SELECT CONCAT('host_limit_', chl.limit_type, '_', chl.telemetry_metric),
+       'published-host',
+       ARRAY[chl.host],
+       chl.limit_type,
+       chl.maximum_hard,
+       chl.maximum_soft,
+       chl.telemetry_id,
+       chl.telemetry_metric,
+       chl.capability_id
+FROM public.cdni_host_limits as chl;
+
+INSERT INTO public.cdni_limits (limit_id,
+                                scope_type,
+                                scope_value,
+                                limit_type,
+                                maximum_hard,
+                                maximum_soft,
+                                telemetry_id,
+                                telemetry_metric,
+                                capability_id)
+SELECT CONCAT('total_limit_', thl.limit_type, '_', thl.telemetry_metric),
+       NULL,
+       NULL,
+       thl.limit_type,
+       thl.maximum_hard,
+       thl.maximum_soft,
+       thl.telemetry_id,
+       thl.telemetry_metric,
+       thl.capability_id
+FROM public.cdni_total_limits as thl;
+
 -- parameters
 -- Moved into postinstall global parameters
 INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('GLOBAL', 'Global Traffic Ops profile, DO NOT DELETE', 'UNK_PROFILE', (SELECT id FROM cdn WHERE "name"='ALL')) ON CONFLICT ("name") DO NOTHING;
@@ -61,6 +102,12 @@ INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('TRAFFIC
 INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE', (SELECT id FROM cdn WHERE "name"='ALL')) ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE', (SELECT id FROM cdn WHERE "name"='ALL')) ON CONFLICT ("name") DO NOTHING;
 
+-- server_profile
+INSERT into public.server_profile(server, profile_name, priority)
+SELECT s.id, p.name, 0
+FROM public.server AS s
+         JOIN public.profile p ON p.id=s.profile;
+
 -- statuses
 INSERT INTO public.status ("name", "description") VALUES ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('ONLINE', 'Server is online.') ON CONFLICT ("name") DO NOTHING;
@@ -96,6 +143,23 @@ SELECT id, 'DELIVERY-SERVICE-SAFE:UPDATE'
 FROM public.role
 WHERE "name" in ('operations', 'read-only', 'portal', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
+
+INSERT INTO public.role_capability
+SELECT id, perm FROM public.role
+CROSS JOIN (
+    VALUES ('DNS-SEC:READ'), ('DNS-SEC:DELETE')
+) AS perms(perm)
+WHERE priv_level >= 30
+    ON CONFLICT DO NOTHING;
+
+INSERT INTO public.role_capability (role_id, cap_name)
+SELECT id, perm
+FROM public.role
+CROSS JOIN (
+    VALUES ('DELIVERY-SERVICE-SAFE:UPDATE')
+) AS perms(perm)
+WHERE "priv_level" < 20 AND "priv_level" > 0
+    ON CONFLICT DO NOTHING;
 
 -- Using role 'read-only'
 INSERT INTO public.role_capability
