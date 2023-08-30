@@ -22,7 +22,7 @@ package tmcheck
 import (
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 	"time"
 )
 
@@ -57,8 +57,8 @@ func ValidateAllPeerPollers(toClient *to.Session, includeOffline bool) (map[tc.T
 	}
 	errs := map[tc.TrafficMonitorName]error{}
 	for _, server := range servers {
-		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
-		errs[tc.TrafficMonitorName(server.HostName)] = ValidatePeerPoller(uri)
+		uri := fmt.Sprintf("http://%s.%s", *server.HostName, *server.DomainName)
+		errs[tc.TrafficMonitorName(*server.HostName)] = ValidatePeerPoller(uri)
 	}
 	return errs, nil
 }

@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 const QueryIntervalMax = time.Duration(10) * time.Second
@@ -78,8 +78,8 @@ func ValidateAllMonitorsQueryInterval(toClient *to.Session, includeOffline bool)
 
 	errs := map[tc.TrafficMonitorName]error{}
 	for _, server := range servers {
-		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
-		errs[tc.TrafficMonitorName(server.HostName)] = ValidateQueryInterval(uri, toClient)
+		uri := fmt.Sprintf("http://%s.%s", *server.HostName, *server.DomainName)
+		errs[tc.TrafficMonitorName(*server.HostName)] = ValidateQueryInterval(uri, toClient)
 	}
 	return errs, nil
 }

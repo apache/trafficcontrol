@@ -30,7 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/datareq"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
-	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -198,11 +198,12 @@ type CRConfigOrError struct {
 	Err      error
 }
 
-func GetMonitors(toClient *to.Session, includeOffline bool) ([]tc.Server, error) {
+func GetMonitors(toClient *to.Session, includeOffline bool) ([]tc.ServerV4, error) {
 	trafficMonitorType := "RASCAL"
 	query := url.Values{}
 	query.Set("type", trafficMonitorType)
-	servers, _, err := toClient.GetServers(&query)
+	response, _, err := toClient.GetServers(to.RequestOptions{QueryParameters: query})
+	servers := response.Response
 	if err != nil {
 		return nil, fmt.Errorf("getting monitors from Traffic Ops: %v", err)
 	}
@@ -265,10 +266,10 @@ func AllValidator(
 }
 
 // FilterOfflines returns only servers which are REPORTED or ONLINE
-func FilterOfflines(servers []tc.Server) []tc.Server {
-	onlineServers := []tc.Server{}
+func FilterOfflines(servers []tc.ServerV4) []tc.ServerV4 {
+	onlineServers := []tc.ServerV4{}
 	for _, server := range servers {
-		status := tc.CacheStatusFromString(server.Status)
+		status := tc.CacheStatusFromString(*server.Status)
 		if status != tc.CacheStatusOnline && status != tc.CacheStatusReported {
 			continue
 		}
@@ -277,10 +278,10 @@ func FilterOfflines(servers []tc.Server) []tc.Server {
 	return onlineServers
 }
 
-func GetCDNs(servers []tc.Server) map[tc.CDNName]struct{} {
+func GetCDNs(servers []tc.ServerV4) map[tc.CDNName]struct{} {
 	cdns := map[tc.CDNName]struct{}{}
 	for _, server := range servers {
-		cdns[tc.CDNName(server.CDNName)] = struct{}{}
+		cdns[tc.CDNName(*server.CDNName)] = struct{}{}
 	}
 	return cdns
 }
@@ -288,18 +289,13 @@ func GetCDNs(servers []tc.Server) map[tc.CDNName]struct{} {
 func GetCRConfigs(cdns map[tc.CDNName]struct{}, toClient *to.Session) map[tc.CDNName]CRConfigOrError {
 	crConfigs := map[tc.CDNName]CRConfigOrError{}
 	for cdn, _ := range cdns {
-		crConfigBytes, _, err := toClient.GetCRConfig(string(cdn))
+		response, _, err := toClient.GetCRConfig(string(cdn), to.RequestOptions{})
 		if err != nil {
 			crConfigs[cdn] = CRConfigOrError{Err: fmt.Errorf("getting CRConfig: %v", err)}
 			continue
 		}
 
-		crConfig := tc.CRConfig{}
-		json := jsoniter.ConfigFastest
-		if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
-			crConfigs[cdn] = CRConfigOrError{Err: fmt.Errorf("unmarshalling CRConfig JSON: %v", err)}
-		}
-
+		crConfig := response.Response
 		crConfigs[cdn] = CRConfigOrError{CRConfig: &crConfig}
 	}
 	return crConfigs

@@ -43,7 +43,7 @@ func main() {
 	}
 
 	toDataThs := NewThs()
-	toDataThs.Set(&FakeTOData{Servers: []tc.ServerV40{}})
+	toDataThs.Set(&FakeTOData{Servers: []tc.ServerV50{}})
 
 	Serve(*port, toDataThs)
 	fmt.Printf("Serving on %v\n", *port)
@@ -57,7 +57,7 @@ func main() {
 type FakeTOData struct {
 	Monitoring tc.TrafficMonitorConfig
 	CRConfig   tc.CRConfig
-	Servers    []tc.ServerV40
+	Servers    []tc.ServerV50
 }
 
 // TODO make timeouts configurable?

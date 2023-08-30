@@ -37,8 +37,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/config"
-	legacyClient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	legacyClient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 
 	jsoniter "github.com/json-iterator/go"
 	"golang.org/x/net/publicsuffix"
@@ -396,20 +396,21 @@ func (s TrafficOpsSessionThreadsafe) CRConfigRaw(cdn string) ([]byte, error) {
 		if ls == nil {
 			return nil, ErrNilSession
 		}
-		configBytes, reqInf, err = ls.GetCRConfig(cdn)
+		response, reqInf, err := ls.GetCRConfig(cdn, legacyClient.RequestOptions{})
 		if reqInf.RemoteAddr != nil {
 			remoteAddr = reqInf.RemoteAddr.String()
 		}
 		if err != nil {
 			log.Errorln("getting CRConfig from Traffic Ops using legacy client: " + err.Error() + ". Checking for backup")
 		}
+		configBytes, err = json.Marshal(response.Response)
 	} else {
 		crConfig = &response.Response
 		configBytes, err = json.Marshal(crConfig)
-		if err != nil {
-			crConfig = nil
-			log.Warnln("failed to marshal CRConfig using up-to-date client: " + err.Error())
-		}
+	}
+	if err != nil {
+		crConfig = nil
+		log.Warnln("failed to marshal CRConfig using up-to-date client: " + err.Error())
 	}
 
 	if err == nil {
@@ -484,15 +485,17 @@ func (s TrafficOpsSessionThreadsafe) fetchTMConfig(cdn string) (*tc.TrafficMonit
 
 func (s TrafficOpsSessionThreadsafe) fetchLegacyTMConfig(cdn string) (*tc.TrafficMonitorConfig, error) {
 	ss := s.getLegacy()
+	var m tc.TrafficMonitorConfig
 	if ss == nil {
 		return nil, ErrNilSession
 	}
 
-	m, _, e := ss.GetTrafficMonitorConfig(cdn)
-	if m == nil {
+	r, _, e := ss.GetTrafficMonitorConfig(cdn, legacyClient.RequestOptions{})
+	if e != nil {
 		return nil, e
 	}
-	return m, e
+	m = r.Response
+	return &m, e
 }
 
 // trafficMonitorConfigMapRaw returns the Traffic Monitor config map from the
@@ -563,37 +566,37 @@ func (s TrafficOpsSessionThreadsafe) TrafficMonitorConfigMap(cdn string) (*tc.Tr
 	return mc, nil
 }
 
-func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.ServerV40, error) {
+func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.ServerV50, error) {
 	ss := s.get()
 	if ss == nil {
-		return tc.ServerV40{}, ErrNilSession
+		return tc.ServerV50{}, ErrNilSession
 	}
 
 	params := url.Values{}
 	params.Set("hostName", hostName)
 	resp, _, err := ss.GetServers(client.RequestOptions{QueryParameters: params})
 	if err != nil {
-		return tc.ServerV40{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
+		return tc.ServerV50{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
 	}
 
 	respLen := len(resp.Response)
 	if respLen < 1 {
-		return tc.ServerV40{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
+		return tc.ServerV50{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
 	}
 
-	var server tc.ServerV40
+	var server tc.ServerV50
 	var num int
 	found := false
 	for i, srv := range resp.Response {
 		num = i
-		if srv.CDNName != nil && srv.HostName != nil && *srv.HostName == hostName {
+		if srv.CDNID > -1 && srv.HostName == hostName {
 			server = srv
 			found = true
 			break
 		}
 	}
 	if !found {
-		return tc.ServerV40{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
+		return tc.ServerV50{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
 	}
 
 	if respLen > 1 {
@@ -603,25 +606,25 @@ func (s TrafficOpsSessionThreadsafe) fetchServerByHostname(hostName string) (tc.
 	return server, nil
 }
 
-func (s TrafficOpsSessionThreadsafe) fetchLegacyServerByHostname(hostName string) (tc.ServerV40, error) {
+func (s TrafficOpsSessionThreadsafe) fetchLegacyServerByHostname(hostName string) (tc.ServerV50, error) {
 	ss := s.getLegacy()
 	if ss == nil {
-		return tc.ServerV40{}, ErrNilSession
+		return tc.ServerV50{}, ErrNilSession
 	}
 
 	params := url.Values{}
 	params.Set("hostName", hostName)
-	resp, _, err := ss.GetServersWithHdr(&params, nil)
+	resp, _, err := ss.GetServers(legacyClient.RequestOptions{QueryParameters: params})
 	if err != nil {
-		return tc.ServerV40{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
+		return tc.ServerV50{}, fmt.Errorf("fetching server by hostname '%s': %v", hostName, err)
 	}
 
 	respLen := len(resp.Response)
 	if respLen < 1 {
-		return tc.ServerV40{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
+		return tc.ServerV50{}, fmt.Errorf("no server '%s' found in Traffic Ops", hostName)
 	}
 
-	var server tc.ServerV30
+	var server tc.ServerV40
 	var num int
 	found := false
 	for i, srv := range resp.Response {
@@ -633,17 +636,17 @@ func (s TrafficOpsSessionThreadsafe) fetchLegacyServerByHostname(hostName string
 		}
 	}
 	if !found {
-		return tc.ServerV40{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
+		return tc.ServerV50{}, fmt.Errorf("either no server '%s' found in Traffic Ops, or none by that hostName had non-nil CDN", hostName)
 	}
 
 	if respLen > 1 {
 		log.Warnf("Getting monitor server by hostname '%s' returned %d servers - selecting #%d", hostName, respLen, num)
 	}
 
-	if server.Profile == nil {
-		return tc.ServerV40{}, fmt.Errorf("server with hostname '%s' has no profile", hostName)
+	if len(server.ProfileNames) == 0 {
+		return tc.ServerV50{}, fmt.Errorf("server with hostname '%s' has no profile", hostName)
 	}
-	newServer, err := server.UpgradeToV40([]string{*server.Profile})
+	newServer := server.Upgrade()
 	if err != nil {
 		return newServer, fmt.Errorf("coercing legacy server to new format: %v", err)
 	}
@@ -653,7 +656,7 @@ func (s TrafficOpsSessionThreadsafe) fetchLegacyServerByHostname(hostName string
 // MonitorCDN returns the name of the CDN of a Traffic Monitor with the given
 // hostName.
 func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error) {
-	var server tc.ServerV40
+	var server tc.ServerV50
 	var err error
 
 	server, err = s.fetchServerByHostname(hostName)
@@ -668,5 +671,5 @@ func (s TrafficOpsSessionThreadsafe) MonitorCDN(hostName string) (string, error)
 
 	// nil-dereference checks done already in each 'fetch' method; they'll just
 	// return an error in that case
-	return *server.CDNName, nil
+	return server.CDN, nil
 }

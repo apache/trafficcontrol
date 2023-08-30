@@ -45,8 +45,8 @@ COPY lib ${GOPATH}/src/github.com/apache/trafficcontrol/lib
 COPY vendor ${GOPATH}/src/github.com/apache/trafficcontrol/vendor
 COPY traffic_monitor/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/
 COPY traffic_ops/toclientlib/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/
-COPY traffic_ops/v3-client/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_ops/v3-client/
 COPY traffic_ops/v4-client/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_ops/v4-client/
+COPY traffic_ops/v5-client/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_ops/v5-client/
 
 WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tests/_integration/
 RUN go mod vendor && \
