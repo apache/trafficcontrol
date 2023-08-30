@@ -41,7 +41,7 @@
     ],
     "ipGateway": "4.0.0.0.1",
     "ipNetmask": "255.255.255.0",
-    "lastUpdated": "2019",
+    "lastUpdated": "2023-08-28T19:55:05.265232Z",
     "mgmtIpAddress": null,
     "mgmtIpGateway": null,
     "mgmtIpNetmask": null,
