@@ -18,5 +18,8 @@
 !/go.mod
 !/go.sum
 !/lib/
+!/cache-config/t3cutil/
+!/traffic_ops/toclientlib
+!/traffic_ops/v*-client
 !/traffic_monitor/tools/testto
 !/vendor/

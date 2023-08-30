@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -e
+set -o errexit -o nounset -o pipefail
 
 function wait_for_endpoint() {
   try=0
