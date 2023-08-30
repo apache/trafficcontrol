@@ -51,7 +51,7 @@ Response Structure
 ------------------
 :configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 :id:          The :term:`Parameter`'s :ref:`parameter-id`
-:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :ref:`non-rfc-datetime`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :rfc:`3339`
 :name:        :ref:`parameter-name` of the :term:`Parameter`
 :profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
 :secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
@@ -76,7 +76,7 @@ Response Structure
 		{
 			"configFile": "global",
 			"id": 4,
-			"lastUpdated": "2018-12-05 17:50:49+00",
+			"lastUpdated": "2018-12-05T23:52:59.696337+05:30",
 			"name": "tm.instance_name",
 			"secure": false,
 			"value": "Traffic Ops CDN"
@@ -84,7 +84,7 @@ Response Structure
 		{
 			"configFile": "global",
 			"id": 5,
-			"lastUpdated": "2018-12-05 17:50:49+00",
+			"lastUpdated": "2018-12-05T23:52:59.696337+05:30",
 			"name": "tm.toolname",
 			"secure": false,
 			"value": "Traffic Ops"
@@ -92,7 +92,7 @@ Response Structure
 		{
 			"configFile": "regex_revalidate.config",
 			"id": 7,
-			"lastUpdated": "2018-12-05 17:50:49+00",
+			"lastUpdated": "2018-12-05T23:52:59.696337+05:30",
 			"name": "maxRevalDurationDays",
 			"secure": false,
 			"value": "90"
