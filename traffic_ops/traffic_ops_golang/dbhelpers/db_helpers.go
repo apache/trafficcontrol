@@ -1975,6 +1975,7 @@ WHERE server.id = $2;`
 	return nil
 }
 
+// SetUpdateFailedForServer sets the update failed flag for the server.
 func SetUpdateFailedForServer(tx *sql.Tx, serverID int64, failed bool) error {
 	query := `
 UPDATE public.server
@@ -1986,6 +1987,7 @@ WHERE server.id = $2`
 	return nil
 }
 
+// SetRevalFailedForServer sets the reval failed flag for the server.
 func SetRevalFailedForServer(tx *sql.Tx, serverID int64, failed bool) error {
 	query := `
 UPDATE public.server

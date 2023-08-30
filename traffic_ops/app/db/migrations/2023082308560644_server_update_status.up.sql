@@ -16,5 +16,5 @@
  */
 
 ALTER TABLE public.server
-  ADD COLUMN IF NOT EXISTS config_update_failed boolean DEFAULT false,
-  ADD COLUMN IF NOT EXISTS revalidate_update_failed boolean DEFAULT false;
+  ADD COLUMN IF NOT EXISTS config_update_failed boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS revalidate_update_failed boolean NOT NULL DEFAULT false;

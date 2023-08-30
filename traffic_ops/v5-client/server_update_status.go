@@ -58,7 +58,7 @@ func (to *Session) SetUpdateServerStatusTimes(serverName string, configApplyTime
 	var alerts tc.Alerts
 
 	if configApplyTime == nil && revalApplyTime == nil && configUpdateFailed == nil && revalUpdateFailed == nil {
-		return alerts, reqInf, errors.New("one must be non-nil (configApplyTime, revalApplyTime); nothing to do")
+		return alerts, reqInf, errors.New("one must be non-nil (configApplyTime, configUpdateFailed, revalApplyTime); nothing to do")
 	}
 
 	if opts.QueryParameters == nil {
