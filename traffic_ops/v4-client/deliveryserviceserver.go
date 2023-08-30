@@ -30,9 +30,9 @@ import (
 // for the given Delivery Service.
 func (to *Session) CreateDeliveryServiceServers(dsID int, serverIDs []int, replace bool, opts RequestOptions) (tc.DeliveryserviceserverResponse, toclientlib.ReqInf, error) {
 	req := tc.DSServerIDs{
-		DeliveryServiceID: util.IntPtr(dsID),
+		DeliveryServiceID: util.Ptr(dsID),
 		ServerIDs:         serverIDs,
-		Replace:           util.BoolPtr(replace),
+		Replace:           util.Ptr(replace),
 	}
 	var resp tc.DeliveryserviceserverResponse
 	reqInf, err := to.post(apiDeliveryServiceServer, opts, req, &resp)
