@@ -73,8 +73,8 @@ BEGIN
     WITH server_ips AS (
         SELECT s.id, i.name, ip.address, s.profile
         FROM server s
-             JOIN interface i on i.server = s.ID
-             JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
+                JOIN interface i on i.server = s.ID
+                JOIN ip_address ip on ip.Server = s.ID and ip.interface = i.name
         WHERE i.monitor = true
     )
     SELECT count(*)
@@ -122,9 +122,9 @@ BEGIN
     INTO server_count, server_id, server_profile
     FROM server_ips sip
     WHERE (sip.server <> NEW.server AND (SELECT host(sip.address)) = (SELECT host(NEW.address)) AND sip.profile = (SELECT profile from server s WHERE s.id = NEW.server))
-G   ROUP BY sip.sid, sip.profile;
+    GROUP BY sip.sid, sip.profile;
 
-IF server_count > 0 THEN
+    IF server_count > 0 THEN
            RAISE EXCEPTION 'ip_address is not unique across the server [id:%] profile [id:%], [%] conflicts',
             server_id,
             server_profile,
@@ -143,8 +143,8 @@ CREATE OR REPLACE FUNCTION on_delete_current_timestamp_last_updated()
     RETURNS trigger
 AS $$
 BEGIN
-update last_deleted set last_updated = now() where table_name = TG_ARGV[0];
-RETURN NEW;
+    update last_deleted set last_updated = now() where table_name = TG_ARGV[0];
+    RETURN NEW;
 END;
 $$
 LANGUAGE plpgsql;
@@ -426,7 +426,7 @@ CREATE TABLE IF NOT EXISTS cachegroup (
     fallback_to_closest boolean DEFAULT TRUE,
     coordinate bigint,
     CONSTRAINT idx_89476_primary PRIMARY KEY (id, type)
-    );
+);
 
 ALTER TABLE cachegroup OWNER TO traffic_ops;
 
@@ -800,11 +800,11 @@ ALTER TABLE deliveryservice_server OWNER TO traffic_ops;
 --
 
 CREATE TABLE IF NOT EXISTS deliveryservice_tls_version (
-                                                           deliveryservice bigint NOT NULL,
-                                                           tls_version text NOT NULL,
-                                                           CONSTRAINT deliveryservice_tls_version_pkey PRIMARY KEY (deliveryservice, tls_version),
+    deliveryservice bigint NOT NULL,
+    tls_version text NOT NULL,
+    CONSTRAINT deliveryservice_tls_version_pkey PRIMARY KEY (deliveryservice, tls_version),
     CONSTRAINT deliveryservice_tls_version_tls_version_check CHECK (tls_version <> '')
-    );
+);
 
 ALTER TABLE deliveryservice_tls_version OWNER TO traffic_ops;
 
@@ -1039,8 +1039,8 @@ CREATE TABLE IF NOT EXISTS interface (
     );
 
 ALTER TABLE interface
-    ADD CONSTRAINT interface_mtu_check
-        CHECK (((mtu IS NULL) OR (mtu >= 1280)));
+ADD CONSTRAINT interface_mtu_check
+CHECK (((mtu IS NULL) OR (mtu >= 1280)));
 
 --
 -- Name: ip_address; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -2104,7 +2104,7 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cachegroup
     -- Name: idx_89476_cg_name_unique; Type: INDEX; Schema: public; Owner: traffic_ops
     --
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_89476_cg_name_unique ON cachegroup USING btree (name);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_89476_cg_name_unique ON cachegroup USING btree (name);
 END IF;
 
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'cachegroup' AND column_name = 'short_name') THEN
