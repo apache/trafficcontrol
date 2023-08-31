@@ -380,7 +380,7 @@ export const topologies = {
                     updPending: false
                 },
                 {
-                    cachegroupID: 0,
+                    cacheGroupID: 0,
                     cdnID: 2,
                     domainName: "test.net",
                     hostName: "topologieserver3",
@@ -428,7 +428,7 @@ export const topologies = {
                             route: "/cachegroups",
                             queryKey: "name",
                             queryValue: "TopoTestCGE3",
-                            replace: "cachegroupID"
+                            replace: "cacheGroupID"
                         },
                         {
 							route: "/phys_locations",
