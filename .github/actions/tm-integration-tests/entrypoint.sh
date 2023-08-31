@@ -82,7 +82,7 @@ EOF
 jq ".[].tcpPort |= $PORT | .[].cdnName |= \"$CDN\" | .[].hostName |= \"$TM_URI\"" \
   ${test_dir}/servers.json > servers.json.tmp && mv servers.json.tmp ${test_dir}/servers.json
 
-jq ".trafficMonitors[].port |= $PORT | .trafficMonitors[].ip6 |= \"$TM_URI\" | .trafficMonitors[].ip |= \"$TM_URI\" | .trafficMonitors[].hostName |= \"$TM_URI\" | .trafficServers[].interfaces[0].ipAddresses[0].address = \"127.0.0.1\"" \
+jq ".trafficMonitors[].port |= $PORT | .trafficMonitors[].ip6 |= \"$TM_URI\" | .trafficMonitors[].ip |= \"$TM_URI\" | .trafficMonitors[].hostname |= \"$TM_URI\" | .trafficServers[].interfaces[0].ipAddresses[0].address = \"127.0.0.1\"" \
   ${test_dir}/monitoring.json > monitoring.json.tmp && mv monitoring.json.tmp ${test_dir}/monitoring.json
 
 jq ".monitors.trafficmonitor.port |= $PORT | .monitors.trafficmonitor.ip |= \"$TM_URI\" | .monitors.trafficmonitor.ip6 |= \"$TM_URI\" | .stats[\"CDN_name\"] = \"$CDN\" | .stats[\"tm_host\"] = \"$TESTTO_URI\"" \
@@ -97,11 +97,11 @@ touch to.log
 ./testto $TESTTO_PORT >to.log 2>&1 &
 tail -f to.log | color_and_prefix "${gray_bg}" 'Test TO' &
 
-wait_for_endpoint "${TESTTO_URI}:${TESTTO_PORT}/api/4.0/ping"
+wait_for_endpoint "${TESTTO_URI}:${TESTTO_PORT}/api/5.0/ping"
 
-curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/cdns/$CDN/snapshot -X POST -d "@${test_dir}/snapshot.json"
-curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/cdns/$CDN/configs/monitoring -X POST -d "@${test_dir}/monitoring.json"
-curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/servers -X POST -d "@${test_dir}/servers.json"
+curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/5.0/cdns/$CDN/snapshot -X POST -d "@${test_dir}/snapshot.json"
+curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/5.0/cdns/$CDN/configs/monitoring -X POST -d "@${test_dir}/monitoring.json"
+curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/5.0/servers -X POST -d "@${test_dir}/servers.json"
 
 cd "${repo_dir}/traffic_monitor/tools/testcaches"
 go mod vendor

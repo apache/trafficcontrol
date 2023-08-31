@@ -30,7 +30,7 @@ for v in $envvars; do
   fi
 done
 
-TO_API_VERSION=4.0
+TO_API_VERSION=5.0
 CFG_FILE=/tm/traffic-monitor-integration-test.cfg
 
 start() {
