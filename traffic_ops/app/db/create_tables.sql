@@ -3840,6 +3840,34 @@ ALTER TABLE cdni_limits_id_seq OWNER TO traffic_ops;
 ALTER SEQUENCE cdni_limits_id_seq OWNED BY cdni_limits.id;
 
 --
+-- Name: cdni_capabilities; Type: SEQUENCE OWNED BY; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS cdni_capabilities (
+    id bigserial NOT NULL,
+    type text NOT NULL,
+    ucdn text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE cdni_capabilities OWNER TO traffic_ops;
+
+--
+-- Name: cdni_footprints; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS cdni_footprints (
+    id bigserial NOT NULL,
+    footprint_type text NOT NULL,
+    footprint_value text[] NOT NULL,
+    ucdn text NOT NULL,
+    capability_id bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE cdni_footprints OWNER TO traffic_ops;
+
+--
 -- Name: cdni_telemetry; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -3867,6 +3895,99 @@ CREATE TABLE cdni_telemetry_metrics (
 );
 
 ALTER TABLE cdni_telemetry_metrics OWNER TO traffic_ops;
+
+--
+-- Name: cdni_total_limits; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS cdni_total_limits (
+    limit_type text NOT NULL,
+    maximum_hard bigint NOT NULL,
+    maximum_soft bigint NOT NULL,
+    telemetry_id text NOT NULL,
+    telemetry_metric text NOT NULL,
+    capability_id bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE cdni_total_limits OWNER TO traffic_ops;
+
+--
+-- Name: cdni_host_limits; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS cdni_host_limits (
+    limit_type text NOT NULL,
+    maximum_hard bigint NOT NULL,
+    maximum_soft bigint NOT NULL,
+    telemetry_id text NOT NULL,
+    telemetry_metric text NOT NULL,
+    capability_id bigint NOT NULL,
+    host text NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE cdni_host_limits OWNER TO traffic_ops;
+
+--
+-- Name: cdni_limits; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS cdni_limits (
+    id bigserial NOT NULL,
+    limit_id text NOT NULL,
+    scope_type text,
+    scope_value text[],
+    limit_type text NOT NULL,
+    maximum_hard bigint NOT NULL,
+    maximum_soft bigint NOT NULL,
+    telemetry_id text NOT NULL,
+    telemetry_metric text NOT NULL,
+    capability_id bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE cdni_limits OWNER TO traffic_ops;
+
+--
+-- Name: cdn_lock_user; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS cdn_lock_user (
+    owner text NOT NULL,
+    cdn text NOT NULL,
+    username text NOT NULL
+)
+
+ALTER TABLE cdn_lock_user OWNER TO traffic_ops;
+
+--
+-- Name: server_profile; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS server_profile (
+    server bigint NOT NULL,
+    profile_name text NOT NULL,
+    priority int NOT NULL CHECK (priority >= 0)
+);
+
+ALTER TABLE server_profile OWNER TO traffic_ops;
+
+--
+-- Name: cdni_capability_updates; Type: TABLE; Schema: public; Owner: traffic_ops
+--
+
+CREATE TABLE IF NOT EXISTS cdni_capability_updates (
+    id bigserial NOT NULL,
+    request_type text NOT NULL,
+    ucdn text NOT NULL,
+    host text,
+    data json NOT NULL,
+    async_status_id bigint NOT NULL,
+    last_updated timestamp with time zone DEFAULT now() NOT NULL
+);
+
+ALTER TABLE cdni_capability_updates OWNER TO traffic_ops;
 
 --
 -- Name: cdni_capabilities id; Type: DEFAULT; Schema: public; Owner: traffic_ops
@@ -3922,6 +4043,41 @@ ALTER TABLE ONLY cdni_telemetry_metrics
     ADD CONSTRAINT pk_cdni_telemetry_metrics PRIMARY KEY (name);
 
 --
+-- Name: cdni_total_limits pk_cdni_total_limits; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_total_limits
+    ADD CONSTRAINT pk_cdni_total_limits PRIMARY KEY (capability_id, telemetry_id)
+
+--
+-- Name: cdni_host_limits pk_cdni_host_limits; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_host_limits
+    ADD CONSTRAINT pk_cdni_host_limits PRIMARY KEY (capability_id, telemetry_id, host),
+
+--
+-- Name: cdn_lock_user pk_cdn_lock_user; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdn_lock_user
+    ADD CONSTRAINT pk_cdn_lock_user PRIMARY KEY (owner, cdn, username),
+
+--
+-- Name: server_profile pk_server_profile; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY server_profile
+    ADD CONSTRAINT pk_server_profile PRIMARY KEY (profile_name, server)
+
+--
+-- Name: cdni_capability_updates pk_cdni_capability_updates; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_capability_updates
+    ADD CONSTRAINT pk_cdni_capability_updates PRIMARY KEY (id)
+
+--
 -- Name: cdni_footprints fk_cdni_footprint_capabilities; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
@@ -3955,6 +4111,70 @@ ALTER TABLE ONLY cdni_telemetry
 
 ALTER TABLE ONLY cdni_telemetry_metrics
     ADD CONSTRAINT fk_cdni_telemetry_metrics_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+--
+-- Name: cdni_telemetry_metrics fk_cdni_total_limits_telemetry; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_telemetry_metrics
+    ADD CONSTRAINT fk_cdni_total_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE
+
+--
+-- Name: cdni_telemetry_metrics fk_cdni_total_limits_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_telemetry_metrics
+    ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE
+
+--
+-- Name: cdni_host_limits fk_cdni_host_limits_telemetry; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_host_limits
+    ADD CONSTRAINT fk_cdni_host_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE
+
+--
+-- Name: cdni_host_limits fk_cdni_total_limits_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_host_limits
+    ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE
+
+--
+-- Name: cdn_lock_user fk_shared_username; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdn_lock_user
+    ADD CONSTRAINT fk_shared_username FOREIGN KEY (username) REFERENCES tm_user(username),
+
+--
+-- Name: cdn_lock_user fk_owner; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdn_lock_user
+    ADD CONSTRAINT fk_owner FOREIGN KEY (owner, cdn) REFERENCES cdn_lock(username, cdn) ON DELETE CASCADE
+
+--
+-- Name: server_profile fk_server_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY server_profile
+    ADD CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES public.server(id) ON DELETE CASCADE ON UPDATE CASCADE
+
+--
+-- Name: server_profile fk_server_profile_name_profile; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY server_profile
+    ADD CONSTRAINT fk_server_profile_name_profile FOREIGN KEY (profile_name) REFERENCES public.profile(name) ON UPDATE CASCADE ON DELETE RESTRICT
+
+--
+-- Name: cdni_capability_updates fk_cdni_capability_updates_async; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_capability_updates
+    ADD CONSTRAINT fk_cdni_capability_updates_async FOREIGN KEY (async_status_id) REFERENCES async_status(id) ON UPDATE CASCADE ON DELETE CASCADE
+
 
 --
 -- PostgreSQL database dump complete
