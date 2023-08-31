@@ -164,7 +164,7 @@ export const physLocations = {
 			method: "post",
 			data: [
 				{
-					cachegroupID: 0,
+					cacheGroupID: 0,
 					cdnID: 0,
 					domainName: "test.net",
 					hostName: "PhysTest",
@@ -225,7 +225,7 @@ export const physLocations = {
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupID"
+							replace: "cacheGroupID"
 						}
 					]
 				}

@@ -314,7 +314,7 @@ export const topologies = {
             method: "post",
             data: [
                 {
-                    cachegroupID: 0,
+                    cacheGroupID: 0,
                     cdnID: 2,
                     domainName: "test.net",
                     hostName: "topologieserver1",
@@ -362,7 +362,7 @@ export const topologies = {
                             route: "/cachegroups",
                             queryKey: "name",
                             queryValue: "TopoTestCGE2",
-                            replace: "cachegroupID"
+                            replace: "cacheGroupID"
                         },
                         {
 							route: "/phys_locations",

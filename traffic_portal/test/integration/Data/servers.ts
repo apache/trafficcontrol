@@ -408,7 +408,7 @@ export const servers = {
 				},
 				{
 					cacheGroupID: 0,
-					CDNiD: 0,
+					cdnID: 0,
 					domainName: "test.net",
 					hostName: "servertestremove3",
 					httpsPort: 443,

@@ -43,7 +43,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
 		},
 		{
 			headerName: "CDN",
-			field: "cdnName",
+			field: "cdn",
 			hide: false
 		},
 		{
