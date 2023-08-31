@@ -37,8 +37,8 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+	
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/jmoiron/sqlx"
@@ -653,12 +653,10 @@ func Update(w http.ResponseWriter, r *http.Request) {
 					profile=$9,
 					protocol=$10,
 					tenant=$11
-					WHERE id=$12 RETURNING cachegroup, coordinate, deliveryservice, fqdn, ip6_address, ip_address, port, protocol, tenant`
+					WHERE id=$12 RETURNING id,last_updated`
 	errUpdate := tx.QueryRow(query, origin.CachegroupID, origin.CoordinateID, origin.DeliveryServiceID,
 		origin.FQDN, origin.IP6Address, origin.IPAddress, origin.Name,
-		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&origin.Cachegroup, &origin.Coordinate, &origin.DeliveryServiceID,
-		&origin.FQDN, &origin.IP6Address, &origin.IPAddress,
-		&origin.Port, &origin.Protocol, &origin.TenantID)
+		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&origin.ID, &origin.LastUpdated)
 	if errUpdate != nil {
 		if errors.Is(errUpdate, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin: %d not found", requestedOriginId), nil)
