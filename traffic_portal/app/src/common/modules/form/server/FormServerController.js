@@ -45,7 +45,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     var getPhysLocations = function() {
         physLocationService.getPhysLocations()
             .then(function(result) {
-                $scope.physLocations = result;
+                $scope.physicalLocations = result;
             });
     };
 
@@ -87,10 +87,10 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     $scope.addProfile = function() {
         $scope.serverForm.$setDirty();
 
-        if (!$scope.server.profileNames) {
-            $scope.server.profileNames = [null];
+        if (!$scope.server.profiles) {
+            $scope.server.profiles = [null];
         } else {
-            $scope.server.profileNames.push(null);
+            $scope.server.profiles.push(null);
         }
     }
 
@@ -105,7 +105,7 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
 
     $scope.deleteProfile = function(index) {
         $scope.serverForm.$setDirty();
-        $scope.server.profileNames.splice(index, 1);
+        $scope.server.profiles.splice(index, 1);
     }
 
     var updateStatus = function(status) {
@@ -184,8 +184,8 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
     }
 
     $scope.onCDNChange = function() {
-        $scope.server.profileId = null; // the cdn of the server changed, so we need to blank out the selected server profile (if any)
-        getProfiles($scope.server.cdnId); // and get a new list of profiles (for the selected cdn)
+        $scope.server.profileID = null; // the cdn of the server changed, so we need to blank out the selected server profile (if any)
+        getProfiles($scope.server.cdnID); // and get a new list of profiles (for the selected cdn)
     };
 
     $scope.isLargeCIDR = function(address) {
@@ -264,7 +264,10 @@ var FormServerController = function(server, $scope, $location, $state, $uibModal
         getCacheGroups();
         getTypes();
         getCDNs();
-        getProfiles(($scope.server.cdnId) ? $scope.server.cdnId : 0); // hacky but does the job. only when a cdn is selected can we fetch the appropriate profiles. otherwise, show no profiles.
+        getProfiles(($scope.server.cdnID) ? $scope.server.cdnID : 0); // hacky but does the job. only when a cdn is selected can we fetch the appropriate profiles. otherwise, show no profiles.
+
+        $scope.server.revalPending = $scope.server.revalApplyTime && $scope.server.revalUpdateTime && $scope.server.revalApplyTime < $scope.server.RevalUpdateTime;
+        $scope.server.updPending = $scope.server.configApplyTime && $scope.server.configUpdateTime && $scope.server.configApplyTime < $scope.server.configUpdateTime;
     };
     init();
 

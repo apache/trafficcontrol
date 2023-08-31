@@ -44,7 +44,7 @@ module.exports = angular.module('trafficPortal.private.servers.new', [])
                                             monitor: true
                                         }
                                     ],
-                                    profileNames: []
+                                    profiles: []
                                 };
                             }
                         }

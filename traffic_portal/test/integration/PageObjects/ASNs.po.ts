@@ -65,7 +65,7 @@ export class ASNsPage extends BasePage {
         await this.txtASN.sendKeys(asns.ASNs + twoNumberRandomize);
         await this.txtCacheGroup.sendKeys(asns.CacheGroup)
         await basePage.ClickCreate();
-        return await basePage.GetOutputMessage().then(v => asns.validationMessage === v);
+        return await basePage.GetOutputMessage().then(v => v.indexOf(asns.validationMessage ?? "") > -1);
     }
 
     public async SearchASNs(nameASNs: string): Promise<boolean> {
@@ -103,7 +103,7 @@ export class ASNsPage extends BasePage {
             result = false;
         }
         result = await basePage.GetOutputMessage().then(function (value) {
-            if (asns.validationMessage == value) {
+            if (value.indexOf(asns.validationMessage ?? "") > -1) {
                 return true;
             } else {
                 return false;

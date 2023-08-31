@@ -59,7 +59,7 @@ export const serviceCategories = {
 				{
 					description: "create a Service Categories",
 					Name: "TPServiceCategories1",
-					validationMessage: "serviceCategory was created."
+					validationMessage: "was created"
 				}
 			],
 			update: [
@@ -67,14 +67,14 @@ export const serviceCategories = {
 					description: "update service categories name",
 					Name: "TPServiceCategories1",
 					NewName: "TPSCNew1",
-					validationMessage: "was successful."
+					validationMessage: "was updated"
 				}
 			],
 			remove: [
 				{
 					description: "delete a service categories",
 					Name: "TPSCNew1",
-					validationMessage: "serviceCategory was deleted."
+					validationMessage: "was deleted"
 				}
 			]
 		},
