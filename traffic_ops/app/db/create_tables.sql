@@ -825,19 +825,6 @@ CREATE TRIGGER update_ds_timestamp_on_tls_version_delete
     FOR EACH ROW EXECUTE PROCEDURE update_ds_timestamp_on_delete();
 
 --
--- Name: deliveryservice_tmuser; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS deliveryservice_tmuser (
-    deliveryservice bigint NOT NULL,
-    tm_user_id bigint NOT NULL,
-    last_updated timestamp with time zone NOT NULL DEFAULT now(),
-    CONSTRAINT idx_89525_primary PRIMARY KEY (deliveryservice, tm_user_id)
-);
-
-ALTER TABLE deliveryservice_tmuser OWNER TO traffic_ops;
-
---
 -- Name: division; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -1443,7 +1430,6 @@ CREATE TABLE IF NOT EXISTS server (
     type bigint NOT NULL,
     status bigint NOT NULL,
     offline_reason text,
-    upd_pending boolean DEFAULT false NOT NULL,
     profile bigint NOT NULL,
     cdn_id bigint NOT NULL,
     mgmt_ip_address text,
@@ -1457,8 +1443,11 @@ CREATE TABLE IF NOT EXISTS server (
     guid text,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     https_port bigint,
-    reval_pending boolean NOT NULL DEFAULT FALSE,
     status_last_updated timestamp with time zone,
+    config_update_time timestamp NOT NULL DEFAULT TIMESTAMP 'epoch',
+    config_apply_time timestamp NOT NULL DEFAULT TIMESTAMP 'epoch',
+    revalidate_update_time timestamp NOT NULL DEFAULT TIMESTAMP 'epoch',
+    revalidate_apply_time timestamp NOT NULL DEFAULT TIMESTAMP 'epoch',
     CONSTRAINT idx_89709_primary PRIMARY KEY (id)
 );
 
@@ -1773,6 +1762,7 @@ CREATE TABLE IF NOT EXISTS tm_user (
     registration_sent timestamp with time zone,
     tenant_id bigint NOT NULL,
     last_authenticated timestamp with time zone,
+    ucdn text NOT NULL DEFAULT '',
     CONSTRAINT idx_89765_primary PRIMARY KEY (id)
 );
 
@@ -2225,14 +2215,6 @@ IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'deliveryse
     --
 
     CREATE INDEX IF NOT EXISTS idx_89521_fk_ds_to_cs_contentserver1 ON deliveryservice_server USING btree (server);
-END IF;
-
-IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'deliveryservice_tmuser' AND column_name = 'tm_user_id') THEN
-    --
-    -- Name: idx_89525_fk_tm_userid; Type: INDEX; Schema: public; Owner: traffic_ops
-    --
-
-    CREATE INDEX IF NOT EXISTS idx_89525_fk_tm_userid ON deliveryservice_tmuser USING btree (tm_user_id);
 END IF;
 
 IF EXISTS (SELECT FROM information_schema.columns WHERE table_name = 'division' AND column_name = 'name') THEN
@@ -2755,7 +2737,6 @@ DO $$
         'deliveryservice_request',
         'deliveryservice_request_comment',
         'deliveryservice_server',
-        'deliveryservice_tmuser',
         'deliveryservices_required_capability',
         'division',
         'federation',
@@ -2871,7 +2852,6 @@ DECLARE
         'deliveryservice_request',
         'deliveryservice_request_comment',
         'deliveryservice_server',
-        'deliveryservice_tmuser',
         'division',
         'federation',
         'federation_deliveryservice',
@@ -3479,24 +3459,6 @@ IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint
         ADD CONSTRAINT fk_steering_target_target FOREIGN KEY (target) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
 END IF;
 
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_tm_user_ds' AND table_name = 'deliveryservice_tmuser') THEN
-    --
-    -- Name: fk_tm_user_ds; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY deliveryservice_tmuser
-        ADD CONSTRAINT fk_tm_user_ds FOREIGN KEY (deliveryservice) REFERENCES deliveryservice(id) ON UPDATE CASCADE ON DELETE CASCADE;
-END IF;
-
-IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_tm_user_id' AND table_name = 'deliveryservice_tmuser') THEN
-    --
-    -- Name: fk_tm_user_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
-    --
-
-    ALTER TABLE ONLY deliveryservice_tmuser
-        ADD CONSTRAINT fk_tm_user_id FOREIGN KEY (tm_user_id) REFERENCES tm_user(id) ON UPDATE CASCADE ON DELETE CASCADE;
-END IF;
-
 IF NOT EXISTS (SELECT FROM information_schema.table_constraints WHERE constraint_name = 'fk_user_1' AND table_name = 'tm_user') THEN
     --
     -- Name: fk_user_1; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -3897,39 +3859,6 @@ CREATE TABLE cdni_telemetry_metrics (
 ALTER TABLE cdni_telemetry_metrics OWNER TO traffic_ops;
 
 --
--- Name: cdni_total_limits; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS cdni_total_limits (
-    limit_type text NOT NULL,
-    maximum_hard bigint NOT NULL,
-    maximum_soft bigint NOT NULL,
-    telemetry_id text NOT NULL,
-    telemetry_metric text NOT NULL,
-    capability_id bigint NOT NULL,
-    last_updated timestamp with time zone DEFAULT now() NOT NULL
-);
-
-ALTER TABLE cdni_total_limits OWNER TO traffic_ops;
-
---
--- Name: cdni_host_limits; Type: TABLE; Schema: public; Owner: traffic_ops
---
-
-CREATE TABLE IF NOT EXISTS cdni_host_limits (
-    limit_type text NOT NULL,
-    maximum_hard bigint NOT NULL,
-    maximum_soft bigint NOT NULL,
-    telemetry_id text NOT NULL,
-    telemetry_metric text NOT NULL,
-    capability_id bigint NOT NULL,
-    host text NOT NULL,
-    last_updated timestamp with time zone DEFAULT now() NOT NULL
-);
-
-ALTER TABLE cdni_host_limits OWNER TO traffic_ops;
-
---
 -- Name: cdni_limits; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -4049,20 +3978,6 @@ ALTER TABLE ONLY cdni_telemetry_metrics
     ADD CONSTRAINT pk_cdni_telemetry_metrics PRIMARY KEY (name);
 
 --
--- Name: cdni_total_limits pk_cdni_total_limits; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cdni_total_limits
-    ADD CONSTRAINT pk_cdni_total_limits PRIMARY KEY (capability_id, telemetry_id);
-
---
--- Name: cdni_host_limits pk_cdni_host_limits; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cdni_host_limits
-    ADD CONSTRAINT pk_cdni_host_limits PRIMARY KEY (capability_id, telemetry_id, host);
-
---
 -- Name: cdn_lock_user pk_cdn_lock_user; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
@@ -4126,34 +4041,6 @@ ALTER TABLE ONLY cdni_telemetry_metrics
     ADD CONSTRAINT fk_cdni_total_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
--- Name: cdni_total_limits fk_cdni_total_limits_telemetry; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cdni_total_limits
-    ADD CONSTRAINT fk_cdni_total_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
---
--- Name: cdni_total_limits fk_cdni_total_limits_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cdni_total_limits
-    ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
---
--- Name: cdni_host_limits fk_cdni_host_limits_telemetry; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cdni_host_limits
-    ADD CONSTRAINT fk_cdni_host_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
---
--- Name: cdni_host_limits fk_cdni_total_limits_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cdni_host_limits
-    ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
---
 -- Name: cdn_lock_user fk_shared_username; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
@@ -4172,14 +4059,14 @@ ALTER TABLE ONLY cdn_lock_user
 --
 
 ALTER TABLE ONLY server_profile
-    ADD CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES public.server(id) ON DELETE CASCADE ON UPDATE CASCADE;
+    ADD CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES server(id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Name: server_profile fk_server_profile_name_profile; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server_profile
-    ADD CONSTRAINT fk_server_profile_name_profile FOREIGN KEY (profile_name) REFERENCES public.profile(name) ON UPDATE CASCADE ON DELETE RESTRICT;
+    ADD CONSTRAINT fk_server_profile_name_profile FOREIGN KEY (profile_name) REFERENCES profile(name) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 --
 -- Name: cdni_capability_updates fk_cdni_capability_updates_async; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
