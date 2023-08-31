@@ -278,17 +278,16 @@ func TestOrigins(t *testing.T) {
 					EndpointID:    GetOriginID(t, "origin2"),
 					ClientSession: TOSession,
 					RequestBody: tc.OriginV5{
-						Name:              "origin2",
-						Cachegroup:        util.Ptr("multiOriginCachegroup"),
-						Coordinate:        util.Ptr("coordinate2"),
-						DeliveryService:   "ds3",
-						DeliveryServiceID: GetDeliveryServiceId(t, "ds3")(),
-						FQDN:              "originupdated.example.com",
-						IPAddress:         util.Ptr("1.2.3.4"),
-						IP6Address:        util.Ptr("0000::1111"),
-						Port:              util.Ptr(1234),
-						Protocol:          "http",
-						TenantID:          GetTenantID(t, "tenant2")(),
+						Name:            "origin2",
+						Cachegroup:      util.Ptr("multiOriginCachegroup"),
+						Coordinate:      util.Ptr("coordinate2"),
+						DeliveryService: "ds3",
+						FQDN:            "originupdated.example.com",
+						IPAddress:       util.Ptr("1.2.3.4"),
+						IP6Address:      util.Ptr("0000::1111"),
+						Port:            util.Ptr(1234),
+						Protocol:        "http",
+						TenantID:        GetTenantID(t, "tenant2")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateOriginsUpdateCreateFields("origin2", map[string]interface{}{"Cachegroup": "multiOriginCachegroup", "Coordinate": "coordinate2", "DeliveryService": "ds3",
@@ -649,8 +648,6 @@ func DeleteTestOrigins(t *testing.T) {
 	assert.NoError(t, err, "Cannot get Origins : %v - alerts: %+v", err, origins.Alerts)
 
 	for _, origin := range origins.Response {
-		origin.TenantID = GetTenantID(t, "root")()
-		origin.DeliveryServiceID = GetDeliveryServiceId(t, origin.DeliveryService)()
 		assert.RequireNotNil(t, origin.ID, "Expected origin ID to not be nil.")
 		assert.RequireNotNil(t, origin.Name, "Expected origin ID to not be nil.")
 		assert.RequireNotNil(t, origin.IsPrimary, "Expected origin ID to not be nil.")
