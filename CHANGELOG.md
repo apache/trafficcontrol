@@ -76,6 +76,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server* Use GCC 11 for building.
 - [#7742](https://github.com/apache/trafficcontrol/pull/7742) *Traffic Ops* Changed api tests to supply the absolute path of certs.
 - [#7718](https://github.com/apache/trafficcontrol/pull/7718) *Traffic Ops* `/servers` endpoint now responds with RFC3339 timestamps for all timestamp fields. Cleaned up naming conventions and superfluous data.
+- [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats* now uses Traffic Ops APIv5
 
 ### Fixed
 - [RFC3339](https://github.com/apache/trafficcontrol/issues/5911)
@@ -102,8 +103,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - [#7691](https://github.com/apache/trafficcontrol/pull/7691) *Traffic Ops* Fixed `/topologies` v5 APIs to respond with `RFC3339` timestamps.
     - [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixed `/service_category` v5 APIs to respond with `RFC3339` timestamps.
     - [#7413](https://github.com/apache/trafficcontrol/issues/7706) *Traffic Ops* Fixed `/statuses` v5 APIs to respond with `RFC3339` timestamps.
-    - [#7743](https://github.com/apache/trafficcontrol/issues/7743) *Traffic Ops* Fixed `/server_server_capabilities` v5 APIs to respond with `RFC3339` timestamps.
     - [#7733](https://github.com/apache/trafficcontrol/pull/7733) *Traffic Ops* Fixes `origins` v5 apis to respond with `RFC3339` date/time Format.
+- [#7762](https://github.com/apache/trafficcontrol/pull/7762) *Traffic Ops* Fixed `/phys_locations` update API to remove error related to mismatching region name and ID.
+- [#7743](https://github.com/apache/trafficcontrol/issues/7743) *Traffic Ops* Fixed `/server_server_capabilities` v5 APIs to respond with `RFC3339` timestamps.
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
 - [#7623](https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go
