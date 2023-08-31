@@ -3957,7 +3957,7 @@ CREATE TABLE IF NOT EXISTS cdn_lock_user (
     owner text NOT NULL,
     cdn text NOT NULL,
     username text NOT NULL
-)
+);
 
 ALTER TABLE cdn_lock_user OWNER TO traffic_ops;
 
@@ -4047,35 +4047,35 @@ ALTER TABLE ONLY cdni_telemetry_metrics
 --
 
 ALTER TABLE ONLY cdni_total_limits
-    ADD CONSTRAINT pk_cdni_total_limits PRIMARY KEY (capability_id, telemetry_id)
+    ADD CONSTRAINT pk_cdni_total_limits PRIMARY KEY (capability_id, telemetry_id);
 
 --
 -- Name: cdni_host_limits pk_cdni_host_limits; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdni_host_limits
-    ADD CONSTRAINT pk_cdni_host_limits PRIMARY KEY (capability_id, telemetry_id, host),
+    ADD CONSTRAINT pk_cdni_host_limits PRIMARY KEY (capability_id, telemetry_id, host);
 
 --
 -- Name: cdn_lock_user pk_cdn_lock_user; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdn_lock_user
-    ADD CONSTRAINT pk_cdn_lock_user PRIMARY KEY (owner, cdn, username),
+    ADD CONSTRAINT pk_cdn_lock_user PRIMARY KEY (owner, cdn, username);
 
 --
 -- Name: server_profile pk_server_profile; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server_profile
-    ADD CONSTRAINT pk_server_profile PRIMARY KEY (profile_name, server)
+    ADD CONSTRAINT pk_server_profile PRIMARY KEY (profile_name, server);
 
 --
 -- Name: cdni_capability_updates pk_cdni_capability_updates; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdni_capability_updates
-    ADD CONSTRAINT pk_cdni_capability_updates PRIMARY KEY (id)
+    ADD CONSTRAINT pk_cdni_capability_updates PRIMARY KEY (id);
 
 --
 -- Name: cdni_footprints fk_cdni_footprint_capabilities; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
@@ -4117,63 +4117,63 @@ ALTER TABLE ONLY cdni_telemetry_metrics
 --
 
 ALTER TABLE ONLY cdni_telemetry_metrics
-    ADD CONSTRAINT fk_cdni_total_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE
+    ADD CONSTRAINT fk_cdni_total_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
 -- Name: cdni_telemetry_metrics fk_cdni_total_limits_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdni_telemetry_metrics
-    ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE
+    ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
 -- Name: cdni_host_limits fk_cdni_host_limits_telemetry; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdni_host_limits
-    ADD CONSTRAINT fk_cdni_host_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE
+    ADD CONSTRAINT fk_cdni_host_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
 -- Name: cdni_host_limits fk_cdni_total_limits_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdni_host_limits
-    ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE
+    ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
 -- Name: cdn_lock_user fk_shared_username; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdn_lock_user
-    ADD CONSTRAINT fk_shared_username FOREIGN KEY (username) REFERENCES tm_user(username),
+    ADD CONSTRAINT fk_shared_username FOREIGN KEY (username) REFERENCES tm_user(username);
 
 --
 -- Name: cdn_lock_user fk_owner; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdn_lock_user
-    ADD CONSTRAINT fk_owner FOREIGN KEY (owner, cdn) REFERENCES cdn_lock(username, cdn) ON DELETE CASCADE
+    ADD CONSTRAINT fk_owner FOREIGN KEY (owner, cdn) REFERENCES cdn_lock(username, cdn) ON DELETE CASCADE;
 
 --
 -- Name: server_profile fk_server_id; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server_profile
-    ADD CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES public.server(id) ON DELETE CASCADE ON UPDATE CASCADE
+    ADD CONSTRAINT fk_server_id FOREIGN KEY (server) REFERENCES public.server(id) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Name: server_profile fk_server_profile_name_profile; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY server_profile
-    ADD CONSTRAINT fk_server_profile_name_profile FOREIGN KEY (profile_name) REFERENCES public.profile(name) ON UPDATE CASCADE ON DELETE RESTRICT
+    ADD CONSTRAINT fk_server_profile_name_profile FOREIGN KEY (profile_name) REFERENCES public.profile(name) ON UPDATE CASCADE ON DELETE RESTRICT;
 
 --
 -- Name: cdni_capability_updates fk_cdni_capability_updates_async; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
 ALTER TABLE ONLY cdni_capability_updates
-    ADD CONSTRAINT fk_cdni_capability_updates_async FOREIGN KEY (async_status_id) REFERENCES async_status(id) ON UPDATE CASCADE ON DELETE CASCADE
+    ADD CONSTRAINT fk_cdni_capability_updates_async FOREIGN KEY (async_status_id) REFERENCES async_status(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 
 --
