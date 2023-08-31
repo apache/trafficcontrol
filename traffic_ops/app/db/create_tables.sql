@@ -4008,6 +4008,12 @@ ALTER TABLE ONLY cdni_footprints ALTER COLUMN id SET DEFAULT nextval('cdni_footp
 ALTER TABLE ONLY cdni_limits ALTER COLUMN id SET DEFAULT nextval('cdni_limits_id_seq'::regclass);
 
 --
+-- Name: cdn_lock cdn_lock_cdn_username_unique; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE cdn_lock ADD CONSTRAINT cdn_lock_cdn_username_unique UNIQUE (username, cdn);
+
+--
 -- Name: cdni_capabilities pk_cdni_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
