@@ -341,13 +341,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if asn already exists
-	var count int
-	err := tx.QueryRow("SELECT count(*) from asn where asn=$1", asn.ASN).Scan(&count)
-	if err != nil {
+	var id int
+	err := tx.QueryRow("SELECT id from asn where asn=$1", asn.ASN).Scan(&id)
+	if err != nil && err != sql.ErrNoRows {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if asn '%d' exists", err, asn.ASN))
 		return
 	}
-	if count == 1 {
+	if id != 0 && id != requestedAsnId {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn:'%d' already exists", asn.ASN), nil)
 		return
 	}
