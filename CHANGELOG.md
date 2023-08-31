@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7674](https://github.com/apache/trafficcontrol/issues/7674) *Traffic Ops* Add the ability to indicate if a server failed its revalidate/config update.
 
 ### Changed
+- [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats* now uses Traffic Ops APIv5
 - [#7757](https://github.com/apache/trafficcontrol/pull/7757) *Traffic Router* Changed Traffic Router to point to api version 5.0 of Traffic Ops.
 - [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
 - [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
@@ -81,6 +82,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7766](https://github.com/apache/trafficcontrol/pull/7766) *Traffic Portal* now uses TO APIv5
 
 ### Fixed
+- [#7764](https://github.com/apache/trafficcontrol/pull/7764) *Traffic Ops* Collapsed DB migrations
 - [#7767](https://github.com/apache/trafficcontrol/pull/7767) *Traffic Ops* Fixed ASN update logic for APIv5
 - [RFC3339](https://github.com/apache/trafficcontrol/issues/5911)
     - [#7759](https://github.com/apache/trafficcontrol/pull/7759) *Traffic Ops* Fixed `/profiles/{{ID}}/parameters` and `profiles/name/{{name}}/parameters` v5 APIs to respond with `RFC3339` timestamps.
