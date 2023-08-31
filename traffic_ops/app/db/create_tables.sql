@@ -4120,10 +4120,17 @@ ALTER TABLE ONLY cdni_telemetry_metrics
     ADD CONSTRAINT fk_cdni_total_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
--- Name: cdni_telemetry_metrics fk_cdni_total_limits_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+-- Name: cdni_total_limits fk_cdni_total_limits_telemetry; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
 --
 
-ALTER TABLE ONLY cdni_telemetry_metrics
+ALTER TABLE ONLY cdni_total_limits
+    ADD CONSTRAINT fk_cdni_total_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+--
+-- Name: cdni_total_limits fk_cdni_total_limits_capabilities; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
+--
+
+ALTER TABLE ONLY cdni_total_limits
     ADD CONSTRAINT fk_cdni_total_limits_capabilities FOREIGN KEY (capability_id) REFERENCES cdni_capabilities(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
