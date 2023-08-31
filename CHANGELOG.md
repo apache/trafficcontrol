@@ -79,6 +79,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats* now uses Traffic Ops APIv5
 
 ### Fixed
+- [#7767](https://github.com/apache/trafficcontrol/pull/7767) *Traffic Ops* Fixed ASN update logic for APIv5
 - [RFC3339](https://github.com/apache/trafficcontrol/issues/5911)
     - [#7759](https://github.com/apache/trafficcontrol/pull/7759) *Traffic Ops* Fixed `/profiles/{{ID}}/parameters` and `profiles/name/{{name}}/parameters` v5 APIs to respond with `RFC3339` timestamps.
     - [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops* Fixed `/profiles` v5 APIs to respond with `RFC3339` timestamps.
