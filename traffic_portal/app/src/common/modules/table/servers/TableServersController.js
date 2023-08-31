@@ -38,7 +38,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
 	$scope.columns = [
 		{
 			headerName: "Cache Group",
-			field: "cachegroup",
+			field: "cacheGroup",
 			hide: false
 		},
 		{
@@ -170,7 +170,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
 		},
 		{
 			headerName: "Phys Location",
-			field: "physLocation",
+			field: "physicalLocation",
 			hide: true
 		},
 		{
@@ -178,10 +178,10 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
 			field: "profileName",
 			hide: false,
 			valueGetter:  function(params) {
-				return params.data.profileNames;
+				return params.data.profiles;
 			},
 			tooltipValueGetter: function(params) {
-				return params.data.profileNames.join(", ");
+				return params.data.profiles.join(", ");
 			},
 			filter: 'arrayTextColumnFilter'
 		},
@@ -384,9 +384,11 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
 		function(x) {
 			x.lastUpdated = x.lastUpdated ? new Date(x.lastUpdated.replace("+00", "Z")) : x.lastUpdated;
 			x.statusLastUpdated = x.statusLastUpdated ? new Date(x.statusLastUpdated): x.statusLastUpdated;
+			x.revalPending = x.revalApplyTime && x.revalUpdateTime && x.revalApplyTime < x.RevalUpdateTime;
+			x.updPending = x.configApplyTime && x.configUpdateTime && x.configApplyTime < x.configUpdateTime;
 			Object.assign(x, serverUtils.toLegacyIPInfo(x.interfaces));
-			if (x.profileNames !== undefined) {
-				x.profileName = x.profileNames[0]
+			if (x.profiles !== undefined) {
+				x.profileName = x.profiles[0]
 			}
 			return x;
 	});

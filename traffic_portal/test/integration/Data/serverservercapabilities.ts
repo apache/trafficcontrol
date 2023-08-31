@@ -232,8 +232,8 @@ export const serverServerCapabilities = {
 			method: "post",
 			data: [
 				{
-					cachegroupId: 0,
-					cdnId: 0,
+					cacheGroupID: 0,
+					cdnID: 0,
 					domainName: "test.net",
 					hostName: "testserver1",
 					httpsPort: 443,
@@ -268,38 +268,37 @@ export const serverServerCapabilities = {
 					mgmtIpGateway: "",
 					mgmtIpNetmask: "",
 					offlineReason: "",
-					physLocationId: 0,
-					profileNames: ["testProfile"],
+					physicalLocationID: 0,
+					profiles: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
 					tcpPort: 80,
-					typeId: 12,
-					updPending: false,
+					typeID: 12,
 					getRequest: [
 						{
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TPPhysLocation2",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
 						{
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "dummycdn",
-							replace: "cdnId"
+							replace: "cdnID"
 						},
 						{
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupId"
+							replace: "cacheGroupID"
 						}
 					]
 				},
 				{
-					cachegroupId: 8,
-					cdnId: 2,
+					cacheGroupID: 8,
+					cdnID: 2,
 					domainName: "test.net",
 					hostName: "testserver2",
 					httpsPort: 443,
@@ -334,38 +333,37 @@ export const serverServerCapabilities = {
 					mgmtIpGateway: "",
 					mgmtIpNetmask: "",
 					offlineReason: "",
-					physLocationId: 2,
-					profileNames: ["testProfile"],
+					physicalLocationID: 2,
+					profiles: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
 					tcpPort: 80,
-					typeId: 12,
-					updPending: false,
+					typeID: 12,
 					getRequest: [
 						{
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TPPhysLocation2",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
 						{
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "dummycdn",
-							replace: "cdnId"
+							replace: "cdnID"
 						},
 						{
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupId"
+							replace: "cacheGroupID"
 						}
 					]
 				},
 				{
-					cachegroupId: 8,
-					cdnId: 2,
+					cacheGroupID: 8,
+					cdnID: 2,
 					domainName: "test.net",
 					hostName: "testserver3",
 					httpsPort: 443,
@@ -400,38 +398,37 @@ export const serverServerCapabilities = {
 					mgmtIpGateway: "",
 					mgmtIpNetmask: "",
 					offlineReason: "",
-					physLocationId: 2,
-					profileNames: ["testProfile"],
+					physicalLocationID: 2,
+					profiles: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
 					tcpPort: 80,
-					typeId: 13,
-					updPending: false,
+					typeID: 13,
 					getRequest: [
 						{
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TPPhysLocation2",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
 						{
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "dummycdn",
-							replace: "cdnId"
+							replace: "cdnID"
 						},
 						{
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupId"
+							replace: "cacheGroupID"
 						}
 					]
 				},
 				{
-					cachegroupId: 8,
-					cdnId: 2,
+					cacheGroupID: 8,
+					cdnID: 2,
 					domainName: "test.net",
 					hostName: "testserver4",
 					httpsPort: 443,
@@ -466,38 +463,37 @@ export const serverServerCapabilities = {
 					mgmtIpGateway: "",
 					mgmtIpNetmask: "",
 					offlineReason: "",
-					physLocationId: 2,
-					profileNames: ["testProfile"],
+					physicalLocationID: 2,
+					profiles: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
 					tcpPort: 80,
-					typeId: 12,
-					updPending: false,
+					typeID: 12,
 					getRequest: [
 						{
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TPPhysLocation2",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
 						{
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "dummycdn",
-							replace: "cdnId"
+							replace: "cdnID"
 						},
 						{
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupId"
+							replace: "cacheGroupID"
 						}
 					]
 				},
 				{
-					cachegroupId: 8,
-					cdnId: 2,
+					cacheGroupID: 8,
+					cdnID: 2,
 					domainName: "test.net",
 					hostName: "testserver5",
 					httpsPort: 443,
@@ -532,38 +528,37 @@ export const serverServerCapabilities = {
 					mgmtIpGateway: "",
 					mgmtIpNetmask: "",
 					offlineReason: "",
-					physLocationId: 2,
-					profileNames: ["testProfile"],
+					physicalLocationID: 2,
+					profiles: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
 					tcpPort: 80,
-					typeId: 12,
-					updPending: false,
+					typeID: 12,
 					getRequest: [
 						{
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TPPhysLocation2",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
 						{
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "dummycdn",
-							replace: "cdnId"
+							replace: "cdnID"
 						},
 						{
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupId"
+							replace: "cacheGroupID"
 						}
 					]
 				},
 				{
-					cachegroupId: 8,
-					cdnId: 2,
+					cacheGroupID: 8,
+					cdnID: 2,
 					domainName: "test.net",
 					hostName: "testserver6",
 					httpsPort: 443,
@@ -598,32 +593,31 @@ export const serverServerCapabilities = {
 					mgmtIpGateway: "",
 					mgmtIpNetmask: "",
 					offlineReason: "",
-					physLocationId: 2,
-					profileNames: ["testProfile"],
+					physicalLocationID: 2,
+					profiles: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
 					tcpPort: 80,
-					typeId: 13,
-					updPending: false,
+					typeID: 13,
 					getRequest: [
 						{
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TPPhysLocation2",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
 						{
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "dummycdn",
-							replace: "cdnId"
+							replace: "cdnID"
 						},
 						{
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupId"
+							replace: "cacheGroupID"
 						}
 					]
 				}
@@ -701,7 +695,7 @@ export const serverServerCapabilities = {
 				{
 					description: "delete server capability linked with one or more servers",
 					ServerCapability: "servercap2",
-					validationMessage: "cannot delete server_capability because it is being used by a server_server_capability"
+					validationMessage: "can not delete a server capability with 2 assigned servers"
 				},
 				{
 					description: "delete server capabilities that is not link to any server",
@@ -793,7 +787,7 @@ export const serverServerCapabilities = {
 				{
 					description: "delete server capability linked with one or more servers",
 					ServerCapability: "servercap2",
-					validationMessage: "cannot delete server_capability because it is being used by a server_server_capability"
+					validationMessage: "can not delete a server capability with 4 assigned servers"
 				},
 				{
 					description: "delete server capabilities that is not link to any server",

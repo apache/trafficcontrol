@@ -164,8 +164,8 @@ export const physLocations = {
 			method: "post",
 			data: [
 				{
-					cachegroupId: 0,
-					cdnId: 0,
+					cachegroupID: 0,
+					cdnID: 0,
 					domainName: "test.net",
 					hostName: "PhysTest",
 					httpsPort: 443,
@@ -200,32 +200,32 @@ export const physLocations = {
 					mgmtIpGateway: "",
 					mgmtIpNetmask: "",
 					offlineReason: "",
-					physLocationId: 0,
-					profileNames: ["testProfile"],
+					physicalLocationID: 0,
+					profiles: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
 					tcpPort: 80,
-					typeId: 12,
+					typeID: 12,
 					updPending: false,
 					getRequest: [
 						{
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TPPhysLocation2",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
 						{
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "dummycdn",
-							replace: "cdnId"
+							replace: "cdnID"
 						},
 						{
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupId"
+							replace: "cachegroupID"
 						}
 					]
 				}
@@ -286,7 +286,7 @@ export const physLocations = {
 				{
 					description: "delete a PhysLocation that currently link with a Server",
 					Name: "TPPhysLocation2",
-					validationMessage: "cannot delete phys_location because it is being used by a server"
+					validationMessage: "can not delete a phys_location"
 				}
 			]
 		},

@@ -72,7 +72,7 @@ export const coordinates = {
 					Name: "TPCoordinates1",
 					Latitude: 0,
 					Longitude: 0,
-					validationMessage: "coordinate was created."
+					validationMessage: "created"
 				}
 			],
 			update: [
@@ -80,14 +80,14 @@ export const coordinates = {
 					description: "update coordinates latitude",
 					Name: "TPCoordinates1",
 					Latitude: 1,
-					validationMessage: "coordinate was updated."
+					validationMessage: "updated"
 				}
 			],
 			remove: [
 				{
 					description: "delete a Coordinates",
 					Name: "TPCoordinates1",
-					validationMessage: "coordinate was deleted."
+					validationMessage: "deleted"
 				}
 			]
 		},

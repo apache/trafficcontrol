@@ -47,7 +47,7 @@ under the License.
 
             <label for="status">Status *</label>
             <div>
-                <select id="status" name="status" class="form-control" ng-model="server.statusId" ng-options="status.id as status.name for status in statuses" ng-disabled="!settings.isNew"></select>
+                <select id="status" name="status" class="form-control" ng-model="server.statusID" ng-options="status.id as status.name for status in statuses" ng-disabled="!settings.isNew"></select>
             </div>
 
             <label ng-if="!settings.isNew" for="statusLastUpdated">Status Last Updated</label>
@@ -85,29 +85,28 @@ under the License.
 
             <label for="cdn" ng-class="{'has-error': hasError(serverForm.cdn)}">CDN *</label>
             <div ng-class="{'has-error': hasError(serverForm.cdn), 'has-feedback': hasError(serverForm.cdn)}">
-                <select name="cdn" id="cdn" class="form-control" ng-change="onCDNChange()" ng-model="server.cdnId" ng-options="cdn.id as cdn.name for cdn in cdns" required>
+                <select name="cdn" id="cdn" class="form-control" ng-change="onCDNChange()" ng-model="server.cdnID" ng-options="cdn.id as cdn.name for cdn in cdns" required>
                     <option hidden selected disabled value="">Select...</option>
                 </select>
                 <small class="input-error" ng-show="hasPropertyError(serverForm.cdn, 'required')">Required</small>
-                <small ng-show="server.cdnId"><a ng-href="/#!/cdns/{{server.cdnId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                <small ng-show="server.cdnID"><a ng-href="/#!/cdns/{{server.cdnID}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
             </div>
 
-            <label for="cachegroup" ng-class="{'has-error': hasError(serverForm.cachegroup)}">Cache Group *</label>
-            <div ng-class="{'has-error': hasError(serverForm.cachegroup), 'has-feedback': hasError(serverForm.cachegroup)}">
-                <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server.cachegroupId" ng-options="cachegroup.id as cachegroup.name for cachegroup in cacheGroups" required>
+            <label for="cachegroup" ng-class="{'has-error': hasError(serverForm.cacheGroup)}">Cache Group *</label>
+            <div ng-class="{'has-error': hasError(serverForm.cacheGroup), 'has-feedback': hasError(serverForm.cacheGroup)}">
+                <select id="cachegroup" name="cachegroup" class="form-control" ng-model="server.cacheGroupID" ng-options="cacheGroup.id as cacheGroup.name for cacheGroup in cacheGroups" required>
                     <option hidden selected disabled value="">Select...</option>
                 </select>
-                <small class="input-error" ng-show="hasPropertyError(serverForm.cachegroup, 'required')">Required</small>
-                <small ng-show="server.cachegroupId"><a ng-href="/#!/cache-groups/{{server.cachegroupId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                <small class="input-error" ng-show="hasPropertyError(serverForm.cacheGroup, 'required')">Required</small>
+                <small ng-show="server.cacheGroupID"><a ng-href="/#!/cache-groups/{{server.cacheGroupID}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
             </div>
-
             <label for="type" ng-class="{'has-error': hasError(serverForm.type)}">Type *</label>
             <div ng-class="{'has-error': hasError(serverForm.type), 'has-feedback': hasError(serverForm.type)}">
-                <select id="type" name="type" class="form-control" ng-model="server.typeId" ng-options="type.id as type.name for type in types" required>
+                <select id="type" name="type" class="form-control" ng-model="server.typeID" ng-options="type.id as type.name for type in types" required>
                     <option hidden selected disabled value="">Select...</option>
                 </select>
                 <small class="input-error" ng-show="hasPropertyError(serverForm.type, 'required')">Required</small>
-                <small ng-show="server.typeId"><a ng-href="/#!/types/{{server.typeId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                <small ng-show="server.typeID"><a ng-href="/#!/types/{{server.typeID}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
             </div>
 
             <fieldset>
@@ -120,25 +119,25 @@ under the License.
                     For example, P1 and P2 are two profiles associated with a server, S1. Parameters of P1 will have a <u>higher</u> priority over that of P2.
                     And if there exists parameters with same name but different values, then P1's parameters will <b>not</b> be overwritten.
                 </p>
-                <fieldset ng-repeat="profile in server.profileNames track by $index"> {{$index + 1}}
+                <fieldset ng-repeat="profile in server.profiles track by $index"> {{$index + 1}}
                     <select ng-class="{'has-error': hasPropertyError(serverForm['activeProfile-'+$index], 'required'), 'has-feedback': hasPropertyError(serverForm['activeProfile-'+$index], 'required')}"
-                            id="activeProfile-{{$index}}" name="activeProfile-{{$index}}" class="form-control" ng-model="server.profileNames[$index]"
-                            ng-options="profile.name as profile.name for profile in profiles|excludeFilter:profile:server.profileNames" required>
+                            id="activeProfile-{{$index}}" name="activeProfile-{{$index}}" class="form-control" ng-model="server.profiles[$index]"
+                            ng-options="profile.name as profile.name for profile in profiles|excludeFilter:profile:server.profiles" required>
                         <option hidden selected disabled value="">Select...</option>
                     </select>
                     <small class="input-error" ng-show="hasPropertyError(serverForm['activeProfile-'+$index], 'required')">Required</small>
-                    <a ng-href="{{getProfileID(server.profileNames[$index])}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a>
-                    <button class="btn btn-danger right-button btn-xs" type="button" title="remove this profile from the server" ng-if="server.profileNames.length>1" ng-click="deleteProfile($index)"><i class="fa fa-minus"></i></button>
+                    <a ng-href="{{getProfileID(server.profiles[$index])}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a>
+                    <button class="btn btn-danger right-button btn-xs" type="button" title="remove this profile from the server" ng-if="server.profiles.length>1" ng-click="deleteProfile($index)"><i class="fa fa-minus"></i></button>
                 </fieldset>
             </fieldset>
 
-            <label for="physLocation" ng-class="{'has-error': hasError(serverForm.physLocation)}">Physical Location *</label>
-            <div ng-class="{'has-error': hasError(serverForm.physLocation), 'has-feedback': hasError(serverForm.physLocation)}">
-                <select id="physLocation" name="physLocation" class="form-control" ng-model="server.physLocationId" ng-options="physLocation.id as physLocation.name for physLocation in physLocations" required>
+            <label for="physicalLocation" ng-class="{'has-error': hasError(serverForm.physicalLocation)}">Physical Location *</label>
+            <div ng-class="{'has-error': hasError(serverForm.physicalLocation), 'has-feedback': hasError(serverForm.physicalLocation)}">
+                <select id="physicalLocation" name="physicalLocation" class="form-control" ng-model="server.physicalLocationID" ng-options="pL.id as pL.name for pL in physicalLocations" required>
                     <option value="">Select...</option>
                 </select>
-                <small class="input-error" ng-show="hasPropertyError(serverForm.physLocation, 'required')">Required</small>
-                <small ng-show="server.physLocationId"><a ng-href="/#!/phys-locations/{{server.physLocationId}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
+                <small class="input-error" ng-show="hasPropertyError(serverForm.physicalLocation, 'required')">Required</small>
+                <small ng-show="server.physicalLocationID"><a ng-href="/#!/phys-locations/{{server.physicalLocationID}}" target="_blank">View Details&nbsp;&nbsp;<i class="fa fs-xs fa-external-link"></i></a></small>
             </div>
 
             <label for="tcpPort" ng-class="{'has-error': hasError(serverForm.tcpPort)}">TCP Port</label>
