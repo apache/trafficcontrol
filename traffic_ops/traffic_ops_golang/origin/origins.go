@@ -37,6 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -655,9 +656,9 @@ func Update(w http.ResponseWriter, r *http.Request) {
 					WHERE id=$12 RETURNING cachegroup, coordinate, deliveryservice, fqdn, ip6_address, ip_address, port, protocol, tenant`
 	errUpdate := tx.QueryRow(query, origin.CachegroupID, origin.CoordinateID, origin.DeliveryServiceID,
 		origin.FQDN, origin.IP6Address, origin.IPAddress, origin.Name,
-		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&origin.Cachegroup, &origin.Coordinate, &origin.DeliveryService,
+		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&origin.Cachegroup, &origin.Coordinate, &origin.DeliveryServiceID,
 		&origin.FQDN, &origin.IP6Address, &origin.IPAddress,
-		&origin.Port, &origin.Protocol, &origin.Tenant)
+		&origin.Port, &origin.Protocol, &origin.TenantID)
 	if errUpdate != nil {
 		if errors.Is(errUpdate, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin: %d not found", requestedOriginId), nil)
@@ -761,7 +762,7 @@ func readAndValidateJsonStruct(r *http.Request, tx *sqlx.Tx) (tc.OriginV5, int, 
 	errs := tovalidate.ToErrors(validation.Errors{
 		"cachegroupId":      validation.Validate(origin.CachegroupID, validation.Min(1)),
 		"coordinateId":      validation.Validate(origin.CoordinateID, validation.Min(1)),
-		"deliveryServiceId": validation.Validate(origin.DeliveryServiceID, validation.NotNil),
+		"deliveryServiceId": validation.Validate(origin.DeliveryServiceID, validation.Required),
 		"fqdn":              validation.Validate(origin.FQDN, validation.Required, is.DNSName),
 		"ip6Address":        validation.Validate(origin.IP6Address, validation.NilOrNotEmpty, is.IPv6),
 		"ipAddress":         validation.Validate(origin.IPAddress, validation.NilOrNotEmpty, is.IPv4),
@@ -769,7 +770,7 @@ func readAndValidateJsonStruct(r *http.Request, tx *sqlx.Tx) (tc.OriginV5, int, 
 		"port":              validation.Validate(origin.Port, validation.NilOrNotEmpty.Error(portErr), validation.Min(1).Error(portErr), validation.Max(65535).Error(portErr)),
 		"profileId":         validation.Validate(origin.ProfileID, validation.Min(1)),
 		"protocol":          validation.Validate(origin.Protocol, validation.Required, validProtocol),
-		"tenantId":          validation.Validate(origin.TenantID, validation.Min(1)),
+		"tenantId":          validation.Validate(origin.TenantID, validation.Required, validation.Min(1)),
 	})
 	if len(errs) > 0 {
 		userErr := util.JoinErrs(errs)
