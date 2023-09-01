@@ -20,6 +20,7 @@ package atscfg
  */
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 
@@ -71,70 +72,19 @@ func makeCacheDotConfigEdge(
 		return Cfg{}, makeErr(warnings, "server missing profiles")
 	}
 
-	profileServerIDsMap := map[int]struct{}{}
-	for _, sv := range servers {
-		if len(sv.ProfileNames) == 0 {
-			warnings = append(warnings, "servers had server with nil profile, skipping!")
-			continue
-		}
-		if sv.ID == nil {
-			warnings = append(warnings, "servers had server with nil id, skipping!")
-			continue
-		}
-		if !ServerProfilesMatch(server, &sv) {
-			continue
-		}
-		profileServerIDsMap[*sv.ID] = struct{}{}
-	}
-
-	dsServers := filterDSS(deliveryServiceServers, nil, profileServerIDsMap)
-
-	dsIDs := map[int]struct{}{}
-	for _, dss := range dsServers {
-		if _, ok := profileServerIDsMap[dss.Server]; !ok {
-			continue
-		}
-		dsIDs[dss.DeliveryService] = struct{}{}
-	}
-
-	profileDSes := []profileDS{}
-	for _, ds := range deliveryServices {
-		if ds.ID == nil {
-			warnings = append(warnings, "deliveryservices had ds with nil id, skipping!")
-			continue
-		}
-		if ds.Type == nil {
-			warnings = append(warnings, "deliveryservices had ds with nil type, skipping!")
-			continue
-		}
-		if ds.OrgServerFQDN == nil {
-			continue // this is normal for steering and anymap dses
-		}
-		if *ds.Type == tc.DSTypeInvalid {
-			warnings = append(warnings, "deliveryservices had ds with invalid type, skipping!")
-			continue
-		}
-		if *ds.OrgServerFQDN == "" {
-			warnings = append(warnings, "deliveryservices had ds with empty origin, skipping!")
-			continue
-		}
-		if _, ok := dsIDs[*ds.ID]; !ok && ds.Topology == nil {
-			continue
-		}
-		origin := *ds.OrgServerFQDN
-		profileDSes = append(profileDSes, profileDS{Type: *ds.Type, OriginFQDN: &origin})
-	}
+	profileDSes, dsWarnings := GetProfileDSes(server, servers, deliveryServices, deliveryServiceServers)
+	warnings = append(warnings, dsWarnings...)
 
 	lines := map[string]struct{}{} // use a "set" for lines, to avoid duplicates, since we're looking up by profile
 	for _, ds := range profileDSes {
 		if ds.Type != tc.DSTypeHTTPNoCache {
 			continue
 		}
-		if ds.OriginFQDN == nil || *ds.OriginFQDN == "" {
-			warnings = append(warnings, "profileCacheDotConfig ds has no origin fqdn, skipping!") // TODO add ds name to data loaded, to put it in the error here?
+		if ds.OriginFQDN == "" {
+			warnings = append(warnings, fmt.Sprintf("profileCacheDotConfig ds %s has no origin fqdn, skipping!", ds.Name))
 			continue
 		}
-		originFQDN, originPort := getHostPortFromURI(*ds.OriginFQDN)
+		originFQDN, originPort := GetHostPortFromURI(ds.OriginFQDN)
 		if originPort != "" {
 			l := "dest_domain=" + originFQDN + " port=" + originPort + " scheme=http action=never-cache\n"
 			lines[l] = struct{}{}
@@ -164,30 +114,99 @@ func makeCacheDotConfigEdge(
 	}, nil
 }
 
-type profileDS struct {
+// ProfileDS struct for filtered delivery services.
+type ProfileDS struct {
+	Name       string
 	Type       tc.DSType
-	OriginFQDN *string
+	OriginFQDN string
+}
+
+// GetProfileDSes filters delivery services and return delivery services with valid type and non-empty FQDN.
+func GetProfileDSes(server *Server,
+	servers []Server,
+	deliveryServices []DeliveryService,
+	deliveryServiceServers []DeliveryServiceServer,
+) ([]ProfileDS, []string) {
+	warnings := make([]string, 0)
+	profileServerIDsMap := map[int]struct{}{}
+	for _, sv := range servers {
+		if len(sv.ProfileNames) == 0 {
+			warnings = append(warnings, "servers had server with nil profile, skipping!")
+			continue
+		}
+		if sv.ID == nil {
+			warnings = append(warnings, "servers had server with nil id, skipping!")
+			continue
+		}
+		if !ServerProfilesMatch(server, &sv) {
+			continue
+		}
+		profileServerIDsMap[*sv.ID] = struct{}{}
+	}
+
+	dsServers := filterDSS(deliveryServiceServers, nil, profileServerIDsMap)
+
+	dsIDs := map[int]struct{}{}
+	for _, dss := range dsServers {
+		if _, ok := profileServerIDsMap[dss.Server]; !ok {
+			continue
+		}
+		dsIDs[dss.DeliveryService] = struct{}{}
+	}
+
+	profileDSes := []ProfileDS{}
+	for _, ds := range deliveryServices {
+		if ds.ID == nil {
+			warnings = append(warnings, "deliveryservices had ds with nil id, skipping!")
+			continue
+		}
+		if ds.Type == nil {
+			warnings = append(warnings, "deliveryservices had ds with nil type, skipping!")
+			continue
+		}
+		if ds.OrgServerFQDN == nil {
+			continue // this is normal for steering and anymap dses
+		}
+		if ds.XMLID == nil || *ds.XMLID == "" {
+			warnings = append(warnings, "got ds with missing XMLID, skipping!")
+			continue
+		}
+		if *ds.Type == tc.DSTypeInvalid {
+			warnings = append(warnings, "deliveryservices had ds with invalid type, skipping!")
+			continue
+		}
+		if *ds.OrgServerFQDN == "" {
+			warnings = append(warnings, "deliveryservices had ds with empty origin, skipping!")
+			continue
+		}
+		if _, ok := dsIDs[*ds.ID]; !ok && ds.Topology == nil {
+			continue
+		}
+		profileDSes = append(profileDSes, ProfileDS{Name: *ds.XMLID, Type: *ds.Type, OriginFQDN: *ds.OrgServerFQDN})
+	}
+
+	return profileDSes, warnings
 }
 
 // dsesToProfileDSes is a helper function to convert a []tc.DeliveryServiceNullable to []ProfileDS.
 // Note this does not check for nil values. If any DeliveryService's Type or OrgServerFQDN may be nil, the returned ProfileDS should be checked for DSTypeInvalid and nil, respectively.
-func dsesToProfileDSes(dses []tc.DeliveryServiceNullable) []profileDS {
-	pdses := []profileDS{}
+func dsesToProfileDSes(dses []tc.DeliveryServiceNullable) []ProfileDS {
+	pdses := []ProfileDS{}
 	for _, ds := range dses {
-		pds := profileDS{}
+		pds := ProfileDS{}
 		if ds.Type != nil {
 			pds.Type = *ds.Type
 		}
 		if ds.OrgServerFQDN != nil && *ds.OrgServerFQDN != "" {
-			org := *ds.OrgServerFQDN
-			pds.OriginFQDN = &org
+			pds.OriginFQDN = *ds.OrgServerFQDN
 		}
 		pdses = append(pdses, pds)
 	}
 	return pdses
 }
 
-func getHostPortFromURI(uriStr string) (string, string) {
+// GetHostPortFromURI strips HTTP(s) scheme and path and return host with port (if found).
+func GetHostPortFromURI(uriStr string) (string, string) {
 	originFQDN := uriStr
 	originFQDN = strings.TrimPrefix(originFQDN, "http://")
 	originFQDN = strings.TrimPrefix(originFQDN, "https://")
