@@ -1051,23 +1051,6 @@ CREATE TABLE IF NOT EXISTS ip_address (
 );
 
 --
--- Name: before_create_ip_address_trigger; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-DROP TRIGGER IF EXISTS before_create_ip_address_trigger on ip_address;
-CREATE TRIGGER before_create_ip_address_trigger
-    BEFORE INSERT ON ip_address
-    FOR EACH ROW EXECUTE PROCEDURE before_ip_address_table();
-
---
--- Name: before_update_ip_address_trigger; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-DROP TRIGGER IF EXISTS before_update_ip_address_trigger on ip_address;
-CREATE TRIGGER before_update_ip_address_trigger
-    BEFORE UPDATE ON ip_address
-    FOR EACH ROW WHEN (NEW.address <> OLD.address)
-    EXECUTE PROCEDURE before_ip_address_table();
-
---
 -- Name: job; Type: TABLE; Schema: public; Owner: traffic_ops
 --
 
@@ -1444,31 +1427,12 @@ CREATE TABLE IF NOT EXISTS server (
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     https_port bigint,
     status_last_updated timestamp with time zone,
-    config_update_time timestamp NOT NULL DEFAULT TIMESTAMP 'epoch',
-    config_apply_time timestamp NOT NULL DEFAULT TIMESTAMP 'epoch',
-    revalidate_update_time timestamp NOT NULL DEFAULT TIMESTAMP 'epoch',
-    revalidate_apply_time timestamp NOT NULL DEFAULT TIMESTAMP 'epoch',
+    config_update_time timestamp with time zone NOT NULL DEFAULT TIMESTAMP 'epoch',
+    config_apply_time timestamp with time zone NOT NULL DEFAULT TIMESTAMP 'epoch',
+    revalidate_update_time timestamp with time zone NOT NULL DEFAULT TIMESTAMP 'epoch',
+    revalidate_apply_time timestamp with time zone NOT NULL DEFAULT TIMESTAMP 'epoch',
     CONSTRAINT idx_89709_primary PRIMARY KEY (id)
 );
-
---
--- Name: before_update_server_trigger; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-DROP TRIGGER IF EXISTS before_update_server_trigger ON server;
-CREATE TRIGGER before_update_server_trigger
-    BEFORE UPDATE ON server
-    FOR EACH ROW WHEN (NEW.profile <> OLD.profile)
-    EXECUTE PROCEDURE before_server_table();
-
---
--- Name: before_create_server_trigger; Type: TRIGGER; Schema: public; Owner: traffic_ops
---
-DROP TRIGGER IF EXISTS before_create_server_trigger ON server;
-CREATE TRIGGER before_create_server_trigger
-    BEFORE INSERT ON server
-    FOR EACH ROW EXECUTE PROCEDURE before_server_table();
-
-ALTER TABLE server OWNER TO traffic_ops;
 
 --
 -- Name: server_capability; Type: TABLE; Schema: public; Owner: traffic_ops
@@ -4032,13 +3996,6 @@ ALTER TABLE ONLY cdni_telemetry
 
 ALTER TABLE ONLY cdni_telemetry_metrics
     ADD CONSTRAINT fk_cdni_telemetry_metrics_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
-
---
--- Name: cdni_telemetry_metrics fk_cdni_total_limits_telemetry; Type: CONSTRAINT; Schema: public; Owner: traffic_ops
---
-
-ALTER TABLE ONLY cdni_telemetry_metrics
-    ADD CONSTRAINT fk_cdni_total_limits_telemetry FOREIGN KEY (telemetry_id) REFERENCES cdni_telemetry(id) ON UPDATE CASCADE ON DELETE CASCADE;
 
 --
 -- Name: cdn_lock_user fk_shared_username; Type: FK CONSTRAINT; Schema: public; Owner: traffic_ops
