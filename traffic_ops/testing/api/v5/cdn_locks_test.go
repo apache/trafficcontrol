@@ -123,19 +123,21 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: opsUserWithLockSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"cdn2-test-edge"}}},
 					RequestBody: map[string]interface{}{
-						"config_apply_time": util.TimePtr(now),
+						"config_apply_time":    util.Ptr(now),
+						"config_update_failed": util.Ptr(true),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"ConfigApplyTime": now})),
+						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"ConfigApplyTime": now, "ConfigUpdateFailed": true})),
 				},
 				"REVALIDATE_APPLY_TIME is SET EVEN when CDN LOCKED": {
 					ClientSession: opsUserWithLockSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"cdn2-test-edge"}}},
 					RequestBody: map[string]interface{}{
-						"revalidate_apply_time": util.TimePtr(now),
+						"revalidate_apply_time":    util.Ptr(now),
+						"revalidate_update_failed": util.Ptr(true),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"RevalApplyTime": now})),
+						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"RevalApplyTime": now, "RevalUpdateFailed": true})),
 				},
 			},
 			"TOPOLOGY QUEUE UPDATES": {
@@ -544,6 +546,8 @@ func TestCDNLocks(t *testing.T) {
 							var hostName string
 							var configApplyTime *time.Time
 							var revalApplyTime *time.Time
+							var revalUpdateFailed *bool
+							var configUpdateFailed *bool
 
 							if hostNameParam, ok := testCase.RequestOpts.QueryParameters["hostName"]; ok {
 								hostName = hostNameParam[0]
@@ -554,7 +558,13 @@ func TestCDNLocks(t *testing.T) {
 							if revalApplyTimeVal, ok := testCase.RequestBody["revalidate_apply_time"]; ok {
 								revalApplyTime = revalApplyTimeVal.(*time.Time)
 							}
-							alerts, reqInf, err := testCase.ClientSession.SetUpdateServerStatusTimes(hostName, configApplyTime, revalApplyTime, testCase.RequestOpts)
+							if val, ok := testCase.RequestBody["config_update_failed"]; ok {
+								configUpdateFailed = val.(*bool)
+							}
+							if val, ok := testCase.RequestBody["revalidate_update_failed"]; ok {
+								revalUpdateFailed = val.(*bool)
+							}
+							alerts, reqInf, err := testCase.ClientSession.SetUpdateServerStatusTimes(hostName, configApplyTime, revalApplyTime, configUpdateFailed, revalUpdateFailed, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}

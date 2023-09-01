@@ -158,9 +158,9 @@ func (to *Session) GetServerIDDeliveryServices(server int, opts RequestOptions) 
 
 // GetServerUpdateStatus retrieves the Server Update Status of the Server with
 // the given (short) hostname.
-func (to *Session) GetServerUpdateStatus(hostName string, opts RequestOptions) (tc.ServerUpdateStatusResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetServerUpdateStatus(hostName string, opts RequestOptions) (tc.ServerUpdateStatusResponseV5, toclientlib.ReqInf, error) {
 	path := apiServers + `/` + url.PathEscape(hostName) + `/update_status`
-	var data tc.ServerUpdateStatusResponseV4
+	var data tc.ServerUpdateStatusResponseV5
 	reqInf, err := to.get(path, opts, &data)
 	return data, reqInf, err
 }
