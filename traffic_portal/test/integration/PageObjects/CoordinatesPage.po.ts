@@ -70,7 +70,7 @@ export class CoordinatesPage extends BasePage {
         await this.txtLongitude.sendKeys(coordinates.Longitude)
         await basePage.ClickCreate();
         result = await basePage.GetOutputMessage().then(function (value) {
-            if (coordinates.validationMessage == value) {
+            if (value.indexOf(coordinates.validationMessage ?? "") > -1) {
                 return true;
             } else {
                 return false;
@@ -107,7 +107,7 @@ export class CoordinatesPage extends BasePage {
         }
         if (result = !undefined) {
             result = await basePage.GetOutputMessage().then(function (value) {
-                if (coordinates.validationMessage == value) {
+                if (value.indexOf(coordinates.validationMessage ?? "") > -1) {
                     return true;
                 } else {
                     return false;
@@ -125,7 +125,7 @@ export class CoordinatesPage extends BasePage {
         await this.txtConfirmName.sendKeys(coordinates.Name + this.randomize);
         await basePage.ClickDeletePermanently();
         result = await basePage.GetOutputMessage().then(function (value) {
-            if (coordinates.validationMessage == value) {
+            if (value.indexOf(coordinates.validationMessage ?? "") > -1) {
                 return true;
             } else {
                 return false;

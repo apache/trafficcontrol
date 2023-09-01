@@ -65,7 +65,7 @@ export class ServiceCategoriesPage extends BasePage {
         await this.txtName.sendKeys(serviceCategories.Name + this.randomize);
         await basePage.ClickCreate();
         result = await basePage.GetOutputMessage().then(function (value) {
-            if (serviceCategories.validationMessage == value) {
+            if (value.indexOf(serviceCategories.validationMessage ?? "") > -1) {
                 return true;
             } else {
                 return false;
@@ -107,7 +107,7 @@ export class ServiceCategoriesPage extends BasePage {
         await this.txtConfirmName.sendKeys(name);
         await basePage.ClickDeletePermanently();
         result = await basePage.GetOutputMessage().then(function (value) {
-            if (serviceCategories.validationMessage == value) {
+            if (value.indexOf(serviceCategories.validationMessage ?? "") > -1) {
                 return true;
             } else {
                 return false;

@@ -142,7 +142,7 @@ export const deliveryservices = {
 			method: "post",
 			data: [
 				{
-					active: true,
+					active: "PRIMED",
 					cdnId: 0,
 					displayName: "DSTestReadOnly",
 					dscp: 0,
@@ -151,7 +151,6 @@ export const deliveryservices = {
 					initialDispersion: 1,
 					ipv6RoutingEnabled: true,
 					logsEnabled: false,
-					maxOriginConnections: 4500,
 					missLat: 41.881944,
 					missLong: -87.627778,
 					multiSiteOrigin: false,
@@ -159,7 +158,6 @@ export const deliveryservices = {
 					protocol: 0,
 					qstringIgnore: 0,
 					rangeRequestHandling: 0,
-					regional: false,
 					regionalGeoBlocking: false,
 					requiredCapabilities: ["DSTestCap"],
 					tenantId: 0,
@@ -246,8 +244,8 @@ export const deliveryservices = {
 			method: "post",
 			data: [
 				{
-					cachegroupId: 0,
-					cdnId: 0,
+					cachegroupID: 0,
+					cdnID: 0,
 					domainName: "test.net",
 					hostName: "DSTest",
 					httpsPort: 443,
@@ -282,32 +280,31 @@ export const deliveryservices = {
 					mgmtIpGateway: "",
 					mgmtIpNetmask: "",
 					offlineReason: "",
-					physLocationId: 0,
-					profileNames: ["testProfile"],
+					physicalLocationID: 0,
+					profiles: ["testProfile"],
 					routerHostName: "",
 					routerPortName: "",
 					statusId: 3,
 					tcpPort: 80,
-					typeId: 11,
-					updPending: false,
+					typeID: 11,
 					getRequest: [
 						{
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "DSTest",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
 						{
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "dummycdn",
-							replace: "cdnId"
+							replace: "cdnID"
 						},
 						{
 							route: "/cachegroups",
 							queryKey: "name",
 							queryValue: "testCG",
-							replace: "cachegroupId"
+							replace: "cachegroupID"
 						}
 					]
 				}
