@@ -2132,13 +2132,8 @@
             "parameters": {
                 "type": "object",
                 "required": [
-                    "default_geo_miss_latitude",
-                    "default_geo_miss_longitude",
-                    "tm.infourl",
                     "tm.instance_name",
-                    "tm.toolname",
-                    "tm.url",
-                    "use_reval_pending"
+                    "tm.toolname"
                 ],
                 "properties": {
                     "default_geo_miss_latitude": {
