@@ -1929,8 +1929,8 @@
             },
             "type": {
                 "type": "string"
-              }
-          }
+            }
+        }
     },
     "delivery_service_capacity": {
         "type": "object",
@@ -2100,7 +2100,7 @@
             }
         }
     },
-    "server_server_capabilities":{
+    "server_server_capabilities": {
         "type": "object",
         "required": [
             "lastUpdated",
@@ -2120,6 +2120,49 @@
             },
             "serverCapability": {
                 "type": "string"
+            }
+        }
+    },
+    "system_info": {
+        "type": "object",
+        "required": [
+            "parameters"
+        ],
+        "properties": {
+            "parameters": {
+                "type": "object",
+                "required": [
+                    "default_geo_miss_latitude",
+                    "default_geo_miss_longitude",
+                    "tm.infourl",
+                    "tm.instance_name",
+                    "tm.toolname",
+                    "tm.url",
+                    "use_reval_pending"
+                ],
+                "properties": {
+                    "default_geo_miss_latitude": {
+                        "type": "string"
+                    },
+                    "default_geo_miss_longitude": {
+                        "type": "string"
+                    },
+                    "tm.infourl": {
+                        "type": "string"
+                    },
+                    "tm.instance_name": {
+                        "type": "string"
+                    },
+                    "tm.toolname": {
+                        "type": "string"
+                    },
+                    "tm.url": {
+                        "type": "string"
+                    },
+                    "use_reval_pending": {
+                        "type": "string"
+                    }
+                }
             }
         }
     }
