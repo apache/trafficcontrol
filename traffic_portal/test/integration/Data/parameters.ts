@@ -99,7 +99,7 @@ export const parameters = {
 				{
 					description: "delete a Parameters",
 					Name: "TPParamtest1",
-					validationMessage: "param was deleted."
+					validationMessage: "parameter was deleted."
 				}
 			]
 		},
@@ -199,7 +199,7 @@ export const parameters = {
 				{
 					description: "delete a Parameters",
 					Name: "TPParamtest1",
-					validationMessage: "param was deleted."
+					validationMessage: "parameter was deleted."
 				}
 			]
 		}

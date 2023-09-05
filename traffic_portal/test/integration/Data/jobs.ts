@@ -44,7 +44,7 @@ export const jobs = {
 			method: "post",
 			data: [
 				{
-					active: true,
+					active: "PRIMED",
 					cdnId: 0,
 					displayName: "DSJobTest",
 					dscp: 0,

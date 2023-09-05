@@ -49,7 +49,11 @@ Request Structure
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 	| config_apply_time          | no       | The value to set for when a queue update is applied for this server. Must be a valid RFC333Nano timestamp.   |
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| config_update_failed       | no       | The value to set for when a queue update is applied for this server. May be 'true' or 'false'.               |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 	| revalidate_apply_time      | no       | The value to set for when a reval update is applied for this server. Must be a valid RFC333Nano timestamp.   |
+	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
+	| revalidate_update_failed   | no       | The value to set for when a reval update is applied for this server. May be 'true' or 'false'.               |
 	+----------------------------+----------+--------------------------------------------------------------------------------------------------------------+
 
 .. note:: While none of the timestamps is required individually, at least one must be sent to the API.
@@ -87,7 +91,7 @@ Response Structure
 		"alerts" :
 			[
 				{
-					"text" : "successfully set server 'my-edge' config_apply_time=2022-01-31T12:00:00.123456-07:00 revalidate_apply_time=2022-01-31T12:00:00.123456-07:00",
+					"text" : "successfully set server 'my-edge' config_apply_time=2022-01-31T12:00:00.123456-07:00 revalidate_apply_time=2022-01-31T12:00:00.123456-07:00 config_update_failed false revalidate_update_failed false",
 					"level" : "success"
 				}
 			]

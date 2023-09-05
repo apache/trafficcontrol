@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TrafficOpsUtils {
-	public static final String TO_API_VERSION = "4.0";
+	public static final String TO_API_VERSION = "5.0";
 
 	private String username;
 	private String password;

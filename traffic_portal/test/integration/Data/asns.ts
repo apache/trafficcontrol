@@ -158,13 +158,13 @@ export const ASNs = {
 					description: "create an ASN with existence number",
 					ASNs: "2222",
 					CacheGroup: "asntestcg1",
-					validationMessage: "an asn with the specified number already exists"
+					validationMessage: "already exists"
 				},
 				{
 					description: "create an ASN with existence number different cachegroup",
 					ASNs: "2222",
 					CacheGroup: "asntestcg2",
-					validationMessage: "an asn with the specified number already exists"
+					validationMessage: "already exists"
 				}
 			],
 			update: [
@@ -178,7 +178,7 @@ export const ASNs = {
 					description: "update an ASN to have existence number",
 					ASNs: "3333",
 					NewASNs: "2222",
-					validationMessage: "another asn exists for this number"
+					validationMessage: "already exists"
 				},
 				{
 					description: "update cachegroup of an ASN",
@@ -252,13 +252,13 @@ export const ASNs = {
 					description: "create an ASN with existence number",
 					ASNs: "4444",
 					CacheGroup: "asntestcg1",
-					validationMessage: "an asn with the specified number already exists"
+					validationMessage: "already exists"
 				},
 				{
 					description: "create an ASN with existence number different cachegroup",
 					ASNs: "4444",
 					CacheGroup: "asntestcg2",
-					validationMessage: "an asn with the specified number already exists"
+					validationMessage: "already exists"
 				}
 			],
 			update: [
@@ -272,7 +272,7 @@ export const ASNs = {
 					description: "update an ASN to have existence number",
 					ASNs: "6666",
 					NewASNs: "5555",
-					validationMessage: "another asn exists for this number"
+					validationMessage: "already exists"
 				},
 				{
 					description: "update cachegroup of an ASN",

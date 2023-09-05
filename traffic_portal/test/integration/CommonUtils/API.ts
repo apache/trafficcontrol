@@ -302,6 +302,11 @@ export class API {
         if(hasProperty(data, 'requiredCapability')) {
             data.requiredCapability = data.requiredCapability + randomize;
         }
+        if(hasProperty(data, 'requiredCapabilities', 'Array')) {
+            data.requiredCapabilities.forEach((_cap, i) => {
+                data.requiredCapabilities[i] += randomize;
+            })
+        }
         if(hasProperty(data, 'serverCapability')) {
             data.serverCapability = data.serverCapability + randomize;
         }
@@ -337,9 +342,9 @@ export class API {
                 }
             }
         }
-        if(hasProperty(data, 'profileNames', "Array")){
-            for (const index in data.profileNames) {
-                data.profileNames[index] = data.profileNames[index]+randomize
+        if(hasProperty(data, 'profiles', "Array")){
+            for (const index in data.profiles) {
+                data.profiles[index] = data.profiles[index]+randomize
             }
         }
     }

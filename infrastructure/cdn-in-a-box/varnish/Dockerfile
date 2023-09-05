@@ -28,6 +28,8 @@ RUN curl -s https://packagecloud.io/install/repositories/varnishcache/varnish73/
 
 RUN yum install varnish-7.3.0 -y
 
+RUN yum install -y hitch-1.5.2
+
 RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nmap-ncat gettext autoconf automake libtool gcc-c++ cronie glibc-devel openssl-devel git perl && \
     dnf install -y jq logrotate findutils && \
     dnf clean all
@@ -49,7 +51,7 @@ RUN rpm -Uvh /$(basename $ORT_RPM) &&\
 
 COPY infrastructure/cdn-in-a-box/varnish/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
 
-
+ENV CACHE_SERVER_TYPE=VARNISH
 CMD /run.sh
 
 FROM common-varnish-cache-config-layers AS mid

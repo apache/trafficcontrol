@@ -39,10 +39,10 @@ var TableAssignDSServersController = function(deliveryService, servers, assigned
 			headerName: "Profile(s)",
 			field: "profile",
 			valueGetter:  function(params) {
-				return params.data.profileNames;
+				return params.data.profiles;
 			},
 			tooltipValueGetter: function(params) {
-				return params.data.profileNames.join(", ");
+				return params.data.profiles.join(", ");
 			}
 		}
 	];

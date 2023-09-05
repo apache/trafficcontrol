@@ -48,8 +48,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7641](https://github.com/apache/trafficcontrol/pull/7641) *Traffic Router* Added further optimization to TR's algorithm of figuring out the zone for an incoming request.
 - [#7646](https://github.com/apache/trafficcontrol/pull/7646) *Traffic Portal* Add the ability to delete a cert.
 - [#7652](https://github.com/apache/trafficcontrol/pull/7652) *t3c* added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt.
+- [#7674](https://github.com/apache/trafficcontrol/issues/7674) *Traffic Ops* Add the ability to indicate if a server failed its revalidate/config update.
 
 ### Changed
+- [#7757](https://github.com/apache/trafficcontrol/pull/7757) *Traffic Router* Changed Traffic Router to point to api version 5.0 of Traffic Ops.
 - [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
 - [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
 - [#7521](https://github.com/apache/trafficcontrol/pull/7521) *Traffic Ops* Returns empty array instead of null when no permissions are given for roles endpoint using POST or PUT request.
@@ -75,9 +77,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server* Use GCC 11 for building.
 - [#7742](https://github.com/apache/trafficcontrol/pull/7742) *Traffic Ops* Changed api tests to supply the absolute path of certs.
 - [#7718](https://github.com/apache/trafficcontrol/pull/7718) *Traffic Ops* `/servers` endpoint now responds with RFC3339 timestamps for all timestamp fields. Cleaned up naming conventions and superfluous data.
+- [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats* now uses Traffic Ops APIv5
+- [#7766](https://github.com/apache/trafficcontrol/pull/7766) *Traffic Portal* now uses TO APIv5
 
 ### Fixed
+- [#7767](https://github.com/apache/trafficcontrol/pull/7767) *Traffic Ops* Fixed ASN update logic for APIv5
 - [RFC3339](https://github.com/apache/trafficcontrol/issues/5911)
+    - [#7759](https://github.com/apache/trafficcontrol/pull/7759) *Traffic Ops* Fixed `/profiles/{{ID}}/parameters` and `profiles/name/{{name}}/parameters` v5 APIs to respond with `RFC3339` timestamps.
     - [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops* Fixed `/profiles` v5 APIs to respond with `RFC3339` timestamps.
     - [#7708](https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixed `/parameters` v5 APIs to respond with `RFC3339` timestamps
     - [#7740](https://github.com/apache/trafficcontrol/pull/7740) *Traffic Ops* Fixed `/staticDNSEntries` v5 APIs to respond with `RFC3339` timestamps.
@@ -100,7 +106,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - [#7691](https://github.com/apache/trafficcontrol/pull/7691) *Traffic Ops* Fixed `/topologies` v5 APIs to respond with `RFC3339` timestamps.
     - [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixed `/service_category` v5 APIs to respond with `RFC3339` timestamps.
     - [#7413](https://github.com/apache/trafficcontrol/issues/7706) *Traffic Ops* Fixed `/statuses` v5 APIs to respond with `RFC3339` timestamps.
-- [#7743](https://github.com/apache/trafficcontrol/issues/7743) *Traffic Ops* Fixes /server_server_capabilities apis to respond with RFC3339 date/time format
+    - [#7733](https://github.com/apache/trafficcontrol/pull/7733) *Traffic Ops* Fixes `origins` v5 apis to respond with `RFC3339` date/time Format.
+    - [#7743](https://github.com/apache/trafficcontrol/issues/7743) *Traffic Ops* Fixed `/server_server_capabilities` v5 APIs to respond with `RFC3339` timestamps.
+- [#7762](https://github.com/apache/trafficcontrol/pull/7762) *Traffic Ops* Fixed `/phys_locations` update API to remove error related to mismatching region name and ID.
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
 - [#7623](https://github.com/apache/trafficcontrol/pull/7623) *Traffic Ops* Removed TryIfModifiedSinceQuery from servicecategories.go and reused from ims.go

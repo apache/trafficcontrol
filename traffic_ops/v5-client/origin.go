@@ -29,7 +29,7 @@ import (
 // apiOrigins is the full path to the /origins API route.
 const apiOrigins = "/origins"
 
-func (to *Session) originIDs(origin *tc.Origin) error {
+func (to *Session) originIDs(origin *tc.OriginV5) error {
 	if origin == nil {
 		return errors.New("invalid call to originIDs; nil origin")
 	}
@@ -48,17 +48,17 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 		origin.CachegroupID = p.Response[0].ID
 	}
 
-	if origin.DeliveryServiceID == nil && origin.DeliveryService != nil {
-		opts.QueryParameters.Set("xmlId", *origin.DeliveryService)
+	if origin.DeliveryServiceID == 0 && origin.DeliveryService != "" {
+		opts.QueryParameters.Set("xmlId", origin.DeliveryService)
 		dses, _, err := to.GetDeliveryServices(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Delivery Service XMLID '%s' to an ID: %w - alerts: %+v", *origin.DeliveryService, err, dses.Alerts)
+			return fmt.Errorf("resolving Delivery Service XMLID '%s' to an ID: %w - alerts: %+v", origin.DeliveryService, err, dses.Alerts)
 		}
 		if len(dses.Response) == 0 {
-			return fmt.Errorf("no Delivery Service with XMLID '%s'", *origin.DeliveryService)
+			return fmt.Errorf("no Delivery Service with XMLID '%s'", origin.DeliveryService)
 		}
 		opts.QueryParameters.Del("xmlId")
-		origin.DeliveryServiceID = dses.Response[0].ID
+		origin.DeliveryServiceID = *dses.Response[0].ID
 	}
 
 	if origin.ProfileID == nil && origin.Profile != nil {
@@ -85,24 +85,24 @@ func (to *Session) originIDs(origin *tc.Origin) error {
 		origin.CoordinateID = coordinates.Response[0].ID
 	}
 
-	if origin.TenantID == nil && origin.Tenant != nil {
-		opts.QueryParameters.Set("name", *origin.Tenant)
+	if origin.TenantID == 0 && origin.Tenant != "" {
+		opts.QueryParameters.Set("name", origin.Tenant)
 		tenant, _, err := to.GetTenants(opts)
 		if err != nil {
-			return fmt.Errorf("resolving Tenant name '%s' to an ID: %w - alerts: %+v", *origin.Tenant, err, tenant.Alerts)
+			return fmt.Errorf("resolving Tenant name '%s' to an ID: %w - alerts: %+v", origin.Tenant, err, tenant.Alerts)
 		}
 		if len(tenant.Response) == 0 {
-			return fmt.Errorf("no Tenant with name '%s'", *origin.Tenant)
+			return fmt.Errorf("no Tenant with name '%s'", origin.Tenant)
 		}
-		origin.TenantID = tenant.Response[0].ID
+		origin.TenantID = *tenant.Response[0].ID
 	}
 
 	return nil
 }
 
 // CreateOrigin creates the given Origin.
-func (to *Session) CreateOrigin(origin tc.Origin, opts RequestOptions) (tc.OriginDetailResponse, toclientlib.ReqInf, error) {
-	var originResp tc.OriginDetailResponse
+func (to *Session) CreateOrigin(origin tc.OriginV5, opts RequestOptions) (tc.OriginDetailResponseV5, toclientlib.ReqInf, error) {
+	var originResp tc.OriginDetailResponseV5
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
@@ -115,8 +115,8 @@ func (to *Session) CreateOrigin(origin tc.Origin, opts RequestOptions) (tc.Origi
 }
 
 // UpdateOrigin replaces the Origin identified by 'id' with the passed Origin.
-func (to *Session) UpdateOrigin(id int, origin tc.Origin, opts RequestOptions) (tc.OriginDetailResponse, toclientlib.ReqInf, error) {
-	var originResp tc.OriginDetailResponse
+func (to *Session) UpdateOrigin(id int, origin tc.OriginV5, opts RequestOptions) (tc.OriginDetailResponseV5, toclientlib.ReqInf, error) {
+	var originResp tc.OriginDetailResponseV5
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
@@ -133,8 +133,8 @@ func (to *Session) UpdateOrigin(id int, origin tc.Origin, opts RequestOptions) (
 }
 
 // GetOrigins retrieves Origins from Traffic Ops.
-func (to *Session) GetOrigins(opts RequestOptions) (tc.OriginsResponse, toclientlib.ReqInf, error) {
-	var data tc.OriginsResponse
+func (to *Session) GetOrigins(opts RequestOptions) (tc.OriginsResponseV5, toclientlib.ReqInf, error) {
+	var data tc.OriginsResponseV5
 	reqInf, err := to.get(apiOrigins, opts, &data)
 	return data, reqInf, err
 }

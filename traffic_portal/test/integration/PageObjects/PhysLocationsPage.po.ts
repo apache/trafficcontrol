@@ -138,7 +138,7 @@ export class PhysLocationsPage extends BasePage {
     await this.txtConfirmName.sendKeys(physlocation.Name + this.randomize);
     await basePage.ClickDeletePermanently();
     result = await basePage.GetOutputMessage().then(function (value) {
-      if (physlocation.validationMessage === value) {
+      if (value.indexOf(physlocation.validationMessage ?? "") > -1) {
         return true;
       } else {
         return false;

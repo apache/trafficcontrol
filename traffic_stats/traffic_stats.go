@@ -40,7 +40,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 
 	"github.com/Shopify/sarama"
 	"github.com/cihub/seelog"
@@ -163,7 +163,7 @@ var useSeelog bool = true
 // about caches, cachegroups, and health urls
 type RunningConfig struct {
 	HealthUrls      map[string]map[string][]string // the 1st map key is CDN_name, the second is DsStats or CacheStats
-	CacheMap        map[string]tc.Server           // map hostName to cache
+	CacheMap        map[string]tc.ServerV5         // map hostName to cache
 	LastSummaryTime time.Time
 }
 
@@ -622,7 +622,7 @@ func calcDailyMaxGbps(client influx.Client, bp influx.BatchPoints, startTime tim
 					value = value / kilobitsToGigabits
 					statTime, _ := time.Parse(time.RFC3339, t)
 					infof("max gbps for cdn %v = %v", cdn, value)
-					var statsSummary tc.StatsSummary
+					var statsSummary tc.StatsSummaryV5
 					statsSummary.CDNName = util.StrPtr(cdn)
 					statsSummary.DeliveryService = util.StrPtr("all")
 					statsSummary.StatName = util.StrPtr("daily_maxgbps")
@@ -682,7 +682,7 @@ func calcDailyBytesServed(client influx.Client, bp influx.BatchPoints, startTime
 			bytesServedTB := bytesServed / bytesToTerabytes
 			infof("TBytes served for cdn %v = %v", cdn, bytesServedTB)
 			//write to Traffic Ops
-			var statsSummary tc.StatsSummary
+			var statsSummary tc.StatsSummaryV5
 			statsSummary.CDNName = util.StrPtr(cdn)
 			statsSummary.DeliveryService = util.StrPtr("all")
 			statsSummary.StatName = util.StrPtr("daily_bytesserved")
@@ -725,14 +725,14 @@ func queryDB(con influx.Client, cmd string, database string) (res []influx.Resul
 	return
 }
 
-func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummary) {
+func writeSummaryStats(config StartupConfig, statsSummary tc.StatsSummaryV5) {
 	to, _, err := client.LoginWithAgent(config.ToURL, config.ToUser, config.ToPasswd, true, UserAgent, false, time.Duration(config.ToRequestTimeoutSeconds)*time.Second)
 	if err != nil {
 		newErr := fmt.Errorf("Could not store summary stats! Error logging in to %v: %v", config.ToURL, err)
 		errorln(newErr)
 		return
 	}
-	_, _, err = to.CreateSummaryStats(statsSummary)
+	_, _, err = to.CreateSummaryStats(statsSummary, client.RequestOptions{})
 	if err != nil {
 		errorf("could not create summary stats: %v", err)
 	}
@@ -750,7 +750,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	servers, _, err := to.GetServers(nil)
+	servers, _, err := to.GetServers(client.RequestOptions{})
 	if err != nil {
 		msg := fmt.Sprintf("Error getting server list from %v: %v ", config.ToURL, err)
 		if init {
@@ -760,14 +760,14 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	runningConfig.CacheMap = make(map[string]tc.Server)
-	for _, server := range servers {
+	runningConfig.CacheMap = make(map[string]tc.ServerV5)
+	for _, server := range servers.Response {
 		runningConfig.CacheMap[server.HostName] = server
 	}
 
 	cacheStatPath := "/publish/CacheStats?hc=1&wildcard=1&stats="
 	dsStatPath := "/publish/DsStats?hc=1&wildcard=1&stats="
-	parameters, _, err := to.GetParametersByProfileName("TRAFFIC_STATS")
+	parameters, _, err := to.GetParametersByProfileName("TRAFFIC_STATS", client.RequestOptions{})
 	if err != nil {
 		msg := fmt.Sprintf("Error getting parameter list from %v: %v", config.ToURL, err)
 		if init {
@@ -777,7 +777,7 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 		return
 	}
 
-	for _, param := range parameters {
+	for _, param := range parameters.Response {
 		if param.Name == "DsStats" {
 			statName := param.Value
 			dsStatPath += "," + statName
@@ -790,7 +790,13 @@ func getToData(config StartupConfig, init bool, configChan chan RunningConfig) {
 
 	setHealthURLs(config, &runningConfig, cacheStatPath, dsStatPath)
 
-	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(util.StrPtr("daily_maxgbps"))
+	opts := client.RequestOptions{
+		QueryParameters: url.Values{
+			"lastSummaryDate": {"true"},
+			"statName":        {"daily_maxgbps"},
+		},
+	}
+	lastSummaryTimeResponse, _, err := to.GetSummaryStatsLastUpdated(opts)
 	if err != nil {
 		errorf("unable to get summary stats last updated: %v", err)
 	} else if lastSummaryTimeResponse.Response.SummaryTime == nil {
@@ -811,7 +817,7 @@ func setHealthURLs(config StartupConfig, runningConfig *RunningConfig, cacheStat
 		}
 
 		if server.Type == tc.MonitorTypeName && server.Status == config.StatusToMon {
-			cdnName := server.CDNName
+			cdnName := server.CDN
 			if cdnName == "" {
 				errorln("Unable to find CDN name for " + server.HostName + ".. skipping")
 				continue
@@ -820,15 +826,16 @@ func setHealthURLs(config StartupConfig, runningConfig *RunningConfig, cacheStat
 			if runningConfig.HealthUrls[cdnName] == nil {
 				runningConfig.HealthUrls[cdnName] = make(map[string][]string)
 			}
-			healthURL := "http://" + server.HostName + "." + server.DomainName + ":" + strconv.Itoa(server.TCPPort) + cacheStatPath
+			tcpPort := util.CoalesceToDefault(server.TCPPort)
+			healthURL := "http://" + server.HostName + "." + server.DomainName + ":" + strconv.Itoa(tcpPort) + cacheStatPath
 			runningConfig.HealthUrls[cdnName]["CacheStats"] = append(runningConfig.HealthUrls[cdnName]["CacheStats"], healthURL)
-			healthURL = "http://" + server.HostName + "." + server.DomainName + ":" + strconv.Itoa(server.TCPPort) + dsStatPath
+			healthURL = "http://" + server.HostName + "." + server.DomainName + ":" + strconv.Itoa(tcpPort) + dsStatPath
 			runningConfig.HealthUrls[cdnName]["DsStats"] = append(runningConfig.HealthUrls[cdnName]["DsStats"], healthURL)
 		}
 	}
 }
 
-func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.Server, config StartupConfig) {
+func calcMetrics(cdnName string, urls []string, cacheMap map[string]tc.ServerV5, config StartupConfig) {
 	sampleTime := time.Now().Unix()
 	// get the data from trafficMonitor
 	var trafMonData []byte
@@ -952,7 +959,7 @@ func calcDsValues(tmData []byte, cdnName string, sampleTime int64, config Startu
 	return nil
 }
 
-func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheMap map[string]tc.Server, config StartupConfig) error {
+func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cacheMap map[string]tc.ServerV5, config StartupConfig) error {
 	var jData tc.LegacyStats
 	err := json.Unmarshal(trafmonData, &jData)
 	if err != nil {
@@ -998,7 +1005,7 @@ func calcCacheValues(trafmonData []byte, cdnName string, sampleTime int64, cache
 			}
 
 			tags := map[string]string{
-				"cachegroup": cache.Cachegroup,
+				"cachegroup": cache.CacheGroup,
 				"hostname":   string(cacheName),
 				"cdn":        cdnName,
 				"type":       cache.Type,

@@ -77,8 +77,10 @@ func getTestServers() []ServerAndInterfaces {
 		StatusLastUpdated:  &(time.Time{}),
 		ConfigUpdateTime:   &(time.Time{}),
 		ConfigApplyTime:    &(time.Time{}),
+		ConfigUpdateFailed: false,
 		RevalUpdateTime:    &(time.Time{}),
 		RevalApplyTime:     &(time.Time{}),
+		RevalUpdateFailed:  false,
 	}
 	mtu := uint64(9500)
 
@@ -175,8 +177,9 @@ func TestGetServersByCachegroup(t *testing.T) {
 		"https_port", "id", "ilo_ip_address", "ilo_ip_gateway", "ilo_ip_netmask", "ilo_password", "ilo_username",
 		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
 		"phys_location_id", "profile_name", "rack", "revalidate_update_time", "revalidate_apply_time",
-		"status", "status_id", "tcp_port", "server_type", "server_type_id", "config_update_time",
-		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
+		"revalidate_update_failed", "status", "status_id", "tcp_port", "server_type", "server_type_id",
+		"config_update_time", "config_apply_time", "config_update_failed", "xmpp_id", "xmpp_passwd",
+		"status_last_updated"}
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -214,6 +217,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 			*ts.Rack,
 			*ts.RevalUpdateTime,
 			*ts.RevalApplyTime,
+			ts.RevalUpdateFailed,
 			ts.Status,
 			ts.StatusID,
 			*ts.TCPPort,
@@ -221,6 +225,7 @@ func TestGetServersByCachegroup(t *testing.T) {
 			ts.TypeID,
 			*ts.ConfigUpdateTime,
 			*ts.ConfigApplyTime,
+			ts.ConfigUpdateFailed,
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
@@ -294,8 +299,9 @@ func TestGetMidServers(t *testing.T) {
 		"https_port", "id", "ilo_ip_address", "ilo_ip_gateway", "ilo_ip_netmask", "ilo_password", "ilo_username",
 		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
 		"phys_location_id", "profile_name", "rack", "revalidate_update_time", "revalidate_apply_time",
-		"status", "status_id", "tcp_port", "server_type", "server_type_id", "config_update_time",
-		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
+		"revalidate_update_failed", "status", "status_id", "tcp_port", "server_type", "server_type_id",
+		"config_update_time", "config_apply_time", "config_update_failed", "xmpp_id", "xmpp_passwd",
+		"status_last_updated"}
 	interfaceCols := []string{"max_bandwidth", "monitor", "mtu", "name", "server", "router_host_name", "router_port_name"}
 	rows := sqlmock.NewRows(cols)
 	interfaceRows := sqlmock.NewRows(interfaceCols)
@@ -331,6 +337,7 @@ func TestGetMidServers(t *testing.T) {
 			*ts.Rack,
 			*ts.RevalUpdateTime,
 			*ts.RevalApplyTime,
+			ts.RevalUpdateFailed,
 			ts.Status,
 			ts.StatusID,
 			*ts.TCPPort,
@@ -338,6 +345,7 @@ func TestGetMidServers(t *testing.T) {
 			ts.TypeID,
 			*ts.ConfigUpdateTime,
 			*ts.ConfigApplyTime,
+			ts.ConfigUpdateFailed,
 			*ts.XMPPID,
 			*ts.XMPPPasswd,
 			*ts.StatusLastUpdated,
@@ -383,8 +391,9 @@ func TestGetMidServers(t *testing.T) {
 		"https_port", "id", "ilo_ip_address", "ilo_ip_gateway", "ilo_ip_netmask", "ilo_password", "ilo_username",
 		"last_updated", "mgmt_ip_address", "mgmt_ip_gateway", "mgmt_ip_netmask", "offline_reason", "phys_location",
 		"phys_location_id", "profile_name", "rack", "revalidate_update_time", "revalidate_apply_time",
-		"status", "status_id", "tcp_port", "server_type", "server_type_id", "config_update_time",
-		"config_apply_time", "xmpp_id", "xmpp_passwd", "status_last_updated"}
+		"revalidate_update_failed", "status", "status_id", "tcp_port", "server_type", "server_type_id",
+		"config_update_time", "config_apply_time", "config_update_failed", "xmpp_id", "xmpp_passwd",
+		"status_last_updated"}
 	rows2 := sqlmock.NewRows(cols2)
 
 	cgs := []tc.CacheGroup{}
@@ -471,6 +480,7 @@ func TestGetMidServers(t *testing.T) {
 		*ts.Rack,
 		*ts.RevalUpdateTime,
 		*ts.RevalApplyTime,
+		ts.RevalUpdateFailed,
 		ts.Status,
 		ts.StatusID,
 		*ts.TCPPort,
@@ -478,6 +488,7 @@ func TestGetMidServers(t *testing.T) {
 		ts.TypeID,
 		*ts.ConfigUpdateTime,
 		*ts.ConfigApplyTime,
+		ts.ConfigUpdateFailed,
 		*ts.XMPPID,
 		*ts.XMPPPasswd,
 		*ts.StatusLastUpdated,
