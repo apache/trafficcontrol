@@ -82,7 +82,7 @@ EOF
 jq ".[].tcpPort |= $PORT | .[].cdnName |= \"$CDN\" | .[].hostName |= \"$TM_URI\"" \
   ${test_dir}/servers.json > servers.json.tmp && mv servers.json.tmp ${test_dir}/servers.json
 
-jq ".trafficMonitors[].port |= $PORT | .trafficMonitors[].ip6 |= \"$TM_URI\" | .trafficMonitors[].ip |= \"$TM_URI\" | .trafficMonitors[].hostname |= \"$TM_URI\" | .trafficServers[].interfaces[0].ipAddresses[0].address = \"127.0.0.1\"" \
+jq ".trafficMonitors[].port |= $PORT | .trafficMonitors[].ip6 |= \"$TM_URI\" | .trafficMonitors[].ip |= \"$TM_URI\" | .trafficMonitors[].hostName |= \"$TM_URI\" | .trafficServers[].interfaces[0].ipAddresses[0].address = \"127.0.0.1\"" \
   ${test_dir}/monitoring.json > monitoring.json.tmp && mv monitoring.json.tmp ${test_dir}/monitoring.json
 
 jq ".monitors.trafficmonitor.port |= $PORT | .monitors.trafficmonitor.ip |= \"$TM_URI\" | .monitors.trafficmonitor.ip6 |= \"$TM_URI\" | .stats[\"CDN_name\"] = \"$CDN\" | .stats[\"tm_host\"] = \"$TESTTO_URI\"" \

@@ -55,7 +55,7 @@
     {
       "cachegroup": "cg0",
       "fqdn": "trafficmonitor.traffic-monitor-integration.test",
-      "hostname": "trafficmonitor",
+      "hostName": "trafficmonitor",
       "ip": "trafficmonitor",
       "ip6": "",
       "port": 80,
@@ -73,7 +73,7 @@
       ],
       "fqdn": "server0.monitor-integration.test",
       "hashid": "server0",
-      "hostname": "server0",
+      "hostName": "server0",
       "interfaces": [
         {
           "ipAddresses": [
@@ -103,7 +103,7 @@
       ],
       "fqdn": "server1.monitor-integration.test",
       "hashid": "server1",
-      "hostname": "server1",
+      "hostName": "server1",
       "interfaces": [
         {
           "ipAddresses": [
