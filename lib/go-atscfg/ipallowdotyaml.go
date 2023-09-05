@@ -107,7 +107,7 @@ func MakeIPAllowDotYAML(
 			coalesceMaskLenV6,
 		)
 		warnings = append(warnings, ws...)
-		
+
 		if err != nil {
 			return Cfg{}, makeErr(warnings, err.Error())
 		}
