@@ -2100,6 +2100,98 @@
             }
         }
     },
+    "cdn_health": {
+        "type": "object",
+        "required": [
+            "totalOffline",
+            "totalOnline",
+            "cachegroups"
+        ],
+        "properties": {
+            "totalOffline": {
+                "type": "integer"
+            },
+            "totalOnline": {
+                "type": "integer"
+            },
+            "cachegroups": {
+                "anyOf": [
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "offline",
+                                "name",
+                                "online"
+                            ],
+                            "properties": {
+                                "offline": {
+                                    "type": "integer"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "online": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "type": "null"
+                    }
+                ]
+            }
+        }
+    },
+    "cdn_routing": {
+        "type": "object",
+        "required": [
+            "cz",
+            "deepCz",
+            "dsr",
+            "err",
+            "fed",
+            "geo",
+            "miss",
+            "regionalAlternate",
+            "regionalDenied",
+            "staticRoute"
+        ],
+        "properties": {
+            "cz": {
+                "type": "integer"
+            },
+            "deepCz": {
+                "type": "number"
+            },
+            "dsr": {
+                "type": "integer"
+            },
+            "err": {
+                "type": "integer"
+            },
+            "fed": {
+                "type": "number"
+            },
+            "geo": {
+                "type": "integer"
+            },
+            "miss": {
+                "type": "number"
+            },
+            "regionalAlternate": {
+                "type": "integer"
+            },
+            "regionalDenied": {
+                "type": "integer"
+            },
+            "staticRoute": {
+                "type": "integer"
+            }
+        }
+    },
     "server_server_capabilities": {
         "type": "object",
         "required": [
