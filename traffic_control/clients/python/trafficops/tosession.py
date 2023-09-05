@@ -560,7 +560,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	#
 	# CDN Notifications
 	#
@@ -585,7 +585,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('delete', 'cdn_notifications', ('4.0', '4.1', '5.0'))
 	def delete_cdn_notification(self, query_params=None):
 		"""
@@ -661,7 +661,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	#
 	# CDN Lock
 	#
@@ -819,7 +819,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 
 	#
 	# Delivery Service Request Comments
@@ -922,7 +922,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('get', 'deliveryservices/{delivery_service_id:d}/routing', ('3.0', '4.0', '4.1', '5.0'))
 	def get_delivery_service_routing(self, delivery_service_id=None):
 		"""
@@ -1555,7 +1555,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	#
 	# Server_capabilities
 	#
@@ -2061,7 +2061,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	#
 	# Service categories
 	#
@@ -2084,7 +2084,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('put', 'service_categories/{service_category_name:s}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_service_category(self, service_category_name=None, data=None):
 		"""
@@ -2273,7 +2273,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('delete', 'tenants/{tenant_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_tenant(self, tenant_id=None):
 		"""
