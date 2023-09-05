@@ -867,31 +867,31 @@ class TOSession(RestApiSession):
     #
 	# Delivery Service Required capabilities
 	#
-	@api_request('get', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('get', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1'))
 	def get_deliveryservices_required_capabilities(self, query_params=None):
 		"""
 		Retrieves all delivery service required capabilities.
-		:ref:`to-api-deliveryservice-required-capabilities`
+		:ref:`to-api-v4-deliveryservices_required_capabilities`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('post', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1'))
 	def create_deliveryservices_required_capabilities(self, data=None):
 		"""
 		Creates a new delivery service required capability.
-		:ref:`to-api-deliveryservice-required-capabilities`
+		:ref:`to-api-v4-deliveryservices_required_capabilities`
 		:param data: The request data structure for the API request
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('delete', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1'))
 	def delete_deliveryservices_required_capabilities(self, query_params=None):
 		"""
 		Deletes a Delivery Service Required capability.
-		:ref:`to-api-deliveryservice-required-capabilities`
+		:ref:`to-api-v4-deliveryservices_required_capabilities`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
