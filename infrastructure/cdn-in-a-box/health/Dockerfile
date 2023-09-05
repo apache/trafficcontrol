@@ -21,6 +21,8 @@ ARG BASE_IMAGE=rockylinux \
     RHEL_VERSION=8
 FROM ${BASE_IMAGE}:${RHEL_VERSION} as common-dependencies
 ARG RHEL_VERSION=8
+# Makes RHEL_VERSION available in later layers without needing to specify it again
+ENV RHEL_VERSION="$RHEL_VERSION"
 
 MAINTAINER dev@trafficcontrol.apache.org
 
@@ -59,7 +61,7 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
         epel-release && \
     yum -y clean all
 
-ARG TCH_RPM=infrastructure/cdn-in-a-box/health/trafficcontrol-health-client.rpm 
+ARG TCH_RPM=infrastructure/cdn-in-a-box/health/trafficcontrol-health-client.rpm
 COPY $TCH_RPM /
 RUN rpm -Uvh /$(basename $TCH_RPM) &&\
     rm /$(basename $TCH_RPM)
