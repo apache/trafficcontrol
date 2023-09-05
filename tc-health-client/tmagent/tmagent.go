@@ -671,7 +671,7 @@ func (pi *ParentInfo) GetTOData(cfg *config.Cfg) error {
 		return errors.New("error fetching Trafficmonitor server list: " + err.Error())
 	} else if reqInf.StatusCode >= 300 || reqInf.StatusCode < 200 {
 		// Provide logging around a potential issue
-		log.Errorf("Traffic Ops returned a non 2xx status code. Expected 2xx, got %v", reqInf.StatusCode, 0)
+		return fmt.Errorf("Traffic Ops returned a non 2xx status code. Expected 2xx, got %v", reqInf.StatusCode)
 	}
 
 	toData.Monitors = map[string]struct{}{}
