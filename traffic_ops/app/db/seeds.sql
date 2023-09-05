@@ -108,7 +108,7 @@ SELECT id, perm FROM public.role
 CROSS JOIN (
     VALUES ('DNS-SEC:READ'), ('DNS-SEC:DELETE')
 ) AS perms(perm)
-WHERE "priv_level" < 20 AND "priv_level" > 8
+WHRER "name" = 'operations'
     ON CONFLICT DO NOTHING;
 
 INSERT INTO public.role_capability (role_id, cap_name)
@@ -117,7 +117,7 @@ FROM public.role
 CROSS JOIN (
     VALUES ('DELIVERY-SERVICE-SAFE:UPDATE')
 ) AS perms(perm)
-WHERE "priv_level" < 20 AND "priv_level" > 2
+WHRER name in ('operations', 'read-only', 'portal', 'federation', 'steering')
     ON CONFLICT DO NOTHING;
 
 -- Using role 'read-only'
