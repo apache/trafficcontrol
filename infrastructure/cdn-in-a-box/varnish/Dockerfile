@@ -49,7 +49,7 @@ RUN rpm -Uvh /$(basename $ORT_RPM) &&\
 
 COPY infrastructure/cdn-in-a-box/varnish/traffic_ops_ort.crontab /etc/cron.d/traffic_ops_ort-cron-template
 
-
+ENV CACHE_SERVER_TYPE=VARNISH
 CMD /run.sh
 
 FROM common-varnish-cache-config-layers AS mid

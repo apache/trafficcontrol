@@ -194,6 +194,7 @@ to-enroll() {
 		MY_IP6_ADDRESS="${MY_IP6_ADDRESS}/64"
 	fi
 	export MY_IP6_GATEWAY="$(route -n6 | grep UG | awk '{print $2}')"
+	local cacheType="${CACHE_SERVER_TYPE:-ATS}"
 
 	case "$serverType" in
 		"db" )
@@ -213,12 +214,12 @@ to-enroll() {
 			;;
 		"edge" )
 			export MY_TYPE="EDGE"
-			export MY_PROFILE="EDGE_TIER_ATS_CACHE"
+			export MY_PROFILE="EDGE_TIER_${cacheType}_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
 		"mid" )
 			export MY_TYPE="MID"
-			export MY_PROFILE="MID_TIER_ATS_CACHE"
+			export MY_PROFILE="MID_TIER_${cacheType}_CACHE"
 			export MY_STATUS="REPORTED"
 			;;
 		"origin" )
