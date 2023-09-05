@@ -3,10 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [unreleased]
-- [#7665](https://github.com/apache/trafficcontrol/pull/7665) *Automation* Changes to Ansible role dataset_loader to add ATS 9 support
-- [#7802](https://github.com/apache/trafficcontrol/pull/7802) *Traffic Control Health Client* Fixed ReadMe.md typos and duplicates.
-- [#7806](https://github.com/apache/trafficcontrol/pull/7806) *Traffic Ops* `cdns/{{name}}/federations` and `cdns/{{name}}/federations/{{ID}}` use RFC3339 timestamps in APIv5
+## [8.0.0] - 2023-09-05
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client* Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login.
@@ -55,9 +52,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - [#7776](https://github.com/apache/trafficcontrol/pull/7776) *tc-health-client* Added error message while issues interacting with Traffic Ops.
+- [#7766](https://github.com/apache/trafficcontrol/pull/7766) *Traffic Portal* now uses TO APIv5
+- [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats* now uses Traffic Ops APIv5
+- [#7761](https://github.com/apache/trafficcontrol/pull/7761) *Traffic Monitor* Use API v5 for the TM's Traffic Ops client, and use TO API v4 for TM's Traffic Ops legacy client
 - [#7757](https://github.com/apache/trafficcontrol/pull/7757) *Traffic Router* Changed Traffic Router to point to api version 5.0 of Traffic Ops.
 - [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
-- [#7761](https://github.com/apache/trafficcontrol/pull/7761) *Traffic Monitor* Use API v5 for the TM's Traffic Ops client, and use TO API v4 for TM's Traffic Ops legacy client
+- [#7665](https://github.com/apache/trafficcontrol/pull/7665) *Automation* Changes to Ansible role dataset_loader to add ATS 9 support
 - [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
 - [#7521](https://github.com/apache/trafficcontrol/pull/7521) *Traffic Ops* Returns empty array instead of null when no permissions are given for roles endpoint using POST or PUT request.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Adds better labels to routing methods widget on the TP dashboard.
@@ -81,9 +81,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7966](https://github.com/apache/trafficcontrol/pull/7696) *t3c* will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit.
 - [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server* Use GCC 11 for building.
 - [#7742](https://github.com/apache/trafficcontrol/pull/7742) *Traffic Ops* Changed api tests to supply the absolute path of certs.
-- [#7718](https://github.com/apache/trafficcontrol/pull/7718) *Traffic Ops* `/servers` endpoint now responds with RFC3339 timestamps for all timestamp fields. Cleaned up naming conventions and superfluous data.
-- [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats* now uses Traffic Ops APIv5
-- [#7766](https://github.com/apache/trafficcontrol/pull/7766) *Traffic Portal* now uses TO APIv5
 
 ### Fixed
 - [#7764](https://github.com/apache/trafficcontrol/pull/7764) *Traffic Ops* Collapsed DB migrations
@@ -91,13 +88,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [RFC3339](https://github.com/apache/trafficcontrol/issues/5911)
     - [#7759](https://github.com/apache/trafficcontrol/pull/7759) *Traffic Ops* Fixed `/profiles/{{ID}}/parameters` and `profiles/name/{{name}}/parameters` v5 APIs to respond with `RFC3339` timestamps.
     - [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops* Fixed `/profiles` v5 APIs to respond with `RFC3339` timestamps.
-    - [#7708](https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixed `/parameters` v5 APIs to respond with `RFC3339` timestamps
+    - [#7718](https://github.com/apache/trafficcontrol/pull/7718) *Traffic Ops* `/servers` endpoint now responds with `RFC3339` timestamps for all timestamp fields. Cleaned up naming conventions and superfluous data.
+    - [#7708](https://github.com/apache/trafficcontrol/pull/7708) *Traffic Ops* Fixed `/parameters` v5 APIs to respond with `RFC3339` timestamps.
     - [#7740](https://github.com/apache/trafficcontrol/pull/7740) *Traffic Ops* Fixed `/staticDNSEntries` v5 APIs to respond with `RFC3339` timestamps.
     - [#7738](https://github.com/apache/trafficcontrol/pull/7738) *Traffic Ops* Fixed `/profileparameters` v5 APIs to respond with `RFC3339` timestamps.
-    - [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixed `/logs` v5 api to respond with RFC3339 timestamps.
+    - [#7690](https://github.com/apache/trafficcontrol/pull/7690) *Traffic Ops* Fixed `/logs` v5 APIs to respond with RFC3339 timestamps.
     - [#7605](https://github.com/apache/trafficcontrol/pull/7605) *Traffic Ops* Fixed `/cachegroups_request_comments` v5 APIs to respond with `RFC3339` timestamps.
-    - [#7720](https://github.com/apache/trafficcontrol/pull/7720) *Traffic Ops* Fixed Delivery Service Servers v5 API to respond with `RFC3339` timestamps.
-    - [#7631](https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixed `/phys_location` V5 APIs to respond with `RFC3339` timestamps.
+    - [#7720](https://github.com/apache/trafficcontrol/pull/7720) *Traffic Ops* Fixed Delivery Service Servers v5 APIs to respond with `RFC3339` timestamps.
+    - [#7631](https://github.com/apache/trafficcontrol/pull/7631) *Traffic Ops* Fixed `/phys_location` v5 APIs to respond with `RFC3339` timestamps.
     - [#7612](https://github.com/apache/trafficcontrol/pull/7612) *Traffic Ops* Fixed `/divisions` v5 APIs to respond with `RFC3339` timestamps.
     - [#7561](https://github.com/apache/trafficcontrol/pull/7561) *Traffic Ops* Fixed `/asns` v5 APIs to respond with `RFC3339` timestamps.
     - [#7575](https://github.com/apache/trafficcontrol/pull/7575) *Traffic Ops* Fixed `/types` v5 APIs to respond with `RFC3339` timestamps.
@@ -106,14 +104,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
     - [#7570](https://github.com/apache/trafficcontrol/pull/7570) *Traffic Ops* Fixed `/deliveryservice_request_comments` v5 APIs to respond with `RFC3339` timestamps.
     - [#7596](https://github.com/apache/trafficcontrol/pull/7596) *Traffic Ops* Fixed `/federation_resolvers` v5 APIs to respond with `RFC3339` timestamps.
     - [#7572](https://github.com/apache/trafficcontrol/pull/7572) *Traffic Ops* Fixed `/deliveryservice_requests` v5 APIs docs with `RFC3339` timestamps
-    - [#7544](https://github.com/apache/trafficcontrol/issues/7544) *Traffic Ops* Fixed `/stats_summary` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7545](https://github.com/apache/trafficcontrol/pull/7545) *Traffic Ops* Fixed `/stats_summary` v5 APIs to respond with `RFC3339` timestamps.
     - [#7542](https://github.com/apache/trafficcontrol/pull/7542) *Traffic Ops* Fixed `cdn_locks` documentation to reflect the correct `RFC3339` timestamps.
-    - [#7465](https://github.com/apache/trafficcontrol/issues/7465) *Traffic Ops* Fixed `/server_capabilities` v5 APIs to respond with RFC3339 timestamps.
+    - [#7482](https://github.com/apache/trafficcontrol/pull/7482) *Traffic Ops* Fixed `/server_capabilities` v5 APIs to respond with RFC3339 timestamps.
     - [#7691](https://github.com/apache/trafficcontrol/pull/7691) *Traffic Ops* Fixed `/topologies` v5 APIs to respond with `RFC3339` timestamps.
-    - [#7413](https://github.com/apache/trafficcontrol/issues/7413) *Traffic Ops* Fixed `/service_category` v5 APIs to respond with `RFC3339` timestamps.
-    - [#7413](https://github.com/apache/trafficcontrol/issues/7706) *Traffic Ops* Fixed `/statuses` v5 APIs to respond with `RFC3339` timestamps.
-    - [#7733](https://github.com/apache/trafficcontrol/pull/7733) *Traffic Ops* Fixes `origins` v5 apis to respond with `RFC3339` date/time Format.
-    - [#7743](https://github.com/apache/trafficcontrol/issues/7743) *Traffic Ops* Fixed `/server_server_capabilities` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7408](https://github.com/apache/trafficcontrol/pull/7408) *Traffic Ops* Fixed `/service_category` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7707](https://github.com/apache/trafficcontrol/pull/7707) *Traffic Ops* Fixed `/statuses` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7733](https://github.com/apache/trafficcontrol/pull/7733) *Traffic Ops* Fixed `/origins` v5 APIs to respond with `RFC3339` timestamps.
+    - [#7744](https://github.com/apache/trafficcontrol/pull/7744) *Traffic Ops* Fixed `/server_server_capabilities` v5 APIs to respond with `RFC3339` timestamps.
 - [#7762](https://github.com/apache/trafficcontrol/pull/7762) *Traffic Ops* Fixed `/phys_locations` update API to remove error related to mismatching region name and ID.
 - [#7730](https://github.com/apache/trafficcontrol/pull/7730) *Traffic Monitor* Fixed the panic seen in TM when `plugin.system_stats.timestamp_ms` appears as float and not string.
 - [#4393](https://github.com/apache/trafficcontrol/issues/4393) *Traffic Ops* Fixed the error code and alert structure when TO is queried for a delivery service with no ssl keys.
@@ -1117,7 +1115,8 @@ will be returned indicating that overlap exists.
 ### Changed
 - Reformatted this CHANGELOG file to the keep-a-changelog format
 
-[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-7.0.0...HEAD
+[unreleased]: https://github.com/apache/trafficcontrol/compare/RELEASE-8.0.0...HEAD
+[8.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-8.0.0...RELEASE-7.0.0
 [7.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-7.0.0...RELEASE-6.0.0
 [6.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-6.0.0...RELEASE-5.0.0
 [5.0.0]: https://github.com/apache/trafficcontrol/compare/RELEASE-4.1.0...RELEASE-5.0.0
