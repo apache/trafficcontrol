@@ -90,6 +90,7 @@ type RestartData struct {
 	TeakdRestart         bool // a restart of teakd is required
 	TrafficServerRestart bool // a trafficserver restart is required
 	RemapConfigReload    bool // remap.config should be reloaded
+	HitchReload          bool // hitch should be reloaded
 }
 
 type ConfigFile struct {
@@ -520,6 +521,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) (*FileRestartData, error
 	trafficServerRestart := cfg.Name == "plugin.config"
 	ntpdRestart := cfg.Name == "ntpd.conf"
 	sysCtlReload := cfg.Name == "sysctl.conf"
+	hitchReload := cfg.Name == "hitch.conf"
 
 	log.Debugf("Reload state after %s: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", cfg.Name, remapConfigReload, trafficCtlReload, trafficServerRestart, ntpdRestart, sysCtlReload)
 
@@ -532,6 +534,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) (*FileRestartData, error
 			NtpdRestart:          ntpdRestart,
 			TrafficServerRestart: trafficServerRestart,
 			RemapConfigReload:    remapConfigReload,
+			HitchReload:          hitchReload,
 		},
 	}, nil
 }
@@ -810,6 +813,7 @@ func (r *TrafficOpsReq) CheckReloadRestart(data []FileRestartData) RestartData {
 		rd.TeakdRestart = rd.TeakdRestart || changedFile.TeakdRestart
 		rd.TrafficServerRestart = rd.TrafficServerRestart || changedFile.TrafficServerRestart
 		rd.RemapConfigReload = rd.RemapConfigReload || changedFile.RemapConfigReload
+		rd.HitchReload = rd.HitchReload || changedFile.HitchReload
 	}
 	return rd
 }
