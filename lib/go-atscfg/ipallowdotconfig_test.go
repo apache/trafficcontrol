@@ -64,19 +64,19 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 		"2001:db8:2::-2001:db8:2:ffff:ffff:ffff:ffff:ffff",
 	}
 
-	cgs := []tc.CacheGroupNullable{
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("cg0"),
+	cgs := []tc.CacheGroupNullableV5{
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("cg0"),
 		},
 	}
 
 	sv := &Server{}
-	sv.HostName = util.StrPtr("server0")
+	sv.HostName = util.Ptr("server0")
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
 
-	topologies := []tc.Topology{}
+	topologies := []tc.TopologyV5{}
 
 	cfg, err := MakeIPAllowDotConfig(params, sv, svs, cgs, topologies, &IPAllowDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -153,19 +153,19 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 		"192.168.2",
 	}
 
-	cgs := []tc.CacheGroupNullable{
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("cg0"),
+	cgs := []tc.CacheGroupNullableV5{
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("cg0"),
 		},
 	}
 
 	sv := &Server{}
-	sv.HostName = util.StrPtr("server0")
+	sv.HostName = util.Ptr("server0")
 	sv.Type = string(tc.CacheTypeEdge)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
 
-	topologies := []tc.Topology{}
+	topologies := []tc.TopologyV5{}
 
 	cfg, err := MakeIPAllowDotConfig(params, sv, svs, cgs, topologies, &IPAllowDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -239,19 +239,19 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 		"2001:db8:2::4",
 	}
 
-	cgs := []tc.CacheGroupNullable{
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("cg0"),
+	cgs := []tc.CacheGroupNullableV5{
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("cg0"),
 		},
 	}
 
 	sv := &Server{}
-	sv.HostName = util.StrPtr("server0")
+	sv.HostName = util.Ptr("server0")
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
 
-	topologies := []tc.Topology{}
+	topologies := []tc.TopologyV5{}
 
 	cfg, err := MakeIPAllowDotConfig(params, sv, svs, cgs, topologies, &IPAllowDotConfigOpts{HdrComment: hdr})
 	if err != nil {
@@ -321,30 +321,30 @@ func TestMakeIPAllowDotConfigTopologies(t *testing.T) {
 		"2001:db8:2::-2001:db8:2:ffff:ffff:ffff:ffff:ffff",
 	}
 
-	cgs := []tc.CacheGroupNullable{
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("midcg"),
+	cgs := []tc.CacheGroupNullableV5{
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("midcg"),
 		},
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("midcg2"),
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("midcg2"),
 		},
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("childcg"),
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("childcg"),
 		},
 	}
 
-	topologies := []tc.Topology{
-		tc.Topology{
+	topologies := []tc.TopologyV5{
+		tc.TopologyV5{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
-				tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
+				tc.TopologyNodeV5{
 					Cachegroup: "childcg",
 					Parents:    []int{1, 2},
 				},
-				tc.TopologyNode{
+				tc.TopologyNodeV5{
 					Cachegroup: "midcg",
 				},
-				tc.TopologyNode{
+				tc.TopologyNodeV5{
 					Cachegroup: "midcg2",
 				},
 			},
@@ -352,7 +352,7 @@ func TestMakeIPAllowDotConfigTopologies(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.StrPtr("server0")
+	sv.HostName = util.Ptr("server0")
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[1].Name
 	svs = append(svs, *sv)
@@ -402,8 +402,8 @@ func TestMakeIPAllowDotConfigTopologies(t *testing.T) {
 
 func makeIPAllowChild(name string, ip string, ip6 string, serverType string) *Server {
 	sv := &Server{}
-	sv.Cachegroup = util.StrPtr("childcg")
-	sv.HostName = util.StrPtr("child0")
+	sv.Cachegroup = util.Ptr("childcg")
+	sv.HostName = util.Ptr("child0")
 	sv.Type = serverType
 	setIPInfo(sv, "eth0", ip, ip6)
 	return sv

@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeRegexRevalidateDotConfig(t *testing.T) {
@@ -37,7 +36,7 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 
 	ds := makeGenericDS()
 	ds.CDNName = &cdnName
-	ds.XMLID = util.StrPtr("myds")
+	ds.XMLID = "myds"
 	dses := []DeliveryService{*ds}
 
 	params := makeParamsFromMapArr("GLOBAL", RegexRevalidateFileName, map[string][]string{

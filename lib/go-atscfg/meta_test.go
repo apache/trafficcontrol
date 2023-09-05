@@ -29,21 +29,21 @@ import (
 
 func TestMakeMetaConfig(t *testing.T) {
 	server := &Server{}
-	server.CachegroupID = util.IntPtr(42)
-	server.Cachegroup = util.StrPtr("cg0")
-	server.CDNName = util.StrPtr("mycdn")
-	server.CDNID = util.IntPtr(43)
-	server.DomainName = util.StrPtr("myserverdomain.invalid")
-	server.HostName = util.StrPtr("myserver")
-	server.HTTPSPort = util.IntPtr(443)
-	server.ID = util.IntPtr(44)
+	server.CachegroupID = util.Ptr(42)
+	server.Cachegroup = util.Ptr("cg0")
+	server.CDNName = util.Ptr("mycdn")
+	server.CDNID = util.Ptr(43)
+	server.DomainName = util.Ptr("myserverdomain.invalid")
+	server.HostName = util.Ptr("myserver")
+	server.HTTPSPort = util.Ptr(443)
+	server.ID = util.Ptr(44)
 	ip := "192.168.2.9"
 	setIP(server, ip)
 	// server.ParentCacheGroupID=            45
 	// server.ParentCacheGroupType=          "MID_LOC"
-	//server.ProfileID = util.IntPtr(46)
+	//server.ProfileID = util.Ptr(46)
 	server.ProfileNames = []string{"myserverprofile"}
-	server.TCPPort = util.IntPtr(80)
+	server.TCPPort = util.Ptr(80)
 	// server.SecondaryParentCacheGroupID=   47
 	// server.SecondaryParentCacheGroupType= "MID_LOC"
 	server.Type = "EDGE"
@@ -51,8 +51,8 @@ func TestMakeMetaConfig(t *testing.T) {
 	// uriSignedDSes := []tc.DeliveryServiceName{"mydsname"}
 	// dses := map[tc.DeliveryServiceName]DeliveryService{"mydsname": {}}
 
-	cgs := []tc.CacheGroupNullable{}
-	topologies := []tc.Topology{}
+	cgs := []tc.CacheGroupNullableV5{}
+	topologies := []tc.TopologyV5{}
 
 	cfgPath := "/etc/foo/trafficserver"
 

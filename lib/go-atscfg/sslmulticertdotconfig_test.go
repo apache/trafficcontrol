@@ -23,7 +23,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
@@ -31,21 +30,21 @@ func TestMakeSSLMultiCertDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = util.StrPtr("mycdn")
+	server.CDNName = util.Ptr("mycdn")
 
-	makeDS := func(name string, dsType tc.DSType, protocol int, exampleURL string) DeliveryService {
+	makeDS := func(name string, dsType *string, protocol int, exampleURL string) DeliveryService {
 		ds := makeGenericDS()
-		ds.XMLID = util.StrPtr(name)
-		ds.Type = &dsType
-		ds.Protocol = util.IntPtr(protocol)
+		ds.XMLID = "name"
+		ds.Type = dsType
+		ds.Protocol = util.Ptr(protocol)
 		ds.ExampleURLs = []string{exampleURL}
 		return *ds
 	}
 
 	dses := []DeliveryService{
-		makeDS("my-https-ds", tc.DSTypeHTTP, 1 /* https */, "https://my-https-ds.example.net"),
-		makeDS("my-https-and-http-ds", tc.DSTypeHTTP, 2 /* https and http */, "https://my-https-and-http-ds.example.net"),
-		makeDS("my-https-to-http-ds", tc.DSTypeHTTP, 3 /* https to http */, "https://my-https-to-http-ds.example.net"),
+		makeDS("my-https-ds", util.Ptr("HTTP"), 1 /* https */, "https://my-https-ds.example.net"),
+		makeDS("my-https-and-http-ds", util.Ptr("HTTP"), 2 /* https and http */, "https://my-https-and-http-ds.example.net"),
+		makeDS("my-https-to-http-ds", util.Ptr("HTTP"), 3 /* https to http */, "https://my-https-to-http-ds.example.net"),
 	}
 
 	cfg, err := MakeSSLMultiCertDotConfig(server, dses, &SSLMultiCertDotConfigOpts{HdrComment: hdr})
@@ -76,12 +75,12 @@ func TestMakeSSLMultiCertDotConfigHTTPDeliveryService(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = util.StrPtr("mycdn")
+	server.CDNName = util.Ptr("mycdn")
 
-	makeDS := func(name string, dsType tc.DSType, protocol int, exampleURL string) DeliveryService {
+	makeDS := func(name string, dsType *string, protocol int, exampleURL string) DeliveryService {
 		ds := makeGenericDS()
-		ds.XMLID = util.StrPtr(name)
-		ds.Type = &dsType
+		ds.XMLID = "name"
+		ds.Type = dsType
 		ds.Protocol = util.IntPtr(protocol)
 		ds.ExampleURLs = []string{exampleURL}
 		return *ds
@@ -89,7 +88,7 @@ func TestMakeSSLMultiCertDotConfigHTTPDeliveryService(t *testing.T) {
 
 	// http-only DSes have no SSL, should be excluded
 	dses := []DeliveryService{
-		makeDS("myds", tc.DSTypeHTTP, 0 /* http */, "https://myds.example.net"),
+		makeDS("myds", util.Ptr("HTTP"), 0 /* http */, "https://myds.example.net"),
 	}
 
 	cfg, err := MakeSSLMultiCertDotConfig(server, dses, &SSLMultiCertDotConfigOpts{HdrComment: hdr})

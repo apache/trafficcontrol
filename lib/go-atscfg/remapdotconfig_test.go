@@ -32,16 +32,16 @@ import (
 
 func makeTestRemapServer() *Server {
 	server := &Server{}
-	server.CDNName = util.StrPtr("mycdn")
-	server.Cachegroup = util.StrPtr("cg0")
-	server.DomainName = util.StrPtr("mydomain")
-	server.CDNID = util.IntPtr(43)
-	server.HostName = util.StrPtr("server")
-	server.HTTPSPort = util.IntPtr(12345)
-	server.ID = util.IntPtr(44)
+	server.CDNName = util.Ptr("mycdn")
+	server.Cachegroup = util.Ptr("cg0")
+	server.DomainName = util.Ptr("mydomain")
+	server.CDNID = util.Ptr(43)
+	server.HostName = util.Ptr("server")
+	server.HTTPSPort = util.Ptr(12345)
+	server.ID = util.Ptr(44)
 	setIP(server, "192.168.2.4")
 	server.ProfileNames = []string{"MyProfile"}
-	server.TCPPort = util.IntPtr(1280)
+	server.TCPPort = util.Ptr(1280)
 	server.Type = "MID"
 	return server
 }
@@ -49,15 +49,15 @@ func makeTestRemapServer() *Server {
 func makeTestAnyCastServers() []Server {
 	server1 := makeTestRemapServer()
 	server1.Type = "EDGE"
-	server1.HostName = util.StrPtr("mcastserver1")
-	server1.ID = util.IntPtr(45)
+	server1.HostName = util.Ptr("mcastserver1")
+	server1.ID = util.Ptr(45)
 	server1.Interfaces = []tc.ServerInterfaceInfoV40{}
 	setIPInfo(server1, "lo", "192.168.2.6", "fdf8:f53b:82e4::53")
 
 	server2 := makeTestRemapServer()
 	server2.Type = "EDGE"
-	server2.HostName = util.StrPtr("mcastserver2")
-	server2.ID = util.IntPtr(46)
+	server2.HostName = util.Ptr("mcastserver2")
+	server2.ID = util.Ptr(46)
 	server2.Interfaces = []tc.ServerInterfaceInfoV40{}
 	setIPInfo(server2, "lo", "192.168.2.6", "fdf8:f53b:82e4::53")
 
@@ -117,49 +117,49 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 	}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.RangeRequestHandling = util.IntPtr(0)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+	ds.RangeRequestHandling = util.Ptr(0)
 	ds.RemapText = nil
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
 	ds.SigningAlgorithm = nil
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPAndHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	ds1 := DeliveryService{}
-	ds1.ID = util.IntPtr(49)
-	dsType1 := tc.DSType("DNS")
+	ds1.ID = util.Ptr(49)
+	dsType1 := "DNS"
 	ds1.Type = &dsType1
-	ds1.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds1.RangeRequestHandling = util.IntPtr(0)
+	ds1.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds1.RangeRequestHandling = util.Ptr(0)
 	ds1.RemapText = nil
 	ds1.SigningAlgorithm = nil
-	ds1.XMLID = util.StrPtr("mydsname1")
-	ds1.QStringIgnore = util.IntPtr(0)
-	ds1.RegexRemap = util.StrPtr("")
-	ds1.FQPacingRate = util.IntPtr(0)
-	ds1.DSCP = util.IntPtr(0)
-	ds1.RoutingName = util.StrPtr("dnsroutingname")
-	ds1.MultiSiteOrigin = util.BoolPtr(false)
-	ds1.OriginShield = util.StrPtr("myoriginshield")
-	ds1.ProfileID = util.IntPtr(49)
-	ds1.ProfileName = util.StrPtr("dsprofile")
-	ds1.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds1.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds1.Active = util.BoolPtr(true)
+	ds1.XMLID = "mydsname1"
+	ds1.QStringIgnore = util.Ptr(0)
+	ds1.RegexRemap = util.Ptr("")
+	ds1.FQPacingRate = util.Ptr(0)
+	ds1.DSCP = 0
+	ds1.RoutingName = "dnsroutingname"
+	ds1.MultiSiteOrigin = false
+	ds1.OriginShield = util.Ptr("myoriginshield")
+	ds1.ProfileID = util.Ptr(49)
+	ds1.ProfileName = util.Ptr("dsprofile")
+	ds1.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds1.AnonymousBlockingEnabled = false
+	ds1.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds, ds1}
 
@@ -187,7 +187,7 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 		pattern := fmt.Sprintf(`.*\.mypattern%d\..*`, i)
 		customRex := fmt.Sprintf("myregexpattern%d", i)
 		dsr := tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -225,12 +225,12 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 			Profiles:   []byte(`["global"]`),
 		},
 	}
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -290,27 +290,27 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 	dses := []DeliveryService{ds}
 
 	dss := []DeliveryServiceServer{
@@ -322,7 +322,7 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -357,13 +357,13 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -409,27 +409,27 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 	dses := []DeliveryService{ds}
 
 	dss := []DeliveryServiceServer{
@@ -441,7 +441,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -476,13 +476,13 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -511,27 +511,27 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 	dses := []DeliveryService{ds}
 
 	dss := []DeliveryServiceServer{
@@ -543,7 +543,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -578,13 +578,13 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -627,27 +627,27 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
 	ds.OrgServerFQDN = nil
-	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 	dses := []DeliveryService{ds}
 
 	dss := []DeliveryServiceServer{
@@ -659,7 +659,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -694,13 +694,13 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -729,27 +729,27 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 	dses := []DeliveryService{ds}
 
 	dss := []DeliveryServiceServer{
@@ -761,7 +761,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -796,13 +796,13 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -831,50 +831,50 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	ds2 := DeliveryService{}
-	ds2.ID = util.IntPtr(49)
-	dsType2 := tc.DSType("HTTP_LIVE_NATNL")
+	ds2.ID = util.Ptr(49)
+	dsType2 := "HTTP_LIVE_NATNL"
 	ds2.Type = &dsType2
-	ds2.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds2.MidHeaderRewrite = util.StrPtr("mymidrewrite2")
-	ds2.RangeRequestHandling = util.IntPtr(0)
-	ds2.RemapText = util.StrPtr("myremaptext")
-	ds2.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds2.SigningAlgorithm = util.StrPtr("url_sig")
-	ds2.XMLID = util.StrPtr("mydsname")
-	ds2.QStringIgnore = util.IntPtr(0)
-	ds2.RegexRemap = util.StrPtr("myregexremap")
-	ds2.FQPacingRate = util.IntPtr(0)
-	ds2.DSCP = util.IntPtr(0)
-	ds2.RoutingName = util.StrPtr("myroutingname")
-	ds2.MultiSiteOrigin = util.BoolPtr(false)
-	ds2.OriginShield = util.StrPtr("myoriginshield")
-	ds2.ProfileID = util.IntPtr(49)
-	ds2.Protocol = util.IntPtr(0)
-	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds2.Active = util.BoolPtr(true)
+	ds2.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds2.MidHeaderRewrite = util.Ptr("mymidrewrite2")
+	ds2.RangeRequestHandling = util.Ptr(0)
+	ds2.RemapText = util.Ptr("myremaptext")
+	ds2.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds2.SigningAlgorithm = util.Ptr("url_sig")
+	ds2.XMLID = "mydsname"
+	ds2.QStringIgnore = util.Ptr(0)
+	ds2.RegexRemap = util.Ptr("myregexremap")
+	ds2.FQPacingRate = util.Ptr(0)
+	ds2.DSCP = 0
+	ds2.RoutingName = "myroutingname"
+	ds2.MultiSiteOrigin = false
+	ds2.OriginShield = util.Ptr("myoriginshield")
+	ds2.ProfileID = util.Ptr(49)
+	ds2.Protocol = util.Ptr(0)
+	ds2.AnonymousBlockingEnabled = false
+	ds2.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds, ds2}
 
@@ -891,7 +891,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -901,7 +901,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 			},
 		},
 		tc.DeliveryServiceRegexes{
-			DSName: *ds2.XMLID,
+			DSName: ds2.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -936,13 +936,13 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -969,27 +969,27 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 	server := makeTestRemapServer()
 	servers := []Server{}
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
 	ds.MidHeaderRewrite = nil
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -1002,7 +1002,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -1037,13 +1037,13 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -1072,27 +1072,27 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
 	ds.MidHeaderRewrite = nil
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(0)
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(0)
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -1105,7 +1105,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -1140,13 +1140,13 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -1175,28 +1175,28 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(0)
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(0)
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -1209,7 +1209,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -1256,13 +1256,13 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -1315,28 +1315,28 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingBackgroundFetch))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingBackgroundFetch))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -1349,7 +1349,7 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -1408,13 +1408,13 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -1457,28 +1457,28 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -1491,7 +1491,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -1526,13 +1526,13 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -1575,52 +1575,52 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	ds2 := DeliveryService{}
-	ds2.ID = util.IntPtr(48)
-	dsType2 := tc.DSType("HTTP_LIVE_NATNL")
+	ds2.ID = util.Ptr(48)
+	dsType2 := "HTTP_LIVE_NATNL"
 	ds2.Type = &dsType2
-	ds2.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds2.MidHeaderRewrite = util.StrPtr("")
-	ds2.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds2.RemapText = util.StrPtr("myremaptext")
+	ds2.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds2.MidHeaderRewrite = util.Ptr("")
+	ds2.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds2.RemapText = util.Ptr("myremaptext")
 	ds2.EdgeHeaderRewrite = nil
-	ds2.SigningAlgorithm = util.StrPtr("url_sig")
-	ds2.XMLID = util.StrPtr("mydsname")
-	ds2.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds2.RegexRemap = util.StrPtr("myregexremap")
-	ds2.FQPacingRate = util.IntPtr(0)
-	ds2.DSCP = util.IntPtr(0)
-	ds2.RoutingName = util.StrPtr("myroutingname")
-	ds2.MultiSiteOrigin = util.BoolPtr(false)
-	ds2.OriginShield = util.StrPtr("myoriginshield")
-	ds2.ProfileID = util.IntPtr(49)
-	ds2.ProfileName = util.StrPtr("dsprofile")
-	ds2.Protocol = util.IntPtr(0)
-	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds2.Active = util.BoolPtr(true)
+	ds2.SigningAlgorithm = util.Ptr("url_sig")
+	ds2.XMLID = "mydsname"
+	ds2.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds2.RegexRemap = util.Ptr("myregexremap")
+	ds2.FQPacingRate = util.Ptr(0)
+	ds2.DSCP = 0
+	ds2.RoutingName = "myroutingname"
+	ds2.MultiSiteOrigin = false
+	ds2.OriginShield = util.Ptr("myoriginshield")
+	ds2.ProfileID = util.Ptr(49)
+	ds2.ProfileName = util.Ptr("dsprofile")
+	ds2.Protocol = util.Ptr(0)
+	ds2.AnonymousBlockingEnabled = false
+	ds2.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds, ds2}
 
@@ -1633,7 +1633,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -1668,13 +1668,13 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -1704,52 +1704,52 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("ANY_MAP")
+	ds.ID = util.Ptr(48)
+	dsType := "ANY_MAP"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds.RemapText = util.StrPtr("") // should not be included, any map requires remap text
+	ds.OrgServerFQDN = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("") // should not be included, any map requires remap text
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(0)
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(0)
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	ds2 := DeliveryService{}
-	ds2.ID = util.IntPtr(49)
-	dsType2 := tc.DSType("ANY_MAP")
+	ds2.ID = util.Ptr(49)
+	dsType2 := "ANY_MAP"
 	ds2.Type = &dsType2
-	ds2.OrgServerFQDN = util.StrPtr("myorigin")
-	ds2.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-	ds2.RangeRequestHandling = util.IntPtr(0)
-	ds2.RemapText = util.StrPtr("myremaptext")
-	ds2.EdgeHeaderRewrite = util.StrPtr("myedgerewrite")
-	ds2.SigningAlgorithm = util.StrPtr("url_sig")
-	ds2.XMLID = util.StrPtr("mydsname2")
-	ds2.QStringIgnore = util.IntPtr(0)
-	ds2.RegexRemap = util.StrPtr("myregexremap")
-	ds2.FQPacingRate = util.IntPtr(0)
-	ds2.DSCP = util.IntPtr(0)
-	ds2.RoutingName = util.StrPtr("myroutingname")
-	ds2.MultiSiteOrigin = util.BoolPtr(false)
-	ds2.OriginShield = util.StrPtr("myoriginshield")
-	ds2.ProfileID = util.IntPtr(49)
-	ds2.ProfileName = util.StrPtr("dsprofile")
-	ds2.Protocol = util.IntPtr(0)
-	ds2.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds2.Active = util.BoolPtr(true)
+	ds2.OrgServerFQDN = util.Ptr("myorigin")
+	ds2.MidHeaderRewrite = util.Ptr("mymidrewrite")
+	ds2.RangeRequestHandling = util.Ptr(0)
+	ds2.RemapText = util.Ptr("myremaptext")
+	ds2.EdgeHeaderRewrite = util.Ptr("myedgerewrite")
+	ds2.SigningAlgorithm = util.Ptr("url_sig")
+	ds2.XMLID = "mydsname2"
+	ds2.QStringIgnore = util.Ptr(0)
+	ds2.RegexRemap = util.Ptr("myregexremap")
+	ds2.FQPacingRate = util.Ptr(0)
+	ds2.DSCP = 0
+	ds2.RoutingName = "myroutingname"
+	ds2.MultiSiteOrigin = false
+	ds2.OriginShield = util.Ptr("myoriginshield")
+	ds2.ProfileID = util.Ptr(49)
+	ds2.ProfileName = util.Ptr("dsprofile")
+	ds2.Protocol = util.Ptr(0)
+	ds2.AnonymousBlockingEnabled = false
+	ds2.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds, ds2}
 
@@ -1766,7 +1766,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -1776,7 +1776,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 			},
 		},
 		tc.DeliveryServiceRegexes{
-			DSName: *ds2.XMLID,
+			DSName: ds2.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -1811,13 +1811,13 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -1861,210 +1861,210 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 	dses := []DeliveryService{}
 	{ // see regexes - has invalid regex type
 		ds := DeliveryService{}
-		ds.ID = util.IntPtr(1)
-		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.ID = util.Ptr(1)
+		dsType := "HTTP_LIVE_NATNL"
 		ds.Type = &dsType
-		ds.OrgServerFQDN = util.StrPtr("myorigin")
-		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.RangeRequestHandling = util.IntPtr(0)
-		ds.RemapText = util.StrPtr("myreamptext")
-		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-		ds.SigningAlgorithm = util.StrPtr("url_sig")
-		ds.XMLID = util.StrPtr("ds")
-		ds.QStringIgnore = util.IntPtr(0)
-		ds.RegexRemap = util.StrPtr("myregexremap")
-		ds.FQPacingRate = util.IntPtr(0)
-		ds.DSCP = util.IntPtr(0)
-		ds.RoutingName = util.StrPtr("myroutingname")
-		ds.MultiSiteOrigin = util.BoolPtr(false)
-		ds.OriginShield = util.StrPtr("myoriginshield")
-		ds.ProfileID = util.IntPtr(49)
-		ds.ProfileName = util.StrPtr("dsprofile")
-		ds.Protocol = util.IntPtr(0)
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-		ds.Active = util.BoolPtr(true)
+		ds.OrgServerFQDN = util.Ptr("myorigin")
+		ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+		ds.RangeRequestHandling = util.Ptr(0)
+		ds.RemapText = util.Ptr("myreamptext")
+		ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.Ptr("url_sig")
+		ds.XMLID = "ds"
+		ds.QStringIgnore = util.Ptr(0)
+		ds.RegexRemap = util.Ptr("myregexremap")
+		ds.FQPacingRate = util.Ptr(0)
+		ds.DSCP = 0
+		ds.RoutingName = "myroutingname"
+		ds.MultiSiteOrigin = false
+		ds.OriginShield = util.Ptr("myoriginshield")
+		ds.ProfileID = util.Ptr(49)
+		ds.ProfileName = util.Ptr("dsprofile")
+		ds.Protocol = util.Ptr(0)
+		ds.AnonymousBlockingEnabled = false
+		ds.Active = tc.DSActiveStateActive
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
 		ds := DeliveryService{}
-		ds.ID = util.IntPtr(2)
-		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.ID = util.Ptr(2)
+		dsType := "HTTP_LIVE_NATNL"
 		ds.Type = &dsType
-		ds.OrgServerFQDN = util.StrPtr("myorigin")
-		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.RangeRequestHandling = util.IntPtr(0)
-		ds.RemapText = util.StrPtr("myremaptext")
-		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-		ds.SigningAlgorithm = util.StrPtr("url_sig")
-		ds.XMLID = util.StrPtr("ds2")
-		ds.QStringIgnore = util.IntPtr(0)
-		ds.RegexRemap = util.StrPtr("myregexremap")
-		ds.FQPacingRate = util.IntPtr(0)
-		ds.DSCP = util.IntPtr(0)
-		ds.RoutingName = util.StrPtr("myroutingname")
-		ds.MultiSiteOrigin = util.BoolPtr(false)
-		ds.OriginShield = util.StrPtr("myoriginshield")
-		ds.ProfileID = util.IntPtr(49)
-		ds.ProfileName = util.StrPtr("dsprofile")
-		ds.Protocol = util.IntPtr(0)
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-		ds.Active = util.BoolPtr(true)
+		ds.OrgServerFQDN = util.Ptr("myorigin")
+		ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+		ds.RangeRequestHandling = util.Ptr(0)
+		ds.RemapText = util.Ptr("myremaptext")
+		ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.Ptr("url_sig")
+		ds.XMLID = "ds2"
+		ds.QStringIgnore = util.Ptr(0)
+		ds.RegexRemap = util.Ptr("myregexremap")
+		ds.FQPacingRate = util.Ptr(0)
+		ds.DSCP = 0
+		ds.RoutingName = "myroutingname"
+		ds.MultiSiteOrigin = false
+		ds.OriginShield = util.Ptr("myoriginshield")
+		ds.ProfileID = util.Ptr(49)
+		ds.ProfileName = util.Ptr("dsprofile")
+		ds.Protocol = util.Ptr(0)
+		ds.AnonymousBlockingEnabled = false
+		ds.Active = tc.DSActiveStateActive
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
 		ds := DeliveryService{}
-		ds.ID = util.IntPtr(3)
-		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.ID = util.Ptr(3)
+		dsType := "HTTP_LIVE_NATNL"
 		ds.Type = &dsType
-		ds.OrgServerFQDN = util.StrPtr("myorigin")
-		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.RangeRequestHandling = util.IntPtr(0)
-		ds.RemapText = util.StrPtr("myremaptext")
-		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-		ds.SigningAlgorithm = util.StrPtr("url_sig")
-		ds.XMLID = util.StrPtr("ds3")
-		ds.QStringIgnore = util.IntPtr(0)
-		ds.RegexRemap = util.StrPtr("myregexremap")
-		ds.FQPacingRate = util.IntPtr(0)
-		ds.DSCP = util.IntPtr(0)
-		ds.RoutingName = util.StrPtr("myroutingname")
-		ds.MultiSiteOrigin = util.BoolPtr(false)
-		ds.OriginShield = util.StrPtr("myoriginshield")
-		ds.ProfileID = util.IntPtr(49)
-		ds.ProfileName = util.StrPtr("dsprofile")
-		ds.Protocol = util.IntPtr(0)
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-		ds.Active = util.BoolPtr(true)
+		ds.OrgServerFQDN = util.Ptr("myorigin")
+		ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+		ds.RangeRequestHandling = util.Ptr(0)
+		ds.RemapText = util.Ptr("myremaptext")
+		ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.Ptr("url_sig")
+		ds.XMLID = "ds3"
+		ds.QStringIgnore = util.Ptr(0)
+		ds.RegexRemap = util.Ptr("myregexremap")
+		ds.FQPacingRate = util.Ptr(0)
+		ds.DSCP = 0
+		ds.RoutingName = "myroutingname"
+		ds.MultiSiteOrigin = false
+		ds.OriginShield = util.Ptr("myoriginshield")
+		ds.ProfileID = util.Ptr(49)
+		ds.ProfileName = util.Ptr("dsprofile")
+		ds.Protocol = util.Ptr(0)
+		ds.AnonymousBlockingEnabled = false
+		ds.Active = tc.DSActiveStateActive
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
 		ds := DeliveryService{}
-		ds.ID = util.IntPtr(4)
-		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.ID = util.Ptr(4)
+		dsType := "HTTP_LIVE_NATNL"
 		ds.Type = &dsType
-		ds.OrgServerFQDN = util.StrPtr("myorigin")
-		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.RangeRequestHandling = util.IntPtr(0)
-		ds.RemapText = util.StrPtr("myremaptext")
-		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-		ds.SigningAlgorithm = util.StrPtr("url_sig")
-		ds.XMLID = util.StrPtr("ds4")
-		ds.QStringIgnore = util.IntPtr(0)
-		ds.RegexRemap = util.StrPtr("myregexremap")
-		ds.FQPacingRate = util.IntPtr(0)
-		ds.DSCP = util.IntPtr(0)
-		ds.RoutingName = util.StrPtr("myroutingname")
-		ds.MultiSiteOrigin = util.BoolPtr(false)
-		ds.OriginShield = util.StrPtr("myoriginshield")
-		ds.ProfileID = util.IntPtr(49)
-		ds.ProfileName = util.StrPtr("dsprofile")
-		ds.Protocol = util.IntPtr(0)
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-		ds.Active = util.BoolPtr(true)
+		ds.OrgServerFQDN = util.Ptr("myorigin")
+		ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+		ds.RangeRequestHandling = util.Ptr(0)
+		ds.RemapText = util.Ptr("myremaptext")
+		ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.Ptr("url_sig")
+		ds.XMLID = "ds4"
+		ds.QStringIgnore = util.Ptr(0)
+		ds.RegexRemap = util.Ptr("myregexremap")
+		ds.FQPacingRate = util.Ptr(0)
+		ds.DSCP = 0
+		ds.RoutingName = "myroutingname"
+		ds.MultiSiteOrigin = false
+		ds.OriginShield = util.Ptr("myoriginshield")
+		ds.ProfileID = util.Ptr(49)
+		ds.ProfileName = util.Ptr("dsprofile")
+		ds.Protocol = util.Ptr(0)
+		ds.AnonymousBlockingEnabled = false
+		ds.Active = tc.DSActiveStateActive
 		dses = append(dses, ds)
 	}
 	{ // see regexes - has invalid regex type
 		ds := DeliveryService{}
-		ds.ID = util.IntPtr(5)
-		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.ID = util.Ptr(5)
+		dsType := "HTTP_LIVE_NATNL"
 		ds.Type = &dsType
-		ds.OrgServerFQDN = util.StrPtr("myorigin")
-		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.RangeRequestHandling = util.IntPtr(0)
-		ds.RemapText = util.StrPtr("myremaptext")
-		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-		ds.SigningAlgorithm = util.StrPtr("url_sig")
-		ds.XMLID = util.StrPtr("ds5")
-		ds.QStringIgnore = util.IntPtr(0)
-		ds.RegexRemap = util.StrPtr("myregexremap")
-		ds.FQPacingRate = util.IntPtr(0)
-		ds.DSCP = util.IntPtr(0)
-		ds.RoutingName = util.StrPtr("myroutingname")
-		ds.MultiSiteOrigin = util.BoolPtr(false)
-		ds.OriginShield = util.StrPtr("myoriginshield")
-		ds.ProfileID = util.IntPtr(49)
-		ds.ProfileName = util.StrPtr("dsprofile")
-		ds.Protocol = util.IntPtr(0)
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-		ds.Active = util.BoolPtr(true)
+		ds.OrgServerFQDN = util.Ptr("myorigin")
+		ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+		ds.RangeRequestHandling = util.Ptr(0)
+		ds.RemapText = util.Ptr("myremaptext")
+		ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.Ptr("url_sig")
+		ds.XMLID = "ds5"
+		ds.QStringIgnore = util.Ptr(0)
+		ds.RegexRemap = util.Ptr("myregexremap")
+		ds.FQPacingRate = util.Ptr(0)
+		ds.DSCP = 0
+		ds.RoutingName = "myroutingname"
+		ds.MultiSiteOrigin = false
+		ds.OriginShield = util.Ptr("myoriginshield")
+		ds.ProfileID = util.Ptr(49)
+		ds.ProfileName = util.Ptr("dsprofile")
+		ds.Protocol = util.Ptr(0)
+		ds.AnonymousBlockingEnabled = false
+		ds.Active = tc.DSActiveStateActive
 		dses = append(dses, ds)
 	}
 	{
 		ds := DeliveryService{}
-		ds.ID = util.IntPtr(6)
-		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.ID = util.Ptr(6)
+		dsType := "HTTP_LIVE_NATNL"
 		ds.Type = &dsType
 		ds.OrgServerFQDN = nil // nil origin should not be included
-		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.RangeRequestHandling = util.IntPtr(0)
-		ds.RemapText = util.StrPtr("myremaptext")
-		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-		ds.SigningAlgorithm = util.StrPtr("url_sig")
-		ds.XMLID = util.StrPtr("ds6")
-		ds.QStringIgnore = util.IntPtr(0)
-		ds.RegexRemap = util.StrPtr("myregexremap")
-		ds.FQPacingRate = util.IntPtr(0)
-		ds.DSCP = util.IntPtr(0)
-		ds.RoutingName = util.StrPtr("myroutingname")
-		ds.MultiSiteOrigin = util.BoolPtr(false)
-		ds.OriginShield = util.StrPtr("myoriginshield")
-		ds.ProfileID = util.IntPtr(49)
-		ds.ProfileName = util.StrPtr("dsprofile")
-		ds.Protocol = util.IntPtr(0)
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-		ds.Active = util.BoolPtr(true)
+		ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+		ds.RangeRequestHandling = util.Ptr(0)
+		ds.RemapText = util.Ptr("myremaptext")
+		ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.Ptr("url_sig")
+		ds.XMLID = "ds6"
+		ds.QStringIgnore = util.Ptr(0)
+		ds.RegexRemap = util.Ptr("myregexremap")
+		ds.FQPacingRate = util.Ptr(0)
+		ds.DSCP = 0
+		ds.RoutingName = "myroutingname"
+		ds.MultiSiteOrigin = false
+		ds.OriginShield = util.Ptr("myoriginshield")
+		ds.ProfileID = util.Ptr(49)
+		ds.ProfileName = util.Ptr("dsprofile")
+		ds.Protocol = util.Ptr(0)
+		ds.AnonymousBlockingEnabled = false
+		ds.Active = tc.DSActiveStateActive
 		dses = append(dses, ds)
 	}
 	{
 		ds := DeliveryService{}
-		ds.ID = util.IntPtr(7)
-		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.ID = util.Ptr(7)
+		dsType := "HTTP_LIVE_NATNL"
 		ds.Type = &dsType
-		ds.OrgServerFQDN = util.StrPtr("") // empty origin should not be included
-		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.RangeRequestHandling = util.IntPtr(0)
-		ds.RemapText = util.StrPtr("myremaptext")
-		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-		ds.SigningAlgorithm = util.StrPtr("url_sig")
-		ds.XMLID = util.StrPtr("ds7")
-		ds.QStringIgnore = util.IntPtr(0)
-		ds.RegexRemap = util.StrPtr("myregexremap")
-		ds.FQPacingRate = util.IntPtr(0)
-		ds.DSCP = util.IntPtr(0)
-		ds.RoutingName = util.StrPtr("myroutingname")
-		ds.MultiSiteOrigin = util.BoolPtr(false)
-		ds.OriginShield = util.StrPtr("myoriginshield")
-		ds.ProfileID = util.IntPtr(49)
-		ds.ProfileName = util.StrPtr("dsprofile")
-		ds.Protocol = util.IntPtr(0)
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-		ds.Active = util.BoolPtr(true)
+		ds.OrgServerFQDN = util.Ptr("") // empty origin should not be included
+		ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+		ds.RangeRequestHandling = util.Ptr(0)
+		ds.RemapText = util.Ptr("myremaptext")
+		ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.Ptr("url_sig")
+		ds.XMLID = "ds7"
+		ds.QStringIgnore = util.Ptr(0)
+		ds.RegexRemap = util.Ptr("myregexremap")
+		ds.FQPacingRate = util.Ptr(0)
+		ds.DSCP = 0
+		ds.RoutingName = "myroutingname"
+		ds.MultiSiteOrigin = false
+		ds.OriginShield = util.Ptr("myoriginshield")
+		ds.ProfileID = util.Ptr(49)
+		ds.ProfileName = util.Ptr("dsprofile")
+		ds.Protocol = util.Ptr(0)
+		ds.AnonymousBlockingEnabled = false
+		ds.Active = tc.DSActiveStateActive
 		dses = append(dses, ds)
 	}
 	{ // see regexes - nil pattern
 		ds := DeliveryService{}
-		ds.ID = util.IntPtr(8)
-		dsType := tc.DSType("HTTP_LIVE_NATNL")
+		ds.ID = util.Ptr(8)
+		dsType := "HTTP_LIVE_NATNL"
 		ds.Type = &dsType
-		ds.OrgServerFQDN = util.StrPtr("") // empty origin should not be included
-		ds.MidHeaderRewrite = util.StrPtr("mymidrewrite")
-		ds.RangeRequestHandling = util.IntPtr(0)
-		ds.RemapText = util.StrPtr("myremaptext")
-		ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-		ds.SigningAlgorithm = util.StrPtr("url_sig")
-		ds.XMLID = util.StrPtr("ds8")
-		ds.QStringIgnore = util.IntPtr(0)
-		ds.RegexRemap = util.StrPtr("myregexremap")
-		ds.FQPacingRate = util.IntPtr(0)
-		ds.DSCP = util.IntPtr(0)
-		ds.RoutingName = util.StrPtr("myroutingname")
-		ds.MultiSiteOrigin = util.BoolPtr(false)
-		ds.OriginShield = util.StrPtr("myoriginshield")
-		ds.ProfileID = util.IntPtr(49)
-		ds.ProfileName = util.StrPtr("dsprofile")
+		ds.OrgServerFQDN = util.Ptr("") // empty origin should not be included
+		ds.MidHeaderRewrite = util.Ptr("mymidrewrite")
+		ds.RangeRequestHandling = util.Ptr(0)
+		ds.RemapText = util.Ptr("myremaptext")
+		ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+		ds.SigningAlgorithm = util.Ptr("url_sig")
+		ds.XMLID = "ds8"
+		ds.QStringIgnore = util.Ptr(0)
+		ds.RegexRemap = util.Ptr("myregexremap")
+		ds.FQPacingRate = util.Ptr(0)
+		ds.DSCP = 0
+		ds.RoutingName = "myroutingname"
+		ds.MultiSiteOrigin = false
+		ds.OriginShield = util.Ptr("myoriginshield")
+		ds.ProfileID = util.Ptr(49)
+		ds.ProfileName = util.Ptr("dsprofile")
 		ds.Protocol = nil // nil protocol shouldn't be included
-		ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-		ds.Active = util.BoolPtr(true)
+		ds.AnonymousBlockingEnabled = false
+		ds.Active = tc.DSActiveStateActive
 		dses = append(dses, ds)
 	}
 
@@ -2210,13 +2210,13 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -2247,28 +2247,28 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPAndHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -2281,7 +2281,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -2316,13 +2316,13 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -2370,28 +2370,28 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -2404,7 +2404,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -2439,13 +2439,13 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -2493,28 +2493,28 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -2527,7 +2527,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -2562,13 +2562,13 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -2616,28 +2616,28 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -2650,7 +2650,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -2685,13 +2685,13 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -2739,28 +2739,28 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -2773,7 +2773,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -2808,13 +2808,13 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -2858,28 +2858,28 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -2892,7 +2892,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -2933,13 +2933,13 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -2983,28 +2983,28 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -3017,7 +3017,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -3058,13 +3058,13 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -3108,28 +3108,28 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("myedgeheaderrewrite")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("myedgeheaderrewrite")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -3142,7 +3142,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -3183,13 +3183,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -3237,28 +3237,28 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -3271,7 +3271,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -3312,13 +3312,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -3366,28 +3366,28 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -3400,7 +3400,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -3441,13 +3441,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -3495,28 +3495,28 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("url_sig")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -3529,7 +3529,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -3576,13 +3576,13 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -3630,28 +3630,28 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("uri_signing")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("uri_signing")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -3664,7 +3664,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -3705,13 +3705,13 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -3754,28 +3754,28 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
 	ds.SigningAlgorithm = nil
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -3788,7 +3788,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -3829,13 +3829,13 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -3878,28 +3878,28 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -3912,7 +3912,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -3953,13 +3953,13 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -4002,28 +4002,28 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -4036,7 +4036,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -4077,13 +4077,13 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -4126,28 +4126,28 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreDropAtEdge))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreDropAtEdge))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -4160,7 +4160,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -4201,13 +4201,13 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -4248,28 +4248,28 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -4282,7 +4282,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -4323,13 +4323,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -4373,28 +4373,28 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -4407,7 +4407,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -4460,13 +4460,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -4521,28 +4521,28 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -4555,7 +4555,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -4589,13 +4589,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	remapConfigParams := []tc.Parameter{}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -4639,28 +4639,28 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -4673,7 +4673,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -4726,13 +4726,13 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -4779,28 +4779,28 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -4813,7 +4813,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -4854,13 +4854,13 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -4904,28 +4904,28 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingCacheRangeRequest))
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingCacheRangeRequest))
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -4938,7 +4938,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -4979,13 +4979,13 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -5025,28 +5025,28 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
 	ds.RangeRequestHandling = nil
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -5059,7 +5059,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -5100,13 +5100,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -5150,28 +5150,28 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingDontCache)
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingDontCache)
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -5184,7 +5184,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -5241,13 +5241,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -5299,28 +5299,28 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingBackgroundFetch)
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingBackgroundFetch)
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -5333,7 +5333,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -5386,13 +5386,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -5445,29 +5445,29 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.RangeSliceBlockSize = util.IntPtr(262144)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
 
 	dses := []DeliveryService{ds}
 
@@ -5480,7 +5480,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -5521,13 +5521,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -5575,29 +5575,29 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.RangeSliceBlockSize = util.IntPtr(262144)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
 
 	dses := []DeliveryService{ds}
 
@@ -5610,7 +5610,7 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -5657,13 +5657,13 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -5715,29 +5715,29 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds.RemapText = util.StrPtr("myremaptext")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("myremaptext")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.RangeSliceBlockSize = util.IntPtr(262144)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
 
 	dses := []DeliveryService{ds}
 
@@ -5750,7 +5750,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -5803,13 +5803,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -5869,29 +5869,29 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua __RANGE_DIRECTIVE__")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua __RANGE_DIRECTIVE__")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.RangeSliceBlockSize = util.IntPtr(262144)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPAndHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
 
 	dses := []DeliveryService{ds}
 
@@ -5904,7 +5904,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -5945,13 +5945,13 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -6016,28 +6016,28 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=uri-manipulator.lua __CACHEKEY_DIRECTIVE__")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=uri-manipulator.lua __CACHEKEY_DIRECTIVE__")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.RangeSliceBlockSize = util.IntPtr(262144)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPAndHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
 
 	dses := []DeliveryService{ds}
 
@@ -6050,7 +6050,7 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -6091,13 +6091,13 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -6150,28 +6150,28 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=uri-manipulator.lua __REGEX_REMAP_DIRECTIVE__")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=uri-manipulator.lua __REGEX_REMAP_DIRECTIVE__")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPAndHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.RangeSliceBlockSize = util.IntPtr(262144)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPAndHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
 
 	dses := []DeliveryService{ds}
 
@@ -6184,7 +6184,7 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -6225,13 +6225,13 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -6284,29 +6284,29 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingSlice)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.RangeSliceBlockSize = util.IntPtr(262144)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
 
 	dses := []DeliveryService{ds}
 
@@ -6319,7 +6319,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -6360,13 +6360,13 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -6425,28 +6425,28 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -6459,7 +6459,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -6500,13 +6500,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -6554,28 +6554,28 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
 	ds.FQPacingRate = nil
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -6588,7 +6588,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -6629,13 +6629,13 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -6675,28 +6675,28 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(-42)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(-42)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -6709,7 +6709,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -6750,13 +6750,13 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -6796,28 +6796,28 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(0)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -6830,7 +6830,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -6871,13 +6871,13 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -6917,28 +6917,28 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -6951,7 +6951,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -6992,13 +6992,13 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -7042,28 +7042,28 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS_LIVE")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS_LIVE"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -7076,7 +7076,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -7117,13 +7117,13 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -7163,28 +7163,28 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS_LIVE")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS_LIVE"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = nil
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = ""
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -7197,7 +7197,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -7238,13 +7238,13 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -7274,28 +7274,28 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS_LIVE")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS_LIVE"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = nil
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = ""
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -7308,7 +7308,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      "",
@@ -7349,13 +7349,13 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -7386,32 +7386,32 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS_LIVE")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS_LIVE"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -7424,7 +7424,7 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -7465,13 +7465,13 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -7507,32 +7507,32 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -7545,7 +7545,7 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -7586,13 +7586,13 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -7628,32 +7628,32 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_NO_CACHE")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_NO_CACHE"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("origin.example.test")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("mid-header-rewrite")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("mid-header-rewrite")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -7666,7 +7666,7 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -7707,13 +7707,13 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -7746,72 +7746,72 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 
 	edge := makeTestRemapServer()
 	edge.Type = "EDGE"
-	edge.Cachegroup = util.StrPtr("edgeCG")
+	edge.Cachegroup = util.Ptr("edgeCG")
 
 	servers := []Server{}
 
 	mid := makeTestParentServer()
 	mid.Type = "MID"
-	mid.Cachegroup = util.StrPtr("midCG")
-	mid.HostName = util.StrPtr("mymid")
-	mid.ID = util.IntPtr(45)
+	mid.Cachegroup = util.Ptr("midCG")
+	mid.HostName = util.Ptr("mymid")
+	mid.ID = util.Ptr(45)
 	setIP(mid, "192.168.2.5")
 
-	dsType := tc.DSType("HTTP_NO_CACHE")
+	dsType := "HTTP_NO_CACHE"
 
 	// show up at mid due to topo
 	ds0 := DeliveryService{}
-	ds0.ID = util.IntPtr(48)
+	ds0.ID = util.Ptr(48)
 	ds0.Type = &dsType
-	ds0.OrgServerFQDN = util.StrPtr("origin0.example.test")
-	ds0.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds0.XMLID = util.StrPtr("mydsname0")
-	ds0.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds0.RegexRemap = util.StrPtr("")
-	ds0.FQPacingRate = util.IntPtr(314159)
-	ds0.DSCP = util.IntPtr(0)
-	ds0.RoutingName = util.StrPtr("myroutingname")
-	ds0.MultiSiteOrigin = util.BoolPtr(false)
-	ds0.OriginShield = util.StrPtr("myoriginshield")
-	ds0.ProfileID = util.IntPtr(49)
-	ds0.ProfileName = util.StrPtr("dsprofile")
-	ds0.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds0.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds0.Active = util.BoolPtr(true)
-	ds0.Topology = util.StrPtr("t0")
+	ds0.OrgServerFQDN = util.Ptr("origin0.example.test")
+	ds0.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds0.XMLID = "mydsname0"
+	ds0.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds0.RegexRemap = util.Ptr("")
+	ds0.FQPacingRate = util.Ptr(314159)
+	ds0.DSCP = 0
+	ds0.RoutingName = "myroutingname"
+	ds0.MultiSiteOrigin = false
+	ds0.OriginShield = util.Ptr("myoriginshield")
+	ds0.ProfileID = util.Ptr(49)
+	ds0.ProfileName = util.Ptr("dsprofile")
+	ds0.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds0.AnonymousBlockingEnabled = false
+	ds0.Active = tc.DSActiveStateActive
+	ds0.Topology = util.Ptr("t0")
 
-	ds0.FirstHeaderRewrite = util.StrPtr("first-header-rewrite")
-	ds0.InnerHeaderRewrite = util.StrPtr("inner-header-rewrite")
-	ds0.LastHeaderRewrite = util.StrPtr("last-header-rewrite")
-	ds0.ServiceCategory = util.StrPtr("")
-	ds0.MaxOriginConnections = util.IntPtr(0)
+	ds0.FirstHeaderRewrite = util.Ptr("first-header-rewrite")
+	ds0.InnerHeaderRewrite = util.Ptr("inner-header-rewrite")
+	ds0.LastHeaderRewrite = util.Ptr("last-header-rewrite")
+	ds0.ServiceCategory = util.Ptr("")
+	ds0.MaxOriginConnections = util.Ptr(0)
 
 	// not show up at mid due to topo
 	ds1 := DeliveryService{}
-	ds1.ID = util.IntPtr(49)
+	ds1.ID = util.Ptr(49)
 	ds1.Type = &dsType
-	ds1.OrgServerFQDN = util.StrPtr("origin1.example.test")
-	ds1.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds1.XMLID = util.StrPtr("mydsname1")
-	ds1.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds1.RegexRemap = util.StrPtr("")
-	ds1.FQPacingRate = util.IntPtr(314159)
-	ds1.DSCP = util.IntPtr(0)
-	ds1.RoutingName = util.StrPtr("myroutingname")
-	ds1.MultiSiteOrigin = util.BoolPtr(false)
-	ds1.OriginShield = util.StrPtr("myoriginshield")
-	ds1.ProfileID = util.IntPtr(49)
-	ds1.ProfileName = util.StrPtr("dsprofile")
-	ds1.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds1.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds1.Active = util.BoolPtr(true)
-	ds1.Topology = util.StrPtr("t1")
+	ds1.OrgServerFQDN = util.Ptr("origin1.example.test")
+	ds1.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds1.XMLID = "mydsname1"
+	ds1.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds1.RegexRemap = util.Ptr("")
+	ds1.FQPacingRate = util.Ptr(314159)
+	ds1.DSCP = 0
+	ds1.RoutingName = "myroutingname"
+	ds1.MultiSiteOrigin = false
+	ds1.OriginShield = util.Ptr("myoriginshield")
+	ds1.ProfileID = util.Ptr(49)
+	ds1.ProfileName = util.Ptr("dsprofile")
+	ds1.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds1.AnonymousBlockingEnabled = false
+	ds1.Active = tc.DSActiveStateActive
+	ds1.Topology = util.Ptr("t1")
 
-	ds1.FirstHeaderRewrite = util.StrPtr("first-header-rewrite")
-	ds1.InnerHeaderRewrite = util.StrPtr("inner-header-rewrite")
-	ds1.LastHeaderRewrite = util.StrPtr("last-header-rewrite")
-	ds1.ServiceCategory = util.StrPtr("")
-	ds1.MaxOriginConnections = util.IntPtr(0)
+	ds1.FirstHeaderRewrite = util.Ptr("first-header-rewrite")
+	ds1.InnerHeaderRewrite = util.Ptr("inner-header-rewrite")
+	ds1.LastHeaderRewrite = util.Ptr("last-header-rewrite")
+	ds1.ServiceCategory = util.Ptr("")
+	ds1.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds0, ds1}
 
@@ -7828,7 +7828,7 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds0.XMLID,
+			DSName: ds0.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -7838,7 +7838,7 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 			},
 		},
 		tc.DeliveryServiceRegexes{
-			DSName: *ds1.XMLID,
+			DSName: ds1.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -7879,15 +7879,15 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{
+	topologies := []tc.TopologyV5{
 		{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1},
@@ -7899,7 +7899,7 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 		},
 		{
 			Name: "t1",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 				},
@@ -7907,7 +7907,7 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 		},
 	}
 
-	eCG := &tc.CacheGroupNullable{}
+	eCG := &tc.CacheGroupNullableV5{}
 	eCG.Name = edge.Cachegroup
 	eCG.ID = edge.CachegroupID
 	eCG.ParentName = mid.Cachegroup
@@ -7915,13 +7915,13 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
+	mCG := &tc.CacheGroupNullableV5{}
 	mCG.Name = mid.Cachegroup
 	mCG.ID = mid.CachegroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG}
+	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -7985,28 +7985,28 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("http://origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("http://origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -8019,7 +8019,7 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -8060,13 +8060,13 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -8114,28 +8114,28 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("https://origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	dses := []DeliveryService{ds}
 
@@ -8148,7 +8148,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -8189,13 +8189,13 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -8243,32 +8243,32 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.OrgServerFQDN = util.Ptr("https://origin.example.test")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -8281,7 +8281,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -8322,13 +8322,13 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{}
-	cgs := []tc.CacheGroupNullable{}
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -8365,33 +8365,33 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	server.Cachegroup = util.StrPtr("edgeCG")
+	server.Cachegroup = util.Ptr("edgeCG")
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("HTTP_LIVE_NATNL")
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.OrgServerFQDN = util.Ptr("https://origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	ds.EdgeHeaderRewrite = nil
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTPToHTTPS))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.Topology = util.StrPtr("t0")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.Topology = util.Ptr("t0")
 
 	dses := []DeliveryService{ds}
 
@@ -8404,7 +8404,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -8445,15 +8445,15 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{
+	topologies := []tc.TopologyV5{
 		{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1, 2},
@@ -8469,18 +8469,18 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.StrPtr("midCG")
-	mid0.HostName = util.StrPtr("mymid0")
-	mid0.ID = util.IntPtr(45)
+	mid0.Cachegroup = util.Ptr("midCG")
+	mid0.HostName = util.Ptr("mymid0")
+	mid0.ID = util.Ptr(45)
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.StrPtr("midCG")
-	mid1.HostName = util.StrPtr("mymid1")
-	mid1.ID = util.IntPtr(46)
+	mid1.Cachegroup = util.Ptr("midCG")
+	mid1.HostName = util.Ptr("mymid1")
+	mid1.ID = util.Ptr(46)
 	setIP(mid1, "192.168.2.3")
 
-	eCG := &tc.CacheGroupNullable{}
+	eCG := &tc.CacheGroupNullableV5{}
 	eCG.Name = server.Cachegroup
 	eCG.ID = server.CachegroupID
 	eCG.ParentName = mid0.Cachegroup
@@ -8490,19 +8490,19 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
+	mCG := &tc.CacheGroupNullableV5{}
 	mCG.Name = mid0.Cachegroup
 	mCG.ID = mid0.CachegroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
-	mCG2 := &tc.CacheGroupNullable{}
+	mCG2 := &tc.CacheGroupNullableV5{}
 	mCG2.Name = mid1.Cachegroup
 	mCG2.ID = mid1.CachegroupID
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG, *mCG2}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -8547,37 +8547,37 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.StrPtr("midCG")
+	server.Cachegroup = util.Ptr("midCG")
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
-	ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-	ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.Topology = util.StrPtr("t0")
+	ds.OrgServerFQDN = util.Ptr("https://origin.example.test")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+	ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.Topology = util.Ptr("t0")
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -8590,7 +8590,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -8631,15 +8631,15 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{
+	topologies := []tc.TopologyV5{
 		{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1, 2},
@@ -8655,18 +8655,18 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.StrPtr("midCG")
-	mid0.HostName = util.StrPtr("mymid0")
-	mid0.ID = util.IntPtr(45)
+	mid0.Cachegroup = util.Ptr("midCG")
+	mid0.HostName = util.Ptr("mymid0")
+	mid0.ID = util.Ptr(45)
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.StrPtr("midCG")
-	mid1.HostName = util.StrPtr("mymid1")
-	mid1.ID = util.IntPtr(46)
+	mid1.Cachegroup = util.Ptr("midCG")
+	mid1.HostName = util.Ptr("mymid1")
+	mid1.ID = util.Ptr(46)
 	setIP(mid1, "192.168.2.3")
 
-	eCG := &tc.CacheGroupNullable{}
+	eCG := &tc.CacheGroupNullableV5{}
 	eCG.Name = server.Cachegroup
 	eCG.ID = server.CachegroupID
 	eCG.ParentName = mid0.Cachegroup
@@ -8676,19 +8676,19 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
+	mCG := &tc.CacheGroupNullableV5{}
 	mCG.Name = mid0.Cachegroup
 	mCG.ID = mid0.CachegroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
-	mCG2 := &tc.CacheGroupNullable{}
+	mCG2 := &tc.CacheGroupNullableV5{}
 	mCG2.Name = mid1.Cachegroup
 	mCG2.ID = mid1.CachegroupID
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG, *mCG2}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 	configDir := `/opt/trafficserver/etc/trafficserver`
@@ -8725,39 +8725,39 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.StrPtr("midCG")
+	server.Cachegroup = util.Ptr("midCG")
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("http://origin.example.test")
+	ds.OrgServerFQDN = util.Ptr("http://origin.example.test")
 	/*
-		ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-		ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+		ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+		ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	*/
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.Topology = util.StrPtr("t0")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.Topology = util.Ptr("t0")
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -8770,7 +8770,7 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -8829,15 +8829,15 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{
+	topologies := []tc.TopologyV5{
 		{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1, 2},
@@ -8853,18 +8853,18 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.StrPtr("midCG")
-	mid0.HostName = util.StrPtr("mymid0")
-	mid0.ID = util.IntPtr(45)
+	mid0.Cachegroup = util.Ptr("midCG")
+	mid0.HostName = util.Ptr("mymid0")
+	mid0.ID = util.Ptr(45)
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.StrPtr("midCG")
-	mid1.HostName = util.StrPtr("mymid1")
-	mid1.ID = util.IntPtr(46)
+	mid1.Cachegroup = util.Ptr("midCG")
+	mid1.HostName = util.Ptr("mymid1")
+	mid1.ID = util.Ptr(46)
 	setIP(mid1, "192.168.2.3")
 
-	eCG := &tc.CacheGroupNullable{}
+	eCG := &tc.CacheGroupNullableV5{}
 	eCG.Name = server.Cachegroup
 	eCG.ID = server.CachegroupID
 	eCG.ParentName = mid0.Cachegroup
@@ -8874,19 +8874,19 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
+	mCG := &tc.CacheGroupNullableV5{}
 	mCG.Name = mid0.Cachegroup
 	mCG.ID = mid0.CachegroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
-	mCG2 := &tc.CacheGroupNullable{}
+	mCG2 := &tc.CacheGroupNullableV5{}
 	mCG2.Name = mid1.Cachegroup
 	mCG2.ID = mid1.CachegroupID
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG, *mCG2}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
@@ -8944,39 +8944,39 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.StrPtr("midCG")
+	server.Cachegroup = util.Ptr("midCG")
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("http://origin.example.test")
+	ds.OrgServerFQDN = util.Ptr("http://origin.example.test")
 	/*
-		ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-		ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+		ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+		ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	*/
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.Topology = util.StrPtr("t0")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.Topology = util.Ptr("t0")
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -8989,7 +8989,7 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -9048,15 +9048,15 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{
+	topologies := []tc.TopologyV5{
 		{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1, 2},
@@ -9072,18 +9072,18 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.StrPtr("midCG")
-	mid0.HostName = util.StrPtr("mymid0")
-	mid0.ID = util.IntPtr(45)
+	mid0.Cachegroup = util.Ptr("midCG")
+	mid0.HostName = util.Ptr("mymid0")
+	mid0.ID = util.Ptr(45)
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.StrPtr("midCG")
-	mid1.HostName = util.StrPtr("mymid1")
-	mid1.ID = util.IntPtr(46)
+	mid1.Cachegroup = util.Ptr("midCG")
+	mid1.HostName = util.Ptr("mymid1")
+	mid1.ID = util.Ptr(46)
 	setIP(mid1, "192.168.2.3")
 
-	eCG := &tc.CacheGroupNullable{}
+	eCG := &tc.CacheGroupNullableV5{}
 	eCG.Name = server.Cachegroup
 	eCG.ID = server.CachegroupID
 	eCG.ParentName = mid0.Cachegroup
@@ -9093,19 +9093,19 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
+	mCG := &tc.CacheGroupNullableV5{}
 	mCG.Name = mid0.Cachegroup
 	mCG.ID = mid0.CachegroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
-	mCG2 := &tc.CacheGroupNullable{}
+	mCG2 := &tc.CacheGroupNullableV5{}
 	mCG2.Name = mid1.Cachegroup
 	mCG2.ID = mid1.CachegroupID
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG, *mCG2}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
@@ -9135,39 +9135,39 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.StrPtr("midCG")
+	server.Cachegroup = util.Ptr("midCG")
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("http://origin.example.test")
+	ds.OrgServerFQDN = util.Ptr("http://origin.example.test")
 	/*
-		ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-		ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+		ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+		ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	*/
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.Topology = util.StrPtr("t0")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.Topology = util.Ptr("t0")
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -9180,7 +9180,7 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -9239,15 +9239,15 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{
+	topologies := []tc.TopologyV5{
 		{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1, 2},
@@ -9263,18 +9263,18 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.StrPtr("midCG")
-	mid0.HostName = util.StrPtr("mymid0")
-	mid0.ID = util.IntPtr(45)
+	mid0.Cachegroup = util.Ptr("midCG")
+	mid0.HostName = util.Ptr("mymid0")
+	mid0.ID = util.Ptr(45)
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.StrPtr("midCG")
-	mid1.HostName = util.StrPtr("mymid1")
-	mid1.ID = util.IntPtr(46)
+	mid1.Cachegroup = util.Ptr("midCG")
+	mid1.HostName = util.Ptr("mymid1")
+	mid1.ID = util.Ptr(46)
 	setIP(mid1, "192.168.2.3")
 
-	eCG := &tc.CacheGroupNullable{}
+	eCG := &tc.CacheGroupNullableV5{}
 	eCG.Name = server.Cachegroup
 	eCG.ID = server.CachegroupID
 	eCG.ParentName = mid0.Cachegroup
@@ -9284,19 +9284,19 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
+	mCG := &tc.CacheGroupNullableV5{}
 	mCG.Name = mid0.Cachegroup
 	mCG.ID = mid0.CachegroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
-	mCG2 := &tc.CacheGroupNullable{}
+	mCG2 := &tc.CacheGroupNullableV5{}
 	mCG2.Name = mid1.Cachegroup
 	mCG2.ID = mid1.CachegroupID
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG, *mCG2}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
@@ -9334,39 +9334,39 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.StrPtr("midCG")
+	server.Cachegroup = util.Ptr("midCG")
 	servers := []Server{}
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
+	ds.OrgServerFQDN = util.Ptr("https://origin.example.test")
 	/*
-		ds.RangeRequestHandling = util.IntPtr(tc.RangeRequestHandlingCacheRangeRequest)
-		ds.RemapText = util.StrPtr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
+		ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingCacheRangeRequest)
+		ds.RemapText = util.Ptr("@plugin=tslua.so @pparam=my-range-manipulator.lua")
 	*/
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RegexRemap = util.StrPtr("")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.Topology = util.StrPtr("t0")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.Topology = util.Ptr("t0")
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.EdgeHeaderRewrite = util.StrPtr("")
-	ds.MidHeaderRewrite = util.StrPtr("")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.EdgeHeaderRewrite = util.Ptr("")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -9379,7 +9379,7 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -9438,15 +9438,15 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{
+	topologies := []tc.TopologyV5{
 		{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1},
@@ -9463,18 +9463,18 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.StrPtr("midCG")
-	mid0.HostName = util.StrPtr("mymid0")
-	mid0.ID = util.IntPtr(45)
+	mid0.Cachegroup = util.Ptr("midCG")
+	mid0.HostName = util.Ptr("mymid0")
+	mid0.ID = util.Ptr(45)
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.StrPtr("midCG2")
-	mid1.HostName = util.StrPtr("mymid1")
-	mid1.ID = util.IntPtr(46)
+	mid1.Cachegroup = util.Ptr("midCG2")
+	mid1.HostName = util.Ptr("mymid1")
+	mid1.ID = util.Ptr(46)
 	setIP(mid1, "192.168.2.3")
 
-	eCG := &tc.CacheGroupNullable{}
+	eCG := &tc.CacheGroupNullableV5{}
 	eCG.Name = server.Cachegroup
 	eCG.ID = server.CachegroupID
 	eCG.ParentName = mid0.Cachegroup
@@ -9484,19 +9484,19 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
+	mCG := &tc.CacheGroupNullableV5{}
 	mCG.Name = mid0.Cachegroup
 	mCG.ID = mid0.CachegroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
-	mCG2 := &tc.CacheGroupNullable{}
+	mCG2 := &tc.CacheGroupNullableV5{}
 	mCG2.Name = mid1.Cachegroup
 	mCG2.ID = mid1.CachegroupID
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *mCG2}
+	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG, *mCG2}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
@@ -9529,53 +9529,53 @@ func TestMakeRemapDotConfigRemapTemplate(t *testing.T) {
 
 	edge := makeTestRemapServer()
 	edge.Type = "EDGE"
-	edge.Cachegroup = util.StrPtr("edgeCG")
+	edge.Cachegroup = util.Ptr("edgeCG")
 	servers := []Server{}
 
 	mid := makeTestParentServer()
 	mid.Type = "MID"
-	mid.Cachegroup = util.StrPtr("midCG")
-	mid.HostName = util.StrPtr("mymid")
-	mid.ID = util.IntPtr(45)
+	mid.Cachegroup = util.Ptr("midCG")
+	mid.HostName = util.Ptr("mymid")
+	mid.ID = util.Ptr(45)
 	setIP(mid, "192.168.2.2")
 
 	opl := makeTestParentServer()
 	opl.Type = "MID"
-	opl.Cachegroup = util.StrPtr("oplCG")
-	opl.HostName = util.StrPtr("myopl")
-	opl.ID = util.IntPtr(46)
+	opl.Cachegroup = util.Ptr("oplCG")
+	opl.HostName = util.Ptr("myopl")
+	opl.ID = util.Ptr(46)
 	setIP(opl, "192.168.2.3")
 
 	ds := DeliveryService{}
-	ds.ID = util.IntPtr(48)
-	dsType := tc.DSType("DNS")
+	ds.ID = util.Ptr(48)
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.OrgServerFQDN = util.StrPtr("https://origin.example.test")
-	ds.SigningAlgorithm = util.StrPtr("foo")
-	ds.XMLID = util.StrPtr("mydsname")
-	ds.QStringIgnore = util.IntPtr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
-	ds.RangeRequestHandling = util.IntPtr(int(tc.RangeRequestHandlingBackgroundFetch))
-	ds.RegexRemap = util.StrPtr("myregexremap")
-	ds.RemapText = util.StrPtr("@plugin=rawtextplugin.so")
-	ds.FQPacingRate = util.IntPtr(314159)
-	ds.DSCP = util.IntPtr(0)
-	ds.RoutingName = util.StrPtr("myroutingname")
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.OriginShield = util.StrPtr("myoriginshield")
-	ds.ProfileID = util.IntPtr(49)
-	ds.ProfileName = util.StrPtr("dsprofile")
-	ds.Protocol = util.IntPtr(int(tc.DSProtocolHTTP))
-	ds.AnonymousBlockingEnabled = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
-	ds.Topology = util.StrPtr("t0")
-	ds.SigningAlgorithm = util.StrPtr("url_sig")
+	ds.OrgServerFQDN = util.Ptr("https://origin.example.test")
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RangeRequestHandling = util.Ptr(int(tc.RangeRequestHandlingBackgroundFetch))
+	ds.RegexRemap = util.Ptr("myregexremap")
+	ds.RemapText = util.Ptr("@plugin=rawtextplugin.so")
+	ds.FQPacingRate = util.Ptr(314159)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTP))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.Topology = util.Ptr("t0")
+	ds.SigningAlgorithm = util.Ptr("url_sig")
 
 	// non-nil default values should not trigger header rewrite plugin directive
-	ds.FirstHeaderRewrite = util.StrPtr("firstfoo")
-	ds.InnerHeaderRewrite = util.StrPtr("innerfoo")
-	ds.LastHeaderRewrite = util.StrPtr("lastfoo")
-	ds.ServiceCategory = util.StrPtr("")
-	ds.MaxOriginConnections = util.IntPtr(0)
+	ds.FirstHeaderRewrite = util.Ptr("firstfoo")
+	ds.InnerHeaderRewrite = util.Ptr("innerfoo")
+	ds.LastHeaderRewrite = util.Ptr("lastfoo")
+	ds.ServiceCategory = util.Ptr("")
+	ds.MaxOriginConnections = util.Ptr(0)
 
 	dses := []DeliveryService{ds}
 
@@ -9588,7 +9588,7 @@ func TestMakeRemapDotConfigRemapTemplate(t *testing.T) {
 
 	dsRegexes := []tc.DeliveryServiceRegexes{
 		tc.DeliveryServiceRegexes{
-			DSName: *ds.XMLID,
+			DSName: ds.XMLID,
 			Regexes: []tc.DeliveryServiceRegex{
 				tc.DeliveryServiceRegex{
 					Type:      string(tc.DSMatchTypeHostRegex),
@@ -9641,15 +9641,15 @@ map http://foo/ http://bar/`
 		},
 	}
 
-	cdn := &tc.CDN{
+	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
 		Name:       "my-cdn-name",
 	}
 
-	topologies := []tc.Topology{
+	topologies := []tc.TopologyV5{
 		{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
 				{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1},
@@ -9665,7 +9665,7 @@ map http://foo/ http://bar/`
 		},
 	}
 
-	eCG := &tc.CacheGroupNullable{}
+	eCG := &tc.CacheGroupNullableV5{}
 	eCG.Name = edge.Cachegroup
 	eCG.ID = edge.CachegroupID
 	eCG.ParentName = mid.Cachegroup
@@ -9673,7 +9673,7 @@ map http://foo/ http://bar/`
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
-	mCG := &tc.CacheGroupNullable{}
+	mCG := &tc.CacheGroupNullableV5{}
 	mCG.Name = mid.Cachegroup
 	mCG.ID = mid.CachegroupID
 	mCG.ParentName = opl.Cachegroup
@@ -9681,13 +9681,13 @@ map http://foo/ http://bar/`
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
-	oCG := &tc.CacheGroupNullable{}
+	oCG := &tc.CacheGroupNullableV5{}
 	oCG.Name = opl.Cachegroup
 	oCG.ID = opl.CachegroupID
 	oCGType := tc.CacheGroupMidTypeName
 	oCG.Type = &oCGType
 
-	cgs := []tc.CacheGroupNullable{*eCG, *mCG, *oCG}
+	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG, *oCG}
 	serverCapabilities := map[int]map[ServerCapability]struct{}{}
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 

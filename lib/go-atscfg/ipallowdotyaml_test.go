@@ -64,19 +64,19 @@ func TestMakeIPAllowDotYAML(t *testing.T) {
 		"2001:db8:2::/48",
 	}
 
-	cgs := []tc.CacheGroupNullable{
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("cg0"),
+	cgs := []tc.CacheGroupNullableV5{
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("cg0"),
 		},
 	}
 
 	sv := &Server{}
-	sv.HostName = util.StrPtr("server0")
+	sv.HostName = util.Ptr("server0")
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
 
-	topologies := []tc.Topology{}
+	topologies := []tc.TopologyV5{}
 
 	cfg, err := MakeIPAllowDotYAML(params, sv, svs, cgs, topologies, &IPAllowDotYAMLOpts{HdrComment: hdr})
 	if err != nil {
@@ -157,19 +157,19 @@ func TestMakeIPAllowDotYAMLEdge(t *testing.T) {
 		"192.168.2",
 	}
 
-	cgs := []tc.CacheGroupNullable{
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("cg0"),
+	cgs := []tc.CacheGroupNullableV5{
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("cg0"),
 		},
 	}
 
 	sv := &Server{}
-	sv.HostName = util.StrPtr("server0")
+	sv.HostName = util.Ptr("server0")
 	sv.Type = string(tc.CacheTypeEdge)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
 
-	topologies := []tc.Topology{}
+	topologies := []tc.TopologyV5{}
 
 	cfg, err := MakeIPAllowDotYAML(params, sv, svs, cgs, topologies, &IPAllowDotYAMLOpts{HdrComment: hdr})
 	if err != nil {
@@ -243,19 +243,19 @@ func TestMakeIPAllowDotYAMLNonDefaultV6Number(t *testing.T) {
 		"2001:db8:2::4",
 	}
 
-	cgs := []tc.CacheGroupNullable{
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("cg0"),
+	cgs := []tc.CacheGroupNullableV5{
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("cg0"),
 		},
 	}
 
 	sv := &Server{}
-	sv.HostName = util.StrPtr("server0")
+	sv.HostName = util.Ptr("server0")
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[0].Name
 	svs = append(svs, *sv)
 
-	topologies := []tc.Topology{}
+	topologies := []tc.TopologyV5{}
 
 	cfg, err := MakeIPAllowDotYAML(params, sv, svs, cgs, topologies, &IPAllowDotYAMLOpts{HdrComment: hdr})
 	if err != nil {
@@ -325,30 +325,30 @@ func TestMakeIPAllowDotYAMLTopologies(t *testing.T) {
 		"2001:db8:2::/48",
 	}
 
-	cgs := []tc.CacheGroupNullable{
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("midcg"),
+	cgs := []tc.CacheGroupNullableV5{
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("midcg"),
 		},
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("midcg2"),
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("midcg2"),
 		},
-		tc.CacheGroupNullable{
-			Name: util.StrPtr("childcg"),
+		tc.CacheGroupNullableV5{
+			Name: util.Ptr("childcg"),
 		},
 	}
 
-	topologies := []tc.Topology{
-		tc.Topology{
+	topologies := []tc.TopologyV5{
+		tc.TopologyV5{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
-				tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
+				tc.TopologyNodeV5{
 					Cachegroup: "childcg",
 					Parents:    []int{1, 2},
 				},
-				tc.TopologyNode{
+				tc.TopologyNodeV5{
 					Cachegroup: "midcg",
 				},
-				tc.TopologyNode{
+				tc.TopologyNodeV5{
 					Cachegroup: "midcg2",
 				},
 			},
@@ -356,7 +356,7 @@ func TestMakeIPAllowDotYAMLTopologies(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.StrPtr("server0")
+	sv.HostName = util.Ptr("server0")
 	sv.Type = string(tc.CacheTypeMid)
 	sv.Cachegroup = cgs[1].Name
 	svs = append(svs, *sv)

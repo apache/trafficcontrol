@@ -276,35 +276,35 @@ func setIPInfo(sv *Server, interfaceName string, ipAddress string, ip6Address st
 
 func makeGenericServer() *Server {
 	server := &Server{}
-	server.CDNName = util.StrPtr("myCDN")
-	server.Cachegroup = util.StrPtr("cg0")
-	server.CachegroupID = util.IntPtr(422)
-	server.DomainName = util.StrPtr("mydomain.example.net")
-	server.CDNID = util.IntPtr(43)
-	server.HostName = util.StrPtr("myserver")
-	server.HTTPSPort = util.IntPtr(12443)
-	server.ID = util.IntPtr(44)
+	server.CDNName = util.Ptr("myCDN")
+	server.Cachegroup = util.Ptr("cg0")
+	server.CachegroupID = util.Ptr(422)
+	server.DomainName = util.Ptr("mydomain.example.net")
+	server.CDNID = util.Ptr(43)
+	server.HostName = util.Ptr("myserver")
+	server.HTTPSPort = util.Ptr(12443)
+	server.ID = util.Ptr(44)
 	setIP(server, "192.168.2.1")
 	server.ProfileNames = []string{"serverprofile"}
-	server.TCPPort = util.IntPtr(80)
+	server.TCPPort = util.Ptr(80)
 	server.Type = "EDGE"
-	server.TypeID = util.IntPtr(91)
+	server.TypeID = util.Ptr(91)
 	status := string(tc.CacheStatusReported)
 	server.Status = &status
-	server.StatusID = util.IntPtr(99)
+	server.StatusID = util.Ptr(99)
 	return server
 }
 
 func makeGenericDS() *DeliveryService {
 	ds := &DeliveryService{}
-	ds.ID = util.IntPtr(42)
-	ds.XMLID = util.StrPtr("ds1")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
-	ds.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
-	dsType := tc.DSTypeDNS
+	ds.ID = util.Ptr(42)
+	ds.XMLID = "ds1"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreDrop))
+	ds.OrgServerFQDN = util.Ptr("http://ds1.example.net")
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.MultiSiteOrigin = false
+	ds.Active = tc.DSActiveStateActive
 	return ds
 }
 
