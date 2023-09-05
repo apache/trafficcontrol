@@ -828,7 +828,7 @@ class TOSession(RestApiSession):
 	def get_deliveryservice_request_comments(self, query_params=None):
 		"""
 		Retrieves all delivery service reuest comments.
-		:ref:`to-api-deliveryservice-request-comments`
+		:ref:`to-api-deliveryservice_request_comments`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -837,7 +837,7 @@ class TOSession(RestApiSession):
 	def create_deliveryservice_request_comment(self, data=None):
 		"""
 		Creates a new delivery service request comment.
-		:ref:`to-api-deliveryservice-request-comments`
+		:ref:`to-api-deliveryservice_request_comments`
 		:param data: The request data structure for the API request
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -848,7 +848,7 @@ class TOSession(RestApiSession):
 	def update_deliveryservice_request_comment(self, query_params=None, data=None):
 		"""
 		Updates an existing Delivery Service Request comment.
-		:ref:`to-api-deliveryservice-request-comments`
+		:ref:`to-api-deliveryservice_request_comments`
 		:param data: The request data structure for the API request
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -859,7 +859,7 @@ class TOSession(RestApiSession):
 	def delete_deliveryservice_request_comment(self, query_params=None):
 		"""
 		Deletes a Delivery Service Request comment.
-		:ref:`to-api-deliveryservice-request-comments`
+		:ref:`to-api-deliveryservice_request_comments`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -2181,7 +2181,7 @@ class TOSession(RestApiSession):
 	def delete_status_by_id(self, status_id=None):
 		"""
 		Delete a status
-		:ref:`to-api-status-id`
+		:ref:`to-api-statuses-id`
 		:param status_id: The status to delete
 		:type status_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
