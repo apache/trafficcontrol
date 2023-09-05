@@ -45,13 +45,13 @@ func (v *VCLBuilder) configureDirectors(vclFile *vclFile, parents *atscfg.Parent
 			anyCastPartners := atscfg.GetAnyCastPartners(v.toData.Server, v.toData.Servers)
 			requestFQDNs, err = atscfg.GetDSRequestFQDNs(
 				&svc.DS,
-				dsRegexes[tc.DeliveryServiceName(*svc.DS.XMLID)],
+				dsRegexes[tc.DeliveryServiceName(svc.DS.XMLID)],
 				v.toData.Server,
 				anyCastPartners,
 				v.toData.CDN.DomainName,
 			)
 			if err != nil {
-				warnings = append(warnings, "error getting ds '"+*svc.DS.XMLID+"' request fqdns, skipping! Error: "+err.Error())
+				warnings = append(warnings, "error getting ds '"+svc.DS.XMLID+"' request fqdns, skipping! Error: "+err.Error())
 				continue
 			}
 		}

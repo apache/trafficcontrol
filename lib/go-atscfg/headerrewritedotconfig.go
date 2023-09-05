@@ -82,11 +82,11 @@ func MakeHeaderRewriteDotConfig(
 	deliveryServiceServers []DeliveryServiceServer,
 	server *Server,
 	servers []Server,
-	cacheGroupsArr []tc.CacheGroupNullable,
+	cacheGroupsArr []tc.CacheGroupNullableV5,
 	tcServerParams []tc.Parameter,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	requiredCapabilities map[int]map[ServerCapability]struct{},
-	topologiesArr []tc.Topology,
+	topologiesArr []tc.TopologyV5,
 	opt *HeaderRewriteDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -120,11 +120,14 @@ func MakeHeaderRewriteDotConfig(
 
 	ds := &DeliveryService{}
 	for _, ids := range deliveryServices {
-		if ids.XMLID == nil {
+		if ids.Active == tc.DSActiveStateInactive {
+			continue
+		}
+		if &ids.XMLID == nil || ids.XMLID == "" {
 			warnings = append(warnings, "deliveryServices had DS with nil xmlId (name)")
 			continue
 		}
-		if *ids.XMLID != dsName {
+		if ids.XMLID != dsName {
 			continue
 		}
 		ds = &ids
@@ -148,11 +151,11 @@ func MakeHeaderRewriteDotConfig(
 		}, nil
 	}
 
-	topology := tc.Topology{}
+	topology := tc.TopologyV5{}
 	if ds.Topology != nil && *ds.Topology != "" {
 		topology = topologies[TopologyName(*ds.Topology)]
 		if topology.Name == "" {
-			return Cfg{}, makeErr(warnings, "DS "+*ds.XMLID+" topology '"+*ds.Topology+"' not found in Topologies!")
+			return Cfg{}, makeErr(warnings, "DS "+ds.XMLID+" topology '"+*ds.Topology+"' not found in Topologies!")
 		}
 	}
 
@@ -213,7 +216,7 @@ func MakeHeaderRewriteDotConfig(
 // headerRewriteServerIsLastTier is whether the server is the last tier for the delivery service of this header rewrite.
 // This should NOT be abstracted into a function that could be used by any other config.
 // This is whether the server is the last tier for this header rewrite. Which may not be true for other rewrites or configs.
-func headerRewriteServerIsLastTier(server *Server, ds *DeliveryService, fileName string, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable, topology tc.Topology) (bool, error) {
+func headerRewriteServerIsLastTier(server *Server, ds *DeliveryService, fileName string, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5, topology tc.TopologyV5) (bool, error) {
 	if ds.Topology != nil {
 		return headerRewriteTopologyTier(fileName) == TopologyCacheTierLast, nil
 		// serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
@@ -228,7 +231,7 @@ func headerRewriteServerIsLastTier(server *Server, ds *DeliveryService, fileName
 	}
 
 	serverIsMid := serverIsMid(server)
-	dsUsesMids := ds.Type.UsesMidCache()
+	dsUsesMids := tc.DSType(*ds.Type).UsesMidCache()
 	dssIsLastTier := (!serverIsMid && !dsUsesMids) || (serverIsMid && dsUsesMids)
 	return dssIsLastTier, nil
 
@@ -272,7 +275,7 @@ func getTierHeaderRewriteTopology(server *Server, ds *DeliveryService, fileName 
 	case TopologyCacheTierLast:
 		return ds.LastHeaderRewrite, nil
 	default:
-		return nil, errors.New("Topology Header Rewrite called for DS '" + *ds.XMLID + "' on server '" + *server.HostName + "' file '" + fileName + "' had unknown topology cache tier '" + string(tier) + "'!")
+		return nil, errors.New("Topology Header Rewrite called for DS '" + ds.XMLID + "' on server '" + *server.HostName + "' file '" + fileName + "' had unknown topology cache tier '" + string(tier) + "'!")
 	}
 }
 
@@ -289,10 +292,10 @@ func serverIsMid(server *Server) bool {
 func getAssignedTierPeers(
 	server *Server,
 	ds *DeliveryService,
-	topology tc.Topology,
+	topology tc.TopologyV5,
 	servers []Server,
 	deliveryServiceServers []DeliveryServiceServer,
-	cacheGroups []tc.CacheGroupNullable,
+	cacheGroups []tc.CacheGroupNullableV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[ServerCapability]struct{},
 ) ([]Server, []string) {
@@ -358,7 +361,7 @@ func getAssignedMids(
 	ds *DeliveryService,
 	servers []Server,
 	deliveryServiceServers []DeliveryServiceServer,
-	cacheGroups []tc.CacheGroupNullable,
+	cacheGroups []tc.CacheGroupNullableV5,
 ) ([]Server, []string) {
 	warnings := []string{}
 	assignedServers := map[int]struct{}{}
@@ -441,7 +444,7 @@ func getAssignedMids(
 // This should only be used for DSes with Topologies.
 // It returns all servers in with the Capabilities of ds in the same tier as cg.
 // Returns the servers, and any warnings.
-func getTopologyTierServers(ds *DeliveryService, dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, topology tc.Topology, cacheGroups []tc.CacheGroupNullable, servers []Server, serverCapabilities map[int]map[ServerCapability]struct{}) ([]Server, []string) {
+func getTopologyTierServers(ds *DeliveryService, dsRequiredCapabilities map[ServerCapability]struct{}, cg tc.CacheGroupName, topology tc.TopologyV5, cacheGroups []tc.CacheGroupNullableV5, servers []Server, serverCapabilities map[int]map[ServerCapability]struct{}) ([]Server, []string) {
 	warnings := []string{}
 	topoServers := []Server{}
 	cacheGroupsInSameTier := getCachegroupsInSameTopologyTier(string(cg), cacheGroups, topology)
@@ -457,6 +460,7 @@ func getTopologyTierServers(ds *DeliveryService, dsRequiredCapabilities map[Serv
 		if !cacheGroupsInSameTier[*sv.Cachegroup] {
 			continue
 		}
+
 		if !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities) {
 			continue
 		}
@@ -468,8 +472,8 @@ func getTopologyTierServers(ds *DeliveryService, dsRequiredCapabilities map[Serv
 	return topoServers, warnings
 }
 
-func getCachegroupsInSameTopologyTier(cg string, cacheGroups []tc.CacheGroupNullable, topology tc.Topology) map[string]bool {
-	cacheGroupMap := make(map[string]tc.CacheGroupNullable)
+func getCachegroupsInSameTopologyTier(cg string, cacheGroups []tc.CacheGroupNullableV5, topology tc.TopologyV5) map[string]bool {
+	cacheGroupMap := make(map[string]tc.CacheGroupNullableV5)
 	originCacheGroups := make(map[string]bool)
 	for _, cg := range cacheGroups {
 		if cg.Name == nil || cg.Type == nil {
@@ -498,7 +502,7 @@ func getCachegroupsInSameTopologyTier(cg string, cacheGroups []tc.CacheGroupNull
 	return cacheGroupsInSameTopologyTier
 }
 
-func getNodesWithSameOriginDistances(nodeIndex int, topology tc.Topology, originNodes map[int]bool) []int {
+func getNodesWithSameOriginDistances(nodeIndex int, topology tc.TopologyV5, originNodes map[int]bool) []int {
 	originDistances := make(map[int]int)
 	nodeDistance := -1
 	for i := range topology.Nodes {
@@ -516,7 +520,7 @@ func getNodesWithSameOriginDistances(nodeIndex int, topology tc.Topology, origin
 	return sameDistances
 }
 
-func getOriginDistance(topology tc.Topology, nodeIndex int, originNodes map[int]bool, originDistances map[int]int) int {
+func getOriginDistance(topology tc.TopologyV5, nodeIndex int, originNodes map[int]bool, originDistances map[int]int) int {
 	if originDistance, ok := originDistances[nodeIndex]; ok {
 		return originDistance
 	}
@@ -596,7 +600,7 @@ func makeATCHeaderRewriteDirectiveServiceCategoryHdr(ds *DeliveryService, header
 	escapedServiceCategory := url.PathEscape(*ds.ServiceCategory)
 	return `
 cond %{REMAP_PSEUDO_HOOK}
-set-header ` + ServiceCategoryHeader + ` "` + *ds.XMLID + `|` + escapedServiceCategory + `"
+set-header ` + ServiceCategoryHeader + ` "` + ds.XMLID + `|` + escapedServiceCategory + `"
 `
 }
 

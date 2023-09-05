@@ -26,10 +26,10 @@ import (
 
 // serversToLatest converts a []tc.Server to []tc.ServerV30.
 // This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
-func serversToLatest(svs tc.ServersV3Response) ([]atscfg.Server, error) {
+func serversToLatest(svs tc.ServersV4Response) ([]atscfg.Server, error) {
 	nss := []atscfg.Server{}
 	for _, sv := range svs.Response {
-		svLatest, err := serverToLatest(&sv)
+		svLatest, err := serverToLatest(sv)
 		if err != nil {
 			return nil, err // serverToLatest adds context
 		}
@@ -40,24 +40,19 @@ func serversToLatest(svs tc.ServersV3Response) ([]atscfg.Server, error) {
 
 // serverToLatest converts a tc.Server to tc.ServerV30.
 // This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
-func serverToLatest(oldSv *tc.ServerV30) (*atscfg.Server, error) {
-	sv, err := oldSv.UpgradeToV40([]string{*oldSv.Profile})
-	if err != nil {
-		return nil, err
-	}
-	asv := atscfg.Server(sv)
+func serverToLatest(oldSv tc.ServerV40) (*atscfg.Server, error) {
+	asv := atscfg.Server(oldSv)
 	return &asv, nil
 }
 
-func dsesToLatest(dses []tc.DeliveryServiceNullableV30) []atscfg.DeliveryService {
-	newDSes := []tc.DeliveryServiceV4{}
+func dsesToLatest(dses []tc.DeliveryServiceV4) []atscfg.DeliveryService {
+	v5DSes := []tc.DeliveryServiceV5{}
 	for _, ds := range dses {
-		newDSes = append(newDSes, ds.UpgradeToV4())
+		v5DSes = append(v5DSes, ds.Upgrade())
 	}
-	return atscfg.ToDeliveryServices(newDSes)
+	return atscfg.ToDeliveryServices(v5DSes)
 }
 
-func serverUpdateStatusToLatest(status *tc.ServerUpdateStatus) atscfg.ServerUpdateStatus {
-	upgraded := status.Upgrade()
-	return atscfg.ServerUpdateStatus(upgraded)
+func serverUpdateStatusToLatest(status []tc.ServerUpdateStatusV40) []atscfg.ServerUpdateStatus {
+	return atscfg.ToServerUpdateStatuses(status)
 }

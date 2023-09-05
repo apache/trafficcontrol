@@ -30,7 +30,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func serversToLatest(svs tc.ServersV4Response) ([]atscfg.Server, error) {
@@ -46,7 +46,7 @@ func serverToLatest(oldSv *tc.ServerV40) (*atscfg.Server, error) {
 	return &asv, nil
 }
 
-func dsesToLatest(dses []tc.DeliveryServiceV4) []atscfg.DeliveryService {
+func dsesToLatest(dses []tc.DeliveryServiceV5) []atscfg.DeliveryService {
 	return atscfg.V4ToDeliveryServices(dses)
 }
 

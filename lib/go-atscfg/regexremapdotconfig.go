@@ -64,10 +64,10 @@ func MakeRegexRemapDotConfig(
 	// only send the requested DS to atscfg. The atscfg.Make will work correctly even if we send it other DSes, but this will prevent deliveryServicesToCDNDSes from logging errors about AnyMap and Steering DSes without origins.
 	ds := DeliveryService{}
 	for _, dsesDS := range deliveryServices {
-		if dsesDS.XMLID == nil {
+		if &dsesDS.XMLID == nil {
 			continue // TODO log?
 		}
-		if *dsesDS.XMLID != dsName {
+		if dsesDS.XMLID != dsName {
 			continue
 		}
 		ds = dsesDS
@@ -108,11 +108,11 @@ func deliveryServicesToCDNDSes(dses []DeliveryService) (map[tc.DeliveryServiceNa
 	warnings := []string{}
 	sDSes := map[tc.DeliveryServiceName]cdnDS{}
 	for _, ds := range dses {
-		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == nil {
-			if ds.XMLID == nil {
+		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || &ds.XMLID == nil {
+			if &ds.XMLID == nil {
 				warnings = append(warnings, "got unknown DS with nil values! Skipping!")
 			} else {
-				warnings = append(warnings, "got DS '"+*ds.XMLID+"' with nil values! Skipping!")
+				warnings = append(warnings, "got DS '"+ds.XMLID+"' with nil values! Skipping!")
 			}
 			continue
 		}
@@ -120,7 +120,7 @@ func deliveryServicesToCDNDSes(dses []DeliveryService) (map[tc.DeliveryServiceNa
 		if ds.RegexRemap != nil {
 			sds.RegexRemap = *ds.RegexRemap
 		}
-		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sds
+		sDSes[tc.DeliveryServiceName(ds.XMLID)] = sds
 	}
 	return sDSes, warnings
 }

@@ -51,8 +51,8 @@ func MakeConfigFilesList(
 	deliveryServices []DeliveryService,
 	deliveryServiceServers []DeliveryServiceServer,
 	globalParams []tc.Parameter,
-	cacheGroupArr []tc.CacheGroupNullable,
-	topologies []tc.Topology,
+	cacheGroupArr []tc.CacheGroupNullableV5,
+	topologies []tc.TopologyV5,
 	opt *ConfigFilesListOpts,
 ) ([]CfgMeta, []string, error) {
 	if opt == nil {
@@ -152,8 +152,8 @@ func addMetaObjConfigDir(
 	locationParams map[string]configProfileParams, // map[configFile]params; 'location' and 'URL' Parameters on serverHostName's Profile
 	uriSignedDSes []tc.DeliveryServiceName,
 	dses map[tc.DeliveryServiceName]DeliveryService,
-	cacheGroupArr []tc.CacheGroupNullable,
-	topologies []tc.Topology,
+	cacheGroupArr []tc.CacheGroupNullableV5,
+	topologies []tc.TopologyV5,
 	atsMajorVersion uint,
 ) ([]CfgMeta, []string, error) {
 	warnings := []string{}
@@ -208,7 +208,7 @@ func addMetaObjConfigDir(
 	nameTopologies := makeTopologyNameMap(topologies)
 
 	for _, ds := range dses {
-		if ds.XMLID == nil {
+		if &ds.XMLID == nil {
 			warnings = append(warnings, "got Delivery Service with nil XMLID - not considering!")
 			continue
 		}
@@ -225,7 +225,7 @@ func addMetaObjConfigDir(
 			}
 			if placement.IsFirstCacheTier {
 				if (ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "") || ds.MaxOriginConnections != nil || ds.ServiceCategory != nil {
-					fileName := FirstHeaderRewriteConfigFileName(*ds.XMLID)
+					fileName := FirstHeaderRewriteConfigFileName(ds.XMLID)
 					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
 						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
 					}
@@ -233,7 +233,7 @@ func addMetaObjConfigDir(
 			}
 			if placement.IsInnerCacheTier {
 				if (ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "") || ds.MaxOriginConnections != nil || ds.ServiceCategory != nil {
-					fileName := InnerHeaderRewriteConfigFileName(*ds.XMLID)
+					fileName := InnerHeaderRewriteConfigFileName(ds.XMLID)
 					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
 						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
 					}
@@ -241,7 +241,7 @@ func addMetaObjConfigDir(
 			}
 			if placement.IsLastCacheTier {
 				if (ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "") || ds.MaxOriginConnections != nil || ds.ServiceCategory != nil {
-					fileName := LastHeaderRewriteConfigFileName(*ds.XMLID)
+					fileName := LastHeaderRewriteConfigFileName(ds.XMLID)
 					if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
 						warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
 					}
@@ -250,35 +250,35 @@ func addMetaObjConfigDir(
 		} else if strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
 			if (ds.EdgeHeaderRewrite != nil || ds.MaxOriginConnections != nil || ds.ServiceCategory != nil) &&
 				strings.HasPrefix(server.Type, tc.EdgeTypePrefix) {
-				fileName := "hdr_rw_" + *ds.XMLID + ".config"
+				fileName := "hdr_rw_" + ds.XMLID + ".config"
 				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
 					warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
 				}
 			}
 		} else if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
 			if (ds.MidHeaderRewrite != nil || ds.MaxOriginConnections != nil || ds.ServiceCategory != nil) &&
-				ds.Type != nil && ds.Type.UsesMidCache() &&
+				ds.Type != nil && tc.DSType(*ds.Type).UsesMidCache() &&
 				strings.HasPrefix(server.Type, tc.MidTypePrefix) {
-				fileName := "hdr_rw_mid_" + *ds.XMLID + ".config"
+				fileName := "hdr_rw_mid_" + ds.XMLID + ".config"
 				if configFilesM, err = ensureConfigFile(configFilesM, fileName, configDir); err != nil {
 					warnings = append(warnings, "ensuring config file '"+fileName+"': "+err.Error())
 				}
 			}
 		}
 		if ds.RegexRemap != nil {
-			configFile := "regex_remap_" + *ds.XMLID + ".config"
+			configFile := "regex_remap_" + ds.XMLID + ".config"
 			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {
 				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
 			}
 		}
 		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
-			configFile := "url_sig_" + *ds.XMLID + ".config"
+			configFile := "url_sig_" + ds.XMLID + ".config"
 			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {
 				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
 			}
 		}
 		if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm == tc.SigningAlgorithmURISigning {
-			configFile := "uri_signing_" + *ds.XMLID + ".config"
+			configFile := "uri_signing_" + ds.XMLID + ".config"
 			if configFilesM, err = ensureConfigFile(configFilesM, configFile, configDir); err != nil {
 				warnings = append(warnings, "ensuring config file '"+configFile+"': "+err.Error())
 			}
@@ -304,17 +304,17 @@ func getURISignedDSes(dses map[tc.DeliveryServiceName]DeliveryService) ([]tc.Del
 			warnings = append(warnings, "got delivery service with no id, skipping!")
 			continue
 		}
-		if ds.XMLID == nil {
+		if &ds.XMLID == nil {
 			warnings = append(warnings, "got delivery service with no xmlId (name), skipping!")
 			continue
 		}
-		if _, ok := dses[tc.DeliveryServiceName(*ds.XMLID)]; !ok {
+		if _, ok := dses[tc.DeliveryServiceName(ds.XMLID)]; !ok {
 			continue // skip: this ds isn't assigned to this server, this is normal
 		}
 		if ds.SigningAlgorithm == nil || *ds.SigningAlgorithm != tc.SigningAlgorithmURISigning {
 			continue // not signed, so not in our list of signed dses to make config files for.
 		}
-		uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(*ds.XMLID))
+		uriSignedDSes = append(uriSignedDSes, tc.DeliveryServiceName(ds.XMLID))
 	}
 
 	return uriSignedDSes, warnings
@@ -332,6 +332,9 @@ func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, de
 		for _, ds := range deliveryServices {
 			if ds.ID == nil {
 				warnings = append(warnings, "got delivery service with no ID, skipping!")
+				continue
+			}
+			if ds.Active == tc.DSActiveStateInactive {
 				continue
 			}
 			dsIDs[*ds.ID] = struct{}{}
@@ -356,14 +359,14 @@ func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, de
 				warnings = append(warnings, "got deliveryservice with nil id, skipping!")
 				continue
 			}
-			if ds.XMLID == nil {
+			if &ds.XMLID == nil {
 				warnings = append(warnings, "got deliveryservice with nil xmlId (name), skipping!")
 				continue
 			}
 			if _, ok := dssMap[*ds.ID]; !ok && ds.Topology == nil {
 				continue
 			}
-			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds
+			dses[tc.DeliveryServiceName(ds.XMLID)] = ds
 		}
 	} else {
 		for _, ds := range deliveryServices {
@@ -371,14 +374,17 @@ func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, de
 				warnings = append(warnings, "got deliveryservice with nil id, skipping!")
 				continue
 			}
-			if ds.XMLID == nil {
+			if &ds.XMLID == nil {
 				warnings = append(warnings, "got deliveryservice with nil xmlId (name), skipping!")
 				continue
 			}
-			if ds.CDNID == nil || *ds.CDNID != *server.CDNID {
+			if &ds.CDNID == nil || ds.CDNID != *server.CDNID {
 				continue
 			}
-			dses[tc.DeliveryServiceName(*ds.XMLID)] = ds
+			if ds.Active == tc.DSActiveStateInactive {
+				continue
+			}
+			dses[tc.DeliveryServiceName(ds.XMLID)] = ds
 		}
 	}
 	return dses, warnings

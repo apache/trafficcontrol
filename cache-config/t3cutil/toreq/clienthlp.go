@@ -27,7 +27,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 // GetProfileByName returns the profile with the given name from Traffic Ops.
@@ -84,7 +84,7 @@ func GetParametersByName(toClient *toclient.Session, name string, opts *toclient
 	return params.Response, reqInf, err
 }
 
-func GetCDNByName(toClient *toclient.Session, name tc.CDNName, opts *toclient.RequestOptions) (tc.CDN, toclientlib.ReqInf, error) {
+func GetCDNByName(toClient *toclient.Session, name tc.CDNName, opts *toclient.RequestOptions) (tc.CDNV5, toclientlib.ReqInf, error) {
 	if opts == nil {
 		opts = &toclient.RequestOptions{}
 	}
@@ -95,13 +95,13 @@ func GetCDNByName(toClient *toclient.Session, name tc.CDNName, opts *toclient.Re
 	cdns, reqInf, err := toClient.GetCDNs(*opts)
 
 	if err != nil {
-		return tc.CDN{}, reqInf, err
+		return tc.CDNV5{}, reqInf, err
 	} else if reqInf.StatusCode == http.StatusNotModified {
-		return tc.CDN{}, reqInf, nil
+		return tc.CDNV5{}, reqInf, nil
 	} else if len(cdns.Response) == 0 {
-		return tc.CDN{}, reqInf, fmt.Errorf("name '"+string(name)+" ' not found (no error, but len 0) reqInf %+v cdns %+v", reqInf, cdns)
+		return tc.CDNV5{}, reqInf, fmt.Errorf("name '"+string(name)+" ' not found (no error, but len 0) reqInf %+v cdns %+v", reqInf, cdns)
 	} else if len(cdns.Response) > 1 {
-		return tc.CDN{}, reqInf, fmt.Errorf("expected 1, got len %v val %+v", len(cdns.Response), cdns.Response)
+		return tc.CDNV5{}, reqInf, fmt.Errorf("expected 1, got len %v val %+v", len(cdns.Response), cdns.Response)
 	}
 	return cdns.Response[0], reqInf, nil
 }
@@ -125,7 +125,7 @@ func ReqOpts(hdr http.Header) *toclient.RequestOptions {
 	return &opts
 }
 
-func GetCacheGroupByName(toClient *toclient.Session, cgName string) (tc.CacheGroupsNullableResponse, toclientlib.ReqInf, error) {
+func GetCacheGroupByName(toClient *toclient.Session, cgName string) (tc.CacheGroupsNullableResponseV5, toclientlib.ReqInf, error) {
 	opt := toclient.NewRequestOptions()
 	opt.QueryParameters.Set("name", cgName)
 	return toClient.GetCacheGroups(opt)

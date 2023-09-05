@@ -64,14 +64,14 @@ func MakeStrategiesDotYAML(
 	dses []DeliveryService,
 	server *Server,
 	servers []Server,
-	topologies []tc.Topology,
+	topologies []tc.TopologyV5,
 	tcServerParams []tc.Parameter,
 	tcParentConfigParams []tc.Parameter,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
-	cacheGroupArr []tc.CacheGroupNullable,
+	cacheGroupArr []tc.CacheGroupNullableV5,
 	dss []DeliveryServiceServer,
-	cdn *tc.CDN,
+	cdn *tc.CDNV5,
 	opt *StrategiesYAMLOpts,
 ) (Cfg, error) {
 	warnings := []string{}

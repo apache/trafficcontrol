@@ -248,14 +248,14 @@ func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, configApply, revalApply
 
 // SetUpdateStatusCompat sets the queue and reval status of serverName in Traffic Ops.
 // *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
-func SetUpdateStatusCompat(cfg TCCfg, serverName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) error {
+/*func SetUpdateStatusCompat(cfg TCCfg, serverName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) error {
 	// TODO need to move to toreq, add fallback
 	reqInf, err := cfg.TOClient.SetServerUpdateStatusBoolCompat(serverName, configApply, revalApply, configApplyBool, revalApplyBool)
 	if err != nil {
 		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
 	}
 	return nil
-}
+}*/
 
 // WriteConfig writes the Traffic Ops data necessary to generate config to output.
 func WriteConfig(cfg TCCfg, output io.Writer) error {

@@ -111,9 +111,9 @@ func MakeSSLServerNameYAML(
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	tcParentConfigParams []tc.Parameter,
-	cdn *tc.CDN,
-	topologies []tc.Topology,
-	cacheGroupArr []tc.CacheGroupNullable,
+	cdn *tc.CDNV5,
+	topologies []tc.TopologyV5,
+	cacheGroupArr []tc.CacheGroupNullableV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	opt *SSLServerNameYAMLOpts,
@@ -203,9 +203,9 @@ func GetServerSSLData(
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	tcParentConfigParams []tc.Parameter,
-	cdn *tc.CDN,
-	topologies []tc.Topology,
-	cacheGroupArr []tc.CacheGroupNullable,
+	cdn *tc.CDNV5,
+	topologies []tc.TopologyV5,
+	cacheGroupArr []tc.CacheGroupNullableV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	defaultTLSVersions []TLSVersion,
@@ -262,9 +262,9 @@ func GetServerSSLData(
 			dsParentConfigParams = profileParentConfigParams[*ds.ProfileName]
 		}
 
-		requestFQDNs, err := GetDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, anyCastPartners, cdn.DomainName)
+		requestFQDNs, err := GetDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(ds.XMLID)], server, anyCastPartners, cdn.DomainName)
 		if err != nil {
-			warnings = append(warnings, "error getting ds '"+*ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
+			warnings = append(warnings, "error getting ds '"+ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
 			continue
 		}
 
@@ -274,7 +274,7 @@ func GetServerSSLData(
 		dsTLSVersions := []TLSVersion{}
 		for _, tlsVersion := range ds.TLSVersions {
 			if _, ok := tlsVersionsToATS[TLSVersion(tlsVersion)]; !ok {
-				warnings = append(warnings, "ds '"+*ds.XMLID+"' had unknown TLS Version '"+tlsVersion+"' - ignoring!")
+				warnings = append(warnings, "ds '"+ds.XMLID+"' had unknown TLS Version '"+tlsVersion+"' - ignoring!")
 				continue
 			}
 			dsTLSVersions = append(dsTLSVersions, TLSVersion(tlsVersion))
@@ -312,7 +312,7 @@ func GetServerSSLData(
 			tlsVersionsParamArr := strings.Split(paramValTLSVersions, delim)
 			for _, tlsVersion := range tlsVersionsParamArr {
 				if _, ok := tlsVersionsToATS[TLSVersion(tlsVersion)]; !ok {
-					warnings = append(warnings, "ds '"+*ds.XMLID+"' had unknown "+SSLServerNameYAMLParamTLSVersions+" parameter '"+tlsVersion+"' - ignoring!")
+					warnings = append(warnings, "ds '"+ds.XMLID+"' had unknown "+SSLServerNameYAMLParamTLSVersions+" parameter '"+tlsVersion+"' - ignoring!")
 					continue
 				}
 				paramTLSVersions = append(paramTLSVersions, TLSVersion(tlsVersion))
@@ -328,7 +328,7 @@ func GetServerSSLData(
 		}
 
 		sslDatas = append(sslDatas, SSLData{
-			DSName:       *ds.XMLID,
+			DSName:       ds.XMLID,
 			RequestFQDNs: requestFQDNs,
 			EnableH2:     enableH2,
 			TLSVersions:  tlsVersions,
@@ -342,12 +342,12 @@ func dsUsesServer(
 	ds *DeliveryService,
 	server *Server,
 	dss []DeliveryServiceServer,
-	nameTopologies map[TopologyName]tc.Topology,
-	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
+	nameTopologies map[TopologyName]tc.TopologyV5,
+	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 ) (bool, error) {
-	if ds.XMLID == nil || *ds.XMLID == "" {
+	if &ds.XMLID == nil || ds.XMLID == "" {
 		return false, errors.New("ds missing xmlId")
 	} else if ds.ID == nil {
 		return false, errors.New("ds missing id")

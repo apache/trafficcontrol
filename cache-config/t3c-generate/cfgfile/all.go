@@ -41,6 +41,12 @@ func GetAllConfigs(
 	if toData.Server.HostName == nil {
 		return nil, errors.New("server hostname is nil")
 	}
+	// if 0 get dataconfig.go was unable to get DS capabilities using APIv5
+	// because the end point has been removed and was added to the DS struct
+	// so we will get the data from DeliveryServices
+	if len(toData.DSRequiredCapabilities) == 0 {
+		toData.DSRequiredCapabilities = makeNewDsCaps(toData.DeliveryServices)
+	}
 
 	configFiles, warnings, err := MakeConfigFilesList(toData, cfg.Dir, cfg.ATSMajorVersion)
 	logWarnings("generating config files list: ", warnings)
@@ -118,4 +124,17 @@ func logWarnings(context string, warnings []string) {
 	for _, warn := range warnings {
 		log.Warnln(context + warn)
 	}
+}
+
+func makeNewDsCaps(deliveryServices []atscfg.DeliveryService) map[int]map[atscfg.ServerCapability]struct{} {
+	svcReqCaps := map[int]map[atscfg.ServerCapability]struct{}{}
+	for _, service := range deliveryServices {
+		for _, dsCap := range service.RequiredCapabilities {
+			if _, ok := svcReqCaps[*service.ID]; !ok {
+				svcReqCaps[*service.ID] = map[atscfg.ServerCapability]struct{}{}
+			}
+			svcReqCaps[*service.ID][atscfg.ServerCapability(dsCap)] = struct{}{}
+		}
+	}
+	return svcReqCaps
 }

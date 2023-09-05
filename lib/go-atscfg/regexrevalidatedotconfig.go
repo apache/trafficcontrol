@@ -78,11 +78,11 @@ func MakeRegexRevalidateDotConfig(
 
 	dsNames := map[string]struct{}{}
 	for _, ds := range deliveryServices {
-		if ds.XMLID == nil {
+		if &ds.XMLID == nil {
 			warnings = append(warnings, "got Delivery Service from Traffic Ops with a nil xmlId! Skipping!")
 			continue
 		}
-		dsNames[*ds.XMLID] = struct{}{}
+		dsNames[ds.XMLID] = struct{}{}
 	}
 
 	dsJobs := []InvalidationJob{}

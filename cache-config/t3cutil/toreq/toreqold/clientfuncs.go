@@ -22,8 +22,11 @@ package toreqold
 import (
 	"encoding/base64"
 	"errors"
+	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
@@ -33,7 +36,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
 )
 
-func (cl *TOClient) GetProfileByName(profileName string) (tc.Profile, toclientlib.ReqInf, error) {
+/*func (cl *TOClient) GetProfileByName(profileName string) (tc.Profile, toclientlib.ReqInf, error) {
 	profile := tc.Profile{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "profile_"+profileName, &profile, func(obj interface{}) error {
@@ -55,18 +58,18 @@ func (cl *TOClient) GetProfileByName(profileName string) (tc.Profile, toclientli
 		return tc.Profile{}, reqInf, errors.New("getting profile '" + profileName + "': " + err.Error())
 	}
 	return profile, reqInf, nil
-}
+}*/
 
-func (cl *TOClient) GetGlobalParameters() ([]tc.Parameter, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetGlobalParameters(reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	globalParams := []tc.Parameter{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "profile_global_parameters", &globalParams, func(obj interface{}) error {
-		toParams, toReqInf, err := cl.c.GetParametersByProfileName(tc.GlobalProfileName)
+		toParams, toReqInf, err := cl.c.GetParametersByProfileName(tc.GlobalProfileName, *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting global profile '" + tc.GlobalProfileName + "' parameters from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		params := obj.(*[]tc.Parameter)
-		*params = toParams
+		*params = toParams.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -76,11 +79,11 @@ func (cl *TOClient) GetGlobalParameters() ([]tc.Parameter, toclientlib.ReqInf, e
 	return globalParams, reqInf, nil
 }
 
-func (cl *TOClient) GetServers() ([]atscfg.Server, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetServers(reqHdr http.Header) ([]atscfg.Server, toclientlib.ReqInf, error) {
 	servers := []atscfg.Server{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "servers", &servers, func(obj interface{}) error {
-		toServers, toReqInf, err := cl.c.GetServersWithHdr(nil, nil)
+		toServers, toReqInf, err := cl.c.GetServers(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting servers from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
@@ -98,19 +101,22 @@ func (cl *TOClient) GetServers() ([]atscfg.Server, toclientlib.ReqInf, error) {
 	return servers, reqInf, nil
 }
 
-func (cl *TOClient) GetServerByHostName(serverHostName string) (*atscfg.Server, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetServerByHostName(serverHostName string, reqHdr http.Header) (*atscfg.Server, toclientlib.ReqInf, error) {
 	server := atscfg.Server{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "server-name-"+serverHostName, &server, func(obj interface{}) error {
-		params := &url.Values{}
-		params.Add("hostName", serverHostName)
-		toServers, toReqInf, err := cl.c.GetServersWithHdr(params, nil)
+
+		vals := &url.Values{}
+		vals.Add("hostName", serverHostName)
+		params := *ReqOpts(reqHdr)
+		params.QueryParameters = *vals
+		toServers, toReqInf, err := cl.c.GetServers(params)
 		if err != nil {
 			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		} else if len(toServers.Response) < 1 {
 			return errors.New("getting server name '" + serverHostName + "' from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': no servers returned")
 		}
-		asv, err := serverToLatest(&toServers.Response[0])
+		asv, err := serverToLatest(toServers.Response[0])
 		if err != nil {
 			return errors.New("converting server to latest version: " + err.Error())
 		}
@@ -125,16 +131,16 @@ func (cl *TOClient) GetServerByHostName(serverHostName string) (*atscfg.Server, 
 	return &server, reqInf, nil
 }
 
-func (cl *TOClient) GetCacheGroups() ([]tc.CacheGroupNullable, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetCacheGroups(reqHdr http.Header) ([]tc.CacheGroupNullable, toclientlib.ReqInf, error) {
 	cacheGroups := []tc.CacheGroupNullable{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "cachegroups", &cacheGroups, func(obj interface{}) error {
-		toCacheGroups, toReqInf, err := cl.c.GetCacheGroupsNullable()
+		toCacheGroups, toReqInf, err := cl.c.GetCacheGroups(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting cachegroups from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		cacheGroups := obj.(*[]tc.CacheGroupNullable)
-		*cacheGroups = toCacheGroups
+		*cacheGroups = toCacheGroups.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -149,7 +155,7 @@ func (cl *TOClient) GetCacheGroups() ([]tc.CacheGroupNullable, toclientlib.ReqIn
 // If your use case is more efficient to only get the needed objects, for example if you're frequently requesting one file, set this false to get and cache the specific needed delivery services and servers.
 const DeliveryServiceServersAlwaysGetAll = true
 
-func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int) ([]tc.DeliveryServiceServer, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnName string, reqHdr http.Header) ([]tc.DeliveryServiceServer, toclientlib.ReqInf, error) {
 	const sortIDsInHash = true
 	reqInf := toclientlib.ReqInf{}
 	serverIDsStr := ""
@@ -158,10 +164,10 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int) ([]t
 	sIDsToFetch := ([]int)(nil)
 	if !DeliveryServiceServersAlwaysGetAll {
 		if len(dsIDs) > 0 {
-			dsIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(dsIDs, sortIDsInHash)))
+			dsIDsStr = base64.RawURLEncoding.EncodeToString(util.HashInts(dsIDs, sortIDsInHash))
 		}
 		if len(serverIDs) > 0 {
-			serverIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(serverIDs, sortIDsInHash)))
+			serverIDsStr = base64.RawURLEncoding.EncodeToString(util.HashInts(serverIDs, sortIDsInHash))
 		}
 		dsIDsToFetch = dsIDs
 		sIDsToFetch = serverIDs
@@ -169,8 +175,29 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int) ([]t
 
 	dsServers := []tc.DeliveryServiceServer{}
 	err := torequtil.GetRetry(cl.NumRetries, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr, &dsServers, func(obj interface{}) error {
-		const noLimit = 999999 // TODO add "no limit" param to DSS endpoint
-		toDSS, toReqInf, err := cl.c.GetDeliveryServiceServersWithLimits(noLimit, dsIDsToFetch, sIDsToFetch)
+		dsIDStrs := []string{}
+		for _, dsID := range dsIDsToFetch {
+			dsIDStrs = append(dsIDStrs, strconv.Itoa(dsID))
+		}
+
+		serverIDStrs := []string{}
+		for _, serverID := range sIDsToFetch {
+			serverIDStrs = append(serverIDStrs, strconv.Itoa(serverID))
+		}
+
+		queryParams := url.Values{}
+		queryParams.Set("limit", "999999") // TODO add "no limit" param to DSS endpoint
+		queryParams.Set("cdn", cdnName)
+		queryParams.Set("orderby", "") // prevent unnecessary sorting of the response
+		if len(dsIDsToFetch) > 0 {
+			queryParams.Set("deliveryserviceids", strings.Join(dsIDStrs, ","))
+		}
+		if len(sIDsToFetch) > 0 {
+			queryParams.Set("serverids", strings.Join(serverIDStrs, ","))
+		}
+		opts := *ReqOpts(reqHdr)
+		opts.QueryParameters = queryParams
+		toDSS, toReqInf, err := cl.c.GetDeliveryServiceServers(opts)
 		if err != nil {
 			return errors.New("getting delivery service servers from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
@@ -215,16 +242,16 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int) ([]t
 	return filteredDSServers, reqInf, nil
 }
 
-func (cl *TOClient) GetServerProfileParameters(profileName string) ([]tc.Parameter, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetServerProfileParameters(profileName string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	serverProfileParameters := []tc.Parameter{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "profile_"+profileName+"_parameters", &serverProfileParameters, func(obj interface{}) error {
-		toParams, toReqInf, err := cl.c.GetParametersByProfileName(profileName)
+		toParams, toReqInf, err := cl.c.GetParametersByProfileName(profileName, *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting server profile '" + profileName + "' parameters from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		params := obj.(*[]tc.Parameter)
-		*params = toParams
+		*params = toParams.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -235,18 +262,20 @@ func (cl *TOClient) GetServerProfileParameters(profileName string) ([]tc.Paramet
 }
 
 // GetCDNDeliveryServices returns the data, the Traffic Ops address, and any error.
-func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]atscfg.DeliveryService, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetCDNDeliveryServices(cdnID int, reqHdr http.Header) ([]atscfg.DeliveryService, toclientlib.ReqInf, error) {
 	deliveryServices := []atscfg.DeliveryService{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+strconv.Itoa(cdnID)+"_deliveryservices", &deliveryServices, func(obj interface{}) error {
 		params := url.Values{}
 		params.Set("cdn", strconv.Itoa(cdnID))
-		toDSes, toReqInf, err := cl.c.GetDeliveryServicesV30WithHdr(nil, params)
+		opts := *ReqOpts(reqHdr)
+		opts.QueryParameters = params
+		toDSes, toReqInf, err := cl.c.GetDeliveryServices(opts)
 		if err != nil {
 			return errors.New("getting delivery services from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		dses := obj.(*[]atscfg.DeliveryService)
-		*dses = dsesToLatest(toDSes)
+		*dses = dsesToLatest(toDSes.Response)
 		reqInf = toReqInf
 		return nil
 	})
@@ -257,16 +286,16 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int) ([]atscfg.DeliveryService,
 }
 
 // GetTopologies returns the data, the Traffic Ops address, and any error.
-func (cl *TOClient) GetTopologies() ([]tc.Topology, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetTopologies(reqHdr http.Header) ([]tc.Topology, toclientlib.ReqInf, error) {
 	topologies := []tc.Topology{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "topologies", &topologies, func(obj interface{}) error {
-		toTopologies, toReqInf, err := cl.c.GetTopologies()
+		toTopologies, toReqInf, err := cl.c.GetTopologies(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting topologies from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		topologies := obj.(*[]tc.Topology)
-		*topologies = toTopologies
+		*topologies = toTopologies.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -276,11 +305,11 @@ func (cl *TOClient) GetTopologies() ([]tc.Topology, toclientlib.ReqInf, error) {
 	return topologies, reqInf, nil
 }
 
-func (cl *TOClient) GetConfigFileParameters(configFile string) ([]tc.Parameter, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetConfigFileParameters(configFile string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	params := []tc.Parameter{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "config_file_"+configFile+"_parameters", &params, func(obj interface{}) error {
-		toParams, toReqInf, err := cl.c.GetParameterByConfigFile(configFile)
+		toParams, toReqInf, err := GetParametersByConfigFile(cl.c, configFile, ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting delivery services from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
@@ -295,19 +324,16 @@ func (cl *TOClient) GetConfigFileParameters(configFile string) ([]tc.Parameter, 
 	return params, reqInf, nil
 }
 
-func (cl *TOClient) GetCDN(cdnName tc.CDNName) (tc.CDN, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetCDN(cdnName tc.CDNName, reqHdr http.Header) (tc.CDN, toclientlib.ReqInf, error) {
 	cdn := tc.CDN{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+string(cdnName), &cdn, func(obj interface{}) error {
-		toCDNs, toReqInf, err := cl.c.GetCDNByName(string(cdnName))
+		toCDNs, toReqInf, err := GetCDNByName(cl.c, cdnName, ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting cdn from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		if len(toCDNs) != 1 {
-			return errors.New("getting cdn from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': expected 1 CDN, got " + strconv.Itoa(len(toCDNs)))
-		}
 		cdn := obj.(*tc.CDN)
-		*cdn = toCDNs[0]
+		*cdn = toCDNs
 		reqInf = toReqInf
 		return nil
 	})
@@ -317,16 +343,16 @@ func (cl *TOClient) GetCDN(cdnName tc.CDNName) (tc.CDN, toclientlib.ReqInf, erro
 	return cdn, reqInf, nil
 }
 
-func (cl *TOClient) GetCDNs() ([]tc.CDN, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetCDNs(reqHdr http.Header) ([]tc.CDN, toclientlib.ReqInf, error) {
 	cdns := []tc.CDN{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "cdns", &cdns, func(obj interface{}) error {
-		toCDNs, toReqInf, err := cl.c.GetCDNs()
+		toCDNs, toReqInf, err := cl.c.GetCDNs(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting cdn from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		cdns := obj.(*[]tc.CDN)
-		*cdns = toCDNs
+		*cdns = toCDNs.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -336,11 +362,11 @@ func (cl *TOClient) GetCDNs() ([]tc.CDN, toclientlib.ReqInf, error) {
 	return cdns, reqInf, nil
 }
 
-func (cl *TOClient) GetURLSigKeys(dsName string) (tc.URLSigKeys, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetURLSigKeys(dsName string, reqHdr http.Header) (tc.URLSigKeys, toclientlib.ReqInf, error) {
 	keys := tc.URLSigKeys{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "urlsigkeys_"+string(dsName), &keys, func(obj interface{}) error {
-		toKeys, toReqInf, err := cl.c.GetDeliveryServiceURLSigKeys(dsName)
+		toKeys, toReqInf, err := GetDeliveryServiceURLSigKeys(cl.c, dsName, ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting url sig keys from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
@@ -355,11 +381,11 @@ func (cl *TOClient) GetURLSigKeys(dsName string) (tc.URLSigKeys, toclientlib.Req
 	return keys, reqInf, nil
 }
 
-func (cl *TOClient) GetURISigningKeys(dsName string) ([]byte, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetURISigningKeys(dsName string, reqHdr http.Header) ([]byte, toclientlib.ReqInf, error) {
 	keys := []byte{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "urisigningkeys_"+string(dsName), &keys, func(obj interface{}) error {
-		toKeys, toReqInf, err := cl.c.GetDeliveryServiceURISigningKeys(dsName)
+		toKeys, toReqInf, err := cl.c.GetDeliveryServiceURISigningKeys(dsName, *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting url sig keys from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
@@ -375,11 +401,11 @@ func (cl *TOClient) GetURISigningKeys(dsName string) ([]byte, toclientlib.ReqInf
 	return keys, reqInf, nil
 }
 
-func (cl *TOClient) GetParametersByName(paramName string) ([]tc.Parameter, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetParametersByName(paramName string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	params := []tc.Parameter{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "parameters_name_"+paramName, &params, func(obj interface{}) error {
-		toParams, toReqInf, err := cl.c.GetParameterByName(paramName)
+		toParams, toReqInf, err := GetParametersByName(cl.c, paramName, ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting parameters name '" + paramName + "' from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
@@ -394,16 +420,16 @@ func (cl *TOClient) GetParametersByName(paramName string) ([]tc.Parameter, tocli
 	return params, reqInf, nil
 }
 
-func (cl *TOClient) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetDeliveryServiceRegexes(reqHdr http.Header) ([]tc.DeliveryServiceRegexes, toclientlib.ReqInf, error) {
 	regexes := []tc.DeliveryServiceRegexes{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "ds_regexes", &regexes, func(obj interface{}) error {
-		toRegexes, toReqInf, err := cl.c.GetDeliveryServiceRegexes()
+		toRegexes, toReqInf, err := cl.c.GetDeliveryServiceRegexes(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting ds regexes from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		regexes := obj.(*[]tc.DeliveryServiceRegexes)
-		*regexes = toRegexes
+		*regexes = toRegexes.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -413,16 +439,16 @@ func (cl *TOClient) GetDeliveryServiceRegexes() ([]tc.DeliveryServiceRegexes, to
 	return regexes, reqInf, nil
 }
 
-func (cl *TOClient) GetJobs() ([]tc.Job, toclientlib.ReqInf, error) {
-	jobs := []tc.Job{}
+func (cl *TOClient) GetJobs(reqHdr http.Header) ([]tc.InvalidationJobV4, toclientlib.ReqInf, error) {
+	jobs := []tc.InvalidationJobV4{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "jobs", &jobs, func(obj interface{}) error {
-		toJobs, toReqInf, err := cl.c.GetJobs(nil, nil)
+		toJobs, toReqInf, err := cl.c.GetInvalidationJobs(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting jobs from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		jobs := obj.(*[]tc.Job)
-		*jobs = toJobs
+		jobs := obj.(*[]tc.InvalidationJobV4)
+		*jobs = toJobs.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -432,7 +458,7 @@ func (cl *TOClient) GetJobs() ([]tc.Job, toclientlib.ReqInf, error) {
 	return jobs, reqInf, nil
 }
 
-func (cl *TOClient) GetServerCapabilitiesByID(serverIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetServerCapabilitiesByID(serverIDs []int, reqHdr http.Header) (map[int]map[atscfg.ServerCapability]struct{}, toclientlib.ReqInf, error) {
 	serverIDsStr := ""
 	if len(serverIDs) > 0 {
 		sortIDsInHash := true
@@ -443,13 +469,13 @@ func (cl *TOClient) GetServerCapabilitiesByID(serverIDs []int) (map[int]map[atsc
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "server_capabilities_s_"+serverIDsStr, &serverCaps, func(obj interface{}) error {
 		// TODO add list of IDs to API+Client
-		toServerCaps, toReqInf, err := cl.c.GetServerServerCapabilities(nil, nil, nil)
+		toServerCaps, toReqInf, err := cl.c.GetServerServerCapabilities(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting server caps from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		serverCaps := obj.(*map[int]map[atscfg.ServerCapability]struct{})
 
-		for _, sc := range toServerCaps {
+		for _, sc := range toServerCaps.Response {
 			if sc.ServerID == nil {
 				log.Errorln("Traffic Ops returned Server Capability with nil server id! Skipping!")
 			}
@@ -470,7 +496,7 @@ func (cl *TOClient) GetServerCapabilitiesByID(serverIDs []int) (map[int]map[atsc
 	return serverCaps, reqInf, nil
 }
 
-func (cl *TOClient) GetDeliveryServiceRequiredCapabilitiesByID(dsIDs []int) (map[int]map[atscfg.ServerCapability]struct{}, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetDeliveryServiceRequiredCapabilitiesByID(dsIDs []int, reqHdr http.Header) (map[int]map[atscfg.ServerCapability]struct{}, toclientlib.ReqInf, error) {
 	dsIDsStr := ""
 	if len(dsIDs) > 0 {
 		sortIDsInHash := true
@@ -481,13 +507,13 @@ func (cl *TOClient) GetDeliveryServiceRequiredCapabilitiesByID(dsIDs []int) (map
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "ds_capabilities_d_"+dsIDsStr, &dsCaps, func(obj interface{}) error {
 		// TODO add list of IDs to API+Client
-		toDSCaps, toReqInf, err := cl.c.GetDeliveryServicesRequiredCapabilities(nil, nil, nil)
+		toDSCaps, toReqInf, err := cl.c.GetDeliveryServicesRequiredCapabilities(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting ds caps from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		dsCaps := obj.(*map[int]map[atscfg.ServerCapability]struct{})
 
-		for _, sc := range toDSCaps {
+		for _, sc := range toDSCaps.Response {
 			if sc.DeliveryServiceID == nil {
 				log.Errorln("Traffic Ops returned Delivery Service Capability with nil ds id! Skipping!")
 			}
@@ -508,16 +534,16 @@ func (cl *TOClient) GetDeliveryServiceRequiredCapabilitiesByID(dsIDs []int) (map
 	return dsCaps, reqInf, nil
 }
 
-func (cl *TOClient) GetCDNSSLKeys(cdnName tc.CDNName) ([]tc.CDNSSLKeys, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetCDNSSLKeys(cdnName tc.CDNName, reqHdr http.Header) ([]tc.CDNSSLKeys, toclientlib.ReqInf, error) {
 	keys := []tc.CDNSSLKeys{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_sslkeys_"+string(cdnName), &keys, func(obj interface{}) error {
-		toKeys, toReqInf, err := cl.c.GetCDNSSLKeys(string(cdnName))
+		toKeys, toReqInf, err := cl.c.GetCDNSSLKeys(string(cdnName), *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting cdn ssl keys from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		keys := obj.(*[]tc.CDNSSLKeys)
-		*keys = toKeys
+		*keys = toKeys.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -527,16 +553,16 @@ func (cl *TOClient) GetCDNSSLKeys(cdnName tc.CDNName) ([]tc.CDNSSLKeys, toclient
 	return keys, reqInf, nil
 }
 
-func (cl *TOClient) GetStatuses() ([]tc.Status, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
 	statuses := []tc.Status{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "statuses", &statuses, func(obj interface{}) error {
-		toStatus, toReqInf, err := cl.c.GetStatuses()
+		toStatus, toReqInf, err := cl.c.GetStatuses(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting old server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		status := obj.(*[]tc.Status)
-		*status = toStatus
+		*status = toStatus.Response
 		reqInf = toReqInf
 		return nil
 	})
@@ -547,16 +573,16 @@ func (cl *TOClient) GetStatuses() ([]tc.Status, toclientlib.ReqInf, error) {
 }
 
 // GetServerUpdateStatus returns the data, the Traffic Ops address, and any error.
-func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (atscfg.ServerUpdateStatus, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr http.Header) (atscfg.ServerUpdateStatus, toclientlib.ReqInf, error) {
 	status := atscfg.ServerUpdateStatus{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), &status, func(obj interface{}) error {
-		toStatus, toReqInf, err := cl.c.GetServerUpdateStatus(string(cacheHostName))
+		toStatus, toReqInf, err := cl.c.GetServerUpdateStatus(string(cacheHostName), *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		status := obj.(*atscfg.ServerUpdateStatus)
-		*status = serverUpdateStatusToLatest(&toStatus)
+		*status = serverUpdateStatusToLatest(toStatus.Response)[0]
 		reqInf = toReqInf
 		return nil
 	})
@@ -567,10 +593,10 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName) (atscfg.Se
 }
 
 // SetServerUpdateStatus sets the server's update status in Traffic Ops.
-func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, updateStatus *bool, revalStatus *bool) (toclientlib.ReqInf, error) {
+func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configApply, revalApply *time.Time) (toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "server_update_status_"+string(cacheHostName), nil, func(obj interface{}) error {
-		toReqInf, err := cl.c.SetUpdateServerStatuses(string(cacheHostName), updateStatus, revalStatus)
+		_, toReqInf, err := cl.c.SetUpdateServerStatusTimes(string(cacheHostName), configApply, revalApply, *ReqOpts(nil))
 		if err != nil {
 			return errors.New("setting server update status from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}

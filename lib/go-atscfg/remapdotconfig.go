@@ -124,10 +124,10 @@ func MakeRemapDotConfig(
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
 	serverParams []tc.Parameter,
-	cdn *tc.CDN,
+	cdn *tc.CDNV5,
 	remapConfigParams []tc.Parameter, // includes cachekey.config
-	topologies []tc.Topology,
-	cacheGroupArr []tc.CacheGroupNullable,
+	topologies []tc.TopologyV5,
+	cacheGroupArr []tc.CacheGroupNullableV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	configDir string,
@@ -313,8 +313,8 @@ func getServerConfigRemapDotConfigForMid(
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
 	header string,
 	server *Server,
-	nameTopologies map[TopologyName]tc.Topology,
-	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
+	nameTopologies map[TopologyName]tc.TopologyV5,
+	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	configDir string,
@@ -341,12 +341,12 @@ func getServerConfigRemapDotConfigForMid(
 			}
 		}
 
-		if !ds.Type.UsesMidCache() && (!hasTopology || *ds.Topology == "") {
+		if !tc.DSType(*ds.Type).UsesMidCache() && (!hasTopology || *ds.Topology == "") {
 			continue // Live local delivery services skip mids (except Topologies ignore DS types)
 		}
 
 		if ds.OrgServerFQDN == nil || *ds.OrgServerFQDN == "" {
-			warnings = append(warnings, "ds '"+*ds.XMLID+"' has no origin fqdn, skipping!") // TODO confirm - Perl uses without checking!
+			warnings = append(warnings, "ds '"+ds.XMLID+"' has no origin fqdn, skipping!") // TODO confirm - Perl uses without checking!
 			continue
 		}
 
@@ -361,7 +361,7 @@ func getServerConfigRemapDotConfigForMid(
 
 		// template fill for moustache
 		remapTags.Source = remapFrom
-		strategy := strategyDirective(getStrategyName(*ds.XMLID), configDir, opts)
+		strategy := strategyDirective(getStrategyName(ds.XMLID), configDir, opts)
 		if strategy != "" {
 			remapTags.Strategy = strategy
 		}
@@ -373,7 +373,7 @@ func getServerConfigRemapDotConfigForMid(
 			}
 			remapTags.HeaderRewrite = topoTxt
 		} else if (ds.MidHeaderRewrite != nil && *ds.MidHeaderRewrite != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections > 0) || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") {
-			remapTags.HeaderRewrite = `@plugin=header_rewrite.so @pparam=` + midHeaderRewriteConfigFileName(*ds.XMLID)
+			remapTags.HeaderRewrite = `@plugin=header_rewrite.so @pparam=` + midHeaderRewriteConfigFileName(ds.XMLID)
 		}
 
 		// Logic for handling cachekey params
@@ -434,7 +434,7 @@ func getServerConfigRemapDotConfigForMid(
 					templateString := tmplparams[0].Value
 					template, err = RemapLineTemplates.parse(templateString)
 					if err != nil {
-						warnings = append(warnings, "Error decoding override "+defaultParamName+" "+templateString+" for DS "+*ds.XMLID+", falling back!")
+						warnings = append(warnings, "Error decoding override "+defaultParamName+" "+templateString+" for DS "+ds.XMLID+", falling back!")
 					}
 				}
 			}
@@ -463,7 +463,7 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		// Any raw pre or post pend
-		dsPreRemaps, dsPostRemaps := lastPrePostRemapLinesFor(dsConfigParamsMap, *ds.XMLID)
+		dsPreRemaps, dsPostRemaps := lastPrePostRemapLinesFor(dsConfigParamsMap, ds.XMLID)
 
 		// Add to pre/post remap lines if this is last tier
 		if len(dsPreRemaps) > 0 || len(dsPostRemaps) > 0 {
@@ -504,8 +504,8 @@ func getServerConfigRemapDotConfigForEdge(
 	header string,
 	server *Server,
 	anyCastPartners map[string][]string,
-	nameTopologies map[TopologyName]tc.Topology,
-	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
+	nameTopologies map[TopologyName]tc.TopologyV5,
+	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cdnDomain string,
@@ -533,9 +533,9 @@ func getServerConfigRemapDotConfigForEdge(
 			}
 		}
 		remapText := ""
-		if *ds.Type == tc.DSTypeAnyMap {
+		if tc.DSType(*ds.Type) == tc.DSTypeAnyMap {
 			if ds.RemapText == nil {
-				warnings = append(warnings, "ds '"+*ds.XMLID+"' is ANY_MAP, but has no remap text - skipping")
+				warnings = append(warnings, "ds '"+ds.XMLID+"' is ANY_MAP, but has no remap text - skipping")
 				continue
 			}
 			remapText = *ds.RemapText + "\n"
@@ -543,16 +543,16 @@ func getServerConfigRemapDotConfigForEdge(
 			continue
 		}
 
-		requestFQDNs, err := GetDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(*ds.XMLID)], server, anyCastPartners, cdnDomain)
+		requestFQDNs, err := GetDSRequestFQDNs(&ds, dsRegexes[tc.DeliveryServiceName(ds.XMLID)], server, anyCastPartners, cdnDomain)
 		if err != nil {
-			warnings = append(warnings, "error getting ds '"+*ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
+			warnings = append(warnings, "error getting ds '"+ds.XMLID+"' request fqdns, skipping! Error: "+err.Error())
 			continue
 		}
 
 		for _, requestFQDN := range requestFQDNs {
 			remapLines, err := makeEdgeDSDataRemapLines(ds, requestFQDN, server, cdnDomain)
 			if err != nil {
-				warnings = append(warnings, "DS '"+*ds.XMLID+"' - skipping! : "+err.Error())
+				warnings = append(warnings, "DS '"+ds.XMLID+"' - skipping! : "+err.Error())
 				continue
 			}
 
@@ -574,7 +574,7 @@ func getServerConfigRemapDotConfigForEdge(
 				if err != nil {
 					return "", warnings, err
 				}
-				remapText += ` # ds '` + *ds.XMLID + `' topology '`
+				remapText += ` # ds '` + ds.XMLID + `' topology '`
 				if hasTopology {
 					remapText += topology.Name
 				}
@@ -615,8 +615,8 @@ func buildEdgeRemapLine(
 	mapFrom string,
 	mapTo string,
 	remapConfigParams []tc.Parameter,
-	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable,
-	nameTopologies map[TopologyName]tc.Topology,
+	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5,
+	nameTopologies map[TopologyName]tc.TopologyV5,
 	configDir string,
 	opts *RemapDotConfigOpts,
 ) (RemapLines, []string, error) {
@@ -642,15 +642,15 @@ func buildEdgeRemapLine(
 	remapTags := RemapTags{}
 	remapTags.Source = mapFrom
 	remapTags.Destination = mapTo
-	strategy := strategyDirective(getStrategyName(*ds.XMLID), configDir, opts)
+	strategy := strategyDirective(getStrategyName(ds.XMLID), configDir, opts)
 	if strategy != "" {
 		remapTags.Strategy = strategy
 	}
 
 	if _, hasDSCPRemap := pData["dscp_remap"]; hasDSCPRemap {
-		remapTags.Dscp = `@plugin=dscp_remap.so @pparam=` + strconv.Itoa(*ds.DSCP)
+		remapTags.Dscp = `@plugin=dscp_remap.so @pparam=` + strconv.Itoa(ds.DSCP)
 	} else {
-		remapTags.Dscp = `@plugin=header_rewrite.so @pparam=dscp/set_dscp_` + strconv.Itoa(*ds.DSCP) + ".config"
+		remapTags.Dscp = `@plugin=header_rewrite.so @pparam=dscp/set_dscp_` + strconv.Itoa(ds.DSCP) + ".config"
 	}
 
 	if *ds.Topology != "" {
@@ -660,17 +660,17 @@ func buildEdgeRemapLine(
 		}
 		remapTags.HeaderRewrite = topoTxt
 	} else if (ds.EdgeHeaderRewrite != nil && *ds.EdgeHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections != 0) {
-		remapTags.HeaderRewrite = `@plugin=header_rewrite.so @pparam=` + edgeHeaderRewriteConfigFileName(*ds.XMLID)
+		remapTags.HeaderRewrite = `@plugin=header_rewrite.so @pparam=` + edgeHeaderRewriteConfigFileName(ds.XMLID)
 	}
 
 	dsConfigParamsMap := classifyConfigParams(remapConfigParams)
 
 	if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm != "" {
 		if *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
-			remapTags.Signing = `@plugin=url_sig.so @pparam=url_sig_` + *ds.XMLID + ".config" +
+			remapTags.Signing = `@plugin=url_sig.so @pparam=url_sig_` + ds.XMLID + ".config" +
 				paramsStringFor(dsConfigParamsMap["url_sig.pparam"], &warnings)
 		} else if *ds.SigningAlgorithm == tc.SigningAlgorithmURISigning {
-			remapTags.Signing = `@plugin=uri_signing.so @pparam=uri_signing_` + *ds.XMLID + ".config" +
+			remapTags.Signing = `@plugin=uri_signing.so @pparam=uri_signing_` + ds.XMLID + ".config" +
 				paramsStringFor(dsConfigParamsMap["uri_signing.pparam"], &warnings)
 		}
 	}
@@ -713,7 +713,7 @@ func buildEdgeRemapLine(
 
 	// Note: should use full path here?
 	if ds.RegexRemap != nil && *ds.RegexRemap != "" {
-		regexRemapTxt = `@plugin=regex_remap.so @pparam=regex_remap_` + *ds.XMLID + ".config"
+		regexRemapTxt = `@plugin=regex_remap.so @pparam=regex_remap_` + ds.XMLID + ".config"
 	}
 
 	// Hack for moving the regex_remap directive into the raw remap text
@@ -768,7 +768,7 @@ func buildEdgeRemapLine(
 			templateString := params[0].Value
 			template, err = RemapLineTemplates.parse(templateString)
 			if err != nil {
-				warnings = append(warnings, "Error decoding override "+RemapConfigTemplateFirst+" "+templateString+" for DS "+*ds.XMLID+", falling back!")
+				warnings = append(warnings, "Error decoding override "+RemapConfigTemplateFirst+" "+templateString+" for DS "+ds.XMLID+", falling back!")
 			}
 		}
 	}
@@ -793,7 +793,7 @@ func buildEdgeRemapLine(
 
 	// Any raw pre or post pend lines?
 	if isLastCache {
-		remapLines.Pre, remapLines.Post = lastPrePostRemapLinesFor(dsConfigParamsMap, *ds.XMLID)
+		remapLines.Pre, remapLines.Post = lastPrePostRemapLinesFor(dsConfigParamsMap, ds.XMLID)
 	}
 
 	return remapLines, warnings, nil
@@ -811,7 +811,7 @@ func strategyDirective(strategyName string, configDir string, opt *RemapDotConfi
 
 // makeDSTopologyHeaderRewriteTxt returns the appropriate header rewrite remap line text for the given DS on the given server, and any error.
 // May be empty, if the DS has no header rewrite for the server's position in the topology.
-func makeDSTopologyHeaderRewriteTxt(ds DeliveryService, cg tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) (string, error) {
+func makeDSTopologyHeaderRewriteTxt(ds DeliveryService, cg tc.CacheGroupName, topology tc.TopologyV5, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5) (string, error) {
 	placement, err := getTopologyPlacement(cg, topology, cacheGroups, &ds)
 	if err != nil {
 		return "", errors.New("getting topology placement: " + err.Error())
@@ -819,13 +819,13 @@ func makeDSTopologyHeaderRewriteTxt(ds DeliveryService, cg tc.CacheGroupName, to
 	txt := ""
 	const pluginTxt = `@plugin=header_rewrite.so @pparam=`
 	if placement.IsFirstCacheTier && ((ds.FirstHeaderRewrite != nil && *ds.FirstHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "")) {
-		txt += pluginTxt + FirstHeaderRewriteConfigFileName(*ds.XMLID) + ` `
+		txt += pluginTxt + FirstHeaderRewriteConfigFileName(ds.XMLID) + ` `
 	}
 	if placement.IsInnerCacheTier && ((ds.InnerHeaderRewrite != nil && *ds.InnerHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "")) {
-		txt += pluginTxt + InnerHeaderRewriteConfigFileName(*ds.XMLID) + ` `
+		txt += pluginTxt + InnerHeaderRewriteConfigFileName(ds.XMLID) + ` `
 	}
 	if placement.IsLastCacheTier && ((ds.LastHeaderRewrite != nil && *ds.LastHeaderRewrite != "") || (ds.ServiceCategory != nil && *ds.ServiceCategory != "") || (ds.MaxOriginConnections != nil && *ds.MaxOriginConnections != 0)) {
-		txt += pluginTxt + LastHeaderRewriteConfigFileName(*ds.XMLID) + ` `
+		txt += pluginTxt + LastHeaderRewriteConfigFileName(ds.XMLID) + ` `
 	}
 	return txt, nil
 }
@@ -852,12 +852,12 @@ func makeEdgeDSDataRemapLines(
 	mapTo := *ds.OrgServerFQDN + "/"
 
 	portStr := ""
-	if !ds.Type.IsDNS() && server.TCPPort != nil && *server.TCPPort > 0 && *server.TCPPort != 80 {
+	if !tc.DSType(*ds.Type).IsDNS() && server.TCPPort != nil && *server.TCPPort > 0 && *server.TCPPort != 80 {
 		portStr = ":" + strconv.Itoa(*server.TCPPort)
 	}
 
 	httpsPortStr := ""
-	if !ds.Type.IsDNS() && server.HTTPSPort != nil && *server.HTTPSPort > 0 && *server.HTTPSPort != 443 {
+	if !tc.DSType(*ds.Type).IsDNS() && server.HTTPSPort != nil && *server.HTTPSPort > 0 && *server.HTTPSPort != 443 {
 		httpsPortStr = ":" + strconv.Itoa(*server.HTTPSPort)
 	}
 
@@ -984,24 +984,24 @@ func remapFilterDSes(server *Server, dss []DeliveryServiceServer, dses []Deliver
 		if ds.LastHeaderRewrite == nil {
 			ds.LastHeaderRewrite = util.StrPtr("")
 		}
-		if ds.XMLID == nil {
+		if &ds.XMLID == nil {
 			warnings = append(warnings, "got Delivery Service with nil XMLID, skipping!")
 			continue
 		} else if ds.Type == nil {
-			warnings = append(warnings, "got Delivery Service '"+*ds.XMLID+"'  with nil Type, skipping!")
+			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil Type, skipping!")
 			continue
-		} else if ds.DSCP == nil {
-			warnings = append(warnings, "got Delivery Service '"+*ds.XMLID+"'  with nil DSCP, skipping!")
+		} else if &ds.DSCP == nil {
+			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil DSCP, skipping!")
 			continue
 		} else if ds.ID == nil {
-			warnings = append(warnings, "got Delivery Service '"+*ds.XMLID+"'  with nil ID, skipping!")
+			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil ID, skipping!")
 			continue
-		} else if ds.Active == nil {
-			warnings = append(warnings, "got Delivery Service '"+*ds.XMLID+"'  with nil Active, skipping!")
+		} else if &ds.Active == nil {
+			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil Active, skipping!")
 			continue
 		} else if _, ok := dssMap[*ds.ID]; !ok && *ds.Topology == "" {
 			continue // normal, not an error, this DS just isn't assigned to our Cache
-		} else if !useInactive && !*ds.Active {
+		} else if !useInactive && ds.Active != tc.DSActiveStateActive {
 			continue // normal, not an error, DS just isn't active and we aren't including inactive DSes
 		}
 		filteredDSes = append(filteredDSes, ds)
@@ -1134,7 +1134,7 @@ func GetDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, s
 		}
 		fqdns = append(fqdns, fqdn)
 
-		if ds.Type.IsHTTP() && strings.HasSuffix(hostRegex, `.*`) {
+		if tc.DSType(*ds.Type).IsHTTP() && strings.HasSuffix(hostRegex, `.*`) {
 			for _, ip := range anyCastPartners {
 				for _, hn := range ip {
 					fqdn, err := makeFQDN(hostRegex, ds, hn, cdnDomain)
@@ -1161,18 +1161,18 @@ func makeFQDN(hostRegex string, ds *DeliveryService, server string, cdnDomain st
 		re = strings.Replace(re, `.*`, ``, -1)
 
 		hName := server
-		if ds.Type.IsDNS() {
-			if ds.RoutingName == nil {
+		if tc.DSType(*ds.Type).IsDNS() {
+			if &ds.RoutingName == nil {
 				return "", errors.New("ds is dns, but missing routing name")
 			}
-			hName = *ds.RoutingName
+			hName = ds.RoutingName
 		}
 		fqdn = hName + re + cdnDomain
 	}
 	return fqdn, nil
 }
 
-func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[TopologyName]tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable) (bool, error) {
+func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[TopologyName]tc.TopologyV5, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5) (bool, error) {
 	if ds.Topology != nil && strings.TrimSpace(*ds.Topology) != "" {
 		if server.Cachegroup == nil {
 			return false, errors.New("Server has no CacheGroup")
@@ -1193,11 +1193,11 @@ func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[
 
 // noTopologyServerIsLastCacheForDS returns whether the server is the last tier for the DS, if the DS has no Topology.
 // This helper MUST NOT be called if the DS has a Topology. It does not check.
-func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService, cgs map[tc.CacheGroupName]tc.CacheGroupNullable) bool {
+func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService, cgs map[tc.CacheGroupName]tc.CacheGroupNullableV5) bool {
 	if strings.HasPrefix(server.Type, tc.MidTypePrefix) {
 		return true // if the type is "MID" it's always the last cache for non-topologies
 	}
-	if !ds.Type.UsesMidCache() {
+	if !tc.DSType(*ds.Type).UsesMidCache() {
 		return true // if this DS type never uses mids (for pre-topology type-parentage), it's the last cache
 	}
 

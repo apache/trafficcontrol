@@ -58,8 +58,8 @@ func MakeIPAllowDotYAML(
 	serverParams []tc.Parameter,
 	server *Server,
 	servers []Server,
-	cacheGroups []tc.CacheGroupNullable,
-	topologies []tc.Topology,
+	cacheGroups []tc.CacheGroupNullableV5,
+	topologies []tc.TopologyV5,
 	opt *IPAllowDotYAMLOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -107,7 +107,7 @@ func MakeIPAllowDotYAML(
 			coalesceMaskLenV6,
 		)
 		warnings = append(warnings, ws...)
-
+		
 		if err != nil {
 			return Cfg{}, makeErr(warnings, err.Error())
 		}
@@ -309,8 +309,8 @@ func GetCoalesceMaskAndNumber(serverParams []tc.Parameter) (int, int, int, int, 
 func GetAllowedCIDRsForMid(
 	server *Server,
 	servers []Server,
-	cacheGroups []tc.CacheGroupNullable,
-	topologies []tc.Topology,
+	cacheGroups []tc.CacheGroupNullableV5,
+	topologies []tc.TopologyV5,
 	coalesceNumberV4 int,
 	coalesceMaskLenV4 int,
 	coalesceNumberV6 int,
@@ -321,7 +321,7 @@ func GetAllowedCIDRsForMid(
 	ip6s := []*net.IPNet{}
 	warnings := make([]string, 0)
 
-	cgMap := map[string]tc.CacheGroupNullable{}
+	cgMap := map[string]tc.CacheGroupNullableV5{}
 	for _, cg := range cacheGroups {
 		if cg.Name == nil {
 			return nil, nil, warnings, errors.New("got cachegroup with nil name!")
@@ -340,7 +340,7 @@ func GetAllowedCIDRsForMid(
 
 	childCGNames := getTopologyDirectChildren(tc.CacheGroupName(*server.Cachegroup), topologies)
 
-	childCGs := map[string]tc.CacheGroupNullable{}
+	childCGs := map[string]tc.CacheGroupNullableV5{}
 	for cgName, _ := range childCGNames {
 		childCGs[string(cgName)] = cgMap[string(cgName)]
 	}

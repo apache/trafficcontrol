@@ -37,10 +37,10 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
-func (cl *TOClient) GetProfileByName(profileName string, reqHdr http.Header) (tc.Profile, toclientlib.ReqInf, error) {
+/*func (cl *TOClient) GetProfileByName(profileName string, reqHdr http.Header) (tc.Profile, toclientlib.ReqInf, error) {
 	if cl.c == nil {
 		return cl.old.GetProfileByName(profileName)
 	}
@@ -65,7 +65,7 @@ func (cl *TOClient) GetProfileByName(profileName string, reqHdr http.Header) (tc
 		return tc.Profile{}, reqInf, errors.New("getting profile '" + profileName + "': " + err.Error())
 	}
 	return profile, reqInf, nil
-}
+}*/
 
 func (cl *TOClient) WriteFsCookie(fileName string) {
 	tmpFileName := fileName + ".tmp"
@@ -101,7 +101,7 @@ func (cl *TOClient) WriteFsCookie(fileName string) {
 
 func (cl *TOClient) GetGlobalParameters(reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetGlobalParameters()
+		return cl.old.GetGlobalParameters(reqHdr)
 	}
 
 	globalParams := []tc.Parameter{}
@@ -124,7 +124,7 @@ func (cl *TOClient) GetGlobalParameters(reqHdr http.Header) ([]tc.Parameter, toc
 
 func (cl *TOClient) GetServers(reqHdr http.Header) ([]atscfg.Server, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetServers()
+		return cl.old.GetServers(reqHdr)
 	}
 
 	servers := []atscfg.Server{}
@@ -150,7 +150,7 @@ func (cl *TOClient) GetServers(reqHdr http.Header) ([]atscfg.Server, toclientlib
 
 func (cl *TOClient) GetServerByHostName(serverHostName string, reqHdr http.Header) (*atscfg.Server, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetServerByHostName(serverHostName)
+		return cl.old.GetServerByHostName(serverHostName, reqHdr)
 	}
 
 	server := atscfg.Server{}
@@ -185,19 +185,23 @@ func (cl *TOClient) GetServerByHostName(serverHostName string, reqHdr http.Heade
 	return &server, reqInf, nil
 }
 
-func (cl *TOClient) GetCacheGroups(reqHdr http.Header) ([]tc.CacheGroupNullable, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetCacheGroups(reqHdr http.Header) ([]tc.CacheGroupNullableV5, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetCacheGroups()
+		oldCg, reqInf, err := cl.old.GetCacheGroups(reqHdr)
+		if err != nil {
+			return []tc.CacheGroupNullableV5{}, reqInf, errors.New("getting cachegroups from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		return atscfg.ToCacheGroups(oldCg), reqInf, nil
 	}
 
-	cacheGroups := []tc.CacheGroupNullable{}
+	cacheGroups := []tc.CacheGroupNullableV5{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "cachegroups", &cacheGroups, func(obj interface{}) error {
 		toCacheGroups, toReqInf, err := cl.c.GetCacheGroups(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting cachegroups from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		cacheGroups := obj.(*[]tc.CacheGroupNullable)
+		cacheGroups := obj.(*[]tc.CacheGroupNullableV5)
 		*cacheGroups = toCacheGroups.Response
 		reqInf = toReqInf
 		return nil
@@ -215,7 +219,7 @@ const DeliveryServiceServersAlwaysGetAll = true
 
 func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnName string, reqHdr http.Header) ([]tc.DeliveryServiceServer, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetDeliveryServiceServers(dsIDs, serverIDs)
+		return cl.old.GetDeliveryServiceServers(dsIDs, serverIDs, cdnName, reqHdr)
 	}
 
 	const sortIDsInHash = true
@@ -226,10 +230,10 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnN
 	sIDsToFetch := ([]int)(nil)
 	if !DeliveryServiceServersAlwaysGetAll {
 		if len(dsIDs) > 0 {
-			dsIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(dsIDs, sortIDsInHash)))
+			dsIDsStr = base64.RawURLEncoding.EncodeToString(util.HashInts(dsIDs, sortIDsInHash))
 		}
 		if len(serverIDs) > 0 {
-			serverIDsStr = base64.RawURLEncoding.EncodeToString((util.HashInts(serverIDs, sortIDsInHash)))
+			serverIDsStr = base64.RawURLEncoding.EncodeToString(util.HashInts(serverIDs, sortIDsInHash))
 		}
 		dsIDsToFetch = dsIDs
 		sIDsToFetch = serverIDs
@@ -311,7 +315,7 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnN
 
 func (cl *TOClient) GetServerProfileParameters(profileName string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetServerProfileParameters(profileName)
+		return cl.old.GetServerProfileParameters(profileName, reqHdr)
 	}
 
 	serverProfileParameters := []tc.Parameter{}
@@ -335,7 +339,7 @@ func (cl *TOClient) GetServerProfileParameters(profileName string, reqHdr http.H
 // GetCDNDeliveryServices returns the data, the Traffic Ops address, and any error.
 func (cl *TOClient) GetCDNDeliveryServices(cdnID int, reqHdr http.Header) ([]atscfg.DeliveryService, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetCDNDeliveryServices(cdnID)
+		return cl.old.GetCDNDeliveryServices(cdnID, reqHdr)
 	}
 
 	deliveryServices := []atscfg.DeliveryService{}
@@ -362,19 +366,23 @@ func (cl *TOClient) GetCDNDeliveryServices(cdnID int, reqHdr http.Header) ([]ats
 }
 
 // GetTopologies returns the data, the Traffic Ops address, and any error.
-func (cl *TOClient) GetTopologies(reqHdr http.Header) ([]tc.Topology, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetTopologies(reqHdr http.Header) ([]tc.TopologyV5, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetTopologies()
+		topologies, reqInf, err := cl.old.GetTopologies(reqHdr)
+		if err != nil {
+			return []tc.TopologyV5{}, reqInf, errors.New("getting topologies from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		return atscfg.ToTopologies(topologies), reqInf, nil
 	}
 
-	topologies := []tc.Topology{}
+	topologies := []tc.TopologyV5{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "topologies", &topologies, func(obj interface{}) error {
 		toTopologies, toReqInf, err := cl.c.GetTopologies(*ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting topologies from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		topologies := obj.(*[]tc.Topology)
+		topologies := obj.(*[]tc.TopologyV5)
 		*topologies = toTopologies.Response
 		reqInf = toReqInf
 		return nil
@@ -387,7 +395,7 @@ func (cl *TOClient) GetTopologies(reqHdr http.Header) ([]tc.Topology, toclientli
 
 func (cl *TOClient) GetConfigFileParameters(configFile string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetConfigFileParameters(configFile)
+		return cl.old.GetConfigFileParameters(configFile, reqHdr)
 	}
 
 	params := []tc.Parameter{}
@@ -408,12 +416,15 @@ func (cl *TOClient) GetConfigFileParameters(configFile string, reqHdr http.Heade
 	return params, reqInf, nil
 }
 
-func (cl *TOClient) GetCDN(cdnName tc.CDNName, reqHdr http.Header) (tc.CDN, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetCDN(cdnName tc.CDNName, reqHdr http.Header) (tc.CDNV5, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetCDN(cdnName)
+		cdn, reqInf, err := cl.old.GetCDN(cdnName, reqHdr)
+		if err != nil {
+			return tc.CDNV5{}, reqInf, errors.New("getting cdn from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		return atscfg.ToCDN(cdn), reqInf, nil
 	}
-
-	cdn := tc.CDN{}
+	cdn := tc.CDNV5{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "cdn_"+string(cdnName), &cdn, func(obj interface{}) error {
 		toCDN, toReqInf, err := GetCDNByName(cl.c, cdnName, ReqOpts(reqHdr))
@@ -421,24 +432,28 @@ func (cl *TOClient) GetCDN(cdnName tc.CDNName, reqHdr http.Header) (tc.CDN, tocl
 			return errors.New("getting cdn from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		if toReqInf.StatusCode != http.StatusNotModified {
-			cdn := obj.(*tc.CDN)
+			cdn := obj.(*tc.CDNV5)
 			*cdn = toCDN
 		}
 		reqInf = toReqInf
 		return nil
 	})
 	if err != nil {
-		return tc.CDN{}, reqInf, errors.New("getting cdn: " + err.Error())
+		return tc.CDNV5{}, reqInf, errors.New("getting cdn: " + err.Error())
 	}
 	return cdn, reqInf, nil
 }
 
-func (cl *TOClient) GetCDNs(reqHdr http.Header) ([]tc.CDN, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetCDNs(reqHdr http.Header) ([]tc.CDNV5, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetCDNs()
+		cdns, reqInf, err := cl.old.GetCDNs(reqHdr)
+		if err != nil {
+			return []tc.CDNV5{}, reqInf, errors.New("getting cdns from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+		}
+		return atscfg.ToCDNs(cdns), reqInf, nil
 	}
 
-	cdns := []tc.CDN{}
+	cdns := []tc.CDNV5{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "cdns", &cdns, func(obj interface{}) error {
 		toCDNs, toReqInf, err := cl.c.GetCDNs(*ReqOpts(reqHdr))
@@ -446,21 +461,21 @@ func (cl *TOClient) GetCDNs(reqHdr http.Header) ([]tc.CDN, toclientlib.ReqInf, e
 			return errors.New("getting cdns from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		if toReqInf.StatusCode != http.StatusNotModified {
-			cdn := obj.(*[]tc.CDN)
+			cdn := obj.(*[]tc.CDNV5)
 			*cdn = toCDNs.Response
 		}
 		reqInf = toReqInf
 		return nil
 	})
 	if err != nil {
-		return []tc.CDN{}, reqInf, errors.New("getting cdn: " + err.Error())
+		return []tc.CDNV5{}, reqInf, errors.New("getting cdn: " + err.Error())
 	}
 	return cdns, reqInf, nil
 }
 
 func (cl *TOClient) GetURLSigKeys(dsName string, reqHdr http.Header) (tc.URLSigKeys, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetURLSigKeys(dsName)
+		return cl.old.GetURLSigKeys(dsName, reqHdr)
 	}
 
 	keys := tc.URLSigKeys{}
@@ -483,7 +498,7 @@ func (cl *TOClient) GetURLSigKeys(dsName string, reqHdr http.Header) (tc.URLSigK
 
 func (cl *TOClient) GetURISigningKeys(dsName string, reqHdr http.Header) ([]byte, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetURISigningKeys(dsName)
+		return cl.old.GetURISigningKeys(dsName, reqHdr)
 	}
 
 	keys := []byte{}
@@ -507,7 +522,7 @@ func (cl *TOClient) GetURISigningKeys(dsName string, reqHdr http.Header) ([]byte
 
 func (cl *TOClient) GetParametersByName(paramName string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetParametersByName(paramName)
+		return cl.old.GetParametersByName(paramName, reqHdr)
 	}
 
 	params := []tc.Parameter{}
@@ -530,7 +545,7 @@ func (cl *TOClient) GetParametersByName(paramName string, reqHdr http.Header) ([
 
 func (cl *TOClient) GetDeliveryServiceRegexes(reqHdr http.Header) ([]tc.DeliveryServiceRegexes, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetDeliveryServiceRegexes()
+		return cl.old.GetDeliveryServiceRegexes(reqHdr)
 	}
 
 	regexes := []tc.DeliveryServiceRegexes{}
@@ -553,8 +568,8 @@ func (cl *TOClient) GetDeliveryServiceRegexes(reqHdr http.Header) ([]tc.Delivery
 
 func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]atscfg.InvalidationJob, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		oldJobs, inf, err := cl.old.GetJobs()
-		jobs, err := atscfg.JobsToInvalidationJobs(oldJobs)
+		oldJobs, inf, err := cl.old.GetJobs(reqHdr)
+		jobs := jobsToLatest(oldJobs)
 		if err != nil {
 			return nil, inf, errors.New("converting old []tc.Job to []tc.InvalidationJob: " + err.Error())
 		}
@@ -586,7 +601,7 @@ func (cl *TOClient) GetJobs(reqHdr http.Header, cdnName string) ([]atscfg.Invali
 
 func (cl *TOClient) GetServerCapabilitiesByID(serverIDs []int, reqHdr http.Header) (map[int]map[atscfg.ServerCapability]struct{}, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetServerCapabilitiesByID(serverIDs)
+		return cl.old.GetServerCapabilitiesByID(serverIDs, reqHdr)
 	}
 
 	serverIDsStr := ""
@@ -628,7 +643,7 @@ func (cl *TOClient) GetServerCapabilitiesByID(serverIDs []int, reqHdr http.Heade
 
 func (cl *TOClient) GetDeliveryServiceRequiredCapabilitiesByID(dsIDs []int, reqHdr http.Header) (map[int]map[atscfg.ServerCapability]struct{}, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetDeliveryServiceRequiredCapabilitiesByID(dsIDs)
+		return cl.old.GetDeliveryServiceRequiredCapabilitiesByID(dsIDs, reqHdr)
 	}
 
 	dsIDsStr := ""
@@ -670,7 +685,7 @@ func (cl *TOClient) GetDeliveryServiceRequiredCapabilitiesByID(dsIDs []int, reqH
 
 func (cl *TOClient) GetCDNSSLKeys(cdnName tc.CDNName, reqHdr http.Header) ([]tc.CDNSSLKeys, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetCDNSSLKeys(cdnName)
+		return cl.old.GetCDNSSLKeys(cdnName, reqHdr)
 	}
 
 	keys := []tc.CDNSSLKeys{}
@@ -693,7 +708,7 @@ func (cl *TOClient) GetCDNSSLKeys(cdnName tc.CDNName, reqHdr http.Header) ([]tc.
 
 func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetStatuses()
+		return cl.old.GetStatuses(reqHdr)
 	}
 
 	statuses := []tc.Status{}
@@ -717,7 +732,7 @@ func (cl *TOClient) GetStatuses(reqHdr http.Header) ([]tc.Status, toclientlib.Re
 // GetServerUpdateStatus returns the data, the Traffic Ops address, and any error.
 func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr http.Header) (atscfg.ServerUpdateStatus, toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		return cl.old.GetServerUpdateStatus(cacheHostName)
+		return cl.old.GetServerUpdateStatus(cacheHostName, reqHdr)
 	}
 
 	status := atscfg.ServerUpdateStatus{}
@@ -745,16 +760,16 @@ func (cl *TOClient) GetServerUpdateStatus(cacheHostName tc.CacheName, reqHdr htt
 // SetServerUpdateStatus sets the server's update and reval statuses in Traffic Ops.
 func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configApply, revalApply *time.Time) (toclientlib.ReqInf, error) {
 	if cl.c == nil {
-		var updateStatus, revalStatus *bool
-		if configApply != nil {
-			*updateStatus = true
-			revalStatus = nil
-		}
-		if revalApply != nil {
-			*revalStatus = true
-			updateStatus = nil
-		}
-		return cl.old.SetServerUpdateStatus(cacheHostName, updateStatus, revalStatus)
+		/*	var updateStatus, revalStatus *bool
+			if configApply != nil {
+				*updateStatus = true
+				revalStatus = nil
+			}
+			if revalApply != nil {
+				*revalStatus = true
+				updateStatus = nil
+			}*/
+		return cl.old.SetServerUpdateStatus(cacheHostName, configApply, revalApply)
 	}
 
 	reqInf := toclientlib.ReqInf{}
@@ -772,7 +787,7 @@ func (cl *TOClient) SetServerUpdateStatus(cacheHostName tc.CacheName, configAppl
 	return reqInf, nil
 }
 
-// SetServerUpdateStatusBoolCompat sets the server's update and reval statuses in Traffic Ops.
+/*// SetServerUpdateStatusBoolCompat sets the server's update and reval statuses in Traffic Ops.
 // *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
 func (cl *TOClient) SetServerUpdateStatusBoolCompat(cacheHostName tc.CacheName, configApply *time.Time, revalApply *time.Time, configApplyBool *bool, revalApplyBool *bool) (toclientlib.ReqInf, error) {
 	if cl.c == nil {
@@ -785,7 +800,7 @@ func (cl *TOClient) SetServerUpdateStatusBoolCompat(cacheHostName tc.CacheName, 
 		if configApplyBool == nil && revalApplyBool == nil {
 			return toclientlib.ReqInf{}, errors.New("Traffic Ops older version doesn't support timestamps, but both booleans were nil! Booleans must be passed to work with older Traffic Ops!")
 		}
-		return cl.old.SetServerUpdateStatus(cacheHostName, configApplyBool, revalApplyBool)
+		return cl.old.SetServerUpdateStatus(cacheHostName, configApply, revalApply)
 	}
 
 	reqInf := toclientlib.ReqInf{}
@@ -801,4 +816,4 @@ func (cl *TOClient) SetServerUpdateStatusBoolCompat(cacheHostName tc.CacheName, 
 		return reqInf, errors.New("getting server update status: " + err.Error())
 	}
 	return reqInf, nil
-}
+}*/

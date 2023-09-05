@@ -59,8 +59,8 @@ func MakeIPAllowDotConfig(
 	serverParams []tc.Parameter,
 	server *Server,
 	servers []Server,
-	cacheGroups []tc.CacheGroupNullable,
-	topologies []tc.Topology,
+	cacheGroups []tc.CacheGroupNullableV5,
+	topologies []tc.TopologyV5,
 	opt *IPAllowDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -140,7 +140,7 @@ func MakeIPAllowDotConfig(
 		ips := []*net.IPNet{}
 		ip6s := []*net.IPNet{}
 
-		cgMap := map[string]tc.CacheGroupNullable{}
+		cgMap := map[string]tc.CacheGroupNullableV5{}
 		for _, cg := range cacheGroups {
 			if cg.Name == nil {
 				return Cfg{}, makeErr(warnings, "got cachegroup with nil name!")
@@ -159,7 +159,7 @@ func MakeIPAllowDotConfig(
 
 		childCGNames := getTopologyDirectChildren(tc.CacheGroupName(*server.Cachegroup), topologies)
 
-		childCGs := map[string]tc.CacheGroupNullable{}
+		childCGs := map[string]tc.CacheGroupNullableV5{}
 		for cgName, _ := range childCGNames {
 			childCGs[string(cgName)] = cgMap[string(cgName)]
 		}

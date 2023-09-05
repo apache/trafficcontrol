@@ -59,7 +59,7 @@ type Server tc.ServerV40
 // DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type DeliveryService tc.DeliveryServiceV4
+type DeliveryService tc.DeliveryServiceV5
 
 // InvalidationJob is a tc.InvalidationJob for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
@@ -71,8 +71,84 @@ type InvalidationJob tc.InvalidationJobV4
 // but to only have to change it here, and the places where breaking symbol changes were made.
 type ServerUpdateStatus tc.ServerUpdateStatusV4
 
+//type CDN tc.CDNV5
+
+func ToCDNs(cdns []tc.CDN) []tc.CDNV5 {
+	ac := make([]tc.CDNV5, 0, len(cdns))
+	for _, cdn := range cdns {
+		ac = append(ac, ToCDN(cdn))
+	}
+	return ac
+}
+
+func ToCDN(cdn tc.CDN) tc.CDNV5 {
+	return tc.CDNV5{
+		DNSSECEnabled: cdn.DNSSECEnabled,
+		DomainName:    cdn.DomainName,
+		ID:            cdn.ID,
+		LastUpdated:   cdn.LastUpdated.Time,
+		Name:          cdn.Name,
+		TTLOverride:   &cdn.TTLOverride,
+	}
+}
+
+func ToCacheGroups(cacheGroups []tc.CacheGroupNullable) []tc.CacheGroupNullableV5 {
+	ag := make([]tc.CacheGroupNullableV5, 0, len(cacheGroups))
+	for _, cg := range cacheGroups {
+		ag = append(ag, ToCacheGroup(cg))
+	}
+	return ag
+}
+
+func ToCacheGroup(cacheGroup tc.CacheGroupNullable) tc.CacheGroupNullableV5 {
+	return tc.CacheGroupNullableV5{
+		ID:                          cacheGroup.ID,
+		Name:                        cacheGroup.Name,
+		ShortName:                   cacheGroup.ShortName,
+		Latitude:                    cacheGroup.Latitude,
+		Longitude:                   cacheGroup.Longitude,
+		ParentName:                  cacheGroup.ParentName,
+		ParentCachegroupID:          cacheGroup.ParentCachegroupID,
+		SecondaryParentName:         cacheGroup.SecondaryParentName,
+		SecondaryParentCachegroupID: cacheGroup.SecondaryParentCachegroupID,
+		FallbackToClosest:           cacheGroup.FallbackToClosest,
+		LocalizationMethods:         cacheGroup.LocalizationMethods,
+		Type:                        cacheGroup.Type,
+		TypeID:                      cacheGroup.TypeID,
+		LastUpdated:                 &cacheGroup.LastUpdated.Time,
+		Fallbacks:                   cacheGroup.Fallbacks,
+	}
+
+}
+
+func ToTopologies(topologies []tc.Topology) []tc.TopologyV5 {
+	tg := make([]tc.TopologyV5, 0, len(topologies))
+	for _, topology := range topologies {
+		tg = append(tg, ToTopology(topology))
+	}
+	return tg
+}
+
+func ToTopology(topology tc.Topology) tc.TopologyV5 {
+	nodes := []tc.TopologyNodeV5{}
+	for _, n := range topology.Nodes {
+		nodes = append(nodes, tc.TopologyNodeV5{
+			Id:          n.Id,
+			Cachegroup:  n.Cachegroup,
+			Parents:     n.Parents,
+			LastUpdated: &n.LastUpdated.Time,
+		})
+	}
+	return tc.TopologyV5{
+		Description: topology.Description,
+		Name:        topology.Name,
+		Nodes:       nodes,
+		LastUpdated: &topology.LastUpdated.Time,
+	}
+}
+
 // ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToDeliveryServices(dses []tc.DeliveryServiceV4) []DeliveryService {
+func ToDeliveryServices(dses []tc.DeliveryServiceV5) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
@@ -81,7 +157,7 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV4) []DeliveryService {
 }
 
 // V40ToDeliveryServices converts a slice of the old traffic_ops/v4-client type to the local alias.
-func V4ToDeliveryServices(dses []tc.DeliveryServiceV4) []DeliveryService {
+func V4ToDeliveryServices(dses []tc.DeliveryServiceV5) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
@@ -137,8 +213,8 @@ type Cfg struct {
 	Warnings    []string
 }
 
-func makeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroupNullable, error) {
-	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
+func makeCGMap(cgs []tc.CacheGroupNullableV5) (map[tc.CacheGroupName]tc.CacheGroupNullableV5, error) {
+	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullableV5{}
 	for _, cg := range cgs {
 		if cg.Name == nil {
 			return nil, errors.New("got cachegroup with nil name!'")
@@ -158,7 +234,7 @@ type serverParentCacheGroupData struct {
 // getParentCacheGroupData returns the parent CacheGroup IDs and types for the given server.
 // Takes a server and a CG map. To create a CGMap from an API CacheGroup slice, use MakeCGMap.
 // If server's CacheGroup has no parent or secondary parent, returns InvalidID and "" with no error.
-func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.CacheGroupNullable) (serverParentCacheGroupData, error) {
+func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.CacheGroupNullableV5) (serverParentCacheGroupData, error) {
 	if server.Cachegroup == nil || *server.Cachegroup == "" {
 		return serverParentCacheGroupData{}, errors.New("server missing cachegroup")
 	} else if server.HostName == nil || *server.HostName == "" {
@@ -286,7 +362,7 @@ func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 }
 
 // topologyIncludesServerNullable returns whether the given topology includes the given server.
-func topologyIncludesServerNullable(topology tc.Topology, server *Server) (bool, error) {
+func topologyIncludesServerNullable(topology tc.TopologyV5, server *Server) (bool, error) {
 	if server.Cachegroup == nil {
 		return false, errors.New("server missing Cachegroup")
 	}
@@ -330,10 +406,10 @@ type TopologyPlacement struct {
 // - Whether the cachegroup is the last tier in the topology.
 // - Whether the cachegroup is in the topology at all.
 // - Whether it's the first, inner, or last cache tier before the Origin.
-func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable, ds *DeliveryService) (TopologyPlacement, error) {
-	isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
+func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.TopologyV5, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5, ds *DeliveryService) (TopologyPlacement, error) {
+	isMSO := ds.MultiSiteOrigin
 
-	serverNode := tc.TopologyNode{}
+	serverNode := tc.TopologyNodeV5{}
 	serverNodeIndex := -1
 	for nodeI, node := range topology.Nodes {
 		if node.Cachegroup == string(cacheGroup) {
@@ -385,8 +461,8 @@ nodeFor:
 	}, nil
 }
 
-func makeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology {
-	topoNames := map[TopologyName]tc.Topology{}
+func makeTopologyNameMap(topologies []tc.TopologyV5) map[TopologyName]tc.TopologyV5 {
+	topoNames := map[TopologyName]tc.TopologyV5{}
 	for _, to := range topologies {
 		topoNames[TopologyName(to.Name)] = to
 	}
@@ -396,7 +472,7 @@ func makeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology 
 // getTopologyDirectChildren returns the cachegroups which are immediate children of the given cachegroup in any topology.
 func getTopologyDirectChildren(
 	cg tc.CacheGroupName,
-	topologies []tc.Topology,
+	topologies []tc.TopologyV5,
 ) map[tc.CacheGroupName]struct{} {
 	children := map[tc.CacheGroupName]struct{}{}
 
@@ -889,5 +965,5 @@ func ProfilesMatch(pa []string, pb []string) bool {
 
 // IsGoDirect checks if this ds type is edge only.
 func IsGoDirect(ds DeliveryService) bool {
-	return *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive
+	return *ds.Type == tc.DSTypeHTTPNoCache.String() || *ds.Type == tc.DSTypeHTTPLive.String() || *ds.Type == tc.DSTypeDNSLive.String()
 }

@@ -156,6 +156,9 @@ func GetProfileDSes(server *Server,
 
 	profileDSes := []ProfileDS{}
 	for _, ds := range deliveryServices {
+		if ds.Active == tc.DSActiveStateInactive {
+			continue
+		}
 		if ds.ID == nil {
 			warnings = append(warnings, "deliveryservices had ds with nil id, skipping!")
 			continue
@@ -167,11 +170,11 @@ func GetProfileDSes(server *Server,
 		if ds.OrgServerFQDN == nil {
 			continue // this is normal for steering and anymap dses
 		}
-		if ds.XMLID == nil || *ds.XMLID == "" {
+		if ds.XMLID == "" {
 			warnings = append(warnings, "got ds with missing XMLID, skipping!")
 			continue
 		}
-		if *ds.Type == tc.DSTypeInvalid {
+		if *ds.Type == tc.DSTypeInvalid.String() {
 			warnings = append(warnings, "deliveryservices had ds with invalid type, skipping!")
 			continue
 		}
@@ -182,7 +185,7 @@ func GetProfileDSes(server *Server,
 		if _, ok := dsIDs[*ds.ID]; !ok && ds.Topology == nil {
 			continue
 		}
-		profileDSes = append(profileDSes, ProfileDS{Name: *ds.XMLID, Type: *ds.Type, OriginFQDN: *ds.OrgServerFQDN})
+		profileDSes = append(profileDSes, ProfileDS{Name: ds.XMLID, Type: tc.DSType(*ds.Type), OriginFQDN: *ds.OrgServerFQDN})
 	}
 
 	return profileDSes, warnings

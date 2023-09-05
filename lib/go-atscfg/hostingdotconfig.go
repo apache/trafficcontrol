@@ -52,7 +52,7 @@ func MakeHostingDotConfig(
 	serverParams []tc.Parameter,
 	deliveryServices []DeliveryService,
 	deliveryServiceServers []DeliveryServiceServer,
-	topologies []tc.Topology,
+	topologies []tc.TopologyV5,
 	opt *HostingDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -118,15 +118,18 @@ func MakeHostingDotConfig(
 
 	filteredDSes := []DeliveryService{}
 	for _, ds := range deliveryServices {
-		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
+		if &ds.Active == nil || ds.Active == "" || ds.Type == nil || &ds.XMLID == nil || &ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify
 			continue
 		}
-		if *ds.CDNID != *server.CDNID {
+		if ds.Active == tc.DSActiveStateInactive {
+			continue
+		}
+		if ds.CDNID != *server.CDNID {
 			continue
 		}
 
-		if !*ds.Active && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
+		if ds.Active == tc.DSActiveStateInactive && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
 			continue
 		}
 
@@ -178,7 +181,7 @@ func MakeHostingDotConfig(
 
 		seenOrigins := map[string]struct{}{}
 		for _, ds := range filteredDSes {
-			if ds.OrgServerFQDN == nil || ds.XMLID == nil || ds.Active == nil {
+			if ds.OrgServerFQDN == nil || &ds.XMLID == nil || &ds.Active == nil {
 				warnings = append(warnings, "got DS with nil values, skipping!")
 				continue
 			}
@@ -199,7 +202,7 @@ func MakeHostingDotConfig(
 					if !topoHasServer {
 						continue
 					}
-					if !ds.Type.IsLive() {
+					if !tc.DSType(*ds.Type).IsLive() {
 						continue
 					}
 				}

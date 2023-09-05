@@ -33,7 +33,7 @@ import (
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
 	"github.com/apache/trafficcontrol/lib/go-log"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 type TOClient struct {
@@ -65,7 +65,7 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 	log.Infoln("TO URL string: '" + toURLStr + "'")
 	log.Infoln("TO URL: '" + url.String() + "'")
 
-	opts := toclient.ClientOpts{}
+	opts := toclient.Options{}
 	opts.Insecure = insecure
 	opts.UserAgent = userAgent
 	opts.RequestTimeout = timeout
