@@ -610,11 +610,7 @@ The following plugins have support for adding args with following parameter Conf
 	| cachekey.pparam        | cachekey.pparam     | ``-o``                       | ``@pparam=-o``                       |
 	+------------------------+---------------------+------------------------------+--------------------------------------+
 
-In order to support difficult configurations at MID/LAST, a
-:term:`Delivery Service` profile parameter is available with parameters
-``LastRawRemapPre`` and ``LastRawRemapPost``, config file ``remap.config``
-and Value the raw remap lines.  The Value in this parameter will be pre
-or post pended to the end of ``remap.config``.
+In order to support difficult configurations at MID/LAST, a :term:`Delivery Service` profile parameter is available with parameters ``LastRawRemapPre`` and ``LastRawRemapPost``, config file ``remap.config`` and Value the raw remap lines. The Value in this parameter will be pre or post pended to the end of ``remap.config``.
 
 To provide the most flexibility for managing :term:`Delivery Service` generated ``remap.config`` lines there are options for redefining the internal mustache template used to generate these ``remap.config`` lines.
 
@@ -626,7 +622,7 @@ To provide the most flexibility for managing :term:`Delivery Service` generated 
 .. table:: ``remap.config`` Template Tags
 
 	+------------------+-----------------------------------+-------------------------------+
-	| :ref:`tag-name`  | Value_                            | Associated plugin/directive   |
+	| Tag Name         | Value_                            | Associated plugin/directive   |
 	+==================+===================================+===============================+
 	| Source           | Target, or request "from" URL     |                               |
 	+------------------+-----------------------------------+-------------------------------+
