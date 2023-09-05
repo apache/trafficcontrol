@@ -244,7 +244,7 @@ Response Structure
 			"cachegroup": "TRAFFIC_OPS",
 			"cachegroupId": 2,
 			"id": 1,
-			"lastUpdated": 2023-05-25T15:59:33.7096-06:00
+			"lastUpdated": "2023-05-25T15:59:33.7096-06:00"
 		}
 	}
 
