@@ -20,7 +20,11 @@ package parameter
  */
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -258,4 +262,341 @@ func deleteQuery() string {
 	query := `DELETE FROM parameter
 WHERE id=:id`
 	return query
+}
+
+func GetParameters(w http.ResponseWriter, r *http.Request) {
+	var runSecond bool
+	var maxTime time.Time
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		ConfigFileQueryParam: {Column: "p.config_file"},
+		IDQueryParam:         {Column: "p.id", Checker: api.IsInt},
+		NameQueryParam:       {Column: "p.name"},
+		SecureQueryParam:     {Column: "p.secure", Checker: api.IsBool},
+		ValueQueryParam:      {Column: "p.value"},
+	}
+	if _, ok := inf.Params["orderby"]; !ok {
+		inf.Params["orderby"] = "name"
+	}
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	query := selectQuery() + where + ParametersGroupBy() + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("Parameter read: error getting Parameter(s): %w", err))
+		return
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	params := tc.ParameterNullableV5{}
+	paramsList := []tc.ParameterNullableV5{}
+	for rows.Next() {
+		if err = rows.Scan(&params.ConfigFile, &params.ID, &params.LastUpdated, &params.Name, &params.Value, &params.Secure, &params.Profiles); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting parameter(s): %w", err))
+			return
+		}
+		if params.Secure != nil && *params.Secure {
+			if inf.Version.Major >= 4 &&
+				inf.Config.RoleBasedPermissions &&
+				!inf.User.Can("PARAMETER-SECURE:READ") {
+				params.Value = &HiddenField
+			} else if inf.User.PrivLevel < auth.PrivLevelAdmin {
+				params.Value = &HiddenField
+			}
+		}
+
+		paramsList = append(paramsList, params)
+	}
+
+	api.WriteResp(w, r, paramsList)
+	return
+}
+
+func CreateParameter(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error reading request body"), nil)
+		return
+	}
+	defer r.Body.Close()
+
+	// Initial Unmarshal to validate request body
+	var data interface{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("invalid request format"), nil)
+		return
+	}
+
+	// This code block decides if the request body is a slice of parameters or a single object and unmarshal it.
+	var params []tc.ParameterV5
+	if err := json.Unmarshal(body, &params); err != nil {
+		var param tc.ParameterV5
+		if err := json.Unmarshal(body, &param); err != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("error unmarshalling single object"), nil)
+			return
+		}
+		params = append(params, param)
+	}
+	// Validate all objects of the every parameter from the request slice
+	for _, parameter := range params {
+		readValErr := validateRequestParameter(parameter)
+		if readValErr != nil {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+			return
+		}
+	}
+
+	// Create all parameters from the request slice
+	var objParams []tc.ParameterV5
+	var objParam tc.ParameterV5
+	for _, parameter := range params {
+		query := `
+			INSERT INTO parameter (
+			    name,
+			    config_file,
+			    value,
+			    secure
+			    ) VALUES (
+			        $1, $2, $3, $4
+			    ) RETURNING id, name, config_file, value, last_updated, secure 
+		`
+		err = tx.QueryRow(
+			query,
+			parameter.Name,
+			parameter.ConfigFile,
+			parameter.Value,
+			parameter.Secure,
+		).Scan(
+
+			&objParam.ID,
+			&objParam.Name,
+			&objParam.ConfigFile,
+			&objParam.Value,
+			&objParam.LastUpdated,
+			&objParam.Secure,
+		)
+
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in parameter  with name: %s", err, parameter.Name), nil)
+				return
+			}
+			usrErr, sysErr, code := api.ParseDBError(err)
+			api.HandleErr(w, r, tx, code, usrErr, sysErr)
+			return
+		}
+
+		objParams = append(objParams, objParam)
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "All Requested Parameters were created.")
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, objParam)
+	return
+}
+
+func UpdateParameter(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	parameter, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	requestedID := inf.Params["id"]
+	intRequestId := inf.IntParams["id"]
+
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, intRequestId, "parameter")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	//update name and description of a phys_location
+	query := `
+	UPDATE parameter p
+	SET
+		config_file = $1,
+		name = $2,
+		value = $3,
+		secure = $4
+	WHERE
+		p.id = $5
+	RETURNING
+		p.id,
+		p.last_updated
+`
+
+	err := tx.QueryRow(
+		query,
+		parameter.ConfigFile,
+		parameter.Name,
+		parameter.Value,
+		parameter.Secure,
+		requestedID,
+	).Scan(
+		&parameter.ID,
+		&parameter.LastUpdated,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("parameter with ID: %v not found", parameter.ID), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "parameter was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, parameter)
+	return
+}
+
+func DeleteParameter(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.Params["id"]
+	if id == "" {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("couldn't delete Parameter. Invalid ID. Id Cannot be empty for Delete Operation"), nil)
+		return
+	}
+	exists, err := dbhelpers.ParameterExists(tx, id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no Parameter exists by id: %s", id), nil)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM parameter AS p WHERE p.id=$1", id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error determining rows affected for delete parameter: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for parameter"), nil)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "parameter"+
+		" was deleted.")
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+// selectMaxLastUpdatedQuery used for TryIfModifiedSinceQuery()
+func selectMaxLastUpdatedQuery(where string) string {
+	return `
+SELECT max(t) from (
+	SELECT max(p.last_updated) as t FROM parameter p
+	LEFT JOIN profile_parameter pp ON p.id = pp.parameter
+	LEFT JOIN profile pr ON pp.profile = pr.id ` + where +
+		` UNION ALL
+	select max(last_updated) as t from last_deleted l where l.table_name='parameter'
+) as res`
+}
+
+func readAndValidateJsonStruct(r *http.Request) (tc.ParameterV5, error) {
+	var parameter tc.ParameterV5
+	if err := json.NewDecoder(r.Body).Decode(&parameter); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into ParameterV5 struct %w", err)
+		return parameter, userErr
+	}
+
+	// validate JSON body
+	errs := make(map[string]error)
+
+	errs[NameQueryParam] = validation.Validate(parameter.Name, validation.Required)
+	errs[ConfigFileQueryParam] = validation.Validate(parameter.ConfigFile, validation.Required)
+
+	if parameter.ConfigFile == atscfg.ParentConfigFileName && parameter.Name == atscfg.ParentConfigCacheParamWeight {
+		key := atscfg.ParentConfigFileName + " " + atscfg.ParentConfigCacheParamWeight
+		errs[key] = validation.Validate(parameter.Value, tovalidate.StringIsValidFloat())
+	}
+
+	if len(errs) > 0 {
+		var errorSlice []error
+		for _, err := range errs {
+			errorSlice = append(errorSlice, err)
+		}
+		userErr := util.JoinErrs(errorSlice)
+		return parameter, userErr
+	}
+	return parameter, nil
+}
+
+// Unlike usual readAndValidateJsonStruct function, this function does not decode the JSON data
+// but only validate the JSON objects
+func validateRequestParameter(parameter tc.ParameterV5) error {
+	errs := make(map[string]error)
+
+	errs[NameQueryParam] = validation.Validate(parameter.Name, validation.Required)
+	errs[ConfigFileQueryParam] = validation.Validate(parameter.ConfigFile, validation.Required)
+
+	if parameter.ConfigFile == atscfg.ParentConfigFileName && parameter.Name == atscfg.ParentConfigCacheParamWeight {
+		key := atscfg.ParentConfigFileName + " " + atscfg.ParentConfigCacheParamWeight
+		errs[key] = validation.Validate(parameter.Value, tovalidate.StringIsValidFloat())
+	}
+
+	if len(errs) > 0 {
+		var errorSlice []error
+		for _, err := range errs {
+			errorSlice = append(errorSlice, err)
+		}
+		userErr := util.JoinErrs(errorSlice)
+		return userErr
+	}
+	return nil
 }

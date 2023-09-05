@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -159,7 +160,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/cdns?name=%s", inf.Version.Major, inf.Version.Minor, cdn.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/cdns?name=%s", inf.Version, cdn.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cdn)
 	return
 }

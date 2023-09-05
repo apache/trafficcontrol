@@ -55,6 +55,7 @@ Each object in the returned array\ [#uniqueness]_ will contain the following fie
 
 :configUpdateTime:     The last time an update was requested for this server. This field defaults to standard epoch
 :configApplyTime:      The last time an update was applied for this server. This field defaults to standard epoch
+:configUpdateFailed:   The status of the last time an update was applied by this server. Defaults to ``false``
 :host_id:              The integral, unique identifier for the server for which the other fields in this object represent the pending updates and revalidation status
 :host_name:            The (short) hostname of the server for which the other fields in this object represent the pending updates and revalidation status
 :parent_pending:       A boolean telling whether or not any :term:`Topology` ancestor or :term:`parent` of this server has pending updates
@@ -62,6 +63,7 @@ Each object in the returned array\ [#uniqueness]_ will contain the following fie
 :reval_pending:        ``true`` if the server has pending :term:`Content Invalidation Jobs`, ``false`` otherwise
 :revalUpdateTime:      The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:       The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
+:revalUpdateFailed:    The status of the last time a content invalidation/revalidation request was applied by this server. Defaults to ``false``
 :status:               The name of the status of this server
 
 	.. seealso:: :ref:`health-proto` gives more information on how these statuses are used, and the ``GET`` method of the :ref:`to-api-statuses` endpoint can be used to retrieve information about all server statuses configured in Traffic Ops.

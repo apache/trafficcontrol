@@ -133,11 +133,10 @@ func validateServerUpdatesAreQueued(topologyDS string) utils.CkReqFunc {
 		for _, server := range serversResponse.Response {
 			assert.RequireNotNil(t, server.CDNID, "Expected Server CDNID to not be nil.")
 			assert.RequireNotNil(t, server.HostName, "Expected Server HostName to not be nil.")
-			assert.RequireNotNil(t, server.UpdPending, "Expected Server UpdPending to not be nil.")
-			if *server.CDNID != int(topQueueUpdateResp.CDNID) {
+			if server.CDNID != int(topQueueUpdateResp.CDNID) {
 				continue
 			}
-			assert.Equal(t, true, *server.UpdPending, "Expected Server %s Update Pending flag to be set to true.", *server.HostName)
+			assert.Equal(t, true, server.UpdatePending(), "Expected Server %s to have pending updates.", server.HostName)
 		}
 	}
 }

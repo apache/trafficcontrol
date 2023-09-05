@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -370,7 +371,7 @@ func CreatePhysLocation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "physLocation was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/phys_locations?name=%s", inf.Version.Major, inf.Version.Minor, physLocation.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/phys_locations?name=%s", inf.Version, physLocation.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, physLocation)
 	return
 }
@@ -388,22 +389,6 @@ func UpdatePhysLocation(w http.ResponseWriter, r *http.Request) {
 	if readValErr != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
 		return
-	}
-
-	// checks to see if the supplied region name and ID in the phys_location body correspond to each other.
-	if physLocation.RegionName != "" {
-		regionName, ok, err := dbhelpers.GetRegionNameFromID(tx, physLocation.RegionID)
-		if err != nil {
-			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error fetching name from region ID: %w", err), nil)
-			return
-		} else if !ok {
-			api.HandleErr(w, r, tx, http.StatusNotFound, errors.New("no such region"), nil)
-			return
-		}
-		if regionName != physLocation.RegionName {
-			api.HandleErr(w, r, tx, http.StatusBadRequest, errors.New("region name and ID do not match"), nil)
-			return
-		}
 	}
 
 	requestedID := inf.Params["id"]

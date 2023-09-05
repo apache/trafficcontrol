@@ -131,7 +131,7 @@ jq " .capabilities.chromeOptions.args = [
     \"--no-sandbox\",
     \"--disable-gpu\",
     \"--ignore-certificate-errors\"
-  ] | .params.apiUrl = \"${to_fqdn}/api/4.0\" | .params.baseUrl =\"${tp_fqdn}\"
+  ] | .params.apiUrl = \"${to_fqdn}/api/5.0\" | .params.baseUrl =\"${tp_fqdn}\"
   | .capabilities[\"goog:chromeOptions\"].w3c = false | .capabilities.chromeOptions.w3c = false" \
   config.json > config.json.tmp && mv config.json.tmp config.json
 
@@ -139,10 +139,10 @@ npm run build
 
 # Wait for tp/to build
 timeout 5m bash <<TMOUT
-  while ! curl -Lvsk "${tp_fqdn}/api/4.0/ping" >/dev/null 2>&1; do
+  while ! curl -Lvsk "${tp_fqdn}/api/5.0/ping" >/dev/null 2>&1; do
     echo "waiting for TP/TO server to start on '${tp_fqdn}'"
     sleep 10
   done
 TMOUT
 
-npm test -- --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/4.0"
+npm test -- --params.baseUrl="${tp_fqdn}" --params.apiUrl="${to_fqdn}/api/5.0"

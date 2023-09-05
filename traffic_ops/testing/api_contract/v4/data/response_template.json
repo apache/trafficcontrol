@@ -2214,5 +2214,43 @@
                 "type": "string"
             }
         }
+    },
+    "system_info": {
+        "type": "object",
+        "required": [
+            "parameters"
+        ],
+        "properties": {
+            "parameters": {
+                "type": "object",
+                "required": [
+                    "tm.instance_name",
+                    "tm.toolname"
+                ],
+                "properties": {
+                    "default_geo_miss_latitude": {
+                        "type": "string"
+                    },
+                    "default_geo_miss_longitude": {
+                        "type": "string"
+                    },
+                    "tm.infourl": {
+                        "type": "string"
+                    },
+                    "tm.instance_name": {
+                        "type": "string"
+                    },
+                    "tm.toolname": {
+                        "type": "string"
+                    },
+                    "tm.url": {
+                        "type": "string"
+                    },
+                    "use_reval_pending": {
+                        "type": "string"
+                    }
+                }
+            }
+        }
     }
 }

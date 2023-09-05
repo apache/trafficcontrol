@@ -64,7 +64,7 @@ export class ServersPage extends BasePage {
   private txtHostName = element(by.xpath("//ol[@class='breadcrumb pull-left']//li[@class='active ng-binding']"))
   private txtDomainName = element(by.name('domainName'));
   private txtProfile = element(by.name('activeProfile-0'));
-  private txtPhysLocation = element(by.name('physLocation'));
+  private txtPhysLocation = element(by.name('physicalLocation'));
   private lblInputError = element(by.className("input-error"));
 
   private txtHostname = element(by.name('hostName'));

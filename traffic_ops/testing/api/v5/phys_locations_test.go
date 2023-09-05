@@ -148,6 +148,23 @@ func TestPhysLocations(t *testing.T) {
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validatePhysicalLocationUpdateCreateFields("HotAtlanta", map[string]interface{}{"City": "NewCity"})),
 				},
+				"OK when REGION ID doesn't match REGION NAME": {
+					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
+					ClientSession: TOSession,
+					RequestBody: tc.PhysLocationV5{
+						Address:    "1234 southern way",
+						City:       "NewCity",
+						Name:       "HotAtlanta",
+						Phone:      "404-222-2222",
+						RegionID:   GetRegionID(t, "region1")(),
+						RegionName: "notRegion1",
+						ShortName:  "atlanta",
+						State:      "GA",
+						Zip:        "30301",
+					},
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
+						validatePhysicalLocationUpdateCreateFields("HotAtlanta", map[string]interface{}{"City": "NewCity"})),
+				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					EndpointID:    GetPhysicalLocationID(t, "HotAtlanta"),
 					ClientSession: TOSession,

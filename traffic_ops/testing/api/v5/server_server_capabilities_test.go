@@ -38,7 +38,7 @@ func TestServerServerCapabilities(t *testing.T) {
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerServerCapability]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerServerCapabilityV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -102,7 +102,7 @@ func TestServerServerCapabilities(t *testing.T) {
 			"POST": {
 				"BAD REQUEST when ALREADY EXISTS": {
 					ClientSession: TOSession,
-					RequestBody: tc.ServerServerCapability{
+					RequestBody: tc.ServerServerCapabilityV5{
 						ServerID:         util.Ptr(GetServerID(t, "dtrc-mid-01")()),
 						ServerCapability: util.Ptr("disk"),
 					},
@@ -110,21 +110,21 @@ func TestServerServerCapabilities(t *testing.T) {
 				},
 				"BAD REQUEST when MISSING SERVER ID": {
 					ClientSession: TOSession,
-					RequestBody: tc.ServerServerCapability{
+					RequestBody: tc.ServerServerCapabilityV5{
 						Server: util.Ptr("disk"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"BAD REQUEST when MISSING SERVER CAPABILITY": {
 					ClientSession: TOSession,
-					RequestBody: tc.ServerServerCapability{
+					RequestBody: tc.ServerServerCapabilityV5{
 						ServerID: util.Ptr(GetServerID(t, "dtrc-mid-01")()),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusBadRequest)),
 				},
 				"NOT FOUND when SERVER CAPABILITY DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: tc.ServerServerCapability{
+					RequestBody: tc.ServerServerCapabilityV5{
 						ServerID:         util.Ptr(GetServerID(t, "dtrc-mid-01")()),
 						ServerCapability: util.Ptr("bogus"),
 					},
@@ -132,7 +132,7 @@ func TestServerServerCapabilities(t *testing.T) {
 				},
 				"NOT FOUND when SERVER DOESNT EXIST": {
 					ClientSession: TOSession,
-					RequestBody: tc.ServerServerCapability{
+					RequestBody: tc.ServerServerCapabilityV5{
 						ServerID:         util.Ptr(99999999),
 						ServerCapability: util.Ptr("bogus"),
 					},
@@ -140,7 +140,7 @@ func TestServerServerCapabilities(t *testing.T) {
 				},
 				"BAD REQUEST when SERVER TYPE NOT EDGE or MID": {
 					ClientSession: TOSession,
-					RequestBody: tc.ServerServerCapability{
+					RequestBody: tc.ServerServerCapabilityV5{
 						ServerID:         util.Ptr(GetServerID(t, "trafficvault")()),
 						ServerCapability: util.Ptr("bogus"),
 					},
@@ -225,7 +225,7 @@ func TestServerServerCapabilities(t *testing.T) {
 func validateServerServerCapabilitiesFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Server Server Capabilities response to not be nil.")
-		serverServerCapabilityResponse := resp.([]tc.ServerServerCapability)
+		serverServerCapabilityResponse := resp.([]tc.ServerServerCapabilityV5)
 		for field, expected := range expectedResp {
 			for _, serverServerCapability := range serverServerCapabilityResponse {
 				switch field {
@@ -261,7 +261,7 @@ func validateServerServerCapabilitiesSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected Server Server Capabilities response to not be nil.")
 		var serverNames []string
-		serverServerCapabilityResponse := resp.([]tc.ServerServerCapability)
+		serverServerCapabilityResponse := resp.([]tc.ServerServerCapabilityV5)
 		for _, serverServerCapability := range serverServerCapabilityResponse {
 			assert.RequireNotNil(t, serverServerCapability.Server, "Expected Server to not be nil.")
 			serverNames = append(serverNames, *serverServerCapability.Server)
@@ -272,7 +272,7 @@ func validateServerServerCapabilitiesSort() utils.CkReqFunc {
 
 func validateServerServerCapabilitiesPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.ServerServerCapability)
+		paginationResp := resp.([]tc.ServerServerCapabilityV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "serverId")

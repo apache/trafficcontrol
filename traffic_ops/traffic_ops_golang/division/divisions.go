@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -245,7 +246,7 @@ func CreateDivision(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "division was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/divisons?name=%s", inf.Version.Major, inf.Version.Minor, div.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/divisons?name=%s", inf.Version, div.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, div)
 	return
 }

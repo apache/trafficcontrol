@@ -31,68 +31,64 @@ const (
 	apiServers = "/servers"
 )
 
-func needAndCanFetch(id *int, name *string) bool {
-	return (id == nil || *id == 0) && name != nil && *name != ""
-}
-
 // CreateServer creates the given Server.
-func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateServer(server tc.ServerV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	var remoteAddr net.Addr
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss, RemoteAddr: remoteAddr}
 
-	if needAndCanFetch(server.CachegroupID, server.Cachegroup) {
+	if server.CacheGroupID <= 0 && server.CacheGroup != "" {
 		innerOpts := NewRequestOptions()
-		innerOpts.QueryParameters.Set("name", *server.Cachegroup)
+		innerOpts.QueryParameters.Set("name", server.CacheGroup)
 		cg, reqInf, err := to.GetCacheGroups(innerOpts)
 		if err != nil {
-			return cg.Alerts, reqInf, fmt.Errorf("no cachegroup named %s: %w", *server.Cachegroup, err)
+			return cg.Alerts, reqInf, fmt.Errorf("no Cache Group named %s: %w", server.CacheGroup, err)
 		}
 		if len(cg.Response) == 0 {
-			return cg.Alerts, reqInf, fmt.Errorf("no cachegroup named %s", *server.Cachegroup)
+			return cg.Alerts, reqInf, fmt.Errorf("no Cache Group named %s", server.CacheGroup)
 		}
 		if cg.Response[0].ID == nil {
-			return cg.Alerts, reqInf, fmt.Errorf("Cachegroup named %s has a nil ID", *server.Cachegroup)
+			return cg.Alerts, reqInf, fmt.Errorf("Cache Group named %s has a nil ID", server.CacheGroup)
 		}
-		server.CachegroupID = cg.Response[0].ID
+		server.CacheGroupID = *cg.Response[0].ID
 	}
-	if needAndCanFetch(server.CDNID, server.CDNName) {
+	if server.CDNID <= 0 && server.CDN != "" {
 		innerOpts := NewRequestOptions()
-		innerOpts.QueryParameters.Set("name", *server.CDNName)
+		innerOpts.QueryParameters.Set("name", server.CDN)
 		c, reqInf, err := to.GetCDNs(innerOpts)
 		if err != nil {
-			return c.Alerts, reqInf, fmt.Errorf("no CDN named %s: %w", *server.CDNName, err)
+			return c.Alerts, reqInf, fmt.Errorf("no CDN named %s: %w", server.CDN, err)
 		}
 		if len(c.Response) == 0 {
-			return c.Alerts, reqInf, fmt.Errorf("no CDN named %s", *server.CDNName)
+			return c.Alerts, reqInf, fmt.Errorf("no CDN named %s", server.CDN)
 		}
-		server.CDNID = &c.Response[0].ID
+		server.CDNID = c.Response[0].ID
 	}
-	if needAndCanFetch(server.PhysLocationID, server.PhysLocation) {
+	if server.PhysicalLocationID <= 0 && server.PhysicalLocation != "" {
 		innerOpts := NewRequestOptions()
-		innerOpts.QueryParameters.Set("name", *server.PhysLocation)
+		innerOpts.QueryParameters.Set("name", server.PhysicalLocation)
 		ph, reqInf, err := to.GetPhysLocations(innerOpts)
 		if err != nil {
-			return ph.Alerts, reqInf, fmt.Errorf("no physlocation named %s: %w", *server.PhysLocation, err)
+			return ph.Alerts, reqInf, fmt.Errorf("no Physical Location named %s: %w", server.PhysicalLocation, err)
 		}
 		if len(ph.Response) == 0 {
-			return ph.Alerts, reqInf, fmt.Errorf("no physlocation named %s", *server.PhysLocation)
+			return ph.Alerts, reqInf, fmt.Errorf("no Physical Location named %s", server.PhysicalLocation)
 		}
-		server.PhysLocationID = &ph.Response[0].ID
+		server.PhysicalLocationID = ph.Response[0].ID
 	}
-	if needAndCanFetch(server.StatusID, server.Status) {
+	if server.StatusID <= 0 && server.Status != "" {
 		innerOpts := NewRequestOptions()
-		innerOpts.QueryParameters.Set("name", *server.Status)
+		innerOpts.QueryParameters.Set("name", server.Status)
 		st, reqInf, err := to.GetStatuses(innerOpts)
 		if err != nil {
-			return st.Alerts, reqInf, fmt.Errorf("no Status named %s: %w", *server.Status, err)
+			return st.Alerts, reqInf, fmt.Errorf("no Status named %s: %w", server.Status, err)
 		}
 		if len(st.Response) == 0 {
-			return alerts, reqInf, fmt.Errorf("no Status named %s", *server.Status)
+			return alerts, reqInf, fmt.Errorf("no Status named %s", server.Status)
 		}
-		server.StatusID = &st.Response[0].ID
+		server.StatusID = st.Response[0].ID
 	}
-	if (server.TypeID == nil || *server.TypeID == 0) && server.Type != "" {
+	if server.TypeID <= 0 && server.Type != "" {
 		innerOpts := NewRequestOptions()
 		innerOpts.QueryParameters.Set("name", server.Type)
 		ty, _, err := to.GetTypes(innerOpts)
@@ -100,9 +96,9 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 			return ty.Alerts, reqInf, fmt.Errorf("no Type named '%s': %w", server.Type, err)
 		}
 		if len(ty.Response) == 0 {
-			return ty.Alerts, reqInf, fmt.Errorf("no type named %s", server.Type)
+			return ty.Alerts, reqInf, fmt.Errorf("no Type named %s", server.Type)
 		}
-		server.TypeID = &ty.Response[0].ID
+		server.TypeID = ty.Response[0].ID
 	}
 
 	reqInf, err := to.post(apiServers, opts, server, &alerts)
@@ -110,7 +106,7 @@ func (to *Session) CreateServer(server tc.ServerV4, opts RequestOptions) (tc.Ale
 }
 
 // UpdateServer replaces the Server identified by ID with the provided one.
-func (to *Session) UpdateServer(id int, server tc.ServerV4, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) UpdateServer(id int, server tc.ServerV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	route := fmt.Sprintf("%s/%d", apiServers, id)
 	reqInf, err := to.put(route, opts, server, &alerts)
@@ -118,8 +114,8 @@ func (to *Session) UpdateServer(id int, server tc.ServerV4, opts RequestOptions)
 }
 
 // GetServers retrieves Servers from Traffic Ops.
-func (to *Session) GetServers(opts RequestOptions) (tc.ServersV4Response, toclientlib.ReqInf, error) {
-	var data tc.ServersV4Response
+func (to *Session) GetServers(opts RequestOptions) (tc.ServersV5Response, toclientlib.ReqInf, error) {
+	var data tc.ServersV5Response
 	reqInf, err := to.get(apiServers, opts, &data)
 	return data, reqInf, err
 }
@@ -162,9 +158,9 @@ func (to *Session) GetServerIDDeliveryServices(server int, opts RequestOptions) 
 
 // GetServerUpdateStatus retrieves the Server Update Status of the Server with
 // the given (short) hostname.
-func (to *Session) GetServerUpdateStatus(hostName string, opts RequestOptions) (tc.ServerUpdateStatusResponseV4, toclientlib.ReqInf, error) {
+func (to *Session) GetServerUpdateStatus(hostName string, opts RequestOptions) (tc.ServerUpdateStatusResponseV5, toclientlib.ReqInf, error) {
 	path := apiServers + `/` + url.PathEscape(hostName) + `/update_status`
-	var data tc.ServerUpdateStatusResponseV4
+	var data tc.ServerUpdateStatusResponseV5
 	reqInf, err := to.get(path, opts, &data)
 	return data, reqInf, err
 }

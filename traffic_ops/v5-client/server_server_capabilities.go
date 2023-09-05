@@ -32,7 +32,7 @@ const apiServerServerCapabilities = "/server_server_capabilities"
 const apiMultipleServersCapabilities = "/multiple_servers_capabilities"
 
 // CreateServerServerCapability assigns a Server Capability to a Server.
-func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapability, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) CreateServerServerCapability(ssc tc.ServerServerCapabilityV5, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	var alerts tc.Alerts
 	reqInf, err := to.post(apiServerServerCapabilities, opts, ssc, &alerts)
 	return alerts, reqInf, err
@@ -52,8 +52,8 @@ func (to *Session) DeleteServerServerCapability(serverID int, serverCapability s
 
 // GetServerServerCapabilities retrieves a list of Server Capabilities that are
 // assigned to Servers.
-func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerServerCapabilitiesResponse, toclientlib.ReqInf, error) {
-	var resp tc.ServerServerCapabilitiesResponse
+func (to *Session) GetServerServerCapabilities(opts RequestOptions) (tc.ServerServerCapabilitiesResponseV5, toclientlib.ReqInf, error) {
+	var resp tc.ServerServerCapabilitiesResponseV5
 	reqInf, err := to.get(apiServerServerCapabilities, opts, &resp)
 	return resp, reqInf, err
 }

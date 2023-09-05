@@ -144,7 +144,7 @@ export class CacheGroupPage extends BasePage {
         await this.txtConfirmCacheGroupName.sendKeys(name);
         if (await basePage.ClickDeletePermanently() == true) {
             result = await basePage.GetOutputMessage().then(function (value) {
-                if (outputMessage == value) {
+                if (value.indexOf(outputMessage) > -1) {
                     return true
                 } else {
                     return false;

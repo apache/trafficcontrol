@@ -21,15 +21,15 @@ package origin
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
-
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -37,6 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/go-ozzo/ozzo-validation/is"
@@ -486,4 +487,293 @@ func deleteQuery() string {
 	query := `DELETE FROM origin
 WHERE id=:id`
 	return query
+}
+
+// Get is the handler for GET requests to Origins of APIv5.
+func Get(w http.ResponseWriter, r *http.Request) {
+
+	var useIMS bool
+
+	inf, sysErr, userErr, errCode := api.NewInfo(r, nil, nil)
+	if sysErr != nil || userErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	origins, userErr, sysErr, errCode, _ := getOrigins(w.Header(), inf.Params, inf.Tx, inf.User, useIMS)
+
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	returnable := make([]tc.OriginV5, len(origins))
+	for i, origin := range origins {
+		returnable[i] = origin.ToOriginV5()
+	}
+
+	api.WriteResp(w, r, returnable)
+	return
+}
+
+// Create Origin with the passed data for APIv5.
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, sysError, userError, errorCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if sysError != nil || userError != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errorCode, userError, sysError)
+		return
+	}
+	defer inf.Close()
+
+	org, errorCode, readValErr := readAndValidateJsonStruct(r, tx)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx.Tx, errorCode, readValErr, nil)
+		return
+	}
+
+	userErr, sysErr, errCode := checkTenancy(&org.TenantID, &org.DeliveryServiceID, tx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(inf.Tx.Tx, org.DeliveryServiceID)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database error: unable to retrieve delivery service name and cdn: %w", err))
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	resultRows, err := tx.NamedQuery(insertQuery(), org)
+	if err != nil {
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx.Tx, code, usrErr, sysErr)
+		return
+	}
+	defer resultRows.Close()
+
+	rowsAffected := 0
+	for resultRows.Next() {
+		rowsAffected++
+		if err := resultRows.Scan(&org.ID, &org.LastUpdated); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: scanning: %w", err), nil)
+			return
+		}
+	}
+
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: no rows inserted"), nil)
+		return
+	} else if rowsAffected > 1 {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, fmt.Errorf("origin create: multiple rows returned"), nil)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was created.")
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/origins?id=%d", inf.Version, org.ID))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, org)
+}
+
+// Update a Origin for APIv5.
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, sysError, userError, errorCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx
+	if sysError != nil || userError != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errorCode, userError, sysError)
+		return
+	}
+	defer inf.Close()
+
+	requestedOriginId := inf.IntParams["id"]
+
+	origin, errorCode, readValErr := readAndValidateJsonStruct(r, tx)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx.Tx, errorCode, readValErr, nil)
+		return
+	}
+
+	userErr, sysErr, errCode := checkTenancy(&origin.TenantID, &origin.DeliveryServiceID, tx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	isPrimary := false
+	ds := 0
+	var existingLastUpdated time.Time
+
+	q := `SELECT is_primary, deliveryservice, last_updated FROM origin WHERE id = $1`
+	errLookup := tx.QueryRow(q, requestedOriginId).Scan(&isPrimary, &ds, &existingLastUpdated)
+	if errLookup != nil {
+		if errors.Is(errLookup, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("no origin exists by id: %d", requestedOriginId), nil)
+			return
+		}
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("database error: %w, when checking if origin with id %d exists", errLookup, requestedOriginId))
+		return
+	}
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedOriginId, "origin")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	if isPrimary && origin.DeliveryServiceID != ds {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, fmt.Errorf("cannot update the delivery service of a primary origin"), nil)
+		return
+	}
+
+	_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(tx.Tx, origin.DeliveryServiceID)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, err, nil)
+		return
+	}
+	userErr, sysErr, errCode = dbhelpers.CheckIfCurrentUserCanModifyCDN(tx.Tx, string(cdnName), inf.User.UserName)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+
+	query := `UPDATE origin SET
+					cachegroup=$1,
+					coordinate=$2,
+					deliveryservice=$3,
+					fqdn=$4,
+					ip6_address=$5,
+					ip_address=$6,
+					name=$7,
+					port=$8,
+					profile=$9,
+					protocol=$10,
+					tenant=$11
+					WHERE id=$12 RETURNING id,last_updated`
+	errUpdate := tx.QueryRow(query, origin.CachegroupID, origin.CoordinateID, origin.DeliveryServiceID,
+		origin.FQDN, origin.IP6Address, origin.IPAddress, origin.Name,
+		origin.Port, origin.ProfileID, origin.Protocol, origin.TenantID, requestedOriginId).Scan(&origin.ID, &origin.LastUpdated)
+	if errUpdate != nil {
+		if errors.Is(errUpdate, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx.Tx, http.StatusNotFound, fmt.Errorf("origin: %d not found", requestedOriginId), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(errUpdate)
+		api.HandleErr(w, r, tx.Tx, code, usrErr, sysErr)
+		return
+	}
+
+	origin.ID = requestedOriginId
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was updated.")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, origin)
+	return
+}
+
+// Delete an Origin for APIv5.
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+
+	var origin tc.OriginV5
+	if err := tx.QueryRow(`SELECT is_primary, deliveryservice, tenant FROM origin WHERE id = $1`, id).Scan(&origin.IsPrimary, &origin.DeliveryServiceID, &origin.TenantID); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no origin exists by id: %d", id), nil)
+			return
+		}
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("origin delete: is_primary scanning: %w", err), nil)
+		return
+	}
+
+	if origin.IsPrimary {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("cannot delete a primary origin"), nil)
+		return
+	}
+
+	if &origin.DeliveryServiceID != nil {
+		_, cdnName, _, err := dbhelpers.GetDSNameAndCDNFromID(tx, origin.DeliveryServiceID)
+		if err != nil {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, err, nil)
+			return
+		}
+
+		userErr, sysErr, errCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, string(cdnName), inf.User.UserName)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+			return
+		}
+	}
+
+	userErr, sysErr, errCode = checkTenancy(&origin.TenantID, &origin.DeliveryServiceID, inf.Tx, inf.User)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	res, err := tx.Exec("DELETE FROM origin WHERE id=$1", id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("origin delete: getting rows affected: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for origin"), nil)
+		return
+	}
+	if rowsAffected != 1 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("origin delete: multiple rows affected"), nil)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was deleted.")
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+// readAndValidateJsonStruct reads json body and validates json fields.
+func readAndValidateJsonStruct(r *http.Request, tx *sqlx.Tx) (tc.OriginV5, int, error) {
+	var origin tc.OriginV5
+	if err := json.NewDecoder(r.Body).Decode(&origin); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into OriginV5 struct %w", err)
+		return origin, http.StatusBadRequest, userErr
+	}
+
+	noSpaces := validation.NewStringRule(tovalidate.NoSpaces, "cannot contain spaces")
+	validProtocol := validation.NewStringRule(tovalidate.IsOneOfStringICase("http", "https"), "must be http or https")
+	portErr := "must be a valid integer between 1 and 65535"
+
+	// validate JSON body
+	errs := tovalidate.ToErrors(validation.Errors{
+		"cachegroupId":      validation.Validate(origin.CachegroupID, validation.Min(1)),
+		"coordinateId":      validation.Validate(origin.CoordinateID, validation.Min(1)),
+		"deliveryServiceId": validation.Validate(origin.DeliveryServiceID, validation.Required),
+		"fqdn":              validation.Validate(origin.FQDN, validation.Required, is.DNSName),
+		"ip6Address":        validation.Validate(origin.IP6Address, validation.NilOrNotEmpty, is.IPv6),
+		"ipAddress":         validation.Validate(origin.IPAddress, validation.NilOrNotEmpty, is.IPv4),
+		"name":              validation.Validate(origin.Name, validation.Required, noSpaces),
+		"port":              validation.Validate(origin.Port, validation.NilOrNotEmpty.Error(portErr), validation.Min(1).Error(portErr), validation.Max(65535).Error(portErr)),
+		"profileId":         validation.Validate(origin.ProfileID, validation.Min(1)),
+		"protocol":          validation.Validate(origin.Protocol, validation.Required, validProtocol),
+		"tenantId":          validation.Validate(origin.TenantID, validation.Required, validation.Min(1)),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return origin, http.StatusBadRequest, userErr
+	}
+
+	return origin, http.StatusBadRequest, nil
 }

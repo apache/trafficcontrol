@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -1007,7 +1008,6 @@ func GetCacheGroup(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]interface{}, time.Time, int, error, error) {
-	//func getCacheGroup(tx *sqlx.Tx, params map[string]string, useIMS bool, header http.Header) ([]tc.CacheGroupV5, time.Time, int, error, error) {
 	var runSecond bool
 	var maxTime time.Time
 	cgList := []interface{}{}
@@ -1153,6 +1153,12 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = dgCg.ValidateTypeInTopology()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("update cachegroup: validating type in topology: "+err.Error()), err)
+		return
+	}
+
 	checkLastUpdated := `UPDATE cachegroup SET coordinate=$1 WHERE id=$2 RETURNING last_updated`
 
 	err = tx.QueryRow(
@@ -1185,7 +1191,7 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/cachegroups?name=%s", inf.Version.Major, inf.Version.Minor, *cg.Name))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/cachegroups?name=%s", inf.Version, *cg.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cg)
 	return
 }
@@ -1432,8 +1438,16 @@ func readAndValidateJsonStruct(r *http.Request) (tc.CacheGroupNullableV5, error)
 
 	// validate JSON body
 	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	latitudeErr := "Must be a floating point number within the range +-90"
+	longitudeErr := "Must be a floating point number within the range +-180"
 	errs := tovalidate.ToErrors(validation.Errors{
-		"name": validation.Validate(cg.Name, validation.Required, rule),
+		"name":                        validation.Validate(cg.Name, validation.Required, rule),
+		"shortName":                   validation.Validate(cg.ShortName, validation.Required, rule),
+		"latitude":                    validation.Validate(cg.Latitude, validation.Min(-90.0).Error(latitudeErr), validation.Max(90.0).Error(latitudeErr)),
+		"longitude":                   validation.Validate(cg.Longitude, validation.Min(-180.0).Error(longitudeErr), validation.Max(180.0).Error(longitudeErr)),
+		"parentCacheGroupID":          validation.Validate(cg.ParentCachegroupID, validation.Min(1)),
+		"secondaryParentCachegroupID": validation.Validate(cg.SecondaryParentCachegroupID, validation.Min(1)),
+		"localizationMethods":         validation.Validate(cg.LocalizationMethods, validation.By(tovalidate.IsPtrToSliceOfUniqueStringersICase("CZ", "DEEP_CZ", "GEO"))),
 	})
 	if len(errs) > 0 {
 		userErr := util.JoinErrs(errs)

@@ -99,7 +99,7 @@ class DeliveryServiceService {
 	 * @returns {Promise<DeliveryService[]>} The response property of the response.
 	 */
 	async getDeliveryServices(params) {
-		const result = await this.$http.get(`${this.ENV.api.next}deliveryservices`, { params });
+		const result = await this.$http.get(`${this.ENV.api.unstable}deliveryservices`, { params });
 		return result.data.response;
 	}
 
@@ -110,7 +110,7 @@ class DeliveryServiceService {
 	 * @returns {Promise<DeliveryService>} The requested Delivery Service.
 	 */
 	async getDeliveryService(id) {
-		const result = await this.$http.get(`${this.ENV.api.next}deliveryservices`, { params: { id } });
+		const result = await this.$http.get(`${this.ENV.api.unstable}deliveryservices`, { params: { id } });
 		return result.data.response[0];
 	}
 
@@ -124,7 +124,7 @@ class DeliveryServiceService {
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(i => i);
 
-		const response = await this.$http.post(`${this.ENV.api.next}deliveryservices`, ds);
+		const response = await this.$http.post(`${this.ENV.api.unstable}deliveryservices`, ds);
 		return response.data;
 	}
 
@@ -138,7 +138,7 @@ class DeliveryServiceService {
 		// strip out any falsy values or duplicates from consistentHashQueryParams
 		ds.consistentHashQueryParams = Array.from(new Set(ds.consistentHashQueryParams)).filter(i => i);
 
-		const response = await this.$http.put(`${this.ENV.api.next}deliveryservices/${ds.id}`, ds);
+		const response = await this.$http.put(`${this.ENV.api.unstable}deliveryservices/${ds.id}`, ds);
 		return response.data;
 	}
 
@@ -149,7 +149,7 @@ class DeliveryServiceService {
 	 * @returns {Promise<{alerts: {level: string; text: string}[]}>} The full API response
 	 */
 	async deleteDeliveryService(ds) {
-		const response = await this.$http.delete(`${this.ENV.api.next}deliveryservices/${ds.id}`);
+		const response = await this.$http.delete(`${this.ENV.api.unstable}deliveryservices/${ds.id}`);
 		return response.data;
 	}
 
@@ -219,7 +219,7 @@ class DeliveryServiceService {
 	 * @returns {Promise<DeliveryService[]>} The Delivery Services for which the identified server is responsible for serving content.
 	 */
 	async getServerDeliveryServices(serverID) {
-		const result = await this.$http.get(`${this.ENV.api.next}servers/${serverID}/deliveryservices`);
+		const result = await this.$http.get(`${this.ENV.api.unstable}servers/${serverID}/deliveryservices`);
 		return result.data.response;
 	}
 

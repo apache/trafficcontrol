@@ -86,17 +86,11 @@ func assignBackends(subroutines map[string][]string, svc *atscfg.ParentAbstracti
 
 	lines = append(lines, "}")
 
-	if _, ok := subroutines["vcl_recv"]; !ok {
-		subroutines["vcl_recv"] = make([]string, 0)
-	}
 	subroutines["vcl_recv"] = append(subroutines["vcl_recv"], lines...)
 	if len(hostHeaderLines) == 0 {
 		return
 	}
 
-	if _, ok := subroutines["vcl_backend_fetch"]; !ok {
-		subroutines["vcl_backend_fetch"] = make([]string, 0)
-	}
 	subroutines["vcl_backend_fetch"] = append(subroutines["vcl_backend_fetch"], hostHeaderLines...)
 }
 
@@ -138,9 +132,6 @@ func addDirectors(subroutines map[string][]string, svc *atscfg.ParentAbstraction
 
 	lines = append(lines, fallbackDirectorLines...)
 
-	if _, ok := subroutines["vcl_init"]; !ok {
-		subroutines["vcl_init"] = make([]string, 0)
-	}
 	subroutines["vcl_init"] = append(subroutines["vcl_init"], lines...)
 }
 

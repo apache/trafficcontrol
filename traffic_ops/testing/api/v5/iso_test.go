@@ -62,7 +62,7 @@ func TestGetOSVersions(t *testing.T) {
 	// does make the reasonable assumption that `/DOES/NOT/EXIST/osversions.json` will not exist
 	// on the TO host.
 	t.Run("ERROR when INVALID PARAMETER", func(t *testing.T) {
-		p := tc.Parameter{
+		p := tc.ParameterV5{
 			ConfigFile: "mkisofs",
 			Name:       "kickstart.files.location",
 			Value:      "/DOES/NOT/EXIST",

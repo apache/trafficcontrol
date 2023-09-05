@@ -38,21 +38,21 @@ type TrafficControl struct {
 	Federations                                       []tc.CDNFederation                      `json:"federations"`
 	FederationResolvers                               []tc.FederationResolverV5               `json:"federation_resolvers"`
 	Jobs                                              []tc.InvalidationJobCreateV4            `json:"jobs"`
-	Origins                                           []tc.Origin                             `json:"origins"`
-	Profiles                                          []tc.Profile                            `json:"profiles"`
-	Parameters                                        []tc.Parameter                          `json:"parameters"`
+	Origins                                           []tc.OriginV5                           `json:"origins"`
+	Profiles                                          []tc.ProfileV5                          `json:"profiles"`
+	Parameters                                        []tc.ParameterV5                        `json:"parameters"`
 	ProfileParameters                                 []tc.ProfileParameterV5                 `json:"profileParameters"`
 	PhysLocations                                     []tc.PhysLocationV5                     `json:"physLocations"`
 	Regions                                           []tc.RegionV5                           `json:"regions"`
 	Roles                                             []tc.RoleV4                             `json:"roles"`
-	Servers                                           []tc.ServerV4                           `json:"servers"`
-	ServerServerCapabilities                          []tc.ServerServerCapability             `json:"serverServerCapabilities"`
+	Servers                                           []tc.ServerV5                           `json:"servers"`
+	ServerServerCapabilities                          []tc.ServerServerCapabilityV5           `json:"serverServerCapabilities"`
 	ServerCapabilities                                []tc.ServerCapabilityV5                 `json:"serverCapabilities"`
 	ServiceCategories                                 []tc.ServiceCategoryV5                  `json:"serviceCategories"`
 	Statuses                                          []tc.StatusV5                           `json:"statuses"`
 	StaticDNSEntries                                  []tc.StaticDNSEntryV5                   `json:"staticdnsentries"`
 	StatsSummaries                                    []tc.StatsSummaryV5                     `json:"statsSummaries"`
-	Tenants                                           []tc.Tenant                             `json:"tenants"`
+	Tenants                                           []tc.TenantV5                           `json:"tenants"`
 	ServerCheckExtensions                             []tc.ServerCheckExtensionNullable       `json:"servercheck_extensions"`
 	Topologies                                        []tc.TopologyV5                         `json:"topologies"`
 	Types                                             []tc.TypeV5                             `json:"types"`

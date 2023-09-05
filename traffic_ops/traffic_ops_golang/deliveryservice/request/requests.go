@@ -465,7 +465,7 @@ func createV5(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 		return
 	}
 
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/deliveryservice_requests/%d", inf.Version, *dsr.ID))
 	w.WriteHeader(http.StatusCreated)
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", dsr)
 
@@ -535,7 +535,7 @@ func createV4(w http.ResponseWriter, r *http.Request, inf *api.APIInfo) (result 
 
 	dsr = upgraded.Downgrade()
 
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/deliveryservice_requests/%d", inf.Version.Major, inf.Version.Minor, *dsr.ID))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/deliveryservice_requests/%d", inf.Version, *dsr.ID))
 	w.WriteHeader(http.StatusCreated)
 	if inf.Version.Minor >= 1 {
 		api.WriteRespAlertObj(w, r, tc.SuccessLevel, "Delivery Service request created", dsr)
