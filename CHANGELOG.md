@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7674](https://github.com/apache/trafficcontrol/issues/7674) *Traffic Ops* Add the ability to indicate if a server failed its revalidate/config update.
 
 ### Changed
+- [#7776](https://github.com/apache/trafficcontrol/pull/7776) *tc-health-client* Added error message while issues interacting with Traffic Ops.
 - [#7757](https://github.com/apache/trafficcontrol/pull/7757) *Traffic Router* Changed Traffic Router to point to api version 5.0 of Traffic Ops.
 - [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
 - [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
