@@ -32,7 +32,7 @@ def test_cdn_health_contract(to_session: TOSession,
 			dict[str, object], list[object]]], dict[object, object]]]
 ) -> None:
 	"""
-	Test step to validate keys, values and data types from cdn health, capacity and routing endpoints
+	Test step to validate keys, values and data types from cdn health and routing endpoints
 	response.
 	:param to_session: Fixture to get Traffic Ops session.
 	:param response_template_data: Fixture to get response template data from a prerequisites file.
