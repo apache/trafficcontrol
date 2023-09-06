@@ -39,7 +39,7 @@ type PackagesOpts struct {
 // MakePackages returns the 'packages' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakePackages(
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opts *PackagesOpts,
 ) (Cfg, error) {
 	if opts == nil {

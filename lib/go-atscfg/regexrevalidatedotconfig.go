@@ -61,7 +61,7 @@ type RegexRevalidateDotConfigOpts struct {
 func MakeRegexRevalidateDotConfig(
 	server *Server,
 	deliveryServices []DeliveryService,
-	globalParams []tc.Parameter,
+	globalParams []tc.ParameterV5,
 	jobs []InvalidationJob,
 	opt *RegexRevalidateDotConfigOpts,
 ) (Cfg, error) {

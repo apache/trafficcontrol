@@ -83,7 +83,7 @@ func MakeHeaderRewriteDotConfig(
 	server *Server,
 	servers []Server,
 	cacheGroupsArr []tc.CacheGroupNullableV5,
-	tcServerParams []tc.Parameter,
+	tcServerParams []tc.ParameterV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	requiredCapabilities map[int]map[ServerCapability]struct{},
 	topologiesArr []tc.TopologyV5,

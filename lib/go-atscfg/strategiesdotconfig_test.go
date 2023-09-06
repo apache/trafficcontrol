@@ -47,20 +47,20 @@ func TestMakeStrategiesDotConfig(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -68,8 +68,8 @@ func TestMakeStrategiesDotConfig(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -171,50 +171,50 @@ func TestMakeStrategiesTopologiesParams(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.ParentRetry,
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxSimpleRetries,
 			ConfigFile: "parent.config",
 			Value:      "14",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxUnavailableRetries,
 			ConfigFile: "parent.config",
 			Value:      "9",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.UnavailableRetryResponses,
 			ConfigFile: "parent.config",
 			Value:      `"400,503"`,
@@ -222,8 +222,8 @@ func TestMakeStrategiesTopologiesParams(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "8",
@@ -345,20 +345,20 @@ func TestMakeStrategiesHTTPSOrigin(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -366,8 +366,8 @@ func TestMakeStrategiesHTTPSOrigin(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -468,50 +468,50 @@ func TestMakeStrategiesPeeringRing(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.ParentRetry,
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxSimpleRetries,
 			ConfigFile: "parent.config",
 			Value:      "14",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxUnavailableRetries,
 			ConfigFile: "parent.config",
 			Value:      "9",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.UnavailableRetryResponses,
 			ConfigFile: "parent.config",
 			Value:      `"400,503"`,
@@ -519,8 +519,8 @@ func TestMakeStrategiesPeeringRing(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "8",
@@ -606,9 +606,9 @@ func TestMakeStrategiesPeeringRing(t *testing.T) {
 	}
 
 	t.Run("peering ring true", func(t *testing.T) {
-		parentConfigParamsPR := make([]tc.Parameter, len(parentConfigParams), len(parentConfigParams))
+		parentConfigParamsPR := make([]tc.ParameterV5, len(parentConfigParams), len(parentConfigParams))
 		copy(parentConfigParamsPR, parentConfigParams)
-		parentConfigParamsPR = append(parentConfigParamsPR, tc.Parameter{
+		parentConfigParamsPR = append(parentConfigParamsPR, tc.ParameterV5{
 			Name:       StrategyConfigUsePeering,
 			ConfigFile: "parent.config",
 			Value:      "true",
@@ -643,9 +643,9 @@ func TestMakeStrategiesPeeringRing(t *testing.T) {
 	})
 
 	t.Run("peering ring false", func(t *testing.T) {
-		parentConfigParamsPR := make([]tc.Parameter, len(parentConfigParams), len(parentConfigParams))
+		parentConfigParamsPR := make([]tc.ParameterV5, len(parentConfigParams), len(parentConfigParams))
 		copy(parentConfigParamsPR, parentConfigParams)
-		parentConfigParamsPR = append(parentConfigParamsPR, tc.Parameter{
+		parentConfigParamsPR = append(parentConfigParamsPR, tc.ParameterV5{
 			Name:       StrategyConfigUsePeering,
 			ConfigFile: "parent.config",
 			Value:      "false",
@@ -724,50 +724,50 @@ func TestMakeStrategiesPeeringRingMSO(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.ParentRetry,
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxSimpleRetries,
 			ConfigFile: "parent.config",
 			Value:      "14",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxUnavailableRetries,
 			ConfigFile: "parent.config",
 			Value:      "9",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.UnavailableRetryResponses,
 			ConfigFile: "parent.config",
 			Value:      `"400,503"`,
@@ -775,8 +775,8 @@ func TestMakeStrategiesPeeringRingMSO(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "8",
@@ -862,9 +862,9 @@ func TestMakeStrategiesPeeringRingMSO(t *testing.T) {
 	}
 
 	t.Run("peering ring true", func(t *testing.T) {
-		parentConfigParamsPR := make([]tc.Parameter, len(parentConfigParams), len(parentConfigParams))
+		parentConfigParamsPR := make([]tc.ParameterV5, len(parentConfigParams), len(parentConfigParams))
 		copy(parentConfigParamsPR, parentConfigParams)
-		parentConfigParamsPR = append(parentConfigParamsPR, tc.Parameter{
+		parentConfigParamsPR = append(parentConfigParamsPR, tc.ParameterV5{
 			Name:       StrategyConfigUsePeering,
 			ConfigFile: "parent.config",
 			Value:      "true",
@@ -899,9 +899,9 @@ func TestMakeStrategiesPeeringRingMSO(t *testing.T) {
 	})
 
 	t.Run("peering ring false", func(t *testing.T) {
-		parentConfigParamsPR := make([]tc.Parameter, len(parentConfigParams), len(parentConfigParams))
+		parentConfigParamsPR := make([]tc.ParameterV5, len(parentConfigParams), len(parentConfigParams))
 		copy(parentConfigParamsPR, parentConfigParams)
-		parentConfigParamsPR = append(parentConfigParamsPR, tc.Parameter{
+		parentConfigParamsPR = append(parentConfigParamsPR, tc.ParameterV5{
 			Name:       StrategyConfigUsePeering,
 			ConfigFile: "parent.config",
 			Value:      "false",
@@ -985,20 +985,20 @@ func TestMakeStrategiesPeeringRingNonTopology(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -1006,8 +1006,8 @@ func TestMakeStrategiesPeeringRingNonTopology(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -1085,9 +1085,9 @@ func TestMakeStrategiesPeeringRingNonTopology(t *testing.T) {
 	}
 
 	t.Run("peering ring true", func(t *testing.T) {
-		parentConfigParamsPR := make([]tc.Parameter, len(parentConfigParams), len(parentConfigParams))
+		parentConfigParamsPR := make([]tc.ParameterV5, len(parentConfigParams), len(parentConfigParams))
 		copy(parentConfigParamsPR, parentConfigParams)
-		parentConfigParamsPR = append(parentConfigParamsPR, tc.Parameter{
+		parentConfigParamsPR = append(parentConfigParamsPR, tc.ParameterV5{
 			Name:       StrategyConfigUsePeering,
 			ConfigFile: "parent.config",
 			Value:      "true",
@@ -1122,9 +1122,9 @@ func TestMakeStrategiesPeeringRingNonTopology(t *testing.T) {
 		}
 	})
 	t.Run("peering ring false", func(t *testing.T) {
-		parentConfigParamsPR := make([]tc.Parameter, len(parentConfigParams), len(parentConfigParams))
+		parentConfigParamsPR := make([]tc.ParameterV5, len(parentConfigParams), len(parentConfigParams))
 		copy(parentConfigParamsPR, parentConfigParams)
-		parentConfigParamsPR = append(parentConfigParamsPR, tc.Parameter{
+		parentConfigParamsPR = append(parentConfigParamsPR, tc.ParameterV5{
 			Name:       StrategyConfigUsePeering,
 			ConfigFile: "parent.config",
 			Value:      "false",
@@ -1214,7 +1214,7 @@ func TestMakeStrategiesDotYAMLFirstLastNoTopoParams(t *testing.T) {
 
 	dsesall := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -1281,7 +1281,7 @@ func TestMakeStrategiesDotYAMLFirstLastNoTopoParams(t *testing.T) {
 
 	// Assign them to the profile
 	for key, val := range params {
-		tcparam := tc.Parameter{
+		tcparam := tc.ParameterV5{
 			Name:       key,
 			ConfigFile: "parent.config",
 			Value:      val,
@@ -1290,7 +1290,7 @@ func TestMakeStrategiesDotYAMLFirstLastNoTopoParams(t *testing.T) {
 		parentConfigParams = append(parentConfigParams, tcparam)
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "trafficserver",
 			ConfigFile: "package",
@@ -1509,10 +1509,10 @@ func TestMakeStrategiesDotYamlMSONoTopologyNoMid(t *testing.T) {
 	ds0.ProfileName = util.Ptr("dsprofile")
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{}
+	parentConfigParams := []tc.ParameterV5{}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -1602,10 +1602,10 @@ func TestMakeStrategiesDotYamlMSONoTopoMultiCG(t *testing.T) {
 
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{}
+	parentConfigParams := []tc.ParameterV5{}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
@@ -1744,7 +1744,7 @@ func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
 
 	dsesall := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -1811,7 +1811,7 @@ func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
 
 	// Assign them to the profile
 	for key, val := range params {
-		tcparam := tc.Parameter{
+		tcparam := tc.ParameterV5{
 			Name:       key,
 			ConfigFile: "parent.config",
 			Value:      val,
@@ -1820,7 +1820,7 @@ func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
 		parentConfigParams = append(parentConfigParams, tcparam)
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "trafficserver",
 			ConfigFile: "package",

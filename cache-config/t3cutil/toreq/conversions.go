@@ -54,7 +54,7 @@ func jobsToLatest(jobs []tc.InvalidationJobV4) []atscfg.InvalidationJob {
 	return atscfg.ToInvalidationJobs(jobs)
 }
 
-func serverUpdateStatusesToLatest(statuses []tc.ServerUpdateStatusV40) []atscfg.ServerUpdateStatus {
+func serverUpdateStatusesToLatest(statuses []tc.ServerUpdateStatusV50) []atscfg.ServerUpdateStatus {
 	return atscfg.ToServerUpdateStatuses(statuses)
 }
 

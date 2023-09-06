@@ -40,7 +40,7 @@ type URLSigConfigOpts struct {
 func MakeURLSigConfig(
 	fileName string,
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	allURLSigKeys map[tc.DeliveryServiceName]tc.URLSigKeys,
 	opt *URLSigConfigOpts,
 ) (Cfg, error) {

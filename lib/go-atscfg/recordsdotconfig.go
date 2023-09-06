@@ -59,7 +59,7 @@ type RecordsConfigOpts struct {
 
 func MakeRecordsDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *RecordsConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {

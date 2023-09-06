@@ -49,7 +49,7 @@ type HostingDotConfigOpts struct {
 func MakeHostingDotConfig(
 	server *Server,
 	servers []Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	deliveryServices []DeliveryService,
 	deliveryServiceServers []DeliveryServiceServer,
 	topologies []tc.TopologyV5,

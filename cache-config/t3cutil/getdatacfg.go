@@ -50,25 +50,25 @@ type ConfigData struct {
 	CacheGroups []tc.CacheGroupNullableV5 `json:"cache_groups,omitempty"`
 
 	// GlobalParams must be all Parameters in Traffic Ops on the tc.GlobalProfileName Profile. Must not include other parameters.
-	GlobalParams []tc.Parameter `json:"global_parameters,omitempty"`
+	GlobalParams []tc.ParameterV5 `json:"global_parameters,omitempty"`
 
 	// ServerProfilesParams must be all Parameters on the Profiles of the current server. Must not include other Parameters.
-	ServerProfilesParams map[atscfg.ProfileName][]tc.Parameter `json:"server_profiles_parameters,omitempty"`
+	ServerProfilesParams map[atscfg.ProfileName][]tc.ParameterV5 `json:"server_profiles_parameters,omitempty"`
 
 	// ServerParams is constructed from Server and ServerParams. Must not include other Parameters.
 	// It's ok for other apps using this data to serialize and deserialize this to pass it around,
 	// but t3c-request must always use ServerProfilesParams to re-populate this, and do If-Modified-Since requests from that.
 	// This must never be used in an If-Modified-Since check, or populated wholesale from a single profile's endpoint.
-	ServerParams []tc.Parameter `json:"server_params,omitempty"`
+	ServerParams []tc.ParameterV5 `json:"server_params,omitempty"`
 
 	// CacheKeyConfigParams must be all Parameters with the "cachekey.config" (compat)
-	CacheKeyConfigParams []tc.Parameter `json:"cachekey_config_parameters,omitempty"`
+	CacheKeyConfigParams []tc.ParameterV5 `json:"cachekey_config_parameters,omitempty"`
 
 	// RemapConfigParams must be all Parameters with the ConfigFile "remap.config"
-	RemapConfigParams []tc.Parameter `json:"remap_config_parameters,omitempty"`
+	RemapConfigParams []tc.ParameterV5 `json:"remap_config_parameters,omitempty"`
 
 	// ParentConfigParams must be all Parameters with the ConfigFile "parent.config.
-	ParentConfigParams []tc.Parameter `json:"parent_config_parameters,omitempty"`
+	ParentConfigParams []tc.ParameterV5 `json:"parent_config_parameters,omitempty"`
 
 	// DeliveryServices must include all Delivery Services on the current server's cdn, including those not assigned to the server. Must not include delivery services on other cdns.
 	DeliveryServices []atscfg.DeliveryService `json:"delivery_services,omitempty"`
@@ -801,10 +801,10 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	}
 	toData.TrafficOpsURL = toClient.URL()
 
-	toData.ServerProfilesParams = map[atscfg.ProfileName][]tc.Parameter{}
+	toData.ServerProfilesParams = map[atscfg.ProfileName][]tc.ParameterV5{}
 	serverProfilesParams.Range(func(key, val interface{}) bool {
 		profileName := key.(atscfg.ProfileName)
-		params := val.([]tc.Parameter)
+		params := val.([]tc.ParameterV5)
 		toData.ServerProfilesParams[profileName] = params
 		return true
 	})
@@ -830,8 +830,8 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 // combineParams combines all the params from different profiles into
 // a single array of parameters.
-func combineParams(profileParams map[atscfg.ProfileName][]tc.Parameter) []tc.Parameter {
-	allParams := map[atscfg.ProfileID]tc.Parameter{}
+func combineParams(profileParams map[atscfg.ProfileName][]tc.ParameterV5) []tc.ParameterV5 {
+	allParams := map[atscfg.ProfileID]tc.ParameterV5{}
 	for profileName, params := range profileParams {
 		for _, param := range params {
 			// the /profile/name/parameters endpoint doesn't return profiles like all the other endpoints,
@@ -842,7 +842,7 @@ func combineParams(profileParams map[atscfg.ProfileName][]tc.Parameter) []tc.Par
 			allParams[atscfg.ProfileID(param.ID)] = param
 		}
 	}
-	paramsArr := []tc.Parameter{}
+	paramsArr := []tc.ParameterV5{}
 	for _, param := range allParams {
 		paramsArr = append(paramsArr, param)
 	}
@@ -943,7 +943,7 @@ func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
 }
 
 // filterUnusedDSS removes entries not on the given server's cdn from dsses, and returns a atscfg.DeliveryServiceServer.
-func filterUnusedDSS(dsses []tc.DeliveryServiceServer, cdnID int, servers []atscfg.Server, dses []atscfg.DeliveryService) []atscfg.DeliveryServiceServer {
+func filterUnusedDSS(dsses []tc.DeliveryServiceServerV5, cdnID int, servers []atscfg.Server, dses []atscfg.DeliveryService) []atscfg.DeliveryServiceServer {
 	serverIDs := map[int]struct{}{}
 	for _, sv := range servers {
 		if sv.ID == nil {

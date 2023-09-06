@@ -36,20 +36,20 @@ func TestMakeHostingDotConfig(t *testing.T) {
 	server.ProfileNames = []string{"serverprofile"}
 	hdr := "myHeaderComment"
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParamRAMDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
 			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParamDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
 			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "somethingelse",
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "somethingelse-shouldnotappearinconfig",
@@ -129,20 +129,20 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 	server.ProfileNames = []string{"serverprofile"}
 	hdr := "myHeaderComment"
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParamRAMDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
 			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParamDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
 			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "somethingelse",
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "somethingelse-shouldnotappearinconfig",

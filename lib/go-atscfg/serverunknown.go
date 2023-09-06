@@ -39,7 +39,7 @@ type ServerUnknownOpts struct {
 func MakeServerUnknown(
 	fileName string,
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *ServerUnknownOpts,
 ) (Cfg, error) {
 	if opt == nil {

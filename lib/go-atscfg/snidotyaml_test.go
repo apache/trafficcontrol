@@ -51,26 +51,26 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       SSLServerNameYAMLParamEnableH2,
 			ConfigFile: "parent.config",
 			Value:      "true",
@@ -163,26 +163,26 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 	})
 
 	t.Run("sni.yaml http2 param disabled", func(t *testing.T) {
-		parentConfigParams := []tc.Parameter{
-			tc.Parameter{
+		parentConfigParams := []tc.ParameterV5{
+			tc.ParameterV5{
 				Name:       ParentConfigParamQStringHandling,
 				ConfigFile: "parent.config",
 				Value:      "myQStringHandlingParam",
 				Profiles:   []byte(`["serverprofile"]`),
 			},
-			tc.Parameter{
+			tc.ParameterV5{
 				Name:       ParentConfigRetryKeysDefault.Algorithm,
 				ConfigFile: "parent.config",
 				Value:      tc.AlgorithmConsistentHash,
 				Profiles:   []byte(`["serverprofile"]`),
 			},
-			tc.Parameter{
+			tc.ParameterV5{
 				Name:       ParentConfigParamQString,
 				ConfigFile: "parent.config",
 				Value:      "myQstringParam",
 				Profiles:   []byte(`["serverprofile"]`),
 			},
-			tc.Parameter{
+			tc.ParameterV5{
 				Name:       SSLServerNameYAMLParamEnableH2,
 				ConfigFile: "parent.config",
 				Value:      "false",
@@ -216,20 +216,20 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 			HdrComment:      "myHeaderComment",
 			DefaultEnableH2: false,
 		}
-		parentConfigParams := []tc.Parameter{
-			tc.Parameter{
+		parentConfigParams := []tc.ParameterV5{
+			tc.ParameterV5{
 				Name:       ParentConfigParamQStringHandling,
 				ConfigFile: "parent.config",
 				Value:      "myQStringHandlingParam",
 				Profiles:   []byte(`["serverprofile"]`),
 			},
-			tc.Parameter{
+			tc.ParameterV5{
 				Name:       ParentConfigRetryKeysDefault.Algorithm,
 				ConfigFile: "parent.config",
 				Value:      tc.AlgorithmConsistentHash,
 				Profiles:   []byte(`["serverprofile"]`),
 			},
-			tc.Parameter{
+			tc.ParameterV5{
 				Name:       ParentConfigParamQString,
 				ConfigFile: "parent.config",
 				Value:      "myQstringParam",
@@ -263,20 +263,20 @@ func TestMakeSNIDotYAMLH2(t *testing.T) {
 			HdrComment:      "myHeaderComment",
 			DefaultEnableH2: true,
 		}
-		parentConfigParams := []tc.Parameter{
-			tc.Parameter{
+		parentConfigParams := []tc.ParameterV5{
+			tc.ParameterV5{
 				Name:       ParentConfigParamQStringHandling,
 				ConfigFile: "parent.config",
 				Value:      "myQStringHandlingParam",
 				Profiles:   []byte(`["serverprofile"]`),
 			},
-			tc.Parameter{
+			tc.ParameterV5{
 				Name:       ParentConfigRetryKeysDefault.Algorithm,
 				ConfigFile: "parent.config",
 				Value:      tc.AlgorithmConsistentHash,
 				Profiles:   []byte(`["serverprofile"]`),
 			},
-			tc.Parameter{
+			tc.ParameterV5{
 				Name:       ParentConfigParamQString,
 				ConfigFile: "parent.config",
 				Value:      "myQstringParam",

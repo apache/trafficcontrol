@@ -60,8 +60,8 @@ func TestMakeMetaConfig(t *testing.T) {
 	dss := []DeliveryServiceServer{}
 	globalParams := []tc.Parameter{}
 
-	makeLocationParam := func(name string) tc.Parameter {
-		return tc.Parameter{
+	makeLocationParam := func(name string) tc.ParameterV5 {
+		return tc.ParameterV5{
 			Name:       "location",
 			ConfigFile: name,
 			Value:      "/my/location/",
@@ -69,7 +69,7 @@ func TestMakeMetaConfig(t *testing.T) {
 		}
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		makeLocationParam("ssl_multicert.config"),
 		makeLocationParam("volume.config"),
 		makeLocationParam("ip_allow.config"),

@@ -45,7 +45,7 @@ type LoggingDotConfigOpts struct {
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeLoggingDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *LoggingDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {

@@ -129,8 +129,8 @@ func MakeParentDotConfig(
 	server *Server,
 	servers []Server,
 	topologies []tc.TopologyV5,
-	tcServerParams []tc.Parameter,
-	tcParentConfigParams []tc.Parameter,
+	tcServerParams []tc.ParameterV5,
+	tcParentConfigParams []tc.ParameterV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroupArr []tc.CacheGroupNullableV5,
@@ -297,8 +297,8 @@ func MakeParentDotConfigData(
 	server *Server,
 	servers []Server,
 	topologies []tc.TopologyV5,
-	tcServerParams []tc.Parameter,
-	tcParentConfigParams []tc.Parameter,
+	tcServerParams []tc.ParameterV5,
+	tcParentConfigParams []tc.ParameterV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 	cacheGroupArr []tc.CacheGroupNullableV5,
@@ -778,10 +778,10 @@ type dsesSortByName []DeliveryService
 func (s dsesSortByName) Len() int      { return len(s) }
 func (s dsesSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s dsesSortByName) Less(i, j int) bool {
-	if &s[i].XMLID == nil {
+	if &s[i].XMLID == nil || s[i].XMLID == "" {
 		return true
 	}
-	if &s[j].XMLID == nil {
+	if &s[j].XMLID == nil || s[j].XMLID == "" {
 		return false
 	}
 	return s[i].XMLID < s[j].XMLID
@@ -1635,7 +1635,7 @@ func getParentStrs(
 	secondaryParentInfo, seen = RemoveParentDuplicates(secondaryParentInfo, seen)
 
 	dsName := tc.DeliveryServiceName("")
-	if ds != nil && &ds.XMLID != nil {
+	if ds != nil && &ds.XMLID != nil || ds.XMLID == "" {
 		dsName = tc.DeliveryServiceName(ds.XMLID)
 	}
 
@@ -1898,7 +1898,7 @@ func getDSOrigins(dses map[int]DeliveryService) (map[int]*originURI, []string, e
 		if ds.ID == nil {
 			return nil, warnings, errors.New("ds has nil ID")
 		}
-		if &ds.XMLID == nil {
+		if &ds.XMLID == nil || ds.XMLID == "" {
 			return nil, warnings, errors.New("ds has nil XMLID")
 		}
 		if ds.OrgServerFQDN == nil {
@@ -1977,7 +1977,7 @@ func makeDSOrigins(dsses []DeliveryServiceServer, dses []DeliveryService, server
 }
 
 // getProfileParentConfigParams returns a map[profileName][paramName]paramVal and any warnings
-func getProfileParentConfigParams(tcParentConfigParams []tc.Parameter) (map[string]map[string]string, []string) {
+func getProfileParentConfigParams(tcParentConfigParams []tc.ParameterV5) (map[string]map[string]string, []string) {
 	warnings := []string{}
 	parentConfigParamsWithProfiles, err := tcParamsToParamsWithProfiles(tcParentConfigParams)
 	if err != nil {

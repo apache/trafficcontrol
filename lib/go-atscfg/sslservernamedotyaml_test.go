@@ -46,20 +46,20 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -167,32 +167,32 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       SSLServerNameYAMLParamEnableH2,
 			ConfigFile: "parent.config",
 			Value:      "true",
 			Profiles:   []byte(`["ds0profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       SSLServerNameYAMLParamTLSVersions,
 			ConfigFile: "parent.config",
 			Value:      "1.1,1.2",
@@ -300,32 +300,32 @@ func TestMakeSSLServerNameYAMLParamInvalid(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       SSLServerNameYAMLParamEnableH2,
 			ConfigFile: "parent.config",
 			Value:      "true",
 			Profiles:   []byte(`["ds0profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       SSLServerNameYAMLParamTLSVersions,
 			ConfigFile: "parent.config",
 			Value:      "1.3,1.invalid,foo,bar,1.1", // invalid params should warn and skip
@@ -437,26 +437,26 @@ func TestMakeSSLServerNameYAMLDSTLSVersions(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       SSLServerNameYAMLParamEnableH2,
 			ConfigFile: "parent.config",
 			Value:      "true",

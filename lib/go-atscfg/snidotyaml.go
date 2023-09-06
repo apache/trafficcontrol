@@ -55,7 +55,7 @@ func MakeSNIDotYAML(
 	dses []DeliveryService,
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
-	tcParentConfigParams []tc.Parameter,
+	tcParentConfigParams []tc.ParameterV5,
 	cdn *tc.CDNV5,
 	topologies []tc.TopologyV5,
 	cacheGroupArr []tc.CacheGroupNullableV5,

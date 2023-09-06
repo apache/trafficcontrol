@@ -41,7 +41,7 @@ type LogsXMLDotConfigOpts struct {
 
 func MakeLogsXMLDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *LogsXMLDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {

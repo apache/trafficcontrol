@@ -28,7 +28,7 @@ import (
 
 func TestMakeChkconfig(t *testing.T) {
 	serverProfile := "sp0"
-	params := []tc.Parameter{
+	params := []tc.ParameterV5{
 		{
 			Name:       "p0",
 			ConfigFile: ChkconfigParamConfigFile,

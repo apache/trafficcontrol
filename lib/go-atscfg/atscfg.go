@@ -69,7 +69,7 @@ type InvalidationJob tc.InvalidationJobV4
 // ServerUdpateStatus is a tc.ServerUdpateStatus for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type ServerUpdateStatus tc.ServerUpdateStatusV4
+type ServerUpdateStatus tc.ServerUpdateStatusV5
 
 //type CDN tc.CDNV5
 
@@ -184,7 +184,7 @@ func ToServers(servers []tc.ServerV40) []Server {
 }
 
 // ToServerUpdateStatuses converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToServerUpdateStatuses(statuses []tc.ServerUpdateStatusV40) []ServerUpdateStatus {
+func ToServerUpdateStatuses(statuses []tc.ServerUpdateStatusV50) []ServerUpdateStatus {
 	sus := make([]ServerUpdateStatus, 0, len(statuses))
 	for _, st := range statuses {
 		sus = append(sus, ServerUpdateStatus(st))
@@ -500,20 +500,20 @@ func getTopologyDirectChildren(
 }
 
 type parameterWithProfiles struct {
-	tc.Parameter
+	tc.ParameterV5
 	ProfileNames []string
 }
 
 type parameterWithProfilesMap struct {
-	tc.Parameter
+	tc.ParameterV5
 	ProfileNames map[string]struct{}
 }
 
 // tcParamsToParamsWithProfiles unmarshals the Profiles that the tc struct doesn't.
-func tcParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]parameterWithProfiles, error) {
+func tcParamsToParamsWithProfiles(tcParams []tc.ParameterV5) ([]parameterWithProfiles, error) {
 	params := make([]parameterWithProfiles, 0, len(tcParams))
 	for _, tcParam := range tcParams {
-		param := parameterWithProfiles{Parameter: tcParam}
+		param := parameterWithProfiles{ParameterV5: tcParam}
 
 		profiles := []string{}
 		if err := json.Unmarshal(tcParam.Profiles, &profiles); err != nil {
@@ -529,7 +529,7 @@ func tcParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]parameterWithProfi
 func parameterWithProfilesToMap(tcParams []parameterWithProfiles) []parameterWithProfilesMap {
 	params := []parameterWithProfilesMap{}
 	for _, tcParam := range tcParams {
-		param := parameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
+		param := parameterWithProfilesMap{ParameterV5: tcParam.ParameterV5, ProfileNames: map[string]struct{}{}}
 		for _, profile := range tcParam.ProfileNames {
 			param.ProfileNames[profile] = struct{}{}
 		}
@@ -561,8 +561,8 @@ func filterDSS(dsses []DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs 
 // filterParams filters params and returns only the parameters which match configFile, name, and value.
 // If configFile, name, or value is the empty string, it is not filtered.
 // Returns a slice of parameters.
-func filterParams(params []tc.Parameter, configFile string, name string, value string, omitName string) []tc.Parameter {
-	filtered := []tc.Parameter{}
+func filterParams(params []tc.ParameterV5, configFile string, name string, value string, omitName string) []tc.ParameterV5 {
+	filtered := []tc.ParameterV5{}
 	for _, param := range params {
 		if configFile != "" && param.ConfigFile != configFile {
 			continue
@@ -586,7 +586,7 @@ func filterParams(params []tc.Parameter, configFile string, name string, value s
 // Warnings will be returned if any parameters have the same name but different values.
 // Returns the parameter map, and any warnings.
 // See ParamArrToMultiMap.
-func paramsToMap(params []tc.Parameter) (map[string]string, []string) {
+func paramsToMap(params []tc.ParameterV5) (map[string]string, []string) {
 	warnings := []string{}
 	mp := map[string]string{}
 	for _, param := range params {
@@ -604,7 +604,7 @@ func paramsToMap(params []tc.Parameter) (map[string]string, []string) {
 }
 
 // paramArrToMultiMap converts a []tc.Parameter to a map[paramName][]paramValue.
-func paramsToMultiMap(params []tc.Parameter) map[string][]string {
+func paramsToMultiMap(params []tc.ParameterV5) map[string][]string {
 	mp := map[string][]string{}
 	for _, param := range params {
 		mp[param.Name] = append(mp[param.Name], param.Value)
@@ -699,7 +699,7 @@ func getServiceAddresses(sv *Server) (net.IP, net.IP) {
 // If more flexibility is needed, getATSMajorVersionFromParams may be called directly;
 // but it should generally be avoided, functions should always take a config variable for the
 // ATS version, in case a user wants to manage the ATS package outside ATC.
-func getATSMajorVersion(atsMajorVersion uint, serverParams []tc.Parameter, warnings *[]string) uint {
+func getATSMajorVersion(atsMajorVersion uint, serverParams []tc.ParameterV5, warnings *[]string) uint {
 	if atsMajorVersion != 0 {
 		return atsMajorVersion
 	}
@@ -714,7 +714,7 @@ func getATSMajorVersion(atsMajorVersion uint, serverParams []tc.Parameter, warni
 // It returns the ATS major version from the config_file 'package' name 'trafficserver' Parameter on the given Server Profile Parameters.
 // If no Parameter is found, or the value is malformed, a warning or error is logged and DefaultATSVersion is returned.
 // Returns the ATS major version, and any warnings
-func getATSMajorVersionFromParams(serverParams []tc.Parameter) (uint, []string) {
+func getATSMajorVersionFromParams(serverParams []tc.ParameterV5) (uint, []string) {
 	warnings := []string{}
 	atsVersionParam := ""
 	for _, param := range serverParams {
@@ -743,7 +743,7 @@ func getATSMajorVersionFromParams(serverParams []tc.Parameter) (uint, []string) 
 
 // getMaxRequestHeaderParam returns the 'CONFIG proxy.config.http.request_header_max_size' if configured in the Server Profile Parameters.
 // If the parameter is not configured it will return the traffic server default request header max size.
-func getMaxRequestHeaderParam(serverParams []tc.Parameter) (int, []string) {
+func getMaxRequestHeaderParam(serverParams []tc.ParameterV5) (int, []string) {
 	warnings := []string{}
 	globalRequestHeaderMaxSize := TsDefaultRequestHeaderMaxSize
 	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))
@@ -862,8 +862,8 @@ func BoolOnOff(b bool) string {
 // GetDSParameters returns the parameters for the given Delivery Service.
 func GetDSParameters(
 	ds *DeliveryService,
-	params []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
-) ([]tc.Parameter, error) {
+	params []tc.ParameterV5, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.ParameterV5, error) {
 	profileNames := []string{}
 	if ds.ProfileName != nil {
 		profileNames = append(profileNames, *ds.ProfileName)
@@ -875,8 +875,8 @@ func GetDSParameters(
 // See LayerProfiles.
 func GetServerParameters(
 	server *Server,
-	params []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
-) ([]tc.Parameter, error) {
+	params []tc.ParameterV5, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.ParameterV5, error) {
 	return LayerProfiles(server.ProfileNames, params)
 }
 
@@ -888,8 +888,8 @@ func GetServerParameters(
 // or other object containing an ordered list of profiles.
 func LayerProfiles(
 	profileNames []string, // from a Server, Delivery Service, or other object with "layered profiles".
-	tcParams []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
-) ([]tc.Parameter, error) {
+	tcParams []tc.ParameterV5, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.ParameterV5, error) {
 	params, err := tcParamsToParamsWithProfiles(tcParams)
 	if err != nil {
 		return nil, errors.New("parsing parameters profiles: " + err.Error())
@@ -898,13 +898,13 @@ func LayerProfiles(
 }
 
 // layerProfilesFromWith is like LayerProfiles if you already have a []parameterWithProfiles.
-func layerProfilesFromWith(profileNames []string, params []parameterWithProfiles) []tc.Parameter {
+func layerProfilesFromWith(profileNames []string, params []parameterWithProfiles) []tc.ParameterV5 {
 	paramsMap := parameterWithProfilesToMap(params)
 	return layerProfilesFromMap(profileNames, paramsMap)
 }
 
 // layerProfilesFromMap is like LayerProfiles if you already have a []parameterWithProfilesMap.
-func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesMap) []tc.Parameter {
+func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesMap) []tc.ParameterV5 {
 	// ParamKey is the key for a Parameter, which
 	// if there's another Parameter with the same key in a subsequent profile
 	// in the ordered list, the last Parameter with this key will be used.
@@ -913,17 +913,17 @@ func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesM
 		ConfigFile string
 	}
 
-	getParamKey := func(pa tc.Parameter) ParamKey { return ParamKey{Name: pa.Name, ConfigFile: pa.ConfigFile} }
+	getParamKey := func(pa tc.ParameterV5) ParamKey { return ParamKey{Name: pa.Name, ConfigFile: pa.ConfigFile} }
 
-	allProfileParams := map[string][]tc.Parameter{}
+	allProfileParams := map[string][]tc.ParameterV5{}
 
 	for _, param := range params {
 		for profile, _ := range param.ProfileNames {
-			allProfileParams[profile] = append(allProfileParams[profile], param.Parameter)
+			allProfileParams[profile] = append(allProfileParams[profile], param.ParameterV5)
 		}
 	}
 
-	layeredParamMap := map[ParamKey]tc.Parameter{}
+	layeredParamMap := map[ParamKey]tc.ParameterV5{}
 	// profileNames is ordered, we need to iterate through this backwards
 	// because we need subsequent params on other profiles to override previous ones,
 	// this will provide the proper "layering" that we want.
@@ -935,7 +935,7 @@ func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesM
 		}
 	}
 
-	layeredParams := []tc.Parameter{}
+	layeredParams := []tc.ParameterV5{}
 	for _, param := range layeredParamMap {
 		layeredParams = append(layeredParams, param)
 	}

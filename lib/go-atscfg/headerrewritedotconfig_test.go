@@ -777,9 +777,9 @@ func TestMakeHeaderRewriteMidDotConfigNoMaxConns(t *testing.T) {
 	}
 }
 
-func makeHdrRwServerParams() []tc.Parameter {
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+func makeHdrRwServerParams() []tc.ParameterV5 {
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",

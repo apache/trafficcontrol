@@ -54,5 +54,52 @@ func dsesToLatest(dses []tc.DeliveryServiceV4) []atscfg.DeliveryService {
 }
 
 func serverUpdateStatusToLatest(status []tc.ServerUpdateStatusV40) []atscfg.ServerUpdateStatus {
-	return atscfg.ToServerUpdateStatuses(status)
+	nStats := []tc.ServerUpdateStatusV50{}
+	for _, stat := range status {
+		nStat := tc.ServerUpdateStatusV50{
+			HostName:             stat.HostName,
+			UpdatePending:        stat.UpdatePending,
+			RevalPending:         stat.RevalPending,
+			UseRevalPending:      stat.UseRevalPending,
+			HostId:               stat.HostId,
+			Status:               stat.Status,
+			ParentPending:        stat.ParentPending,
+			ConfigUpdateTime:     stat.ConfigUpdateTime,
+			ConfigApplyTime:      stat.ConfigApplyTime,
+			RevalidateUpdateTime: stat.RevalidateUpdateTime,
+			RevalidateApplyTime:  stat.RevalidateApplyTime,
+		}
+		nStats = append(nStats, nStat)
+	}
+	return atscfg.ToServerUpdateStatuses(nStats)
+}
+
+func deliveryServiceServersToLatest(dsServers []tc.DeliveryServiceServer) []tc.DeliveryServiceServerV5 {
+	nDss := []tc.DeliveryServiceServerV5{}
+	for _, dss := range dsServers {
+		dsServer := tc.DeliveryServiceServerV5{
+			Server:          dss.Server,
+			DeliveryService: dss.DeliveryService,
+			LastUpdated:     &dss.LastUpdated.Time,
+		}
+		nDss = append(nDss, dsServer)
+	}
+	return nDss
+}
+
+func parametersToLatest(params []tc.Parameter) []tc.ParameterV5 {
+	nParams := []tc.ParameterV5{}
+	for _, param := range params {
+		np := tc.ParameterV5{
+			ConfigFile:  param.ConfigFile,
+			ID:          param.ID,
+			LastUpdated: param.LastUpdated.Time,
+			Name:        param.Name,
+			Profiles:    param.Profiles,
+			Secure:      param.Secure,
+			Value:       param.Value,
+		}
+		nParams = append(nParams, np)
+	}
+	return nParams
 }

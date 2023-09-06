@@ -89,8 +89,8 @@ func DeliveryServicesToSSLMultiCertDSes(dses []DeliveryService) (map[tc.Delivery
 	warnings := []string{}
 	sDSes := map[tc.DeliveryServiceName]sslMultiCertDS{}
 	for _, ds := range dses {
-		if ds.Type == nil || ds.Protocol == nil || &ds.XMLID == nil {
-			if &ds.XMLID == nil {
+		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == "" {
+			if ds.XMLID == "" {
 				warnings = append(warnings, "got unknown DS with nil values! Skipping!")
 			} else {
 				warnings = append(warnings, "got DS '"+ds.XMLID+"' with nil values! Skipping!")

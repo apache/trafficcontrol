@@ -39,7 +39,7 @@ type AStatsDotConfigOpts struct {
 
 func MakeAStatsDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *AStatsDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {

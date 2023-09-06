@@ -49,7 +49,7 @@ type LoggingDotYAMLOpts struct {
 
 func MakeLoggingDotYAML(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *LoggingDotYAMLOpts,
 ) (Cfg, error) {
 	if opt == nil {

@@ -60,16 +60,16 @@ import (
 	return profile, reqInf, nil
 }*/
 
-func (cl *TOClient) GetGlobalParameters(reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	globalParams := []tc.Parameter{}
+func (cl *TOClient) GetGlobalParameters(reqHdr http.Header) ([]tc.ParameterV5, toclientlib.ReqInf, error) {
+	globalParams := []tc.ParameterV5{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "profile_global_parameters", &globalParams, func(obj interface{}) error {
 		toParams, toReqInf, err := cl.c.GetParametersByProfileName(tc.GlobalProfileName, *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting global profile '" + tc.GlobalProfileName + "' parameters from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		params := obj.(*[]tc.Parameter)
-		*params = toParams.Response
+		params := obj.(*[]tc.ParameterV5)
+		*params = parametersToLatest(toParams.Response)
 		reqInf = toReqInf
 		return nil
 	})
@@ -155,7 +155,7 @@ func (cl *TOClient) GetCacheGroups(reqHdr http.Header) ([]tc.CacheGroupNullable,
 // If your use case is more efficient to only get the needed objects, for example if you're frequently requesting one file, set this false to get and cache the specific needed delivery services and servers.
 const DeliveryServiceServersAlwaysGetAll = true
 
-func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnName string, reqHdr http.Header) ([]tc.DeliveryServiceServer, toclientlib.ReqInf, error) {
+func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnName string, reqHdr http.Header) ([]tc.DeliveryServiceServerV5, toclientlib.ReqInf, error) {
 	const sortIDsInHash = true
 	reqInf := toclientlib.ReqInf{}
 	serverIDsStr := ""
@@ -173,7 +173,7 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnN
 		sIDsToFetch = serverIDs
 	}
 
-	dsServers := []tc.DeliveryServiceServer{}
+	dsServers := []tc.DeliveryServiceServerV5{}
 	err := torequtil.GetRetry(cl.NumRetries, "deliveryservice_servers_s"+serverIDsStr+"_d_"+dsIDsStr, &dsServers, func(obj interface{}) error {
 		dsIDStrs := []string{}
 		for _, dsID := range dsIDsToFetch {
@@ -201,8 +201,8 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnN
 		if err != nil {
 			return errors.New("getting delivery service servers from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		dss := obj.(*[]tc.DeliveryServiceServer)
-		*dss = toDSS.Response
+		dss := obj.(*[]tc.DeliveryServiceServerV5)
+		*dss = deliveryServiceServersToLatest(toDSS.Response)
 		reqInf = toReqInf
 		return nil
 	})
@@ -221,7 +221,7 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnN
 
 	// Older TO's may ignore the server ID list, so we need to filter them out manually to be sure.
 	// Also, if DeliveryServiceServersAlwaysGetAll, we need to filter here anyway.
-	filteredDSServers := []tc.DeliveryServiceServer{}
+	filteredDSServers := []tc.DeliveryServiceServerV5{}
 	for _, dsServer := range dsServers {
 		if dsServer.Server == nil || dsServer.DeliveryService == nil {
 			continue // TODO warn? error?
@@ -242,16 +242,16 @@ func (cl *TOClient) GetDeliveryServiceServers(dsIDs []int, serverIDs []int, cdnN
 	return filteredDSServers, reqInf, nil
 }
 
-func (cl *TOClient) GetServerProfileParameters(profileName string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	serverProfileParameters := []tc.Parameter{}
+func (cl *TOClient) GetServerProfileParameters(profileName string, reqHdr http.Header) ([]tc.ParameterV5, toclientlib.ReqInf, error) {
+	serverProfileParameters := []tc.ParameterV5{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "profile_"+profileName+"_parameters", &serverProfileParameters, func(obj interface{}) error {
 		toParams, toReqInf, err := cl.c.GetParametersByProfileName(profileName, *ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting server profile '" + profileName + "' parameters from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		params := obj.(*[]tc.Parameter)
-		*params = toParams.Response
+		params := obj.(*[]tc.ParameterV5)
+		*params = parametersToLatest(toParams.Response)
 		reqInf = toReqInf
 		return nil
 	})
@@ -305,16 +305,16 @@ func (cl *TOClient) GetTopologies(reqHdr http.Header) ([]tc.Topology, toclientli
 	return topologies, reqInf, nil
 }
 
-func (cl *TOClient) GetConfigFileParameters(configFile string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	params := []tc.Parameter{}
+func (cl *TOClient) GetConfigFileParameters(configFile string, reqHdr http.Header) ([]tc.ParameterV5, toclientlib.ReqInf, error) {
+	params := []tc.ParameterV5{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "config_file_"+configFile+"_parameters", &params, func(obj interface{}) error {
 		toParams, toReqInf, err := GetParametersByConfigFile(cl.c, configFile, ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting delivery services from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		params := obj.(*[]tc.Parameter)
-		*params = toParams
+		params := obj.(*[]tc.ParameterV5)
+		*params = parametersToLatest(toParams)
 		reqInf = toReqInf
 		return nil
 	})
@@ -401,16 +401,16 @@ func (cl *TOClient) GetURISigningKeys(dsName string, reqHdr http.Header) ([]byte
 	return keys, reqInf, nil
 }
 
-func (cl *TOClient) GetParametersByName(paramName string, reqHdr http.Header) ([]tc.Parameter, toclientlib.ReqInf, error) {
-	params := []tc.Parameter{}
+func (cl *TOClient) GetParametersByName(paramName string, reqHdr http.Header) ([]tc.ParameterV5, toclientlib.ReqInf, error) {
+	params := []tc.ParameterV5{}
 	reqInf := toclientlib.ReqInf{}
 	err := torequtil.GetRetry(cl.NumRetries, "parameters_name_"+paramName, &params, func(obj interface{}) error {
 		toParams, toReqInf, err := GetParametersByName(cl.c, paramName, ReqOpts(reqHdr))
 		if err != nil {
 			return errors.New("getting parameters name '" + paramName + "' from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
-		params := obj.(*[]tc.Parameter)
-		*params = toParams
+		params := obj.(*[]tc.ParameterV5)
+		*params = parametersToLatest(toParams)
 		reqInf = toReqInf
 		return nil
 	})

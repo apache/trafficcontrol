@@ -118,7 +118,7 @@ func TestLayerProfiles(t *testing.T) {
 		"BAZ",
 	}
 
-	allParams := []tc.Parameter{
+	allParams := []tc.ParameterV5{
 		{
 			ConfigFile: "cfg_a",
 			ID:         1000,
@@ -323,11 +323,11 @@ func makeDSS(servers []Server, dses []DeliveryService) []DeliveryServiceServer {
 	return dss
 }
 
-func makeParamsFromMapArr(profile string, configFile string, paramM map[string][]string) []tc.Parameter {
-	params := []tc.Parameter{}
+func makeParamsFromMapArr(profile string, configFile string, paramM map[string][]string) []tc.ParameterV5 {
+	params := []tc.ParameterV5{}
 	for name, vals := range paramM {
 		for _, val := range vals {
-			params = append(params, tc.Parameter{
+			params = append(params, tc.ParameterV5{
 				Name:       name,
 				ConfigFile: configFile,
 				Value:      val,
@@ -338,10 +338,10 @@ func makeParamsFromMapArr(profile string, configFile string, paramM map[string][
 	return params
 }
 
-func makeParamsFromMap(profile string, configFile string, paramM map[string]string) []tc.Parameter {
-	params := []tc.Parameter{}
+func makeParamsFromMap(profile string, configFile string, paramM map[string]string) []tc.ParameterV5 {
+	params := []tc.ParameterV5{}
 	for name, val := range paramM {
-		params = append(params, tc.Parameter{
+		params = append(params, tc.ParameterV5{
 			Name:       name,
 			ConfigFile: configFile,
 			Value:      val,

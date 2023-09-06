@@ -39,7 +39,7 @@ type ATSDotRulesOpts struct {
 
 func MakeATSDotRules(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *ATSDotRulesOpts,
 ) (Cfg, error) {
 	if opt == nil {

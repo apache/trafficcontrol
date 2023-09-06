@@ -33,7 +33,7 @@ func TestMakeATSDotRules(t *testing.T) {
 
 	hdr := "myHeaderComment"
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "Drive_Prefix",
 			ConfigFile: ATSDotRulesFileName,

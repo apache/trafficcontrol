@@ -38,7 +38,7 @@ type PluginDotConfigOpts struct {
 
 func MakePluginDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *PluginDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {

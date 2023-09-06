@@ -123,9 +123,9 @@ func MakeRemapDotConfig(
 	unfilteredDSes []DeliveryService,
 	dss []DeliveryServiceServer,
 	dsRegexArr []tc.DeliveryServiceRegexes,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	cdn *tc.CDNV5,
-	remapConfigParams []tc.Parameter, // includes cachekey.config
+	remapConfigParams []tc.ParameterV5, // includes cachekey.config
 	topologies []tc.TopologyV5,
 	cacheGroupArr []tc.CacheGroupNullableV5,
 	serverCapabilities map[int]map[ServerCapability]struct{},
@@ -200,8 +200,8 @@ func MakeRemapDotConfig(
 // This sticks the DS parameters in a map.
 // remap.config parameters use "<plugin>.pparam" key
 // cachekey.config parameters retain the 'cachekey.config' key
-func classifyConfigParams(configParams []tc.Parameter) map[string][]tc.Parameter {
-	configParamMap := map[string][]tc.Parameter{}
+func classifyConfigParams(configParams []tc.ParameterV5) map[string][]tc.ParameterV5 {
+	configParamMap := map[string][]tc.ParameterV5{}
 	for _, param := range configParams {
 		key := param.ConfigFile
 		if "remap.config" == key {
@@ -213,7 +213,7 @@ func classifyConfigParams(configParams []tc.Parameter) map[string][]tc.Parameter
 }
 
 // For general <plugin>.pparam parameters
-func paramsStringFor(parameters []tc.Parameter, warnings *[]string) (paramsString string) {
+func paramsStringFor(parameters []tc.ParameterV5, warnings *[]string) (paramsString string) {
 	uniquemap := map[string]int{}
 
 	for _, param := range parameters {
@@ -239,7 +239,7 @@ func paramsStringFor(parameters []tc.Parameter, warnings *[]string) (paramsStrin
 }
 
 // for parameters that use 'cachekey.config' as their key
-func paramsStringOldFor(parameters []tc.Parameter, warnings *[]string) (paramsString string) {
+func paramsStringOldFor(parameters []tc.ParameterV5, warnings *[]string) (paramsString string) {
 	// check for duplicate parameters
 	uniquemap := map[string]int{}
 	paramKeyVals := []keyVal{}
@@ -264,7 +264,7 @@ func paramsStringOldFor(parameters []tc.Parameter, warnings *[]string) (paramsSt
 }
 
 // Handles special case for cachekey
-func cachekeyArgsFor(configParamsMap map[string][]tc.Parameter, warnings *[]string) (argsString string) {
+func cachekeyArgsFor(configParamsMap map[string][]tc.ParameterV5, warnings *[]string) (argsString string) {
 
 	hasCachekey := false
 
@@ -284,7 +284,7 @@ func cachekeyArgsFor(configParamsMap map[string][]tc.Parameter, warnings *[]stri
 }
 
 // lastPrePostRemapLinesFor Returns any pre or post raw remap lines.
-func lastPrePostRemapLinesFor(dsConfigParamsMap map[string][]tc.Parameter, dsid string) ([]string, []string) {
+func lastPrePostRemapLinesFor(dsConfigParamsMap map[string][]tc.ParameterV5, dsid string) ([]string, []string) {
 	preRemapLines := []string{}
 	postRemapLines := []string{}
 
@@ -308,7 +308,7 @@ func lastPrePostRemapLinesFor(dsConfigParamsMap map[string][]tc.Parameter, dsid 
 // getServerConfigRemapDotConfigForMid returns the remap lines, any warnings, and any error.
 func getServerConfigRemapDotConfigForMid(
 	atsMajorVersion uint,
-	profilesConfigParams map[int][]tc.Parameter,
+	profilesConfigParams map[int][]tc.ParameterV5,
 	dses []DeliveryService,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
 	header string,
@@ -384,7 +384,7 @@ func getServerConfigRemapDotConfigForMid(
 			cachekeyArgs = getQStringIgnoreRemap(atsMajorVersion)
 		}
 
-		dsConfigParamsMap := map[string][]tc.Parameter{}
+		dsConfigParamsMap := map[string][]tc.ParameterV5{}
 		if nil != ds.ProfileID {
 			dsConfigParamsMap = classifyConfigParams(profilesConfigParams[*ds.ProfileID])
 		}
@@ -496,7 +496,7 @@ func getServerConfigRemapDotConfigForMid(
 
 // getServerConfigRemapDotConfigForEdge returns the remap lines, any warnings, and any error.
 func getServerConfigRemapDotConfigForEdge(
-	profilesRemapConfigParams map[int][]tc.Parameter,
+	profilesRemapConfigParams map[int][]tc.ParameterV5,
 	serverPackageParamData map[string]string, // map[paramName]paramVal for this server, config file 'package'
 	dses []DeliveryService,
 	dsRegexes map[tc.DeliveryServiceName][]tc.DeliveryServiceRegex,
@@ -557,7 +557,7 @@ func getServerConfigRemapDotConfigForEdge(
 			}
 
 			for _, line := range remapLines {
-				profileremapConfigParams := []tc.Parameter{}
+				profileremapConfigParams := []tc.ParameterV5{}
 				if ds.ProfileID != nil {
 					profileremapConfigParams = profilesRemapConfigParams[*ds.ProfileID]
 				}
@@ -614,7 +614,7 @@ func buildEdgeRemapLine(
 	ds DeliveryService,
 	mapFrom string,
 	mapTo string,
-	remapConfigParams []tc.Parameter,
+	remapConfigParams []tc.ParameterV5,
 	cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5,
 	nameTopologies map[TopologyName]tc.TopologyV5,
 	configDir string,
@@ -893,7 +893,7 @@ func getQStringIgnoreRemap(atsMajorVersion uint) string {
 
 // makeServerPackageParamData returns a map[paramName]paramVal for this server, config file 'package'.
 // Returns the param data, and any warnings
-func makeServerPackageParamData(server *Server, serverParams []tc.Parameter) (map[string]string, []string) {
+func makeServerPackageParamData(server *Server, serverParams []tc.ParameterV5) (map[string]string, []string) {
 	warnings := []string{}
 
 	serverPackageParamData := map[string]string{}
@@ -1011,7 +1011,7 @@ func remapFilterDSes(server *Server, dss []DeliveryServiceServer, dses []Deliver
 
 // makeDSProfilesConfigParams returns a map[ProfileID][ParamName]ParamValue for the cache key params for each profile.
 // Returns the params, any warnings, and any error.
-func makeDSProfilesConfigParams(server *Server, dses []DeliveryService, remapConfigParams []tc.Parameter) (map[int][]tc.Parameter, []string, error) {
+func makeDSProfilesConfigParams(server *Server, dses []DeliveryService, remapConfigParams []tc.ParameterV5) (map[int][]tc.ParameterV5, []string, error) {
 	warnings := []string{}
 	dsConfigParamsWithProfiles, err := tcParamsToParamsWithProfiles(remapConfigParams)
 	if err != nil {
@@ -1028,14 +1028,14 @@ func makeDSProfilesConfigParams(server *Server, dses []DeliveryService, remapCon
 		dsProfileNamesToIDs[*ds.ProfileName] = *ds.ProfileID
 	}
 
-	dsProfilesConfigParams := map[int][]tc.Parameter{}
+	dsProfilesConfigParams := map[int][]tc.ParameterV5{}
 	for _, param := range configParamsWithProfilesMap {
 		for dsProfileName, dsProfileID := range dsProfileNamesToIDs {
 			if _, ok := param.ProfileNames[dsProfileName]; ok {
 				if _, ok := dsProfilesConfigParams[dsProfileID]; !ok {
-					dsProfilesConfigParams[dsProfileID] = []tc.Parameter{}
+					dsProfilesConfigParams[dsProfileID] = []tc.ParameterV5{}
 				}
-				dsProfilesConfigParams[dsProfileID] = append(dsProfilesConfigParams[dsProfileID], param.Parameter)
+				dsProfilesConfigParams[dsProfileID] = append(dsProfilesConfigParams[dsProfileID], param.ParameterV5)
 			}
 		}
 	}
@@ -1162,7 +1162,7 @@ func makeFQDN(hostRegex string, ds *DeliveryService, server string, cdnDomain st
 
 		hName := server
 		if tc.DSType(*ds.Type).IsDNS() {
-			if &ds.RoutingName == nil {
+			if &ds.RoutingName == nil || ds.RoutingName == "" {
 				return "", errors.New("ds is dns, but missing routing name")
 			}
 			hName = ds.RoutingName

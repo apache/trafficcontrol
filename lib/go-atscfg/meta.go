@@ -47,7 +47,7 @@ type ConfigFilesListOpts struct {
 func MakeConfigFilesList(
 	configDir string,
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	deliveryServices []DeliveryService,
 	deliveryServiceServers []DeliveryServiceServer,
 	globalParams []tc.Parameter,
@@ -407,7 +407,7 @@ func getTOURLAndReverseProxy(globalParams []tc.Parameter) (string, string) {
 	return toURL, toReverseProxyURL
 }
 
-func getLocationParams(serverParams []tc.Parameter) map[string]configProfileParams {
+func getLocationParams(serverParams []tc.ParameterV5) map[string]configProfileParams {
 	locationParams := map[string]configProfileParams{}
 	for _, param := range serverParams {
 		if param.Name == "location" {

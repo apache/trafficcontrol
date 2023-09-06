@@ -33,7 +33,7 @@ import (
 // GetProfileByName returns the profile with the given name from Traffic Ops.
 // It is a helper function equivalent to calling GetProfiles with RequestOptions with the Values (query string) with the key name set to the Profile name.
 // If opts.Values[name] exists, it is overwritten with name.
-func GetProfileByName(toClient *toclient.Session, name string, opts *toclient.RequestOptions) (tc.Profile, toclientlib.ReqInf, error) {
+func GetProfileByName(toClient *toclient.Session, name string, opts *toclient.RequestOptions) (tc.ProfileV5, toclientlib.ReqInf, error) {
 	if opts == nil {
 		opts = &toclient.RequestOptions{}
 	}
@@ -43,13 +43,13 @@ func GetProfileByName(toClient *toclient.Session, name string, opts *toclient.Re
 	opts.QueryParameters.Set("name", name)
 	profiles, reqInf, err := toClient.GetProfiles(*opts)
 	if err != nil {
-		return tc.Profile{}, reqInf, err
+		return tc.ProfileV5{}, reqInf, err
 	} else if reqInf.StatusCode == http.StatusNotModified {
-		return tc.Profile{}, reqInf, nil
+		return tc.ProfileV5{}, reqInf, nil
 	} else if len(profiles.Response) == 0 {
-		return tc.Profile{}, reqInf, fmt.Errorf("name '"+string(name)+" ' not found (no error, but len 0) reqInf %+v profiles %+v", reqInf, profiles)
+		return tc.ProfileV5{}, reqInf, fmt.Errorf("name '"+string(name)+" ' not found (no error, but len 0) reqInf %+v profiles %+v", reqInf, profiles)
 	} else if len(profiles.Response) > 1 {
-		return tc.Profile{}, reqInf, fmt.Errorf("expected 1 profile, got len %v val %+v", len(profiles.Response), profiles.Response)
+		return tc.ProfileV5{}, reqInf, fmt.Errorf("expected 1 profile, got len %v val %+v", len(profiles.Response), profiles.Response)
 	}
 	return profiles.Response[0], reqInf, nil
 }
@@ -57,7 +57,7 @@ func GetProfileByName(toClient *toclient.Session, name string, opts *toclient.Re
 // GetParametersByConfigFile returns the parameters with the given config file from Traffic Ops.
 // It is a helper function equivalent to calling GetParameters with RequestOptions with the Values (query string) with the key configFile set to the config file.
 // If opts.Values[configFile] exists, it is overwritten with name.
-func GetParametersByConfigFile(toClient *toclient.Session, configFile string, opts *toclient.RequestOptions) ([]tc.Parameter, toclientlib.ReqInf, error) {
+func GetParametersByConfigFile(toClient *toclient.Session, configFile string, opts *toclient.RequestOptions) ([]tc.ParameterV5, toclientlib.ReqInf, error) {
 	if opts == nil {
 		opts = &toclient.RequestOptions{}
 	}
@@ -72,7 +72,7 @@ func GetParametersByConfigFile(toClient *toclient.Session, configFile string, op
 // GetParametersByName returns the parameters with the given name from Traffic Ops.
 // It is a helper function equivalent to calling GetParameters with RequestOptions with the Values (query string) with the key name set to the name.
 // If opts.Values[name] exists, it is overwritten with name.
-func GetParametersByName(toClient *toclient.Session, name string, opts *toclient.RequestOptions) ([]tc.Parameter, toclientlib.ReqInf, error) {
+func GetParametersByName(toClient *toclient.Session, name string, opts *toclient.RequestOptions) ([]tc.ParameterV5, toclientlib.ReqInf, error) {
 	if opts == nil {
 		opts = &toclient.RequestOptions{}
 	}
@@ -134,7 +134,7 @@ func GetCacheGroupByName(toClient *toclient.Session, cgName string) (tc.CacheGro
 // GetParameterByNameAndConfigFile returns the parameters with the given name from Traffic Ops.
 // It is a helper function equivalent to calling GetParameters with RequestOptions with the Values (query string) with the key name set to the name.
 // If opts.Values[name] exists, it is overwritten with name.
-func GetParameterByNameAndConfigFile(toClient *toclient.Session, name string, configFile string, opts *toclient.RequestOptions) ([]tc.Parameter, toclientlib.ReqInf, error) {
+func GetParameterByNameAndConfigFile(toClient *toclient.Session, name string, configFile string, opts *toclient.RequestOptions) ([]tc.ParameterV5, toclientlib.ReqInf, error) {
 	if opts == nil {
 		opts = &toclient.RequestOptions{}
 	}
@@ -149,7 +149,7 @@ func GetParameterByNameAndConfigFile(toClient *toclient.Session, name string, co
 
 // GetServerByHostName requests the server with the given hostname from Traffic Ops and returns it.
 // If the server does not exist, an error is returned
-func GetServerByHostName(toClient *toclient.Session, hostName string) (*tc.ServerV40, toclientlib.ReqInf, error) {
+func GetServerByHostName(toClient *toclient.Session, hostName string) (*tc.ServerV5, toclientlib.ReqInf, error) {
 	opts := toclient.NewRequestOptions()
 	opts.QueryParameters.Set("hostName", hostName)
 	resp, reqInf, err := toClient.GetServers(opts)

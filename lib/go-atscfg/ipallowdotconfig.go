@@ -56,7 +56,7 @@ type IPAllowDotConfigOpts struct {
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
 // More specifically, it should be the list of edges whose cachegroup's parent_cachegroup or secondary_parent_cachegroup is the cachegroup of this Mid server.
 func MakeIPAllowDotConfig(
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	server *Server,
 	servers []Server,
 	cacheGroups []tc.CacheGroupNullableV5,

@@ -203,22 +203,22 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 		}
 		dsRegexes = append(dsRegexes, dsr)
 	}
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
 	}
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "cachekey.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--cachekeykey=cachekeyval",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -333,8 +333,8 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
@@ -342,14 +342,14 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "cachekey.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--cachekeykey=cachekeyval",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -452,14 +452,14 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -467,8 +467,8 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -554,14 +554,14 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -569,8 +569,8 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -670,14 +670,14 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -685,8 +685,8 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -772,14 +772,14 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -787,8 +787,8 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -912,14 +912,14 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -927,8 +927,8 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -1013,14 +1013,14 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -1028,8 +1028,8 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -1116,14 +1116,14 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -1131,8 +1131,8 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -1220,14 +1220,14 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -1235,20 +1235,20 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "cachekey.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--ckeypp=cvalpp",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "ckeycc",
 			ConfigFile: "cachekey.config",
 			Value:      "cvalcc",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -1360,14 +1360,14 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -1375,32 +1375,32 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "cachekeykey",
 			ConfigFile: "cacheurl.config",
 			Value:      "cachekeyval",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "shouldnotexist",
 			ConfigFile: "cacheurl.config",
 			Value:      "shouldnotexisteither",
 			Profiles:   []byte(`["not-dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "cachekeykey",
 			ConfigFile: "cacheurl.config",
 			Value:      "cachekeyval",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cacheurl.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -1502,14 +1502,14 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -1517,8 +1517,8 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -1644,14 +1644,14 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -1659,8 +1659,8 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -1787,14 +1787,14 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -1802,8 +1802,8 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -2186,14 +2186,14 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -2201,8 +2201,8 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -2292,14 +2292,14 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -2307,8 +2307,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -2415,14 +2415,14 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -2430,8 +2430,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -2538,14 +2538,14 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -2553,8 +2553,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -2661,14 +2661,14 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -2676,8 +2676,8 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -2784,14 +2784,14 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
@@ -2799,8 +2799,8 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -2903,20 +2903,20 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -2924,8 +2924,8 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -3028,20 +3028,20 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -3049,8 +3049,8 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -3153,20 +3153,20 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -3174,8 +3174,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -3282,20 +3282,20 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -3303,8 +3303,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -3411,20 +3411,20 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -3432,8 +3432,8 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -3540,20 +3540,20 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -3561,14 +3561,14 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "url_sig.pparam",
 			ConfigFile: "remap.config",
 			Value:      "pristine",
@@ -3675,20 +3675,20 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -3696,8 +3696,8 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -3799,20 +3799,20 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -3820,8 +3820,8 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -3923,20 +3923,20 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -3944,8 +3944,8 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -4047,20 +4047,20 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -4068,8 +4068,8 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -4171,20 +4171,20 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -4192,8 +4192,8 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -4293,20 +4293,20 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -4314,8 +4314,8 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -4418,20 +4418,20 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -4439,20 +4439,20 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "cachekey.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--ckeypp=",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "ckeycc",
 			ConfigFile: "cachekey.config",
 			Value:      "",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -4566,20 +4566,20 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "5",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -4587,7 +4587,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{}
+	remapConfigParams := []tc.ParameterV5{}
 
 	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
@@ -4684,20 +4684,20 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -4705,20 +4705,20 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "cachekey.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--ckeypp=cvalpp",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "ckeycc",
 			ConfigFile: "cachekey.config",
 			Value:      "cvalcc",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -4824,20 +4824,20 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -4845,8 +4845,8 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -4949,20 +4949,20 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -4970,8 +4970,8 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -5070,20 +5070,20 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -5091,8 +5091,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -5195,20 +5195,20 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -5216,24 +5216,24 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			ConfigFile: "cacheurl.config",
 			Profiles:   []byte(`["not-dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "cachekeykey",
 			ConfigFile: "cachekey.config",
 			Value:      "cachekeyval",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -5344,20 +5344,20 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -5365,20 +5365,20 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "background_fetch.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--log=regex_revalidate.log",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "background_fetch.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--log=regex_revalidate.log",
@@ -5491,20 +5491,20 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -5512,8 +5512,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -5621,20 +5621,20 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -5642,14 +5642,14 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "cache_range_requests.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--consider-ims",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -5761,20 +5761,20 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -5782,20 +5782,20 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "cache_range_requests.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--consider-ims",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "cache_range_requests.pparam",
 			ConfigFile: "remap.config",
 			Value:      "--no-modify-cachekey",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -5915,20 +5915,20 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -5936,8 +5936,8 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -6061,20 +6061,20 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -6082,8 +6082,8 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -6195,20 +6195,20 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -6216,8 +6216,8 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -6330,20 +6330,20 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -6351,8 +6351,8 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -6470,20 +6470,20 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -6491,8 +6491,8 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -6599,20 +6599,20 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -6620,8 +6620,8 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -6720,20 +6720,20 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -6741,8 +6741,8 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -6841,20 +6841,20 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -6862,8 +6862,8 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -6962,20 +6962,20 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -6983,8 +6983,8 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -7087,20 +7087,20 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -7108,8 +7108,8 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -7208,20 +7208,20 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -7229,8 +7229,8 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -7319,20 +7319,20 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -7340,8 +7340,8 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -7435,20 +7435,20 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -7456,8 +7456,8 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -7556,20 +7556,20 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -7577,8 +7577,8 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -7677,20 +7677,20 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -7698,8 +7698,8 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -7849,20 +7849,20 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(mid.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -7870,8 +7870,8 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -8030,20 +8030,20 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -8051,8 +8051,8 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -8159,20 +8159,20 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -8180,8 +8180,8 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -8292,20 +8292,20 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -8313,8 +8313,8 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -8415,20 +8415,20 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -8436,8 +8436,8 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -8601,20 +8601,20 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -8622,8 +8622,8 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
@@ -8781,20 +8781,20 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -8802,26 +8802,26 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPost",
 			ConfigFile: "remap.config",
 			Value:      "remap http://penraw/ http://penraw0/",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPost",
 			ConfigFile: "remap.config",
 			Value:      "remap http://lastraw/ http://lastraw0/",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPre",
 			ConfigFile: "remap.config",
 			Value:      "map_with_recp_port http://firstraw:8000/ http://firstraw0/",
@@ -9000,20 +9000,20 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -9021,26 +9021,26 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPost",
 			ConfigFile: "remap.config",
 			Value:      "remap http://penraw/ http://penraw0/",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPost",
 			ConfigFile: "remap.config",
 			Value:      "remap http://lastraw/ http://lastraw0/",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPre",
 			ConfigFile: "remap.config",
 			Value:      "map_with_recp_port http://firstraw:8000/ http://firstraw0/",
@@ -9191,20 +9191,20 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -9212,26 +9212,26 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPost",
 			ConfigFile: "remap.config",
 			Value:      "remap http://penraw/ http://penraw0/",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPost",
 			ConfigFile: "remap.config",
 			Value:      "remap http://lastraw/ http://lastraw0/",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPre",
 			ConfigFile: "remap.config",
 			Value:      "map_with_recp_port http://firstraw:8000/ http://firstraw0/",
@@ -9390,20 +9390,20 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
 			Profiles:   []byte(server.ProfileNames[0]),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
@@ -9411,26 +9411,26 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 		},
 	}
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPost",
 			ConfigFile: "remap.config",
 			Value:      "remap http://penraw/ http://penraw0/",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPost",
 			ConfigFile: "remap.config",
 			Value:      "remap http://lastraw/ http://lastraw0/",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "LastRawRemapPre",
 			ConfigFile: "remap.config",
 			Value:      "map_with_recp_port http://firstraw:8000/ http://firstraw0/",
@@ -9599,8 +9599,8 @@ func TestMakeRemapDotConfigRemapTemplate(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
@@ -9614,26 +9614,26 @@ map http://foo/ http://bar/`
 	const InnerTemplateString = `map {{{Source}}} {{{Destination}}} {{{Cachekey}}} {{{HeaderRewrite}}} {{{RangeRequests}}} @plugin=prefetch.so @pparam=--backend=true`
 	const LastTemplateString = `map_with_recv_port {{{Source}}}:3600 {{{Destination}}} {{{HeaderRewrite}}} {{{Cachekey}}}`
 
-	remapConfigParams := []tc.Parameter{
-		tc.Parameter{
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "not_location",
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "template.first",
 			ConfigFile: "remap.config",
 			Value:      FirstTemplateString,
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "template.inner",
 			ConfigFile: "remap.config",
 			Value:      InnerTemplateString,
 			Profiles:   []byte(`["dsprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "template.last",
 			ConfigFile: "remap.config",
 			Value:      LastTemplateString,

@@ -45,20 +45,20 @@ func TestMakeParentDotConfig(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -66,8 +66,8 @@ func TestMakeParentDotConfig(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -156,20 +156,20 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -177,8 +177,8 @@ func TestMakeParentDotConfigCapabilities(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -301,20 +301,20 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 	ds0.MultiSiteOrigin = true
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -322,8 +322,8 @@ func TestMakeParentDotConfigMSOSecondaryParent(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -420,20 +420,20 @@ func TestMakeParentDotConfigMSONoPrimaryParent(t *testing.T) {
 	ds0.MultiSiteOrigin = true
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -441,8 +441,8 @@ func TestMakeParentDotConfigMSONoPrimaryParent(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -537,44 +537,44 @@ func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
 	ds0.ProfileName = util.Ptr("dsprofile")
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "mso.parent_retry",
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["` + *ds0.ProfileName + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "mso.algorithm",
 			ConfigFile: "parent.config",
 			Value:      "consistent_hash",
 			Profiles:   []byte(`["` + *ds0.ProfileName + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "mso.unavailable_server_retry_responses",
 			ConfigFile: "parent.config",
 			Value:      `"500,502,503,542"`,
 			Profiles:   []byte(`["` + *ds0.ProfileName + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "mso.max_simple_retries",
 			ConfigFile: "parent.config",
 			Value:      "2",
@@ -582,8 +582,8 @@ func TestMakeParentDotConfigMSONoTopologyNoMid(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -672,10 +672,10 @@ func TestMakeParentDotConfigMSONoTopoMultiCG(t *testing.T) {
 
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{}
+	parentConfigParams := []tc.ParameterV5{}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
@@ -802,20 +802,20 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -823,8 +823,8 @@ func TestMakeParentDotConfigTopologies(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -944,20 +944,20 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -965,8 +965,8 @@ func TestMakeParentDotConfigNotInTopologies(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -1084,20 +1084,20 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1, *ds2}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -1105,8 +1105,8 @@ func TestMakeParentDotConfigTopologiesCapabilities(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -1232,20 +1232,20 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -1253,8 +1253,8 @@ func TestMakeParentDotConfigTopologiesOmitOfflineParents(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -1375,20 +1375,20 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -1396,8 +1396,8 @@ func TestMakeParentDotConfigTopologiesOmitDifferentCDNParents(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -1515,8 +1515,8 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
@@ -1524,8 +1524,8 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
@@ -1639,7 +1639,7 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 	})
 
 	t.Run("MSO topologoies param qstring=ignore", func(t *testing.T) {
-		parentConfigParamsWithQstr := append(parentConfigParams, tc.Parameter{
+		parentConfigParamsWithQstr := append(parentConfigParams, tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "ignore",
@@ -1656,7 +1656,7 @@ func TestMakeParentDotConfigTopologiesMSO(t *testing.T) {
 	})
 
 	t.Run("MSO topologoies param qstring=consider", func(t *testing.T) {
-		parentConfigParamsWithQstr := append(parentConfigParams, tc.Parameter{
+		parentConfigParamsWithQstr := append(parentConfigParams, tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "consider",
@@ -1700,20 +1700,20 @@ func TestMakeParentDotConfigTopologiesMSOWithCapabilities(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -1721,8 +1721,8 @@ func TestMakeParentDotConfigTopologiesMSOWithCapabilities(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -1840,20 +1840,20 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -1861,8 +1861,8 @@ func TestMakeParentDotConfigMSOWithCapabilities(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -1970,50 +1970,50 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysMSO.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      "consistent_hash",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysMSO.ParentRetry,
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysMSO.MaxSimpleRetries,
 			ConfigFile: "parent.config",
 			Value:      "14",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysMSO.MaxUnavailableRetries,
 			ConfigFile: "parent.config",
 			Value:      "9",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysMSO.UnavailableRetryResponses,
 			ConfigFile: "parent.config",
 			Value:      `"400,503"`,
@@ -2021,8 +2021,8 @@ func TestMakeParentDotConfigTopologiesMSOParams(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "8",
@@ -2146,50 +2146,50 @@ func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      "consistent_hash",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.ParentRetry,
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxSimpleRetries,
 			ConfigFile: "parent.config",
 			Value:      "14",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxUnavailableRetries,
 			ConfigFile: "parent.config",
 			Value:      "9",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.UnavailableRetryResponses,
 			ConfigFile: "parent.config",
 			Value:      `"400,503"`,
@@ -2197,8 +2197,8 @@ func TestMakeParentDotConfigTopologiesParams(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "8",
@@ -2325,20 +2325,20 @@ func TestMakeParentDotConfigTopologiesNonStandardServerTypes(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -2346,8 +2346,8 @@ func TestMakeParentDotConfigTopologiesNonStandardServerTypes(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -2473,32 +2473,32 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.SecondaryMode,
 			ConfigFile: "parent.config",
 			Value:      "",
 			Profiles:   []byte(`["ds0Profile","ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysFirst.SecondaryMode,
 			ConfigFile: "parent.config",
 			Value:      "",
@@ -2506,8 +2506,8 @@ func TestMakeParentDotConfigSecondaryMode(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "8",
@@ -2640,20 +2640,20 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -2661,8 +2661,8 @@ func TestMakeParentDotConfigNoSecondaryMode(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "8",
@@ -2797,7 +2797,7 @@ func TestMakeParentDotConfigComments(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -2818,7 +2818,7 @@ func TestMakeParentDotConfigComments(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "trafficserver",
 			ConfigFile: "package",
@@ -2923,7 +2923,7 @@ func TestMakeParentDotConfigCommentTopology(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -2944,7 +2944,7 @@ func TestMakeParentDotConfigCommentTopology(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "trafficserver",
 			ConfigFile: "package",
@@ -3077,20 +3077,20 @@ func TestMakeParentDotConfigHTTPSOrigin(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -3098,8 +3098,8 @@ func TestMakeParentDotConfigHTTPSOrigin(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -3194,7 +3194,7 @@ func TestMakeParentDotConfigHTTPSOriginTopology(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -3215,7 +3215,7 @@ func TestMakeParentDotConfigHTTPSOriginTopology(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "trafficserver",
 			ConfigFile: "package",
@@ -3321,27 +3321,27 @@ func TestMakeParentDotConfigNoParentNoTopology(t *testing.T) {
 	hdr := &ParentConfigOpts{AddComments: false, HdrComment: "myHeaderComment", GoDirect: "true"}
 
 	ds0 := makeParentDS()
-	ds0Type := "HTTP"
+	ds0Type := "HTTP_LIVE"
 	ds0.Type = &ds0Type
 	ds0.QStringIgnore = util.Ptr(int(tc.QStringIgnoreUseInCacheKeyAndPassUp))
 	ds0.OrgServerFQDN = util.Ptr("http://ds0-origin.example.net")
 
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -3349,8 +3349,8 @@ func TestMakeParentDotConfigNoParentNoTopology(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",
@@ -3457,7 +3457,7 @@ func TestMakeParentDotConfigHTTPSOriginTopologyNoPrimaryParent(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -3478,7 +3478,7 @@ func TestMakeParentDotConfigHTTPSOriginTopologyNoPrimaryParent(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "trafficserver",
 			ConfigFile: "package",
@@ -3595,7 +3595,7 @@ func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 
 	dses := []DeliveryService{*ds0}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -3622,7 +3622,7 @@ func TestMakeParentDotConfigMergeParentGroupTopology(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "trafficserver",
 			ConfigFile: "package",
@@ -3804,62 +3804,62 @@ func TestMakeParentDotConfigTopologiesServerMultipleProfileParams(t *testing.T) 
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      "consistent_hash",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.ParentRetry,
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxSimpleRetries,
 			ConfigFile: "parent.config",
 			Value:      "14",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxUnavailableRetries,
 			ConfigFile: "parent.config",
 			Value:      "9",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.UnavailableRetryResponses,
 			ConfigFile: "parent.config",
 			Value:      `"400,503"`,
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
 			Value:      "100",
 			Profiles:   []byte(`["serverprofile1"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
 			Value:      "200",
@@ -3867,20 +3867,20 @@ func TestMakeParentDotConfigTopologiesServerMultipleProfileParams(t *testing.T) 
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "8",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
 			Value:      "100",
 			Profiles:   []byte(`["serverprofile0"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigCacheParamWeight,
 			ConfigFile: "parent.config",
 			Value:      "200",
@@ -4003,7 +4003,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -4071,7 +4071,7 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 
 	// Assign them to the profile
 	for key, val := range params {
-		tcparam := tc.Parameter{
+		tcparam := tc.ParameterV5{
 			Name:       key,
 			ConfigFile: "parent.config",
 			Value:      val,
@@ -4080,8 +4080,8 @@ func TestMakeParentDotConfigFirstLastNoTopo(t *testing.T) {
 		parentConfigParams = append(parentConfigParams, tcparam)
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "9",
@@ -4341,7 +4341,7 @@ func TestMakeParentDotConfigFirstInnerLastTopology(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
 		{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
@@ -4410,7 +4410,7 @@ func TestMakeParentDotConfigFirstInnerLastTopology(t *testing.T) {
 
 	// Assign them to the profile
 	for key, val := range params {
-		tcparam := tc.Parameter{
+		tcparam := tc.ParameterV5{
 			Name:       key,
 			ConfigFile: "parent.config",
 			Value:      val,
@@ -4419,7 +4419,7 @@ func TestMakeParentDotConfigFirstInnerLastTopology(t *testing.T) {
 		parentConfigParams = append(parentConfigParams, tcparam)
 	}
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "trafficserver",
 			ConfigFile: "package",
@@ -4731,50 +4731,50 @@ func TestMakeParentDotConfigOptVersion(t *testing.T) {
 
 	dses := []DeliveryService{*ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      "consistent_hash",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.ParentRetry,
 			ConfigFile: "parent.config",
 			Value:      "both",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxSimpleRetries,
 			ConfigFile: "parent.config",
 			Value:      "14",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.MaxUnavailableRetries,
 			ConfigFile: "parent.config",
 			Value:      "9",
 			Profiles:   []byte(`["ds1Profile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.UnavailableRetryResponses,
 			ConfigFile: "parent.config",
 			Value:      `"400,503"`,
@@ -4854,8 +4854,8 @@ func TestMakeParentDotConfigOptVersion(t *testing.T) {
 	// unavailable_server_retry_responses is not available as a feature in ATS 5, but is in ATS 9.
 
 	t.Run("Package Parameter 9 with no Opt ATSVersion has ATS 9 feature", func(t *testing.T) {
-		serverParams := []tc.Parameter{
-			tc.Parameter{
+		serverParams := []tc.ParameterV5{
+			tc.ParameterV5{
 				Name:       "trafficserver",
 				ConfigFile: "package",
 				Value:      "9",
@@ -4879,8 +4879,8 @@ func TestMakeParentDotConfigOptVersion(t *testing.T) {
 	})
 
 	t.Run("Package Parameter 5 with no Opt ATSVersion does not have the feature it shouldn't", func(t *testing.T) {
-		serverParams := []tc.Parameter{
-			tc.Parameter{
+		serverParams := []tc.ParameterV5{
+			tc.ParameterV5{
 				Name:       "trafficserver",
 				ConfigFile: "package",
 				Value:      "5",
@@ -4904,8 +4904,8 @@ func TestMakeParentDotConfigOptVersion(t *testing.T) {
 	})
 
 	t.Run("Package Parameter 5 with Opt ATSVersion 9 uses Opt not Param.", func(t *testing.T) {
-		serverParams := []tc.Parameter{
-			tc.Parameter{
+		serverParams := []tc.ParameterV5{
+			tc.ParameterV5{
 				Name:       "trafficserver",
 				ConfigFile: "package",
 				Value:      "5",
@@ -4933,8 +4933,8 @@ func TestMakeParentDotConfigOptVersion(t *testing.T) {
 	})
 
 	t.Run("Package Parameter 9 with Opt ATSVersion 5 uses Opt not Param.", func(t *testing.T) {
-		serverParams := []tc.Parameter{
-			tc.Parameter{
+		serverParams := []tc.ParameterV5{
+			tc.ParameterV5{
 				Name:       "trafficserver",
 				ConfigFile: "package",
 				Value:      "9",
@@ -4981,20 +4981,20 @@ func TestMakeParentDotConfigOriginIP(t *testing.T) {
 
 	dses := []DeliveryService{*ds0, *ds1}
 
-	parentConfigParams := []tc.Parameter{
-		tc.Parameter{
+	parentConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQStringHandling,
 			ConfigFile: "parent.config",
 			Value:      "myQStringHandlingParam",
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigRetryKeysDefault.Algorithm,
 			ConfigFile: "parent.config",
 			Value:      tc.AlgorithmConsistentHash,
 			Profiles:   []byte(`["serverprofile"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParentConfigParamQString,
 			ConfigFile: "parent.config",
 			Value:      "myQstringParam",
@@ -5002,8 +5002,8 @@ func TestMakeParentDotConfigOriginIP(t *testing.T) {
 		},
 	}
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       "trafficserver",
 			ConfigFile: "package",
 			Value:      "7",

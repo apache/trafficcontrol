@@ -34,7 +34,7 @@ func TestMakeSSLMultiCertDotConfig(t *testing.T) {
 
 	makeDS := func(name string, dsType *string, protocol int, exampleURL string) DeliveryService {
 		ds := makeGenericDS()
-		ds.XMLID = "name"
+		ds.XMLID = name
 		ds.Type = dsType
 		ds.Protocol = util.Ptr(protocol)
 		ds.ExampleURLs = []string{exampleURL}

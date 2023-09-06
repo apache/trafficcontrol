@@ -43,7 +43,7 @@ type StorageDotConfigOpts struct {
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeStorageDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *StorageDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {

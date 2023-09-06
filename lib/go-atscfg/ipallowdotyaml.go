@@ -55,7 +55,7 @@ type IPAllowDotYAMLOpts struct {
 
 // MakeIPAllowDotYAML creates the ip_allow.yaml ATS 9+ config file.
 func MakeIPAllowDotYAML(
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	server *Server,
 	servers []Server,
 	cacheGroups []tc.CacheGroupNullableV5,
@@ -241,7 +241,7 @@ func yamlDenyAll(rangeStr string) ipAllowYAMLData {
 }
 
 // GetPurgeIPs returns IPs allowed for PURGE requests.
-func GetPurgeIPs(serverParams []tc.Parameter) []string {
+func GetPurgeIPs(serverParams []tc.ParameterV5) []string {
 	ips := make([]string, 0)
 
 	params := paramsToMultiMap(filterParams(serverParams, IPAllowConfigFileName, "", "", ""))
@@ -253,7 +253,7 @@ func GetPurgeIPs(serverParams []tc.Parameter) []string {
 }
 
 // GetCoalesceMaskAndNumber returns coalesce mask length and number for ipv4 and ipv6.
-func GetCoalesceMaskAndNumber(serverParams []tc.Parameter) (int, int, int, int, []string) {
+func GetCoalesceMaskAndNumber(serverParams []tc.ParameterV5) (int, int, int, int, []string) {
 	warnings := make([]string, 0)
 
 	// default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
