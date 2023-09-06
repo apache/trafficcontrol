@@ -91,7 +91,7 @@ Response Structure
 		"id": 9,
 		"name": "quest",
 		"active": true,
-		"lastUpdated": "2018-12-11 20:30:54+00",
+		"lastUpdated": "2023-05-30T19:52:58.183642+00:00",
 		"parentId": 3
 	}}
 

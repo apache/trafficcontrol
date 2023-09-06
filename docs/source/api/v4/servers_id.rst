@@ -218,6 +218,10 @@ Response Structure
 :physLocationId:  An integral, unique identifier for the :term:`Physical Location` where the server resides
 :profileNames:    List of :ref:`profile-name` of the :term:`Profiles` used by this server
 :revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
+
+	.. deprecated:: 4.1
+		With the addition of ``revalUpdateTime`` and ``revalApplyTime``, this field is superfluous as it is trivially calculated from those other properties. It has been removed in version 5.0 of the API.
+
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
 :rack:            A string indicating "server rack" location
@@ -413,6 +417,10 @@ Response Structure
 :physLocationId:  An integral, unique identifier for the physical location where the server resided
 :profileNames:    List of :ref:`profile-name` of the :term:`Profiles` which was used by this server
 :revalPending:    A boolean value which, if ``true`` indicates that this server has pending content invalidation/revalidation
+
+	.. deprecated:: 4.1
+		With the addition of ``revalUpdateTime`` and ``revalApplyTime``, this field is superfluous as it is trivially calculated from those other properties. It has been removed in version 5.0 of the API.
+
 :revalUpdateTime: The last time a content invalidation/revalidation request was submitted for this server. This field defaults to standard epoch
 :revalApplyTime:  The last time a content invalidation/revalidation request was applied by this server. This field defaults to standard epoch
 :rack:            A string indicating "server rack" location

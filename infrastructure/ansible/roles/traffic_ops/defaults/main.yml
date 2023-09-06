@@ -98,9 +98,12 @@ to_go_supported_ds_metrics:
   - tps_4xx
   - tps_5xx
 
+to_go_client_auth_enabled: 0
 to_go_whitelisted_oauth_urls: ""
 to_go_oauth_user_attribute: ""
 to_go_oauth_client_secret: ""
+
+to_client_cert_root_directory: "/etc/pki/tls/traffic_ops/"
 
 to_plugin_config: {}
 

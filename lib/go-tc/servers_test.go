@@ -21,6 +21,7 @@ package tc
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -81,6 +82,124 @@ func ExampleLegacyInterfaceDetails_String() {
 	fmt.Println(lid.String())
 
 	// Output: LegacyInterfaceDetails(InterfaceMtu=9000, InterfaceName='test', IP6Address='2001:DB8::/64', IP6Gateway=nil, IPAddress='192.0.2.0', IPGateway=nil, IPNetmask=nil)
+}
+
+func ExampleServerIPAddress_Copy() {
+	ip := ServerIPAddress{
+		Address:        "test",
+		Gateway:        new(string),
+		ServiceAddress: false,
+	}
+
+	*ip.Gateway = "not a gateway, but who cares?"
+	ip2 := ip.Copy()
+	fmt.Println(*ip.Gateway == *ip2.Gateway)
+
+	*ip.Gateway = "something different"
+	fmt.Println(*ip.Gateway == *ip2.Gateway)
+
+	// Output: true
+	// false
+}
+
+func ExampleServerInterfaceInfoV40_Copy() {
+	inf := ServerInterfaceInfoV40{
+		ServerInterfaceInfo: ServerInterfaceInfo{
+			IPAddresses: []ServerIPAddress{
+				{
+					Address:        "test",
+					Gateway:        new(string),
+					ServiceAddress: false,
+				},
+			},
+			MaxBandwidth: new(uint64),
+			Monitor:      false,
+			MTU:          new(uint64),
+			Name:         "eth0",
+		},
+		RouterHostName: "router host",
+		RouterPortName: "router port",
+	}
+
+	*inf.IPAddresses[0].Gateway = "not a gateway, but who cares?"
+	inf2 := inf.Copy()
+
+	fmt.Println(*inf.IPAddresses[0].Gateway == *inf2.IPAddresses[0].Gateway)
+	*inf.IPAddresses[0].Gateway = "something different"
+	fmt.Println(*inf.IPAddresses[0].Gateway == *inf2.IPAddresses[0].Gateway)
+
+	// Output: true
+	// false
+}
+
+func TestServerV5DowngradeUpgrade(t *testing.T) {
+	serverV5 := ServerV50{
+		CacheGroup:         "Cache Group",
+		CacheGroupID:       1,
+		CDNID:              2,
+		CDN:                "CDN",
+		DomainName:         "domain",
+		GUID:               nil,
+		HostName:           "host",
+		HTTPSPort:          nil,
+		ID:                 3,
+		ILOIPAddress:       nil,
+		ILOIPGateway:       nil,
+		ILOIPNetmask:       nil,
+		ILOPassword:        nil,
+		ILOUsername:        nil,
+		LastUpdated:        time.Time{}.Add(time.Hour),
+		MgmtIPAddress:      nil,
+		MgmtIPGateway:      nil,
+		MgmtIPNetmask:      nil,
+		OfflineReason:      nil,
+		PhysicalLocation:   "physical location",
+		PhysicalLocationID: 4,
+		Profiles:           []string{"test", "quest"},
+		Rack:               nil,
+		Status:             "Status",
+		StatusID:           5,
+		TCPPort:            nil,
+		Type:               "type",
+		TypeID:             6,
+		XMPPID:             nil,
+		XMPPPasswd:         nil,
+		Interfaces: []ServerInterfaceInfoV40{
+			{
+				ServerInterfaceInfo: ServerInterfaceInfo{
+					IPAddresses: []ServerIPAddress{
+						{
+							Address:        "192.0.0.1/12",
+							Gateway:        nil,
+							ServiceAddress: true,
+						},
+					},
+					MaxBandwidth: nil,
+					Monitor:      false,
+					MTU:          nil,
+					Name:         "eth0",
+				},
+				RouterHostName: "router host",
+				RouterPortName: "router port",
+			},
+		},
+		StatusLastUpdated:  nil,
+		ConfigUpdateTime:   nil,
+		ConfigApplyTime:    nil,
+		ConfigUpdateFailed: false,
+		RevalUpdateTime:    nil,
+		RevalApplyTime:     nil,
+		RevalUpdateFailed:  false,
+	}
+
+	serverV4 := serverV5.Downgrade()
+	if fqdn := serverV5.HostName + "." + serverV5.DomainName; serverV4.FQDN == nil || *serverV4.FQDN != fqdn {
+		t.Errorf("incorrectly calculated FQDN; want: %s, got: %v", fqdn, serverV4.FQDN)
+	}
+
+	if !reflect.DeepEqual(serverV4.Upgrade(), serverV5) {
+		t.Error("server not equal after downgrading then upgrading")
+	}
 }
 
 type interfaceTest struct {
@@ -1370,4 +1489,38 @@ func TestServerNullableV2_Upgrade(t *testing.T) {
 	} else if *upgraded.XMPPPasswd != *nullable.XMPPPasswd {
 		t.Errorf("Incorrect XMPPPasswd after upgraded conversion; want: '%s', got: '%s'", *nullable.XMPPPasswd, *upgraded.XMPPPasswd)
 	}
+}
+
+func ExampleServerV50_UpdatePending() {
+	s := ServerV50{
+		ConfigApplyTime:  new(time.Time),
+		ConfigUpdateTime: new(time.Time),
+	}
+
+	*s.ConfigApplyTime = time.Now()
+	*s.ConfigUpdateTime = s.ConfigApplyTime.Add(-time.Hour)
+	fmt.Println(s.UpdatePending())
+
+	*s.ConfigUpdateTime = s.ConfigUpdateTime.Add(2 * time.Hour)
+	fmt.Println(s.UpdatePending())
+
+	// Output: false
+	// true
+}
+
+func ExampleServerV50_RevalidationPending() {
+	s := ServerV50{
+		RevalApplyTime:  new(time.Time),
+		RevalUpdateTime: new(time.Time),
+	}
+
+	*s.RevalApplyTime = time.Now()
+	*s.RevalUpdateTime = s.RevalApplyTime.Add(-time.Hour)
+	fmt.Println(s.RevalidationPending())
+
+	*s.RevalUpdateTime = s.RevalUpdateTime.Add(2 * time.Hour)
+	fmt.Println(s.RevalidationPending())
+
+	// Output: false
+	// true
 }

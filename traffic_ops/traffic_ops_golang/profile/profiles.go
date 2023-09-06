@@ -25,6 +25,8 @@ package profile
  */
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -33,6 +35,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -189,7 +192,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent
 		if _, ok := prof.APIInfo().Params[IDQueryParam]; ok {
-			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.APIInfo().Params, prof.ReqInfo.User, profile)
+			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.ReqInfo.User, *profile.ID)
 			if err != nil {
 				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError, nil
 			}
@@ -226,10 +229,10 @@ LEFT JOIN cdn c ON prof.cdn = c.id`
 	return query
 }
 
-func ReadParameters(tx *sqlx.Tx, parameters map[string]string, user *auth.CurrentUser, profile tc.ProfileNullable) ([]tc.ParameterNullable, error) {
+func ReadParameters(tx *sqlx.Tx, user *auth.CurrentUser, profileID int) ([]tc.ParameterNullable, error) {
 	privLevel := user.PrivLevel
 	queryValues := make(map[string]interface{})
-	queryValues["profile_id"] = *profile.ID
+	queryValues["profile_id"] = profileID
 
 	query := selectParametersQuery()
 	rows, err := tx.NamedQuery(query, queryValues)
@@ -269,13 +272,13 @@ JOIN profile_parameter pp ON pp.parameter = p.id
 WHERE pp.profile = :profile_id`
 }
 
-func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, int) {
+func canProfileBeAlteredByCurrentUser(user string, tx *sql.Tx, cName *string, cdnID *int) (error, error, int) {
 	var cdnName string
-	if pr.CDNName != nil {
-		cdnName = *pr.CDNName
+	if cName != nil {
+		cdnName = *cName
 	} else {
-		if pr.CDNID != nil {
-			cdn, ok, err := dbhelpers.GetCDNNameFromID(pr.ReqInfo.Tx.Tx, int64(*pr.CDNID))
+		if cdnID != nil {
+			cdn, ok, err := dbhelpers.GetCDNNameFromID(tx, int64(*cdnID))
 			if err != nil {
 				return nil, err, http.StatusInternalServerError
 			} else if !ok {
@@ -286,7 +289,7 @@ func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, in
 			return errors.New("no cdn found for this profile"), nil, http.StatusBadRequest
 		}
 	}
-	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(pr.ReqInfo.Tx.Tx, cdnName, pr.ReqInfo.User.UserName)
+	userErr, sysErr, statusCode := dbhelpers.CheckIfCurrentUserCanModifyCDN(tx, cdnName, user)
 	if userErr != nil || sysErr != nil {
 		return userErr, sysErr, statusCode
 	}
@@ -295,7 +298,7 @@ func (pr *TOProfile) checkIfProfileCanBeAlteredByCurrentUser() (error, error, in
 
 func (pr *TOProfile) Update(h http.Header) (error, error, int) {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(pr.ReqInfo.User.UserName, pr.ReqInfo.Tx.Tx, pr.CDNName, pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -305,7 +308,7 @@ func (pr *TOProfile) Update(h http.Header) (error, error, int) {
 
 func (pr *TOProfile) Create() (error, error, int) {
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(pr.ReqInfo.User.UserName, pr.ReqInfo.Tx.Tx, pr.CDNName, pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -322,7 +325,7 @@ func (pr *TOProfile) Delete() (error, error, int) {
 		pr.CDNName = util.StrPtr(string(cdnName))
 	}
 	if pr.CDNName != nil || pr.CDNID != nil {
-		userErr, sysErr, statusCode := pr.checkIfProfileCanBeAlteredByCurrentUser()
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(pr.ReqInfo.User.UserName, pr.ReqInfo.Tx.Tx, pr.CDNName, pr.CDNID)
 		if userErr != nil || sysErr != nil {
 			return userErr, sysErr, statusCode
 		}
@@ -359,4 +362,291 @@ type) VALUES (
 
 func deleteQuery() string {
 	return `DELETE FROM profile WHERE id = :id`
+}
+
+// Read gets a list of Profiles for APIv5.
+func Read(w http.ResponseWriter, r *http.Request) {
+	var runSecond bool
+	var maxTime time.Time
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	tx := inf.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	// Query Parameters to Database Query column mappings
+	queryParamsToQueryCols := map[string]dbhelpers.WhereColumnInfo{
+		"cdn":   {Column: "c.id", Checker: api.IsInt},
+		"name":  {Column: "prof.name", Checker: nil},
+		"id":    {Column: "prof.id", Checker: api.IsInt},
+		"param": {Column: "pp.parameter", Checker: api.IsInt},
+	}
+
+	query := selectProfilesQuery()
+	if paramValue, ok := inf.Params["param"]; ok {
+		if len(paramValue) > 0 {
+			query += " LEFT JOIN profile_parameter pp ON prof.id = pp.profile"
+		}
+	}
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, queryParamsToQueryCols)
+	if len(errs) > 0 {
+		api.HandleErr(w, r, tx.Tx, http.StatusBadRequest, util.JoinErrs(errs), nil)
+		return
+	}
+
+	if inf.Config.UseIMS {
+		runSecond, maxTime = ims.TryIfModifiedSinceQuery(tx, r.Header, queryValues, selectMaxLastUpdatedQuery(where))
+		if !runSecond {
+			log.Debugln("IMS HIT")
+			api.AddLastModifiedHdr(w, maxTime)
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	query += where + orderBy + pagination
+	rows, err := tx.NamedQuery(query, queryValues)
+	if err != nil {
+		api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error getting profile(s): %w", err))
+		return
+	}
+	defer log.Close(rows, "unable to close DB connection")
+
+	profile := tc.ProfileV5{}
+	var profileList []tc.ProfileV5
+	for rows.Next() {
+		if err = rows.Scan(&profile.Description, &profile.ID, &profile.LastUpdated, &profile.Name, &profile.RoutingDisabled, &profile.Type, &profile.CDNID, &profile.CDNName); err != nil {
+			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting profile(s): %w", err))
+			return
+		}
+		profileList = append(profileList, profile)
+	}
+	rows.Close()
+	profileInterfaces := []interface{}{}
+	for _, p := range profileList {
+		// Attach Parameters if the 'param' parameter is sent
+		if _, ok := inf.Params["param"]; ok {
+			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID)
+			if err != nil {
+				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
+				return
+			}
+		}
+		profileInterfaces = append(profileInterfaces, p)
+	}
+
+	api.WriteResp(w, r, profileInterfaces)
+	return
+}
+
+// Create a Profile for APIv5.
+func Create(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, nil, nil)
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+	tx := inf.Tx.Tx
+
+	profile, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	//check if user can modify.
+	if len(strings.TrimSpace(profile.CDNName)) != 0 || profile.CDNID != 0 {
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(inf.User.UserName, inf.Tx.Tx, &profile.CDNName, &profile.CDNID)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
+	// check if profile already exists
+	var count int
+	err := tx.QueryRow("SELECT count(*) from profile where name=$1", profile.Name).Scan(&count)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if profile '%s' exists", err, profile.Name))
+		return
+	}
+	if count == 1 {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("profile:'%s' already exists", profile.Name), nil)
+		return
+	}
+
+	// create profile
+	query := `INSERT INTO profile (name, cdn, type, routing_disabled, description) 
+	VALUES ($1, $2, $3, $4, $5) 
+	RETURNING id, last_updated, name, description, (select name FROM cdn where id = $2), cdn, routing_disabled, type`
+
+	err = tx.QueryRow(query, profile.Name, profile.CDNID, profile.Type, profile.RoutingDisabled, profile.Description).
+		Scan(&profile.ID, &profile.LastUpdated, &profile.Name, &profile.Description, &profile.CDNName, &profile.CDNID, &profile.RoutingDisabled, &profile.Type)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("error: %w in creating profile:%s", err, profile.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was created.")
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/profiles?id=%d", inf.Version, profile.ID))
+	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, profile)
+	return
+}
+
+// Update a profile for APIv5.
+func Update(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	tx := inf.Tx.Tx
+	profile, readValErr := readAndValidateJsonStruct(r)
+	if readValErr != nil {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, readValErr, nil)
+		return
+	}
+
+	//check if user can modify.
+	if len(strings.TrimSpace(profile.CDNName)) != 0 || profile.CDNID != 0 {
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(inf.User.UserName, inf.Tx.Tx, &profile.CDNName, &profile.CDNID)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
+	requestedProfileId := inf.IntParams["id"]
+	// check if the entity was already updated
+	userErr, sysErr, errCode = api.CheckIfUnModified(r.Header, inf.Tx, requestedProfileId, "profile")
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+
+	//update profile
+	query := `UPDATE profile SET
+		name = $2, 
+		cdn = $3,
+		type = $4, 
+		routing_disabled = $5, 
+		description = $6
+	WHERE id = $1
+	RETURNING id, last_updated, name, description, (select name FROM cdn where id = $3), cdn, routing_disabled, type`
+
+	err := tx.QueryRow(query, requestedProfileId, profile.Name, profile.CDNID, profile.Type, profile.RoutingDisabled, profile.Description).
+		Scan(&profile.ID, &profile.LastUpdated, &profile.Name, &profile.Description, &profile.CDNName, &profile.CDNID, &profile.RoutingDisabled, &profile.Type)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("profile: %s not found", profile.Name), nil)
+			return
+		}
+		usrErr, sysErr, code := api.ParseDBError(err)
+		api.HandleErr(w, r, tx, code, usrErr, sysErr)
+		return
+	}
+
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was updated")
+	api.WriteAlertsObj(w, r, http.StatusOK, alerts, profile)
+	return
+}
+
+// Delete a profile in APIv5.
+func Delete(w http.ResponseWriter, r *http.Request) {
+	inf, userErr, sysErr, errCode := api.NewInfo(r, []string{"id"}, []string{"id"})
+	tx := inf.Tx.Tx
+	if userErr != nil || sysErr != nil {
+		api.HandleErr(w, r, tx, errCode, userErr, sysErr)
+		return
+	}
+	defer inf.Close()
+
+	id := inf.IntParams["id"]
+	cdnName, err := dbhelpers.GetCDNNameFromProfileID(tx, id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, sysErr)
+		return
+	}
+
+	//check if user can modify
+	if len(strings.TrimSpace(string(cdnName))) != 0 {
+		userErr, sysErr, statusCode := canProfileBeAlteredByCurrentUser(inf.User.UserName, inf.Tx.Tx, util.StrPtr(string(cdnName)), nil)
+		if userErr != nil || sysErr != nil {
+			api.HandleErr(w, r, tx, statusCode, userErr, sysErr)
+			return
+		}
+	}
+
+	// check if profile exists
+	exists, err := dbhelpers.ProfileExists(tx, strconv.Itoa(id))
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	if !exists {
+		if id != 0 {
+			api.HandleErr(w, r, tx, http.StatusNotFound, fmt.Errorf("no profile exists by id: %d", id), nil)
+			return
+		} else {
+			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("no profile exists for empty id"), nil)
+			return
+		}
+	}
+
+	res, err := tx.Exec("DELETE FROM profile WHERE id=$1", id)
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, err)
+		return
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("determining rows affected for delete profile: %w", err))
+		return
+	}
+	if rowsAffected == 0 {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, fmt.Errorf("no rows deleted for profile"), nil)
+		return
+	}
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was deleted.")
+	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	return
+}
+
+// readAndValidateJsonStruct reads json body and validates json fields
+func readAndValidateJsonStruct(r *http.Request) (tc.ProfileV5, error) {
+	var profile tc.ProfileV5
+	if err := json.NewDecoder(r.Body).Decode(&profile); err != nil {
+		userErr := fmt.Errorf("error decoding POST request body into ProfilesV5 struct %w", err)
+		return profile, userErr
+	}
+
+	rule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters")
+	// validate JSON body
+	errs := tovalidate.ToErrors(validation.Errors{
+		"name":            validation.Validate(profile.Name, validation.Required, rule),
+		"cdn":             validation.Validate(profile.CDNID, validation.NilOrNotEmpty),
+		"type":            validation.Validate(profile.Type, validation.Required, validation.NotNil),
+		"routingDisabled": validation.Validate(profile.RoutingDisabled, validation.NotNil),
+		"description":     validation.Validate(profile.Description, validation.Required),
+	})
+	if len(errs) > 0 {
+		userErr := util.JoinErrs(errs)
+		return profile, userErr
+	}
+	return profile, nil
 }

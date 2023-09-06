@@ -123,19 +123,21 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: opsUserWithLockSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"cdn2-test-edge"}}},
 					RequestBody: map[string]interface{}{
-						"config_apply_time": util.TimePtr(now),
+						"config_apply_time":    util.Ptr(now),
+						"config_update_failed": util.Ptr(true),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"ConfigApplyTime": now})),
+						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"ConfigApplyTime": now, "ConfigUpdateFailed": true})),
 				},
 				"REVALIDATE_APPLY_TIME is SET EVEN when CDN LOCKED": {
 					ClientSession: opsUserWithLockSession,
 					RequestOpts:   client.RequestOptions{QueryParameters: url.Values{"hostName": {"cdn2-test-edge"}}},
 					RequestBody: map[string]interface{}{
-						"revalidate_apply_time": util.TimePtr(now),
+						"revalidate_apply_time":    util.Ptr(now),
+						"revalidate_update_failed": util.Ptr(true),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
-						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"RevalApplyTime": now})),
+						validateServerApplyTimes("cdn2-test-edge", map[string]interface{}{"RevalApplyTime": now, "RevalUpdateFailed": true})),
 				},
 			},
 			"TOPOLOGY QUEUE UPDATES": {
@@ -264,7 +266,7 @@ func TestCDNLocks(t *testing.T) {
 						"routing_disabled": false,
 						"type":             "ATS_PROFILE",
 					},
-					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK)),
+					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,
@@ -359,16 +361,16 @@ func TestCDNLocks(t *testing.T) {
 				"OK when USER OWNS LOCK": {
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNID(t, "cdn2")(),
-						"profileNames": []string{"EDGEInCDN2"},
+						"cdnID":    GetCDNID(t, "cdn2")(),
+						"profiles": []string{"EDGEInCDN2"},
 					}),
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusCreated)),
 				},
 				"FORBIDDEN when ADMIN USER DOESNT OWN LOCK": {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"cdnId":        GetCDNID(t, "cdn2")(),
-						"profileNames": []string{"EDGEInCDN2"},
+						"cdnID":    GetCDNID(t, "cdn2")(),
+						"profiles": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
 								"address":        "127.0.0.2/30",
@@ -385,9 +387,9 @@ func TestCDNLocks(t *testing.T) {
 					EndpointID:    GetServerID(t, "edge1-cdn2"),
 					ClientSession: opsUserWithLockSession,
 					RequestBody: generateServer(t, map[string]interface{}{
-						"id":           GetServerID(t, "edge1-cdn2")(),
-						"cdnId":        GetCDNID(t, "cdn2")(),
-						"profileNames": []string{"EDGEInCDN2"},
+						"id":       GetServerID(t, "edge1-cdn2")(),
+						"cdnID":    GetCDNID(t, "cdn2")(),
+						"profiles": []string{"EDGEInCDN2"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
 								"address":        "0.0.0.1",
@@ -403,9 +405,9 @@ func TestCDNLocks(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: generateServer(t, map[string]interface{}{
 						"id":           GetServerID(t, "dtrc-edge-07")(),
-						"cdnId":        GetCDNID(t, "cdn2")(),
+						"cdnID":        GetCDNID(t, "cdn2")(),
 						"cachegroupId": GetCacheGroupId(t, "dtrc2")(),
-						"profileNames": []string{"CDN2_EDGE"},
+						"profiles":     []string{"CDN2_EDGE"},
 						"interfaces": []map[string]interface{}{{
 							"ipAddresses": []map[string]interface{}{{
 								"address":        "192.0.2.11/24",
@@ -544,6 +546,8 @@ func TestCDNLocks(t *testing.T) {
 							var hostName string
 							var configApplyTime *time.Time
 							var revalApplyTime *time.Time
+							var revalUpdateFailed *bool
+							var configUpdateFailed *bool
 
 							if hostNameParam, ok := testCase.RequestOpts.QueryParameters["hostName"]; ok {
 								hostName = hostNameParam[0]
@@ -554,7 +558,13 @@ func TestCDNLocks(t *testing.T) {
 							if revalApplyTimeVal, ok := testCase.RequestBody["revalidate_apply_time"]; ok {
 								revalApplyTime = revalApplyTimeVal.(*time.Time)
 							}
-							alerts, reqInf, err := testCase.ClientSession.SetUpdateServerStatusTimes(hostName, configApplyTime, revalApplyTime, testCase.RequestOpts)
+							if val, ok := testCase.RequestBody["config_update_failed"]; ok {
+								configUpdateFailed = val.(*bool)
+							}
+							if val, ok := testCase.RequestBody["revalidate_update_failed"]; ok {
+								revalUpdateFailed = val.(*bool)
+							}
+							alerts, reqInf, err := testCase.ClientSession.SetUpdateServerStatusTimes(hostName, configApplyTime, revalApplyTime, configUpdateFailed, revalUpdateFailed, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, nil, alerts, err)
 							}
@@ -618,7 +628,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"PROFILE POST": func(t *testing.T) {
-							profile := tc.Profile{}
+							profile := tc.ProfileV5{}
 							err = json.Unmarshal(dat, &profile)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.CreateProfile(profile, testCase.RequestOpts)
@@ -627,7 +637,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"PROFILE PUT": func(t *testing.T) {
-							profile := tc.Profile{}
+							profile := tc.ProfileV5{}
 							err = json.Unmarshal(dat, &profile)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.UpdateProfile(testCase.EndpointID(), profile, testCase.RequestOpts)
@@ -658,7 +668,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"SERVER POST": func(t *testing.T) {
-							server := tc.ServerV4{}
+							var server tc.ServerV5
 							err = json.Unmarshal(dat, &server)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.CreateServer(server, testCase.RequestOpts)
@@ -667,7 +677,7 @@ func TestCDNLocks(t *testing.T) {
 							}
 						},
 						"SERVER PUT": func(t *testing.T) {
-							server := tc.ServerV4{}
+							var server tc.ServerV5
 							err = json.Unmarshal(dat, &server)
 							assert.NoError(t, err, "Error occurred when unmarshalling request body: %v", err)
 							alerts, reqInf, err := testCase.ClientSession.UpdateServer(testCase.EndpointID(), server, testCase.RequestOpts)

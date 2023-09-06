@@ -40,7 +40,7 @@ export const topologies = {
                             route: "/servers",
                             queryKey: "hostName",
                             queryValue: "topologieserver1",
-                            replace: "route"                           
+                            replace: "route"
                         }
                     ]
                 },
@@ -51,7 +51,7 @@ export const topologies = {
                             route: "/servers",
                             queryKey: "hostName",
                             queryValue: "topologieserver3",
-                            replace: "route"   
+                            replace: "route"
                         }
                     ]
                 }
@@ -314,9 +314,8 @@ export const topologies = {
             method: "post",
             data: [
                 {
-                    cachegroupId: 0,
-                    
-                    cdnId: 2,
+                    cacheGroupID: 0,
+                    cdnID: 2,
                     domainName: "test.net",
                     hostName: "topologieserver1",
                     httpsPort: 443,
@@ -351,38 +350,38 @@ export const topologies = {
                     mgmtIpGateway: "",
                     mgmtIpNetmask: "",
                     offlineReason: "",
-                    physLocationId: 2,
-                    profileNames: ["TopTestPf"],
+                    physLocationID: 2,
+                    profiles: ["TopTestPf"],
                     routerHostName: "",
                     routerPortName: "",
                     statusId: 3,
                     tcpPort: 80,
-                    typeId: 12,
+                    typeID: 12,
                     getRequest: [
                         {
                             route: "/cachegroups",
                             queryKey: "name",
                             queryValue: "TopoTestCGE2",
-                            replace: "cachegroupId"
+                            replace: "cacheGroupID"
                         },
                         {
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TopTestPhys",
-							replace: "physLocationId"
+							replace: "physicalLocationID"
 						},
                         {
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "TopTestCDN",
-							replace: "cdnId"
+							replace: "cdnID"
 						}
                     ],
                     updPending: false
                 },
                 {
-                    cachegroupId: 0,
-                    cdnId: 2,
+                    cacheGroupID: 0,
+                    cdnID: 2,
                     domainName: "test.net",
                     hostName: "topologieserver3",
                     httpsPort: 443,
@@ -417,31 +416,31 @@ export const topologies = {
                     mgmtIpGateway: "",
                     mgmtIpNetmask: "",
                     offlineReason: "",
-                    physLocationId: 2,
-                    profileNames: ["TopTestPf"],
+                    physicalLocationID: 2,
+                    profiles: ["TopTestPf"],
                     routerHostName: "",
                     routerPortName: "",
                     statusId: 3,
                     tcpPort: 80,
-                    typeId: 12,
+                    typeID: 12,
                     getRequest: [
                         {
                             route: "/cachegroups",
                             queryKey: "name",
                             queryValue: "TopoTestCGE3",
-                            replace: "cachegroupId"
+                            replace: "cacheGroupID"
                         },
                         {
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TopTestPhys",
-							replace: "physLocationId"
+							replace: "physLocationID"
 						},
                         {
 							route: "/cdns",
 							queryKey: "name",
 							queryValue: "TopTestCDN",
-							replace: "cdnId"
+							replace: "cdnID"
 						}
                     ],
                     updPending: false

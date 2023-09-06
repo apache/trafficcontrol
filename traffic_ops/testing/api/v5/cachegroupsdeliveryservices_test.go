@@ -82,8 +82,8 @@ func validateCGDSServerAssignments() utils.CkReqFunc {
 			assert.NoError(t, err, "Error: Getting server: %v - alerts: %+v", err, resp.Alerts)
 			assert.Equal(t, len(resp.Response), 1, "Error: Getting servers: expected 1 got %v", len(resp.Response))
 
-			serverDSes, _, err := TOSession.GetDeliveryServicesByServer(*resp.Response[0].ID, client.RequestOptions{})
-			assert.NoError(t, err, "Error: Getting Delivery Service Servers #%d: %v - alerts: %+v", *resp.Response[0].ID, err, serverDSes.Alerts)
+			serverDSes, _, err := TOSession.GetDeliveryServicesByServer(resp.Response[0].ID, client.RequestOptions{})
+			assert.NoError(t, err, "Error: Getting Delivery Service Servers #%d: %v - alerts: %+v", resp.Response[0].ID, err, serverDSes.Alerts)
 			for _, dsID := range cgDsResp.DeliveryServices {
 				found := false
 				for _, serverDS := range serverDSes.Response {

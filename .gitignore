@@ -61,7 +61,7 @@ local.tar.gz
 *.sublime-project
 *.sublime-workspace
 .vscode/
-__debug_bin
+__debug_bin*
 *.code-workspace
 *.pydevproject
 .idea/

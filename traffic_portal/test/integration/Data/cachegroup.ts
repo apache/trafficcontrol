@@ -54,7 +54,7 @@ export const cachegroups = {
 					ParentCacheGroup: "infrastructure",
 					SecondaryParentCG: "infrastructure",
 					FailoverCG: "albany-ny-usa",
-					validationMessage: "cachegroup was created."
+					validationMessage: "cache group was created."
 				},
 				{
 					Description: "create multiple EDGE_LOC cachegroup",
@@ -66,7 +66,7 @@ export const cachegroups = {
 					ParentCacheGroup: "infrastructure",
 					SecondaryParentCG: "infrastructure",
 					FailoverCG: "",
-					validationMessage: "cachegroup was created."
+					validationMessage: "cache group was created."
 				},
 				{
 					Description: "create a MID_LOC cachegroup",
@@ -77,7 +77,7 @@ export const cachegroups = {
 					Longitude: "0",
 					ParentCacheGroup: "infrastructure",
 					SecondaryParentCG: "infrastructure",
-					validationMessage: "cachegroup was created."
+					validationMessage: "cache group was created."
 				}
 			],
 			update: [
@@ -86,7 +86,7 @@ export const cachegroups = {
 					Name: "TP_Cache1",
 					Type: "EDGE_LOC",
 					FailoverCG: "TP_Cache2",
-					validationMessage: "cachegroup was updated."
+					validationMessage: "cache group was updated"
 				},
 				{
 					Description: "Validate cannot add cache group fallback if the cache group fall back is a different Type",
@@ -104,19 +104,19 @@ export const cachegroups = {
 					Description: "change Type of the Cache Groups",
 					Name: "TP_Cache1",
 					Type: "MID_LOC",
-					validationMessage: "cachegroup was updated."
+					validationMessage: "cache group was updated"
 				}
 			],
 			remove: [
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache1",
-					validationMessage: "cachegroup was deleted."
+					validationMessage: "was deleted"
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache3",
-					validationMessage: "cachegroup was deleted."
+					validationMessage: "was deleted"
 				}
 			]
 		},
@@ -209,7 +209,7 @@ export const cachegroups = {
 					ParentCacheGroup: "infrastructure",
 					SecondaryParentCG: "infrastructure",
 					FailoverCG: "albany-ny-usa",
-					validationMessage: "cachegroup was created."
+					validationMessage: "cache group was created."
 				},
 				{
 					Description: "create multiple EDGE_LOC cachegroup",
@@ -221,7 +221,7 @@ export const cachegroups = {
 					ParentCacheGroup: "infrastructure",
 					SecondaryParentCG: "infrastructure",
 					FailoverCG: "",
-					validationMessage: "cachegroup was created."
+					validationMessage: "cache group was created."
 				},
 				{
 					Description: "create a MID_LOC cachegroup",
@@ -232,7 +232,7 @@ export const cachegroups = {
 					Longitude: "0",
 					ParentCacheGroup: "infrastructure",
 					SecondaryParentCG: "infrastructure",
-					validationMessage: "cachegroup was created."
+					validationMessage: "cache group was created."
 				}
 			],
 			update: [
@@ -241,7 +241,7 @@ export const cachegroups = {
 					Name: "TP_Cache4",
 					Type: "EDGE_LOC",
 					FailoverCG: "TP_Cache5",
-					validationMessage: "cachegroup was updated."
+					validationMessage: "cache group was updated"
 				},
 				{
 					Description: "Validate cannot add cache group fallback if the cache group fall back is a different Type",
@@ -259,29 +259,29 @@ export const cachegroups = {
 					Description: "change Type of the Cache Groups",
 					Name: "TP_Cache4",
 					Type: "MID_LOC",
-					validationMessage: "cachegroup was updated."
+					validationMessage: "cache group was updated"
 				}
 			],
 			remove: [
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache2",
-					validationMessage: "cachegroup was deleted."
+					validationMessage: "was deleted"
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache4",
-					validationMessage: "cachegroup was deleted."
+					validationMessage: "was deleted"
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache5",
-					validationMessage: "cachegroup was deleted."
+					validationMessage: "was deleted"
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache6",
-					validationMessage: "cachegroup was deleted."
+					validationMessage: "was deleted"
 				}
 			]
 		}

@@ -347,3 +347,72 @@ func TestDeleteHandler(t *testing.T) {
 		t.Error("Expected body", body, "got", w.Body.String())
 	}
 }
+
+// The constructed handler will return an error if fail is true, or nothing
+// special otherwise.
+func testingHandler(fail bool) Handler {
+	return func(inf *APIInfo) (int, error, error) {
+		if fail {
+			return http.StatusBadRequest, errors.New("testing user error"), errors.New("testing system error")
+		}
+		return http.StatusOK, nil, nil
+	}
+}
+
+func wrapContext(r *http.Request, key any, value any) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), key, value))
+}
+
+func TestWrap(t *testing.T) {
+	h := Wrap(testingHandler(false), nil, nil)
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	h(w, r)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("Expected a system-internal error when an API info object can't be constructed, got response status code: %d (expected: %d)", w.Code, http.StatusInternalServerError)
+	}
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open a stub database connection: %v", err)
+	}
+
+	w = httptest.NewRecorder()
+	r = httptest.NewRequest(http.MethodGet, "/", nil)
+	r = wrapContext(r, ConfigContextKey, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 1000}})
+	r = wrapContext(r, DBContextKey, &sqlx.DB{DB: db})
+	r = wrapContext(r, TrafficVaultContextKey, &disabled.Disabled{})
+	r = wrapContext(r, ReqIDContextKey, uint64(0))
+	r = wrapContext(r, auth.CurrentUserKey, auth.CurrentUser{})
+	r = wrapContext(r, PathParamsKey, make(map[string]string))
+
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+	h(w, r)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("wrong status code when the trivial handler is used without an API version; want: %d, got: %d", http.StatusInternalServerError, w.Code)
+	}
+
+	w = httptest.NewRecorder()
+	mock.ExpectBegin()
+	mock.ExpectCommit()
+	r.URL.Path = "/api/1.0/something"
+	h(w, r)
+	if w.Code != http.StatusOK {
+		t.Errorf("wrong status code from a normal run of the trivial handler; want: %d, got: %d", http.StatusOK, w.Code)
+	}
+
+	h = Wrap(testingHandler(true), nil, nil)
+	w = httptest.NewRecorder()
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+	h(w, r)
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("wrong status code when the trivial handler is asked to fail; want: %d, got: %d", http.StatusBadRequest, w.Code)
+	}
+
+	if err = mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("not all expectations were met: %v", err)
+	}
+}

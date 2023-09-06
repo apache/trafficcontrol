@@ -26,4 +26,4 @@
 
 angular.module('config', [])
 
-.constant('ENV', { api: { next: "/api/5.0/", unstable:'/api/4.1/', stable: "/api/4.0/" } });
+.constant('ENV', { api: { next: "/api/5.0/", unstable:'/api/5.0/', stable: "/api/4.1/" } });

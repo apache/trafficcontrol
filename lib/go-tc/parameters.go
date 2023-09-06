@@ -70,6 +70,51 @@ type ParameterNullable struct {
 	Value       *string         `json:"value" db:"value"`
 }
 
+// ParametersResponseV5 is an alias for the latest minor version for the major version 5.
+type ParametersResponseV5 = ParametersResponseV50
+
+// ParametersResponseV50 is the type of the response from Traffic Ops to GET
+// requests made to the /parameters and /profiles/name/{{Name}}/parameters
+// endpoints of its API.
+type ParametersResponseV50 struct {
+	Response []ParameterV5 `json:"response"`
+	Alerts
+}
+
+// ParameterV5 is an alias for the latest minor version for the major version 5.
+type ParameterV5 = ParameterV50
+
+// A ParameterV50 defines some configuration setting (which is usually but
+// definitely not always a line in a configuration file) used by some Profile
+// or Cache Group.
+type ParameterV50 struct {
+	ConfigFile  string          `json:"configFile" db:"config_file"`
+	ID          int             `json:"id" db:"id"`
+	LastUpdated time.Time       `json:"lastUpdated" db:"last_updated"`
+	Name        string          `json:"name" db:"name"`
+	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
+	Secure      bool            `json:"secure" db:"secure"`
+	Value       string          `json:"value" db:"value"`
+}
+
+// ParameterNullableV5 is an alias for the latest minor version for the major version 5.
+type ParameterNullableV5 = ParameterNullableV50
+
+// ParameterNullableV50 is exactly like Parameter except that its properties are
+// reference values, so they can be nil.
+type ParameterNullableV50 struct {
+	//
+	// NOTE: the db: struct tags are used for testing to map to their equivalent database column (if there is one)
+	//
+	ConfigFile  *string         `json:"configFile" db:"config_file"`
+	ID          *int            `json:"id" db:"id"`
+	LastUpdated *time.Time      `json:"lastUpdated" db:"last_updated"`
+	Name        *string         `json:"name" db:"name"`
+	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
+	Secure      *bool           `json:"secure" db:"secure"`
+	Value       *string         `json:"value" db:"value"`
+}
+
 // ProfileParameterByName is a structure that's used to represent a Parameter
 // in a context where they are associated with some Profile specified by a
 // client of the Traffic Ops API by its Name.
@@ -77,6 +122,21 @@ type ProfileParameterByName struct {
 	ConfigFile  string    `json:"configFile"`
 	ID          int       `json:"id"`
 	LastUpdated TimeNoMod `json:"lastUpdated"`
+	Name        string    `json:"name"`
+	Secure      bool      `json:"secure"`
+	Value       string    `json:"value"`
+}
+
+// ProfileParameterByNameV5 is the alias to the latest minor version of major version 5
+type ProfileParameterByNameV5 ProfileParameterByNameV50
+
+// ProfileParameterByNameV50 is a structure that's used to represent a Parameter
+// in a context where they are associated with some Profile specified by a
+// client of the Traffic Ops API by its Name.
+type ProfileParameterByNameV50 struct {
+	ConfigFile  string    `json:"configFile"`
+	ID          int       `json:"id"`
+	LastUpdated time.Time `json:"lastUpdated"`
 	Name        string    `json:"name"`
 	Secure      bool      `json:"secure"`
 	Value       string    `json:"value"`

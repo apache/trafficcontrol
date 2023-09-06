@@ -334,6 +334,25 @@ func Main() int {
 		}
 	}
 
+	if trops.HitchReload {
+		svcStatus, _, err := util.GetServiceStatus("hitch")
+		cmd := "start"
+		running := false
+		if err != nil {
+			log.Errorf("not starting 'hitch', error getting 'hitch' run status: %s\n", err)
+		} else if svcStatus != util.SvcNotRunning {
+			cmd = "reload"
+		}
+		running, err = util.ServiceStart("hitch", cmd)
+		if err != nil {
+			log.Errorf("'hitch' was not %sed: %s\n", cmd, err)
+		} else if running {
+			log.Infof("service 'hitch' %sed", cmd)
+		} else {
+			log.Infoln("service 'hitch' already running")
+		}
+	}
+
 	// reload sysctl
 	if trops.SysCtlReload == true {
 		runSysctl(cfg)

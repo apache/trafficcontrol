@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
@@ -310,7 +311,7 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was created.")
-	w.Header().Set("Location", fmt.Sprintf("/api/%d.%d/asns?id=%d", inf.Version.Major, inf.Version.Minor, asn.ID))
+	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/asns?id=%d", inf.Version, asn.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, asn)
 	return
 }
@@ -339,6 +340,18 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check if asn already exists
+	var id int
+	err := tx.QueryRow("SELECT id from asn where asn=$1", asn.ASN).Scan(&id)
+	if err != nil && err != sql.ErrNoRows {
+		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, fmt.Errorf("error: %w, when checking if asn '%d' exists", err, asn.ASN))
+		return
+	}
+	if id != 0 && id != requestedAsnId {
+		api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn:'%d' already exists", asn.ASN), nil)
+		return
+	}
+
 	//update asn and cachegroup of an asn
 	query := `UPDATE asn SET
 		asn = $1,
@@ -346,7 +359,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	WHERE id = $3
 	RETURNING id, last_updated, (select name FROM cachegroup where id = $2)`
 
-	err := tx.QueryRow(query, asn.ASN, asn.CachegroupID, requestedAsnId).Scan(&asn.ID, &asn.LastUpdated, &asn.Cachegroup)
+	err = tx.QueryRow(query, asn.ASN, asn.CachegroupID, requestedAsnId).Scan(&asn.ID, &asn.LastUpdated, &asn.Cachegroup)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			api.HandleErr(w, r, tx, http.StatusBadRequest, fmt.Errorf("asn: %d not found", asn.ASN), nil)

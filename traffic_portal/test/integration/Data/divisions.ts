@@ -81,7 +81,7 @@ export const divisions = {
 					description: "update Division's name",
 					Name: "TPDivision1",
 					NewName: "NewDivision1",
-					validationMessage: "division was updated."
+					validationMessage: "division was updated"
 				}
 			],
 			remove: [

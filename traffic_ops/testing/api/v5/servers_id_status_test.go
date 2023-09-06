@@ -147,15 +147,13 @@ func validateUpdPending(hostName string) utils.CkReqFunc {
 		assert.RequireEqual(t, 1, len(servers.Response), "Expected exactly one server returned from response, Got: %d", len(servers.Response))
 
 		updatedServer := servers.Response[0]
-		assert.RequireNotNil(t, updatedServer.CachegroupID, "Expected Server's CachegroupID to NOT be nil.")
-		assert.RequireNotNil(t, updatedServer.Cachegroup, "Expected Server's Cachegroup to NOT be nil.")
 
 		opts.QueryParameters.Del("hostName")
 		cacheGroups, _, err := TOSession.GetCacheGroups(opts)
 		assert.RequireNoError(t, err, "Expected no error when getting cache groups: %v", err)
 		for _, cacheGroup := range cacheGroups.Response {
 			if cacheGroup.ParentCachegroupID != nil {
-				if *cacheGroup.ParentCachegroupID == *servers.Response[0].CachegroupID {
+				if *cacheGroup.ParentCachegroupID == servers.Response[0].CacheGroupID {
 					assert.RequireNotNil(t, cacheGroup.Name, "Expected Cachegroup's Name to NOT be nil.")
 					descendants[*cacheGroup.Name] = struct{}{}
 					if cacheGroup.SecondaryParentCachegroupID != nil {
@@ -165,7 +163,7 @@ func validateUpdPending(hostName string) utils.CkReqFunc {
 				}
 			}
 			if cacheGroup.SecondaryParentCachegroupID != nil {
-				if *cacheGroup.SecondaryParentCachegroupID == *servers.Response[0].CachegroupID {
+				if *cacheGroup.SecondaryParentCachegroupID == servers.Response[0].CacheGroupID {
 					assert.RequireNotNil(t, cacheGroup.Name, "Expected Cachegroup's Name to NOT be nil.")
 					descendants[*cacheGroup.Name] = struct{}{}
 				}
@@ -175,14 +173,11 @@ func validateUpdPending(hostName string) utils.CkReqFunc {
 		allServers, _, err := TOSession.GetServers(opts)
 		assert.RequireNoError(t, err, "Expected no error when getting servers: %v", err)
 		for _, server := range allServers.Response {
-			assert.RequireNotNil(t, server.HostName, "Expected Hostname to NOT be nil.")
-			assert.RequireNotNil(t, server.Cachegroup, "Expected Cachegroup to NOT be nil.")
-			assert.RequireNotNil(t, server.UpdPending, "Expected UpdPending to NOT be nil.")
-			_, ok := descendants[*server.Cachegroup]
-			if ok && *server.CDNName == *updatedServer.CDNName {
-				assert.Equal(t, true, *server.UpdPending, "Expected server %s with cachegroup %s to have updates pending.", *server.HostName, *server.Cachegroup)
+			_, ok := descendants[server.CacheGroup]
+			if ok && server.CDN == updatedServer.CDN {
+				assert.Equal(t, true, server.UpdatePending(), "Expected server %s with cachegroup %s to have updates pending.", server.HostName, server.CacheGroup)
 			} else {
-				assert.Equal(t, false, *server.UpdPending, "Expected server %s with cachegroup %s to NOT have updates pending.", *server.HostName, *server.Cachegroup)
+				assert.Equal(t, false, server.UpdatePending(), "Expected server %s with cachegroup %s to NOT have updates pending.", server.HostName, server.CacheGroup)
 			}
 		}
 	}

@@ -103,7 +103,7 @@ func GetServersEligible(w http.ResponseWriter, r *http.Request) {
 		newServerList := make([]tc.DSServerV5, len(servers))
 
 		for i, server := range servers {
-			newServerList[i] = server.ToDSServerV5()
+			newServerList[i] = server.Upgrade()
 		}
 
 		api.WriteResp(w, r, newServerList)
@@ -131,7 +131,7 @@ JOIN type t ON s.type = t.id
 WHERE s.cdn_id = (SELECT cdn_id from deliveryservice where id = (select v from ds_id))
 	AND (t.name LIKE 'EDGE%' OR t.name LIKE 'ORG%')
 `
-	dataFetchQuery := `, 
+	dataFetchQuery := `,
 cg.name as cachegroup,
 s.cachegroup as cachegroup_id,
 s.cdn_id,

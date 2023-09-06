@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
@@ -52,12 +53,12 @@ func (to *Session) SetServerQueueUpdate(serverID int, queueUpdate bool, opts Req
 
 // SetUpdateServerStatusTimes updates a server's config queue status and/or reval status.
 // Each argument individually is optional, however at least one argument must not be nil.
-func (to *Session) SetUpdateServerStatusTimes(serverName string, configApplyTime, revalApplyTime *time.Time, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
+func (to *Session) SetUpdateServerStatusTimes(serverName string, configApplyTime, revalApplyTime *time.Time, configUpdateFailed, revalUpdateFailed *bool, opts RequestOptions) (tc.Alerts, toclientlib.ReqInf, error) {
 	reqInf := toclientlib.ReqInf{CacheHitStatus: toclientlib.CacheHitStatusMiss}
 	var alerts tc.Alerts
 
-	if configApplyTime == nil && revalApplyTime == nil {
-		return alerts, reqInf, errors.New("one must be non-nil (configApplyTime, revalApplyTime); nothing to do")
+	if configApplyTime == nil && revalApplyTime == nil && configUpdateFailed == nil && revalUpdateFailed == nil {
+		return alerts, reqInf, errors.New("one must be non-nil (configApplyTime, configUpdateFailed, revalApplyTime); nothing to do")
 	}
 
 	if opts.QueryParameters == nil {
@@ -68,9 +69,15 @@ func (to *Session) SetUpdateServerStatusTimes(serverName string, configApplyTime
 		cat := configApplyTime.Format(time.RFC3339Nano)
 		opts.QueryParameters.Set("config_apply_time", cat)
 	}
+	if configUpdateFailed != nil {
+		opts.QueryParameters.Set("config_update_failed", strconv.FormatBool(*configUpdateFailed))
+	}
 	if revalApplyTime != nil {
 		rat := revalApplyTime.Format(time.RFC3339Nano)
 		opts.QueryParameters.Set("revalidate_apply_time", rat)
+	}
+	if revalUpdateFailed != nil {
+		opts.QueryParameters.Set("revalidate_update_failed", strconv.FormatBool(*revalUpdateFailed))
 	}
 
 	path := `/servers/` + url.PathEscape(serverName) + `/update`

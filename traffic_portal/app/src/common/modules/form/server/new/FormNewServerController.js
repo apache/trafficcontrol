@@ -38,7 +38,7 @@ var FormNewServerController = function(server, $anchorScroll, $scope, $controlle
                 $scope.statuses = result;
                 // Issue #2651 - Enabling server status for New Server but still defaulting enabled dropdown to OFFLINE
                 const offlineStatus = result.find(status => status.name === 'OFFLINE');
-                $scope.server.statusId = offlineStatus.id;
+                $scope.server.statusID = offlineStatus.id;
             });
     };
 

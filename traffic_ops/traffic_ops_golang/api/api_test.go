@@ -26,11 +26,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/lib/pq"
 
+	"github.com/apache/trafficcontrol/lib/go-rfc"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 )
 
@@ -260,5 +264,207 @@ func TestParseRestrictFKConstraint(t *testing.T) {
 				t.Errorf("code expected: %v, actual %v", tc.expectedReturnCode, sc)
 			}
 		})
+	}
+}
+
+func TestAPIInfo_WriteOKResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	inf := APIInfo{
+		request: r,
+		w:       w,
+	}
+	code, userErr, sysErr := inf.WriteOKResponse("test")
+	if code != http.StatusOK {
+		t.Errorf("WriteOKResponse should return a %d %s code, got: %d %s", http.StatusOK, http.StatusText(http.StatusOK), code, http.StatusText(code))
+	}
+	if userErr != nil {
+		t.Errorf("Unexpected user error: %v", userErr)
+	}
+	if sysErr != nil {
+		t.Errorf("Unexpected system error: %v", sysErr)
+	}
+
+	if w.Code != http.StatusOK {
+		t.Errorf("incorrect response status code; want: %d, got: %d", http.StatusOK, w.Code)
+	}
+}
+func TestAPIInfo_WriteOKResponseWithSummary(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	inf := APIInfo{
+		request: r,
+		w:       w,
+	}
+	code, userErr, sysErr := inf.WriteOKResponseWithSummary("test", 42)
+	if code != http.StatusOK {
+		t.Errorf("WriteOKResponseWithSummary should return a %d %s code, got: %d %s", http.StatusOK, http.StatusText(http.StatusOK), code, http.StatusText(code))
+	}
+	if userErr != nil {
+		t.Errorf("Unexpected user error: %v", userErr)
+	}
+	if sysErr != nil {
+		t.Errorf("Unexpected system error: %v", sysErr)
+	}
+
+	if w.Code != http.StatusOK {
+		t.Errorf("incorrect response status code; want: %d, got: %d", http.StatusOK, w.Code)
+	}
+}
+func TestAPIInfo_WriteNotModifiedResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	inf := APIInfo{
+		request: r,
+		w:       w,
+	}
+	code, userErr, sysErr := inf.WriteNotModifiedResponse("test")
+	if code != http.StatusNotModified {
+		t.Errorf("WriteNotModifiedResponse should return a %d %s code, got: %d %s", http.StatusNotModified, http.StatusText(http.StatusNotModified), code, http.StatusText(code))
+	}
+	if userErr != nil {
+		t.Errorf("Unexpected user error: %v", userErr)
+	}
+	if sysErr != nil {
+		t.Errorf("Unexpected system error: %v", sysErr)
+	}
+
+	if w.Code != http.StatusNotModified {
+		t.Errorf("incorrect response status code; want: %d, got: %d", http.StatusNotModified, w.Code)
+	}
+}
+
+func TestAPIInfo_WriteSuccessResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	inf := APIInfo{
+		request: r,
+		w:       w,
+	}
+	code, userErr, sysErr := inf.WriteSuccessResponse("test", "quest")
+	if code != http.StatusOK {
+		t.Errorf("WriteSuccessResponse should return a %d %s code, got: %d %s", http.StatusOK, http.StatusText(http.StatusOK), code, http.StatusText(code))
+	}
+	if userErr != nil {
+		t.Errorf("Unexpected user error: %v", userErr)
+	}
+	if sysErr != nil {
+		t.Errorf("Unexpected system error: %v", sysErr)
+	}
+
+	if w.Code != http.StatusOK {
+		t.Errorf("incorrect response status code; want: %d, got: %d", http.StatusOK, w.Code)
+	}
+	var alerts tc.Alerts
+	if err := json.NewDecoder(w.Body).Decode(&alerts); err != nil {
+		t.Fatalf("couldn't decode response body: %v", err)
+	}
+
+	if len(alerts.Alerts) != 1 {
+		t.Fatalf("expected exactly one alert; got: %d", len(alerts.Alerts))
+	}
+	alert := alerts.Alerts[0]
+	if alert.Level != tc.SuccessLevel.String() {
+		t.Errorf("Incorrect alert level; want: %s, got: %s", tc.SuccessLevel, alert.Level)
+	}
+	if alert.Text != "quest" {
+		t.Errorf("Incorrect alert text; want: 'quest', got: '%s'", alert.Text)
+	}
+}
+
+func TestAPIInfo_WriteCreatedResponse(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodPost, "/", nil)
+
+	inf := APIInfo{
+		request: r,
+		Version: &Version{Major: 420, Minor: 9001},
+		w:       w,
+	}
+	code, userErr, sysErr := inf.WriteCreatedResponse("test", "quest", "mypath")
+	if code != http.StatusCreated {
+		t.Errorf("WriteCreatedResponse should return a %d %s code, got: %d %s", http.StatusCreated, http.StatusText(http.StatusCreated), code, http.StatusText(code))
+	}
+	if userErr != nil {
+		t.Errorf("Unexpected user error: %v", userErr)
+	}
+	if sysErr != nil {
+		t.Errorf("Unexpected system error: %v", sysErr)
+	}
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("incorrect response status code; want: %d, got: %d", http.StatusCreated, w.Code)
+	}
+	if locHdr := w.Header().Get(rfc.Location); locHdr != "/api/420.9001/mypath" {
+		t.Errorf("incorrect '%s' header value; want: '/api/420.9001/mypath', got: '%s'", rfc.Location, locHdr)
+	}
+	var alerts tc.Alerts
+	if err := json.NewDecoder(w.Body).Decode(&alerts); err != nil {
+		t.Fatalf("couldn't decode response body: %v", err)
+	}
+
+	if len(alerts.Alerts) != 1 {
+		t.Fatalf("expected exactly one alert; got: %d", len(alerts.Alerts))
+	}
+	alert := alerts.Alerts[0]
+	if alert.Level != tc.SuccessLevel.String() {
+		t.Errorf("Incorrect alert level; want: %s, got: %s", tc.SuccessLevel, alert.Level)
+	}
+	if alert.Text != "quest" {
+		t.Errorf("Incorrect alert text; want: 'quest', got: '%s'", alert.Text)
+	}
+}
+
+func TestAPIInfo_RequestHeaders(t *testing.T) {
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.Header.Set("test", "quest")
+
+	inf := APIInfo{
+		request: r,
+	}
+	testHdr := inf.RequestHeaders().Get("test")
+	if testHdr != "quest" {
+		t.Errorf("should have retrieved the 'test' header (expected value: 'quest'), but found that header to have value: '%s'", testHdr)
+	}
+
+}
+
+func TestAPIInfo_SetLastModified(t *testing.T) {
+	w := httptest.NewRecorder()
+	inf := APIInfo{w: w}
+	tm := time.Now().Truncate(time.Second).UTC()
+	inf.SetLastModified(tm)
+
+	wLMHdr := w.Header().Get(rfc.LastModified)
+	lm, err := time.Parse(time.RFC1123, wLMHdr)
+	if err != nil {
+		t.Fatalf("Failed to parse the response writer's '%s' header as an RFC1123 timestamp: %v", rfc.LastModified, err)
+	}
+
+	// For unknown reasons, our API always adds a second to the truncated time
+	// value for LastModified headers. I suspect it's a poor attempt at rounding
+	// - for which the `Round` method ought to be used instead.
+	if expected := tm.Add(time.Second); lm != expected {
+		t.Errorf("Incorrect time set as '%s' header; want: %s, got: %s", rfc.LastModified, expected.Format(time.RFC3339Nano), lm.Format(time.RFC3339Nano))
+	}
+}
+
+func TestAPIInfo_DecodeBody(t *testing.T) {
+	inf := APIInfo{
+		request: httptest.NewRequest(http.MethodConnect, "/", strings.NewReader(`{"test": "quest"}`)),
+	}
+
+	var out struct {
+		Test string `json:"test"`
+	}
+	if err := inf.DecodeBody(&out); err != nil {
+		t.Fatalf("failed to decode body: %v", err)
+	}
+	if out.Test != "quest" {
+		t.Errorf(`incorrect request body parsed; want: {"test": "quest"}, got: {"test": "%s"}`, out.Test)
 	}
 }
