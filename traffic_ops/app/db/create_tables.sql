@@ -22,18 +22,11 @@
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
 SET check_function_bodies = false;
-SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
 
 --
 -- Name: plpgsql; Type: EXTENSION; Schema: -; Owner:
@@ -125,7 +118,7 @@ BEGIN
     GROUP BY sip.sid, sip.profile;
 
     IF server_count > 0 THEN
-           RAISE EXCEPTION 'ip_address is not unique across the server [id:%] profile [id:%], [%] conflicts',
+        RAISE EXCEPTION 'ip_address is not unique across the server [id:%] profile [id:%], [%] conflicts',
             server_id,
             server_profile,
             server_count;
@@ -143,8 +136,8 @@ CREATE OR REPLACE FUNCTION on_delete_current_timestamp_last_updated()
     RETURNS trigger
 AS $$
 BEGIN
-    update last_deleted set last_updated = now() where table_name = TG_ARGV[0];
-    RETURN NEW;
+  update last_deleted set last_updated = now() where table_name = TG_ARGV[0];
+  RETURN NEW;
 END;
 $$
 LANGUAGE plpgsql;
@@ -460,7 +453,7 @@ CREATE TABLE IF NOT EXISTS cachegroup_fallbacks (
     set_order bigint NOT NULL,
     UNIQUE (primary_cg, backup_cg),
     UNIQUE (primary_cg, set_order)
-    );
+);
 
 ALTER TABLE cachegroup_fallbacks OWNER TO traffic_ops;
 
@@ -1023,7 +1016,7 @@ CREATE TABLE IF NOT EXISTS interface (
     router_host_name text NOT NULL DEFAULT '',
     router_port_name text NOT NULL DEFAULT '',
     PRIMARY KEY (name, server)
-    );
+);
 
 ALTER TABLE interface
 ADD CONSTRAINT interface_mtu_check
@@ -1464,6 +1457,7 @@ CREATE TABLE IF NOT EXISTS service_category (
     name TEXT PRIMARY KEY CHECK (name <> ''),
     last_updated TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
+
 --
 -- Name: server_id_seq; Type: SEQUENCE; Schema: public; Owner: traffic_ops
 --

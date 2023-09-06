@@ -68,12 +68,12 @@ FROM public.server AS s
          JOIN public.profile p ON p.id=s.profile;
 
 -- statuses
-INSERT INTO public.status ("name", "description") VALUES ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('ONLINE', 'Server is online.') ON CONFLICT ("name") DO NOTHING;
+INSERT INTO public.status ("name", "description") VALUES ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('REPORTED', 'Server is online and reported in the health protocol.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('ADMIN_DOWN', 'Sever is administrative down and does not receive traffic.') ON CONFLICT ("name") DO NOTHING;
-INSERT INTO public.status ("name", "description") VALUES ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
+INSERT INTO public.status ("name", "description") VALUES ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT ("name") DO NOTHING;
 
 -- tenants
 INSERT INTO public.tenant ("name", active, parent_id) VALUES ('root', true, NULL) ON CONFLICT DO NOTHING;
