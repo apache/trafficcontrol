@@ -1427,6 +1427,8 @@ CREATE TABLE IF NOT EXISTS server (
     CONSTRAINT idx_89709_primary PRIMARY KEY (id)
 );
 
+ALTER TABLE server OWNER TO traffic_ops;
+
 --
 -- Name: server_capability; Type: TABLE; Schema: public; Owner: traffic_ops
 --
