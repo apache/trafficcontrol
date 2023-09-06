@@ -165,7 +165,7 @@
 			"configFile": "rascal.properties",
 			"name": "health.polling.url",
 			"secure": false,
-			"value": "http://${hostname}:2000/"
+			"value": "http://${hostname}:2000/?inf.name=${interface_name}"
 		},
 		{
 			"configFile": "storage.config",

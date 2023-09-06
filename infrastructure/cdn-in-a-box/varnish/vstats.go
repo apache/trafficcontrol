@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -30,15 +29,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 )
-
-type app struct {
-	mu            *sync.Mutex
-	vstats        vstats
-	checkInterval time.Duration
-}
 
 type vstats struct {
 	ProcLoadavg  string `json:"proc.loadavg"`
@@ -48,82 +39,72 @@ type vstats struct {
 	// TODO: stats
 }
 
-func (a *app) getSystemData(ctx context.Context) {
-	ticker := time.NewTicker(a.checkInterval)
-	for {
-		select {
-		case <-ticker.C:
-			var vstats vstats
-			loadavg, err := os.ReadFile("/proc/loadavg")
-			if err != nil {
-				log.Printf("failed to read /proc/loadavg: %s\n", err)
-			}
-			vstats.ProcLoadavg = strings.TrimSpace(string(loadavg))
+func getSystemData(inf string) vstats {
+	var vstats vstats
+	loadavg, err := os.ReadFile("/proc/loadavg")
+	if err != nil {
+		log.Printf("failed to read /proc/loadavg: %s\n", err)
+	}
+	vstats.ProcLoadavg = strings.TrimSpace(string(loadavg))
 
-			procNetDev, err := os.ReadFile("/proc/net/dev")
-			if err != nil {
-				log.Printf("failed to read /proc/net/dev: %s\n", err)
-			}
-			parts := strings.Split(string(procNetDev), "\n")
-			// 3 because first two are columns headers and 2 is loopback interface
-			vstats.ProcNetDev = strings.TrimSpace(parts[3])
+	procNetDev, err := os.ReadFile("/proc/net/dev")
+	if err != nil {
+		log.Printf("failed to read /proc/net/dev: %s\n", err)
+	}
 
-			infSpeedFile := fmt.Sprintf("/sys/class/net/%s/speed", strings.Split(vstats.ProcNetDev, ":")[0])
-			speedStr, err := os.ReadFile(infSpeedFile)
-			if err != nil {
-				log.Printf("failed to read %s: %s\n", infSpeedFile, err)
-			}
-			speed, err := strconv.ParseInt(strings.TrimSpace(string(speedStr)), 10, 64)
-			if err != nil {
-				log.Printf("failed to convert speed '%s' to int: %s\n", speedStr, err)
-			}
-			vstats.InfSpeed = speed
-
-			cmd := exec.Command("systemctl", "status", "varnish.service")
-			err = cmd.Run()
-			if err != nil {
-				log.Printf("failed to run systemctl: %s\n", err)
-			}
-			if cmd.ProcessState.ExitCode() != 0 {
-				vstats.NotAvailable = true
-			}
-
-			a.mu.Lock()
-			a.vstats = vstats
-			a.mu.Unlock()
-
-		case <-ctx.Done():
+	parts := strings.Split(string(procNetDev), "\n")
+	for _, line := range parts {
+		if strings.HasPrefix(strings.TrimSpace(line), inf) {
+			vstats.ProcNetDev = strings.TrimSpace(line)
 			break
 		}
 	}
+
+	infSpeedFile := fmt.Sprintf("/sys/class/net/%s/speed", inf)
+	speedStr, err := os.ReadFile(infSpeedFile)
+	if err != nil {
+		log.Printf("failed to read %s: %s\n", infSpeedFile, err)
+	}
+	speed, err := strconv.ParseInt(strings.TrimSpace(string(speedStr)), 10, 64)
+	if err != nil {
+		log.Printf("failed to convert speed '%s' to int: %s\n", speedStr, err)
+	}
+	vstats.InfSpeed = speed
+
+	cmd := exec.Command("systemctl", "status", "varnish.service")
+	err = cmd.Run()
+	if err != nil {
+		log.Printf("failed to run systemctl: %s\n", err)
+	}
+	if cmd.ProcessState.ExitCode() != 0 {
+		vstats.NotAvailable = true
+	}
+	return vstats
 }
 
-func (a *app) getStats(w http.ResponseWriter, r *http.Request) {
-	a.mu.Lock()
-	defer a.mu.Unlock()
+func getStats(w http.ResponseWriter, r *http.Request) {
+	inf := r.URL.Query().Get("inf.name")
+	if inf == "" {
+		// assume default eth0?
+		inf = "eth0"
+	}
+	vstats := getSystemData(inf)
 	encoder := json.NewEncoder(w)
-	err := encoder.Encode(a.vstats)
+	err := encoder.Encode(vstats)
 	if err != nil {
 		log.Printf("failed to write Varnish stats: %s", err)
 	}
 }
 
 func main() {
-	var checkInterval int
-	flag.IntVar(&checkInterval, "check-interval", 1, "the duration in seconds to get system data and poll Varnish cache")
+	var port int
+	flag.IntVar(&port, "port", 2000, "port to run vstats on")
 
 	flag.Parse()
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	app := app{
-		mu:            &sync.Mutex{},
-		checkInterval: time.Duration(checkInterval) * time.Second,
-	}
-	go app.getSystemData(ctx)
+	http.HandleFunc("/", getStats)
 
-	http.HandleFunc("/", app.getStats)
-
-	if err := http.ListenAndServe(":2000", nil); err != nil {
+	listenAddress := fmt.Sprintf(":%d", port)
+	if err := http.ListenAndServe(listenAddress, nil); err != nil {
 		log.Printf("server stopped %s", err)
 	}
 }

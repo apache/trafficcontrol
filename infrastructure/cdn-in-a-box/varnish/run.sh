@@ -84,7 +84,7 @@ debug_binary="${!debug_variable_name}"
 if ! type -p "$debug_binary"; then
 	t3c apply --cache=varnish --trafficserver-home=/opt/cache --run-mode=badass --traffic-ops-url="$TO_URL" --traffic-ops-user="$TO_USER" --traffic-ops-password="$TO_PASSWORD" --git=yes -vv || { echo "Failed"; }
 fi
-vstats --check-interval 1 >> /var/log/vstats.log 2>&1 &
+vstats -port 2000 >> /var/log/vstats.log 2>&1 &
 
 envsubst < "/etc/cron.d/traffic_ops_ort-cron-template" > "/etc/cron.d/traffic_ops_ort-cron" && rm -f "/etc/cron.d/traffic_ops_ort-cron-template"
 chmod "0644" "/etc/cron.d/traffic_ops_ort-cron" && crontab "/etc/cron.d/traffic_ops_ort-cron"
