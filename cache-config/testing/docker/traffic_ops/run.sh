@@ -6,9 +6,9 @@
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -128,10 +128,10 @@ if [ -z "$INITIALIZED" ]; then init; fi
 
 i=0
 sleep_time=3
-while ! nc $DB_SERVER $DB_PORT </dev/null; do 
+while ! nc $DB_SERVER $DB_PORT </dev/null; do
   echo "waiting for $DB_SERVER:$DB_PORT" >> /var/log/traffic_ops/to_admin.log
   sleep $sleep_time
-  let i=i+1  
+  let i=i+1
   if [ $i -gt 10 ]; then
     let d=i*sleep_time
     echo "$DB_SERVER:$DB_PORT is unavailable after $d seconds, giving up" >> /var/log/traffic_ops/to_admin.log
@@ -145,10 +145,14 @@ set -o errexit
 mkdir -p /var/log/traffic_ops/
 touch /var/log/traffic_ops/to_admin.log /var/log/traffic_ops/tv_admin.log
 tail -f /var/log/traffic_ops/to_admin.log /var/log/traffic_ops/tv_admin.log &
-cd /opt/traffic_ops/app && db/admin --env=production reset >> /var/log/traffic_ops/to_admin.log 2>&1
-cd /opt/traffic_ops/app && db/admin --trafficvault --env=production reset >> /var/log/traffic_ops/tv_admin.log 2>&1
-) || {
-	echo Failed to run migrations
+cd /opt/traffic_ops/app
+(
+db/admin --env=production reset
+db/admin --env=production upgrade
+db/admin --trafficvault --env=production reset
+db/admin --trafficvault --env=production upgrade
+) >> /var/log/traffic_ops/to_admin.log 2>&1) || {
+	echo Failed to run migrations;
 	exit 1
 }
 
