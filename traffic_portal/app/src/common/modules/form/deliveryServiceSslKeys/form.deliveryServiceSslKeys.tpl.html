@@ -36,6 +36,7 @@ under the License.
                 <ul class="dropdown-menu-right dropdown-menu" uib-dropdown-menu>
                     <li><a ng-click="generateKeys()">Generate SSL Keys</a></li>
                     <li><a ng-click="renewCert()">Renew Certificate</a></li>
+                    <li><a ng-click="revertCert()" ng-show="showRevert()">Revert Certificate</a></li>
                 </ul>
             </div>
         </div>
