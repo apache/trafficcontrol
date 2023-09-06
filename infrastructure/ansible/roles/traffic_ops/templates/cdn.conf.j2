@@ -68,6 +68,9 @@
       "plugins": {{ to_plugin_config.keys() | list | to_json }},
       "plugin_config" : {{ to_plugin_config | to_nice_json(indent=2) }},
       "traffic_vault_backend": "{{ to_traffic_vault_backend }}",
+      "tls_config": {
+         "ClientAuth": "{{ to_go_client_auth_enabled }}"
+      },
       "traffic_vault_config": {
 {% if to_traffic_vault_backend == "postgres" %}
          "dbname": "{{ to_tvdb_db_name }}",
@@ -86,6 +89,11 @@
       "oauth_client_secret": "{{ to_go_oauth_client_secret }}",
       "oauth_user_attribute": "{{ to_go_oauth_user_attribute }}"
    },
+{% if to_go_client_auth_enabled == 1 %}
+   "client_certificate_authentication" : {
+      "root_certificates_directory" : "{{ to_client_cert_root_directory }}"
+   },
+{% endif %}
    "lets_encrypt": {
       "user_email": "{{ to_le_user_email }}",
       "send_expiration_email": {{ to_le_send_expiration_email | bool | lower }},
