@@ -23,18 +23,18 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestServerCapabilities(t *testing.T, cl *toclient.Session, td TrafficControl) {
 	for _, sc := range td.ServerCapabilities {
-		resp, _, err := cl.CreateServerCapabilityV41(sc, toclient.RequestOptions{})
+		resp, _, err := cl.CreateServerCapabilityV5(sc, toclient.RequestOptions{})
 		assert.RequireNoError(t, err, "Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
 	}
 }
 
 func DeleteTestServerCapabilities(t *testing.T, cl *toclient.Session) {
-	serverCapabilities, _, err := cl.GetServerCapabilities(toclient.RequestOptions{})
+	serverCapabilities, _, err := cl.GetServerCapabilitiesV5(toclient.RequestOptions{})
 	assert.NoError(t, err, "Cannot get Server Capabilities: %v - alerts: %+v", err, serverCapabilities.Alerts)
 
 	for _, serverCapability := range serverCapabilities.Response {
@@ -43,7 +43,7 @@ func DeleteTestServerCapabilities(t *testing.T, cl *toclient.Session) {
 		// Retrieve the Server Capability to see if it got deleted
 		opts := toclient.NewRequestOptions()
 		opts.QueryParameters.Set("name", serverCapability.Name)
-		getServerCapability, _, err := cl.GetServerCapabilities(opts)
+		getServerCapability, _, err := cl.GetServerCapabilitiesV5(opts)
 		assert.NoError(t, err, "Error getting Server Capability '%s' after deletion: %v - alerts: %+v", serverCapability.Name, err, getServerCapability.Alerts)
 		assert.Equal(t, 0, len(getServerCapability.Response), "Expected Server Capability '%s' to be deleted, but it was found in Traffic Ops", serverCapability.Name)
 	}

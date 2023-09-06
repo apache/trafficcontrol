@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestStaticDNSEntries(t *testing.T, cl *toclient.Session, td TrafficControl) {
@@ -38,11 +38,11 @@ func DeleteTestStaticDNSEntries(t *testing.T, cl *toclient.Session) {
 	assert.NoError(t, err, "Cannot get Static DNS Entries: %v - alerts: %+v", err, staticDNSEntries.Alerts)
 
 	for _, staticDNSEntry := range staticDNSEntries.Response {
-		alerts, _, err := cl.DeleteStaticDNSEntry(staticDNSEntry.ID, toclient.RequestOptions{})
+		alerts, _, err := cl.DeleteStaticDNSEntry(*staticDNSEntry.ID, toclient.RequestOptions{})
 		assert.NoError(t, err, "Unexpected error deleting Static DNS Entry '%s' (#%d): %v - alerts: %+v", staticDNSEntry.Host, staticDNSEntry.ID, err, alerts.Alerts)
 		// Retrieve the Static DNS Entry to see if it got deleted
 		opts := toclient.NewRequestOptions()
-		opts.QueryParameters.Set("host", staticDNSEntry.Host)
+		opts.QueryParameters.Set("host", *staticDNSEntry.Host)
 		getStaticDNSEntry, _, err := cl.GetStaticDNSEntries(opts)
 		assert.NoError(t, err, "Error getting Static DNS Entry '%s' after deletion: %v - alerts: %+v", staticDNSEntry.Host, err, getStaticDNSEntry.Alerts)
 		assert.Equal(t, 0, len(getStaticDNSEntry.Response), "Expected Static DNS Entry '%s' to be deleted, but it was found in Traffic Ops", staticDNSEntry.Host)

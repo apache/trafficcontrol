@@ -23,19 +23,19 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestDeliveryServices(t *testing.T, cl *toclient.Session, td TrafficControl) {
 	for _, ds := range td.DeliveryServices {
-		ds = ds.RemoveLD1AndLD2()
-		if ds.XMLID == nil {
+		if &ds.XMLID == nil {
 			t.Error("Found a Delivery Service in testing data with null or undefined XMLID")
 			continue
 		}
 		resp, _, err := cl.CreateDeliveryService(ds, toclient.RequestOptions{})
-		assert.NoError(t, err, "Could not create Delivery Service '%s': %v - alerts: %+v", *ds.XMLID, err, resp.Alerts)
+		assert.NoError(t, err, "Could not create Delivery Service '%s': %v - alerts: %+v", ds.XMLID, err, resp.Alerts)
 	}
 }
 
@@ -50,8 +50,8 @@ func DeleteTestDeliveryServices(t *testing.T, cl *toclient.Session) {
 		opts := toclient.NewRequestOptions()
 		opts.QueryParameters.Set("id", strconv.Itoa(*ds.ID))
 		getDS, _, err := cl.GetDeliveryServices(opts)
-		assert.NoError(t, err, "Error deleting Delivery Service for '%s' : %v - alerts: %+v", *ds.XMLID, err, getDS.Alerts)
-		assert.Equal(t, 0, len(getDS.Response), "Expected Delivery Service '%s' to be deleted", *ds.XMLID)
+		assert.NoError(t, err, "Error deleting Delivery Service for '%s' : %v - alerts: %+v", ds.XMLID, err, getDS.Alerts)
+		assert.Equal(t, 0, len(getDS.Response), "Expected Delivery Service '%s' to be deleted", ds.XMLID)
 	}
 }
 
@@ -77,12 +77,12 @@ func setInactive(t *testing.T, cl *toclient.Session, dsID int) {
 	assert.RequireEqual(t, len(resp.Response), 1, "Expected exactly one Delivery Service to exist with ID %d, found: %d", dsID, len(resp.Response))
 
 	ds := resp.Response[0]
-	if ds.Active == nil {
+	if ds.Active == "" {
 		t.Errorf("Deliver Service #%d had null or undefined 'active'", dsID)
-		ds.Active = new(bool)
+		ds.Active = tc.DSActiveStateInactive
 	}
-	if *ds.Active {
-		*ds.Active = false
+	if ds.Active == tc.DSActiveStateActive || ds.Active == tc.DSActiveStatePrimed {
+		ds.Active = tc.DSActiveStateInactive
 		_, _, err = cl.UpdateDeliveryService(dsID, ds, toclient.RequestOptions{})
 		assert.NoError(t, err, "Failed to set Delivery Service #%d to inactive: %v", dsID, err)
 	}

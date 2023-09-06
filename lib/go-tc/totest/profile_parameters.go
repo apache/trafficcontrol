@@ -24,7 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestProfileParameters(t *testing.T, cl *toclient.Session, td TrafficControl) {
@@ -43,7 +43,7 @@ func CreateTestProfileParameters(t *testing.T, cl *toclient.Session, td TrafficC
 			getParameter, _, err := cl.GetParameters(parameterOpts)
 			assert.RequireNoError(t, err, "Could not get Parameter %s: %v - alerts: %+v", *parameter.Name, err, getParameter.Alerts)
 			if len(getParameter.Response) == 0 {
-				alerts, _, err := cl.CreateParameter(tc.Parameter{Name: *parameter.Name, Value: *parameter.Value, ConfigFile: *parameter.ConfigFile}, toclient.RequestOptions{})
+				alerts, _, err := cl.CreateParameter(tc.ParameterV5{Name: *parameter.Name, Value: *parameter.Value, ConfigFile: *parameter.ConfigFile}, toclient.RequestOptions{})
 				assert.RequireNoError(t, err, "Could not create Parameter %s: %v - alerts: %+v", parameter.Name, err, alerts.Alerts)
 				getParameter, _, err = cl.GetParameters(parameterOpts)
 				assert.RequireNoError(t, err, "Could not get Parameter %s: %v - alerts: %+v", *parameter.Name, err, getParameter.Alerts)

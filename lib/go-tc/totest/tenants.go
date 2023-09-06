@@ -23,8 +23,9 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestTenants(t *testing.T, cl *toclient.Session, td TrafficControl) {
@@ -41,13 +42,13 @@ func DeleteTestTenants(t *testing.T, cl *toclient.Session) {
 	assert.NoError(t, err, "Cannot get Tenants: %v - alerts: %+v", err, tenants.Alerts)
 
 	for _, tenant := range tenants.Response {
-		if tenant.Name == "root" {
+		if tenant.Name == util.Ptr("root") {
 			continue
 		}
-		alerts, _, err := cl.DeleteTenant(tenant.ID, toclient.RequestOptions{})
+		alerts, _, err := cl.DeleteTenant(*tenant.ID, toclient.RequestOptions{})
 		assert.NoError(t, err, "Unexpected error deleting Tenant '%s' (#%d): %v - alerts: %+v", tenant.Name, tenant.ID, err, alerts.Alerts)
 		// Retrieve the Tenant to see if it got deleted
-		opts.QueryParameters.Set("id", strconv.Itoa(tenant.ID))
+		opts.QueryParameters.Set("id", strconv.Itoa(*tenant.ID))
 		getTenants, _, err := cl.GetTenants(opts)
 		assert.NoError(t, err, "Error getting Tenant '%s' after deletion: %v - alerts: %+v", tenant.Name, err, getTenants.Alerts)
 		assert.Equal(t, 0, len(getTenants.Response), "Expected Tenant '%s' to be deleted, but it was found in Traffic Ops", tenant.Name)

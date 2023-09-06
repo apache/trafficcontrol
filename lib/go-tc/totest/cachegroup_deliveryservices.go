@@ -23,7 +23,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestCachegroupsDeliveryServices(t *testing.T, cl *toclient.Session) {

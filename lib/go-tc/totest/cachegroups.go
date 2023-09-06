@@ -24,7 +24,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestCacheGroups(t *testing.T, cl *toclient.Session, dat TrafficControl) {
@@ -52,7 +52,7 @@ func CreateTestCacheGroups(t *testing.T, cl *toclient.Session, dat TrafficContro
 }
 
 func DeleteTestCacheGroups(t *testing.T, cl *toclient.Session, dat TrafficControl) {
-	var parentlessCacheGroups []tc.CacheGroupNullable
+	var parentlessCacheGroups []tc.CacheGroupNullableV5
 	opts := toclient.NewRequestOptions()
 
 	// delete the edge caches.

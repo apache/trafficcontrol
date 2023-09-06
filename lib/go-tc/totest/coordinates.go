@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestCoordinates(t *testing.T, cl *toclient.Session, td TrafficControl) {
@@ -38,11 +38,11 @@ func DeleteTestCoordinates(t *testing.T, cl *toclient.Session) {
 	coordinates, _, err := cl.GetCoordinates(toclient.RequestOptions{})
 	assert.NoError(t, err, "Cannot get Coordinates: %v - alerts: %+v", err, coordinates.Alerts)
 	for _, coordinate := range coordinates.Response {
-		alerts, _, err := cl.DeleteCoordinate(coordinate.ID, toclient.RequestOptions{})
+		alerts, _, err := cl.DeleteCoordinate(*coordinate.ID, toclient.RequestOptions{})
 		assert.NoError(t, err, "Unexpected error deleting Coordinate '%s' (#%d): %v - alerts: %+v", coordinate.Name, coordinate.ID, err, alerts.Alerts)
 		// Retrieve the Coordinate to see if it got deleted
 		opts := toclient.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(coordinate.ID))
+		opts.QueryParameters.Set("id", strconv.Itoa(*coordinate.ID))
 		getCoordinate, _, err := cl.GetCoordinates(opts)
 		assert.NoError(t, err, "Error getting Coordinate '%s' after deletion: %v - alerts: %+v", coordinate.Name, err, getCoordinate.Alerts)
 		assert.Equal(t, 0, len(getCoordinate.Response), "Expected Coordinate '%s' to be deleted, but it was found in Traffic Ops", coordinate.Name)
