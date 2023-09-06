@@ -169,6 +169,13 @@ By default, `docker-compose.yml` does not expose ports to the host. This allows 
 
 To expose the ports of each service on the host, add the `docker-compose.expose-ports.yml` file. For example, `docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`.
 
+## Varnish
+
+By default, CDN-in-a-Box uses Apache Traffic Server as the cache server.
+
+To run CDN-in-a-Box with Varnish add the `docker-compose.varnish.yml` file.
+For example, `docker-compose -f docker-compose.yml -f docker-compose.varnish.yml up`
+
 ## Common Pitfalls
 
 ### Traffic Monitor is stuck waiting for a valid Snapshot
