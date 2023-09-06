@@ -139,10 +139,18 @@ while ! nc $DB_SERVER $DB_PORT </dev/null; do
   fi
 done
 
+(
+set -o errexit
 # create the 'traffic_ops' database, tables and runs migrations
 mkdir -p /var/log/traffic_ops/
+touch /var/log/traffic_ops/to_admin.log /var/log/traffic_ops/tv_admin.log
+tail -f /var/log/traffic_ops/to_admin.log /var/log/traffic_ops/tv_admin.log &
 cd /opt/traffic_ops/app && db/admin --env=production reset >> /var/log/traffic_ops/to_admin.log 2>&1
 cd /opt/traffic_ops/app && db/admin --trafficvault --env=production reset >> /var/log/traffic_ops/tv_admin.log 2>&1
+) || {
+	echo Failed to run migrations
+	exit 1
+}
 
 # start traffic_ops
 start
