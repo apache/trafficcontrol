@@ -139,6 +139,47 @@ var DeliveryServiceSslKeysService = function($http, messageModel, ENV) {
             }
         );
     };
+
+
+    this.revertCert = function(deliveryService) {
+        return $http.get(ENV.api.unstable + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys", {params: {decode: "true"}}).then(
+            function(result) {
+                let prevVersion = parseInt(result.data.response.version, 10) - 1;
+                $http.get(ENV.api.unstable + "deliveryservices/xmlId/" + deliveryService.xmlId + "/sslkeys", {params: {decode: "true", version: prevVersion}}).then(
+                    function(result) {
+                        let prevKeys = result.data.response;
+                        prevKeys.cdn = deliveryService.cdnName;
+                        prevKeys.deliveryservice = deliveryService.xmlId;
+
+                        return $http.post(ENV.api.unstable + "deliveryservices/sslkeys/add", prevKeys).then(
+                            function(result) {
+                                messageModel.setMessages(result.data.alerts, false);
+                                return result.data.response;
+                            },
+                            function(err) {
+                                if (err.data && err.data.alerts) {
+                                    messageModel.setMessages(err.data.alerts, false);
+                                }
+                                throw err;
+                            }
+                        );
+                    },
+                    function(err) {
+                        if (err.data && err.data.alerts) {
+                            messageModel.setMessages(err.data.alerts, false);
+                        }
+                        throw err;
+                    }
+                );
+            },
+            function(err) {
+                if (err.data && err.data.alerts) {
+                    messageModel.setMessages(err.data.alerts, false);
+                }
+                throw err;
+            }
+        );
+    };
 };
 
 DeliveryServiceSslKeysService.$inject = ['$http', 'messageModel', 'ENV'];

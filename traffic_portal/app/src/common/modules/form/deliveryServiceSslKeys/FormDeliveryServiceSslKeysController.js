@@ -35,6 +35,10 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 		$state.reload(); // reloads all the resolves for the view
 	};
 
+	$scope.showRevert = function() {
+		return $scope.sslKeys.version > 1
+	};
+
 	var setSSLKeys = function(sslKeys) {
 		if (!sslKeys.hostname) {
 			var url = deliveryService.exampleURLs[0],
@@ -173,6 +177,31 @@ var FormDeliveryServiceSslKeysController = function(deliveryService, sslKeys, $s
 	};
 	init();
 
+	$scope.revertCert = function() {
+		var params = {
+			title: 'Revert SSL Keys for Delivery Service: ' + deliveryService.xmlId,
+			message: 'This will replace existing keys with the keys from the previous version'
+
+		};
+		var modalInstance = $uibModal.open({
+			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
+			controller: 'DialogConfirmController',
+			size: 'md',
+			resolve: {
+				params: function () {
+					return params;
+				}
+			}
+		});
+		modalInstance.result.then(function() {
+			deliveryServiceSslKeysService.revertCert(deliveryService).then(
+				function() {
+					$anchorScroll();
+					$scope.refresh();
+					if ($scope.dsSslKeyForm) $scope.dsSslKeyForm.$setPristine();
+				});
+		});
+	};
 
 };
 
