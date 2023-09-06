@@ -70,9 +70,9 @@ func (to *Session) UpdateProfile(id int, pl tc.ProfileV5, opts RequestOptions) (
 
 // GetParametersByProfileName returns all of the Parameters that are assigned
 // to the Profile with the given Name.
-func (to *Session) GetParametersByProfileName(profileName string, opts RequestOptions) (tc.ParametersResponse, toclientlib.ReqInf, error) {
+func (to *Session) GetParametersByProfileName(profileName string, opts RequestOptions) (tc.ParametersResponseV5, toclientlib.ReqInf, error) {
 	route := fmt.Sprintf(apiProfilesNameParameters, profileName)
-	var data tc.ParametersResponse
+	var data tc.ParametersResponseV5
 	reqInf, err := to.get(route, opts, &data)
 	return data, reqInf, err
 }
