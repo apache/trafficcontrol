@@ -23,7 +23,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 type TCObj int
@@ -102,7 +102,7 @@ func WrapNewClientDat(
 	clF func(t *testing.T, toClient *toclient.Session, dat totest.TrafficControl),
 ) func(t *testing.T) {
 	return func(t *testing.T) {
-		cl := utils.CreateV4Session(t, r.Config.TrafficOps.URL, *user, *pass, r.Config.Default.Session.TimeoutInSecs)
+		cl := utils.CreateV5Session(t, r.Config.TrafficOps.URL, *user, *pass, r.Config.Default.Session.TimeoutInSecs)
 		clF(t, cl, *dat)
 	}
 }

@@ -25,7 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
 	testutil "github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
 	"github.com/apache/trafficcontrol/lib/go-tc"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func TestIMS(t *testing.T) {
@@ -112,11 +112,11 @@ func doTestIMSChangedCDN(t *testing.T) {
 		t.Fatalf("getting server: %v", err)
 	}
 
-	sv.CDNID = &cdn2ID
-	sv.CDNName = &cdn2Name
-	sv.ProfileNames = []string{cdn2ProfileName}
+	sv.CDNID = cdn2ID
+	sv.CDN = cdn2Name
+	sv.Profiles = []string{cdn2ProfileName}
 
-	_, _, err = tcdata.TOSession.UpdateServer(*sv.ID, *sv, toclient.RequestOptions{})
+	_, _, err = tcdata.TOSession.UpdateServer(sv.ID, *sv, toclient.RequestOptions{})
 	if err != nil {
 		t.Fatalf("updating server: %v", err)
 	}

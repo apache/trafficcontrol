@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func (r *TCData) QueueUpdatesForServer(hostname string, queue bool) error {
@@ -27,10 +27,10 @@ func (r *TCData) QueueUpdatesForServer(hostname string, queue bool) error {
 	if err != nil {
 		return fmt.Errorf("cannot GET Server by hostname '%s': %v", hostname, err)
 	}
-	if respServer.ID == nil {
+	if &respServer.ID == nil || respServer.ID == 0 {
 		return fmt.Errorf("server '%s' had nil ID", hostname)
 	}
-	if _, _, err := TOSession.SetServerQueueUpdate(*respServer.ID, queue, toclient.RequestOptions{}); err != nil {
+	if _, _, err := TOSession.SetServerQueueUpdate(respServer.ID, queue, toclient.RequestOptions{}); err != nil {
 		return err
 	}
 	return nil
