@@ -58,7 +58,7 @@ func TestMakeMetaConfig(t *testing.T) {
 
 	deliveryServices := []DeliveryService{}
 	dss := []DeliveryServiceServer{}
-	globalParams := []tc.Parameter{}
+	globalParams := []tc.ParameterV5{}
 
 	makeLocationParam := func(name string) tc.ParameterV5 {
 		return tc.ParameterV5{

@@ -133,91 +133,89 @@ func removeComments(configs string) string {
 	return strings.Join(newLines, "\n")
 }
 
-func randDSS() tc.DeliveryServiceServer {
-	return tc.DeliveryServiceServer{
-		Server:          util.IntPtr(test.RandInt()),
-		DeliveryService: util.IntPtr(test.RandInt()),
+func randDSS() tc.DeliveryServiceServerV5 {
+	return tc.DeliveryServiceServerV5{
+		Server:          util.Ptr(test.RandInt()),
+		DeliveryService: util.Ptr(test.RandInt()),
 	}
 }
 
 func randDS() *atscfg.DeliveryService {
 	deepCachingTypeNever := tc.DeepCachingTypeNever
-	dsTypeHTTP := tc.DSTypeHTTP
+	dsTypeHTTP := util.Ptr("HTTP")
 	protocol := tc.DSProtocolHTTP
 	ds := atscfg.DeliveryService{}
 	ds.EcsEnabled = test.RandBool()
-	ds.RangeSliceBlockSize = util.IntPtr(test.RandInt())
-	ds.ConsistentHashRegex = util.StrPtr(test.RandStr())
+	ds.RangeSliceBlockSize = util.Ptr(test.RandInt())
+	ds.ConsistentHashRegex = util.Ptr(test.RandStr())
 	ds.ConsistentHashQueryParams = []string{
 		test.RandStr(),
 		test.RandStr(),
 	}
-	ds.MaxOriginConnections = util.IntPtr(test.RandInt())
-	ds.DeepCachingType = &deepCachingTypeNever
-	ds.FQPacingRate = util.IntPtr(test.RandInt())
-	ds.SigningAlgorithm = util.StrPtr(test.RandStr())
-	ds.Tenant = util.StrPtr(test.RandStr())
-	ds.TRResponseHeaders = util.StrPtr(test.RandStr())
-	ds.TRRequestHeaders = util.StrPtr(test.RandStr())
-	ds.Active = util.BoolPtr(test.RandBool())
-	ds.AnonymousBlockingEnabled = util.BoolPtr(test.RandBool())
-	ds.CCRDNSTTL = util.IntPtr(test.RandInt())
-	ds.CDNID = util.IntPtr(test.RandInt())
-	ds.CDNName = util.StrPtr(test.RandStr())
-	ds.CheckPath = util.StrPtr(test.RandStr())
-	ds.DisplayName = util.StrPtr(test.RandStr())
-	ds.DNSBypassCNAME = util.StrPtr(test.RandStr())
-	ds.DNSBypassIP = util.StrPtr(test.RandStr())
-	ds.DNSBypassIP6 = util.StrPtr(test.RandStr())
-	ds.DNSBypassTTL = util.IntPtr(test.RandInt())
-	ds.DSCP = util.IntPtr(test.RandInt())
-	ds.EdgeHeaderRewrite = util.StrPtr(test.RandStr())
-	ds.GeoLimit = util.IntPtr(test.RandInt())
+	ds.MaxOriginConnections = util.Ptr(test.RandInt())
+	ds.DeepCachingType = deepCachingTypeNever
+	ds.FQPacingRate = util.Ptr(test.RandInt())
+	ds.SigningAlgorithm = util.Ptr(test.RandStr())
+	ds.Tenant = util.Ptr(test.RandStr())
+	ds.TRResponseHeaders = util.Ptr(test.RandStr())
+	ds.TRRequestHeaders = util.Ptr(test.RandStr())
+	ds.Active = randActiveState()
+	ds.AnonymousBlockingEnabled = test.RandBool()
+	ds.CCRDNSTTL = util.Ptr(test.RandInt())
+	ds.CDNID = test.RandInt()
+	ds.CDNName = util.Ptr(test.RandStr())
+	ds.CheckPath = util.Ptr(test.RandStr())
+	ds.DisplayName = test.RandStr()
+	ds.DNSBypassCNAME = util.Ptr(test.RandStr())
+	ds.DNSBypassIP = util.Ptr(test.RandStr())
+	ds.DNSBypassIP6 = util.Ptr(test.RandStr())
+	ds.DNSBypassTTL = util.Ptr(test.RandInt())
+	ds.DSCP = test.RandInt()
+	ds.EdgeHeaderRewrite = util.Ptr(test.RandStr())
+	ds.GeoLimit = test.RandInt()
 	ds.GeoLimitCountries = nil
-	ds.GeoLimitRedirectURL = util.StrPtr(test.RandStr())
-	ds.GeoProvider = util.IntPtr(test.RandInt())
-	ds.GlobalMaxMBPS = util.IntPtr(test.RandInt())
-	ds.GlobalMaxTPS = util.IntPtr(test.RandInt())
-	ds.HTTPBypassFQDN = util.StrPtr(test.RandStr())
-	ds.ID = util.IntPtr(test.RandInt())
-	ds.InfoURL = util.StrPtr(test.RandStr())
-	ds.InitialDispersion = util.IntPtr(test.RandInt())
-	ds.IPV6RoutingEnabled = util.BoolPtr(test.RandBool())
-	ds.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
-	ds.LogsEnabled = util.BoolPtr(test.RandBool())
-	ds.LongDesc = util.StrPtr(test.RandStr())
-	ds.LongDesc1 = util.StrPtr(test.RandStr())
-	ds.LongDesc2 = util.StrPtr(test.RandStr())
-	ds.MatchList = &[]tc.DeliveryServiceMatch{
+	ds.GeoLimitRedirectURL = util.Ptr(test.RandStr())
+	ds.GeoProvider = test.RandInt()
+	ds.GlobalMaxMBPS = util.Ptr(test.RandInt())
+	ds.GlobalMaxTPS = util.Ptr(test.RandInt())
+	ds.HTTPBypassFQDN = util.Ptr(test.RandStr())
+	ds.ID = util.Ptr(test.RandInt())
+	ds.InfoURL = util.Ptr(test.RandStr())
+	ds.InitialDispersion = util.Ptr(test.RandInt())
+	ds.IPV6RoutingEnabled = util.Ptr(test.RandBool())
+	ds.LastUpdated = time.Now()
+	ds.LogsEnabled = test.RandBool()
+	ds.LongDesc = test.RandStr()
+	ds.MatchList = []tc.DeliveryServiceMatch{
 		{
 			Type:      tc.DSMatchTypeHostRegex,
 			SetNumber: 0,
 			Pattern:   `\.*foo\.*`,
 		},
 	}
-	ds.MaxDNSAnswers = util.IntPtr(test.RandInt())
-	ds.MidHeaderRewrite = util.StrPtr(test.RandStr())
-	ds.MissLat = util.FloatPtr(test.RandFloat64())
-	ds.MissLong = util.FloatPtr(test.RandFloat64())
-	ds.MultiSiteOrigin = util.BoolPtr(test.RandBool())
-	ds.OriginShield = util.StrPtr(test.RandStr())
-	ds.OrgServerFQDN = util.StrPtr("http://" + test.RandStr())
-	ds.ProfileDesc = util.StrPtr(test.RandStr())
-	ds.ProfileID = util.IntPtr(test.RandInt())
-	ds.ProfileName = util.StrPtr(test.RandStr())
+	ds.MaxDNSAnswers = util.Ptr(test.RandInt())
+	ds.MidHeaderRewrite = util.Ptr(test.RandStr())
+	ds.MissLat = util.Ptr(test.RandFloat64())
+	ds.MissLong = util.Ptr(test.RandFloat64())
+	ds.MultiSiteOrigin = test.RandBool()
+	ds.OriginShield = util.Ptr(test.RandStr())
+	ds.OrgServerFQDN = util.Ptr("http://" + test.RandStr())
+	ds.ProfileDesc = util.Ptr(test.RandStr())
+	ds.ProfileID = util.Ptr(test.RandInt())
+	ds.ProfileName = util.Ptr(test.RandStr())
 	ds.Protocol = &protocol
-	ds.QStringIgnore = util.IntPtr(test.RandInt())
-	ds.RangeRequestHandling = util.IntPtr(test.RandInt())
-	ds.RegexRemap = util.StrPtr(test.RandStr())
-	ds.RegionalGeoBlocking = util.BoolPtr(test.RandBool())
-	ds.RemapText = util.StrPtr(test.RandStr())
-	ds.RoutingName = util.StrPtr(test.RandStr())
-	ds.Signed = *util.BoolPtr(test.RandBool())
-	ds.SSLKeyVersion = util.IntPtr(test.RandInt())
-	ds.TenantID = util.IntPtr(test.RandInt())
-	ds.Type = &dsTypeHTTP
-	ds.TypeID = util.IntPtr(test.RandInt())
-	ds.XMLID = util.StrPtr(test.RandStr())
+	ds.QStringIgnore = util.Ptr(test.RandInt())
+	ds.RangeRequestHandling = util.Ptr(test.RandInt())
+	ds.RegexRemap = util.Ptr(test.RandStr())
+	ds.RegionalGeoBlocking = test.RandBool()
+	ds.RemapText = util.Ptr(test.RandStr())
+	ds.RoutingName = test.RandStr()
+	ds.Signed = *util.Ptr(test.RandBool())
+	ds.SSLKeyVersion = util.Ptr(test.RandInt())
+	ds.TenantID = test.RandInt()
+	ds.Type = dsTypeHTTP
+	ds.TypeID = test.RandInt()
+	ds.XMLID = test.RandStr()
 	ds.ExampleURLs = []string{
 		test.RandStr(),
 		test.RandStr(),
@@ -225,24 +223,36 @@ func randDS() *atscfg.DeliveryService {
 	return &ds
 }
 
+func randActiveState() tc.DeliveryServiceActiveState {
+	states := []tc.DeliveryServiceActiveState{
+		tc.DSActiveStateActive,
+		tc.DSActiveStateInactive,
+		tc.DSActiveStatePrimed,
+		tc.DSActiveStateInactive,
+		tc.DSActiveStatePrimed,
+		tc.DSActiveStateActive,
+	}
+	n := test.RandIntForActive()
+	return states[n]
+}
 func randServer() *atscfg.Server {
 	sv := &atscfg.Server{}
-	sv.Cachegroup = util.StrPtr(test.RandStr())
-	sv.CachegroupID = util.IntPtr(test.RandInt())
-	sv.CDNID = util.IntPtr(test.RandInt())
-	sv.CDNName = util.StrPtr(test.RandStr())
-	sv.DomainName = util.StrPtr(test.RandStr())
-	sv.FQDN = util.StrPtr(test.RandStr())
+	sv.Cachegroup = util.Ptr(test.RandStr())
+	sv.CachegroupID = util.Ptr(test.RandInt())
+	sv.CDNID = util.Ptr(test.RandInt())
+	sv.CDNName = util.Ptr(test.RandStr())
+	sv.DomainName = util.Ptr(test.RandStr())
+	sv.FQDN = util.Ptr(test.RandStr())
 	sv.FqdnTime = time.Now()
-	sv.GUID = util.StrPtr(test.RandStr())
-	sv.HostName = util.StrPtr(test.RandStr())
-	sv.HTTPSPort = util.IntPtr(test.RandInt())
-	sv.ID = util.IntPtr(test.RandInt())
-	sv.ILOIPAddress = util.StrPtr(test.RandStr())
-	sv.ILOIPGateway = util.StrPtr(test.RandStr())
-	sv.ILOIPNetmask = util.StrPtr(test.RandStr())
-	sv.ILOPassword = util.StrPtr(test.RandStr())
-	sv.ILOUsername = util.StrPtr(test.RandStr())
+	sv.GUID = util.Ptr(test.RandStr())
+	sv.HostName = util.Ptr(test.RandStr())
+	sv.HTTPSPort = util.Ptr(test.RandInt())
+	sv.ID = util.Ptr(test.RandInt())
+	sv.ILOIPAddress = util.Ptr(test.RandStr())
+	sv.ILOIPGateway = util.Ptr(test.RandStr())
+	sv.ILOIPNetmask = util.Ptr(test.RandStr())
+	sv.ILOPassword = util.Ptr(test.RandStr())
+	sv.ILOUsername = util.Ptr(test.RandStr())
 
 	sv.Interfaces = []tc.ServerInterfaceInfoV40{}
 	{
@@ -251,12 +261,12 @@ func randServer() *atscfg.Server {
 		ssi.IPAddresses = []tc.ServerIPAddress{
 			tc.ServerIPAddress{
 				Address:        test.RandStr(),
-				Gateway:        util.StrPtr(test.RandStr()),
+				Gateway:        util.Ptr(test.RandStr()),
 				ServiceAddress: true,
 			},
 			tc.ServerIPAddress{
 				Address:        test.RandStr(),
-				Gateway:        util.StrPtr(test.RandStr()),
+				Gateway:        util.Ptr(test.RandStr()),
 				ServiceAddress: true,
 			},
 		}
@@ -264,41 +274,41 @@ func randServer() *atscfg.Server {
 	}
 
 	sv.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
-	sv.MgmtIPAddress = util.StrPtr(test.RandStr())
-	sv.MgmtIPGateway = util.StrPtr(test.RandStr())
-	sv.MgmtIPNetmask = util.StrPtr(test.RandStr())
-	sv.OfflineReason = util.StrPtr(test.RandStr())
-	sv.PhysLocation = util.StrPtr(test.RandStr())
-	sv.PhysLocationID = util.IntPtr(test.RandInt())
+	sv.MgmtIPAddress = util.Ptr(test.RandStr())
+	sv.MgmtIPGateway = util.Ptr(test.RandStr())
+	sv.MgmtIPNetmask = util.Ptr(test.RandStr())
+	sv.OfflineReason = util.Ptr(test.RandStr())
+	sv.PhysLocation = util.Ptr(test.RandStr())
+	sv.PhysLocationID = util.Ptr(test.RandInt())
 	sv.ProfileNames = []string{test.RandStr()}
-	sv.Rack = util.StrPtr(test.RandStr())
-	sv.RevalPending = util.BoolPtr(test.RandBool())
-	sv.Status = util.StrPtr(test.RandStr())
-	sv.StatusID = util.IntPtr(test.RandInt())
-	sv.TCPPort = util.IntPtr(test.RandInt())
+	sv.Rack = util.Ptr(test.RandStr())
+	sv.RevalPending = util.Ptr(test.RandBool())
+	sv.Status = util.Ptr(test.RandStr())
+	sv.StatusID = util.Ptr(test.RandInt())
+	sv.TCPPort = util.Ptr(test.RandInt())
 	sv.Type = test.RandStr()
-	sv.TypeID = util.IntPtr(test.RandInt())
-	sv.UpdPending = util.BoolPtr(test.RandBool())
-	sv.XMPPID = util.StrPtr(test.RandStr())
-	sv.XMPPPasswd = util.StrPtr(test.RandStr())
+	sv.TypeID = util.Ptr(test.RandInt())
+	sv.UpdPending = util.Ptr(test.RandBool())
+	sv.XMPPID = util.Ptr(test.RandStr())
+	sv.XMPPPasswd = util.Ptr(test.RandStr())
 	return sv
 }
 
-func randCacheGroup() *tc.CacheGroupNullable {
-	return &tc.CacheGroupNullable{
-		ID:        util.IntPtr(test.RandInt()),
-		Name:      util.StrPtr(test.RandStr()),
-		ShortName: util.StrPtr(test.RandStr()),
-		Latitude:  util.FloatPtr(test.RandFloat64()),
-		Longitude: util.FloatPtr(test.RandFloat64()),
+func randCacheGroup() *tc.CacheGroupNullableV5 {
+	return &tc.CacheGroupNullableV5{
+		ID:        util.Ptr(test.RandInt()),
+		Name:      util.Ptr(test.RandStr()),
+		ShortName: util.Ptr(test.RandStr()),
+		Latitude:  util.Ptr(test.RandFloat64()),
+		Longitude: util.Ptr(test.RandFloat64()),
 		// ParentName:                  util.StrPtr(test.RandStr()),
 		// ParentCachegroupID:          util.IntPtr(test.RandInt()),
 		// SecondaryParentName:         util.StrPtr(test.RandStr()),
 		// SecondaryParentCachegroupID: util.IntPtr(test.RandInt()),
-		FallbackToClosest: util.BoolPtr(test.RandBool()),
-		Type:              util.StrPtr(test.RandStr()),
-		TypeID:            util.IntPtr(test.RandInt()),
-		LastUpdated:       &tc.TimeNoMod{Time: time.Now()},
+		FallbackToClosest: util.Ptr(test.RandBool()),
+		Type:              util.Ptr(test.RandStr()),
+		TypeID:            util.Ptr(test.RandInt()),
+		LastUpdated:       util.Ptr(time.Now()),
 		Fallbacks: &[]string{
 			test.RandStr(),
 			test.RandStr(),
@@ -306,8 +316,8 @@ func randCacheGroup() *tc.CacheGroupNullable {
 	}
 }
 
-func randParam() *tc.Parameter {
-	return &tc.Parameter{
+func randParam() *tc.ParameterV5 {
+	return &tc.ParameterV5{
 		ConfigFile: test.RandStr(),
 		Name:       test.RandStr(),
 		Value:      test.RandStr(),
@@ -328,8 +338,8 @@ func randJob() *atscfg.InvalidationJob {
 	}
 }
 
-func randCDN() *tc.CDN {
-	return &tc.CDN{
+func randCDN() *tc.CDNV5 {
+	return &tc.CDNV5{
 		DNSSECEnabled: test.RandBool(),
 		DomainName:    test.RandStr(),
 		Name:          test.RandStr(),
@@ -401,26 +411,26 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 	}
 
 	dsr0 := randDSRs()
-	dsr0.DSName = *ds0.XMLID
+	dsr0.DSName = ds0.XMLID
 	dsr0.Regexes[0].Pattern = `\.*foo\.*`
 	// ds1.Pattern = `\.*bar\.*`
 
 	dsr1 := randDSRs()
-	dsr1.DSName = *ds1.XMLID
+	dsr1.DSName = ds1.XMLID
 
 	return &t3cutil.ConfigData{
-		CacheGroups: []tc.CacheGroupNullable{
+		CacheGroups: []tc.CacheGroupNullableV5{
 			cg0,
 			cg1,
 		},
-		GlobalParams: []tc.Parameter{
+		GlobalParams: []tc.ParameterV5{
 			*randParam(),
 			*randParam(),
 			*randParam(),
 		},
-		ServerParams: []tc.Parameter{
+		ServerParams: []tc.ParameterV5{
 			// configLocation := locationParams["remap.config"].Location
-			tc.Parameter{
+			tc.ParameterV5{
 				ConfigFile: "remap.config",
 				Name:       "location",
 				Value:      "/etc/trafficserver",
@@ -430,12 +440,12 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 			*randParam(),
 			*randParam(),
 		},
-		RemapConfigParams: []tc.Parameter{
+		RemapConfigParams: []tc.ParameterV5{
 			*randParam(),
 			*randParam(),
 			*randParam(),
 		},
-		ParentConfigParams: []tc.Parameter{
+		ParentConfigParams: []tc.ParameterV5{
 			*randParam(),
 			*randParam(),
 			*randParam(),
