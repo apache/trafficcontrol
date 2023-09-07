@@ -2160,5 +2160,36 @@
                 }
             }
         }
+    },
+    "logs":{
+        "type": "object",
+        "required": [
+            "ticketNum",
+            "level",
+            "lastUpdated",
+            "user",
+            "id",
+            "message"
+        ],
+        "properties": {
+            "ticketNum": {
+                "type": "null"
+            },
+            "level": {
+                "type": "string"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "user": {
+                "type": "string"
+            },
+            "id": {
+                "type": "integer"
+            },
+            "message": {
+                "type": "string"
+            }
+        }
     }
 }

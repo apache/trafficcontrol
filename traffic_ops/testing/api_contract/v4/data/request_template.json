@@ -472,5 +472,14 @@
 			"serverId": 1,
 			"serverCapability": "disk"
     	}
-  	]
+  	],
+	  "logs":[
+		{
+			"ticketNum": null,
+			"level": "APICHANGE",
+			"user": "admin",
+			"id": 444,
+			"message": "log for test purposes"
+		}
+	]
 }
