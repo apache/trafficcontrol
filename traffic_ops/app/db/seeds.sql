@@ -61,13 +61,19 @@ INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('TRAFFIC
 INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE', (SELECT id FROM cdn WHERE "name"='ALL')) ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE', (SELECT id FROM cdn WHERE "name"='ALL')) ON CONFLICT ("name") DO NOTHING;
 
+-- server_profile
+INSERT into public.server_profile(server, profile_name, priority)
+SELECT s.id, p.name, 0
+FROM public.server AS s
+         JOIN public.profile p ON p.id=s.profile;
+
 -- statuses
-INSERT INTO public.status ("name", "description") VALUES ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('ONLINE', 'Server is online.') ON CONFLICT ("name") DO NOTHING;
+INSERT INTO public.status ("name", "description") VALUES ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('REPORTED', 'Server is online and reported in the health protocol.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('ADMIN_DOWN', 'Sever is administrative down and does not receive traffic.') ON CONFLICT ("name") DO NOTHING;
-INSERT INTO public.status ("name", "description") VALUES ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('PRE_PROD', 'Pre Production. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
+INSERT INTO public.status ("name", "description") VALUES ('CCR_IGNORE', 'Server is ignored by traffic router.') ON CONFLICT ("name") DO NOTHING;
 
 -- tenants
 INSERT INTO public.tenant ("name", active, parent_id) VALUES ('root', true, NULL) ON CONFLICT DO NOTHING;
@@ -96,6 +102,23 @@ SELECT id, 'DELIVERY-SERVICE-SAFE:UPDATE'
 FROM public.role
 WHERE "name" in ('operations', 'read-only', 'portal', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
+
+INSERT INTO public.role_capability
+SELECT id, perm FROM public.role
+CROSS JOIN (
+    VALUES ('DNS-SEC:READ'), ('DNS-SEC:DELETE')
+) AS perms(perm)
+WHERE "name" = 'operations'
+    ON CONFLICT DO NOTHING;
+
+INSERT INTO public.role_capability (role_id, cap_name)
+SELECT id, perm
+FROM public.role
+CROSS JOIN (
+    VALUES ('DELIVERY-SERVICE-SAFE:UPDATE')
+) AS perms(perm)
+WHERE name in ('operations', 'read-only', 'portal', 'federation', 'steering')
+    ON CONFLICT DO NOTHING;
 
 -- Using role 'read-only'
 INSERT INTO public.role_capability

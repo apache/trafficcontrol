@@ -19,7 +19,7 @@ under the License.
 
 # Squashing database migrations
 
-For convenience, [`squash_migrations.sh`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/squash_migrations.sh) script squashes the migrations, but whoever PRs the result is responsible for verifying that the migrations are squashed and `LastSquashedMigrationVersion` in [`db/admin.go`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/admin.go) is updated correctly, regardless of the result of having run the script.
+For convenience, [`squash_migrations.sh`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/squash_migrations.sh) script squashes the migrations, but whoever PRs the result is responsible for verifying that the migrations are squashed, regardless of the result of having run the script.
 
 --------
 
@@ -43,8 +43,7 @@ And suppose the ATC [`master`](https://github.com/apache/trafficcontrol/commits/
 
 1. In order to prepare database migrations for the next major release, in this case, ATC 148.0.0, migrations `1` and `3` should be collapsed into `create_tables.sql` and migrations `4` and `9` should remain in [`traffic_ops/app/db/migrations/`](https://github.com/apache/trafficcontrol/tree/master/traffic_ops/app/db/migrations/).
 
-2. * Note that `3` is the migration timestamp of the last up/down migration set. Find the definition for `LastSquashedMigrationTimestamp` in [`traffic_ops/app/db/admin.go`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/admin.go) and change it to `3`.
-   * After migrations from ATC 147.5.8 have been collapsed, the first migration version will be `4`. Find the definition for `FirstMigrationTimestamp` in [`traffic_ops/app/db/admin.go`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/admin.go) and change it to `4`.
+2. * After migrations from ATC 147.5.8 have been collapsed, the first migration version will be `4`. Find the definition for `FirstMigrationTimestamp` in [`traffic_ops/app/db/admin.go`](https://github.com/apache/trafficcontrol/blob/master/traffic_ops/app/db/admin.go) and change it to `4`.
 
 Past PRs that have collapsed the DB migrations:
 - https://github.com/apache/trafficcontrol/pull/6065

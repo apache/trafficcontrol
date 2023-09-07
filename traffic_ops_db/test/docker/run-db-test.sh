@@ -87,7 +87,7 @@ cd "$TO_DIR"
 # This NEEDS to be updated if migrations are squashed. It should be the
 # timestamp of the oldest extant migration.
 # TODO: this can be determined automatically from an inspection of the migrations dir
-FIRST_MIGRATION=2022011112591400
+FIRST_MIGRATION=2022100210472946
 
 old_db_version=$FIRST_MIGRATION
 
