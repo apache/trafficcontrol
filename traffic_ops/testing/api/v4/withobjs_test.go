@@ -19,7 +19,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/totest"
+	totest "github.com/apache/trafficcontrol/lib/go-tc/totestv4"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
