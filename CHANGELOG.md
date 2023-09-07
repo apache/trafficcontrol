@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [8.0.0] - 2023-09-05
+## [8.0.0] - 2023-09-12
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client* Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login.
@@ -35,30 +35,30 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7343](https://github.com/apache/trafficcontrol/pull/7343) *Traffic Ops* Adds ACME:READ, CDNI-ADMIN:READ and CDNI-CAPACITY:READ permissions to operations, portal, read-only, federation and steering roles.
 - [#7296](https://github.com/apache/trafficcontrol/pull/7296) *Traffic Portal* New configuration option in `traffic_portal_properties.json` at `deliveryServices.exposeInactive` controls exposing APIv5 DS Active State options in the TP UI.
 - [#7332](https://github.com/apache/trafficcontrol/pull/7332) *Traffic Ops* Creates new role needed for TR to watch TO resources.
-- [#7322](https://github.com/apache/trafficcontrol/issues/7322) *t3c Adds support for anycast on http routed edges.
+- [#7322](https://github.com/apache/trafficcontrol/issues/7322) *Traffic Control Cache Config (t3c)* Adds support for anycast on http routed edges.
 - [#7367](https://github.com/apache/trafficcontrol/pull/7367) *Traffic Ops* Adds ACME:CREATE, ACME:DELETE, ACME:DELETE, and ACME:READ permissions to operations role.
 - [#7380](https://github.com/apache/trafficcontrol/pull/7380) *Traffic Portal* Adds strikethrough (expired), red (7 days until expiration) and yellow (30 days until expiration) visuals to delivery service cert expiration grid rows.
 - [#7388](https://github.com/apache/trafficcontrol/pull/7388) *TC go Client* Adds sslkey_expiration methodology in v4 and v5 clients.
 - [#7543](https://github.com/apache/trafficcontrol/pull/7543) *Traffic Portal* New Ansible Role to use Traffic Portal v2.
-- [#7516](https://github.com/apache/trafficcontrol/pull/7516) *t3c* added command line arg to control go_direct in parent.config.
-- [#7602](https://github.com/apache/trafficcontrol/pull/7602) *t3c* added installed package data to t3c-apply-metadata.json.
+- [#7516](https://github.com/apache/trafficcontrol/pull/7516) *Traffic Control Cache Config (t3c)* added command line arg to control go_direct in parent.config.
+- [#7602](https://github.com/apache/trafficcontrol/pull/7602) *Traffic Control Cache Config (t3c)* added installed package data to t3c-apply-metadata.json.
 - [#7618](https://github.com/apache/trafficcontrol/pull/7618) *Traffic Portal* Add the ability to inspect a user provider cert, or the cert chain on DS SSL keys.
 - [#7619](https://github.com/apache/trafficcontrol/pull/7619) Traffic Ops* added optional field `oauth_user_attribute` for OAuth login credentials.
 - [#7641](https://github.com/apache/trafficcontrol/pull/7641) *Traffic Router* Added further optimization to TR's algorithm of figuring out the zone for an incoming request.
 - [#7646](https://github.com/apache/trafficcontrol/pull/7646) *Traffic Portal* Add the ability to delete a cert.
-- [#7652](https://github.com/apache/trafficcontrol/pull/7652) *t3c* added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt.
+- [#7652](https://github.com/apache/trafficcontrol/pull/7652) *Traffic Control Cache Config (t3c)* added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt.
 - [#7674](https://github.com/apache/trafficcontrol/issues/7674) *Traffic Ops* Add the ability to indicate if a server failed its revalidate/config update.
 - [#7784](https://github.com/apache/trafficcontrol/pull/7784) *Traffic Portal* Added revert certificate functionality to the ssl-keys page.
 
 ### Changed
 - [#7776](https://github.com/apache/trafficcontrol/pull/7776) *tc-health-client* Added error message while issues interacting with Traffic Ops.
-- [#7766](https://github.com/apache/trafficcontrol/pull/7766) *Traffic Portal* now uses TO APIv5
+- [#7766](https://github.com/apache/trafficcontrol/pull/7766) *Traffic Portal* now uses Traffic Ops APIv5
 - [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats* now uses Traffic Ops APIv5
 - [#7761](https://github.com/apache/trafficcontrol/pull/7761) *Traffic Monitor* Use API v5 for the TM's Traffic Ops client, and use TO API v4 for TM's Traffic Ops legacy client
-- [#7757](https://github.com/apache/trafficcontrol/pull/7757) *Traffic Router* Changed Traffic Router to point to api version 5.0 of Traffic Ops.
+- [#7757](https://github.com/apache/trafficcontrol/pull/7757) *Traffic Router* Changed Traffic Router to point to API version 5.0 of Traffic Ops.
 - [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
 - [#7665](https://github.com/apache/trafficcontrol/pull/7665) *Automation* Changes to Ansible role dataset_loader to add ATS 9 support
-- [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
+- [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Docs* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
 - [#7521](https://github.com/apache/trafficcontrol/pull/7521) *Traffic Ops* Returns empty array instead of null when no permissions are given for roles endpoint using POST or PUT request.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Adds better labels to routing methods widget on the TP dashboard.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Simplifies DS button bar by moving DS changes / DSRs under More menu and renaming to 'View Change Requests'.
@@ -71,14 +71,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7242](https://github.com/apache/trafficcontrol/pull/7276) *Traffic Portal* Now depends on NodeJS version 16 or later.
 - [#7120](https://github.com/apache/trafficcontrol/pull/7120) *Docs* Update t3c documentation regarding parent.config parent_retry.
 - [#7044](https://github.com/apache/trafficcontrol/issues/7044) *CDN in a Box* [CDN in a Box, the t3c integration tests, and the tc health client integration tests now use Apache Traffic Server 9.1.
-- [#7366](https://github.com/apache/trafficcontrol/pull/7366) *t3c* Removed timestamp from metadata file since it's changing every minute and causing excessive commits to git repo.
+- [#7366](https://github.com/apache/trafficcontrol/pull/7366) *Traffic Control Cache Config (t3c)* Removed timestamp from metadata file since it's changing every minute and causing excessive commits to git repo.
 - [#7386](https://github.com/apache/trafficcontrol/pull/7386) *Traffic Portal* Increased the number of events that are logged to the TP access log.
 - [#7469](https://github.com/apache/trafficcontrol/pull/7469) *Traffic Ops* Changed logic to not report empty or missing cookies into TO error.log.
 - [#7586](https://github.com/apache/trafficcontrol/pull/7586) *Traffic Ops* Add permission to Operations Role to read from dnsseckeys endpoint.
-- [#7600](https://github.com/apache/trafficcontrol/pull/7600) *t3c* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
+- [#7600](https://github.com/apache/trafficcontrol/pull/7600) *Traffic Control Cache Config (t3c)* changed default go-direct command line arg to be old to avoid unexpected config changes upon upgrade.
 - [#7621](https://github.com/apache/trafficcontrol/pull/7621) *Traffic Ops* Use ID token for OAuth authentication, not Access Token.
-- [#7694](https://github.com/apache/trafficcontrol/pull/7694) *t3c*, *Traffic Control Health Client* Upgrade to ATS 9.2.
-- [#7966](https://github.com/apache/trafficcontrol/pull/7696) *t3c* will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit.
+- [#7694](https://github.com/apache/trafficcontrol/pull/7694) *Traffic Control Cache Config (t3c)*, *Traffic Control Health Client* Upgrade to ATS 9.2.
+- [#7966](https://github.com/apache/trafficcontrol/pull/7696) *Traffic Control Cache Config (t3c)* will no longer clear update flag when config failure occurs and will also give a cache config error msg on exit.
 - [#7716](https://github.com/apache/trafficcontrol/pull/7716) *Apache Traffic Server* Use GCC 11 for building.
 - [#7742](https://github.com/apache/trafficcontrol/pull/7742) *Traffic Ops* Changed api tests to supply the absolute path of certs.
 
@@ -157,7 +157,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7158](https://github.com/apache/trafficcontrol/issues/7158) *Traffic Vault* Fix the `reencrypt` utility to uniquely reencrypt each version of the SSL Certificates.
 - [#7137](https://github.com/apache/trafficcontrol/pull/7137) *Traffic Control Cache Config (t3c)* parent.config simulate topology for non topo delivery services.
 - [#7153](https://github.com/apache/trafficcontrol/pull/7153) *Traffic Control Cache Config (t3c)* Adds an extra T3C check for validity of an ssl cert (crash fix).
-- [#3965](https://github.com/apache/trafficcontrol/pull/3965) *Traffic Router* Traffic Router now always includes a `Content-Length` header in the response.
+- [#3965](https://github.com/apache/trafficcontrol/pull/3965) *Traffic Router* TR now always includes a `Content-Length` header in the response.
 - [#6533](https://github.com/apache/trafficcontrol/issues/6533) *Traffic Router* TR should not rename/recreate log files on rollover
 - [#7182](https://github.com/apache/trafficcontrol/pull/7182) *Traffic Control Cache Config (t3c)* Sort peers used in strategy.yaml to prevent false positive for reload.
 - [#7204](https://github.com/apache/trafficcontrol/pull/7204) *Traffic Control Cache Config (t3c)* strategies.yaml hash_key only for consistent_hash
@@ -180,7 +180,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Removed
 - [#7804](https://github.com/apache/trafficcontrol/pull/7804) Removed unneeded V5 client methods for `deliveryServiceRequiredcapabilities`.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
-- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed`misc/jira_github_issue_import.py`, the project does not use JIRA.
+- [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed `misc/jira_github_issue_import.py`, the project does not use JIRA.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use.
 
