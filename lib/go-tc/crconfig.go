@@ -120,7 +120,7 @@ type CRConfigTrafficOpsServer struct {
 	Fqdn             *string               `json:"fqdn,omitempty"`
 	HashCount        *int                  `json:"hashCount,omitempty"`
 	HashId           *string               `json:"hashId,omitempty"`
-	HttpsPort        *int                  `json:"httpsPort"`
+	HttpsPort        *int                  `json:"httpsPort,omitempty"`
 	InterfaceName    *string               `json:"interfaceName"`
 	Ip               *string               `json:"ip,omitempty"`
 	Ip6              *string               `json:"ip6,omitempty"`
@@ -242,7 +242,7 @@ type CRConfigLatitudeLongitude struct {
 	Lat                 float64                 `json:"latitude"`
 	Lon                 float64                 `json:"longitude"`
 	BackupLocations     CRConfigBackupLocations `json:"backupLocations,omitempty"`
-	LocalizationMethods []LocalizationMethod    `json:"localizationMethods"`
+	LocalizationMethods []LocalizationMethod    `json:"localizationMethods,omitempty"`
 }
 
 // CRConfigLatitudeLongitudeShort is a geographical location where clients will
@@ -271,7 +271,7 @@ type CRConfigDeliveryServiceProtocol struct {
 // Monitors, named with "CRConfig" for legacy reasons.
 type CRConfigMonitor struct {
 	FQDN         *string               `json:"fqdn,omitempty"`
-	HTTPSPort    *int                  `json:"httpsPort"`
+	HTTPSPort    *int                  `json:"httpsPort,omitempty"`
 	IP           *string               `json:"ip,omitempty"`
 	IP6          *string               `json:"ip6,omitempty"`
 	Location     *string               `json:"location,omitempty"`

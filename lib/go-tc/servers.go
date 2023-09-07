@@ -1317,9 +1317,9 @@ type ServerV50 struct {
 	CDN          string `json:"cdn" db:"cdn_name"`
 	// The time at which configuration updates were last applied for this server
 	// by t3c.
-	ConfigApplyTime *time.Time `json:"configApplyTime" db:"config_apply_time"`
+	ConfigApplyTime *time.Time `json:"configApplyTime,omitempty" db:"config_apply_time"`
 	// The time at which configuration updates were last queued for this server.
-	ConfigUpdateTime *time.Time `json:"configUpdateTime" db:"config_update_time"`
+	ConfigUpdateTime *time.Time `json:"configUpdateTime,omitempty" db:"config_update_time"`
 	// If the last config apply failed for this server
 	ConfigUpdateFailed bool   `json:"configUpdateFailed" db:"config_update_failed"`
 	DomainName         string `json:"domainName" db:"domain_name"`
@@ -1327,43 +1327,43 @@ type ServerV50 struct {
 	// that we can get rid of it.
 	GUID         *string                  `json:"guid" db:"guid"`
 	HostName     string                   `json:"hostName" db:"host_name"`
-	HTTPSPort    *int                     `json:"httpsPort" db:"https_port"`
+	HTTPSPort    *int                     `json:"httpsPort,omitempty" db:"https_port"`
 	ID           int                      `json:"id" db:"id"`
-	ILOIPAddress *string                  `json:"iloIpAddress" db:"ilo_ip_address"`
-	ILOIPGateway *string                  `json:"iloIpGateway" db:"ilo_ip_gateway"`
-	ILOIPNetmask *string                  `json:"iloIpNetmask" db:"ilo_ip_netmask"`
-	ILOPassword  *string                  `json:"iloPassword" db:"ilo_password"`
-	ILOUsername  *string                  `json:"iloUsername" db:"ilo_username"`
+	ILOIPAddress *string                  `json:"iloIpAddress,omitempty" db:"ilo_ip_address"`
+	ILOIPGateway *string                  `json:"iloIpGateway,omitempty" db:"ilo_ip_gateway"`
+	ILOIPNetmask *string                  `json:"iloIpNetmask,omitempty" db:"ilo_ip_netmask"`
+	ILOPassword  *string                  `json:"iloPassword,omitempty" db:"ilo_password"`
+	ILOUsername  *string                  `json:"iloUsername,omitempty" db:"ilo_username"`
 	Interfaces   []ServerInterfaceInfoV40 `json:"interfaces" db:"interfaces"`
 	LastUpdated  time.Time                `json:"lastUpdated" db:"last_updated"`
 	// Deprecated: In the future, management interfaces must be configured as
 	// interfaces within the Interfaces of the server, not separately on these
 	// properties.
-	MgmtIPAddress *string `json:"mgmtIpAddress" db:"mgmt_ip_address"`
+	MgmtIPAddress *string `json:"mgmtIpAddress,omitempty" db:"mgmt_ip_address"`
 	// Deprecated: In the future, management interfaces must be configured as
 	// interfaces within the Interfaces of the server, not separately on these
 	// properties.
-	MgmtIPGateway *string `json:"mgmtIpGateway" db:"mgmt_ip_gateway"`
+	MgmtIPGateway *string `json:"mgmtIpGateway,omitempty" db:"mgmt_ip_gateway"`
 	// Deprecated: In the future, management interfaces must be configured as
 	// interfaces within the Interfaces of the server, not separately on these
 	// properties.
-	MgmtIPNetmask      *string  `json:"mgmtIpNetmask" db:"mgmt_ip_netmask"`
+	MgmtIPNetmask      *string  `json:"mgmtIpNetmask,omitempty" db:"mgmt_ip_netmask"`
 	OfflineReason      *string  `json:"offlineReason" db:"offline_reason"`
 	PhysicalLocation   string   `json:"physicalLocation" db:"phys_location"`
 	PhysicalLocationID int      `json:"physicalLocationID" db:"phys_location_id"`
-	Profiles           []string `json:"profiles" db:"profile_name"`
+	Profiles           []string `json:"profiles,omitempty" db:"profile_name"`
 	// Deprecated: This property has unknown purpose and should not be used so
 	// that we can get rid of it.
 	Rack *string `json:"rack" db:"rack"`
 	// The time at which revalidations for this server were last updated by t3c.
-	RevalApplyTime *time.Time `json:"revalApplyTime" db:"revalidate_apply_time"`
+	RevalApplyTime *time.Time `json:"revalApplyTime,omitempty" db:"revalidate_apply_time"`
 	// The time at which revalidations were last queued for this server.
-	RevalUpdateTime *time.Time `json:"revalUpdateTime" db:"revalidate_update_time"`
+	RevalUpdateTime *time.Time `json:"revalUpdateTime,omitempty" db:"revalidate_update_time"`
 	// If the last reval apply failed for this server
 	RevalUpdateFailed bool       `json:"revalUpdateFailed" db:"revalidate_update_failed"`
 	Status            string     `json:"status" db:"status"`
 	StatusID          int        `json:"statusID" db:"status_id"`
-	StatusLastUpdated *time.Time `json:"statusLastUpdated" db:"status_last_updated"`
+	StatusLastUpdated *time.Time `json:"statusLastUpdated,omitempty" db:"status_last_updated"`
 	TCPPort           *int       `json:"tcpPort" db:"tcp_port"`
 	Type              string     `json:"type" db:"server_type"`
 	TypeID            int        `json:"typeID" db:"server_type_id"`
