@@ -5,7 +5,7 @@
     "cdn": "fake",
     "cdnID": 1,
     "configUpdateFailed": false,
-    "domainName": "",
+    "domainName": "traffic-monitor-integration.test",
     "guid": "foo",
     "hostName": "trafficmonitor",
     "id": 1,
