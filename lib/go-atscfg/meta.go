@@ -50,7 +50,7 @@ func MakeConfigFilesList(
 	serverParams []tc.ParameterV5,
 	deliveryServices []DeliveryService,
 	deliveryServiceServers []DeliveryServiceServer,
-	globalParams []tc.Parameter,
+	globalParams []tc.ParameterV5,
 	cacheGroupArr []tc.CacheGroupNullableV5,
 	topologies []tc.TopologyV5,
 	opt *ConfigFilesListOpts,

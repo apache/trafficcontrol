@@ -230,7 +230,7 @@ func MakeRegexRevalidateDotConfig(toData *t3cutil.ConfigData, fileName string, h
 }
 
 func MakeRemapDotConfig(toData *t3cutil.ConfigData, fileName string, hdrCommentTxt string, cfg config.Cfg) (atscfg.Cfg, error) {
-	remapAndCacheKeyParams := []tc.Parameter{}
+	remapAndCacheKeyParams := []tc.ParameterV5{}
 	remapAndCacheKeyParams = append(remapAndCacheKeyParams, toData.RemapConfigParams...)
 	remapAndCacheKeyParams = append(remapAndCacheKeyParams, toData.CacheKeyConfigParams...)
 	return atscfg.MakeRemapDotConfig(

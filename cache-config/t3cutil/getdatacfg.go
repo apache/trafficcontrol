@@ -641,7 +641,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceRequiredCapabilitiesByID"))
 			if err != nil {
 				if strings.Contains(err.Error(), "/api/5.0/deliveryservices_required_capabilities' does not exist") {
-					log.Infof("This endpoint was removed in APIv5", err.Error())
+					log.Infof("This endpoint was removed in APIv5 %s", err.Error())
 					return nil
 				}
 				return errors.New("getting DS required capabilities: " + err.Error())

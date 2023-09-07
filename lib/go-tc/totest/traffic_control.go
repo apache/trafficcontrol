@@ -40,7 +40,7 @@ type TrafficControl struct {
 	Federations                                       []tc.CDNFederation                      `json:"federations"`
 	FederationResolvers                               []tc.FederationResolverV5               `json:"federation_resolvers"`
 	Jobs                                              []tc.InvalidationJobCreateV4            `json:"jobs"`
-	Origins                                           []tc.Origin                             `json:"origins"`
+	Origins                                           []tc.OriginV5                           `json:"origins"`
 	Profiles                                          []tc.ProfileV5                          `json:"profiles"`
 	Parameters                                        []tc.ParameterV5                        `json:"parameters"`
 	ProfileParameters                                 []tc.ProfileParameterV5                 `json:"profileParameters"`

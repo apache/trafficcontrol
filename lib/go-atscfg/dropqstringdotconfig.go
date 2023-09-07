@@ -38,7 +38,7 @@ type DropQStringDotConfigOpts struct {
 
 func MakeDropQStringDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *DropQStringDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {

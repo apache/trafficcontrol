@@ -24,15 +24,14 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestGetHitchConfig(t *testing.T) {
 	ds1 := &atscfg.DeliveryService{}
-	ds1.XMLID = util.StrPtr("ds1")
-	ds1.Protocol = util.IntPtr(1)
-	ds1Type := tc.DSTypeHTTP
+	ds1.XMLID = "ds1"
+	ds1.Protocol = util.Ptr(1)
+	ds1Type := "HTTP"
 	ds1.Type = &ds1Type
 	ds1.ExampleURLs = []string{"https://ds1.example.org"}
 	deliveryServices := []atscfg.DeliveryService{*ds1}
