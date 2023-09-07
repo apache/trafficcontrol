@@ -6,6 +6,7 @@
     "coveragezone.polling.url": "30",
     "dnssec.dynamic.response.expiration": "60",
     "dnssec.enabled": "false",
+    "dnssec.inception": "0",
     "domain_name": "monitor-integration.test",
     "federationmapping.polling.interval": "60",
     "federationmapping.polling.url": "foo",
@@ -14,9 +15,7 @@
     "keystore.maintenance.interval": "30",
     "neustar.polling.interval": "30",
     "neustar.polling.url": "foo",
-    "soa": {
-    },
-    "dnssec.inception": "0",
+    "soa": {},
     "ttls": {
       "admin": "30",
       "expire": "30",
@@ -31,51 +30,49 @@
   "contentServers": {
     "server0": {
       "cacheGroup": "cg0",
-      "profile": "Edge0",
+      "deliveryServices": {
+        "ds0": [
+          "ds0.monitor-integration.test"
+        ]
+      },
       "fqdn": "server0.monitor-integration.test",
       "hashCount": 1,
       "hashId": "server0",
+      "interfaceName": "bond0",
       "ip": "testcaches",
-      "ip6": null,
       "locationId": "",
       "port": 30000,
+      "profile": "Edge0",
+      "routingDisabled": 0,
       "status": "REPORTED",
-      "type": "EDGE",
-      "interfaceName": "bond0",
-      "deliveryServices": {
-        "ds0": [
-          "ds0.monitor-integration.test"
-        ]
-      },
-      "routingDisabled": 0
+      "type": "EDGE"
     },
     "server1": {
       "cacheGroup": "cg0",
-      "profile": "Edge0",
-      "fqdn": "server1.monitor-integration.test",
-      "hashCount": 1,
-      "hashId": "server1",
-      "ip": "testcaches",
-      "ip6": null,
-      "locationId": "",
-      "port": 30001,
-      "status": "REPORTED",
-      "type": "EDGE",
-      "interfaceName": "bond0",
       "deliveryServices": {
         "ds0": [
           "ds0.monitor-integration.test"
         ]
       },
-      "routingDisabled": 0
+      "fqdn": "server1.monitor-integration.test",
+      "hashCount": 1,
+      "hashId": "server1",
+      "interfaceName": "bond0",
+      "ip": "testcaches",
+      "locationId": "",
+      "port": 30001,
+      "profile": "Edge0",
+      "routingDisabled": 0,
+      "status": "REPORTED",
+      "type": "EDGE"
     }
   },
   "deliveryServices": {
     "ds0": {
       "anonymousBlockingEnabled": "false",
-      "consistentHashQueryParams": [],
       "consistentHashRegex": "",
       "coverageZoneOnly": "false",
+      "deepCachingType": "NEVER",
       "dispersion": {
         "limit": 1,
         "shuffled": "false"
@@ -83,20 +80,22 @@
       "domains": [
         "ds0.monitor-integration.test"
       ],
+      "ip6RoutingEnabled": "false",
       "matchsets": [
         {
-          "protocol": "HTTP",
           "matchlist": [
             {
-              "regex": "\\.*ds0\\.*",
-              "match-type": "HOST"
+              "match-type": "HOST",
+              "regex": "\\.*ds0\\.*"
             }
-          ]
+          ],
+          "protocol": "HTTP"
         }
       ],
+      "maxDnsIpsForLocation": 3,
       "missLocation": {
         "lat": 0,
-        "lon": 0
+        "long": 0
       },
       "protocol": {
         "acceptHttp": "true",
@@ -104,8 +103,7 @@
         "redirectToHttps": "false"
       },
       "regionalGeoBlocking": "false",
-      "responseHeaders": {},
-      "requestHeaders": [],
+      "routingName": "ccr",
       "soa": {
         "admin": "60",
         "expire": "60",
@@ -122,22 +120,14 @@
         "DS": "60",
         "NS": "60",
         "SOA": "60"
-      },
-      "maxDnsIpsForLocation": 3,
-      "ip6RoutingEnabled": "false",
-      "routingName": "ccr",
-      "deepCachingType": "",
-      "staticDnsEntries": []
+      }
     }
   },
   "edgeLocations": {
     "cg0": {
-      "latitude": 0,
-      "longitude": 0
-    }
-  },
-  "trafficRouterLocations": {
-    "tr0": {
+      "backupLocations": {
+        "fallbackToClosest": "false"
+      },
       "latitude": 0,
       "longitude": 0
     }
@@ -146,7 +136,6 @@
     "trafficmonitor": {
       "fqdn": "trafficmonitor.monitor-integration.test",
       "ip": "trafficmonitor",
-      "ip6": null,
       "location": "cg0",
       "port": 80,
       "profile": "Monitor0",
@@ -160,5 +149,14 @@
     "tm_path": "/fake",
     "tm_user": "fake",
     "tm_version": "integrationtest/0.fake"
+  },
+  "trafficRouterLocations": {
+    "tr0": {
+      "backupLocations": {
+        "fallbackToClosest": "false"
+      },
+      "latitude": 0,
+      "longitude": 0
+    }
   }
 }

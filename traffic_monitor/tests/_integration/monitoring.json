@@ -1,16 +1,16 @@
 {
   "cacheGroups": [
     {
-      "cg0": {
-        "coordinates": {
-          "latitude": 0,
-          "longitude": 0
-        },
-        "name": "cg0"
-      }
+      "coordinates": {
+        "latitude": 0,
+        "longitude": 0
+      },
+      "name": ""
     }
   ],
   "config": {
+    "address": "172.22.0.2",
+    "gateway": "172.22.0.1",
     "health.polling.interval": 2000,
     "heartbeat.polling.interval": 2000,
     "peers.polling.interval": 30,
@@ -18,10 +18,10 @@
   },
   "deliveryServices": [
     {
+      "TotalKbpsThreshold": 1000000,
+      "TotalTpsThreshold": 1000000,
       "status": "REPORTED",
       "topology": "",
-      "totalKbpsThreshold": 1000000,
-      "totalTpsThreshold": 1000000,
       "type": "HTTP",
       "xmlId": "ds0"
     }
@@ -30,23 +30,36 @@
     {
       "name": "Edge0",
       "parameters": {
+        "MinFreeKbps": 0,
         "health.connection.timeout": 10,
         "health.polling.format": "",
         "health.polling.type": "",
         "health.polling.url": "http://${hostname}/_astats?application=&inf.name=bond0",
-        "health.threshold.kbps": "<20000",
-        "health_threshold": {}
+        "health_threshold": {
+          "kbps": {
+            "Comparator": "<",
+            "Val": 20000
+          }
+        },
+        "history.count": 0
       },
       "type": "EDGE"
     },
     {
       "name": "Monitor0",
       "parameters": {
+        "MinFreeKbps": 0,
         "health.connection.timeout": 10,
         "health.polling.format": "",
         "health.polling.type": "",
-        "health.threshold.kbps": "<20000",
-        "health_threshold": {}
+        "health.polling.url": "",
+        "health_threshold": {
+          "kbps": {
+            "Comparator": "<",
+            "Val": 20000
+          }
+        },
+        "history.count": 0
       },
       "type": "RASCAL"
     }
@@ -72,14 +85,14 @@
         }
       ],
       "fqdn": "server0.monitor-integration.test",
-      "hashid": "server0",
+      "hashId": "server0",
       "hostName": "server0",
       "interfaces": [
         {
           "ipAddresses": [
             {
-              "address": "172.31.0.2",
-              "gateway": "172.31.0.1",
+              "address": "172.22.0.2",
+              "gateway": "172.22.0.1",
               "serviceAddress": true
             }
           ],
@@ -102,14 +115,14 @@
         }
       ],
       "fqdn": "server1.monitor-integration.test",
-      "hashid": "server1",
+      "hashId": "server1",
       "hostName": "server1",
       "interfaces": [
         {
           "ipAddresses": [
             {
-              "address": "172.31.0.2",
-              "gateway": "172.31.0.1",
+              "address": "172.22.0.2",
+              "gateway": "172.22.0.1",
               "serviceAddress": true
             }
           ],
