@@ -560,7 +560,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	#
 	# CDN Notifications
 	#
@@ -585,7 +585,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('delete', 'cdn_notifications', ('4.0', '4.1', '5.0'))
 	def delete_cdn_notification(self, query_params=None):
 		"""
@@ -661,7 +661,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	#
 	# CDN Lock
 	#
@@ -819,7 +819,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 
 	#
 	# Delivery Service Request Comments
@@ -828,7 +828,7 @@ class TOSession(RestApiSession):
 	def get_deliveryservice_request_comments(self, query_params=None):
 		"""
 		Retrieves all delivery service reuest comments.
-		:ref:`to-api-deliveryservice-request-comments`
+		:ref:`to-api-deliveryservice_request_comments`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -837,7 +837,7 @@ class TOSession(RestApiSession):
 	def create_deliveryservice_request_comment(self, data=None):
 		"""
 		Creates a new delivery service request comment.
-		:ref:`to-api-deliveryservice-request-comments`
+		:ref:`to-api-deliveryservice_request_comments`
 		:param data: The request data structure for the API request
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
@@ -848,7 +848,7 @@ class TOSession(RestApiSession):
 	def update_deliveryservice_request_comment(self, query_params=None, data=None):
 		"""
 		Updates an existing Delivery Service Request comment.
-		:ref:`to-api-deliveryservice-request-comments`
+		:ref:`to-api-deliveryservice_request_comments`
 		:param data: The request data structure for the API request
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -859,7 +859,7 @@ class TOSession(RestApiSession):
 	def delete_deliveryservice_request_comment(self, query_params=None):
 		"""
 		Deletes a Delivery Service Request comment.
-		:ref:`to-api-deliveryservice-request-comments`
+		:ref:`to-api-deliveryservice_request_comments`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -867,31 +867,31 @@ class TOSession(RestApiSession):
     #
 	# Delivery Service Required capabilities
 	#
-	@api_request('get', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('get', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1'))
 	def get_deliveryservices_required_capabilities(self, query_params=None):
 		"""
 		Retrieves all delivery service required capabilities.
-		:ref:`to-api-deliveryservice-required-capabilities`
+		:ref:`to-api-v4-deliveryservices_required_capabilities`
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('post', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('post', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1'))
 	def create_deliveryservices_required_capabilities(self, data=None):
 		"""
 		Creates a new delivery service required capability.
-		:ref:`to-api-deliveryservice-required-capabilities`
+		:ref:`to-api-v4-deliveryservices_required_capabilities`
 		:param data: The request data structure for the API request
 		:type data: Dict[str, Any]
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
 
-	@api_request('delete', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1', '5.0'))
+	@api_request('delete', 'deliveryservices_required_capabilities', ('3.0', '4.0', '4.1'))
 	def delete_deliveryservices_required_capabilities(self, query_params=None):
 		"""
 		Deletes a Delivery Service Required capability.
-		:ref:`to-api-deliveryservice-required-capabilities`
+		:ref:`to-api-v4-deliveryservices_required_capabilities`
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
@@ -922,7 +922,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('get', 'deliveryservices/{delivery_service_id:d}/routing', ('3.0', '4.0', '4.1', '5.0'))
 	def get_delivery_service_routing(self, delivery_service_id=None):
 		"""
@@ -1555,7 +1555,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	#
 	# Server_capabilities
 	#
@@ -2061,7 +2061,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Dict[str, Any], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	#
 	# Service categories
 	#
@@ -2084,7 +2084,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('put', 'service_categories/{service_category_name:s}', ('3.0', '4.0', '4.1', '5.0'))
 	def update_service_category(self, service_category_name=None, data=None):
 		"""
@@ -2181,7 +2181,7 @@ class TOSession(RestApiSession):
 	def delete_status_by_id(self, status_id=None):
 		"""
 		Delete a status
-		:ref:`to-api-status-id`
+		:ref:`to-api-statuses-id`
 		:param status_id: The status to delete
 		:type status_id: int
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
@@ -2273,7 +2273,7 @@ class TOSession(RestApiSession):
 		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
 		:raises: Union[LoginError, OperationError]
 		"""
-	
+
 	@api_request('delete', 'tenants/{tenant_id:d}', ('3.0', '4.0', '4.1', '5.0'))
 	def delete_tenant(self, tenant_id=None):
 		"""

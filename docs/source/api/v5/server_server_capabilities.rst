@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-server-server-capabilities:
+.. _to-api-server_server_capabilities:
 
 ******************************
 ``server_server_capabilities``

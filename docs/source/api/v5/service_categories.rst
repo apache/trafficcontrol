@@ -13,7 +13,7 @@
 .. limitations under the License.
 ..
 
-.. _to-api-service-categories:
+.. _to-api-service_categories:
 
 **********************
 ``service_categories``
