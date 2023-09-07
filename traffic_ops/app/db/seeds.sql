@@ -61,12 +61,6 @@ INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('TRAFFIC
 INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('INFLUXDB', 'InfluxDb profile', 'INFLUXDB_PROFILE', (SELECT id FROM cdn WHERE "name"='ALL')) ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.profile ("name", "description", "type", cdn) VALUES ('RIAK_ALL', 'Riak profile for all CDNs', 'RIAK_PROFILE', (SELECT id FROM cdn WHERE "name"='ALL')) ON CONFLICT ("name") DO NOTHING;
 
--- server_profile
-INSERT into public.server_profile(server, profile_name, priority)
-SELECT s.id, p.name, 0
-FROM public.server AS s
-         JOIN public.profile p ON p.id=s.profile;
-
 -- statuses
 INSERT INTO public.status ("name", "description") VALUES ('ONLINE', 'Server is online.') ON CONFLICT ("name") DO NOTHING;
 INSERT INTO public.status ("name", "description") VALUES ('OFFLINE', 'Server is Offline. Not active in any configuration.') ON CONFLICT ("name") DO NOTHING;
@@ -103,25 +97,8 @@ FROM public.role
 WHERE "name" in ('operations', 'read-only', 'portal', 'federation', 'steering')
 ON CONFLICT DO NOTHING;
 
-INSERT INTO public.role_capability
-SELECT id, perm FROM public.role
-CROSS JOIN (
-    VALUES ('DNS-SEC:READ'), ('DNS-SEC:DELETE')
-) AS perms(perm)
-WHERE "name" = 'operations'
-    ON CONFLICT DO NOTHING;
-
-INSERT INTO public.role_capability (role_id, cap_name)
-SELECT id, perm
-FROM public.role
-CROSS JOIN (
-    VALUES ('DELIVERY-SERVICE-SAFE:UPDATE')
-) AS perms(perm)
-WHERE name in ('operations', 'read-only', 'portal', 'federation', 'steering')
-    ON CONFLICT DO NOTHING;
-
 -- Using role 'read-only'
-INSERT INTO public.role_capability
+INSERT INTO public.role_capability (role_id, cap_name)
 SELECT id, perm
 FROM public.role
 CROSS JOIN ( VALUES
@@ -136,6 +113,7 @@ CROSS JOIN ( VALUES
 	('CDNI-CAPACITY:READ'),
 	('COORDINATE:READ'),
 	('DELIVERY-SERVICE:READ'),
+    ('DELIVERY-SERVICE-SAFE:UPDATE'),
 	('DIVISION:READ'),
 	('DS-REQUEST:READ'),
 	('DS-SECURITY-KEY:READ'),
@@ -209,10 +187,10 @@ INSERT INTO public.role_capability
 SELECT id, perm
 FROM public.role
 CROSS JOIN ( VALUES
-        ('ACME:CREATE'),
-        ('ACME:DELETE'),
-        ('ACME:READ'),
-        ('ACME:UPDATE'),
+    ('ACME:CREATE'),
+    ('ACME:DELETE'),
+    ('ACME:READ'),
+    ('ACME:UPDATE'),
 	('ASN:CREATE'),
 	('ASN:DELETE'),
 	('ASN:UPDATE'),
@@ -236,6 +214,7 @@ CROSS JOIN ( VALUES
 	('DIVISION:UPDATE'),
 	('DNS-SEC:READ'),
 	('DNS-SEC:UPDATE'),
+    ('DNS-SEC:DELETE')
 	('ISO:GENERATE'),
 	('ORIGIN:CREATE'),
 	('ORIGIN:DELETE'),
