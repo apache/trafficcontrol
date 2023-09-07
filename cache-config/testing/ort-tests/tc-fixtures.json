@@ -269,7 +269,7 @@
     {
       "changeType": "create",
       "deliveryService": {
-        "active": true,
+        "active": "ACTIVE",
         "cdnName": "cdn1",
         "ccrDnsTtl": 30,
         "deepCachingType": "NEVER",
@@ -291,7 +291,7 @@
     {
       "changeType": "create",
       "deliveryService": {
-        "active": true,
+        "active": "ACTIVE",
         "cdnName": "cdn1",
         "ccrDnsTtl": 30,
         "deepCachingType": "NEVER",
@@ -334,7 +334,7 @@
     {
       "changeType": "update",
       "deliveryService": {
-        "active": false,
+        "active": "INACTIVE",
         "cdnName": "cdn1",
         "ccrDnsTtl": 30,
         "deepCachingType": "NEVER",
@@ -356,7 +356,7 @@
   ],
   "deliveryServices": [
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "cacheUrl1",
       "ccrDnsTtl": 3600,
@@ -421,7 +421,7 @@
       "anonymousBlockingEnabled": true
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "cacheUrl2",
       "ccrDnsTtl": 3600,
@@ -492,7 +492,7 @@
       "anonymousBlockingEnabled": true
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "cacheUrl3",
       "ccrDnsTtl": 3600,
@@ -559,7 +559,7 @@
       "anonymousBlockingEnabled": true
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "",
       "ccrDnsTtl": 3600,
@@ -616,7 +616,7 @@
       "anonymousBlockingEnabled": true
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "cacheUrl1",
       "ccrDnsTtl": 3600,
@@ -679,7 +679,7 @@
       "anonymousBlockingEnabled": true
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "cacheUrl1",
       "ccrDnsTtl": 3600,
@@ -745,7 +745,7 @@
       "anonymousBlockingEnabled": true
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "cacheUrl1",
       "ccrDnsTtl": 3600,
@@ -811,7 +811,7 @@
       "anonymousBlockingEnabled": true
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "",
       "ccrDnsTtl": 3600,
@@ -877,7 +877,7 @@
       "lastHeaderRewrite": "cond %{REMAP_PSEUDO_HOOK} __RETURN__ set-header CDN-SVCL \"lastHeaderRewrite\" [L]"
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn2",
       "cacheurl": "",
       "ccrDnsTtl": 3600,
@@ -940,7 +940,7 @@
       "topology": "top-for-ds-cdn2"
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "",
       "ccrDnsTtl": 3600,
@@ -1003,7 +1003,7 @@
       "anonymousBlockingEnabled": false
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "",
       "ccrDnsTtl": 3600,
@@ -1066,7 +1066,7 @@
       "anonymousBlockingEnabled": false
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "",
       "ccrDnsTtl": 3600,
@@ -1128,7 +1128,7 @@
       "anonymousBlockingEnabled": false
     },
     {
-      "active": true,
+      "active": "ACTIVE",
       "cdnName": "cdn1",
       "cacheurl": "",
       "ccrDnsTtl": 3600,
