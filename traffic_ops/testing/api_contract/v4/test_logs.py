@@ -53,11 +53,11 @@ def test_logs_contract(
 			logs_data, _ = change_logs_get_response
 
 			try:
-				change_logs_data = change_logs_get_response[0]
-				if not isinstance(change_logs_data, list):
+				logs_data = change_logs_get_response[0]
+				if not isinstance(logs_data, list):
 					raise TypeError("Malformed API response; 'response' property not an array")
 
-				first_change_log = change_logs_data[0]
+				first_change_log = logs_data[0]
 				if not isinstance(first_change_log, dict):
 					raise TypeError("Malformed API response; first Log in response is not an object")
 				logger.info("Logs API get response %s", first_change_log)

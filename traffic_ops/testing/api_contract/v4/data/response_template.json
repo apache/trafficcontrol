@@ -2173,7 +2173,10 @@
         ],
         "properties": {
             "ticketNum": {
-                "type": "integer"
+                "type": [
+                    "integer",
+                    "null"
+                ]
             },
             "level": {
                 "type": "string"
