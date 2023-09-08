@@ -93,14 +93,14 @@ jobs:
     runs-on: ubuntu-latest
     services:
       hub:
-        image: selenium/hub
+        image: selenium/hub:4.8.1
         ports:
           - 4442:4442
           - 4443:4443
           - 4444:4444
         options: --health-cmd=/opt/bin/check-grid.sh --health-interval=5s --health-timeout=15s --health-retries=5
-      chromium:
-        image: ossalternatives/selenium-node-chromium
+      chrome:
+        image: selenium/node-chrome:110.0
         env:
           SE_EVENT_BUS_HOST: hub
           SE_EVENT_BUS_PUBLISH_PORT: 4442
