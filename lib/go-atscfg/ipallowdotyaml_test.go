@@ -71,9 +71,9 @@ func TestMakeIPAllowDotYAML(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.Ptr("server0")
+	sv.HostName = "server0"
 	sv.Type = string(tc.CacheTypeMid)
-	sv.Cachegroup = cgs[0].Name
+	sv.CacheGroup = *cgs[0].Name
 	svs = append(svs, *sv)
 
 	topologies := []tc.TopologyV5{}
@@ -164,9 +164,9 @@ func TestMakeIPAllowDotYAMLEdge(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.Ptr("server0")
+	sv.HostName = "server0"
 	sv.Type = string(tc.CacheTypeEdge)
-	sv.Cachegroup = cgs[0].Name
+	sv.CacheGroup = *cgs[0].Name
 	svs = append(svs, *sv)
 
 	topologies := []tc.TopologyV5{}
@@ -250,9 +250,9 @@ func TestMakeIPAllowDotYAMLNonDefaultV6Number(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.Ptr("server0")
+	sv.HostName = "server0"
 	sv.Type = string(tc.CacheTypeMid)
-	sv.Cachegroup = cgs[0].Name
+	sv.CacheGroup = *cgs[0].Name
 	svs = append(svs, *sv)
 
 	topologies := []tc.TopologyV5{}
@@ -356,9 +356,9 @@ func TestMakeIPAllowDotYAMLTopologies(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.Ptr("server0")
+	sv.HostName = "server0"
 	sv.Type = string(tc.CacheTypeMid)
-	sv.Cachegroup = cgs[1].Name
+	sv.CacheGroup = *cgs[1].Name
 	svs = append(svs, *sv)
 
 	//	topologies := []tc.Topology{}

@@ -41,13 +41,13 @@ func Make12MFacts(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 
 	hdr := makeHdrComment(opt.HdrComment)
 	txt := hdr
-	txt += "profiles:" + strings.Join(server.ProfileNames, ", ") + "\n"
+	txt += "profiles:" + strings.Join(server.Profiles, ", ") + "\n"
 
 	return Cfg{
 		Text:        txt,

@@ -237,17 +237,15 @@ func randActiveState() tc.DeliveryServiceActiveState {
 }
 func randServer() *atscfg.Server {
 	sv := &atscfg.Server{}
-	sv.Cachegroup = util.Ptr(test.RandStr())
-	sv.CachegroupID = util.Ptr(test.RandInt())
-	sv.CDNID = util.Ptr(test.RandInt())
-	sv.CDNName = util.Ptr(test.RandStr())
-	sv.DomainName = util.Ptr(test.RandStr())
-	sv.FQDN = util.Ptr(test.RandStr())
-	sv.FqdnTime = time.Now()
+	sv.CacheGroup = test.RandStr()
+	sv.CacheGroupID = test.RandInt()
+	sv.CDNID = test.RandInt()
+	sv.CDN = test.RandStr()
+	sv.DomainName = test.RandStr()
 	sv.GUID = util.Ptr(test.RandStr())
-	sv.HostName = util.Ptr(test.RandStr())
+	sv.HostName = test.RandStr()
 	sv.HTTPSPort = util.Ptr(test.RandInt())
-	sv.ID = util.Ptr(test.RandInt())
+	sv.ID = test.RandInt()
 	sv.ILOIPAddress = util.Ptr(test.RandStr())
 	sv.ILOIPGateway = util.Ptr(test.RandStr())
 	sv.ILOIPNetmask = util.Ptr(test.RandStr())
@@ -273,22 +271,26 @@ func randServer() *atscfg.Server {
 		sv.Interfaces = append(sv.Interfaces, ssi)
 	}
 
-	sv.LastUpdated = &tc.TimeNoMod{Time: time.Now()}
+	sv.LastUpdated = time.Now()
 	sv.MgmtIPAddress = util.Ptr(test.RandStr())
 	sv.MgmtIPGateway = util.Ptr(test.RandStr())
 	sv.MgmtIPNetmask = util.Ptr(test.RandStr())
 	sv.OfflineReason = util.Ptr(test.RandStr())
-	sv.PhysLocation = util.Ptr(test.RandStr())
-	sv.PhysLocationID = util.Ptr(test.RandInt())
-	sv.ProfileNames = []string{test.RandStr()}
+	sv.PhysicalLocation = test.RandStr()
+	sv.PhysicalLocationID = test.RandInt()
+	sv.Profiles = []string{test.RandStr()}
 	sv.Rack = util.Ptr(test.RandStr())
-	sv.RevalPending = util.Ptr(test.RandBool())
-	sv.Status = util.Ptr(test.RandStr())
-	sv.StatusID = util.Ptr(test.RandInt())
+	sv.RevalApplyTime = util.Ptr(time.Now())
+	sv.RevalUpdateTime = util.Ptr(time.Now())
+	sv.RevalUpdateFailed = test.RandBool()
+	sv.Status = test.RandStr()
+	sv.StatusID = test.RandInt()
 	sv.TCPPort = util.Ptr(test.RandInt())
 	sv.Type = test.RandStr()
-	sv.TypeID = util.Ptr(test.RandInt())
-	sv.UpdPending = util.Ptr(test.RandBool())
+	sv.TypeID = test.RandInt()
+	sv.ConfigUpdateTime = util.Ptr(time.Now())
+	sv.ConfigApplyTime = util.Ptr(time.Now())
+	sv.ConfigUpdateFailed = test.RandBool()
 	sv.XMPPID = util.Ptr(test.RandStr())
 	sv.XMPPPasswd = util.Ptr(test.RandStr())
 	return sv
@@ -388,24 +390,24 @@ func MakeFakeTOData() *t3cutil.ConfigData {
 	sv1 := randServer()
 	sv2 := randServer()
 
-	sv0.Cachegroup = cg0.Name
-	sv1.Cachegroup = cg0.Name
-	sv2.Cachegroup = cg1.Name
+	sv0.CacheGroup = *cg0.Name
+	sv1.CacheGroup = *cg0.Name
+	sv2.CacheGroup = *cg1.Name
 
 	ds0 := *randDS()
 	ds1 := *randDS()
 
 	dss := []atscfg.DeliveryServiceServer{
 		atscfg.DeliveryServiceServer{
-			Server:          *sv0.ID,
+			Server:          sv0.ID,
 			DeliveryService: *ds0.ID,
 		},
 		atscfg.DeliveryServiceServer{
-			Server:          *sv0.ID,
+			Server:          sv0.ID,
 			DeliveryService: *ds1.ID,
 		},
 		atscfg.DeliveryServiceServer{
-			Server:          *sv1.ID,
+			Server:          sv1.ID,
 			DeliveryService: *ds0.ID,
 		},
 	}

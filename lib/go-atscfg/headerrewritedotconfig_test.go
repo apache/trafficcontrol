@@ -35,12 +35,12 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = &cdnName
+	server.CDN = cdnName
 
-	server.HostName = util.Ptr("my-edge")
-	server.ID = util.Ptr(990)
-	server.Status = util.Ptr(string(tc.CacheStatusReported))
-	server.CDNName = &cdnName
+	server.HostName = "my-edge"
+	server.ID = 990
+	server.Status = string(tc.CacheStatusReported)
+	server.CDN = cdnName
 
 	ds := makeGenericDS()
 	ds.EdgeHeaderRewrite = util.Ptr("edgerewrite")
@@ -54,18 +54,18 @@ func TestMakeHeaderRewriteDotConfig(t *testing.T) {
 	ds.ServiceCategory = util.Ptr("servicecategory")
 
 	sv1 := makeGenericServer()
-	sv1.HostName = util.Ptr("my-edge-1")
-	sv1.CDNName = &cdnName
-	sv1.ID = util.Ptr(991)
+	sv1.HostName = "my-edge-1"
+	sv1.CDN = cdnName
+	sv1.ID = 991
 	sv1Status := string(tc.CacheStatusOnline)
-	sv1.Status = &sv1Status
+	sv1.Status = sv1Status
 
 	sv2 := makeGenericServer()
-	sv2.HostName = util.Ptr("my-edge-2")
-	sv2.CDNName = &cdnName
-	sv2.ID = util.Ptr(992)
+	sv2.HostName = "my-edge-2"
+	sv2.CDN = cdnName
+	sv2.ID = 992
 	sv2Status := string(tc.CacheStatusOffline)
-	sv2.Status = &sv2Status
+	sv2.Status = sv2Status
 
 	servers := []Server{*server, *sv1, *sv2}
 	dses := []DeliveryService{*ds}
@@ -114,13 +114,13 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = &cdnName
+	server.CDN = cdnName
 
-	server.HostName = util.Ptr("my-edge")
-	server.ID = util.Ptr(990)
+	server.HostName = "my-edge"
+	server.ID = 990
 	serverStatus := string(tc.CacheStatusReported)
-	server.Status = &serverStatus
-	server.CDNName = &cdnName
+	server.Status = serverStatus
+	server.CDN = cdnName
 
 	ds := makeGenericDS()
 	ds.EdgeHeaderRewrite = util.Ptr("edgerewrite")
@@ -134,18 +134,18 @@ func TestMakeHeaderRewriteDotConfigNoMaxOriginConnections(t *testing.T) {
 	ds.ServiceCategory = util.Ptr("servicecategory")
 
 	sv1 := makeGenericServer()
-	sv1.HostName = util.Ptr("my-edge-1")
-	sv1.CDNName = &cdnName
-	sv1.ID = util.Ptr(991)
+	sv1.HostName = "my-edge-1"
+	sv1.CDN = cdnName
+	sv1.ID = 991
 	sv1Status := string(tc.CacheStatusOnline)
-	sv1.Status = &sv1Status
+	sv1.Status = sv1Status
 
 	sv2 := makeGenericServer()
-	sv2.HostName = util.Ptr("my-edge-2")
-	sv2.CDNName = &cdnName
-	sv2.ID = util.Ptr(992)
+	sv2.HostName = "my-edge-2"
+	sv2.CDN = cdnName
+	sv2.ID = 992
 	sv2Status := string(tc.CacheStatusOffline)
-	sv2.Status = &sv2Status
+	sv2.Status = sv2Status
 
 	servers := []Server{*server, *sv1, *sv2}
 	dses := []DeliveryService{*ds}
@@ -394,35 +394,35 @@ func TestGetAssignedTierPeers(t *testing.T) {
 
 	edges := []Server{
 		{
-			Cachegroup: util.Ptr("edge1"),
-			CDNName:    util.Ptr("mycdn"),
-			HostName:   util.Ptr("edgeCache1"),
-			ID:         util.Ptr(1),
-			Status:     util.Ptr(string(tc.CacheStatusReported)),
+			CacheGroup: "edge1",
+			CDN:        "mycdn",
+			HostName:   "edgeCache1",
+			ID:         1,
+			Status:     string(tc.CacheStatusReported),
 		},
 		{
-			Cachegroup: util.Ptr("edge2"),
-			CDNName:    util.Ptr("mycdn"),
-			HostName:   util.Ptr("edgeCache2"),
-			ID:         util.Ptr(2),
-			Status:     util.Ptr(string(tc.CacheStatusReported)),
+			CacheGroup: "edge2",
+			CDN:        "mycdn",
+			HostName:   "edgeCache2",
+			ID:         2,
+			Status:     string(tc.CacheStatusReported),
 		},
 	}
 	mids := []Server{
 		{
-			Cachegroup: util.Ptr("mid1"),
-			CDNName:    util.Ptr("mycdn"),
-			HostName:   util.Ptr("midCache1"),
-			ID:         util.Ptr(3),
-			Status:     util.Ptr(string(tc.CacheStatusReported)),
+			CacheGroup: "mid1",
+			CDN:        "mycdn",
+			HostName:   "midCache1",
+			ID:         3,
+			Status:     string(tc.CacheStatusReported),
 			Type:       tc.MidTypePrefix,
 		},
 		{
-			Cachegroup: util.Ptr("mid2"),
-			CDNName:    util.Ptr("mycdn"),
-			HostName:   util.Ptr("midCache2"),
-			ID:         util.Ptr(4),
-			Status:     util.Ptr(string(tc.CacheStatusReported)),
+			CacheGroup: "mid2",
+			CDN:        "mycdn",
+			HostName:   "midCache2",
+			ID:         4,
+			Status:     string(tc.CacheStatusReported),
 			Type:       tc.MidTypePrefix,
 		},
 	}
@@ -599,7 +599,7 @@ func TestGetAssignedTierPeers(t *testing.T) {
 		actualServers, _ := getAssignedTierPeers(tc.server, tc.ds, tc.topology, tc.servers, tc.deliveryServiceServers, tc.cacheGroups, tc.serverCapabilities, tc.dsRequiredCapabilities)
 		actualHostnames := []string{}
 		for _, as := range actualServers {
-			actualHostnames = append(actualHostnames, *as.HostName)
+			actualHostnames = append(actualHostnames, as.HostName)
 		}
 		if !reflect.DeepEqual(tc.expectedHostnames, actualHostnames) {
 			t.Errorf("getting servers in same cachegroup tier -- expected: %v, actual: %v", tc.expectedHostnames, actualHostnames)
@@ -612,10 +612,10 @@ func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = util.Ptr(cdnName)
-	server.Cachegroup = util.Ptr("edgeCG")
-	server.HostName = util.Ptr("myserver")
-	server.Status = util.Ptr(string(tc.CacheStatusReported))
+	server.CDN = cdnName
+	server.CacheGroup = "edgeCG"
+	server.HostName = "myserver"
+	server.Status = string(tc.CacheStatusReported)
 	server.Type = string(tc.CacheTypeMid)
 
 	ds := makeGenericDS()
@@ -630,37 +630,37 @@ func TestMakeHeaderRewriteMidDotConfig(t *testing.T) {
 	ds.ServiceCategory = util.Ptr("servicecategory")
 
 	mid0 := makeGenericServer()
-	mid0.CDNName = &cdnName
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
+	mid0.CDN = cdnName
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
 	mid0Status := string(tc.CacheStatusReported)
-	mid0.Status = &mid0Status
+	mid0.Status = mid0Status
 
 	mid1 := makeGenericServer()
-	mid1.CDNName = &cdnName
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
+	mid1.CDN = cdnName
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
 	mid1Status := string(tc.CacheStatusOnline)
-	mid1.Status = &mid1Status
+	mid1.Status = mid1Status
 
 	mid2 := makeGenericServer()
-	mid2.CDNName = &cdnName
-	mid2.Cachegroup = util.Ptr("midCG")
-	mid2.HostName = util.Ptr("mymid2")
+	mid2.CDN = cdnName
+	mid2.CacheGroup = "midCG"
+	mid2.HostName = "mymid2"
 	mid2Status := string(tc.CacheStatusOffline)
-	mid2.Status = &mid2Status
+	mid2.Status = mid2Status
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = &server.CacheGroup
+	eCG.ID = &server.CacheGroupID
+	eCG.ParentName = &mid0.CacheGroup
+	eCG.ParentCachegroupID = &mid0.CacheGroupID
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = &mid0.CacheGroup
+	mCG.ID = &mid0.CacheGroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
@@ -705,10 +705,10 @@ func TestMakeHeaderRewriteMidDotConfigNoMaxConns(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = util.Ptr(cdnName)
-	server.Cachegroup = util.Ptr("edgeCG")
-	server.HostName = util.Ptr("myserver")
-	server.Status = util.Ptr(string(tc.CacheStatusReported))
+	server.CDN = cdnName
+	server.CacheGroup = "edgeCG"
+	server.HostName = "myserver"
+	server.Status = string(tc.CacheStatusReported)
 	server.Type = string(tc.CacheTypeMid)
 
 	ds := makeGenericDS()
@@ -722,34 +722,34 @@ func TestMakeHeaderRewriteMidDotConfigNoMaxConns(t *testing.T) {
 	ds.ServiceCategory = util.Ptr("servicecategory")
 
 	mid0 := makeGenericServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
 	mid0Status := string(tc.CacheStatusReported)
-	mid0.Status = &mid0Status
+	mid0.Status = mid0Status
 
 	mid1 := makeGenericServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
 	mid1Status := string(tc.CacheStatusOnline)
-	mid1.Status = &mid1Status
+	mid1.Status = mid1Status
 
 	mid2 := makeGenericServer()
-	mid2.Cachegroup = util.Ptr("midCG")
-	mid2.HostName = util.Ptr("mymid2")
+	mid2.CacheGroup = "midCG"
+	mid2.HostName = "mymid2"
 	mid2Status := string(tc.CacheStatusOffline)
-	mid2.Status = &mid2Status
+	mid2.Status = mid2Status
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = &server.CacheGroup
+	eCG.ID = &server.CacheGroupID
+	eCG.ParentName = &mid0.CacheGroup
+	eCG.ParentCachegroupID = &mid0.CacheGroupID
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = &mid0.CacheGroup
+	mCG.ID = &mid0.CacheGroupID
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 

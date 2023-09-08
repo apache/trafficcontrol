@@ -31,9 +31,9 @@ func TestMakeHostingDotConfig(t *testing.T) {
 	cdnName := "cdn0"
 
 	server := makeGenericServer()
-	server.HostName = util.Ptr("server0")
-	server.CDNName = &cdnName
-	server.ProfileNames = []string{"serverprofile"}
+	server.HostName = "server0"
+	server.CDN = cdnName
+	server.Profiles = []string{"serverprofile"}
 	hdr := "myHeaderComment"
 
 	serverParams := []tc.ParameterV5{
@@ -41,19 +41,19 @@ func TestMakeHostingDotConfig(t *testing.T) {
 			Name:       ParamRAMDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
 		tc.ParameterV5{
 			Name:       ParamDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
 		tc.ParameterV5{
 			Name:       "somethingelse",
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "somethingelse-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
 	}
 
@@ -121,12 +121,12 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 	cdnName := "cdn0"
 
 	server := makeGenericServer()
-	server.HostName = util.Ptr("server0")
-	server.Cachegroup = util.Ptr("edgeCG")
-	server.CDNName = &cdnName
-	server.CDNID = util.Ptr(400)
-	server.ID = util.Ptr(899)
-	server.ProfileNames = []string{"serverprofile"}
+	server.HostName = "server0"
+	server.CacheGroup = "edgeCG"
+	server.CDN = cdnName
+	server.CDNID = 400
+	server.ID = 899
+	server.Profiles = []string{"serverprofile"}
 	hdr := "myHeaderComment"
 
 	serverParams := []tc.ParameterV5{
@@ -134,19 +134,19 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 			Name:       ParamRAMDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
 		tc.ParameterV5{
 			Name:       ParamDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
 		tc.ParameterV5{
 			Name:       "somethingelse",
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "somethingelse-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
 	}
 

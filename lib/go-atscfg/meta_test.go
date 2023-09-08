@@ -29,20 +29,20 @@ import (
 
 func TestMakeMetaConfig(t *testing.T) {
 	server := &Server{}
-	server.CachegroupID = util.Ptr(42)
-	server.Cachegroup = util.Ptr("cg0")
-	server.CDNName = util.Ptr("mycdn")
-	server.CDNID = util.Ptr(43)
-	server.DomainName = util.Ptr("myserverdomain.invalid")
-	server.HostName = util.Ptr("myserver")
+	server.CacheGroupID = 42
+	server.CacheGroup = "cg0"
+	server.CDN = "mycdn"
+	server.CDNID = 43
+	server.DomainName = "myserverdomain.invalid"
+	server.HostName = "myserver"
 	server.HTTPSPort = util.Ptr(443)
-	server.ID = util.Ptr(44)
+	server.ID = 44
 	ip := "192.168.2.9"
 	setIP(server, ip)
 	// server.ParentCacheGroupID=            45
 	// server.ParentCacheGroupType=          "MID_LOC"
 	//server.ProfileID = util.Ptr(46)
-	server.ProfileNames = []string{"myserverprofile"}
+	server.Profiles = []string{"myserverprofile"}
 	server.TCPPort = util.Ptr(80)
 	// server.SecondaryParentCacheGroupID=   47
 	// server.SecondaryParentCacheGroupType= "MID_LOC"
@@ -65,7 +65,7 @@ func TestMakeMetaConfig(t *testing.T) {
 			Name:       "location",
 			ConfigFile: name,
 			Value:      "/my/location/",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		}
 	}
 

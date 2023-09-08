@@ -48,7 +48,7 @@ func MakeSSLMultiCertDotConfig(
 		opt = &SSLMultiCertDotConfigOpts{}
 	}
 	warnings := []string{}
-	if server.CDNName == nil {
+	if &server.CDN == nil || server.CDN == "" {
 		return Cfg{}, makeErr(warnings, "server missing CDNName")
 	}
 

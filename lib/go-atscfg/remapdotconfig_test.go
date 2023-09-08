@@ -32,15 +32,15 @@ import (
 
 func makeTestRemapServer() *Server {
 	server := &Server{}
-	server.CDNName = util.Ptr("mycdn")
-	server.Cachegroup = util.Ptr("cg0")
-	server.DomainName = util.Ptr("mydomain")
-	server.CDNID = util.Ptr(43)
-	server.HostName = util.Ptr("server")
+	server.CDN = "mycdn"
+	server.CacheGroup = "cg0"
+	server.DomainName = "mydomain"
+	server.CDNID = 43
+	server.HostName = "server"
 	server.HTTPSPort = util.Ptr(12345)
-	server.ID = util.Ptr(44)
+	server.ID = 44
 	setIP(server, "192.168.2.4")
-	server.ProfileNames = []string{"MyProfile"}
+	server.Profiles = []string{"MyProfile"}
 	server.TCPPort = util.Ptr(1280)
 	server.Type = "MID"
 	return server
@@ -49,15 +49,15 @@ func makeTestRemapServer() *Server {
 func makeTestAnyCastServers() []Server {
 	server1 := makeTestRemapServer()
 	server1.Type = "EDGE"
-	server1.HostName = util.Ptr("mcastserver1")
-	server1.ID = util.Ptr(45)
+	server1.HostName = "mcastserver1"
+	server1.ID = 45
 	server1.Interfaces = []tc.ServerInterfaceInfoV40{}
 	setIPInfo(server1, "lo", "192.168.2.6", "fdf8:f53b:82e4::53")
 
 	server2 := makeTestRemapServer()
 	server2.Type = "EDGE"
-	server2.HostName = util.Ptr("mcastserver2")
-	server2.ID = util.Ptr(46)
+	server2.HostName = "mcastserver2"
+	server2.ID = 46
 	server2.Interfaces = []tc.ServerInterfaceInfoV40{}
 	setIPInfo(server2, "lo", "192.168.2.6", "fdf8:f53b:82e4::53")
 
@@ -165,18 +165,18 @@ func TestAnyCastRemapDotConfig(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
 	for _, srv := range servers {
 		for _, ds := range dses {
 			dssrv := DeliveryServiceServer{
-				Server:          *srv.ID,
+				Server:          srv.ID,
 				DeliveryService: *ds.ID,
 			}
 			dss = append(dss, dssrv)
@@ -315,7 +315,7 @@ func TestMakeRemapDotConfig0(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -434,7 +434,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -463,7 +463,7 @@ func TestMakeRemapDotConfigMidLiveLocalExcluded(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -536,7 +536,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -565,7 +565,7 @@ func TestMakeRemapDotConfigMid(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -652,7 +652,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -681,7 +681,7 @@ func TestMakeRemapDotConfigNilOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -754,7 +754,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -783,7 +783,7 @@ func TestMakeRemapDotConfigEmptyOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -880,11 +880,11 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds2.ID,
 		},
 	}
@@ -923,7 +923,7 @@ func TestMakeRemapDotConfigDuplicateOrigins(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -995,7 +995,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -1024,7 +1024,7 @@ func TestMakeRemapDotConfigNilMidRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -1098,7 +1098,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -1127,7 +1127,7 @@ func TestMakeRemapDotConfigMidHasNoEdgeRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -1202,7 +1202,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -1231,7 +1231,7 @@ func TestMakeRemapDotConfigMidProfileCacheKey(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -1342,7 +1342,7 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -1371,7 +1371,7 @@ func TestMakeRemapDotConfigMidBgFetchHandling(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -1484,7 +1484,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -1513,7 +1513,7 @@ func TestMakeRemapDotConfigMidRangeRequestHandling(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -1626,7 +1626,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -1655,7 +1655,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -1755,11 +1755,11 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds2.ID,
 		},
 	}
@@ -1798,7 +1798,7 @@ func TestMakeRemapDotConfigAnyMap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -2070,35 +2070,35 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: 1,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: 2,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: 3,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: 4,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: 5,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: 6,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: 7,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: 8,
 		},
 	}
@@ -2197,7 +2197,7 @@ func TestMakeRemapDotConfigEdgeMissingRemapData(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -2274,7 +2274,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -2303,7 +2303,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacement(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -2397,7 +2397,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -2426,7 +2426,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTP(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -2520,7 +2520,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -2549,7 +2549,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -2643,7 +2643,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -2672,7 +2672,7 @@ func TestMakeRemapDotConfigEdgeHostRegexReplacementHTTPToHTTPS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -2766,7 +2766,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -2795,7 +2795,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -2845,7 +2845,7 @@ func TestMakeRemapDotConfigEdgeRemapUnderscoreHTTPReplace(t *testing.T) {
 		t.Errorf("expected literal pattern to replace '__http__', actual '%v'", txt)
 	}
 
-	if !strings.Contains(remapLine, "myliteralpattern"+*server.HostName+"foo") {
+	if !strings.Contains(remapLine, "myliteralpattern"+server.HostName+"foo") {
 		t.Errorf("expected literal pattern to replace __http__ with server name, actual '%v'", txt)
 	}
 }
@@ -2885,7 +2885,7 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -2914,13 +2914,13 @@ func TestMakeRemapDotConfigEdgeDSCPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -3010,7 +3010,7 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -3039,13 +3039,13 @@ func TestMakeRemapDotConfigEdgeNoDSCPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -3135,7 +3135,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -3164,13 +3164,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -3264,7 +3264,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -3293,13 +3293,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -3393,7 +3393,7 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -3422,13 +3422,13 @@ func TestMakeRemapDotConfigEdgeHeaderRewriteNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -3522,7 +3522,7 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -3551,13 +3551,13 @@ func TestMakeRemapDotConfigEdgeSigningURLSig(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -3657,7 +3657,7 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -3686,13 +3686,13 @@ func TestMakeRemapDotConfigEdgeSigningURISigning(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -3781,7 +3781,7 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -3810,13 +3810,13 @@ func TestMakeRemapDotConfigEdgeSigningNone(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -3905,7 +3905,7 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -3934,13 +3934,13 @@ func TestMakeRemapDotConfigEdgeSigningEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -4029,7 +4029,7 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -4058,13 +4058,13 @@ func TestMakeRemapDotConfigEdgeSigningWrong(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -4153,7 +4153,7 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -4182,13 +4182,13 @@ func TestMakeRemapDotConfigEdgeQStringDropAtEdge(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -4275,7 +4275,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -4304,13 +4304,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUp(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -4400,7 +4400,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -4429,13 +4429,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpWithCacheKeyParameter(t *testi
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -4548,7 +4548,7 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -4577,13 +4577,13 @@ func TestMakeRemapDotConfigEdgeQStringIgnorePassUpCacheURLParamCacheURL(t *testi
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -4666,7 +4666,7 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -4695,13 +4695,13 @@ func TestMakeRemapDotConfigEdgeCacheKeyParams(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -4806,7 +4806,7 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -4835,13 +4835,13 @@ func TestMakeRemapDotConfigEdgeRegexRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -4931,7 +4931,7 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -4960,13 +4960,13 @@ func TestMakeRemapDotConfigEdgeRegexRemapEmpty(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -5052,7 +5052,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -5081,13 +5081,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -5177,7 +5177,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -5206,13 +5206,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestDontCache(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -5326,7 +5326,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -5355,13 +5355,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestBGFetch(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -5473,7 +5473,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -5502,13 +5502,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -5603,7 +5603,7 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -5632,13 +5632,13 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -5743,7 +5743,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -5772,13 +5772,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -5897,7 +5897,7 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -5926,13 +5926,13 @@ func TestMakeRemapDotConfigRawRemapRangeDirective(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -6043,7 +6043,7 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -6072,13 +6072,13 @@ func TestMakeRemapDotConfigRawRemapCachekeyDirective(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -6177,7 +6177,7 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -6206,13 +6206,13 @@ func TestMakeRemapDotConfigRawRemapRegexRemapDirective(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -6312,7 +6312,7 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -6341,13 +6341,13 @@ func TestMakeRemapDotConfigRawRemapWithoutRangeDirective(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -6452,7 +6452,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -6481,13 +6481,13 @@ func TestMakeRemapDotConfigEdgeRangeRequestCache(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -6581,7 +6581,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -6610,13 +6610,13 @@ func TestMakeRemapDotConfigEdgeFQPacingNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -6702,7 +6702,7 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -6731,13 +6731,13 @@ func TestMakeRemapDotConfigEdgeFQPacingNegative(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -6823,7 +6823,7 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -6852,13 +6852,13 @@ func TestMakeRemapDotConfigEdgeFQPacingZero(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -6944,7 +6944,7 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -6973,13 +6973,13 @@ func TestMakeRemapDotConfigEdgeFQPacingPositive(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -7069,7 +7069,7 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -7098,13 +7098,13 @@ func TestMakeRemapDotConfigEdgeDNS(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -7190,7 +7190,7 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -7219,13 +7219,13 @@ func TestMakeRemapDotConfigEdgeDNSNoRoutingName(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -7301,7 +7301,7 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -7330,13 +7330,13 @@ func TestMakeRemapDotConfigEdgeRegexTypeNil(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -7417,7 +7417,7 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -7446,13 +7446,13 @@ func TestMakeRemapDotConfigNoHeaderRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -7538,7 +7538,7 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -7567,13 +7567,13 @@ func TestMakeRemapDotConfigMidNoHeaderRewrite(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -7659,7 +7659,7 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -7688,13 +7688,13 @@ func TestMakeRemapDotConfigMidNoNoCacheRemapLine(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -7746,15 +7746,15 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 
 	edge := makeTestRemapServer()
 	edge.Type = "EDGE"
-	edge.Cachegroup = util.Ptr("edgeCG")
+	edge.CacheGroup = "edgeCG"
 
 	servers := []Server{}
 
 	mid := makeTestParentServer()
 	mid.Type = "MID"
-	mid.Cachegroup = util.Ptr("midCG")
-	mid.HostName = util.Ptr("mymid")
-	mid.ID = util.Ptr(45)
+	mid.CacheGroup = "midCG"
+	mid.HostName = "mymid"
+	mid.ID = 45
 	setIP(mid, "192.168.2.5")
 
 	dsType := "HTTP_NO_CACHE"
@@ -7817,11 +7817,11 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *edge.ID,
+			Server:          edge.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *edge.ID,
+			Server:          edge.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -7860,13 +7860,13 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(mid.ProfileNames[0]),
+			Profiles:   []byte(mid.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(mid.ProfileNames[0]),
+			Profiles:   []byte(mid.Profiles[0]),
 		},
 	}
 
@@ -7908,16 +7908,16 @@ func TestMakeRemapDotConfigMidNoCacheRemapLineTopo(t *testing.T) {
 	}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge.Cachegroup
-	eCG.ID = edge.CachegroupID
-	eCG.ParentName = mid.Cachegroup
-	eCG.ParentCachegroupID = mid.CachegroupID
+	eCG.Name = util.Ptr(edge.CacheGroup)
+	eCG.ID = util.Ptr(edge.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid.Cachegroup
-	mCG.ID = mid.CachegroupID
+	mCG.Name = util.Ptr(mid.CacheGroup)
+	mCG.ID = util.Ptr(mid.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
@@ -8012,7 +8012,7 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -8041,13 +8041,13 @@ func TestMakeRemapDotConfigEdgeHTTPOriginHTTPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -8141,7 +8141,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -8170,13 +8170,13 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -8274,7 +8274,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -8303,13 +8303,13 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -8365,7 +8365,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "EDGE"
-	server.Cachegroup = util.Ptr("edgeCG")
+	server.CacheGroup = "edgeCG"
 	servers := []Server{}
 
 	ds := DeliveryService{}
@@ -8397,7 +8397,7 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -8426,13 +8426,13 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -8469,36 +8469,36 @@ func TestMakeRemapDotConfigEdgeHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
-	eCG.SecondaryParentName = mid1.Cachegroup
-	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
+	eCG.SecondaryParentName = util.Ptr(mid1.CacheGroup)
+	eCG.SecondaryParentCachegroupID = util.Ptr(mid1.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
 	mCG2 := &tc.CacheGroupNullableV5{}
-	mCG2.Name = mid1.Cachegroup
-	mCG2.ID = mid1.CachegroupID
+	mCG2.Name = util.Ptr(mid1.CacheGroup)
+	mCG2.ID = util.Ptr(mid1.CacheGroupID)
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
@@ -8547,7 +8547,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.Ptr("midCG")
+	server.CacheGroup = "midCG"
 	servers := []Server{}
 
 	ds := DeliveryService{}
@@ -8583,7 +8583,7 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -8612,13 +8612,13 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -8655,36 +8655,36 @@ func TestMakeRemapDotConfigMidHTTPSOriginHTTPRemapTopology(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
-	eCG.SecondaryParentName = mid1.Cachegroup
-	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
+	eCG.SecondaryParentName = util.Ptr(mid1.CacheGroup)
+	eCG.SecondaryParentCachegroupID = util.Ptr(mid1.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
 	mCG2 := &tc.CacheGroupNullableV5{}
-	mCG2.Name = mid1.Cachegroup
-	mCG2.ID = mid1.CachegroupID
+	mCG2.Name = util.Ptr(mid1.CacheGroup)
+	mCG2.ID = util.Ptr(mid1.CacheGroupID)
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
@@ -8725,7 +8725,7 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.Ptr("midCG")
+	server.CacheGroup = "midCG"
 	servers := []Server{}
 
 	ds := DeliveryService{}
@@ -8763,7 +8763,7 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -8792,13 +8792,13 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -8853,36 +8853,36 @@ func TestMakeRemapDotConfigMidLastRawRemap(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
-	eCG.SecondaryParentName = mid1.Cachegroup
-	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
+	eCG.SecondaryParentName = util.Ptr(mid1.CacheGroup)
+	eCG.SecondaryParentCachegroupID = util.Ptr(mid1.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
 	mCG2 := &tc.CacheGroupNullableV5{}
-	mCG2.Name = mid1.Cachegroup
-	mCG2.ID = mid1.CachegroupID
+	mCG2.Name = util.Ptr(mid1.CacheGroup)
+	mCG2.ID = util.Ptr(mid1.CacheGroupID)
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
@@ -8944,7 +8944,7 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.Ptr("midCG")
+	server.CacheGroup = "midCG"
 	servers := []Server{}
 
 	ds := DeliveryService{}
@@ -8982,7 +8982,7 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -9011,13 +9011,13 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -9072,36 +9072,36 @@ func TestMakeRemapDotConfigStrategies(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
-	eCG.SecondaryParentName = mid1.Cachegroup
-	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
+	eCG.SecondaryParentName = util.Ptr(mid1.CacheGroup)
+	eCG.SecondaryParentCachegroupID = util.Ptr(mid1.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
 	mCG2 := &tc.CacheGroupNullableV5{}
-	mCG2.Name = mid1.Cachegroup
-	mCG2.ID = mid1.CachegroupID
+	mCG2.Name = util.Ptr(mid1.CacheGroup)
+	mCG2.ID = util.Ptr(mid1.CacheGroupID)
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
@@ -9135,7 +9135,7 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.Ptr("midCG")
+	server.CacheGroup = "midCG"
 	servers := []Server{}
 
 	ds := DeliveryService{}
@@ -9173,7 +9173,7 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -9202,13 +9202,13 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -9263,36 +9263,36 @@ func TestMakeRemapDotConfigStrategiesFalseButCoreUnused(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
-	eCG.SecondaryParentName = mid1.Cachegroup
-	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
+	eCG.SecondaryParentName = util.Ptr(mid1.CacheGroup)
+	eCG.SecondaryParentCachegroupID = util.Ptr(mid1.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
 	mCG2 := &tc.CacheGroupNullableV5{}
-	mCG2.Name = mid1.Cachegroup
-	mCG2.ID = mid1.CachegroupID
+	mCG2.Name = util.Ptr(mid1.CacheGroup)
+	mCG2.ID = util.Ptr(mid1.CacheGroupID)
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
@@ -9334,7 +9334,7 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 
 	server := makeTestRemapServer()
 	server.Type = "MID"
-	server.Cachegroup = util.Ptr("midCG")
+	server.CacheGroup = "midCG"
 	servers := []Server{}
 
 	ds := DeliveryService{}
@@ -9372,7 +9372,7 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -9401,13 +9401,13 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 			Name:       "serverpkgval",
 			ConfigFile: "package",
 			Value:      "serverpkgval __HOSTNAME__ foo",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 		tc.ParameterV5{
 			Name:       "dscp_remap_no",
 			ConfigFile: "package",
 			Value:      "notused",
-			Profiles:   []byte(server.ProfileNames[0]),
+			Profiles:   []byte(server.Profiles[0]),
 		},
 	}
 
@@ -9463,36 +9463,36 @@ func TestMakeRemapDotConfigMidCacheParentHTTPSOrigin(t *testing.T) {
 	}
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG2")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG2"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
-	eCG.SecondaryParentName = mid1.Cachegroup
-	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
+	eCG.SecondaryParentName = util.Ptr(mid1.CacheGroup)
+	eCG.SecondaryParentCachegroupID = util.Ptr(mid1.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
 	mCG2 := &tc.CacheGroupNullableV5{}
-	mCG2.Name = mid1.Cachegroup
-	mCG2.ID = mid1.CachegroupID
+	mCG2.Name = util.Ptr(mid1.CacheGroup)
+	mCG2.ID = util.Ptr(mid1.CacheGroupID)
 	mCGType2 := tc.CacheGroupMidTypeName
 	mCG2.Type = &mCGType2
 
@@ -9529,21 +9529,21 @@ func TestMakeRemapDotConfigRemapTemplate(t *testing.T) {
 
 	edge := makeTestRemapServer()
 	edge.Type = "EDGE"
-	edge.Cachegroup = util.Ptr("edgeCG")
+	edge.CacheGroup = "edgeCG"
 	servers := []Server{}
 
 	mid := makeTestParentServer()
 	mid.Type = "MID"
-	mid.Cachegroup = util.Ptr("midCG")
-	mid.HostName = util.Ptr("mymid")
-	mid.ID = util.Ptr(45)
+	mid.CacheGroup = "midCG"
+	mid.HostName = "mymid"
+	mid.ID = 45
 	setIP(mid, "192.168.2.2")
 
 	opl := makeTestParentServer()
 	opl.Type = "MID"
-	opl.Cachegroup = util.Ptr("oplCG")
-	opl.HostName = util.Ptr("myopl")
-	opl.ID = util.Ptr(46)
+	opl.CacheGroup = "oplCG"
+	opl.HostName = "myopl"
+	opl.ID = 46
 	setIP(opl, "192.168.2.3")
 
 	ds := DeliveryService{}
@@ -9581,7 +9581,7 @@ func TestMakeRemapDotConfigRemapTemplate(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *edge.ID,
+			Server:          edge.ID,
 			DeliveryService: *ds.ID,
 		},
 	}
@@ -9666,24 +9666,24 @@ map http://foo/ http://bar/`
 	}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge.Cachegroup
-	eCG.ID = edge.CachegroupID
-	eCG.ParentName = mid.Cachegroup
-	eCG.ParentCachegroupID = mid.CachegroupID
+	eCG.Name = util.Ptr(edge.CacheGroup)
+	eCG.ID = util.Ptr(edge.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid.Cachegroup
-	mCG.ID = mid.CachegroupID
-	mCG.ParentName = opl.Cachegroup
-	mCG.ParentCachegroupID = opl.CachegroupID
+	mCG.Name = util.Ptr(mid.CacheGroup)
+	mCG.ID = util.Ptr(mid.CacheGroupID)
+	mCG.ParentName = util.Ptr(opl.CacheGroup)
+	mCG.ParentCachegroupID = util.Ptr(opl.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
 	oCG := &tc.CacheGroupNullableV5{}
-	oCG.Name = opl.Cachegroup
-	oCG.ID = opl.CachegroupID
+	oCG.Name = util.Ptr(opl.CacheGroup)
+	oCG.ID = util.Ptr(opl.CacheGroupID)
 	oCGType := tc.CacheGroupMidTypeName
 	oCG.Type = &oCGType
 

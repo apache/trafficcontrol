@@ -32,7 +32,7 @@ func TestMakeRegexRevalidateDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = &cdnName
+	server.CDN = cdnName
 
 	ds := makeGenericDS()
 	ds.CDNName = &cdnName

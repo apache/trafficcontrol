@@ -60,13 +60,13 @@ func MakeHostingDotConfig(
 	}
 	warnings := []string{}
 
-	if server.CDNID == nil {
+	if &server.CDNID == nil || server.CDNID == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing CDNID")
 	}
-	if server.HostName == nil || *server.HostName == "" {
+	if &server.HostName == nil || server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server had no host name!")
 	}
-	if server.ID == nil {
+	if &server.ID == nil || server.ID == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing ID")
 	}
 
@@ -75,26 +75,26 @@ func MakeHostingDotConfig(
 
 	cdnServers := map[tc.CacheName]Server{}
 	for _, sv := range servers {
-		if sv.HostName == nil {
+		if &sv.HostName == nil || sv.HostName == "" {
 			warnings = append(warnings, "TO Servers had server missing HostName, skipping!")
 			continue
-		} else if sv.CDNID == nil {
+		} else if &sv.CDNID == nil || sv.CDNID == 0 {
 			warnings = append(warnings, "TO Servers had server missing CDNID, skipping!")
 			continue
 		}
-		if *sv.CDNID != *server.CDNID {
+		if sv.CDNID != server.CDNID {
 			continue
 		}
-		cdnServers[tc.CacheName(*sv.HostName)] = sv
+		cdnServers[tc.CacheName(sv.HostName)] = sv
 	}
 
 	serverIDs := map[int]struct{}{}
 	for _, sv := range cdnServers {
-		if sv.CDNID == nil {
+		if &sv.CDNID == nil || sv.CDNID == 0 {
 			warnings = append(warnings, "TO Servers had server missing CDNID, skipping!")
 			continue
 		}
-		serverIDs[*sv.ID] = struct{}{}
+		serverIDs[sv.ID] = struct{}{}
 	}
 
 	dsIDs := map[int]struct{}{}
@@ -125,7 +125,7 @@ func MakeHostingDotConfig(
 		if ds.Active == tc.DSActiveStateInactive {
 			continue
 		}
-		if ds.CDNID != *server.CDNID {
+		if ds.CDNID != server.CDNID {
 			continue
 		}
 
@@ -155,7 +155,7 @@ func MakeHostingDotConfig(
 					continue
 				}
 
-				if _, ok := dsServerMap[*ds.ID][*server.ID]; !ok {
+				if _, ok := dsServerMap[*ds.ID][server.ID]; !ok {
 					continue
 				}
 			}

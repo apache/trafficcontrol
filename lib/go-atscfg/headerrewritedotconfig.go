@@ -93,13 +93,13 @@ func MakeHeaderRewriteDotConfig(
 		opt = &HeaderRewriteDotConfigOpts{}
 	}
 	warnings := []string{}
-	if server.CDNName == nil {
+	if &server.CDN == nil || server.CDN == "" {
 		return Cfg{}, makeErr(warnings, "this server missing CDNName")
 	} else if tc.CacheType(server.Type) == tc.CacheTypeInvalid {
 		return Cfg{}, makeErr(warnings, "this server missing Type")
-	} else if server.HostName == nil {
+	} else if &server.HostName == nil || server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server missing HostName")
-	} else if server.Cachegroup == nil {
+	} else if &server.CacheGroup == nil || server.CacheGroup == "" {
 		return Cfg{}, makeErr(warnings, "server missing Cachegroup")
 	}
 
@@ -169,11 +169,11 @@ func MakeHeaderRewriteDotConfig(
 
 	dsOnlinePeerCount := 0
 	for _, sv := range assignedTierPeers {
-		if sv.Status == nil {
+		if &sv.Status == nil || sv.Status == "" {
 			warnings = append(warnings, "got server with nil status! skipping!")
 			continue
 		}
-		if tc.CacheStatus(*sv.Status) == tc.CacheStatusReported || tc.CacheStatus(*sv.Status) == tc.CacheStatusOnline {
+		if tc.CacheStatus(sv.Status) == tc.CacheStatusReported || tc.CacheStatus(sv.Status) == tc.CacheStatusOnline {
 			dsOnlinePeerCount++
 		}
 	}
@@ -275,7 +275,7 @@ func getTierHeaderRewriteTopology(server *Server, ds *DeliveryService, fileName 
 	case TopologyCacheTierLast:
 		return ds.LastHeaderRewrite, nil
 	default:
-		return nil, errors.New("Topology Header Rewrite called for DS '" + ds.XMLID + "' on server '" + *server.HostName + "' file '" + fileName + "' had unknown topology cache tier '" + string(tier) + "'!")
+		return nil, errors.New("Topology Header Rewrite called for DS '" + ds.XMLID + "' on server '" + server.HostName + "' file '" + fileName + "' had unknown topology cache tier '" + string(tier) + "'!")
 	}
 }
 
@@ -300,7 +300,7 @@ func getAssignedTierPeers(
 	dsRequiredCapabilities map[ServerCapability]struct{},
 ) ([]Server, []string) {
 	if ds.Topology != nil {
-		return getTopologyTierServers(ds, dsRequiredCapabilities, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, servers, serverCapabilities)
+		return getTopologyTierServers(ds, dsRequiredCapabilities, tc.CacheGroupName(server.CacheGroup), topology, cacheGroups, servers, serverCapabilities)
 	}
 	if serverIsMid(server) {
 		return getAssignedMids(server, ds, servers, deliveryServiceServers, cacheGroups)
@@ -331,21 +331,21 @@ func getAssignedEdges(
 
 	assignedEdges := []Server{}
 	for _, sv := range servers {
-		if sv.CDNName == nil {
+		if &sv.CDN == nil || sv.CDN == "" {
 			warnings = append(warnings, "servers had server with missing cdnName, skipping!")
 			continue
 		}
-		if sv.ID == nil {
+		if &sv.ID == nil || sv.ID == 0 {
 			warnings = append(warnings, "servers had server with missing id, skipping!")
 			continue
 		}
-		if *sv.CDNName != *ds.CDNName {
+		if sv.CDN != *ds.CDNName {
 			continue
 		}
-		if _, ok := dsServerIDs[*sv.ID]; !ok && ds.Topology == nil {
+		if _, ok := dsServerIDs[sv.ID]; !ok && ds.Topology == nil {
 			continue
 		}
-		if ds != nil && ds.Regional && *sv.Cachegroup != *server.Cachegroup {
+		if ds != nil && ds.Regional && sv.CacheGroup != server.CacheGroup {
 			continue
 		}
 		assignedEdges = append(assignedEdges, sv)
@@ -374,30 +374,30 @@ func getAssignedMids(
 
 	serverCGs := map[tc.CacheGroupName]struct{}{}
 	for _, sv := range servers {
-		if sv.CDNName == nil {
+		if &sv.CDN == nil || sv.CDN == "" {
 			warnings = append(warnings, "TO returned Servers sv with missing CDNName, skipping!")
 			continue
-		} else if sv.ID == nil {
+		} else if &sv.ID == nil || sv.ID == 0 {
 			warnings = append(warnings, "TO returned Servers sv with missing ID, skipping!")
 			continue
-		} else if sv.Status == nil {
+		} else if &sv.Status == nil || sv.Status == "" {
 			warnings = append(warnings, "TO returned Servers sv with missing Status, skipping!")
 			continue
-		} else if sv.Cachegroup == nil {
+		} else if &sv.CacheGroup == nil || sv.CacheGroup == "" {
 			warnings = append(warnings, "TO returned Servers sv with missing Cachegroup, skipping!")
 			continue
 		}
 
-		if *sv.CDNName != *server.CDNName {
+		if sv.CDN != server.CDN {
 			continue
 		}
-		if _, ok := assignedServers[*sv.ID]; !ok && (ds.Topology == nil || *ds.Topology == "") {
+		if _, ok := assignedServers[sv.ID]; !ok && (ds.Topology == nil || *ds.Topology == "") {
 			continue
 		}
-		if tc.CacheStatus(*sv.Status) != tc.CacheStatusReported && tc.CacheStatus(*sv.Status) != tc.CacheStatusOnline {
+		if tc.CacheStatus(sv.Status) != tc.CacheStatusReported && tc.CacheStatus(sv.Status) != tc.CacheStatusOnline {
 			continue
 		}
-		serverCGs[tc.CacheGroupName(*sv.Cachegroup)] = struct{}{}
+		serverCGs[tc.CacheGroupName(sv.CacheGroup)] = struct{}{}
 	}
 
 	parentCGs := map[string]struct{}{} // names of cachegroups which are parent cachegroups of the cachegroup of any edge assigned to the given DS
@@ -417,21 +417,21 @@ func getAssignedMids(
 
 	assignedMids := []Server{}
 	for _, sv := range servers {
-		if sv.CDNName == nil {
+		if &sv.CDN == nil || sv.CDN == "" {
 			warnings = append(warnings, "TO returned Servers server with missing CDNName, skipping!")
 			continue
 		}
-		if sv.Cachegroup == nil {
+		if &sv.CacheGroup == nil || sv.CacheGroup == "" {
 			warnings = append(warnings, "TO returned Servers server with missing Cachegroup, skipping!")
 			continue
 		}
-		if *sv.CDNName != *ds.CDNName {
+		if sv.CDN != *ds.CDNName {
 			continue
 		}
-		if _, ok := parentCGs[*sv.Cachegroup]; !ok {
+		if _, ok := parentCGs[sv.CacheGroup]; !ok {
 			continue
 		}
-		if ds != nil && ds.Regional && *sv.Cachegroup != *server.Cachegroup {
+		if ds != nil && ds.Regional && sv.CacheGroup != server.CacheGroup {
 			continue
 		}
 		assignedMids = append(assignedMids, sv)
@@ -449,22 +449,22 @@ func getTopologyTierServers(ds *DeliveryService, dsRequiredCapabilities map[Serv
 	topoServers := []Server{}
 	cacheGroupsInSameTier := getCachegroupsInSameTopologyTier(string(cg), cacheGroups, topology)
 	for _, sv := range servers {
-		if sv.Cachegroup == nil {
+		if &sv.CacheGroup == nil || sv.CacheGroup == "" {
 			warnings = append(warnings, "Servers had server with nil cachegroup, skipping!")
 			continue
-		} else if sv.ID == nil {
+		} else if &sv.ID == nil || sv.ID == 0 {
 			warnings = append(warnings, "Servers had server with nil id, skipping!")
 			continue
 		}
 
-		if !cacheGroupsInSameTier[*sv.Cachegroup] {
+		if !cacheGroupsInSameTier[sv.CacheGroup] {
 			continue
 		}
 
-		if !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities) {
+		if !hasRequiredCapabilities(serverCapabilities[sv.ID], dsRequiredCapabilities) {
 			continue
 		}
-		if ds != nil && ds.Regional && *sv.Cachegroup != string(cg) {
+		if ds != nil && ds.Regional && sv.CacheGroup != string(cg) {
 			continue
 		}
 		topoServers = append(topoServers, sv)

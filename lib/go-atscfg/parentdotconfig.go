@@ -229,7 +229,7 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 
 	if IsGoDirect(ds) {
 		node := tc.TopologyNodeV5{
-			Cachegroup: *server.Cachegroup,
+			Cachegroup: server.CacheGroup,
 		}
 		topo.Nodes = append(topo.Nodes, node)
 	} else {
@@ -272,7 +272,7 @@ func createTopology(server *Server, ds DeliveryService, nameTopologies map[Topol
 
 		// create the cache group this server belongs to
 		node := tc.TopologyNodeV5{
-			Cachegroup: *server.Cachegroup,
+			Cachegroup: server.CacheGroup,
 			Parents:    parents,
 		}
 		topo.Nodes = append(topo.Nodes, node)
@@ -313,13 +313,13 @@ func MakeParentDotConfigData(
 	parentAbstraction := &ParentAbstraction{}
 	warnings := []string{}
 
-	if server.HostName == nil || *server.HostName == "" {
+	if &server.HostName == nil || server.HostName == "" {
 		return nil, warnings, errors.New("server HostName missing")
-	} else if server.CDNName == nil || *server.CDNName == "" {
+	} else if &server.CDN == nil || server.CDN == "" {
 		return nil, warnings, errors.New("server CDNName missing")
-	} else if server.Cachegroup == nil || *server.Cachegroup == "" {
+	} else if &server.CacheGroup == nil || server.CacheGroup == "" {
 		return nil, warnings, errors.New("server Cachegroup missing")
-	} else if len(server.ProfileNames) == 0 {
+	} else if len(server.Profiles) == 0 {
 		return nil, warnings, errors.New("server Profile missing")
 	} else if server.TCPPort == nil {
 		return nil, warnings, errors.New("server TCPPort missing")
@@ -387,7 +387,7 @@ func MakeParentDotConfigData(
 				return nil, warnings, errors.New("cachegroup name is nil!")
 			}
 
-			if *cg.Name == *server.Cachegroup {
+			if *cg.Name == server.CacheGroup {
 				if cg.ParentName != nil && *cg.ParentName != "" {
 					parentCGs[*cg.ParentName] = struct{}{}
 				}
@@ -404,35 +404,35 @@ func MakeParentDotConfigData(
 	cgPeers := map[int]serverWithParams{}   // map[serverID]server
 	cgServers := map[int]serverWithParams{} // map[serverID]server
 	for _, sv := range serversWithParams {
-		if sv.ID == nil {
+		if &sv.ID == nil || sv.ID == 0 {
 			warnings = append(warnings, "TO servers had server with missing ID, skipping!")
 			continue
-		} else if sv.CDNName == nil {
+		} else if &sv.CDN == nil || sv.CDN == "" {
 			warnings = append(warnings, "TO servers had server with missing CDNName, skipping!")
 			continue
-		} else if sv.Cachegroup == nil || *sv.Cachegroup == "" {
+		} else if &sv.CacheGroup == nil || sv.CacheGroup == "" {
 			warnings = append(warnings, "TO servers had server with missing Cachegroup, skipping!")
 			continue
-		} else if sv.Status == nil || *sv.Status == "" {
+		} else if &sv.Status == nil || sv.Status == "" {
 			warnings = append(warnings, "TO servers had server with missing Status, skipping!")
 			continue
 		} else if sv.Type == "" {
 			warnings = append(warnings, "TO servers had server with missing Type, skipping!")
 			continue
 		}
-		if *sv.CDNName != *server.CDNName {
+		if sv.CDN != server.CDN {
 			continue
 		}
 		// save cachegroup peer servers
-		if *sv.CDNName == *server.CDNName && *sv.Cachegroup == *server.Cachegroup {
-			if *sv.Status == string(tc.CacheStatusReported) || *sv.Status == string(tc.CacheStatusOnline) {
-				if _, ok := cgPeers[*sv.ID]; !ok {
-					cgPeers[*sv.ID] = sv
+		if sv.CDN == server.CDN && sv.CacheGroup == server.CacheGroup {
+			if sv.Status == string(tc.CacheStatusReported) || sv.Status == string(tc.CacheStatusOnline) {
+				if _, ok := cgPeers[sv.ID]; !ok {
+					cgPeers[sv.ID] = sv
 				}
 			}
 			continue
 		}
-		if _, ok := parentCGs[*sv.Cachegroup]; !ok {
+		if _, ok := parentCGs[sv.CacheGroup]; !ok {
 			continue
 		}
 		if sv.Type != tc.OriginTypeName &&
@@ -440,16 +440,16 @@ func MakeParentDotConfigData(
 			!strings.HasPrefix(sv.Type, tc.MidTypePrefix) {
 			continue
 		}
-		if *sv.Status != string(tc.CacheStatusReported) && *sv.Status != string(tc.CacheStatusOnline) {
+		if sv.Status != string(tc.CacheStatusReported) && sv.Status != string(tc.CacheStatusOnline) {
 			continue
 		}
-		cgServers[*sv.ID] = sv
+		cgServers[sv.ID] = sv
 	}
 
 	// save the cache group peers
 	for _, v := range cgPeers {
 		peer := &ParentAbstractionServiceParent{}
-		peer.FQDN = *v.HostName + "." + *v.DomainName
+		peer.FQDN = v.HostName + "." + v.DomainName
 		peer.Port = *v.TCPPort
 		peer.Weight = 0.999
 		parentAbstraction.Peers = append(parentAbstraction.Peers, peer)
@@ -461,7 +461,7 @@ func MakeParentDotConfigData(
 	for serverID, _ := range cgServers {
 		cgServerIDs[serverID] = struct{}{}
 	}
-	cgServerIDs[*server.ID] = struct{}{}
+	cgServerIDs[server.ID] = struct{}{}
 
 	cgDSServers := filterDSS(dss, nil, cgServerIDs)
 
@@ -502,7 +502,7 @@ func MakeParentDotConfigData(
 		}
 
 		if !cacheIsTopLevel && ds.Topology == nil {
-			if _, ok := parentServerDSes[*server.ID][*ds.ID]; !ok {
+			if _, ok := parentServerDSes[server.ID][*ds.ID]; !ok {
 				continue // skip DSes not assigned to this server.
 			}
 		}
@@ -736,24 +736,24 @@ func (ss serversWithParamsSortByRank) Less(i, j int) bool {
 		return ss[i].Params.Rank < ss[j].Params.Rank
 	}
 
-	if ss[i].HostName == nil {
-		if ss[j].HostName != nil {
+	if &ss[i].HostName == nil || ss[i].HostName == "" {
+		if &ss[j].HostName != nil || ss[j].HostName == "" {
 			return true
 		}
-	} else if ss[j].HostName == nil {
+	} else if &ss[j].HostName == nil || ss[j].HostName == "" {
 		return false
 	} else if ss[i].HostName != ss[j].HostName {
-		return *ss[i].HostName < *ss[j].HostName
+		return ss[i].HostName < ss[j].HostName
 	}
 
-	if ss[i].DomainName == nil {
-		if ss[j].DomainName != nil {
+	if &ss[i].DomainName == nil || ss[i].DomainName == "" {
+		if &ss[j].DomainName != nil || ss[j].DomainName == "" {
 			return true
 		}
-	} else if ss[j].DomainName == nil {
+	} else if &ss[j].DomainName == nil || ss[j].DomainName == "" {
 		return false
 	} else if ss[i].DomainName != ss[j].DomainName {
-		return *ss[i].DomainName < *ss[j].DomainName
+		return ss[i].DomainName < ss[j].DomainName
 	}
 
 	if ss[i].Params.Port != ss[j].Params.Port {
@@ -1017,7 +1017,7 @@ func getTopologyParentConfigLine(
 ) (*ParentAbstractionService, []string, error) {
 	warnings := []string{}
 
-	if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+	if !hasRequiredCapabilities(serverCapabilities[server.ID], dsRequiredCapabilities[*ds.ID]) {
 		return nil, warnings, nil
 	}
 
@@ -1026,7 +1026,7 @@ func getTopologyParentConfigLine(
 		return nil, warnings, errors.New("DS " + ds.XMLID + " topology '" + *ds.Topology + "' not found in Topologies!")
 	}
 
-	serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
+	serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(server.CacheGroup), topology, cacheGroups, ds)
 	if err != nil {
 		return nil, warnings, errors.New("getting topology placement: " + err.Error())
 	}
@@ -1355,7 +1355,7 @@ func serverParentageParams(sv *Server, allParentConfigParams []parameterWithProf
 		parentServerParams.Port = *sv.TCPPort
 	}
 
-	serverParentConfigParams := layerProfilesFromMap(sv.ProfileNames, allParentConfigParams)
+	serverParentConfigParams := layerProfilesFromMap(sv.Profiles, allParentConfigParams)
 	for _, param := range serverParentConfigParams {
 		switch param.Name {
 		case ParentConfigCacheParamWeight:
@@ -1396,7 +1396,7 @@ func serverParentStr(sv *Server, svParams parentServerParams) (*ParentAbstractio
 		}
 		host = ip.String()
 	} else {
-		host = *sv.HostName + "." + *sv.DomainName
+		host = sv.HostName + "." + sv.DomainName
 	}
 
 	weight, err := strconv.ParseFloat(svParams.Weight, 64)
@@ -1452,13 +1452,13 @@ func getTopologyParents(
 
 	svNode := tc.TopologyNodeV5{}
 	for _, node := range topology.Nodes {
-		if node.Cachegroup == *server.Cachegroup {
+		if node.Cachegroup == server.CacheGroup {
 			svNode = node
 			break
 		}
 	}
 	if svNode.Cachegroup == "" {
-		return nil, nil, warnings, errors.New("This server '" + *server.HostName + "' not in DS " + ds.XMLID + " topology, skipping")
+		return nil, nil, warnings, errors.New("This server '" + server.HostName + "' not in DS " + ds.XMLID + " topology, skipping")
 	}
 
 	numParents := len(svNode.Parents)
@@ -1482,7 +1482,7 @@ func getTopologyParents(
 			if parentCG != "" {
 				primaryCGs[parentCG] = struct{}{}
 			} else {
-				warnings = append(warnings, "Server '"+*server.HostName+"' DS "+ds.XMLID+" topology '"+*ds.Topology+"' cachegroup '"+*server.Cachegroup+"' topology node parent "+strconv.Itoa(pind)+" is not in the topology!")
+				warnings = append(warnings, "Server '"+server.HostName+"' DS "+ds.XMLID+" topology '"+*ds.Topology+"' cachegroup '"+server.CacheGroup+"' topology node parent "+strconv.Itoa(pind)+" is not in the topology!")
 			}
 		}
 	} else { // normal topology/mso configuration
@@ -1505,7 +1505,7 @@ func getTopologyParents(
 		}
 
 		if parentCG == "" {
-			return nil, nil, warnings, errors.New("Server '" + *server.HostName + "' DS " + ds.XMLID + " topology '" + *ds.Topology + "' cachegroup '" + *server.Cachegroup + "' topology node parent " + strconv.Itoa(svNode.Parents[0]) + " is not in the topology!")
+			return nil, nil, warnings, errors.New("Server '" + server.HostName + "' DS " + ds.XMLID + " topology '" + *ds.Topology + "' cachegroup '" + server.CacheGroup + "' topology node parent " + strconv.Itoa(svNode.Parents[0]) + " is not in the topology!")
 		}
 
 		primaryCGs[parentCG] = struct{}{}
@@ -1515,16 +1515,16 @@ func getTopologyParents(
 	secondaryParentStrs := []*ParentAbstractionServiceParent{}
 
 	for _, sv := range serversWithParams {
-		if sv.ID == nil {
+		if &sv.ID == nil || sv.ID == 0 {
 			warnings = append(warnings, "TO Servers server had nil ID, skipping")
 			continue
-		} else if sv.Cachegroup == nil {
+		} else if &sv.CacheGroup == nil || sv.CacheGroup == "" {
 			warnings = append(warnings, "TO Servers server had nil Cachegroup, skipping")
 			continue
-		} else if sv.CDNName == nil {
+		} else if &sv.CDN == nil || sv.CDN == "" {
 			warnings = append(warnings, "TO servers had server with missing CDNName, skipping!")
 			continue
-		} else if sv.Status == nil || *sv.Status == "" {
+		} else if &sv.Status == nil || sv.Status == "" {
 			warnings = append(warnings, "TO servers had server with missing Status, skipping!")
 			continue
 		}
@@ -1532,20 +1532,20 @@ func getTopologyParents(
 		if !strings.HasPrefix(sv.Type, tc.EdgeTypePrefix) && !strings.HasPrefix(sv.Type, tc.MidTypePrefix) && sv.Type != tc.OriginTypeName {
 			continue // only consider edges, mids, and origins in the CacheGroup.
 		}
-		if _, dsHasOrigin := dsOrigins[ServerID(*sv.ID)]; sv.Type == tc.OriginTypeName && !dsHasOrigin {
+		if _, dsHasOrigin := dsOrigins[ServerID(sv.ID)]; sv.Type == tc.OriginTypeName && !dsHasOrigin {
 			continue
 		}
-		if *sv.CDNName != *server.CDNName {
+		if sv.CDN != server.CDN {
 			continue
 		}
-		if *sv.Status != string(tc.CacheStatusReported) && *sv.Status != string(tc.CacheStatusOnline) {
+		if sv.Status != string(tc.CacheStatusReported) && sv.Status != string(tc.CacheStatusOnline) {
 			continue
 		}
 
-		if sv.Type != tc.OriginTypeName && !hasRequiredCapabilities(serverCapabilities[*sv.ID], dsRequiredCapabilities[*ds.ID]) {
+		if sv.Type != tc.OriginTypeName && !hasRequiredCapabilities(serverCapabilities[sv.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
-		if _, ok := primaryCGs[*sv.Cachegroup]; ok {
+		if _, ok := primaryCGs[sv.CacheGroup]; ok {
 			parentStr, err := serverParentStr(&sv.Server, sv.Params)
 			if err != nil {
 				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
@@ -1553,7 +1553,7 @@ func getTopologyParents(
 			if parentStr != nil { // will be nil if server is not_a_parent (possibly other reasons)
 				parentStrs = append(parentStrs, parentStr)
 			}
-		} else if *sv.Cachegroup == secondaryCG {
+		} else if sv.CacheGroup == secondaryCG {
 			parentStr, err := serverParentStr(&sv.Server, sv.Params)
 			if err != nil {
 				return nil, nil, warnings, errors.New("getting server parent string: " + err.Error())
@@ -1754,7 +1754,7 @@ func makeParentInfos(
 
 			weight, err := strconv.ParseFloat(sv.Params.Weight, 64)
 			if err != nil {
-				warnings = append(warnings, "server "+*sv.HostName+" profile had malformed weight, using default!")
+				warnings = append(warnings, "server "+sv.HostName+" profile had malformed weight, using default!")
 				weight = DefaultParentWeight
 			}
 
@@ -1765,17 +1765,17 @@ func makeParentInfos(
 			}
 
 			parentInf := parentInfo{
-				Host:            *sv.HostName,
+				Host:            sv.HostName,
 				Port:            sv.Params.Port,
-				Domain:          *sv.DomainName,
+				Domain:          sv.DomainName,
 				Weight:          weight,
 				UseIP:           sv.Params.UseIP,
 				Rank:            sv.Params.Rank,
 				IP:              ipAddr.String(),
-				Cachegroup:      *sv.Cachegroup,
-				PrimaryParent:   serverParentCGData.ParentID == *sv.CachegroupID,
-				SecondaryParent: serverParentCGData.SecondaryParentID == *sv.CachegroupID,
-				Capabilities:    serverCapabilities[*sv.ID],
+				Cachegroup:      sv.CacheGroup,
+				PrimaryParent:   serverParentCGData.ParentID == sv.CacheGroupID,
+				SecondaryParent: serverParentCGData.SecondaryParentID == sv.CacheGroupID,
+				Capabilities:    serverCapabilities[sv.ID],
 			}
 			if parentInf.Port < 1 {
 				parentInf.Port = *sv.TCPPort
@@ -1837,31 +1837,31 @@ func getOriginServers(
 	}
 
 	for _, cgSv := range cgServers {
-		if cgSv.ID == nil {
+		if &cgSv.ID == nil || cgSv.ID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil ID, skipping!")
 			continue
-		} else if cgSv.HostName == nil {
+		} else if &cgSv.HostName == nil || cgSv.HostName == "" {
 			warnings = append(warnings, "getting origin servers: got server with nil HostName, skipping!")
 			continue
 		} else if cgSv.TCPPort == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TCPPort, skipping!")
 			continue
-		} else if cgSv.CachegroupID == nil {
+		} else if &cgSv.CacheGroupID == nil || cgSv.CacheGroupID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil CachegroupID, skipping!")
 			continue
-		} else if cgSv.StatusID == nil {
+		} else if &cgSv.StatusID == nil || cgSv.StatusID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil StatusID, skipping!")
 			continue
-		} else if cgSv.TypeID == nil {
+		} else if &cgSv.TypeID == nil || cgSv.TypeID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil TypeID, skipping!")
 			continue
-		} else if len(cgSv.ProfileNames) == 0 {
+		} else if len(cgSv.Profiles) == 0 {
 			warnings = append(warnings, "getting origin servers: got server with no profile names, skipping!")
 			continue
-		} else if cgSv.CDNID == nil {
+		} else if &cgSv.CDNID == nil || cgSv.CDNID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil CDNID, skipping!")
 			continue
-		} else if cgSv.DomainName == nil {
+		} else if &cgSv.DomainName == nil || cgSv.DomainName == "" {
 			warnings = append(warnings, "getting origin servers: got server with nil DomainName, skipping!")
 			continue
 		}
@@ -1873,7 +1873,7 @@ func getOriginServers(
 		}
 
 		if cgSv.Type == tc.OriginTypeName {
-			for dsID, _ := range parentServerDSes[*cgSv.ID] { // map[serverID][]dsID
+			for dsID, _ := range parentServerDSes[cgSv.ID] { // map[serverID][]dsID
 				orgURI := dsOrigins[dsID]
 				if orgURI == nil {
 					// warnings = append(warnings, fmt.Sprintf(("ds %v has no origins! Skipping!\n", dsID) // TODO determine if this is normal
@@ -1948,10 +1948,10 @@ func makeDSOrigins(dsses []DeliveryServiceServer, dses []DeliveryService, server
 
 	svMap := map[ServerID]Server{}
 	for _, sv := range servers {
-		if sv.ID == nil {
+		if &sv.ID == nil || sv.ID == 0 {
 			warnings = append(warnings, "got server with missing ID, skipping!")
 		}
-		svMap[ServerID(*sv.ID)] = sv
+		svMap[ServerID(sv.ID)] = sv
 	}
 
 	dsOrigins := map[DeliveryServiceID]map[ServerID]struct{}{}
@@ -2003,7 +2003,7 @@ func getProfileParentConfigParams(tcParentConfigParams []tc.ParameterV5) (map[st
 func getServerParentConfigParams(server *Server, allParentConfigParams []parameterWithProfilesMap) map[string]string {
 	// We only need parent.config params, don't need all the params on the server
 	serverParams := map[string]string{}
-	serverParentConfigParams := layerProfilesFromMap(server.ProfileNames, allParentConfigParams)
+	serverParentConfigParams := layerProfilesFromMap(server.Profiles, allParentConfigParams)
 	for _, pa := range serverParentConfigParams {
 		name := pa.Name
 		val := pa.Value

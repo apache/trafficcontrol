@@ -47,9 +47,9 @@ func MakeServerUnknown(
 	}
 	warnings := []string{}
 
-	if server.HostName == nil {
+	if &server.HostName == nil || server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server missing HostName")
-	} else if server.DomainName == nil {
+	} else if &server.DomainName == nil || server.DomainName == "" {
 		return Cfg{}, makeErr(warnings, "server missing DomainName")
 	}
 
@@ -75,7 +75,7 @@ func MakeServerUnknown(
 		txt += pa.Val + "\n"
 	}
 
-	txt = strings.Replace(txt, `__HOSTNAME__`, *server.HostName, -1)
+	txt = strings.Replace(txt, `__HOSTNAME__`, server.HostName, -1)
 	txt = strings.Replace(txt, `__RETURN__`, "\n", -1)
 
 	lineComment := getServerUnknownConfigCommentType(params)

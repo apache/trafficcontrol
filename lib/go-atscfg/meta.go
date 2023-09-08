@@ -60,21 +60,21 @@ func MakeConfigFilesList(
 	}
 	warnings := []string{}
 
-	if server.Cachegroup == nil {
+	if &server.CacheGroup == nil || server.CacheGroup == "" {
 		return nil, warnings, errors.New("this server missing Cachegroup")
-	} else if server.CachegroupID == nil {
+	} else if &server.CacheGroupID == nil || server.CacheGroupID == 0 {
 		return nil, warnings, errors.New("this server missing CachegroupID")
 	} else if server.TCPPort == nil {
 		return nil, warnings, errors.New("server missing TCPPort")
-	} else if server.HostName == nil {
+	} else if &server.HostName == nil || server.HostName == "" {
 		return nil, warnings, errors.New("server missing HostName")
-	} else if server.CDNID == nil {
+	} else if &server.CDNID == nil || server.CDNID == 0 {
 		return nil, warnings, errors.New("server missing CDNID")
-	} else if server.CDNName == nil {
+	} else if &server.CDN == nil || server.CDN == "" {
 		return nil, warnings, errors.New("server missing CDNName")
-	} else if server.ID == nil {
+	} else if &server.ID == nil || server.ID == 0 {
 		return nil, warnings, errors.New("server missing ID")
-	} else if len(server.ProfileNames) == 0 {
+	} else if len(server.Profiles) == 0 {
 		return nil, warnings, errors.New("server missing Profile")
 	}
 
@@ -158,7 +158,7 @@ func addMetaObjConfigDir(
 ) ([]CfgMeta, []string, error) {
 	warnings := []string{}
 
-	if server.Cachegroup == nil {
+	if &server.CacheGroup == nil || server.CacheGroup == "" {
 		return nil, warnings, errors.New("server missing Cachegroup")
 	}
 
@@ -219,7 +219,7 @@ func addMetaObjConfigDir(
 		if ds.Topology != nil && *ds.Topology != "" {
 			topology := nameTopologies[TopologyName(*ds.Topology)]
 
-			placement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, &ds)
+			placement, err := getTopologyPlacement(tc.CacheGroupName(server.CacheGroup), topology, cacheGroups, &ds)
 			if err != nil {
 				return nil, warnings, errors.New("getting topology placement: " + err.Error())
 			}
@@ -345,7 +345,7 @@ func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, de
 
 		dssMap := map[int]struct{}{}
 		for _, dss := range deliveryServiceServers {
-			if dss.Server != *server.ID {
+			if dss.Server != server.ID {
 				continue
 			}
 			if _, ok := dsIDs[dss.DeliveryService]; !ok {
@@ -378,7 +378,7 @@ func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, de
 				warnings = append(warnings, "got deliveryservice with nil xmlId (name), skipping!")
 				continue
 			}
-			if &ds.CDNID == nil || ds.CDNID != *server.CDNID {
+			if &ds.CDNID == nil || ds.CDNID != server.CDNID {
 				continue
 			}
 			if ds.Active == tc.DSActiveStateInactive {

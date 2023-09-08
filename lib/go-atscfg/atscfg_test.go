@@ -276,22 +276,22 @@ func setIPInfo(sv *Server, interfaceName string, ipAddress string, ip6Address st
 
 func makeGenericServer() *Server {
 	server := &Server{}
-	server.CDNName = util.Ptr("myCDN")
-	server.Cachegroup = util.Ptr("cg0")
-	server.CachegroupID = util.Ptr(422)
-	server.DomainName = util.Ptr("mydomain.example.net")
-	server.CDNID = util.Ptr(43)
-	server.HostName = util.Ptr("myserver")
+	server.CDN = "myCDN"
+	server.CacheGroup = "cg0"
+	server.CacheGroupID = 422
+	server.DomainName = "mydomain.example.net"
+	server.CDNID = 43
+	server.HostName = "myserver"
 	server.HTTPSPort = util.Ptr(12443)
-	server.ID = util.Ptr(44)
+	server.ID = 44
 	setIP(server, "192.168.2.1")
-	server.ProfileNames = []string{"serverprofile"}
+	server.Profiles = []string{"serverprofile"}
 	server.TCPPort = util.Ptr(80)
 	server.Type = "EDGE"
-	server.TypeID = util.Ptr(91)
+	server.TypeID = 91
 	status := string(tc.CacheStatusReported)
-	server.Status = &status
-	server.StatusID = util.Ptr(99)
+	server.Status = status
+	server.StatusID = 99
 	return server
 }
 
@@ -315,7 +315,7 @@ func makeDSS(servers []Server, dses []DeliveryService) []DeliveryServiceServer {
 	for _, sv := range servers {
 		for _, ds := range dses {
 			dss = append(dss, DeliveryServiceServer{
-				Server:          *sv.ID,
+				Server:          sv.ID,
 				DeliveryService: *ds.ID,
 			})
 		}

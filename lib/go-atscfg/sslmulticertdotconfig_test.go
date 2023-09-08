@@ -30,7 +30,7 @@ func TestMakeSSLMultiCertDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = util.Ptr("mycdn")
+	server.CDN = "mycdn"
 
 	makeDS := func(name string, dsType *string, protocol int, exampleURL string) DeliveryService {
 		ds := makeGenericDS()
@@ -75,7 +75,7 @@ func TestMakeSSLMultiCertDotConfigHTTPDeliveryService(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.CDNName = util.Ptr("mycdn")
+	server.CDN = "mycdn"
 
 	makeDS := func(name string, dsType *string, protocol int, exampleURL string) DeliveryService {
 		ds := makeGenericDS()

@@ -33,7 +33,7 @@ func TestMakeRegexRemapDotConfig(t *testing.T) {
 	dsName := "myds"
 
 	server := makeGenericServer()
-	server.CDNName = &cdnName
+	server.CDN = cdnName
 
 	fileName := "regex_remap_myds.config"
 
@@ -75,7 +75,7 @@ func TestMakeRegexRemapDotConfigUnusedDS(t *testing.T) {
 	dsName := "myds"
 
 	server := makeGenericServer()
-	server.CDNName = &cdnName
+	server.CDN = cdnName
 
 	fileName := "regex_remap_myds.config"
 
@@ -134,7 +134,7 @@ func TestMakeRegexRemapDotConfigReplaceReturns(t *testing.T) {
 	dsName := "myds"
 
 	server := makeGenericServer()
-	server.CDNName = &cdnName
+	server.CDN = cdnName
 
 	fileName := "regex_remap_myds.config"
 

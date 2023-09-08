@@ -39,7 +39,7 @@ func makeCacheDotConfigMid(
 	}
 	warnings := []string{}
 
-	if server.HostName == nil {
+	if &server.HostName == nil || server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server missing HostName")
 	}
 	if !strings.HasPrefix(string(server.Type), tc.MidTypePrefix) {

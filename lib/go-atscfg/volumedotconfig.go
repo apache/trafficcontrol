@@ -49,7 +49,7 @@ func MakeVolumeDotConfig(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 

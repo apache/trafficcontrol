@@ -54,7 +54,7 @@ type ServerCapability string
 // Server is a tc.Server for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type Server tc.ServerV40
+type Server tc.ServerV5
 
 // DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
@@ -175,7 +175,7 @@ func ToInvalidationJobs(jobs []tc.InvalidationJobV4) []InvalidationJob {
 }
 
 // ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToServers(servers []tc.ServerV40) []Server {
+func ToServers(servers []tc.ServerV5) []Server {
 	as := make([]Server, 0, len(servers))
 	for _, sv := range servers {
 		as = append(as, Server(sv))
@@ -235,14 +235,14 @@ type serverParentCacheGroupData struct {
 // Takes a server and a CG map. To create a CGMap from an API CacheGroup slice, use MakeCGMap.
 // If server's CacheGroup has no parent or secondary parent, returns InvalidID and "" with no error.
 func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.CacheGroupNullableV5) (serverParentCacheGroupData, error) {
-	if server.Cachegroup == nil || *server.Cachegroup == "" {
+	if &server.CacheGroup == nil || server.CacheGroup == "" {
 		return serverParentCacheGroupData{}, errors.New("server missing cachegroup")
-	} else if server.HostName == nil || *server.HostName == "" {
+	} else if &server.HostName == nil || server.HostName == "" {
 		return serverParentCacheGroupData{}, errors.New("server missing hostname")
 	}
-	serverCG, ok := cgMap[tc.CacheGroupName(*server.Cachegroup)]
+	serverCG, ok := cgMap[tc.CacheGroupName(server.CacheGroup)]
 	if !ok {
-		return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' not found in CacheGroups")
+		return serverParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.CacheGroup + "' not found in CacheGroups")
 	}
 
 	parentCGID := InvalidID
@@ -250,7 +250,7 @@ func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.Cach
 	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
 		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.ParentName)]
 		if !ok {
-			return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+			return serverParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.CacheGroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
 		}
 		if parentCG.ID == nil {
 			return serverParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
@@ -268,7 +268,7 @@ func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.Cach
 	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
 		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.SecondaryParentName)]
 		if !ok {
-			return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+			return serverParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.CacheGroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
 		}
 
 		if parentCG.ID == nil {
@@ -363,11 +363,11 @@ func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 
 // topologyIncludesServerNullable returns whether the given topology includes the given server.
 func topologyIncludesServerNullable(topology tc.TopologyV5, server *Server) (bool, error) {
-	if server.Cachegroup == nil {
+	if &server.CacheGroup == nil || server.CacheGroup == "" {
 		return false, errors.New("server missing Cachegroup")
 	}
 	for _, node := range topology.Nodes {
-		if node.Cachegroup == *server.Cachegroup {
+		if node.Cachegroup == server.CacheGroup {
 			return true, nil
 		}
 	}
@@ -877,7 +877,7 @@ func GetServerParameters(
 	server *Server,
 	params []tc.ParameterV5, // from v4-client.GetParameters -> /4.0/parameters
 ) ([]tc.ParameterV5, error) {
-	return LayerProfiles(server.ProfileNames, params)
+	return LayerProfiles(server.Profiles, params)
 }
 
 // LayerProfiles takes an ordered list of profile names (presumably from a Server or Delivery Service),
@@ -945,7 +945,7 @@ func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesM
 // ServerProfilesMatch returns whether both servers have the same Profiles in the same order,
 // and thus will have the same Parameters.
 func ServerProfilesMatch(sa *Server, sb *Server) bool {
-	return ProfilesMatch(sa.ProfileNames, sb.ProfileNames)
+	return ProfilesMatch(sa.Profiles, sb.Profiles)
 }
 
 // ProfilesMatch takes two ordered lists of profile names (such as from Servers or Delivery Services)

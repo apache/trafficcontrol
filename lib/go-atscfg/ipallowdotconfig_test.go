@@ -71,9 +71,9 @@ func TestMakeIPAllowDotConfig(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.Ptr("server0")
+	sv.HostName = "server0"
 	sv.Type = string(tc.CacheTypeMid)
-	sv.Cachegroup = cgs[0].Name
+	sv.CacheGroup = *cgs[0].Name
 	svs = append(svs, *sv)
 
 	topologies := []tc.TopologyV5{}
@@ -160,9 +160,9 @@ func TestMakeIPAllowDotConfigEdge(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.Ptr("server0")
+	sv.HostName = "server0"
 	sv.Type = string(tc.CacheTypeEdge)
-	sv.Cachegroup = cgs[0].Name
+	sv.CacheGroup = *cgs[0].Name
 	svs = append(svs, *sv)
 
 	topologies := []tc.TopologyV5{}
@@ -246,9 +246,9 @@ func TestMakeIPAllowDotConfigNonDefaultV6Number(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.Ptr("server0")
+	sv.HostName = "server0"
 	sv.Type = string(tc.CacheTypeMid)
-	sv.Cachegroup = cgs[0].Name
+	sv.CacheGroup = *cgs[0].Name
 	svs = append(svs, *sv)
 
 	topologies := []tc.TopologyV5{}
@@ -352,9 +352,9 @@ func TestMakeIPAllowDotConfigTopologies(t *testing.T) {
 	}
 
 	sv := &Server{}
-	sv.HostName = util.Ptr("server0")
+	sv.HostName = "server0"
 	sv.Type = string(tc.CacheTypeMid)
-	sv.Cachegroup = cgs[1].Name
+	sv.CacheGroup = *cgs[1].Name
 	svs = append(svs, *sv)
 
 	//	topologies := []tc.Topology{}
@@ -402,8 +402,8 @@ func TestMakeIPAllowDotConfigTopologies(t *testing.T) {
 
 func makeIPAllowChild(name string, ip string, ip6 string, serverType string) *Server {
 	sv := &Server{}
-	sv.Cachegroup = util.Ptr("childcg")
-	sv.HostName = util.Ptr("child0")
+	sv.CacheGroup = "childcg"
+	sv.HostName = "child0"
 	sv.Type = serverType
 	setIPInfo(sv, "eth0", ip, ip6)
 	return sv

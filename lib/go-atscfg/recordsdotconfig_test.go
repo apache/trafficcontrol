@@ -43,7 +43,7 @@ func TestMakeRecordsDotConfig(t *testing.T) {
 	ip6Str := "2001:db8::9"
 	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
 	setIP6(server, ip6CIDR)
-	server.ProfileNames = []string{profileName}
+	server.Profiles = []string{profileName}
 	opt := &RecordsConfigOpts{}
 	opt.DNSLocalBindServiceAddr = true
 	opt.HdrComment = hdr
@@ -182,7 +182,7 @@ func TestMakeRecordsDotConfigDNSLocalBindNoOverrideV4(t *testing.T) {
 	ip6Str := "2001:db8::9"
 	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
 	setIP6(server, ip6CIDR)
-	server.ProfileNames = []string{profileName}
+	server.Profiles = []string{profileName}
 	opt := &RecordsConfigOpts{}
 	opt.DNSLocalBindServiceAddr = true
 	opt.HdrComment = hdr
@@ -225,7 +225,7 @@ func TestMakeRecordsDotConfigDNSLocalBindNoOverrideV6(t *testing.T) {
 	ip6Str := "2001:db8::9"
 	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
 	setIP6(server, ip6CIDR)
-	server.ProfileNames = []string{profileName}
+	server.Profiles = []string{profileName}
 	opt := &RecordsConfigOpts{}
 	opt.HdrComment = hdr
 	opt.DNSLocalBindServiceAddr = true
@@ -269,7 +269,7 @@ func TestMakeRecordsDotConfigDNSLocalBindNoOverrideBoth(t *testing.T) {
 	ip6Str := "2001:db8::9"
 	ip6CIDR := ip6Str + "/48" // set the ip to a cidr, to make sure addr logic removes it
 	setIP6(server, ip6CIDR)
-	server.ProfileNames = []string{profileName}
+	server.Profiles = []string{profileName}
 	opt := &RecordsConfigOpts{}
 	opt.HdrComment = hdr
 	opt.DNSLocalBindServiceAddr = true

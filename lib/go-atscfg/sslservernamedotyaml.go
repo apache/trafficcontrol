@@ -213,7 +213,7 @@ func GetServerSSLData(
 ) ([]SSLData, []string, error) {
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return nil, warnings, errors.New("this server missing Profiles")
 	}
 
@@ -351,13 +351,13 @@ func dsUsesServer(
 		return false, errors.New("ds missing xmlId")
 	} else if ds.ID == nil {
 		return false, errors.New("ds missing id")
-	} else if server.ID == nil {
+	} else if &server.ID == nil || server.ID == 0 {
 		return false, errors.New("server missing id")
 	} else if ds.Type == nil {
 		return false, errors.New("ds missing type")
 	}
 
-	if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+	if !hasRequiredCapabilities(serverCapabilities[server.ID], dsRequiredCapabilities[*ds.ID]) {
 		return false, nil
 	}
 
@@ -368,7 +368,7 @@ func dsUsesServer(
 	cacheIsTopLevel := isTopLevelCache(serverParentCGData)
 
 	if !cacheIsTopLevel && (ds.Topology == nil || *ds.Topology == "") {
-		if !dsAssignedServer(*ds.ID, *server.ID, dss) {
+		if !dsAssignedServer(*ds.ID, server.ID, dss) {
 			return false, nil
 		}
 	}
@@ -379,7 +379,7 @@ func dsUsesServer(
 			return false, errors.New("ds topology '" + *ds.Topology + "' not found in topologies")
 		}
 
-		serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
+		serverPlacement, err := getTopologyPlacement(tc.CacheGroupName(server.CacheGroup), topology, cacheGroups, ds)
 		if err != nil {
 			return false, errors.New("getting topology placement: " + err.Error())
 		}

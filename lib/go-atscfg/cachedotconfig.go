@@ -68,7 +68,7 @@ func makeCacheDotConfigEdge(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing profiles")
 	}
 
@@ -130,18 +130,18 @@ func GetProfileDSes(server *Server,
 	warnings := make([]string, 0)
 	profileServerIDsMap := map[int]struct{}{}
 	for _, sv := range servers {
-		if len(sv.ProfileNames) == 0 {
+		if len(sv.Profiles) == 0 {
 			warnings = append(warnings, "servers had server with nil profile, skipping!")
 			continue
 		}
-		if sv.ID == nil {
+		if sv.ID == 0 {
 			warnings = append(warnings, "servers had server with nil id, skipping!")
 			continue
 		}
 		if !ServerProfilesMatch(server, &sv) {
 			continue
 		}
-		profileServerIDsMap[*sv.ID] = struct{}{}
+		profileServerIDsMap[sv.ID] = struct{}{}
 	}
 
 	dsServers := filterDSS(deliveryServiceServers, nil, profileServerIDsMap)

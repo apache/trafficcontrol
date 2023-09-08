@@ -29,7 +29,7 @@ import (
 func TestMakeATSDotRules(t *testing.T) {
 	server := makeGenericServer()
 	serverProfile := "myProfile"
-	server.ProfileNames = []string{serverProfile}
+	server.Profiles = []string{serverProfile}
 
 	hdr := "myHeaderComment"
 

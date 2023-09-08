@@ -142,13 +142,13 @@ func MakeRemapDotConfig(
 		warnings = append(warnings, "opt.UseStrategies was false, but opt.UseStrategiesCore was set, which has no effect! Not using strategies, per opt.UseStrategies.")
 	}
 
-	if server.HostName == nil {
+	if &server.HostName == nil || server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server HostName missing")
-	} else if server.ID == nil {
+	} else if &server.ID == nil || server.ID == 0 {
 		return Cfg{}, makeErr(warnings, "server ID missing")
-	} else if server.Cachegroup == nil {
+	} else if &server.CacheGroup == nil || server.CacheGroup == "" {
 		return Cfg{}, makeErr(warnings, "server Cachegroup missing")
-	} else if server.DomainName == nil {
+	} else if &server.DomainName == nil || server.DomainName == "" {
 		return Cfg{}, makeErr(warnings, "server DomainName missing")
 	}
 
@@ -326,7 +326,7 @@ func getServerConfigRemapDotConfigForMid(
 	postRemapLines := []string{}
 
 	for _, ds := range dses {
-		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+		if !hasRequiredCapabilities(serverCapabilities[server.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
 
@@ -367,7 +367,7 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if *ds.Topology != "" {
-			topoTxt, err := makeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups)
+			topoTxt, err := makeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(server.CacheGroup), topology, cacheGroups)
 			if err != nil {
 				return "", warnings, err
 			}
@@ -518,7 +518,7 @@ func getServerConfigRemapDotConfigForEdge(
 	postRemapLines := []string{}
 
 	for _, ds := range dses {
-		if !hasRequiredCapabilities(serverCapabilities[*server.ID], dsRequiredCapabilities[*ds.ID]) {
+		if !hasRequiredCapabilities(serverCapabilities[server.ID], dsRequiredCapabilities[*ds.ID]) {
 			continue
 		}
 
@@ -624,7 +624,7 @@ func buildEdgeRemapLine(
 	remapLines := RemapLines{}
 
 	// ds = 'remap' in perl
-	mapFrom = strings.Replace(mapFrom, `__http__`, *server.HostName, -1)
+	mapFrom = strings.Replace(mapFrom, `__http__`, server.HostName, -1)
 
 	isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
 	if err != nil {
@@ -654,7 +654,7 @@ func buildEdgeRemapLine(
 	}
 
 	if *ds.Topology != "" {
-		topoTxt, err := makeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(*server.Cachegroup), nameTopologies[TopologyName(*ds.Topology)], cacheGroups)
+		topoTxt, err := makeDSTopologyHeaderRewriteTxt(ds, tc.CacheGroupName(server.CacheGroup), nameTopologies[TopologyName(*ds.Topology)], cacheGroups)
 		if err != nil {
 			return remapLines, warnings, err
 		}
@@ -912,7 +912,7 @@ func makeServerPackageParamData(server *Server, serverParams []tc.ParameterV5) (
 		}
 		paramValue := param.Value
 		if paramValue == "STRING __HOSTNAME__" {
-			paramValue = *server.HostName + "." + *server.DomainName // TODO strings.Replace to replace all anywhere, instead of just an exact match?
+			paramValue = server.HostName + "." + server.DomainName // TODO strings.Replace to replace all anywhere, instead of just an exact match?
 		}
 
 		if val, ok := serverPackageParamData[paramName]; ok {
@@ -939,7 +939,7 @@ func remapFilterDSes(server *Server, dss []DeliveryServiceServer, dses []Deliver
 	serverIDs := map[int]struct{}{}
 	if !isMid {
 		// mids use all servers, so pass empty=all. Edges only use this current server
-		serverIDs[*server.ID] = struct{}{}
+		serverIDs[server.ID] = struct{}{}
 	}
 
 	dsIDs := map[int]struct{}{}
@@ -1072,14 +1072,14 @@ func GetAnyCastPartners(server *Server, servers []Server) map[string][]string {
 		}
 	}
 	for _, srv := range servers {
-		if *server.HostName == *srv.HostName {
+		if server.HostName == srv.HostName {
 			continue
 		}
 		for _, int := range srv.Interfaces {
 			if int.Name == "lo" {
 				for _, address := range int.IPAddresses {
 					if _, ok := anyCastIPs[address.Address]; ok && address.ServiceAddress {
-						anyCastIPs[address.Address] = append(anyCastIPs[address.Address], *srv.HostName)
+						anyCastIPs[address.Address] = append(anyCastIPs[address.Address], srv.HostName)
 					}
 				}
 			}
@@ -1106,7 +1106,7 @@ func (ks keyVals) Less(i, j int) bool {
 
 // GetDSRequestFQDNs returns the FQDNs that clients will request from the edge.
 func GetDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, server *Server, anyCastPartners map[string][]string, cdnDomain string) ([]string, error) {
-	if server.HostName == nil {
+	if &server.HostName == nil || server.HostName == "" {
 		return nil, errors.New("server missing hostname")
 	}
 
@@ -1128,7 +1128,7 @@ func GetDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, s
 
 		hostRegex := dsRegex.Pattern
 
-		fqdn, err := makeFQDN(hostRegex, ds, *server.HostName, cdnDomain)
+		fqdn, err := makeFQDN(hostRegex, ds, server.HostName, cdnDomain)
 		if err != nil {
 			return nil, err
 		}
@@ -1174,14 +1174,14 @@ func makeFQDN(hostRegex string, ds *DeliveryService, server string, cdnDomain st
 
 func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[TopologyName]tc.TopologyV5, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5) (bool, error) {
 	if ds.Topology != nil && strings.TrimSpace(*ds.Topology) != "" {
-		if server.Cachegroup == nil {
+		if &server.CacheGroup == nil || server.CacheGroup == "" {
 			return false, errors.New("Server has no CacheGroup")
 		}
 		topology, ok := topologies[TopologyName(*ds.Topology)]
 		if !ok {
 			return false, errors.New("DS topology '" + *ds.Topology + "' not found in topologies")
 		}
-		topoPlacement, err := getTopologyPlacement(tc.CacheGroupName(*server.Cachegroup), topology, cacheGroups, ds)
+		topoPlacement, err := getTopologyPlacement(tc.CacheGroupName(server.CacheGroup), topology, cacheGroups, ds)
 		if err != nil {
 			return false, errors.New("getting topology placement: " + err.Error())
 		}
@@ -1203,12 +1203,12 @@ func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService, cgs m
 
 	// pre-topology parentage is based on Cachegroups
 
-	if server.Cachegroup == nil {
+	if &server.CacheGroup == nil || server.CacheGroup == "" {
 		// if the server has no CG (which TO shouldn't allow), it can't possibly have parents.
 		return true
 	}
 
-	cg, ok := cgs[tc.CacheGroupName(*server.Cachegroup)]
+	cg, ok := cgs[tc.CacheGroupName(server.CacheGroup)]
 	if !ok {
 		// if the server's CG doesn't exist (which TO shouldn't allow), it can't possibly have parents.
 		return true

@@ -71,15 +71,15 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	topologies := []tc.TopologyV5{}
@@ -87,16 +87,16 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
@@ -104,11 +104,11 @@ func TestMakeSSLServerNameYAML(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -204,15 +204,15 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	topologies := []tc.TopologyV5{}
@@ -220,16 +220,16 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
@@ -237,11 +237,11 @@ func TestMakeSSLServerNameYAMLParams(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -337,15 +337,15 @@ func TestMakeSSLServerNameYAMLParamInvalid(t *testing.T) {
 	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	topologies := []tc.TopologyV5{}
@@ -353,16 +353,16 @@ func TestMakeSSLServerNameYAMLParamInvalid(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
@@ -370,11 +370,11 @@ func TestMakeSSLServerNameYAMLParamInvalid(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -468,15 +468,15 @@ func TestMakeSSLServerNameYAMLDSTLSVersions(t *testing.T) {
 	servers := makeTestAnyCastServers()
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	topologies := []tc.TopologyV5{}
@@ -484,16 +484,16 @@ func TestMakeSSLServerNameYAMLDSTLSVersions(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
@@ -501,11 +501,11 @@ func TestMakeSSLServerNameYAMLDSTLSVersions(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}

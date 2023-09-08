@@ -80,15 +80,15 @@ func TestMakeStrategiesDotConfig(t *testing.T) {
 	server := makeTestParentServer()
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	servers := []Server{*server, *mid0, *mid1}
@@ -98,16 +98,16 @@ func TestMakeStrategiesDotConfig(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
@@ -115,11 +115,11 @@ func TestMakeStrategiesDotConfig(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -232,26 +232,26 @@ func TestMakeStrategiesTopologiesParams(t *testing.T) {
 	}
 
 	server := makeTestParentServer()
-	server.Cachegroup = util.Ptr("edgeCG")
-	server.CachegroupID = util.Ptr(400)
+	server.CacheGroup = "edgeCG"
+	server.CacheGroupID = 400
 
 	origin0 := makeTestParentServer()
-	origin0.Cachegroup = util.Ptr("originCG")
-	origin0.CachegroupID = util.Ptr(500)
-	origin0.HostName = util.Ptr("myorigin0")
-	origin0.ID = util.Ptr(45)
+	origin0.CacheGroup = "originCG"
+	origin0.CacheGroupID = 500
+	origin0.HostName = "myorigin0"
+	origin0.ID = 45
 	setIP(origin0, "192.168.2.2")
 	origin0.Type = tc.OriginTypeName
-	origin0.TypeID = util.Ptr(991)
+	origin0.TypeID = 991
 
 	origin1 := makeTestParentServer()
-	origin1.Cachegroup = util.Ptr("originCG")
-	origin1.CachegroupID = util.Ptr(500)
-	origin1.HostName = util.Ptr("myorigin1")
-	origin1.ID = util.Ptr(46)
+	origin1.CacheGroup = "originCG"
+	origin1.CacheGroupID = 500
+	origin1.HostName = "myorigin1"
+	origin1.ID = 46
 	setIP(origin1, "192.168.2.3")
 	origin1.Type = tc.OriginTypeName
-	origin1.TypeID = util.Ptr(991)
+	origin1.TypeID = 991
 
 	servers := []Server{*server, *origin0, *origin1}
 
@@ -274,16 +274,16 @@ func TestMakeStrategiesTopologiesParams(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = origin0.Cachegroup
-	eCG.ParentCachegroupID = origin0.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(origin0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(origin0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	oCG := &tc.CacheGroupNullableV5{}
-	oCG.Name = origin0.Cachegroup
-	oCG.ID = origin0.CachegroupID
+	oCG.Name = util.Ptr(origin0.CacheGroup)
+	oCG.ID = util.Ptr(origin0.CacheGroupID)
 	oCGType := tc.CacheGroupOriginTypeName
 	oCG.Type = &oCGType
 
@@ -291,7 +291,7 @@ func TestMakeStrategiesTopologiesParams(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *origin0.ID,
+			Server:          origin0.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -378,15 +378,15 @@ func TestMakeStrategiesHTTPSOrigin(t *testing.T) {
 	server := makeTestParentServer()
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	servers := []Server{*server, *mid0, *mid1}
@@ -396,16 +396,16 @@ func TestMakeStrategiesHTTPSOrigin(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = server.Cachegroup
-	eCG.ID = server.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = util.Ptr(server.CacheGroup)
+	eCG.ID = util.Ptr(server.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
@@ -413,11 +413,11 @@ func TestMakeStrategiesHTTPSOrigin(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -529,34 +529,34 @@ func TestMakeStrategiesPeeringRing(t *testing.T) {
 	}
 
 	edge0 := makeTestParentServer()
-	edge0.ID = util.Ptr(12)
-	edge0.HostName = util.Ptr("edge0")
-	edge0.Cachegroup = util.Ptr("edgeCG")
-	edge0.CachegroupID = util.Ptr(400)
+	edge0.ID = 12
+	edge0.HostName = "edge0"
+	edge0.CacheGroup = "edgeCG"
+	edge0.CacheGroupID = 400
 
 	edge1 := makeTestParentServer()
-	edge1.ID = util.Ptr(13)
-	edge1.HostName = util.Ptr("edge1")
-	edge1.Cachegroup = util.Ptr("edgeCG")
-	edge1.CachegroupID = util.Ptr(400)
+	edge1.ID = 13
+	edge1.HostName = "edge1"
+	edge1.CacheGroup = "edgeCG"
+	edge1.CacheGroupID = 400
 
 	origin0 := makeTestParentServer()
-	origin0.Cachegroup = util.Ptr("originCG")
-	origin0.CachegroupID = util.Ptr(500)
-	origin0.HostName = util.Ptr("myorigin0")
-	origin0.ID = util.Ptr(45)
+	origin0.CacheGroup = "originCG"
+	origin0.CacheGroupID = 500
+	origin0.HostName = "myorigin0"
+	origin0.ID = 45
 	setIP(origin0, "192.168.2.2")
 	origin0.Type = tc.OriginTypeName
-	origin0.TypeID = util.Ptr(991)
+	origin0.TypeID = 991
 
 	origin1 := makeTestParentServer()
-	origin1.Cachegroup = util.Ptr("originCG")
-	origin1.CachegroupID = util.Ptr(500)
-	origin1.HostName = util.Ptr("myorigin1")
-	origin1.ID = util.Ptr(46)
+	origin1.CacheGroup = "originCG"
+	origin1.CacheGroupID = 500
+	origin1.HostName = "myorigin1"
+	origin1.ID = 46
 	setIP(origin1, "192.168.2.3")
 	origin1.Type = tc.OriginTypeName
-	origin1.TypeID = util.Ptr(991)
+	origin1.TypeID = 991
 
 	servers := []Server{*edge0, *edge1, *origin0, *origin1}
 
@@ -579,16 +579,16 @@ func TestMakeStrategiesPeeringRing(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge0.Cachegroup
-	eCG.ID = edge0.CachegroupID
-	eCG.ParentName = origin0.Cachegroup
-	eCG.ParentCachegroupID = origin0.CachegroupID
+	eCG.Name = util.Ptr(edge0.CacheGroup)
+	eCG.ID = util.Ptr(edge0.CacheGroupID)
+	eCG.ParentName = util.Ptr(origin0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(origin0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	oCG := &tc.CacheGroupNullableV5{}
-	oCG.Name = origin0.Cachegroup
-	oCG.ID = origin0.CachegroupID
+	oCG.Name = util.Ptr(origin0.CacheGroup)
+	oCG.ID = util.Ptr(origin0.CacheGroupID)
 	oCGType := tc.CacheGroupOriginTypeName
 	oCG.Type = &oCGType
 
@@ -596,7 +596,7 @@ func TestMakeStrategiesPeeringRing(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *origin0.ID,
+			Server:          origin0.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -785,34 +785,34 @@ func TestMakeStrategiesPeeringRingMSO(t *testing.T) {
 	}
 
 	edge0 := makeTestParentServer()
-	edge0.ID = util.Ptr(12)
-	edge0.HostName = util.Ptr("edge0")
-	edge0.Cachegroup = util.Ptr("edgeCG")
-	edge0.CachegroupID = util.Ptr(400)
+	edge0.ID = 12
+	edge0.HostName = "edge0"
+	edge0.CacheGroup = "edgeCG"
+	edge0.CacheGroupID = 400
 
 	edge1 := makeTestParentServer()
-	edge1.ID = util.Ptr(13)
-	edge1.HostName = util.Ptr("edge1")
-	edge1.Cachegroup = util.Ptr("edgeCG")
-	edge1.CachegroupID = util.Ptr(400)
+	edge1.ID = 13
+	edge1.HostName = "edge1"
+	edge1.CacheGroup = "edgeCG"
+	edge1.CacheGroupID = 400
 
 	origin0 := makeTestParentServer()
-	origin0.Cachegroup = util.Ptr("originCG")
-	origin0.CachegroupID = util.Ptr(500)
-	origin0.HostName = util.Ptr("myorigin0")
-	origin0.ID = util.Ptr(45)
+	origin0.CacheGroup = "originCG"
+	origin0.CacheGroupID = 500
+	origin0.HostName = "myorigin0"
+	origin0.ID = 45
 	setIP(origin0, "192.168.2.2")
 	origin0.Type = tc.OriginTypeName
-	origin0.TypeID = util.Ptr(991)
+	origin0.TypeID = 991
 
 	origin1 := makeTestParentServer()
-	origin1.Cachegroup = util.Ptr("originCG")
-	origin1.CachegroupID = util.Ptr(500)
-	origin1.HostName = util.Ptr("myorigin1")
-	origin1.ID = util.Ptr(46)
+	origin1.CacheGroup = "originCG"
+	origin1.CacheGroupID = 500
+	origin1.HostName = "myorigin1"
+	origin1.ID = 46
 	setIP(origin1, "192.168.2.3")
 	origin1.Type = tc.OriginTypeName
-	origin1.TypeID = util.Ptr(991)
+	origin1.TypeID = 991
 
 	servers := []Server{*edge0, *edge1, *origin0, *origin1}
 
@@ -835,16 +835,16 @@ func TestMakeStrategiesPeeringRingMSO(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge0.Cachegroup
-	eCG.ID = edge0.CachegroupID
-	eCG.ParentName = origin0.Cachegroup
-	eCG.ParentCachegroupID = origin0.CachegroupID
+	eCG.Name = util.Ptr(edge0.CacheGroup)
+	eCG.ID = util.Ptr(edge0.CacheGroupID)
+	eCG.ParentName = util.Ptr(origin0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(origin0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	oCG := &tc.CacheGroupNullableV5{}
-	oCG.Name = origin0.Cachegroup
-	oCG.ID = origin0.CachegroupID
+	oCG.Name = util.Ptr(origin0.CacheGroup)
+	oCG.ID = util.Ptr(origin0.CacheGroupID)
 	oCGType := tc.CacheGroupOriginTypeName
 	oCG.Type = &oCGType
 
@@ -852,7 +852,7 @@ func TestMakeStrategiesPeeringRingMSO(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *origin0.ID,
+			Server:          origin0.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -1016,27 +1016,27 @@ func TestMakeStrategiesPeeringRingNonTopology(t *testing.T) {
 	}
 
 	edge0 := makeTestParentServer()
-	edge0.ID = util.Ptr(12)
-	edge0.HostName = util.Ptr("edge0")
-	edge0.Cachegroup = util.Ptr("edgeCG")
-	edge0.CachegroupID = util.Ptr(400)
+	edge0.ID = 12
+	edge0.HostName = "edge0"
+	edge0.CacheGroup = "edgeCG"
+	edge0.CacheGroupID = 400
 
 	edge1 := makeTestParentServer()
-	edge1.ID = util.Ptr(13)
-	edge1.HostName = util.Ptr("edge1")
-	edge1.Cachegroup = util.Ptr("edgeCG")
-	edge1.CachegroupID = util.Ptr(400)
+	edge1.ID = 13
+	edge1.HostName = "edge1"
+	edge1.CacheGroup = "edgeCG"
+	edge1.CacheGroupID = 400
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG")
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG"
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG")
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG"
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	servers := []Server{*edge0, *edge1, *mid0, *mid1}
@@ -1046,36 +1046,36 @@ func TestMakeStrategiesPeeringRingNonTopology(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge0.Cachegroup
-	eCG.ID = edge0.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
+	eCG.Name = util.Ptr(edge0.CacheGroup)
+	eCG.ID = util.Ptr(edge0.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid0.Cachegroup
-	mCG.ID = mid0.CachegroupID
-	mCGType := tc.CacheGroupMidTypeName
-	mCG.Type = &mCGType
+	mCG.Name = util.Ptr(mid0.CacheGroup)
+	mCG.ID = util.Ptr(mid0.CacheGroupID)
+	mCGType := util.Ptr(tc.CacheGroupMidTypeName)
+	mCG.Type = mCGType
 
 	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG}
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *edge0.ID,
+			Server:          edge0.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *edge0.ID,
+			Server:          edge0.ID,
 			DeliveryService: *ds1.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *edge1.ID,
+			Server:          edge1.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *edge1.ID,
+			Server:          edge1.ID,
 			DeliveryService: *ds1.ID,
 		},
 	}
@@ -1300,44 +1300,44 @@ func TestMakeStrategiesDotYAMLFirstLastNoTopoParams(t *testing.T) {
 	}
 
 	edge := makeTestParentServer()
-	edge.Cachegroup = util.Ptr("edgeCG")
-	edge.CachegroupID = util.Ptr(400)
+	edge.CacheGroup = "edgeCG"
+	edge.CacheGroupID = 400
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG0")
-	mid0.CachegroupID = util.Ptr(500)
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG0"
+	mid0.CacheGroupID = 500
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 	mid0.Type = tc.CacheGroupMidTypeName
-	mid0.TypeID = util.Ptr(990)
+	mid0.TypeID = 990
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG1")
-	mid1.CachegroupID = util.Ptr(501)
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG1"
+	mid1.CacheGroupID = 501
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 	mid1.Type = tc.CacheGroupMidTypeName
-	mid1.TypeID = util.Ptr(990)
+	mid1.TypeID = 990
 
 	org0 := makeTestParentServer()
-	org0.Cachegroup = util.Ptr("orgCG0")
-	org0.CachegroupID = util.Ptr(502)
-	org0.HostName = util.Ptr("myorg0")
-	org0.ID = util.Ptr(48)
+	org0.CacheGroup = "orgCG0"
+	org0.CacheGroupID = 502
+	org0.HostName = "myorg0"
+	org0.ID = 48
 	setIP(org0, "192.168.2.4")
 	org0.Type = tc.OriginTypeName
-	org0.TypeID = util.Ptr(991)
+	org0.TypeID = 991
 
 	org1 := makeTestParentServer()
-	org1.Cachegroup = util.Ptr("orgCG1")
-	org1.CachegroupID = util.Ptr(503)
-	org1.HostName = util.Ptr("myorg1")
-	org1.ID = util.Ptr(49)
+	org1.CacheGroup = "orgCG1"
+	org1.CacheGroupID = 503
+	org1.HostName = "myorg1"
+	org1.ID = 49
 	setIP(org1, "192.168.2.5")
 	org1.Type = tc.OriginTypeName
-	org1.TypeID = util.Ptr(991)
+	org1.TypeID = 991
 
 	servers := []Server{*edge, *mid0, *mid1, *org0, *org1}
 
@@ -1371,61 +1371,61 @@ func TestMakeStrategiesDotYAMLFirstLastNoTopoParams(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge.Cachegroup
-	eCG.ID = edge.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
-	eCG.SecondaryParentName = mid1.Cachegroup
-	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCG.Name = util.Ptr(edge.CacheGroup)
+	eCG.ID = util.Ptr(edge.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
+	eCG.SecondaryParentName = util.Ptr(mid1.CacheGroup)
+	eCG.SecondaryParentCachegroupID = util.Ptr(mid1.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG0 := &tc.CacheGroupNullableV5{}
-	mCG0.Name = mid0.Cachegroup
-	mCG0.ID = mid0.CachegroupID
-	mCG0.ParentName = org0.Cachegroup
-	mCG0.ParentCachegroupID = org0.CachegroupID
-	mCG0.SecondaryParentName = org1.Cachegroup
-	mCG0.SecondaryParentCachegroupID = org1.CachegroupID
+	mCG0.Name = util.Ptr(mid0.CacheGroup)
+	mCG0.ID = util.Ptr(mid0.CacheGroupID)
+	mCG0.ParentName = util.Ptr(org0.CacheGroup)
+	mCG0.ParentCachegroupID = util.Ptr(org0.CacheGroupID)
+	mCG0.SecondaryParentName = util.Ptr(org1.CacheGroup)
+	mCG0.SecondaryParentCachegroupID = util.Ptr(org1.CacheGroupID)
 	mCGType0 := tc.CacheGroupMidTypeName
 	mCG0.Type = &mCGType0
 
 	mCG1 := &tc.CacheGroupNullableV5{}
-	mCG1.Name = mid1.Cachegroup
-	mCG1.ID = mid1.CachegroupID
-	mCG1.ParentName = org1.Cachegroup
-	mCG1.ParentCachegroupID = org1.CachegroupID
-	mCG1.SecondaryParentName = org0.Cachegroup
-	mCG1.SecondaryParentCachegroupID = org0.CachegroupID
+	mCG1.Name = util.Ptr(mid1.CacheGroup)
+	mCG1.ID = util.Ptr(mid1.CacheGroupID)
+	mCG1.ParentName = util.Ptr(org1.CacheGroup)
+	mCG1.ParentCachegroupID = util.Ptr(org1.CacheGroupID)
+	mCG1.SecondaryParentName = util.Ptr(org0.CacheGroup)
+	mCG1.SecondaryParentCachegroupID = util.Ptr(org0.CacheGroupID)
 	mCGType1 := tc.CacheGroupMidTypeName
 	mCG1.Type = &mCGType1
 
 	oCG0 := &tc.CacheGroupNullableV5{}
-	oCG0.Name = org0.Cachegroup
-	oCG0.ID = org0.CachegroupID
+	oCG0.Name = util.Ptr(org0.CacheGroup)
+	oCG0.ID = util.Ptr(org0.CacheGroupID)
 	oCGType0 := tc.CacheGroupOriginTypeName
 	oCG0.Type = &oCGType0
 
 	oCG1 := &tc.CacheGroupNullableV5{}
-	oCG1.Name = org1.Cachegroup
-	oCG1.ID = org1.CachegroupID
+	oCG1.Name = util.Ptr(org1.CacheGroup)
+	oCG1.ID = util.Ptr(org1.CacheGroupID)
 	oCGType1 := tc.CacheGroupOriginTypeName
 	oCG1.Type = &oCGType1
 
 	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG0, *mCG1, *oCG0, *oCG1}
 
 	dss := []DeliveryServiceServer{
-		{Server: *edge.ID, DeliveryService: *ds0.ID},
-		{Server: *mid0.ID, DeliveryService: *ds0.ID},
-		{Server: *mid1.ID, DeliveryService: *ds0.ID},
-		{Server: *org0.ID, DeliveryService: *ds0.ID},
-		{Server: *org1.ID, DeliveryService: *ds0.ID},
+		{Server: edge.ID, DeliveryService: *ds0.ID},
+		{Server: mid0.ID, DeliveryService: *ds0.ID},
+		{Server: mid1.ID, DeliveryService: *ds0.ID},
+		{Server: org0.ID, DeliveryService: *ds0.ID},
+		{Server: org1.ID, DeliveryService: *ds0.ID},
 
-		{Server: *edge.ID, DeliveryService: *ds1.ID},
-		{Server: *mid0.ID, DeliveryService: *ds1.ID},
-		{Server: *mid1.ID, DeliveryService: *ds1.ID},
-		{Server: *org0.ID, DeliveryService: *ds1.ID},
-		{Server: *org1.ID, DeliveryService: *ds1.ID},
+		{Server: edge.ID, DeliveryService: *ds1.ID},
+		{Server: mid0.ID, DeliveryService: *ds1.ID},
+		{Server: mid1.ID, DeliveryService: *ds1.ID},
+		{Server: org0.ID, DeliveryService: *ds1.ID},
+		{Server: org1.ID, DeliveryService: *ds1.ID},
 	}
 	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",
@@ -1523,13 +1523,13 @@ func TestMakeStrategiesDotYamlMSONoTopologyNoMid(t *testing.T) {
 	edge := makeTestParentServer()
 
 	origin0 := makeTestParentServer()
-	origin0.Cachegroup = util.Ptr("originCG")
-	origin0.CachegroupID = util.Ptr(500)
-	origin0.HostName = util.Ptr("myorigin0")
-	origin0.ID = util.Ptr(45)
+	origin0.CacheGroup = "originCG"
+	origin0.CacheGroupID = 500
+	origin0.HostName = "myorigin0"
+	origin0.ID = 45
 	setIP(origin0, "192.168.2.2")
 	origin0.Type = tc.OriginTypeName
-	origin0.TypeID = util.Ptr(991)
+	origin0.TypeID = 991
 
 	servers := []Server{*edge, *origin0}
 
@@ -1538,16 +1538,16 @@ func TestMakeStrategiesDotYamlMSONoTopologyNoMid(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge.Cachegroup
-	eCG.ID = edge.CachegroupID
-	eCG.ParentName = origin0.Cachegroup
-	eCG.ParentCachegroupID = origin0.CachegroupID
+	eCG.Name = util.Ptr(edge.CacheGroup)
+	eCG.ID = util.Ptr(edge.CacheGroupID)
+	eCG.ParentName = util.Ptr(origin0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(origin0.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	oCG := &tc.CacheGroupNullableV5{}
-	oCG.Name = origin0.Cachegroup
-	oCG.ID = origin0.CachegroupID
+	oCG.Name = util.Ptr(origin0.CacheGroup)
+	oCG.ID = util.Ptr(origin0.CacheGroupID)
 	oCGType := tc.CacheGroupOriginTypeName
 	oCG.Type = &oCGType
 
@@ -1555,11 +1555,11 @@ func TestMakeStrategiesDotYamlMSONoTopologyNoMid(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		{
-			Server:          *edge.ID,
+			Server:          edge.ID,
 			DeliveryService: *ds0.ID,
 		},
 		{
-			Server:          *origin0.ID,
+			Server:          origin0.ID,
 			DeliveryService: *ds0.ID,
 		},
 	}
@@ -1614,33 +1614,33 @@ func TestMakeStrategiesDotYamlMSONoTopoMultiCG(t *testing.T) {
 	}
 
 	edge := makeTestParentServer()
-	edge.Cachegroup = util.Ptr("edgeCG")
-	edge.CachegroupID = util.Ptr(400)
+	edge.CacheGroup = "edgeCG"
+	edge.CacheGroupID = 400
 
 	mid := makeTestParentServer()
-	mid.Cachegroup = util.Ptr("midCG")
-	mid.CachegroupID = util.Ptr(500)
-	mid.HostName = util.Ptr("mid0")
-	mid.ID = util.Ptr(45)
+	mid.CacheGroup = "midCG"
+	mid.CacheGroupID = 500
+	mid.HostName = "mid0"
+	mid.ID = 45
 	setIP(mid, "192.168.2.2")
 
 	org0 := makeTestParentServer()
-	org0.Cachegroup = util.Ptr("orgCG0")
-	org0.CachegroupID = util.Ptr(501)
-	org0.HostName = util.Ptr("org0")
-	org0.ID = util.Ptr(46)
+	org0.CacheGroup = "orgCG0"
+	org0.CacheGroupID = 501
+	org0.HostName = "org0"
+	org0.ID = 46
 	setIP(org0, "192.168.2.3")
 	org0.Type = tc.OriginTypeName
-	org0.TypeID = util.Ptr(991)
+	org0.TypeID = 991
 
 	org1 := makeTestParentServer()
-	org1.Cachegroup = util.Ptr("orgCG1")
-	org1.CachegroupID = util.Ptr(502)
-	org1.HostName = util.Ptr("org1")
-	org1.ID = util.Ptr(47)
+	org1.CacheGroup = "orgCG1"
+	org1.CacheGroupID = 502
+	org1.HostName = "org1"
+	org1.ID = 47
 	setIP(org1, "192.168.2.4")
 	org1.Type = tc.OriginTypeName
-	org1.TypeID = util.Ptr(991)
+	org1.TypeID = 991
 
 	servers := []Server{*edge, *mid, *org0, *org1}
 
@@ -1649,29 +1649,29 @@ func TestMakeStrategiesDotYamlMSONoTopoMultiCG(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge.Cachegroup
-	eCG.ID = edge.CachegroupID
-	eCG.ParentName = mid.Cachegroup
-	eCG.ParentCachegroupID = mid.CachegroupID
+	eCG.Name = util.Ptr(edge.CacheGroup)
+	eCG.ID = util.Ptr(edge.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	// NOTE: no parent cache groups specified
 	mCG := &tc.CacheGroupNullableV5{}
-	mCG.Name = mid.Cachegroup
-	mCG.ID = mid.CachegroupID
+	mCG.Name = util.Ptr(mid.CacheGroup)
+	mCG.ID = util.Ptr(mid.CacheGroupID)
 	mCGType := tc.CacheGroupMidTypeName
 	mCG.Type = &mCGType
 
 	oCG0 := &tc.CacheGroupNullableV5{}
-	oCG0.Name = org0.Cachegroup
-	oCG0.ID = org0.CachegroupID
+	oCG0.Name = util.Ptr(org0.CacheGroup)
+	oCG0.ID = util.Ptr(org0.CacheGroupID)
 	oCG0Type := tc.CacheGroupOriginTypeName
 	oCG0.Type = &oCG0Type
 
 	oCG1 := &tc.CacheGroupNullableV5{}
-	oCG1.Name = org1.Cachegroup
-	oCG1.ID = org1.CachegroupID
+	oCG1.Name = util.Ptr(org1.CacheGroup)
+	oCG1.ID = util.Ptr(org1.CacheGroupID)
 	oCG1Type := tc.CacheGroupOriginTypeName
 	oCG1.Type = &oCG1Type
 
@@ -1679,15 +1679,15 @@ func TestMakeStrategiesDotYamlMSONoTopoMultiCG(t *testing.T) {
 
 	dss := []DeliveryServiceServer{
 		DeliveryServiceServer{
-			Server:          *edge.ID,
+			Server:          edge.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *org0.ID,
+			Server:          org0.ID,
 			DeliveryService: *ds0.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *org1.ID,
+			Server:          org1.ID,
 			DeliveryService: *ds0.ID,
 		},
 	}
@@ -1830,54 +1830,54 @@ func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
 	}
 
 	edge := makeTestParentServer()
-	edge.Cachegroup = util.Ptr("edgeCG")
-	edge.CachegroupID = util.Ptr(400)
+	edge.CacheGroup = "edgeCG"
+	edge.CacheGroupID = 400
 
 	mid0 := makeTestParentServer()
-	mid0.Cachegroup = util.Ptr("midCG0")
-	mid0.CachegroupID = util.Ptr(500)
-	mid0.HostName = util.Ptr("mymid0")
-	mid0.ID = util.Ptr(45)
+	mid0.CacheGroup = "midCG0"
+	mid0.CacheGroupID = 500
+	mid0.HostName = "mymid0"
+	mid0.ID = 45
 	setIP(mid0, "192.168.2.2")
 
 	mid1 := makeTestParentServer()
-	mid1.Cachegroup = util.Ptr("midCG1")
-	mid1.CachegroupID = util.Ptr(501)
-	mid1.HostName = util.Ptr("mymid1")
-	mid1.ID = util.Ptr(46)
+	mid1.CacheGroup = "midCG1"
+	mid1.CacheGroupID = 501
+	mid1.HostName = "mymid1"
+	mid1.ID = 46
 	setIP(mid1, "192.168.2.3")
 
 	opl0 := makeTestParentServer()
-	opl0.Cachegroup = util.Ptr("oplCG0")
-	opl0.CachegroupID = util.Ptr(502)
-	opl0.HostName = util.Ptr("myopl0")
-	opl0.ID = util.Ptr(46)
+	opl0.CacheGroup = "oplCG0"
+	opl0.CacheGroupID = 502
+	opl0.HostName = "myopl0"
+	opl0.ID = 46
 	setIP(opl0, "192.168.2.4")
 
 	opl1 := makeTestParentServer()
-	opl1.Cachegroup = util.Ptr("oplCG1")
-	opl1.CachegroupID = util.Ptr(503)
-	opl1.HostName = util.Ptr("myopl1")
-	opl1.ID = util.Ptr(47)
+	opl1.CacheGroup = "oplCG1"
+	opl1.CacheGroupID = 503
+	opl1.HostName = "myopl1"
+	opl1.ID = 47
 	setIP(opl1, "192.168.2.5")
 
 	org0 := makeTestParentServer()
-	org0.Cachegroup = util.Ptr("orgCG0")
-	org0.CachegroupID = util.Ptr(504)
-	org0.HostName = util.Ptr("myorg0")
-	org0.ID = util.Ptr(48)
+	org0.CacheGroup = "orgCG0"
+	org0.CacheGroupID = 504
+	org0.HostName = "myorg0"
+	org0.ID = 48
 	setIP(org0, "192.168.2.6")
 	org0.Type = tc.OriginTypeName
-	org0.TypeID = util.Ptr(991)
+	org0.TypeID = 991
 
 	org1 := makeTestParentServer()
-	org1.Cachegroup = util.Ptr("orgCG1")
-	org1.CachegroupID = util.Ptr(505)
-	org1.HostName = util.Ptr("myorg1")
-	org1.ID = util.Ptr(49)
+	org1.CacheGroup = "orgCG1"
+	org1.CacheGroupID = 505
+	org1.HostName = "myorg1"
+	org1.ID = 49
 	setIP(org1, "192.168.2.7")
 	org1.Type = tc.OriginTypeName
-	org1.TypeID = util.Ptr(991)
+	org1.TypeID = 991
 
 	servers := []Server{*edge, *mid0, *mid1, *opl0, *opl1, *org0, *org1}
 
@@ -1919,80 +1919,80 @@ func TestMakeStrategiesDotYAMLFirstInnerLastParams(t *testing.T) {
 	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
 
 	eCG := &tc.CacheGroupNullableV5{}
-	eCG.Name = edge.Cachegroup
-	eCG.ID = edge.CachegroupID
-	eCG.ParentName = mid0.Cachegroup
-	eCG.ParentCachegroupID = mid0.CachegroupID
-	eCG.SecondaryParentName = mid1.Cachegroup
-	eCG.SecondaryParentCachegroupID = mid1.CachegroupID
+	eCG.Name = util.Ptr(edge.CacheGroup)
+	eCG.ID = util.Ptr(edge.CacheGroupID)
+	eCG.ParentName = util.Ptr(mid0.CacheGroup)
+	eCG.ParentCachegroupID = util.Ptr(mid0.CacheGroupID)
+	eCG.SecondaryParentName = util.Ptr(mid1.CacheGroup)
+	eCG.SecondaryParentCachegroupID = util.Ptr(mid1.CacheGroupID)
 	eCGType := tc.CacheGroupEdgeTypeName
 	eCG.Type = &eCGType
 
 	mCG0 := &tc.CacheGroupNullableV5{}
-	mCG0.Name = mid0.Cachegroup
-	mCG0.ID = mid0.CachegroupID
-	mCG0.ParentName = opl0.Cachegroup
-	mCG0.ParentCachegroupID = opl0.CachegroupID
-	mCG0.SecondaryParentName = opl1.Cachegroup
-	mCG0.SecondaryParentCachegroupID = opl1.CachegroupID
+	mCG0.Name = util.Ptr(mid0.CacheGroup)
+	mCG0.ID = util.Ptr(mid0.CacheGroupID)
+	mCG0.ParentName = util.Ptr(opl0.CacheGroup)
+	mCG0.ParentCachegroupID = util.Ptr(opl0.CacheGroupID)
+	mCG0.SecondaryParentName = util.Ptr(opl1.CacheGroup)
+	mCG0.SecondaryParentCachegroupID = util.Ptr(opl1.CacheGroupID)
 	mCGType0 := tc.CacheGroupMidTypeName
 	mCG0.Type = &mCGType0
 
 	mCG1 := &tc.CacheGroupNullableV5{}
-	mCG1.Name = mid1.Cachegroup
-	mCG1.ID = mid1.CachegroupID
-	mCG1.ParentName = opl1.Cachegroup
-	mCG1.ParentCachegroupID = opl1.CachegroupID
-	mCG1.SecondaryParentName = opl0.Cachegroup
-	mCG1.SecondaryParentCachegroupID = opl0.CachegroupID
+	mCG1.Name = util.Ptr(mid1.CacheGroup)
+	mCG1.ID = util.Ptr(mid1.CacheGroupID)
+	mCG1.ParentName = util.Ptr(opl1.CacheGroup)
+	mCG1.ParentCachegroupID = util.Ptr(opl1.CacheGroupID)
+	mCG1.SecondaryParentName = util.Ptr(opl0.CacheGroup)
+	mCG1.SecondaryParentCachegroupID = util.Ptr(opl0.CacheGroupID)
 	mCGType1 := tc.CacheGroupMidTypeName
 	mCG1.Type = &mCGType1
 
 	oplCG0 := &tc.CacheGroupNullableV5{}
-	oplCG0.Name = opl0.Cachegroup
-	oplCG0.ID = opl0.CachegroupID
-	oplCG0.ParentName = org0.Cachegroup
-	oplCG0.ParentCachegroupID = org0.CachegroupID
-	oplCG0.SecondaryParentName = org1.Cachegroup
-	oplCG0.SecondaryParentCachegroupID = org1.CachegroupID
+	oplCG0.Name = util.Ptr(opl0.CacheGroup)
+	oplCG0.ID = util.Ptr(opl0.CacheGroupID)
+	oplCG0.ParentName = util.Ptr(org0.CacheGroup)
+	oplCG0.ParentCachegroupID = util.Ptr(org0.CacheGroupID)
+	oplCG0.SecondaryParentName = util.Ptr(org1.CacheGroup)
+	oplCG0.SecondaryParentCachegroupID = util.Ptr(org1.CacheGroupID)
 	oplCGType0 := tc.CacheGroupMidTypeName
 	oplCG0.Type = &oplCGType0
 
 	oplCG1 := &tc.CacheGroupNullableV5{}
-	oplCG1.Name = opl1.Cachegroup
-	oplCG1.ID = opl1.CachegroupID
-	oplCG1.ParentName = org1.Cachegroup
-	oplCG1.ParentCachegroupID = org1.CachegroupID
-	oplCG1.SecondaryParentName = org0.Cachegroup
-	oplCG1.SecondaryParentCachegroupID = org0.CachegroupID
+	oplCG1.Name = util.Ptr(opl1.CacheGroup)
+	oplCG1.ID = util.Ptr(opl1.CacheGroupID)
+	oplCG1.ParentName = util.Ptr(org1.CacheGroup)
+	oplCG1.ParentCachegroupID = util.Ptr(org1.CacheGroupID)
+	oplCG1.SecondaryParentName = util.Ptr(org0.CacheGroup)
+	oplCG1.SecondaryParentCachegroupID = util.Ptr(org0.CacheGroupID)
 	oplCGType1 := tc.CacheGroupMidTypeName
 	oplCG1.Type = &oplCGType1
 
 	oCG0 := &tc.CacheGroupNullableV5{}
-	oCG0.Name = org0.Cachegroup
-	oCG0.ID = org0.CachegroupID
+	oCG0.Name = util.Ptr(org0.CacheGroup)
+	oCG0.ID = util.Ptr(org0.CacheGroupID)
 	oCGType0 := tc.CacheGroupOriginTypeName
 	oCG0.Type = &oCGType0
 
 	oCG1 := &tc.CacheGroupNullableV5{}
-	oCG1.Name = org1.Cachegroup
-	oCG1.ID = org1.CachegroupID
+	oCG1.Name = util.Ptr(org1.CacheGroup)
+	oCG1.ID = util.Ptr(org1.CacheGroupID)
 	oCGType1 := tc.CacheGroupOriginTypeName
 	oCG1.Type = &oCGType1
 
 	cgs := []tc.CacheGroupNullableV5{*eCG, *mCG0, *mCG1, *oplCG0, *oplCG1, *oCG0, *oCG1}
 
 	dss := []DeliveryServiceServer{
-		{Server: *org0.ID, DeliveryService: *ds0.ID},
-		{Server: *org1.ID, DeliveryService: *ds0.ID},
+		{Server: org0.ID, DeliveryService: *ds0.ID},
+		{Server: org1.ID, DeliveryService: *ds0.ID},
 
-		{Server: *edge.ID, DeliveryService: *ds1.ID},
-		{Server: *mid0.ID, DeliveryService: *ds1.ID},
-		{Server: *mid1.ID, DeliveryService: *ds1.ID},
-		{Server: *opl0.ID, DeliveryService: *ds1.ID},
-		{Server: *opl1.ID, DeliveryService: *ds1.ID},
-		{Server: *org0.ID, DeliveryService: *ds1.ID},
-		{Server: *org1.ID, DeliveryService: *ds1.ID},
+		{Server: edge.ID, DeliveryService: *ds1.ID},
+		{Server: mid0.ID, DeliveryService: *ds1.ID},
+		{Server: mid1.ID, DeliveryService: *ds1.ID},
+		{Server: opl0.ID, DeliveryService: *ds1.ID},
+		{Server: opl1.ID, DeliveryService: *ds1.ID},
+		{Server: org0.ID, DeliveryService: *ds1.ID},
+		{Server: org1.ID, DeliveryService: *ds1.ID},
 	}
 	cdn := &tc.CDNV5{
 		DomainName: "cdndomain.example",

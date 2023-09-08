@@ -29,7 +29,7 @@ import (
 func TestMakeCacheDotConfig(t *testing.T) {
 	server := makeGenericServer()
 	serverProfile := "myProfile"
-	server.ProfileNames = []string{serverProfile}
+	server.Profiles = []string{serverProfile}
 	servers := []Server{*server}
 
 	ds0 := makeGenericDS()

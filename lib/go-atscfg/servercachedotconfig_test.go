@@ -32,7 +32,7 @@ func TestMakeServerCacheDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.HostName = &serverName
+	server.HostName = serverName
 	server.Type = tc.MidTypePrefix + "_CUSTOM"
 
 	makeDS := func(name string, origin string, dsType *string) DeliveryService {
