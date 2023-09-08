@@ -157,9 +157,15 @@
 		},
 		{
 			"configFile": "rascal.properties",
+			"name": "health.polling.format",
+			"secure": false,
+			"value": "vstats"
+		},
+		{
+			"configFile": "rascal.properties",
 			"name": "health.polling.url",
 			"secure": false,
-			"value": "http://${hostname}/_astats?application=&inf.name=${interface_name}"
+			"value": "http://${hostname}:2000/?inf.name=${interface_name}"
 		},
 		{
 			"configFile": "storage.config",

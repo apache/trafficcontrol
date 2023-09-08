@@ -91,6 +91,7 @@ type RestartData struct {
 	TrafficServerRestart bool // a trafficserver restart is required
 	RemapConfigReload    bool // remap.config should be reloaded
 	HitchReload          bool // hitch should be reloaded
+	VarnishReload        bool // varnish should be reloaded
 }
 
 type ConfigFile struct {
@@ -522,6 +523,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) (*FileRestartData, error
 	ntpdRestart := cfg.Name == "ntpd.conf"
 	sysCtlReload := cfg.Name == "sysctl.conf"
 	hitchReload := cfg.Name == "hitch.conf"
+	varnishReload := cfg.Name == "default.vcl"
 
 	log.Debugf("Reload state after %s: remap.config: %t reload: %t restart: %t ntpd: %t sysctl: %t", cfg.Name, remapConfigReload, trafficCtlReload, trafficServerRestart, ntpdRestart, sysCtlReload)
 
@@ -535,6 +537,7 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) (*FileRestartData, error
 			TrafficServerRestart: trafficServerRestart,
 			RemapConfigReload:    remapConfigReload,
 			HitchReload:          hitchReload,
+			VarnishReload:        varnishReload,
 		},
 	}, nil
 }
@@ -814,6 +817,7 @@ func (r *TrafficOpsReq) CheckReloadRestart(data []FileRestartData) RestartData {
 		rd.TrafficServerRestart = rd.TrafficServerRestart || changedFile.TrafficServerRestart
 		rd.RemapConfigReload = rd.RemapConfigReload || changedFile.RemapConfigReload
 		rd.HitchReload = rd.HitchReload || changedFile.HitchReload
+		rd.VarnishReload = rd.VarnishReload || changedFile.VarnishReload
 	}
 	return rd
 }
@@ -1153,7 +1157,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 	// If check-reload does not know about these and we do, then we should initiate
 	// a reload as well
 	if serviceNeeds != t3cutil.ServiceNeedsRestart && serviceNeeds != t3cutil.ServiceNeedsReload {
-		if r.TrafficCtlReload || r.RemapConfigReload {
+		if r.TrafficCtlReload || r.RemapConfigReload || r.VarnishReload {
 			log.Infof("ATS config files unchanged, we updated files via t3c-apply, ATS needs reload")
 			serviceNeeds = t3cutil.ServiceNeedsReload
 		}
@@ -1215,7 +1219,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 			reloadCommand := config.TSHome + config.TrafficCtl
 			reloadArgs := []string{"config", "reload"}
 			if cfg.CacheType == "varnish" {
-				reloadCommand = "varnishreload"
+				reloadCommand = "/usr/sbin/varnishreload"
 				reloadArgs = []string{}
 			}
 			if _, _, err := util.ExecCommand(reloadCommand, reloadArgs...); err != nil {
