@@ -95,7 +95,7 @@ export class DeliveryServicePage extends BasePage {
 			element(by.name("active")).sendKeys("Active"),
 			element(by.id("type")).sendKeys(type),
 			element(by.name("tenantId")).click().then(() => element(by.name(tenant)).click()),
-			element(by.name("cdn")).sendKeys("dummycdn")
+			element(by.name("cdn")).sendKeys("dummycdn"+randomize)
 		);
 
 		await Promise.all(ps);
