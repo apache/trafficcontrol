@@ -121,8 +121,7 @@ export const deliveryservices = {
 					name: "location",
 					value: "/a/b/c/d",
 					configFile: "remap.config",
-					secure: false,
-					noRandomize: true
+					secure: false
 				}
 			]
 		},
@@ -159,7 +158,7 @@ export const deliveryservices = {
 					qstringIgnore: 0,
 					rangeRequestHandling: 0,
 					regionalGeoBlocking: false,
-					requiredCapabilities: ["DSTestCap"],
+					requiredCapabilities: [],
 					tenantId: 0,
 					typeId: 1,
 					xmlId: "dstestro1",

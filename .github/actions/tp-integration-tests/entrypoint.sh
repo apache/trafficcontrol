@@ -27,7 +27,7 @@ onFail() {
   if [[ -f "${REPO_DIR}/traffic_ops/traffic_ops_golang/out.log" ]]; then
     mv "${REPO_DIR}/traffic_ops/traffic_ops_golang/out.log" Reports/to.log
   fi
-  docker logs $CHROME_CONTAINER > Reports/chromium.log 2>&1;
+  docker logs $CHROME_CONTAINER > Reports/chrome.log 2>&1;
   docker logs $HUB_CONTAINER > Reports/hub.log 2>&1;
   echo "Detailed logs produced info Reports artifact"
   exit 1

@@ -315,7 +315,7 @@ export const topologies = {
             data: [
                 {
                     cacheGroupID: 0,
-                    cdnID: 2,
+                    cdnID: 0,
                     domainName: "test.net",
                     hostName: "topologieserver1",
                     httpsPort: 443,
@@ -350,7 +350,7 @@ export const topologies = {
                     mgmtIpGateway: "",
                     mgmtIpNetmask: "",
                     offlineReason: "",
-                    physLocationID: 2,
+                    physicalLocationID: 2,
                     profiles: ["TopTestPf"],
                     routerHostName: "",
                     routerPortName: "",
@@ -381,7 +381,7 @@ export const topologies = {
                 },
                 {
                     cacheGroupID: 0,
-                    cdnID: 2,
+                    cdnID: 0,
                     domainName: "test.net",
                     hostName: "topologieserver3",
                     httpsPort: 443,
@@ -434,7 +434,7 @@ export const topologies = {
 							route: "/phys_locations",
 							queryKey: "name",
 							queryValue: "TopTestPhys",
-							replace: "physLocationID"
+							replace: "physicalLocationID"
 						},
                         {
 							route: "/cdns",
