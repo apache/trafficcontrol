@@ -34,15 +34,16 @@ import (
 )
 
 func serversToLatest(svs tc.ServersV4Response) ([]atscfg.Server, error) {
-	serversV40 := make([]tc.ServerV40, 0)
+	//serversV40 := make([]tc.ServerV40, 0)
+	servers := make([]tc.ServerV5, 0)
 	for _, srv := range svs.Response {
-		serversV40 = append(serversV40, srv)
+		servers = append(servers, srv.Upgrade())
 	}
-	return atscfg.ToServers(serversV40), nil
+	return atscfg.ToServers(servers), nil
 }
 
 func serverToLatest(oldSv *tc.ServerV40) (*atscfg.Server, error) {
-	asv := atscfg.Server(*oldSv)
+	asv := atscfg.Server(oldSv.Upgrade())
 	return &asv, nil
 }
 

@@ -248,7 +248,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	oldServer := &atscfg.Server{}
 	if oldCfg != nil {
 		for _, toServer := range oldCfg.Servers {
-			if toServer.HostName != nil && *toServer.HostName == oldCfg.MetaData.CacheHostName {
+			if toServer.HostName != "nil" && toServer.HostName == oldCfg.MetaData.CacheHostName {
 				oldServer = &toServer
 				break
 			}
@@ -282,18 +282,18 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 		server := &atscfg.Server{}
 		for _, toServer := range toData.Servers {
-			if toServer.HostName != nil && *toServer.HostName == cacheHostName {
+			if toServer.HostName != "" && toServer.HostName == cacheHostName {
 				server = &toServer
 				break
 			}
 		}
-		if server.ID == nil {
+		if &server.ID == nil || server.ID == 0 {
 			return errors.New("server '" + cacheHostName + " not found in servers")
-		} else if server.CDNName == nil {
+		} else if &server.CDN == nil || server.CDN == "" {
 			return errors.New("server '" + cacheHostName + " missing CDNName")
-		} else if server.CDNID == nil {
+		} else if server.CDNID == 0 {
 			return errors.New("server '" + cacheHostName + " missing CDNID")
-		} else if len(server.ProfileNames) == 0 {
+		} else if len(server.Profiles) == 0 {
 			return errors.New("server '" + cacheHostName + " missing Profile")
 		}
 
@@ -305,13 +305,13 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			{
 
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
+				if oldCfg != nil && oldServer.CDN != "" && oldServer.CDN == server.CDN {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.SSLKeys)
 				}
-				keys, reqInf, err := toClient.GetCDNSSLKeys(tc.CDNName(*server.CDNName), reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDNSSLKeys("+*server.CDNName+")"))
+				keys, reqInf, err := toClient.GetCDNSSLKeys(tc.CDNName(server.CDN), reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDNSSLKeys("+server.CDN+")"))
 				if err != nil {
-					return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
+					return errors.New("getting cdn '" + server.CDN + "': " + err.Error())
 				}
 
 				if reqInf.StatusCode == http.StatusNotModified {
@@ -331,11 +331,11 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
+				if oldCfg != nil && oldServer.CDN != "" && oldServer.CDN == server.CDN {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServices)
 				}
-				dses, reqInf, err := toClient.GetCDNDeliveryServices(*server.CDNID, reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDNDeliveryServices("+strconv.Itoa(*server.CDNID)+")"))
+				dses, reqInf, err := toClient.GetCDNDeliveryServices(server.CDNID, reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDNDeliveryServices("+strconv.Itoa(server.CDNID)+")"))
 				if err != nil {
 					return errors.New("getting delivery services: " + err.Error())
 				}
@@ -368,11 +368,11 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 
 				{
 					reqHdr := (http.Header)(nil)
-					if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
+					if oldCfg != nil && oldServer.CDN != "" && oldServer.CDN == server.CDN {
 						reqHdr = MakeReqHdr(oldCfg.MetaData.DeliveryServiceServers)
 					}
-					dss, reqInf, err := toClient.GetDeliveryServiceServers(nil, nil, *server.CDNName, reqHdr)
-					log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceServers("+*server.CDNName+")"))
+					dss, reqInf, err := toClient.GetDeliveryServiceServers(nil, nil, server.CDN, reqHdr)
+					log.Infoln(toreq.RequestInfoStr(reqInf, "GetDeliveryServiceServers("+server.CDN+")"))
 					if err != nil {
 						return errors.New("getting delivery service servers: " + err.Error())
 					}
@@ -382,7 +382,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 						toData.DeliveryServiceServers = oldCfg.DeliveryServiceServers
 					} else {
 						log.Infof("Getting config: %v is modified, using new response", "DeliveryServiceServers")
-						toData.DeliveryServiceServers = filterUnusedDSS(dss, *toData.Server.CDNID, toData.Servers, toData.DeliveryServices)
+						toData.DeliveryServiceServers = filterUnusedDSS(dss, toData.Server.CDNID, toData.Servers, toData.DeliveryServices)
 					}
 					toData.MetaData.DeliveryServiceServers = MakeReqMetaData(reqInf.RespHeaders)
 					toIPs.Store(reqInf.RemoteAddr, nil)
@@ -517,7 +517,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			return nil
 		}
 		serverParamsFs := []func() error{}
-		for _, profileNamePtr := range server.ProfileNames {
+		for _, profileNamePtr := range server.Profiles {
 			profileName := profileNamePtr // must copy, because Go for-loops overwrite the variable every iteration
 			serverParamsFs = append(serverParamsFs, func() error { return serverParamsF(atscfg.ProfileName(profileName)) })
 		}
@@ -526,13 +526,13 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("cdnF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
+				if oldCfg != nil && oldServer.CDN != "" && oldServer.CDN == server.CDN {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.CDN)
 				}
-				cdn, reqInf, err := toClient.GetCDN(tc.CDNName(*server.CDNName), reqHdr)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDN("+*server.CDNName+")"))
+				cdn, reqInf, err := toClient.GetCDN(tc.CDNName(server.CDN), reqHdr)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetCDN("+server.CDN+")"))
 				if err != nil {
-					return errors.New("getting cdn '" + *server.CDNName + "': " + err.Error())
+					return errors.New("getting cdn '" + server.CDN + "': " + err.Error())
 				}
 				if reqInf.StatusCode == http.StatusNotModified {
 					log.Infof("Getting config: %v not modified, using old config", "CDN")
@@ -550,11 +550,11 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.CDNName != nil && *oldServer.CDNName == *server.CDNName {
+				if oldCfg != nil && oldServer.CDN != "nil" && oldServer.CDN == server.CDN {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.Jobs)
 				}
-				jobs, reqInf, err := toClient.GetJobs(reqHdr, *server.CDNName)
-				log.Infoln(toreq.RequestInfoStr(reqInf, "GetJobs("+*server.CDNName+")"))
+				jobs, reqInf, err := toClient.GetJobs(reqHdr, server.CDN)
+				log.Infoln(toreq.RequestInfoStr(reqInf, "GetJobs("+server.CDN+")"))
 				if err != nil {
 					return errors.New("getting jobs: " + err.Error())
 				}
@@ -946,16 +946,16 @@ func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
 func filterUnusedDSS(dsses []tc.DeliveryServiceServerV5, cdnID int, servers []atscfg.Server, dses []atscfg.DeliveryService) []atscfg.DeliveryServiceServer {
 	serverIDs := map[int]struct{}{}
 	for _, sv := range servers {
-		if sv.ID == nil {
+		if &sv.ID == nil || sv.ID == 0 {
 			log.Errorln("filterUnusedDSS got server with nil id, skipping!")
 			continue
-		} else if sv.CDNID == nil {
+		} else if &sv.CDNID == nil || sv.CDNID == 0 {
 			log.Errorln("filterUnusedDSS got server with nil cdnId, skipping!")
 			continue
-		} else if *sv.CDNID != cdnID {
+		} else if sv.CDNID != cdnID {
 			continue
 		}
-		serverIDs[*sv.ID] = struct{}{}
+		serverIDs[sv.ID] = struct{}{}
 	}
 	dsIDs := map[int]struct{}{}
 	for _, ds := range dses {
