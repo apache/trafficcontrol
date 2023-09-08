@@ -312,6 +312,64 @@ export const deliveryservices = {
 	],
 	tests: [
 		{
+			description: "Admin Role Delivery Service actions",
+			login: {
+				username: "TPAdmin",
+				password: "pa$$word"
+			},
+			add: [
+				{
+					description: "create ANY_MAP delivery service",
+					name: "tpdservice1",
+					tenant: "tenantSame",
+					type: "ANY_MAP",
+					validationMessage: "Delivery Service creation was successful"
+				},
+				{
+					description: "create DNS delivery service",
+					name: "tpdservice2",
+					tenant: "tenantSame",
+					type: "DNS",
+					validationMessage: "Delivery Service creation was successful"
+				},
+				{
+					description: "create STEERING delivery service",
+					name: "tpdservice3",
+					tenant: "tenantSame",
+					type: "STEERING",
+					validationMessage: "Delivery Service creation was successful"
+				}
+			],
+			update: [
+				{
+					name: "tpdservice1",
+					newName: "TPServiceNew1",
+					validationMessage: "Delivery Service update was successful"
+				}
+			],
+			assignServer: [
+				{
+					serverHostname: "DSTest",
+					xmlID: "TPServiceNew1",
+					validationMessage: "server assignments complete"
+				}
+			],
+			remove: [
+				{
+					name: "tpdservice1",
+					validationMessage: "ds was deleted."
+				},
+				{
+					name: "tpdservice2",
+					validationMessage: "ds was deleted."
+				},
+				{
+					name: "tpdservice3",
+					validationMessage: "ds was deleted."
+				}
+			]
+		},
+		{
 			description: "Read Only Role Delivery Service actions",
 			login: {
 				username: "TPReadOnly",
@@ -344,6 +402,64 @@ export const deliveryservices = {
 				{
 					name: "dstestro1",
 					validationMessage: "missing required Permissions: DELIVERY-SERVICE:DELETE"
+				}
+			]
+		},
+		{
+			description: "Operation Role Delivery Service actions",
+			login: {
+				username: "TPOperator",
+				password: "pa$$word"
+			},
+			add: [
+				{
+					description: "create ANY_MAP delivery service",
+					name: "optpdservice1",
+					tenant: "tenantSame",
+					type: "ANY_MAP",
+					validationMessage: "Delivery Service creation was successful"
+				},
+				{
+					description: "create DNS delivery service",
+					name: "optpdservice2",
+					tenant: "tenantSame",
+					type: "DNS",
+					validationMessage: "Delivery Service creation was successful"
+				},
+				{
+					description: "create STEERING delivery service",
+					name: "optpdservice3",
+					tenant: "tenantSame",
+					type: "STEERING",
+					validationMessage: "Delivery Service creation was successful"
+				}
+			],
+			update: [
+				{
+					name: "optpdservice1",
+					newName: "opTPServiceNew1",
+					validationMessage: "Delivery Service update was successful"
+				}
+			],
+			assignServer: [
+				{
+					serverHostname: "DSTest",
+					xmlID: "opTPServiceNew1",
+					validationMessage: "server assignments complete"
+				}
+			],
+			remove: [
+				{
+					name: "optpdservice1",
+					validationMessage: "ds was deleted."
+				},
+				{
+					name: "optpdservice2",
+					validationMessage: "ds was deleted."
+				},
+				{
+					name: "optpdservice3",
+					validationMessage: "ds was deleted."
 				}
 			]
 		}
