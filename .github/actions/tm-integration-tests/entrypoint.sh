@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-set -e
+set -o errexit -o nounset -o pipefail
 
 function wait_for_endpoint() {
   try=0
@@ -97,11 +97,11 @@ touch to.log
 ./testto $TESTTO_PORT >to.log 2>&1 &
 tail -f to.log | color_and_prefix "${gray_bg}" 'Test TO' &
 
-wait_for_endpoint "${TESTTO_URI}:${TESTTO_PORT}/api/4.0/ping"
+wait_for_endpoint "${TESTTO_URI}:${TESTTO_PORT}/api/5.0/ping"
 
-curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/cdns/$CDN/snapshot -X POST -d "@${test_dir}/snapshot.json"
-curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/cdns/$CDN/configs/monitoring -X POST -d "@${test_dir}/monitoring.json"
-curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/4.0/servers -X POST -d "@${test_dir}/servers.json"
+curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/5.0/cdns/$CDN/snapshot -X POST -d "@${test_dir}/snapshot.json"
+curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/5.0/cdns/$CDN/configs/monitoring -X POST -d "@${test_dir}/monitoring.json"
+curl -Lvsk ${TESTTO_URI}:${TESTTO_PORT}/api/5.0/servers -X POST -d "@${test_dir}/servers.json"
 
 cd "${repo_dir}/traffic_monitor/tools/testcaches"
 go mod vendor

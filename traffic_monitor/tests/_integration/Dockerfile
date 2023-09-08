@@ -35,18 +35,7 @@ RUN dnf install -y initscripts epel-release jq git
 COPY traffic_monitor/tests/_integration/ /tm/
 
 RUN mkdir -p ${GOPATH}/src/github.com/apache/trafficcontrol
-COPY go.mod \
-     go.sum \
-     ${GOPATH}/src/github.com/apache/trafficcontrol/
-# config.go is included so that `go mod vendor` includes github.com/kelseyhightower/envconfig
-# since dependencies within _integration are not considered
-COPY cache-config/testing/ort-tests/config/config.go ${GOPATH}/src/github.com/apache/trafficcontrol/cache-config/testing/ort-tests/config/config.go
-COPY lib ${GOPATH}/src/github.com/apache/trafficcontrol/lib
-COPY vendor ${GOPATH}/src/github.com/apache/trafficcontrol/vendor
-COPY traffic_monitor/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/
-COPY traffic_ops/toclientlib/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_ops/toclientlib/
-COPY traffic_ops/v3-client/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_ops/v3-client/
-COPY traffic_ops/v4-client/ ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_ops/v4-client/
+COPY . ${GOPATH}/src/github.com/apache/trafficcontrol
 
 WORKDIR ${GOPATH}/src/github.com/apache/trafficcontrol/traffic_monitor/tests/_integration/
 RUN go mod vendor && \

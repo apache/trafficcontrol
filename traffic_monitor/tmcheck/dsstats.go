@@ -25,9 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
-	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
-
-	"github.com/json-iterator/go"
+	to "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 // ValidateDSStates validates that all Delivery Services in the CRConfig exist in given Traffic Monitor's DSStats.
@@ -42,17 +40,12 @@ func ValidateDSStats(tmURI string, toClient *to.Session) error {
 
 // ValidateOfflineStatesWithCDN validates per ValidateOfflineStates, but saves an additional query if the Traffic Monitor's CDN is known.
 func ValidateDSStatsWithCDN(tmURI string, tmCDN string, toClient *to.Session) error {
-	crConfigBytes, _, err := toClient.GetCRConfig(tmCDN)
+	response, _, err := toClient.GetCRConfig(tmCDN, to.RequestOptions{})
 	if err != nil {
 		return fmt.Errorf("getting CRConfig: %v", err)
 	}
 
-	crConfig := tc.CRConfig{}
-	json := jsoniter.ConfigFastest
-	if err := json.Unmarshal(crConfigBytes, &crConfig); err != nil {
-		return fmt.Errorf("unmarshalling CRConfig JSON: %v", err)
-	}
-
+	crConfig := response.Response
 	return ValidateDSStatsWithCRConfig(tmURI, &crConfig, toClient)
 }
 
@@ -125,14 +118,14 @@ func ValidateAllMonitorsDSStats(toClient *to.Session, includeOffline bool) (map[
 
 	errs := map[tc.TrafficMonitorName]error{}
 	for _, server := range servers {
-		crConfig := crConfigs[tc.CDNName(server.CDNName)]
+		crConfig := crConfigs[tc.CDNName(*server.CDNName)]
 		if err := crConfig.Err; err != nil {
-			errs[tc.TrafficMonitorName(server.HostName)] = fmt.Errorf("getting CRConfig: %v", err)
+			errs[tc.TrafficMonitorName(*server.HostName)] = fmt.Errorf("getting CRConfig: %v", err)
 			continue
 		}
 
-		uri := fmt.Sprintf("http://%s.%s", server.HostName, server.DomainName)
-		errs[tc.TrafficMonitorName(server.HostName)] = ValidateDSStatsWithCRConfig(uri, crConfig.CRConfig, toClient)
+		uri := fmt.Sprintf("http://%s.%s", *server.HostName, *server.DomainName)
+		errs[tc.TrafficMonitorName(*server.HostName)] = ValidateDSStatsWithCRConfig(uri, crConfig.CRConfig, toClient)
 	}
 	return errs, nil
 }

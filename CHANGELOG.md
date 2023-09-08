@@ -54,6 +54,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Changed
 - [#7757](https://github.com/apache/trafficcontrol/pull/7757) *Traffic Router* Changed Traffic Router to point to api version 5.0 of Traffic Ops.
 - [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
+- [#7761](https://github.com/apache/trafficcontrol/pull/7761) *Traffic Monitor* Use API v5 for the TM's Traffic Ops client, and use TO API v4 for TM's Traffic Ops legacy client
 - [#7584](https://github.com/apache/trafficcontrol/pull/7584) *Documentation* Upgrade Traffic Control Sphinx documentation Makefile OS intelligent.
 - [#7521](https://github.com/apache/trafficcontrol/pull/7521) *Traffic Ops* Returns empty array instead of null when no permissions are given for roles endpoint using POST or PUT request.
 - [#7369](https://github.com/apache/trafficcontrol/pull/7369) *Traffic Portal* Adds better labels to routing methods widget on the TP dashboard.

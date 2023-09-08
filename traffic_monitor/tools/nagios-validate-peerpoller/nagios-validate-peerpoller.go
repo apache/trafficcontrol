@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"github.com/apache/trafficcontrol/lib/go-nagios"
 	"github.com/apache/trafficcontrol/traffic_monitor/tmcheck"
-	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	to "github.com/apache/trafficcontrol/traffic_ops/v4-client"
 )
 
 const UserAgent = "tm-peerpoller-validator/0.1"

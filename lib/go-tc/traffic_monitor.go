@@ -86,7 +86,7 @@ type TrafficMonitorConfig struct {
 	Profiles []TMProfile `json:"profiles,omitempty"`
 	// Topologies is the set of topologies defined in Traffic Ops, consisting
 	// of just the EDGE_LOC-type cachegroup nodes.
-	Topologies map[string]CRConfigTopology `json:"topologies"`
+	Topologies map[string]CRConfigTopology `json:"topologies,omitempty"`
 }
 
 const healthThresholdAvailableBandwidthInKbps = "availableBandwidthInKbps"
@@ -475,7 +475,7 @@ type TMDeliveryService struct {
 	TotalKbpsThreshold int64    `json:"TotalKbpsThreshold"`
 	Topology           string   `json:"topology"`
 	Type               string   `json:"type"`
-	HostRegexes        []string `json:"hostRegexes"`
+	HostRegexes        []string `json:"hostRegexes,omitempty"`
 }
 
 // TMProfile is primarily a collection of the Parameters with special meaning
