@@ -41,7 +41,7 @@ func serversToLatest(svs tc.ServersV4Response) ([]atscfg.Server, error) {
 // serverToLatest converts a tc.Server to tc.ServerV30.
 // This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
 func serverToLatest(oldSv tc.ServerV40) (*atscfg.Server, error) {
-	asv := atscfg.Server(oldSv)
+	asv := atscfg.Server(oldSv.Upgrade())
 	return &asv, nil
 }
 
