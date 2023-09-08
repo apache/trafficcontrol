@@ -88,6 +88,8 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 		// assume default eth0?
 		inf = "eth0"
 	}
+	inf = strings.ReplaceAll(inf, ".", "")
+	inf = strings.ReplaceAll(inf, "/", "")
 	vstats := getSystemData(inf)
 	encoder := json.NewEncoder(w)
 	err := encoder.Encode(vstats)
