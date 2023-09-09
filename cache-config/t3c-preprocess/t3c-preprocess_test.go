@@ -31,7 +31,7 @@ func TestPreprocessConfigFile(t *testing.T) {
 	// the TCP port replacement is fundamentally different for 80 vs non-80, so test both
 	t.Run("verify port 80 replace", func(t *testing.T) {
 		server := &atscfg.Server{}
-		server.TCPPort = util.IntPtr(8080)
+		server.TCPPort = util.Ptr(8080)
 		server.Interfaces = []tc.ServerInterfaceInfoV40{}
 		{
 			ssi := tc.ServerInterfaceInfoV40{}
@@ -43,8 +43,8 @@ func TestPreprocessConfigFile(t *testing.T) {
 			}
 			server.Interfaces = append(server.Interfaces, ssi)
 		}
-		server.HostName = util.StrPtr("my-edge")
-		server.DomainName = util.StrPtr("example.net")
+		server.HostName = "my-edge"
+		server.DomainName = "example.net"
 		cfgFile := "abc__SERVER_TCP_PORT__def__CACHE_IPV4__ghi __RETURN__  \t __HOSTNAME__ jkl __FULL_HOSTNAME__ \n__SOMETHING__ __ELSE__\nmno\r\n"
 
 		actual := PreprocessConfigFile(server, cfgFile)
@@ -70,8 +70,8 @@ func TestPreprocessConfigFile(t *testing.T) {
 			}
 			server.Interfaces = append(server.Interfaces, si)
 		}
-		server.HostName = util.StrPtr("my-edge")
-		server.DomainName = util.StrPtr("example.net")
+		server.HostName = "my-edge"
+		server.DomainName = "example.net"
 
 		cfgFile := "abc__SERVER_TCP_PORT__def__CACHE_IPV4__ghi __RETURN__  \t __HOSTNAME__ jkl __FULL_HOSTNAME__ \n__SOMETHING__ __ELSE__\nmno:__SERVER_TCP_PORT__\r\n"
 
@@ -86,10 +86,10 @@ func TestPreprocessConfigFile(t *testing.T) {
 
 	t.Run("verify cachegroup replace", func(t *testing.T) {
 		server := &atscfg.Server{}
-		server.TCPPort = util.IntPtr(80)
-		server.Cachegroup = util.StrPtr("mycachegroup")
-		server.HostName = util.StrPtr("my-edge")
-		server.DomainName = util.StrPtr("example.net")
+		server.TCPPort = util.Ptr(80)
+		server.CacheGroup = "mycachegroup"
+		server.HostName = "my-edge"
+		server.DomainName = "example.net"
 
 		cfgFile := "abc__CACHEGROUP__defghi __RETURN__  \t __HOSTNAME__ jkl __FULL_HOSTNAME__ \n__SOMETHING__ __ELSE__\nmno\r\n"
 
