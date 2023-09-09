@@ -72,8 +72,8 @@ func TestConfigureAccessControl(t *testing.T) {
 		vb := NewVCLBuilder(&t3cutil.ConfigData{
 			Server: &atscfg.Server{
 				Type:       "MID",
-				HostName:   util.StrPtr("server0"),
-				Cachegroup: util.StrPtr("cg0"),
+				HostName:   "server0",
+				CacheGroup: "cg0",
 			},
 			ServerParams: []tc.ParameterV5{
 				{
@@ -87,8 +87,8 @@ func TestConfigureAccessControl(t *testing.T) {
 			},
 			Servers: []atscfg.Server{
 				{
-					HostName:   util.Ptr("child0"),
-					Cachegroup: util.Ptr("childcg"),
+					HostName:   "child0",
+					CacheGroup: "childcg",
 					Type:       tc.MonitorTypeName,
 					Interfaces: []tc.ServerInterfaceInfoV40{
 						{
@@ -100,8 +100,8 @@ func TestConfigureAccessControl(t *testing.T) {
 					},
 				},
 				{
-					HostName:   util.Ptr("child1"),
-					Cachegroup: util.Ptr("childcg"),
+					HostName:   "child1",
+					CacheGroup: "childcg",
 					Type:       tc.MonitorTypeName,
 					Interfaces: []tc.ServerInterfaceInfoV40{
 						{
