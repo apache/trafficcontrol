@@ -25,13 +25,12 @@ import (
 	"github.com/apache/trafficcontrol/cache-config/t3c-generate/config"
 	"github.com/apache/trafficcontrol/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestPlugin(t *testing.T) {
 	AddPlugin(10000, Funcs{
 		modifyFiles: func(d ModifyFilesData) []t3cutil.ATSConfigFile {
-			if d.TOData.Server == nil || d.TOData.Server.HostName == nil || *d.TOData.Server.HostName != "testplugin" {
+			if d.TOData.Server == nil || d.TOData.Server.HostName == "" || d.TOData.Server.HostName != "testplugin" {
 				return d.Files
 			}
 			fi := t3cutil.ATSConfigFile{}
@@ -77,7 +76,7 @@ func TestPlugin(t *testing.T) {
 	if modifyFilesData.TOData.Server == nil {
 		modifyFilesData.TOData.Server = &atscfg.Server{}
 	}
-	modifyFilesData.TOData.Server.HostName = util.StrPtr("testplugin")
+	modifyFilesData.TOData.Server.HostName = "testplugin"
 	newFiles = plugins.ModifyFiles(modifyFilesData)
 	if len(newFiles) == 0 {
 		t.Error("Expected server 'testplugin' to be handled by plugin, actual: unhandled")
