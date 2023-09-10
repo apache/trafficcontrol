@@ -2474,7 +2474,7 @@
   "servers": [
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-edge-01",
@@ -2508,8 +2508,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2523,7 +2523,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-edge-01-multiprofile",
@@ -2557,8 +2557,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2572,7 +2572,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "cdn2-test-edge",
@@ -2601,8 +2601,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGEInCDN2"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGEInCDN2"],
       "rack": "",
       "revalPending": false,
       "routerHostName": "",
@@ -2616,7 +2616,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "guid": null,
       "hostName": "influxdb02",
@@ -2650,8 +2650,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2665,7 +2665,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-router-01",
@@ -2699,8 +2699,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2714,7 +2714,7 @@
     },
     {
       "cacheGroup": "cachegroup2",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-edge-03",
@@ -2748,8 +2748,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["ATS_EDGE_TIER_CACHE"],
+      "physicalLocation": "Denver",
+      "profiles": ["ATS_EDGE_TIER_CACHE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2763,7 +2763,7 @@
     },
     {
       "cacheGroup": "cachegroup2",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-edge-03-02",
@@ -2797,8 +2797,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["ATS_EDGE_TIER_CACHE"],
+      "physicalLocation": "Denver",
+      "profiles": ["ATS_EDGE_TIER_CACHE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2812,7 +2812,7 @@
     },
     {
       "cacheGroup": "cachegroup2",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-edge-03-03",
@@ -2847,8 +2847,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["ATS_EDGE_TIER_CACHE_CDN2"],
+      "physicalLocation": "Denver",
+      "profiles": ["ATS_EDGE_TIER_CACHE_CDN2"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2862,7 +2862,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-edge-14",
@@ -2896,8 +2896,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2911,7 +2911,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-edge-15",
@@ -2946,8 +2946,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -2961,7 +2961,7 @@
     },
     {
       "cacheGroup": "parentCachegroup",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-mid-16",
@@ -2995,8 +2995,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["MID1"],
+      "physicalLocation": "Denver",
+      "profiles": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3010,7 +3010,7 @@
     },
     {
       "cacheGroup": "parentCachegroup",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-mid-17",
@@ -3044,8 +3044,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["MID2"],
+      "physicalLocation": "Denver",
+      "profiles": ["MID2"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3059,7 +3059,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-org-1",
@@ -3093,8 +3093,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3108,7 +3108,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-org-2",
@@ -3142,8 +3142,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3157,7 +3157,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.atlanta.kabletown.net",
       "guid": null,
       "hostName": "atlanta-mid-01",
@@ -3191,8 +3191,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3206,7 +3206,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "guid": null,
       "hostName": "rascal01",
@@ -3240,8 +3240,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["RASCAL1"],
+      "physicalLocation": "Denver",
+      "profiles": ["RASCAL1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3255,7 +3255,7 @@
     },
     {
       "cacheGroup": "cachegroup2",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown2.net",
       "guid": null,
       "hostName": "edge1-cdn2",
@@ -3289,8 +3289,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_EDGE"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3304,7 +3304,7 @@
     },
     {
       "cacheGroup": "cachegroup1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "docker_default",
       "guid": null,
       "hostName": "traffic_vault",
@@ -3338,8 +3338,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3353,7 +3353,7 @@
     },
     {
       "cacheGroup": "multiOriginCachegroup",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "ga.denver.kabletown.net",
       "guid": null,
       "hostName": "denver-mso-org-01",
@@ -3387,8 +3387,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["MSO"],
+      "physicalLocation": "Denver",
+      "profiles": ["MSO"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3402,7 +3402,7 @@
     },
     {
       "cacheGroup": "cachegroup3",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown2.net",
       "guid": null,
       "hostName": "edge1-cdn1-cg3",
@@ -3436,8 +3436,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3451,7 +3451,7 @@
     },
     {
       "cacheGroup": "cachegroup3",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown2.net",
       "guid": null,
       "hostName": "edge2-cdn1-cg3",
@@ -3485,8 +3485,8 @@
       "mgmtIpGateway": "",
       "mgmtIpNetmask": "",
       "offlineReason": null,
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "routerHostName": "",
@@ -3500,7 +3500,7 @@
     },
     {
       "cacheGroup": "topology-edge-cg-01",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "edge-01.forked-topology.kabletown.net",
       "hostName": "topology-edge-01",
       "httpsPort": 443,
@@ -3523,8 +3523,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3534,7 +3534,7 @@
     },
     {
       "cacheGroup": "topology-edge-cg-02",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "edge-02.forked-topology.kabletown.net",
       "hostName": "topology-edge-02",
       "httpsPort": 443,
@@ -3557,8 +3557,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3568,7 +3568,7 @@
     },
     {
       "cacheGroup": "topology-mid-cg-04",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "mid-04.forked-topology.kabletown.net",
       "hostName": "topology-mid-04",
       "httpsPort": 443,
@@ -3591,8 +3591,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["MID1"],
+      "physicalLocation": "Denver",
+      "profiles": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3602,7 +3602,7 @@
     },
     {
       "cacheGroup": "dtrc1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-mid-01",
       "httpsPort": 443,
@@ -3625,8 +3625,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["MID1"],
+      "physicalLocation": "Denver",
+      "profiles": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3636,7 +3636,7 @@
     },
     {
       "cacheGroup": "dtrc1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-mid-02",
       "httpsPort": 443,
@@ -3659,8 +3659,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["MID1"],
+      "physicalLocation": "Denver",
+      "profiles": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3670,7 +3670,7 @@
     },
     {
       "cacheGroup": "dtrc1",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-mid-03",
       "httpsPort": 443,
@@ -3693,8 +3693,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["MID1"],
+      "physicalLocation": "Denver",
+      "profiles": ["MID1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3704,7 +3704,7 @@
     },
     {
       "cacheGroup": "dtrc2",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-edge-01",
       "httpsPort": 443,
@@ -3727,8 +3727,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3738,7 +3738,7 @@
     },
     {
       "cacheGroup": "dtrc2",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-edge-02",
       "httpsPort": 443,
@@ -3761,8 +3761,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3772,7 +3772,7 @@
     },
     {
       "cacheGroup": "dtrc2",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-edge-03",
       "httpsPort": 443,
@@ -3795,8 +3795,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3806,7 +3806,7 @@
     },
     {
       "cacheGroup": "dtrc3",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-edge-04",
       "httpsPort": 443,
@@ -3829,8 +3829,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3840,7 +3840,7 @@
     },
     {
       "cacheGroup": "dtrc3",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-edge-05",
       "httpsPort": 443,
@@ -3863,8 +3863,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3874,7 +3874,7 @@
     },
     {
       "cacheGroup": "dtrc3",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "dtrc-edge-06",
       "httpsPort": 443,
@@ -3897,8 +3897,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3908,7 +3908,7 @@
     },
     {
       "cacheGroup": "dtrc2",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "dtrc-edge-07",
       "httpsPort": 443,
@@ -3931,8 +3931,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_EDGE"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3942,7 +3942,7 @@
     },
     {
       "cacheGroup": "dtrc3",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "dtrc-edge-08",
       "httpsPort": 443,
@@ -3965,8 +3965,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_EDGE"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -3976,7 +3976,7 @@
     },
     {
       "cacheGroup": "dtrc1",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "dtrc-mid-04",
       "httpsPort": 443,
@@ -3999,8 +3999,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4010,7 +4010,7 @@
     },
     {
       "cacheGroup": "cachegroup3",
-      "cdnName": "cdn1",
+      "cdn": "cdn1",
       "domainName": "kabletown.net",
       "hostName": "edgeInCachegroup3",
       "httpsPort": 443,
@@ -4033,8 +4033,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["EDGE1"],
+      "physicalLocation": "Denver",
+      "profiles": ["EDGE1"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4044,7 +4044,7 @@
     },
     {
       "cacheGroup": "parentCachegroup",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInParentCachegroup",
       "httpsPort": 443,
@@ -4067,8 +4067,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4078,7 +4078,7 @@
     },
     {
       "cacheGroup": "secondaryCachegroup",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInSecondaryCachegroup",
       "httpsPort": 443,
@@ -4101,8 +4101,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4112,7 +4112,7 @@
     },
     {
       "cacheGroup": "fallback1",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "edgeInFallback1",
       "httpsPort": 443,
@@ -4135,8 +4135,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_EDGE"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4146,7 +4146,7 @@
     },
     {
       "cacheGroup": "fallback2",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "edgeInFallback2",
       "httpsPort": 443,
@@ -4169,8 +4169,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_EDGE"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4180,7 +4180,7 @@
     },
     {
       "cacheGroup": "parentCachegroup2",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInParentCachegroup2",
       "httpsPort": 443,
@@ -4203,8 +4203,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4214,7 +4214,7 @@
     },
     {
       "cacheGroup": "topology-edge-cg-01",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "edgeInTopologyEdgeCg01",
       "httpsPort": 443,
@@ -4237,8 +4237,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_EDGE"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4248,7 +4248,7 @@
     },
     {
       "cacheGroup": "topology-edge-cg-02",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "edgeInTopologyEdgeCg02",
       "httpsPort": 443,
@@ -4271,8 +4271,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_EDGE"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_EDGE"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4282,7 +4282,7 @@
     },
     {
       "cacheGroup": "topology-mid-cg-01",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInTopologyMidCg01",
       "httpsPort": 443,
@@ -4305,8 +4305,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4316,7 +4316,7 @@
     },
     {
       "cacheGroup": "topology-mid-cg-02",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInTopologyMidCg02",
       "httpsPort": 443,
@@ -4339,8 +4339,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4350,7 +4350,7 @@
     },
     {
       "cacheGroup": "topology-mid-cg-03",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInTopologyMidCg03",
       "httpsPort": 443,
@@ -4373,8 +4373,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4384,7 +4384,7 @@
     },
     {
       "cacheGroup": "topology-mid-cg-04",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInTopologyMidCg04",
       "httpsPort": 443,
@@ -4407,8 +4407,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4418,7 +4418,7 @@
     },
     {
       "cacheGroup": "topology-mid-cg-05",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInTopologyMidCg05",
       "httpsPort": 443,
@@ -4441,8 +4441,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4452,7 +4452,7 @@
     },
     {
       "cacheGroup": "topology-mid-cg-06",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInTopologyMidCg06",
       "httpsPort": 443,
@@ -4475,8 +4475,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
@@ -4486,7 +4486,7 @@
     },
     {
       "cacheGroup": "topology-mid-cg-07",
-      "cdnName": "cdn2",
+      "cdn": "cdn2",
       "domainName": "kabletown.net",
       "hostName": "midInTopologyMidCg07",
       "httpsPort": 443,
@@ -4509,8 +4509,8 @@
           "name": "bond0"
         }
       ],
-      "physLocation": "Denver",
-      "profileNames": ["CDN2_MID"],
+      "physicalLocation": "Denver",
+      "profiles": ["CDN2_MID"],
       "rack": "RR 119.02",
       "revalPending": false,
       "status": "REPORTED",
