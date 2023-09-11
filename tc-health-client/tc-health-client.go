@@ -206,11 +206,11 @@ func reloadConfig(pi *tmagent.ParentInfo) {
 
 	if isNew {
 		if err = config.ReadCredentials(newCfg, false); err != nil {
-			log.Errorln("could not load credentials for config updates, keeping the old config")
+			log.Errorf("could not load credentials for config updates, keeping the old config: %v", err.Error())
 			return
 		}
 		if err = pi.GetTOData(newCfg); err != nil {
-			log.Errorln("could not update the list of trafficmonitors, keeping the old config")
+			log.Errorf("could not update the list of trafficmonitors, keeping the old config: %v", err.Error())
 		} else {
 			// TODO this was calling a custom copy func that wasn't copying:
 			//      MarkUpPollThreshold, TmProxyURL, CredentialFile, ParsedProxyURL

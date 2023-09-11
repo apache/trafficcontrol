@@ -108,7 +108,7 @@ func doPollAndUpdateCacheStatus(pi *ParentInfo, doTrafficOpsReq bool) {
 	if err != nil {
 		log.Errorf("poll-status %v\n", err.Error())
 		if err := pi.GetTOData(cfg); err != nil {
-			log.Errorln("update event=\"could not update the list of trafficmonitors, keeping the old config\"")
+			log.Errorf("update event=\"could not update the list of trafficmonitors, keeping the old config\": %v", err.Error())
 		} else {
 			log.Infoln("service-status service=tm-health event=\"updated TrafficMonitor statuses from TrafficOps\"")
 		}
@@ -132,7 +132,7 @@ func doPollAndUpdateCacheStatus(pi *ParentInfo, doTrafficOpsReq bool) {
 	if doTrafficOpsReq {
 		// TODO move to its own TO poller
 		if err = pi.GetTOData(cfg); err != nil {
-			log.Errorln("update event=\"could not update the list of trafficmonitors, keeping the old config\"")
+			log.Errorf("update event=\"could not update the list of trafficmonitors, keeping the old config\": %v", err.Error())
 		} else {
 			log.Infoln("service-status service=tm-health event=\"updated TrafficMonitor statuses from TrafficOps\"")
 		}

@@ -52,6 +52,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7784](https://github.com/apache/trafficcontrol/pull/7784) *Traffic Portal* Added revert certificate functionality to the ssl-keys page.
 
 ### Changed
+- [#7776](https://github.com/apache/trafficcontrol/pull/7776) *tc-health-client* Added error message while issues interacting with Traffic Ops.
 - [#7757](https://github.com/apache/trafficcontrol/pull/7757) *Traffic Router* Changed Traffic Router to point to api version 5.0 of Traffic Ops.
 - [#7732](https://github.com/apache/trafficcontrol/pull/7732) *Traffic Router* Increased negative TTL value to 900 seconds.
 - [#7761](https://github.com/apache/trafficcontrol/pull/7761) *Traffic Monitor* Use API v5 for the TM's Traffic Ops client, and use TO API v4 for TM's Traffic Ops legacy client
