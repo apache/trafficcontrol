@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
 	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
@@ -42,7 +41,7 @@ func DeleteTestTenants(t *testing.T, cl *toclient.Session) {
 	assert.NoError(t, err, "Cannot get Tenants: %v - alerts: %+v", err, tenants.Alerts)
 
 	for _, tenant := range tenants.Response {
-		if tenant.Name == util.Ptr("root") {
+		if tenant.Name != nil && *tenant.Name == "root" {
 			continue
 		}
 		alerts, _, err := cl.DeleteTenant(*tenant.ID, toclient.RequestOptions{})
