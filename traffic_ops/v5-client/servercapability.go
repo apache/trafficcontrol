@@ -34,14 +34,14 @@ func (to *Session) CreateServerCapability(sc tc.ServerCapabilityV5, opts Request
 }
 
 // GetServerCapabilities returns all the Server Capabilities in Traffic Ops.
-func (to *Session) GetServerCapabilitiesbvey(opts RequestOptions) (tc.ServerCapabilitiesResponseV5, toclientlib.ReqInf, error) {
+func (to *Session) GetServerCapabilities(opts RequestOptions) (tc.ServerCapabilitiesResponseV5, toclientlib.ReqInf, error) {
 	var data tc.ServerCapabilitiesResponseV5
 	reqInf, err := to.get(apiServerCapabilities, opts, &data)
 	return data, reqInf, err
 }
 
-// UpdateServerCapabilityV5 updates a Server Capability by name.
-func (to *Session) UpdateServerCapabilityV5(name string, sc tc.ServerCapabilityV5, opts RequestOptions) (tc.ServerCapabilityDetailResponseV5, toclientlib.ReqInf, error) {
+// UpdateServerCapability updates a Server Capability by name.
+func (to *Session) UpdateServerCapability(name string, sc tc.ServerCapabilityV5, opts RequestOptions) (tc.ServerCapabilityDetailResponseV5, toclientlib.ReqInf, error) {
 	if opts.QueryParameters == nil {
 		opts.QueryParameters = url.Values{}
 	}
