@@ -68,7 +68,7 @@ func TestASN(t *testing.T) {
 				},
 				"PRECONDITION FAILED when updating with IMS & IUS Headers": {
 					ClientSession: TOSession,
-					EndpointID:    GetASNId(t, "7777"),
+					EndpointID:    GetASNId(t, "9999"),
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: map[string]interface{}{
 						"asn":            8888,
