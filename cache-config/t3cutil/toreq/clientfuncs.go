@@ -403,7 +403,7 @@ func (cl *TOClient) GetConfigFileParameters(configFile string, reqHdr http.Heade
 	err := torequtil.GetRetry(cl.NumRetries, "config_file_"+configFile+"_parameters", &params, func(obj interface{}) error {
 		toParams, toReqInf, err := GetParametersByConfigFile(cl.c, configFile, ReqOpts(reqHdr))
 		if err != nil {
-			return errors.New("getting delivery services from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
+			return errors.New("getting config file parameters from Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "': " + err.Error())
 		}
 		params := obj.(*[]tc.ParameterV5)
 		*params = toParams
