@@ -281,7 +281,7 @@ to-enroll() {
 
 	# replace env references in the file
 	<"/server_template.json" envsubst | #first envsubst expands $MY_TCP_PORT and $MY_HTTPS_PORT so they are valid JSON
-		jq '.cdnName = "$MY_CDN"' |
+		jq '.cdn = "$MY_CDN"' |
 		if [[ -n "$MY_IP" && -n "$MY_GATEWAY" ]]; then
 			jq '.interfaces[0].ipAddresses += [({} | .address = "$MY_IP" | .gateway = "$MY_GATEWAY" | .serviceAddress = true)]'
 		else
