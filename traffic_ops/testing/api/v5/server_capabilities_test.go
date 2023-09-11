@@ -145,7 +145,7 @@ func TestServerCapabilities(t *testing.T) {
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateServerCapabilityV5(testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.CreateServerCapability(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -200,7 +200,7 @@ func validateServerCapabilitiesSort() utils.CkReqFunc {
 
 func CreateTestServerCapabilities(t *testing.T) {
 	for _, sc := range testData.ServerCapabilities {
-		resp, _, err := TOSession.CreateServerCapabilityV5(sc, client.RequestOptions{})
+		resp, _, err := TOSession.CreateServerCapability(sc, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
 	}
 }

@@ -26,8 +26,8 @@ import (
 // endpoint.
 const apiServerCapabilities = "/server_capabilities"
 
-// CreateServerCapabilityV5 creates the given Server Capability.
-func (to *Session) CreateServerCapabilityV5(sc tc.ServerCapabilityV5, opts RequestOptions) (tc.ServerCapabilityDetailResponseV5, toclientlib.ReqInf, error) {
+// CreateServerCapability creates the given Server Capability.
+func (to *Session) CreateServerCapability(sc tc.ServerCapabilityV5, opts RequestOptions) (tc.ServerCapabilityDetailResponseV5, toclientlib.ReqInf, error) {
 	var scResp tc.ServerCapabilityDetailResponseV5
 	reqInf, err := to.post(apiServerCapabilities, opts, sc, &scResp)
 	return scResp, reqInf, err
