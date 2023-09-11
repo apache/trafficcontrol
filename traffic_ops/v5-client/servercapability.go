@@ -33,8 +33,8 @@ func (to *Session) CreateServerCapability(sc tc.ServerCapabilityV5, opts Request
 	return scResp, reqInf, err
 }
 
-// GetServerCapabilitiesV5 returns all the Server Capabilities in Traffic Ops.
-func (to *Session) GetServerCapabilitiesV5(opts RequestOptions) (tc.ServerCapabilitiesResponseV5, toclientlib.ReqInf, error) {
+// GetServerCapabilities returns all the Server Capabilities in Traffic Ops.
+func (to *Session) GetServerCapabilitiesbvey(opts RequestOptions) (tc.ServerCapabilitiesResponseV5, toclientlib.ReqInf, error) {
 	var data tc.ServerCapabilitiesResponseV5
 	reqInf, err := to.get(apiServerCapabilities, opts, &data)
 	return data, reqInf, err
