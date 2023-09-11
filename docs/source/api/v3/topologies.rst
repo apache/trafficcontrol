@@ -55,7 +55,7 @@ Response Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Response Example
@@ -161,7 +161,7 @@ Request Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Request Example
@@ -251,7 +251,7 @@ Response Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Response Example
@@ -369,7 +369,7 @@ Request Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Request Example
@@ -451,7 +451,7 @@ Response Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Response Example
