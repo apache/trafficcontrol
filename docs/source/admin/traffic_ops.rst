@@ -328,7 +328,7 @@ This file deals with the configuration parameters of running Traffic Ops itself.
 
 :default_certificate_info: This is an optional object to define default values when generating a self signed certificate when an HTTPS delivery service is created or updated. If this is an empty object or not present in the :ref:`cdn.conf` then the term "Placeholder" will be used for all fields.
 
- 	:business_unit: An optional field which, if present, will represent the business unit for which the SSL certificate was generated
+	:business_unit: An optional field which, if present, will represent the business unit for which the SSL certificate was generated
 	:city: An optional field which, if present, will represent the resident city of the generated SSL certificate
 	:organization: An optional field which, if present, will represent the organization for which the SSL certificate was generated
 	:country: An optional field which, if present, will represent the resident country of the generated SSL certificate

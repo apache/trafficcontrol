@@ -907,7 +907,7 @@ The response is a full representation of the deleted :term:`Delivery Service Req
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 200 OK	HTTP/1.1 200 OK
+	HTTP/1.1 200 OK HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE

@@ -65,9 +65,10 @@ Response Structure
 :dnssecEnabled: ``true`` if DNSSEC is enabled on this CDN, otherwise ``false``
 :domainName:    Top Level Domain name within which this CDN operates
 :id:            The integral, unique identifier for the CDN
-:lastUpdated:   Date and time when the CDN was last modified in :rfc:`3339`
-:name:          The name of the CDN
-:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
+:lastUpdated:   Date and time when the CDN was last modified in :rfc:`3339` Format
+
+:name:        The name of the CDN
+:ttlOverride: A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
 
 .. code-block:: http
 	:caption: Response Example
@@ -117,7 +118,7 @@ Request Structure
 :dnssecEnabled: If ``true``, this CDN will use DNSSEC, if ``false`` it will not
 :domainName:    The top-level domain (TLD) belonging to the new CDN
 :name:          Name of the new CDN
-:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
+:ttlOverride:   A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
 
 .. code-block:: http
 	:caption: Request Structure
@@ -137,8 +138,10 @@ Response Structure
 :dnssecEnabled: ``true`` if the CDN uses DNSSEC, ``false`` otherwise
 :domainName:    The top-level domain (TLD) assigned to the newly created CDN
 :id:            An integral, unique identifier for the newly created CDN
-:name:          The newly created CDN's name
-:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
+:lastUpdated:   Date and time when the CDN was last modified in :rfc:`3339` Format
+
+:name:        The newly created CDN's name
+:ttlOverride: A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
 
 
 .. code-block:: http
