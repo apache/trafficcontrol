@@ -43,7 +43,7 @@ Request Structure
 	Accept: */*
 	Cookie: mojolicious=...
 	Content-Length: 80
-	Content-Type: application/x-www-form-urlencoded
+	Content-Type: application/json
 
 	{"regex":"/.*?(/.*?/).*?(m3u8)","requestPath":"/test/path/asset.m3u8","cdnId":2}
 

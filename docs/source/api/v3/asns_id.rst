@@ -57,7 +57,7 @@ Request Structure
 	Accept: */*
 	Cookie: mojolicious=...
 	Content-Length: 29
-	Content-Type: application/x-www-form-urlencoded
+	Content-Type: application/json
 
 	{"asn": 2, "cachegroupId": 1}
 
