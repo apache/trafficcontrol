@@ -21,7 +21,7 @@
 
 ``PUT``
 =======
-Updates a specific Division
+Updates a specific :term:`Division`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -32,14 +32,14 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-----------------------------------------------------------+
-	| Name | Description                                               |
-	+======+===========================================================+
-	|  ID  | The integral, unique identifier of the requested Division |
-	+------+-----------------------------------------------------------+
+	+------+-------------------------------------------------------------------+
+	| Name | Description                                                       |
+	+======+===================================================================+
+	|  ID  | The integral, unique identifier of the requested :term:`Division` |
+	+------+-------------------------------------------------------------------+
 
 
-:name: The new name of the Division
+:name: The new name of the :term:`Division`
 
 .. code-block:: http
 	:caption: Request Example
@@ -93,7 +93,7 @@ Response Structure
 
 ``DELETE``
 ============
-Deletes a specific Division
+Deletes a specific :term:`Division`\ .
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -104,11 +104,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-----------------------------------------------------------+
-	| Name | Description                                               |
-	+======+===========================================================+
-	|  ID  | The integral, unique identifier of the requested Division |
-	+------+-----------------------------------------------------------+
+	+------+-------------------------------------------------------------------+
+	| Name | Description                                                       |
+	+======+===================================================================+
+	|  ID  | The integral, unique identifier of the requested :term:`Division` |
+	+------+-------------------------------------------------------------------+
 
 
 .. code-block:: http
@@ -125,6 +125,7 @@ Request Structure
 
 Response Structure
 ------------------
+:id: The integral, unique identifier of the deleted :term:`Division`\ .
 
 .. code-block:: http
 	:caption: Response Example

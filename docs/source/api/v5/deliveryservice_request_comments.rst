@@ -189,7 +189,7 @@ Response Structure
 
 ``PUT``
 =======
-Updates a delivery service request comment.
+Updates a :term:`Delivery Service Request` comment.
 
 :Auth. Required: Yes
 :Roles Required: "admin", "Federation", "operations", "Portal", or "Steering"

@@ -37,7 +37,7 @@ Request Structure
 	+===============+==========+===================================================================================+
 	| domainName    | no       | Return only the CDN that has this domain name                                     |
 	+---------------+----------+-----------------------------------------------------------------------------------+
-	| dnssecEnabled | no       | Return only the CDNs that are either dnssec enabled or not                        |
+	| dnssecEnabled | no       | Return only the CDNs that have DNSSEC enabled settings matching this parameter    |
 	+---------------+----------+-----------------------------------------------------------------------------------+
 	| id            | no       | Return only the CDN that has this id                                              |
 	+---------------+----------+-----------------------------------------------------------------------------------+

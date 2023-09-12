@@ -104,7 +104,7 @@ Response Structure
 
 ``POST``
 ========
-Creates a new region
+Creates a new :term:Region
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -113,8 +113,8 @@ Creates a new region
 
 Request Structure
 -----------------
-:division:     The integral, unique identifier of the division which shall contain the new region
-:name:         The name of the region
+:division: The integral, unique identifier of the division which shall contain the new :term:Region
+:name:     The name of the :term:Region
 
 .. code-block:: http
 	:caption: Request Example
@@ -135,7 +135,7 @@ Request Structure
 Response Structure
 ------------------
 :divisionName: The name of the division which contains this :term:Region
-:division:   The integral, unique identifier of the division which contains this :term:Region
+:division:     The integral, unique identifier of the division which contains this :term:Region
 :id:           An integral, unique identifier for this :term:Region
 :lastUpdated:  The date and time at which this :term:Region was last updated in :rfc:`3339` format
 
@@ -175,7 +175,7 @@ Response Structure
 
 ``DELETE``
 ==========
-Deletes a region. If no query parameter is specified, a ``400 Bad Request`` response is returned.
+Deletes a :term:`Region`\ . If no query parameter is specified, a ``400 Bad Request`` response is returned.
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -187,13 +187,13 @@ Request Structure
 
 .. table:: Request Query Parameters
 
-	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
-	| Name      | Required | Description                                                                                                   |
-	+===========+==========+===============================================================================================================+
-	| id        | no       | Delete :term:`Region` by integral, unique identifier                                                          |
-	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
-	| name      | no       | Delete :term:`Region` by name                                                                                 |
-	+-----------+----------+---------------------------------------------------------------------------------------------------------------+
+	+-----------+----------+------------------------------------------------------+
+	| Name      | Required | Description                                          |
+	+===========+==========+======================================================+
+	| id        | no       | Delete :term:`Region` by integral, unique identifier |
+	+-----------+----------+------------------------------------------------------+
+	| name      | no       | Delete :term:`Region` by name                        |
+	+-----------+----------+------------------------------------------------------+
 
 .. code-block:: http
 	:caption: Request Example

@@ -32,14 +32,14 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+---------------------------------------------------------+
-	| Name |                Description                              |
-	+======+=========================================================+
-	|  ID  | The integral, unique identifier of the region to update |
-	+------+---------------------------------------------------------+
+	+------+---------------------------------------------------------------+
+	| Name | Description                                                   |
+	+======+===============================================================+
+	|  ID  | The integral, unique identifier of the :term:Region to update |
+	+------+---------------------------------------------------------------+
 
-:division:     The new integral, unique identifier of the division which shall contain the region
-:name:         The new name of the region
+:division: The new integral, unique identifier of the :term:Division which shall contain the :term:Region
+:name:     The new name of the :term:Region
 
 .. code-block:: http
 	:caption: Request Example
@@ -59,8 +59,8 @@ Request Structure
 
 Response Structure
 ------------------
-:divisionName: The name of the division which contains this :term:Region
-:division:     The integral, unique identifier of the division which contains this :term:Region
+:divisionName: The name of the :term:Division which contains this :term:Region
+:division:     The integral, unique identifier of the :term:Division which contains this :term:Region
 :id:           An integral, unique identifier for this :term:Region
 :lastUpdated:  The date and time at which this :term:Region was last updated in :rfc:`3339` format
 
