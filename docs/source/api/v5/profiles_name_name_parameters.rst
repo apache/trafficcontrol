@@ -51,11 +51,14 @@ Response Structure
 ------------------
 :configFile:  The :term:`Parameter`'s :ref:`parameter-config-file`
 :id:          The :term:`Parameter`'s :ref:`parameter-id`
-:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :rfc:`3339`
 :name:        :ref:`parameter-name` of the :term:`Parameter`
 :profiles:    An array of :term:`Profile` :ref:`Names <profile-name>` that use this :term:`Parameter`
 :secure:      A boolean value that describes whether or not the :term:`Parameter` is :ref:`parameter-secure`
 :value:       The :term:`Parameter`'s :ref:`parameter-value`
+:lastUpdated: The date and time at which this :term:`Parameter` was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
 
 .. code-block:: http
 	:caption: Response Example

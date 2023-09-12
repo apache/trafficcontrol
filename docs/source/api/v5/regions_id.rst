@@ -62,8 +62,11 @@ Response Structure
 :divisionName: The name of the division which contains this region
 :division:   The integral, unique identifier of the division which contains this region
 :id:           An integral, unique identifier for this region
-:lastUpdated:  The date and time at which this region was last updated in :rfc:`3339` Format
 :name:         The region name
+:lastUpdated:  The date and time at which this region was last updated in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
 
 .. code-block:: http
 	:caption: Response Example

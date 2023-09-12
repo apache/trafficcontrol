@@ -70,7 +70,11 @@ Response Structure
 		:gateway:       The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
 		:service_address:  A boolean determining if content will be routed to the IP address
 
-:lastUpdated:    The time and date at which this server was last updated, in :rfc:`3339`
+:lastUpdated: The time and date at which this server was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :mgmtIpAddress:  The IPv4 address of the server's management port
 :mgmtIpGateway:  The IPv4 gateway of the server's management port
 :mgmtIpNetmask:  The IPv4 subnet mask of the server's management port

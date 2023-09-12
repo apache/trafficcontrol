@@ -108,9 +108,13 @@ Summary Stats
 
 	.. note:: If the ``deliveryServiceName`` is equal to ``all`` it represents summary_stats across all delivery services within the given CDN
 
-:statName:            Stat name summary stat represents
-:statValue:           Summary stat value
-:summaryTime:         Timestamp of summary, in :rfc:`3339` format
+:statName:    Stat name summary stat represents
+:statValue:   Summary stat value
+:summaryTime: Timestamp of summary, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :statDate:            Date stat was taken, in ``YYYY-MM-DD`` format
 
 .. code-block:: http
@@ -160,6 +164,10 @@ Last Updated Summary Stat
 
 :summaryTime: Timestamp of the last updated summary, in :rfc:`3339` format
 
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+
 .. code-block:: http
 	:caption: Response Example
 
@@ -199,10 +207,14 @@ Request Structure
 
 	.. note:: If the ``deliveryServiceName`` is equal to ``all`` it represents summary_stats across all delivery services within the given CDN
 
-:statName:            Stat name summary stat represents
-:statValue:           Summary stat value
-:summaryTime:         Timestamp of summary, in :rfc:`3339` format
-:statDate:            Date stat was taken, in ``YYYY-MM-DD`` format
+:statName:    Stat name summary stat represents
+:statValue:   Summary stat value
+:summaryTime: Timestamp of summary, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:statDate: Date stat was taken, in ``YYYY-MM-DD`` format
 
 .. note:: ``statName``, ``statValue`` and ``summaryTime`` are required. If ``cdnName`` and ``deliveryServiceName`` are not given they will default to ``all``.
 

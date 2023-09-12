@@ -64,9 +64,13 @@ Request Structure
 
 Response Structure
 ------------------
-:serverHostName:   The server's host name
-:serverId:         The server's integral, unique identifier
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :rfc:`3339` format
+:serverHostName: The server's host name
+:serverId:       The server's integral, unique identifier
+:lastUpdated:    The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http
@@ -135,8 +139,12 @@ Request Structure
 
 Response Structure
 ------------------
-:serverId:         The integral, unique identifier of the newly associated server
-:lastUpdated:      The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :rfc:`3339` format
+:serverId:    The integral, unique identifier of the newly associated server
+:lastUpdated: The date and time at which this association between the server and the :term:`Server Capability` was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :serverCapability: The :term:`Server Capability`'s name
 
 .. code-block:: http

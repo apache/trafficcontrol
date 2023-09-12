@@ -85,6 +85,10 @@ Response Structure
 :fallbackToClosest: A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
 :id:                An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
 :lastUpdated:       The time and date at which this entry was last updated in :rfc:`3339`
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`

@@ -70,7 +70,11 @@ Response Structure
 :description: A short description of the status
 :id:          The integral, unique identifier of this status
 :lastUpdated: The date and time at which this status was last modified, in :rfc:`3339` format
-:name:        The name of the status
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name: The name of the status
 
 .. code-block:: http
 	:caption: Response Example
@@ -126,7 +130,11 @@ Response Structure
 :description: A short description of the status
 :id:          The integral, unique identifier of this status
 :lastUpdated: The date and time at which this status was last modified, in :rfc:`3339` format
-:name:        The name of the status
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name: The name of the status
 
 .. code-block:: http
 	:caption: Response Example

@@ -71,7 +71,6 @@ Response Structure
 :comments:    Any and all human-readable comments
 :email:       The email address of the physical location's ``poc``
 :id:          An integral, unique identifier for the physical location
-:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339` Format
 :name:        The name of the physical location
 :phone:       A phone number where the the physical location's ``poc`` might be reached
 :poc:         The name of a "point of contact" for the physical location
@@ -80,6 +79,10 @@ Response Structure
 :shortName:   An abbreviation of the ``name``
 :state:       An abbreviation of the name of the state or province within which this physical location lies
 :zip:         The zip code of the physical location
+:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
 
 .. code-block:: http
 	:caption: Response Example
@@ -173,7 +176,6 @@ Response Structure
 :comments:    Any and all human-readable comments
 :email:       The email address of the physical location's ``poc``
 :id:          An integral, unique identifier for the physical location
-:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339`
 :name:        The name of the physical location
 :phone:       A phone number where the the physical location's ``poc`` might be reached
 :poc:         The name of a "point of contact" for the physical location
@@ -182,6 +184,10 @@ Response Structure
 :shortName:   An abbreviation of the ``name``
 :state:       An abbreviation of the name of the state or province within which this physical location lies
 :zip:         The zip code of the physical location
+:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
 
 .. code-block:: http
 	:caption: Response Example

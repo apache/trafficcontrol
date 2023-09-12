@@ -71,9 +71,14 @@ Response Structure
 ------------------
 :active:      A boolean which indicates whether or not the :term:`Tenant` is active
 :id:          The integral, unique identifier of this :term:`Tenant`
-:name:        This :term:`Tenant`'s name
-:parentId:    The integral, unique identifier of this :term:`Tenant`'s parent
-:parentName:  The name of the parent of this :term:`Tenant`
+:lastUpdated: The date and time at which the :term:Tenant was last updated, in :RFC:3339 format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:       This :term:`Tenant`'s name
+:parentId:   The integral, unique identifier of this :term:`Tenant`'s parent
+:parentName: The name of the parent of this :term:`Tenant`
 
 .. code-block:: http
 	:caption: Response Example
@@ -136,8 +141,13 @@ Response Structure
 ------------------
 :active:      A boolean which indicates whether or not the tenant is active
 :id:          The integral, unique identifier of this tenant
-:name:        This tenant's name
-:parentId:    The integral, unique identifier of this tenant's parent
+:lastUpdated: The date and time at which the :term:Tenant was last updated, in :RFC:3339 format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:     This tenant's name
+:parentId: The integral, unique identifier of this tenant's parent
 
 .. code-block:: http
 	:caption: Response Example

@@ -67,6 +67,9 @@ Response Structure
 :id:            The integral, unique identifier for the CDN
 :lastUpdated:   Date and time when the CDN was last modified in :rfc:`3339` Format
 
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :name:        The name of the CDN
 :ttlOverride: A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
 
@@ -139,6 +142,9 @@ Response Structure
 :domainName:    The top-level domain (TLD) assigned to the newly created CDN
 :id:            An integral, unique identifier for the newly created CDN
 :lastUpdated:   Date and time when the CDN was last modified in :rfc:`3339` Format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
 
 :name:        The newly created CDN's name
 :ttlOverride: A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`

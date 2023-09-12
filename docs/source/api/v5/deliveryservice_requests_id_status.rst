@@ -111,6 +111,9 @@ Response Structure
 ------------------
 The response is a full representation of the modified :term:`DSR`.
 
+.. versionchanged:: 5.0
+	Prior to version 5.0 of the API, the ``lastUpdated`` field was in :ref:`non-rfc-datetime`.
+
 .. code-block:: http
 	:caption: Response Example
 

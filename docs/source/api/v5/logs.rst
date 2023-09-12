@@ -64,10 +64,14 @@ Response Structure
 ------------------
 :id:          Integral, unique identifier for the Log entry
 :lastUpdated: Date and time at which the change was made, in :rfc:`3339` format
-:level:       Log categories for each entry, e.g. 'UICHANGE', 'OPER', 'APICHANGE'
-:message:     Log detail about what occurred
-:ticketNum:   Optional field to cross reference with any bug tracking systems
-:user:        Name of the user who made the change
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:level:     Log categories for each entry, e.g. 'UICHANGE', 'OPER', 'APICHANGE'
+:message:   Log detail about what occurred
+:ticketNum: Optional field to cross reference with any bug tracking systems
+:user:      Name of the user who made the change
 
 .. code-block:: http
 	:caption: Response Example
