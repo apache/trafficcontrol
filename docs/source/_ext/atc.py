@@ -16,8 +16,10 @@ REPO_URI = "https://github.com/apache/trafficcontrol/"
 
 # -- Implementation detail directive -----------------------------------------
 from docutils import nodes
+from sphinx.application import Sphinx
 from sphinx.util.docutils import SphinxDirective
 from sphinx.locale import translators, _
+from sphinx.domains import changeset
 
 class impl(nodes.Admonition, nodes.Element):
 	pass
@@ -45,6 +47,12 @@ class ImplementationDetail(SphinxDirective):
 			n, m = self.state.inline_text(self.arguments[0], self.lineno)
 			impl_node.append(nodes.paragraph('', '', *(n + m)))
 		return [impl_node]
+
+# -- Version Removed directive ----------------------------------------
+changeset.versionlabels["versionremoved"] = "Removed in version %s"
+changeset.versionlabel_classes["versionremoved"] = "removed"
+class VersionRemoved(changeset.VersionChange):
+	pass
 
 # -- Go Version role --------------------------------------------------
 # Returns the value of the Go version stored in GO_VERSION to minor version
@@ -196,12 +204,13 @@ def to_godoc_role(unused_typ,
 	return [refnode], []
 
 
-def setup(app: object) -> dict:
+def setup(app: Sphinx) -> dict:
 	app.add_node(impl,
 	             html=(visit_impl_node, depart_impl_node),
 	             latex=(visit_impl_node, depart_impl_node),
 	             text=(visit_impl_node, depart_impl_node))
 	app.add_directive("impl-detail", ImplementationDetail)
+	app.add_directive("versionremoved", VersionRemoved)
 	app.add_role("atc-go-version", atc_go_version)
 	app.add_role("issue", issue_role)
 	app.add_role("pr", pr_role)
