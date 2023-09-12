@@ -202,7 +202,7 @@ func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTi
 // This makes t3c work with old or new Traffic Ops deployed from `master`,
 // though it doesn't make a version of t3c older than this work with a new TO,
 // which isn't logically possible from the client.
-func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV5Response, toclientlib.ReqInf, error) {
+/*func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV5Response, toclientlib.ReqInf, error) {
 	path := "/servers"
 	objs := struct {
 		Response []tc.ServerV5Response `json:"response"`
@@ -218,8 +218,13 @@ func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV5
 	}
 
 	resp := tc.ServersV5Response{Alerts: objs.Alerts}
+
+	for _, sv := range objs.Response {
+		resp.Response = append(resp.Response, sv.Response)
+	}
+
 	return resp, reqInf, nil
-}
+}*/
 
 type ServerV40PlusLegacy struct {
 	tc.ServerV40
