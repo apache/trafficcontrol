@@ -318,9 +318,6 @@ func enrollDeliveryServiceServer(toSession *session, r io.Reader) error {
 		if len(servers.Response) == 0 {
 			return errors.New("no server with hostName " + sn)
 		}
-		if servers.Response[0].ID < 1 {
-			return fmt.Errorf("Traffic Ops gave back a representation for server '%s' with non-positive ID", sn)
-		}
 		serverIDs = append(serverIDs, servers.Response[0].ID)
 	}
 	resp, _, err := toSession.CreateDeliveryServiceServers(dsID, serverIDs, true, client.RequestOptions{})
@@ -366,9 +363,6 @@ func enrollOrigin(toSession *session, r io.Reader) error {
 	if err != nil {
 		log.Infof("error decoding Origin: %v", err)
 		return err
-	}
-	if s.Name == "" {
-		return errors.New("cannot create an Origin with no name")
 	}
 
 	alerts, _, err := toSession.CreateOrigin(s, client.RequestOptions{})
@@ -827,11 +821,6 @@ func enrollFederation(toSession *session, r io.Reader) error {
 				return err
 			}
 			deliveryService := deliveryServices.Response[0]
-			if deliveryService.CDNName == nil || deliveryService.ID == nil || deliveryService.XMLID == "" {
-				err = fmt.Errorf("Delivery Service '%s' as returned from Traffic Ops had null or undefined CDN name and/or ID", xmlID)
-				log.Infoln(err)
-				return err
-			}
 			cdnName = *deliveryService.CDNName
 			cdnFederation = tc.CDNFederation{
 				CName: mapping.CName,
