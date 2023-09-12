@@ -59,14 +59,15 @@ Request Structure
 
 Response Structure
 ------------------
-:divisionName: The name of the division which contains this region
-:division:   The integral, unique identifier of the division which contains this region
-:id:           An integral, unique identifier for this region
-:name:         The region name
-:lastUpdated:  The date and time at which this region was last updated in :rfc:`3339` format
+:divisionName: The name of the division which contains this :term:Region
+:division:     The integral, unique identifier of the division which contains this :term:Region
+:id:           An integral, unique identifier for this :term:Region
+:lastUpdated:  The date and time at which this :term:Region was last updated in :rfc:`3339` format
 
 	.. versionchanged:: 5.0
 		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name: The :term:Region name
 
 .. code-block:: http
 	:caption: Response Example

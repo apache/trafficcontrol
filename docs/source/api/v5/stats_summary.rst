@@ -100,7 +100,7 @@ Response Structure
 Summary Stats
 """""""""""""
 
-:cdnName:             The CDN name for which the summary stat was taken for
+:cdnName: The CDN name for which the summary stat was taken
 
 	.. note:: If the ``cdn`` is equal to ``all`` it represents summary_stats across all delivery services across all CDNs
 
@@ -199,7 +199,7 @@ Post a stats summary for a given stat.
 
 Request Structure
 -----------------
-:cdnName:             The CDN name for which the summary stat was taken for
+:cdnName: The CDN name for which the summary stat was taken
 
 	.. note:: If the ``cdn`` is equal to ``all`` it represents summary_stats across all delivery services across all CDNs
 

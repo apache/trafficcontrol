@@ -67,10 +67,10 @@ Request Structure
 
 Response Structure
 ------------------
-:cdn:             The integral, unique identifier of the :ref:`profile-cdn` to which this :term:`Profile` belongs
-:cdnName:         The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
-:description:     The :term:`Profile`'s :ref:`profile-description`
-:id:              The :term:`Profile`'s :ref:`profile-id`
+:cdn:         The integral, unique identifier of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:cdnName:     The name of the :ref:`profile-cdn` to which this :term:`Profile` belongs
+:description: The :term:`Profile`'s :ref:`profile-description`
+:id:          The :term:`Profile`'s :ref:`profile-id`
 :lastUpdated: The date and time at which this :term:`Profile` was last updated, in :rfc:`3339` format
 
 	.. versionchanged:: 5.0

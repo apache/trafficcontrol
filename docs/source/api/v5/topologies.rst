@@ -162,12 +162,12 @@ Create a new :term:`Topology`.
 
 Request Structure
 -----------------
-:description:           A short sentence that describes the topology.
-:name:                  The name of the topology. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the :term:`Topology`
+:description: A short sentence that describes the topology.
+:name:        The name of the topology. This can only be letters, numbers, and dashes.
+:nodes:       An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed.
+	:cachegroup: The name of a :term:`Cache Group` with at least 1 server in it
+	:parents:    The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Request Example

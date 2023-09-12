@@ -52,12 +52,13 @@ Request Structure
 
 Response Structure
 ------------------
-:parameter:   The :ref:`parameter-id` of a :term:`Parameter` assigned to ``profile``
-:profile:     The :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameter`` is assigned
 :lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in :rfc:`3339` format
 
 	.. versionchanged:: 5.0
 		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:parameter: The :ref:`parameter-id` of a :term:`Parameter` assigned to ``profile``
+:profile:   The :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameter`` is assigned
 
 .. code-block:: http
 	:caption: Response Structure
