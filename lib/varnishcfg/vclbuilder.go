@@ -75,8 +75,18 @@ func (vb *VCLBuilder) BuildVCLFile() (string, []string, error) {
 	if err != nil {
 		return "", nil, fmt.Errorf("(warnings: %s) %w", strings.Join(warnings, ", "), err)
 	}
+	profileDSes, dsWarnings := atscfg.GetProfileDSes(
+		vb.toData.Server,
+		vb.toData.Servers,
+		vb.toData.DeliveryServices,
+		vb.toData.DeliveryServiceServers,
+	)
+	warnings = append(warnings, dsWarnings...)
+	cacheWarnings := vb.configureUncacheableDSes(&v, profileDSes)
+	warnings = append(warnings, cacheWarnings...)
 
 	dirWarnings, err := vb.configureDirectors(&v, parents)
 	warnings = append(warnings, dirWarnings...)
+
 	return fmt.Sprint(v), warnings, err
 }
