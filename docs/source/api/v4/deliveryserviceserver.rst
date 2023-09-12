@@ -65,7 +65,7 @@ Unlike most API endpoints, this will return a JSON response body containing both
 :response: An array of objects, each of which represents a server's :term:`Delivery Service` assignment
 
 	:deliveryService: The integral, unique identifier of the :term:`Delivery Service` to which the server identified by ``server`` is assigned
-	:lastUpdated:     The date and time at which the server's assignment to a :term:`Delivery Service` was last updated
+	:lastUpdated:     The date and time at which the server's assignment to a :term:`Delivery Service` was last updated, in :ref:`non-rfc-datetime`
 	:server:          The integral, unique identifier of a server which is assigned to the :term:`Delivery Service` identified by ``deliveryService``
 
 :size: The page number - if pagination was requested in the query parameters, else ``0`` to indicate no pagination - of the results represented by the ``response`` array. This is named "size" for legacy reasons

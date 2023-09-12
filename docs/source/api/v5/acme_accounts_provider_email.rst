@@ -19,8 +19,6 @@
 ``acme_accounts/{{provider}}/{{email}}``
 ****************************************
 
-.. versionadded:: 3.1
-
 ``DELETE``
 ==========
 Delete :term:`ACME Account` information.
@@ -28,7 +26,7 @@ Delete :term:`ACME Account` information.
 :Auth. Required: Yes
 :Roles Required: "admin"
 :Permissions Required: ACME:DELETE, ACME:READ
-:Response Type:  Object
+:Response Type:  ``undefined``
 
 Request Structure
 -----------------

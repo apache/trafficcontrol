@@ -57,7 +57,7 @@ Response Structure
 ------------------
 :id:           The integral, unique identifier of the notification
 :cdn:          The name of the CDN to which the notification belongs to
-:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
+:lastUpdated:  The time and date this server entry was last updated in :rfc:3339 format
 :notification: The content of the notification
 :user:         The user responsible for creating the notification
 
@@ -81,7 +81,7 @@ Response Structure
 		{
 			"id": 42,
 			"cdn": "cdn1",
-			"lastUpdated": "2019-12-02 21:49:08+00",
+			"lastUpdated": "2019-12-02T21:49:08Z",
 			"notification": "the content of the notification",
 			"user": "username123",
 		}
@@ -121,7 +121,7 @@ Response Structure
 ------------------
 :id:           The integral, unique identifier of the notification
 :cdn:          The name of the CDN to which the notification belongs to
-:lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
+:lastUpdated:  The time and date this server entry was last updated in :rfc:3339 format
 :notification: The content of the notification
 :user:         The user responsible for creating the notification
 
@@ -153,7 +153,7 @@ Response Structure
 		{
 			"id": 42,
 			"cdn": "cdn1",
-			"lastUpdated": "2019-12-02 21:49:08+00",
+			"lastUpdated": "2019-12-02T21:49:08Z",
 			"notification": "the content of the notification",
 			"user": "username123",
 		}
