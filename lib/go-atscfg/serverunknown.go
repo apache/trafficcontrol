@@ -39,7 +39,7 @@ type ServerUnknownOpts struct {
 func MakeServerUnknown(
 	fileName string,
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *ServerUnknownOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -47,9 +47,9 @@ func MakeServerUnknown(
 	}
 	warnings := []string{}
 
-	if server.HostName == nil {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server missing HostName")
-	} else if server.DomainName == nil {
+	} else if server.DomainName == "" {
 		return Cfg{}, makeErr(warnings, "server missing DomainName")
 	}
 
@@ -75,7 +75,7 @@ func MakeServerUnknown(
 		txt += pa.Val + "\n"
 	}
 
-	txt = strings.Replace(txt, `__HOSTNAME__`, *server.HostName, -1)
+	txt = strings.Replace(txt, `__HOSTNAME__`, server.HostName, -1)
 	txt = strings.Replace(txt, `__RETURN__`, "\n", -1)
 
 	lineComment := getServerUnknownConfigCommentType(params)

@@ -54,12 +54,12 @@ type ServerCapability string
 // Server is a tc.Server for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type Server tc.ServerV40
+type Server tc.ServerV5
 
 // DeliveryService is a tc.DeliveryService for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type DeliveryService tc.DeliveryServiceV4
+type DeliveryService tc.DeliveryServiceV5
 
 // InvalidationJob is a tc.InvalidationJob for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
@@ -69,10 +69,86 @@ type InvalidationJob tc.InvalidationJobV4
 // ServerUdpateStatus is a tc.ServerUdpateStatus for the latest lib/go-tc and traffic_ops/vx-client type.
 // This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
 // but to only have to change it here, and the places where breaking symbol changes were made.
-type ServerUpdateStatus tc.ServerUpdateStatusV4
+type ServerUpdateStatus tc.ServerUpdateStatusV5
+
+//type CDN tc.CDNV5
+
+func ToCDNs(cdns []tc.CDN) []tc.CDNV5 {
+	ac := make([]tc.CDNV5, 0, len(cdns))
+	for _, cdn := range cdns {
+		ac = append(ac, ToCDN(cdn))
+	}
+	return ac
+}
+
+func ToCDN(cdn tc.CDN) tc.CDNV5 {
+	return tc.CDNV5{
+		DNSSECEnabled: cdn.DNSSECEnabled,
+		DomainName:    cdn.DomainName,
+		ID:            cdn.ID,
+		LastUpdated:   cdn.LastUpdated.Time,
+		Name:          cdn.Name,
+		TTLOverride:   &cdn.TTLOverride,
+	}
+}
+
+func ToCacheGroups(cacheGroups []tc.CacheGroupNullable) []tc.CacheGroupNullableV5 {
+	ag := make([]tc.CacheGroupNullableV5, 0, len(cacheGroups))
+	for _, cg := range cacheGroups {
+		ag = append(ag, ToCacheGroup(cg))
+	}
+	return ag
+}
+
+func ToCacheGroup(cacheGroup tc.CacheGroupNullable) tc.CacheGroupNullableV5 {
+	return tc.CacheGroupNullableV5{
+		ID:                          cacheGroup.ID,
+		Name:                        cacheGroup.Name,
+		ShortName:                   cacheGroup.ShortName,
+		Latitude:                    cacheGroup.Latitude,
+		Longitude:                   cacheGroup.Longitude,
+		ParentName:                  cacheGroup.ParentName,
+		ParentCachegroupID:          cacheGroup.ParentCachegroupID,
+		SecondaryParentName:         cacheGroup.SecondaryParentName,
+		SecondaryParentCachegroupID: cacheGroup.SecondaryParentCachegroupID,
+		FallbackToClosest:           cacheGroup.FallbackToClosest,
+		LocalizationMethods:         cacheGroup.LocalizationMethods,
+		Type:                        cacheGroup.Type,
+		TypeID:                      cacheGroup.TypeID,
+		LastUpdated:                 &cacheGroup.LastUpdated.Time,
+		Fallbacks:                   cacheGroup.Fallbacks,
+	}
+
+}
+
+func ToTopologies(topologies []tc.Topology) []tc.TopologyV5 {
+	tg := make([]tc.TopologyV5, 0, len(topologies))
+	for _, topology := range topologies {
+		tg = append(tg, ToTopology(topology))
+	}
+	return tg
+}
+
+func ToTopology(topology tc.Topology) tc.TopologyV5 {
+	nodes := []tc.TopologyNodeV5{}
+	for _, n := range topology.Nodes {
+		nodes = append(nodes, tc.TopologyNodeV5{
+			Id:          n.Id,
+			Cachegroup:  n.Cachegroup,
+			Parents:     n.Parents,
+			LastUpdated: &n.LastUpdated.Time,
+		})
+	}
+	return tc.TopologyV5{
+		Description: topology.Description,
+		Name:        topology.Name,
+		Nodes:       nodes,
+		LastUpdated: &topology.LastUpdated.Time,
+	}
+}
 
 // ToDeliveryServices converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToDeliveryServices(dses []tc.DeliveryServiceV4) []DeliveryService {
+func ToDeliveryServices(dses []tc.DeliveryServiceV5) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
 		ad = append(ad, DeliveryService(ds))
@@ -80,11 +156,13 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV4) []DeliveryService {
 	return ad
 }
 
-// V40ToDeliveryServices converts a slice of the old traffic_ops/v4-client type to the local alias.
-func V4ToDeliveryServices(dses []tc.DeliveryServiceV4) []DeliveryService {
+// V50ToDeliveryServices converts a slice of the traffic_ops/v5-client type to the local alias.
+func V5ToDeliveryServices(dses []tc.DeliveryServiceV5) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
-		ad = append(ad, DeliveryService(ds))
+		if ds.Active != tc.DSActiveStateInactive {
+			ad = append(ad, DeliveryService(ds))
+		}
 	}
 	return ad
 }
@@ -99,7 +177,7 @@ func ToInvalidationJobs(jobs []tc.InvalidationJobV4) []InvalidationJob {
 }
 
 // ToServers converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToServers(servers []tc.ServerV40) []Server {
+func ToServers(servers []tc.ServerV5) []Server {
 	as := make([]Server, 0, len(servers))
 	for _, sv := range servers {
 		as = append(as, Server(sv))
@@ -108,7 +186,7 @@ func ToServers(servers []tc.ServerV40) []Server {
 }
 
 // ToServerUpdateStatuses converts a slice of the latest lib/go-tc and traffic_ops/vx-client type to the local alias.
-func ToServerUpdateStatuses(statuses []tc.ServerUpdateStatusV40) []ServerUpdateStatus {
+func ToServerUpdateStatuses(statuses []tc.ServerUpdateStatusV50) []ServerUpdateStatus {
 	sus := make([]ServerUpdateStatus, 0, len(statuses))
 	for _, st := range statuses {
 		sus = append(sus, ServerUpdateStatus(st))
@@ -137,8 +215,8 @@ type Cfg struct {
 	Warnings    []string
 }
 
-func makeCGMap(cgs []tc.CacheGroupNullable) (map[tc.CacheGroupName]tc.CacheGroupNullable, error) {
-	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullable{}
+func makeCGMap(cgs []tc.CacheGroupNullableV5) (map[tc.CacheGroupName]tc.CacheGroupNullableV5, error) {
+	cgMap := map[tc.CacheGroupName]tc.CacheGroupNullableV5{}
 	for _, cg := range cgs {
 		if cg.Name == nil {
 			return nil, errors.New("got cachegroup with nil name!'")
@@ -158,15 +236,15 @@ type serverParentCacheGroupData struct {
 // getParentCacheGroupData returns the parent CacheGroup IDs and types for the given server.
 // Takes a server and a CG map. To create a CGMap from an API CacheGroup slice, use MakeCGMap.
 // If server's CacheGroup has no parent or secondary parent, returns InvalidID and "" with no error.
-func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.CacheGroupNullable) (serverParentCacheGroupData, error) {
-	if server.Cachegroup == nil || *server.Cachegroup == "" {
+func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.CacheGroupNullableV5) (serverParentCacheGroupData, error) {
+	if server.CacheGroup == "" {
 		return serverParentCacheGroupData{}, errors.New("server missing cachegroup")
-	} else if server.HostName == nil || *server.HostName == "" {
+	} else if server.HostName == "" {
 		return serverParentCacheGroupData{}, errors.New("server missing hostname")
 	}
-	serverCG, ok := cgMap[tc.CacheGroupName(*server.Cachegroup)]
+	serverCG, ok := cgMap[tc.CacheGroupName(server.CacheGroup)]
 	if !ok {
-		return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' not found in CacheGroups")
+		return serverParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.CacheGroup + "' not found in CacheGroups")
 	}
 
 	parentCGID := InvalidID
@@ -174,7 +252,7 @@ func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.Cach
 	if serverCG.ParentName != nil && *serverCG.ParentName != "" {
 		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.ParentName)]
 		if !ok {
-			return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
+			return serverParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.CacheGroup + "' parent '" + *serverCG.ParentName + "' not found in CacheGroups")
 		}
 		if parentCG.ID == nil {
 			return serverParentCacheGroupData{}, errors.New("got cachegroup '" + *parentCG.Name + "' with nil ID!'")
@@ -192,7 +270,7 @@ func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.Cach
 	if serverCG.SecondaryParentName != nil && *serverCG.SecondaryParentName != "" {
 		parentCG, ok := cgMap[tc.CacheGroupName(*serverCG.SecondaryParentName)]
 		if !ok {
-			return serverParentCacheGroupData{}, errors.New("server '" + *server.HostName + "' cachegroup '" + *server.Cachegroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
+			return serverParentCacheGroupData{}, errors.New("server '" + server.HostName + "' cachegroup '" + server.CacheGroup + "' secondary parent '" + *serverCG.SecondaryParentName + "' not found in CacheGroups")
 		}
 
 		if parentCG.ID == nil {
@@ -286,12 +364,12 @@ func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 }
 
 // topologyIncludesServerNullable returns whether the given topology includes the given server.
-func topologyIncludesServerNullable(topology tc.Topology, server *Server) (bool, error) {
-	if server.Cachegroup == nil {
+func topologyIncludesServerNullable(topology tc.TopologyV5, server *Server) (bool, error) {
+	if server.CacheGroup == "" {
 		return false, errors.New("server missing Cachegroup")
 	}
 	for _, node := range topology.Nodes {
-		if node.Cachegroup == *server.Cachegroup {
+		if node.Cachegroup == server.CacheGroup {
 			return true, nil
 		}
 	}
@@ -330,10 +408,10 @@ type TopologyPlacement struct {
 // - Whether the cachegroup is the last tier in the topology.
 // - Whether the cachegroup is in the topology at all.
 // - Whether it's the first, inner, or last cache tier before the Origin.
-func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.Topology, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullable, ds *DeliveryService) (TopologyPlacement, error) {
-	isMSO := ds.MultiSiteOrigin != nil && *ds.MultiSiteOrigin
+func getTopologyPlacement(cacheGroup tc.CacheGroupName, topology tc.TopologyV5, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5, ds *DeliveryService) (TopologyPlacement, error) {
+	isMSO := ds.MultiSiteOrigin
 
-	serverNode := tc.TopologyNode{}
+	serverNode := tc.TopologyNodeV5{}
 	serverNodeIndex := -1
 	for nodeI, node := range topology.Nodes {
 		if node.Cachegroup == string(cacheGroup) {
@@ -385,8 +463,8 @@ nodeFor:
 	}, nil
 }
 
-func makeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology {
-	topoNames := map[TopologyName]tc.Topology{}
+func makeTopologyNameMap(topologies []tc.TopologyV5) map[TopologyName]tc.TopologyV5 {
+	topoNames := map[TopologyName]tc.TopologyV5{}
 	for _, to := range topologies {
 		topoNames[TopologyName(to.Name)] = to
 	}
@@ -396,7 +474,7 @@ func makeTopologyNameMap(topologies []tc.Topology) map[TopologyName]tc.Topology 
 // getTopologyDirectChildren returns the cachegroups which are immediate children of the given cachegroup in any topology.
 func getTopologyDirectChildren(
 	cg tc.CacheGroupName,
-	topologies []tc.Topology,
+	topologies []tc.TopologyV5,
 ) map[tc.CacheGroupName]struct{} {
 	children := map[tc.CacheGroupName]struct{}{}
 
@@ -424,20 +502,20 @@ func getTopologyDirectChildren(
 }
 
 type parameterWithProfiles struct {
-	tc.Parameter
+	tc.ParameterV5
 	ProfileNames []string
 }
 
 type parameterWithProfilesMap struct {
-	tc.Parameter
+	tc.ParameterV5
 	ProfileNames map[string]struct{}
 }
 
 // tcParamsToParamsWithProfiles unmarshals the Profiles that the tc struct doesn't.
-func tcParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]parameterWithProfiles, error) {
+func tcParamsToParamsWithProfiles(tcParams []tc.ParameterV5) ([]parameterWithProfiles, error) {
 	params := make([]parameterWithProfiles, 0, len(tcParams))
 	for _, tcParam := range tcParams {
-		param := parameterWithProfiles{Parameter: tcParam}
+		param := parameterWithProfiles{ParameterV5: tcParam}
 
 		profiles := []string{}
 		if err := json.Unmarshal(tcParam.Profiles, &profiles); err != nil {
@@ -453,7 +531,7 @@ func tcParamsToParamsWithProfiles(tcParams []tc.Parameter) ([]parameterWithProfi
 func parameterWithProfilesToMap(tcParams []parameterWithProfiles) []parameterWithProfilesMap {
 	params := []parameterWithProfilesMap{}
 	for _, tcParam := range tcParams {
-		param := parameterWithProfilesMap{Parameter: tcParam.Parameter, ProfileNames: map[string]struct{}{}}
+		param := parameterWithProfilesMap{ParameterV5: tcParam.ParameterV5, ProfileNames: map[string]struct{}{}}
 		for _, profile := range tcParam.ProfileNames {
 			param.ProfileNames[profile] = struct{}{}
 		}
@@ -485,8 +563,8 @@ func filterDSS(dsses []DeliveryServiceServer, dsIDs map[int]struct{}, serverIDs 
 // filterParams filters params and returns only the parameters which match configFile, name, and value.
 // If configFile, name, or value is the empty string, it is not filtered.
 // Returns a slice of parameters.
-func filterParams(params []tc.Parameter, configFile string, name string, value string, omitName string) []tc.Parameter {
-	filtered := []tc.Parameter{}
+func filterParams(params []tc.ParameterV5, configFile string, name string, value string, omitName string) []tc.ParameterV5 {
+	filtered := []tc.ParameterV5{}
 	for _, param := range params {
 		if configFile != "" && param.ConfigFile != configFile {
 			continue
@@ -510,7 +588,7 @@ func filterParams(params []tc.Parameter, configFile string, name string, value s
 // Warnings will be returned if any parameters have the same name but different values.
 // Returns the parameter map, and any warnings.
 // See ParamArrToMultiMap.
-func paramsToMap(params []tc.Parameter) (map[string]string, []string) {
+func paramsToMap(params []tc.ParameterV5) (map[string]string, []string) {
 	warnings := []string{}
 	mp := map[string]string{}
 	for _, param := range params {
@@ -528,7 +606,7 @@ func paramsToMap(params []tc.Parameter) (map[string]string, []string) {
 }
 
 // paramArrToMultiMap converts a []tc.Parameter to a map[paramName][]paramValue.
-func paramsToMultiMap(params []tc.Parameter) map[string][]string {
+func paramsToMultiMap(params []tc.ParameterV5) map[string][]string {
 	mp := map[string][]string{}
 	for _, param := range params {
 		mp[param.Name] = append(mp[param.Name], param.Value)
@@ -623,7 +701,7 @@ func getServiceAddresses(sv *Server) (net.IP, net.IP) {
 // If more flexibility is needed, getATSMajorVersionFromParams may be called directly;
 // but it should generally be avoided, functions should always take a config variable for the
 // ATS version, in case a user wants to manage the ATS package outside ATC.
-func getATSMajorVersion(atsMajorVersion uint, serverParams []tc.Parameter, warnings *[]string) uint {
+func getATSMajorVersion(atsMajorVersion uint, serverParams []tc.ParameterV5, warnings *[]string) uint {
 	if atsMajorVersion != 0 {
 		return atsMajorVersion
 	}
@@ -638,7 +716,7 @@ func getATSMajorVersion(atsMajorVersion uint, serverParams []tc.Parameter, warni
 // It returns the ATS major version from the config_file 'package' name 'trafficserver' Parameter on the given Server Profile Parameters.
 // If no Parameter is found, or the value is malformed, a warning or error is logged and DefaultATSVersion is returned.
 // Returns the ATS major version, and any warnings
-func getATSMajorVersionFromParams(serverParams []tc.Parameter) (uint, []string) {
+func getATSMajorVersionFromParams(serverParams []tc.ParameterV5) (uint, []string) {
 	warnings := []string{}
 	atsVersionParam := ""
 	for _, param := range serverParams {
@@ -667,7 +745,7 @@ func getATSMajorVersionFromParams(serverParams []tc.Parameter) (uint, []string) 
 
 // getMaxRequestHeaderParam returns the 'CONFIG proxy.config.http.request_header_max_size' if configured in the Server Profile Parameters.
 // If the parameter is not configured it will return the traffic server default request header max size.
-func getMaxRequestHeaderParam(serverParams []tc.Parameter) (int, []string) {
+func getMaxRequestHeaderParam(serverParams []tc.ParameterV5) (int, []string) {
 	warnings := []string{}
 	globalRequestHeaderMaxSize := TsDefaultRequestHeaderMaxSize
 	params, paramWarns := paramsToMap(filterParams(serverParams, RecordsFileName, "", "", "location"))
@@ -786,8 +864,8 @@ func BoolOnOff(b bool) string {
 // GetDSParameters returns the parameters for the given Delivery Service.
 func GetDSParameters(
 	ds *DeliveryService,
-	params []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
-) ([]tc.Parameter, error) {
+	params []tc.ParameterV5, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.ParameterV5, error) {
 	profileNames := []string{}
 	if ds.ProfileName != nil {
 		profileNames = append(profileNames, *ds.ProfileName)
@@ -799,9 +877,9 @@ func GetDSParameters(
 // See LayerProfiles.
 func GetServerParameters(
 	server *Server,
-	params []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
-) ([]tc.Parameter, error) {
-	return LayerProfiles(server.ProfileNames, params)
+	params []tc.ParameterV5, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.ParameterV5, error) {
+	return LayerProfiles(server.Profiles, params)
 }
 
 // LayerProfiles takes an ordered list of profile names (presumably from a Server or Delivery Service),
@@ -812,8 +890,8 @@ func GetServerParameters(
 // or other object containing an ordered list of profiles.
 func LayerProfiles(
 	profileNames []string, // from a Server, Delivery Service, or other object with "layered profiles".
-	tcParams []tc.Parameter, // from v4-client.GetParameters -> /4.0/parameters
-) ([]tc.Parameter, error) {
+	tcParams []tc.ParameterV5, // from v4-client.GetParameters -> /4.0/parameters
+) ([]tc.ParameterV5, error) {
 	params, err := tcParamsToParamsWithProfiles(tcParams)
 	if err != nil {
 		return nil, errors.New("parsing parameters profiles: " + err.Error())
@@ -822,13 +900,13 @@ func LayerProfiles(
 }
 
 // layerProfilesFromWith is like LayerProfiles if you already have a []parameterWithProfiles.
-func layerProfilesFromWith(profileNames []string, params []parameterWithProfiles) []tc.Parameter {
+func layerProfilesFromWith(profileNames []string, params []parameterWithProfiles) []tc.ParameterV5 {
 	paramsMap := parameterWithProfilesToMap(params)
 	return layerProfilesFromMap(profileNames, paramsMap)
 }
 
 // layerProfilesFromMap is like LayerProfiles if you already have a []parameterWithProfilesMap.
-func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesMap) []tc.Parameter {
+func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesMap) []tc.ParameterV5 {
 	// ParamKey is the key for a Parameter, which
 	// if there's another Parameter with the same key in a subsequent profile
 	// in the ordered list, the last Parameter with this key will be used.
@@ -837,17 +915,17 @@ func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesM
 		ConfigFile string
 	}
 
-	getParamKey := func(pa tc.Parameter) ParamKey { return ParamKey{Name: pa.Name, ConfigFile: pa.ConfigFile} }
+	getParamKey := func(pa tc.ParameterV5) ParamKey { return ParamKey{Name: pa.Name, ConfigFile: pa.ConfigFile} }
 
-	allProfileParams := map[string][]tc.Parameter{}
+	allProfileParams := map[string][]tc.ParameterV5{}
 
 	for _, param := range params {
 		for profile, _ := range param.ProfileNames {
-			allProfileParams[profile] = append(allProfileParams[profile], param.Parameter)
+			allProfileParams[profile] = append(allProfileParams[profile], param.ParameterV5)
 		}
 	}
 
-	layeredParamMap := map[ParamKey]tc.Parameter{}
+	layeredParamMap := map[ParamKey]tc.ParameterV5{}
 	// profileNames is ordered, we need to iterate through this backwards
 	// because we need subsequent params on other profiles to override previous ones,
 	// this will provide the proper "layering" that we want.
@@ -859,7 +937,7 @@ func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesM
 		}
 	}
 
-	layeredParams := []tc.Parameter{}
+	layeredParams := []tc.ParameterV5{}
 	for _, param := range layeredParamMap {
 		layeredParams = append(layeredParams, param)
 	}
@@ -869,7 +947,7 @@ func layerProfilesFromMap(profileNames []string, params []parameterWithProfilesM
 // ServerProfilesMatch returns whether both servers have the same Profiles in the same order,
 // and thus will have the same Parameters.
 func ServerProfilesMatch(sa *Server, sb *Server) bool {
-	return ProfilesMatch(sa.ProfileNames, sb.ProfileNames)
+	return ProfilesMatch(sa.Profiles, sb.Profiles)
 }
 
 // ProfilesMatch takes two ordered lists of profile names (such as from Servers or Delivery Services)
@@ -889,5 +967,5 @@ func ProfilesMatch(pa []string, pb []string) bool {
 
 // IsGoDirect checks if this ds type is edge only.
 func IsGoDirect(ds DeliveryService) bool {
-	return *ds.Type == tc.DSTypeHTTPNoCache || *ds.Type == tc.DSTypeHTTPLive || *ds.Type == tc.DSTypeDNSLive
+	return *ds.Type == tc.DSTypeHTTPNoCache.String() || *ds.Type == tc.DSTypeHTTPLive.String() || *ds.Type == tc.DSTypeDNSLive.String()
 }

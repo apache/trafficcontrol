@@ -25,7 +25,7 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestFederationUsers(t *testing.T, cl *toclient.Session) {
@@ -33,11 +33,11 @@ func CreateTestFederationUsers(t *testing.T, cl *toclient.Session) {
 	federationUsers := map[string]tc.FederationUserPost{
 		"the.cname.com.": {
 			IDs:     []int{GetUserID(t, cl, "admin")(), GetUserID(t, cl, "adminuser")(), GetUserID(t, cl, "disalloweduser")(), GetUserID(t, cl, "readonlyuser")()},
-			Replace: util.BoolPtr(false),
+			Replace: util.Ptr(false),
 		},
 		"booya.com.": {
 			IDs:     []int{GetUserID(t, cl, "adminuser")()},
-			Replace: util.BoolPtr(false),
+			Replace: util.Ptr(false),
 		},
 	}
 

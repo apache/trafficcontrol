@@ -24,13 +24,13 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestServers(t *testing.T, cl *toclient.Session, td TrafficControl) {
 	for _, server := range td.Servers {
 		resp, _, err := cl.CreateServer(server, toclient.RequestOptions{})
-		assert.RequireNoError(t, err, "Could not create server '%s': %v - alerts: %+v", *server.HostName, err, resp.Alerts)
+		assert.RequireNoError(t, err, "Could not create server '%s': %v - alerts: %+v", server.HostName, err, resp.Alerts)
 	}
 }
 
@@ -39,15 +39,15 @@ func DeleteTestServers(t *testing.T, cl *toclient.Session) {
 	assert.NoError(t, err, "Cannot get Servers: %v - alerts: %+v", err, servers.Alerts)
 
 	for _, server := range servers.Response {
-		delResp, _, err := cl.DeleteServer(*server.ID, toclient.RequestOptions{})
+		delResp, _, err := cl.DeleteServer(server.ID, toclient.RequestOptions{})
 		assert.NoError(t, err, "Could not delete Server: %v - alerts: %+v", err, delResp.Alerts)
 		// Retrieve Server to see if it got deleted
 		opts := toclient.NewRequestOptions()
-		opts.QueryParameters.Set("id", strconv.Itoa(*server.ID))
+		opts.QueryParameters.Set("id", strconv.Itoa(server.ID))
 		getServer, _, err := cl.GetServers(opts)
 		assert.RequireNotNil(t, server.HostName, "Expected server host name to not be nil.")
-		assert.NoError(t, err, "Error deleting Server for '%s' : %v - alerts: %+v", *server.HostName, err, getServer.Alerts)
-		assert.Equal(t, 0, len(getServer.Response), "Expected Server '%s' to be deleted", *server.HostName)
+		assert.NoError(t, err, "Error deleting Server for '%s' : %v - alerts: %+v", server.HostName, err, getServer.Alerts)
+		assert.Equal(t, 0, len(getServer.Response), "Expected Server '%s' to be deleted", server.HostName)
 	}
 }
 
@@ -59,6 +59,6 @@ func GetServerID(t *testing.T, cl *toclient.Session, hostName string) func() int
 		assert.RequireNoError(t, err, "Get Servers Request failed with error:", err)
 		assert.RequireEqual(t, 1, len(serversResp.Response), "Expected response object length 1, but got %d", len(serversResp.Response))
 		assert.RequireNotNil(t, serversResp.Response[0].ID, "Expected id to not be nil")
-		return *serversResp.Response[0].ID
+		return serversResp.Response[0].ID
 	}
 }

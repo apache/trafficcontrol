@@ -41,7 +41,7 @@ type LogsXMLDotConfigOpts struct {
 
 func MakeLogsXMLDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *LogsXMLDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -49,7 +49,7 @@ func MakeLogsXMLDotConfig(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 

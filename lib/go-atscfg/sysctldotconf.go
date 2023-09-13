@@ -38,14 +38,14 @@ type SysCtlDotConfOpts struct {
 
 func MakeSysCtlDotConf(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *SysCtlDotConfOpts,
 ) (Cfg, error) {
 	if opt == nil {
 		opt = &SysCtlDotConfOpts{}
 	}
 	warnings := []string{}
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 

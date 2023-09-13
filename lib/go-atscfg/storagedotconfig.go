@@ -43,7 +43,7 @@ type StorageDotConfigOpts struct {
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeStorageDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *StorageDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -51,11 +51,11 @@ func MakeStorageDotConfig(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 
-	if server.HostName == nil {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server missing HostName")
 	}
 
@@ -68,7 +68,7 @@ func MakeStorageDotConfig(
 	if drivePrefix := paramData["Drive_Prefix"]; drivePrefix != "" {
 		driveLetters := strings.TrimSpace(paramData["Drive_Letters"])
 		if driveLetters == "" {
-			warnings = append(warnings, fmt.Sprintf("server %+v profile has Drive_Prefix parameter, but no Drive_Letters; creating anyway", *server.HostName))
+			warnings = append(warnings, fmt.Sprintf("server %+v profile has Drive_Prefix parameter, but no Drive_Letters; creating anyway", server.HostName))
 		}
 		text += makeStorageVolumeText(drivePrefix, driveLetters, nextVolume)
 		nextVolume++
@@ -77,7 +77,7 @@ func MakeStorageDotConfig(
 	if ramDrivePrefix := paramData["RAM_Drive_Prefix"]; ramDrivePrefix != "" {
 		ramDriveLetters := strings.TrimSpace(paramData["RAM_Drive_Letters"])
 		if ramDriveLetters == "" {
-			warnings = append(warnings, fmt.Sprintf("server %+v profile has RAM_Drive_Prefix parameter, but no RAM_Drive_Letters; creating anyway", *server.HostName))
+			warnings = append(warnings, fmt.Sprintf("server %+v profile has RAM_Drive_Prefix parameter, but no RAM_Drive_Letters; creating anyway", server.HostName))
 		}
 		text += makeStorageVolumeText(ramDrivePrefix, ramDriveLetters, nextVolume)
 		nextVolume++
@@ -86,7 +86,7 @@ func MakeStorageDotConfig(
 	if ssdDrivePrefix := paramData["SSD_Drive_Prefix"]; ssdDrivePrefix != "" {
 		ssdDriveLetters := strings.TrimSpace(paramData["SSD_Drive_Letters"])
 		if ssdDriveLetters == "" {
-			warnings = append(warnings, fmt.Sprintf("server %+v profile has SSD_Drive_Prefix parameter, but no SSD_Drive_Letters; creating anyway", *server.HostName))
+			warnings = append(warnings, fmt.Sprintf("server %+v profile has SSD_Drive_Prefix parameter, but no SSD_Drive_Letters; creating anyway", server.HostName))
 		}
 		text += makeStorageVolumeText(ssdDrivePrefix, ssdDriveLetters, nextVolume)
 		nextVolume++

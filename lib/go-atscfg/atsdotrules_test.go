@@ -29,11 +29,11 @@ import (
 func TestMakeATSDotRules(t *testing.T) {
 	server := makeGenericServer()
 	serverProfile := "myProfile"
-	server.ProfileNames = []string{serverProfile}
+	server.Profiles = []string{serverProfile}
 
 	hdr := "myHeaderComment"
 
-	serverParams := []tc.Parameter{
+	serverParams := []tc.ParameterV5{
 		{
 			Name:       "Drive_Prefix",
 			ConfigFile: ATSDotRulesFileName,

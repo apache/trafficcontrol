@@ -25,7 +25,7 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 // this resets the IDs of things attached to a DS, which needs to be done
@@ -38,15 +38,15 @@ import (
 // A better solution _might_ be to reload all the test fixtures every time
 // to wipe any and all referential modifications made to any test data, but
 // for now that's overkill.
-func resetDS(ds *tc.DeliveryServiceV4) {
+func resetDS(ds *tc.DeliveryServiceV5) {
 	if ds == nil {
 		return
 	}
-	ds.CDNID = nil
+	ds.CDNID = 0
 	ds.ID = nil
 	ds.ProfileID = nil
-	ds.TenantID = nil
-	ds.TypeID = nil
+	ds.TenantID = 0
+	ds.TypeID = 0
 }
 
 func CreateTestDeliveryServiceRequests(t *testing.T, cl *toclient.Session, td TrafficControl) {

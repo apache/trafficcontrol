@@ -25,12 +25,12 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestFederationResolvers(t *testing.T, cl *toclient.Session, td TrafficControl) {
 	for _, fr := range td.FederationResolvers {
-		fr.TypeID = util.UIntPtr(uint(GetTypeId(t, cl, *fr.Type)))
+		fr.TypeID = util.Ptr(uint(GetTypeId(t, cl, *fr.Type)))
 		resp, _, err := cl.CreateFederationResolver(fr, toclient.RequestOptions{})
 		assert.RequireNoError(t, err, "Failed to create Federation Resolver %+v: %v - alerts: %+v", fr, err, resp.Alerts)
 	}

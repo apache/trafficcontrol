@@ -22,13 +22,11 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeSetDSCPDotConfig(t *testing.T) {
 	server := makeGenericServer()
-	server.CDNName = util.StrPtr("mycdn")
+	server.CDN = "mycdn"
 
 	hdr := "myHeaderComment"
 	fileName := "set_dscp_42.config"
@@ -53,7 +51,7 @@ func TestMakeSetDSCPDotConfig(t *testing.T) {
 
 func TestMakeSetDSCPDotConfigNonNumber(t *testing.T) {
 	server := makeGenericServer()
-	server.CDNName = util.StrPtr("mycdn")
+	server.CDN = "mycdn"
 
 	hdr := "myHeaderComment"
 	fileName := "set_dscp_42a.config"

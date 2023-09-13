@@ -56,11 +56,11 @@ type IPAllowDotConfigOpts struct {
 // The childServers is a list of servers which are children for this Mid-tier server. This should be empty for Edge servers.
 // More specifically, it should be the list of edges whose cachegroup's parent_cachegroup or secondary_parent_cachegroup is the cachegroup of this Mid server.
 func MakeIPAllowDotConfig(
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	server *Server,
 	servers []Server,
-	cacheGroups []tc.CacheGroupNullable,
-	topologies []tc.Topology,
+	cacheGroups []tc.CacheGroupNullableV5,
+	topologies []tc.TopologyV5,
 	opt *IPAllowDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -68,10 +68,10 @@ func MakeIPAllowDotConfig(
 	}
 	warnings := []string{}
 
-	if server.Cachegroup == nil {
+	if server.CacheGroup == "" {
 		return Cfg{}, makeErr(warnings, "this server missing Cachegroup")
 	}
-	if server.HostName == nil {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "this server missing HostName")
 	}
 
@@ -140,7 +140,7 @@ func MakeIPAllowDotConfig(
 		ips := []*net.IPNet{}
 		ip6s := []*net.IPNet{}
 
-		cgMap := map[string]tc.CacheGroupNullable{}
+		cgMap := map[string]tc.CacheGroupNullableV5{}
 		for _, cg := range cacheGroups {
 			if cg.Name == nil {
 				return Cfg{}, makeErr(warnings, "got cachegroup with nil name!")
@@ -148,18 +148,18 @@ func MakeIPAllowDotConfig(
 			cgMap[*cg.Name] = cg
 		}
 
-		if server.Cachegroup == nil {
+		if server.CacheGroup == "" {
 			return Cfg{}, makeErr(warnings, "server had nil Cachegroup!")
 		}
 
-		serverCG, ok := cgMap[*server.Cachegroup]
+		serverCG, ok := cgMap[server.CacheGroup]
 		if !ok {
 			return Cfg{}, makeErr(warnings, "server cachegroup not in cachegroups!")
 		}
 
-		childCGNames := getTopologyDirectChildren(tc.CacheGroupName(*server.Cachegroup), topologies)
+		childCGNames := getTopologyDirectChildren(tc.CacheGroupName(server.CacheGroup), topologies)
 
-		childCGs := map[string]tc.CacheGroupNullable{}
+		childCGs := map[string]tc.CacheGroupNullableV5{}
 		for cgName, _ := range childCGNames {
 			childCGs[string(cgName)] = cgMap[string(cgName)]
 		}
@@ -173,10 +173,10 @@ func MakeIPAllowDotConfig(
 		// sort servers, to guarantee things like IP coalescing are deterministic
 		sort.Sort(serversSortByName(servers))
 		for _, childServer := range servers {
-			if childServer.Cachegroup == nil {
+			if childServer.CacheGroup == "" {
 				warnings = append(warnings, "Servers had server with nil Cachegroup, skipping!")
 				continue
-			} else if childServer.HostName == nil {
+			} else if childServer.HostName == "" {
 				warnings = append(warnings, "Servers had server with nil HostName, skipping!")
 				continue
 			}
@@ -185,7 +185,7 @@ func MakeIPAllowDotConfig(
 			// - all children of this server
 			// - all monitors, if this server is a Mid
 			//
-			_, isChild := childCGs[*childServer.Cachegroup]
+			_, isChild := childCGs[childServer.CacheGroup]
 			if !isChild && !strings.HasPrefix(server.Type, tc.MidTypePrefix) && string(childServer.Type) != tc.MonitorTypeName {
 				continue
 			}
@@ -203,10 +203,10 @@ func MakeIPAllowDotConfig(
 						// not an IP, try a CIDR
 						if ip, cidr, err := net.ParseCIDR(svAddr.Address); err != nil {
 							// not a CIDR or IP - error out
-							warnings = append(warnings, "server '"+*server.HostName+"' IP '"+svAddr.Address+" is not an IP address or CIDR - skipping!")
+							warnings = append(warnings, "server '"+server.HostName+"' IP '"+svAddr.Address+" is not an IP address or CIDR - skipping!")
 						} else if ip == nil {
 							// not a CIDR or IP - error out
-							warnings = append(warnings, "server '"+*server.HostName+"' IP '"+svAddr.Address+" failed to parse as IP or CIDR - skipping!")
+							warnings = append(warnings, "server '"+server.HostName+"' IP '"+svAddr.Address+" failed to parse as IP or CIDR - skipping!")
 						} else {
 							// got a valid CIDR - add it to the list
 							if ip4 := ip.To4(); ip4 != nil {
@@ -290,12 +290,12 @@ type serversSortByName []Server
 func (ss serversSortByName) Len() int      { return len(ss) }
 func (ss serversSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
 func (ss serversSortByName) Less(i, j int) bool {
-	if ss[j].HostName == nil {
+	if ss[j].HostName == "" {
 		return false
-	} else if ss[i].HostName == nil {
+	} else if ss[i].HostName == "" {
 		return true
 	}
-	return *ss[i].HostName < *ss[j].HostName
+	return ss[i].HostName < ss[j].HostName
 }
 
 const ActionAllow = "ip_allow"

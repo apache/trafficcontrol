@@ -49,10 +49,10 @@ type HostingDotConfigOpts struct {
 func MakeHostingDotConfig(
 	server *Server,
 	servers []Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	deliveryServices []DeliveryService,
 	deliveryServiceServers []DeliveryServiceServer,
-	topologies []tc.Topology,
+	topologies []tc.TopologyV5,
 	opt *HostingDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -60,13 +60,13 @@ func MakeHostingDotConfig(
 	}
 	warnings := []string{}
 
-	if server.CDNID == nil {
+	if server.CDNID == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing CDNID")
 	}
-	if server.HostName == nil || *server.HostName == "" {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server had no host name!")
 	}
-	if server.ID == nil {
+	if server.ID == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing ID")
 	}
 
@@ -75,26 +75,26 @@ func MakeHostingDotConfig(
 
 	cdnServers := map[tc.CacheName]Server{}
 	for _, sv := range servers {
-		if sv.HostName == nil {
+		if sv.HostName == "" {
 			warnings = append(warnings, "TO Servers had server missing HostName, skipping!")
 			continue
-		} else if sv.CDNID == nil {
+		} else if sv.CDNID == 0 {
 			warnings = append(warnings, "TO Servers had server missing CDNID, skipping!")
 			continue
 		}
-		if *sv.CDNID != *server.CDNID {
+		if sv.CDNID != server.CDNID {
 			continue
 		}
-		cdnServers[tc.CacheName(*sv.HostName)] = sv
+		cdnServers[tc.CacheName(sv.HostName)] = sv
 	}
 
 	serverIDs := map[int]struct{}{}
 	for _, sv := range cdnServers {
-		if sv.CDNID == nil {
+		if sv.CDNID == 0 {
 			warnings = append(warnings, "TO Servers had server missing CDNID, skipping!")
 			continue
 		}
-		serverIDs[*sv.ID] = struct{}{}
+		serverIDs[sv.ID] = struct{}{}
 	}
 
 	dsIDs := map[int]struct{}{}
@@ -118,15 +118,18 @@ func MakeHostingDotConfig(
 
 	filteredDSes := []DeliveryService{}
 	for _, ds := range deliveryServices {
-		if ds.Active == nil || ds.Type == nil || ds.XMLID == nil || ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
+		if ds.Active == "" || ds.Type == nil || ds.XMLID == "" || ds.CDNID == 0 || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify
 			continue
 		}
-		if *ds.CDNID != *server.CDNID {
+		if ds.Active == tc.DSActiveStateInactive {
+			continue
+		}
+		if ds.CDNID != server.CDNID {
 			continue
 		}
 
-		if !*ds.Active && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
+		if ds.Active == tc.DSActiveStateInactive && ((!isMid && !ServerHostingDotConfigEdgeIncludeInactive) || (isMid && !ServerHostingDotConfigMidIncludeInactive)) {
 			continue
 		}
 
@@ -152,7 +155,7 @@ func MakeHostingDotConfig(
 					continue
 				}
 
-				if _, ok := dsServerMap[*ds.ID][*server.ID]; !ok {
+				if _, ok := dsServerMap[*ds.ID][server.ID]; !ok {
 					continue
 				}
 			}
@@ -178,7 +181,7 @@ func MakeHostingDotConfig(
 
 		seenOrigins := map[string]struct{}{}
 		for _, ds := range filteredDSes {
-			if ds.OrgServerFQDN == nil || ds.XMLID == nil || ds.Active == nil {
+			if ds.OrgServerFQDN == nil || ds.XMLID == "" || ds.Active == "" {
 				warnings = append(warnings, "got DS with nil values, skipping!")
 				continue
 			}
@@ -199,7 +202,7 @@ func MakeHostingDotConfig(
 					if !topoHasServer {
 						continue
 					}
-					if !ds.Type.IsLive() {
+					if !tc.DSType(*ds.Type).IsLive() {
 						continue
 					}
 				}

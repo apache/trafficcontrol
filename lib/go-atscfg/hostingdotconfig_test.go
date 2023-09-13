@@ -31,29 +31,29 @@ func TestMakeHostingDotConfig(t *testing.T) {
 	cdnName := "cdn0"
 
 	server := makeGenericServer()
-	server.HostName = util.StrPtr("server0")
-	server.CDNName = &cdnName
-	server.ProfileNames = []string{"serverprofile"}
+	server.HostName = "server0"
+	server.CDN = cdnName
+	server.Profiles = []string{"serverprofile"}
 	hdr := "myHeaderComment"
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParamRAMDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParamDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "somethingelse",
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "somethingelse-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
 	}
 
@@ -69,7 +69,7 @@ func TestMakeHostingDotConfig(t *testing.T) {
 	for _, origin := range origins {
 		ds := makeGenericDS()
 		ds.CDNName = &cdnName
-		ds.OrgServerFQDN = util.StrPtr(origin)
+		ds.OrgServerFQDN = util.Ptr(origin)
 		dses = append(dses, *ds)
 	}
 
@@ -121,78 +121,78 @@ func TestMakeHostingDotConfigTopologiesIgnoreDSS(t *testing.T) {
 	cdnName := "cdn0"
 
 	server := makeGenericServer()
-	server.HostName = util.StrPtr("server0")
-	server.Cachegroup = util.StrPtr("edgeCG")
-	server.CDNName = &cdnName
-	server.CDNID = util.IntPtr(400)
-	server.ID = util.IntPtr(899)
-	server.ProfileNames = []string{"serverprofile"}
+	server.HostName = "server0"
+	server.CacheGroup = "edgeCG"
+	server.CDN = cdnName
+	server.CDNID = 400
+	server.ID = 899
+	server.Profiles = []string{"serverprofile"}
 	hdr := "myHeaderComment"
 
-	serverParams := []tc.Parameter{
-		tc.Parameter{
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
 			Name:       ParamRAMDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamRAMDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       ParamDrivePrefix,
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "ParamDrivePrefix-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "somethingelse",
 			ConfigFile: HostingConfigParamConfigFile,
 			Value:      "somethingelse-shouldnotappearinconfig",
-			Profiles:   []byte(`["` + server.ProfileNames[0] + `"]`),
+			Profiles:   []byte(`["` + server.Profiles[0] + `"]`),
 		},
 	}
 
 	dsTopology := makeGenericDS()
-	dsTopology.OrgServerFQDN = util.StrPtr("https://origin0.example.net")
-	dsTopology.XMLID = util.StrPtr("ds-topology")
-	dsTopology.CDNID = util.IntPtr(400)
-	dsTopology.ID = util.IntPtr(900)
-	dsTopology.Topology = util.StrPtr("t0")
-	dsTopology.Active = util.BoolPtr(true)
-	dsType := tc.DSTypeHTTPLive
+	dsTopology.OrgServerFQDN = util.Ptr("https://origin0.example.net")
+	dsTopology.XMLID = "ds-topology"
+	dsTopology.CDNID = 400
+	dsTopology.ID = util.Ptr(900)
+	dsTopology.Topology = util.Ptr("t0")
+	dsTopology.Active = tc.DSActiveStateActive
+	dsType := "HTTP_LIVE"
 	dsTopology.Type = &dsType
 
 	dsTopologyWithoutServer := makeGenericDS()
-	dsTopologyWithoutServer.ID = util.IntPtr(901)
-	dsTopologyWithoutServer.OrgServerFQDN = util.StrPtr("https://origin1.example.net")
-	dsTopologyWithoutServer.XMLID = util.StrPtr("ds-topology-without-server")
-	dsTopologyWithoutServer.CDNID = util.IntPtr(400)
-	dsTopologyWithoutServer.Topology = util.StrPtr("t1")
-	dsTopologyWithoutServer.Active = util.BoolPtr(true)
-	dsType2 := tc.DSTypeHTTP
+	dsTopologyWithoutServer.ID = util.Ptr(901)
+	dsTopologyWithoutServer.OrgServerFQDN = util.Ptr("https://origin1.example.net")
+	dsTopologyWithoutServer.XMLID = "ds-topology-without-server"
+	dsTopologyWithoutServer.CDNID = 400
+	dsTopologyWithoutServer.Topology = util.Ptr("t1")
+	dsTopologyWithoutServer.Active = tc.DSActiveStateActive
+	dsType2 := "HTTP"
 	dsTopologyWithoutServer.Type = &dsType2
 
 	dses := []DeliveryService{*dsTopology, *dsTopologyWithoutServer}
 
-	topologies := []tc.Topology{
-		tc.Topology{
+	topologies := []tc.TopologyV5{
+		tc.TopologyV5{
 			Name: "t0",
-			Nodes: []tc.TopologyNode{
-				tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
+				tc.TopologyNodeV5{
 					Cachegroup: "edgeCG",
 					Parents:    []int{1},
 				},
-				tc.TopologyNode{
+				tc.TopologyNodeV5{
 					Cachegroup: "midCG",
 				},
 			},
 		},
-		tc.Topology{
+		tc.TopologyV5{
 			Name: "t1",
-			Nodes: []tc.TopologyNode{
-				tc.TopologyNode{
+			Nodes: []tc.TopologyNodeV5{
+				tc.TopologyNodeV5{
 					Cachegroup: "otherEdgeCG",
 					Parents:    []int{1},
 				},
-				tc.TopologyNode{
+				tc.TopologyNodeV5{
 					Cachegroup: "midCG",
 				},
 			},

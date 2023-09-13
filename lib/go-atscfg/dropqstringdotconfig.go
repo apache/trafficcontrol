@@ -38,7 +38,7 @@ type DropQStringDotConfigOpts struct {
 
 func MakeDropQStringDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *DropQStringDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -46,7 +46,7 @@ func MakeDropQStringDotConfig(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing Profile")
 	}
 

@@ -38,7 +38,7 @@ type ChkconfigOpts struct {
 // MakeChkconfig returns the 'chkconfig' ATS config file endpoint.
 // This is a JSON object, and should be served with an 'application/json' Content-Type.
 func MakeChkconfig(
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *ChkconfigOpts,
 ) (Cfg, error) {
 	if opt == nil {

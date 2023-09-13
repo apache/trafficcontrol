@@ -24,7 +24,7 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestOrigins(t *testing.T, cl *toclient.Session, td TrafficControl) {
@@ -42,15 +42,15 @@ func DeleteTestOrigins(t *testing.T, cl *toclient.Session) {
 		assert.RequireNotNil(t, origin.ID, "Expected origin ID to not be nil.")
 		assert.RequireNotNil(t, origin.Name, "Expected origin ID to not be nil.")
 		assert.RequireNotNil(t, origin.IsPrimary, "Expected origin ID to not be nil.")
-		if !*origin.IsPrimary {
-			alerts, _, err := cl.DeleteOrigin(*origin.ID, toclient.RequestOptions{})
-			assert.NoError(t, err, "Unexpected error deleting Origin '%s' (#%d): %v - alerts: %+v", *origin.Name, *origin.ID, err, alerts.Alerts)
+		if !origin.IsPrimary {
+			alerts, _, err := cl.DeleteOrigin(origin.ID, toclient.RequestOptions{})
+			assert.NoError(t, err, "Unexpected error deleting Origin '%s' (#%d): %v - alerts: %+v", origin.Name, origin.ID, err, alerts.Alerts)
 			// Retrieve the Origin to see if it got deleted
 			opts := toclient.NewRequestOptions()
-			opts.QueryParameters.Set("id", strconv.Itoa(*origin.ID))
+			opts.QueryParameters.Set("id", strconv.Itoa(origin.ID))
 			getOrigin, _, err := cl.GetOrigins(opts)
-			assert.NoError(t, err, "Error getting Origin '%s' after deletion: %v - alerts: %+v", *origin.Name, err, getOrigin.Alerts)
-			assert.Equal(t, 0, len(getOrigin.Response), "Expected Origin '%s' to be deleted, but it was found in Traffic Ops", *origin.Name)
+			assert.NoError(t, err, "Error getting Origin '%s' after deletion: %v - alerts: %+v", origin.Name, err, getOrigin.Alerts)
+			assert.Equal(t, 0, len(getOrigin.Response), "Expected Origin '%s' to be deleted, but it was found in Traffic Ops", origin.Name)
 		}
 	}
 }

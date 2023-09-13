@@ -31,9 +31,9 @@ func TestMakeDropQStringDotConfig(t *testing.T) {
 	profileName := "myProfile"
 
 	server := makeGenericServer()
-	server.ProfileNames = []string{profileName}
+	server.Profiles = []string{profileName}
 
-	params := []tc.Parameter{
+	params := []tc.ParameterV5{
 		{
 			Name:       DropQStringDotConfigParamName,
 			ConfigFile: DropQStringDotConfigFileName,

@@ -55,11 +55,11 @@ type IPAllowDotYAMLOpts struct {
 
 // MakeIPAllowDotYAML creates the ip_allow.yaml ATS 9+ config file.
 func MakeIPAllowDotYAML(
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	server *Server,
 	servers []Server,
-	cacheGroups []tc.CacheGroupNullable,
-	topologies []tc.Topology,
+	cacheGroups []tc.CacheGroupNullableV5,
+	topologies []tc.TopologyV5,
 	opt *IPAllowDotYAMLOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -67,10 +67,10 @@ func MakeIPAllowDotYAML(
 	}
 	warnings := []string{}
 
-	if server.Cachegroup == nil {
+	if server.CacheGroup == "" {
 		return Cfg{}, makeErr(warnings, "this server missing Cachegroup")
 	}
-	if server.HostName == nil {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "this server missing HostName")
 	}
 
@@ -241,7 +241,7 @@ func yamlDenyAll(rangeStr string) ipAllowYAMLData {
 }
 
 // GetPurgeIPs returns IPs allowed for PURGE requests.
-func GetPurgeIPs(serverParams []tc.Parameter) []string {
+func GetPurgeIPs(serverParams []tc.ParameterV5) []string {
 	ips := make([]string, 0)
 
 	params := paramsToMultiMap(filterParams(serverParams, IPAllowConfigFileName, "", "", ""))
@@ -253,7 +253,7 @@ func GetPurgeIPs(serverParams []tc.Parameter) []string {
 }
 
 // GetCoalesceMaskAndNumber returns coalesce mask length and number for ipv4 and ipv6.
-func GetCoalesceMaskAndNumber(serverParams []tc.Parameter) (int, int, int, int, []string) {
+func GetCoalesceMaskAndNumber(serverParams []tc.ParameterV5) (int, int, int, int, []string) {
 	warnings := make([]string, 0)
 
 	// default for coalesce_ipv4 = 24, 5 and for ipv6 48, 5; override with the parameters in the server profile.
@@ -309,8 +309,8 @@ func GetCoalesceMaskAndNumber(serverParams []tc.Parameter) (int, int, int, int, 
 func GetAllowedCIDRsForMid(
 	server *Server,
 	servers []Server,
-	cacheGroups []tc.CacheGroupNullable,
-	topologies []tc.Topology,
+	cacheGroups []tc.CacheGroupNullableV5,
+	topologies []tc.TopologyV5,
 	coalesceNumberV4 int,
 	coalesceMaskLenV4 int,
 	coalesceNumberV6 int,
@@ -321,7 +321,7 @@ func GetAllowedCIDRsForMid(
 	ip6s := []*net.IPNet{}
 	warnings := make([]string, 0)
 
-	cgMap := map[string]tc.CacheGroupNullable{}
+	cgMap := map[string]tc.CacheGroupNullableV5{}
 	for _, cg := range cacheGroups {
 		if cg.Name == nil {
 			return nil, nil, warnings, errors.New("got cachegroup with nil name!")
@@ -329,18 +329,18 @@ func GetAllowedCIDRsForMid(
 		cgMap[*cg.Name] = cg
 	}
 
-	if server.Cachegroup == nil {
+	if server.CacheGroup == "" {
 		return nil, nil, warnings, errors.New("server had nil Cachegroup!")
 	}
 
-	serverCG, ok := cgMap[*server.Cachegroup]
+	serverCG, ok := cgMap[server.CacheGroup]
 	if !ok {
 		return nil, nil, warnings, errors.New("server cachegroup not in cachegroups!")
 	}
 
-	childCGNames := getTopologyDirectChildren(tc.CacheGroupName(*server.Cachegroup), topologies)
+	childCGNames := getTopologyDirectChildren(tc.CacheGroupName(server.CacheGroup), topologies)
 
-	childCGs := map[string]tc.CacheGroupNullable{}
+	childCGs := map[string]tc.CacheGroupNullableV5{}
 	for cgName, _ := range childCGNames {
 		childCGs[string(cgName)] = cgMap[string(cgName)]
 	}
@@ -354,10 +354,10 @@ func GetAllowedCIDRsForMid(
 	// sort servers, to guarantee things like IP coalescing are deterministic
 	sort.Sort(serversSortByName(servers))
 	for _, childServer := range servers {
-		if childServer.Cachegroup == nil {
+		if childServer.CacheGroup == "" {
 			warnings = append(warnings, "Servers had server with nil Cachegroup, skipping!")
 			continue
-		} else if childServer.HostName == nil {
+		} else if childServer.HostName == "" {
 			warnings = append(warnings, "Servers had server with nil HostName, skipping!")
 			continue
 		}
@@ -366,7 +366,7 @@ func GetAllowedCIDRsForMid(
 		// - all children of this server
 		// - all monitors, if this server is a Mid
 		//
-		_, isChild := childCGs[*childServer.Cachegroup]
+		_, isChild := childCGs[childServer.CacheGroup]
 		if !isChild && !strings.HasPrefix(server.Type, tc.MidTypePrefix) && string(childServer.Type) != tc.MonitorTypeName {
 			continue
 		}
@@ -384,10 +384,10 @@ func GetAllowedCIDRsForMid(
 					// not an IP, try a CIDR
 					if ip, cidr, err := net.ParseCIDR(svAddr.Address); err != nil {
 						// not a CIDR or IP - error out
-						warnings = append(warnings, "server '"+*server.HostName+"' IP '"+svAddr.Address+" is not an IP address or CIDR - skipping!")
+						warnings = append(warnings, "server '"+server.HostName+"' IP '"+svAddr.Address+" is not an IP address or CIDR - skipping!")
 					} else if ip == nil {
 						// not a CIDR or IP - error out
-						warnings = append(warnings, "server '"+*server.HostName+"' IP '"+svAddr.Address+" failed to parse as IP or CIDR - skipping!")
+						warnings = append(warnings, "server '"+server.HostName+"' IP '"+svAddr.Address+" failed to parse as IP or CIDR - skipping!")
 					} else {
 						// got a valid CIDR - add it to the list
 						if ip4 := ip.To4(); ip4 != nil {

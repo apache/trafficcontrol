@@ -22,21 +22,19 @@ package atscfg
 import (
 	"strings"
 	"testing"
-
-	"github.com/apache/trafficcontrol/lib/go-util"
 )
 
 func TestMakeServerUnknown(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.HostName = util.StrPtr("server0")
-	server.ProfileNames = []string{"serverProfile"}
-	server.DomainName = util.StrPtr("example.test")
+	server.HostName = "server0"
+	server.Profiles = []string{"serverProfile"}
+	server.DomainName = "example.test"
 
 	fileName := "myconfig.config"
 
-	params := makeParamsFromMapArr(server.ProfileNames[0], fileName, map[string][]string{
+	params := makeParamsFromMapArr(server.Profiles[0], fileName, map[string][]string{
 		"location":   []string{"locationshouldnotexist"},
 		"param0name": []string{"param0val0", "param0val1"},
 		"param1name": []string{"param1val0"},

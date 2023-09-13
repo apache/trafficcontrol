@@ -28,7 +28,7 @@ func TestMakeBGFetchDotConfig(t *testing.T) {
 	cdnName := "mycdn"
 
 	server := makeGenericServer()
-	server.CDNName = &cdnName
+	server.CDN = cdnName
 	hdr := "myHeaderComment"
 
 	cfg, err := MakeBGFetchDotConfig(server, &BGFetchDotConfigOpts{HdrComment: hdr})

@@ -30,31 +30,32 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-atscfg"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
-func serversToLatest(svs tc.ServersV4Response) ([]atscfg.Server, error) {
-	serversV40 := make([]tc.ServerV40, 0)
+func serversToLatest(svs tc.ServersV5Response) ([]atscfg.Server, error) {
+	//serversV40 := make([]tc.ServerV40, 0)
+	servers := make([]tc.ServerV5, 0)
 	for _, srv := range svs.Response {
-		serversV40 = append(serversV40, srv)
+		servers = append(servers, srv)
 	}
-	return atscfg.ToServers(serversV40), nil
+	return atscfg.ToServers(servers), nil
 }
 
-func serverToLatest(oldSv *tc.ServerV40) (*atscfg.Server, error) {
+func serverToLatest(oldSv *tc.ServerV5) (*atscfg.Server, error) {
 	asv := atscfg.Server(*oldSv)
 	return &asv, nil
 }
 
-func dsesToLatest(dses []tc.DeliveryServiceV4) []atscfg.DeliveryService {
-	return atscfg.V4ToDeliveryServices(dses)
+func dsesToLatest(dses []tc.DeliveryServiceV5) []atscfg.DeliveryService {
+	return atscfg.V5ToDeliveryServices(dses)
 }
 
 func jobsToLatest(jobs []tc.InvalidationJobV4) []atscfg.InvalidationJob {
 	return atscfg.ToInvalidationJobs(jobs)
 }
 
-func serverUpdateStatusesToLatest(statuses []tc.ServerUpdateStatusV40) []atscfg.ServerUpdateStatus {
+func serverUpdateStatusesToLatest(statuses []tc.ServerUpdateStatusV50) []atscfg.ServerUpdateStatus {
 	return atscfg.ToServerUpdateStatuses(statuses)
 }
 
@@ -201,10 +202,10 @@ func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTi
 // This makes t3c work with old or new Traffic Ops deployed from `master`,
 // though it doesn't make a version of t3c older than this work with a new TO,
 // which isn't logically possible from the client.
-func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV4Response, toclientlib.ReqInf, error) {
+/*func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV5Response, toclientlib.ReqInf, error) {
 	path := "/servers"
 	objs := struct {
-		Response []ServerV40PlusLegacy `json:"response"`
+		Response []tc.ServerV5Response `json:"response"`
 		tc.Alerts
 	}{}
 
@@ -213,19 +214,17 @@ func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV4
 	}
 	reqInf, err := cl.c.TOClient.Req(http.MethodGet, path, nil, opts.Header, &objs)
 	if err != nil {
-		return tc.ServersV4Response{}, reqInf, errors.New("request: " + err.Error())
+		return tc.ServersV5Response{}, reqInf, errors.New("request: " + err.Error())
 	}
 
-	resp := tc.ServersV4Response{Alerts: objs.Alerts}
+	resp := tc.ServersV5Response{Alerts: objs.Alerts}
+
 	for _, sv := range objs.Response {
-		newSv, err := ServerV40FromLegacy(sv)
-		if err != nil {
-			return tc.ServersV4Response{}, reqInf, errors.New("converting server from possible legacy format: " + err.Error())
-		}
-		resp.Response = append(resp.Response, newSv)
+		resp.Response = append(resp.Response, sv.Response)
 	}
+
 	return resp, reqInf, nil
-}
+}*/
 
 type ServerV40PlusLegacy struct {
 	tc.ServerV40

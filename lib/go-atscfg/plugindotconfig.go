@@ -38,14 +38,14 @@ type PluginDotConfigOpts struct {
 
 func MakePluginDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *PluginDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
 		opt = &PluginDotConfigOpts{}
 	}
 	warnings := []string{}
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing profiles")
 	}
 

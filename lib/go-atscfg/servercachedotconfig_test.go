@@ -32,28 +32,28 @@ func TestMakeServerCacheDotConfig(t *testing.T) {
 	hdr := "myHeaderComment"
 
 	server := makeGenericServer()
-	server.HostName = &serverName
+	server.HostName = serverName
 	server.Type = tc.MidTypePrefix + "_CUSTOM"
 
-	makeDS := func(name string, origin string, dsType tc.DSType) DeliveryService {
+	makeDS := func(name string, origin string, dsType *string) DeliveryService {
 		ds := makeGenericDS()
-		ds.XMLID = util.StrPtr(name)
-		ds.OrgServerFQDN = util.StrPtr(origin)
-		ds.Type = &dsType
+		ds.XMLID = name
+		ds.OrgServerFQDN = util.Ptr(origin)
+		ds.Type = dsType
 		return *ds
 	}
 
 	dses := []DeliveryService{
-		makeDS("ds0", "https://ds0.example.test/path", tc.DSTypeHTTP),
-		makeDS("ds1", "https://ds1.example.test:4321/path", tc.DSTypeDNS),
-		makeDS("ds2", "https://ds2.example.test:4321", tc.DSTypeHTTP),
-		makeDS("ds3", "https://ds3.example.test", tc.DSTypeHTTP),
-		makeDS("ds4", "https://ds4.example.test/", tc.DSTypeHTTP),
-		makeDS("ds5", "http://ds5.example.test:1234/", tc.DSTypeHTTP),
-		makeDS("ds6", "ds6.example.test", tc.DSTypeHTTP),
-		makeDS("ds7", "ds7.example.test:80", tc.DSTypeHTTP),
-		makeDS("ds8", "ds8.example.test:8080/path", tc.DSTypeHTTP),
-		makeDS("ds-nocache", "http://ds-nocache.example.test", tc.DSTypeHTTPNoCache),
+		makeDS("ds0", "https://ds0.example.test/path", util.Ptr("HTTP")),
+		makeDS("ds1", "https://ds1.example.test:4321/path", util.Ptr("DNS")),
+		makeDS("ds2", "https://ds2.example.test:4321", util.Ptr("HTTP")),
+		makeDS("ds3", "https://ds3.example.test", util.Ptr("HTTP")),
+		makeDS("ds4", "https://ds4.example.test/", util.Ptr("HTTP")),
+		makeDS("ds5", "http://ds5.example.test:1234/", util.Ptr("HTTP")),
+		makeDS("ds6", "ds6.example.test", util.Ptr("HTTP")),
+		makeDS("ds7", "ds7.example.test:80", util.Ptr("HTTP")),
+		makeDS("ds8", "ds8.example.test:8080/path", util.Ptr("HTTP")),
+		makeDS("ds-nocache", "http://ds-nocache.example.test", util.Ptr("HTTP_NO_CACHE")),
 	}
 
 	cfg, err := makeCacheDotConfigMid(server, dses, &CacheDotConfigOpts{HdrComment: hdr})

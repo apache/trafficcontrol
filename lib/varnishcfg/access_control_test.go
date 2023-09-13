@@ -34,7 +34,7 @@ func TestConfigureAccessControl(t *testing.T) {
 	t.Run("edge server", func(t *testing.T) {
 		vb := NewVCLBuilder(&t3cutil.ConfigData{
 			Server: &atscfg.Server{Type: "EDGE"},
-			ServerParams: []tc.Parameter{
+			ServerParams: []tc.ParameterV5{
 				{
 					ConfigFile: "ip_allow.config",
 					Name:       "purge_allow_ip",
@@ -72,23 +72,23 @@ func TestConfigureAccessControl(t *testing.T) {
 		vb := NewVCLBuilder(&t3cutil.ConfigData{
 			Server: &atscfg.Server{
 				Type:       "MID",
-				HostName:   util.StrPtr("server0"),
-				Cachegroup: util.StrPtr("cg0"),
+				HostName:   "server0",
+				CacheGroup: "cg0",
 			},
-			ServerParams: []tc.Parameter{
+			ServerParams: []tc.ParameterV5{
 				{
 					ConfigFile: "ip_allow.config",
 					Name:       atscfg.ParamPurgeAllowIP,
 					Value:      "1.1.1.1,2.2.2.2",
 				},
 			},
-			CacheGroups: []tc.CacheGroupNullable{
-				{Name: util.StrPtr("cg0")},
+			CacheGroups: []tc.CacheGroupNullableV5{
+				{Name: util.Ptr("cg0")},
 			},
 			Servers: []atscfg.Server{
 				{
-					HostName:   util.StrPtr("child0"),
-					Cachegroup: util.StrPtr("childcg"),
+					HostName:   "child0",
+					CacheGroup: "childcg",
 					Type:       tc.MonitorTypeName,
 					Interfaces: []tc.ServerInterfaceInfoV40{
 						{
@@ -100,8 +100,8 @@ func TestConfigureAccessControl(t *testing.T) {
 					},
 				},
 				{
-					HostName:   util.StrPtr("child1"),
-					Cachegroup: util.StrPtr("childcg"),
+					HostName:   "child1",
+					CacheGroup: "childcg",
 					Type:       tc.MonitorTypeName,
 					Interfaces: []tc.ServerInterfaceInfoV40{
 						{

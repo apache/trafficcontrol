@@ -118,7 +118,7 @@ func TestLayerProfiles(t *testing.T) {
 		"BAZ",
 	}
 
-	allParams := []tc.Parameter{
+	allParams := []tc.ParameterV5{
 		{
 			ConfigFile: "cfg_a",
 			ID:         1000,
@@ -276,35 +276,35 @@ func setIPInfo(sv *Server, interfaceName string, ipAddress string, ip6Address st
 
 func makeGenericServer() *Server {
 	server := &Server{}
-	server.CDNName = util.StrPtr("myCDN")
-	server.Cachegroup = util.StrPtr("cg0")
-	server.CachegroupID = util.IntPtr(422)
-	server.DomainName = util.StrPtr("mydomain.example.net")
-	server.CDNID = util.IntPtr(43)
-	server.HostName = util.StrPtr("myserver")
-	server.HTTPSPort = util.IntPtr(12443)
-	server.ID = util.IntPtr(44)
+	server.CDN = "myCDN"
+	server.CacheGroup = "cg0"
+	server.CacheGroupID = 422
+	server.DomainName = "mydomain.example.net"
+	server.CDNID = 43
+	server.HostName = "myserver"
+	server.HTTPSPort = util.Ptr(12443)
+	server.ID = 44
 	setIP(server, "192.168.2.1")
-	server.ProfileNames = []string{"serverprofile"}
-	server.TCPPort = util.IntPtr(80)
+	server.Profiles = []string{"serverprofile"}
+	server.TCPPort = util.Ptr(80)
 	server.Type = "EDGE"
-	server.TypeID = util.IntPtr(91)
+	server.TypeID = 91
 	status := string(tc.CacheStatusReported)
-	server.Status = &status
-	server.StatusID = util.IntPtr(99)
+	server.Status = status
+	server.StatusID = 99
 	return server
 }
 
 func makeGenericDS() *DeliveryService {
 	ds := &DeliveryService{}
-	ds.ID = util.IntPtr(42)
-	ds.XMLID = util.StrPtr("ds1")
-	ds.QStringIgnore = util.IntPtr(int(tc.QStringIgnoreDrop))
-	ds.OrgServerFQDN = util.StrPtr("http://ds1.example.net")
-	dsType := tc.DSTypeDNS
+	ds.ID = util.Ptr(42)
+	ds.XMLID = "ds1"
+	ds.QStringIgnore = util.Ptr(int(tc.QStringIgnoreDrop))
+	ds.OrgServerFQDN = util.Ptr("http://ds1.example.net")
+	dsType := "DNS"
 	ds.Type = &dsType
-	ds.MultiSiteOrigin = util.BoolPtr(false)
-	ds.Active = util.BoolPtr(true)
+	ds.MultiSiteOrigin = false
+	ds.Active = tc.DSActiveStateActive
 	return ds
 }
 
@@ -315,7 +315,7 @@ func makeDSS(servers []Server, dses []DeliveryService) []DeliveryServiceServer {
 	for _, sv := range servers {
 		for _, ds := range dses {
 			dss = append(dss, DeliveryServiceServer{
-				Server:          *sv.ID,
+				Server:          sv.ID,
 				DeliveryService: *ds.ID,
 			})
 		}
@@ -323,11 +323,11 @@ func makeDSS(servers []Server, dses []DeliveryService) []DeliveryServiceServer {
 	return dss
 }
 
-func makeParamsFromMapArr(profile string, configFile string, paramM map[string][]string) []tc.Parameter {
-	params := []tc.Parameter{}
+func makeParamsFromMapArr(profile string, configFile string, paramM map[string][]string) []tc.ParameterV5 {
+	params := []tc.ParameterV5{}
 	for name, vals := range paramM {
 		for _, val := range vals {
-			params = append(params, tc.Parameter{
+			params = append(params, tc.ParameterV5{
 				Name:       name,
 				ConfigFile: configFile,
 				Value:      val,
@@ -338,10 +338,10 @@ func makeParamsFromMapArr(profile string, configFile string, paramM map[string][
 	return params
 }
 
-func makeParamsFromMap(profile string, configFile string, paramM map[string]string) []tc.Parameter {
-	params := []tc.Parameter{}
+func makeParamsFromMap(profile string, configFile string, paramM map[string]string) []tc.ParameterV5 {
+	params := []tc.ParameterV5{}
 	for name, val := range paramM {
-		params = append(params, tc.Parameter{
+		params = append(params, tc.ParameterV5{
 			Name:       name,
 			ConfigFile: configFile,
 			Value:      val,

@@ -39,7 +39,7 @@ func MakeBGFetchDotConfig(
 	}
 	warnings := []string{}
 
-	if server.CDNName == nil {
+	if server.CDN == "" {
 		return Cfg{}, makeErr(warnings, "server missing CDNName")
 	}
 

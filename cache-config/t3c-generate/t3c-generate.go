@@ -80,7 +80,7 @@ func main() {
 	if toData.Server == nil {
 		log.Errorln("input had no server")
 		os.Exit(config.ExitCodeErrGeneric)
-	} else if toData.Server.HostName == nil {
+	} else if toData.Server.HostName == "" {
 		log.Errorln("input server had no host name")
 		os.Exit(config.ExitCodeErrGeneric)
 	}
@@ -88,12 +88,12 @@ func main() {
 	if cfg.Cache == "varnish" {
 		configs, err := cfgfile.GetVarnishConfigs(toData, cfg)
 		if err != nil {
-			log.Errorln("Generating varnish config for'" + *toData.Server.HostName + "': " + err.Error())
+			log.Errorln("Generating varnish config for'" + toData.Server.HostName + "': " + err.Error())
 			os.Exit(config.ExitCodeErrGeneric)
 		}
 		err = cfgfile.WriteConfigs(configs, os.Stdout)
 		if err != nil {
-			log.Errorln("Writing configs for '" + *toData.Server.HostName + "': " + err.Error())
+			log.Errorln("Writing configs for '" + toData.Server.HostName + "': " + err.Error())
 			os.Exit(config.ExitCodeErrGeneric)
 		}
 		os.Exit(config.ExitCodeSuccess)
@@ -101,7 +101,7 @@ func main() {
 
 	configs, err := cfgfile.GetAllConfigs(toData, cfg)
 	if err != nil {
-		log.Errorln("Getting config for'" + *toData.Server.HostName + "': " + err.Error())
+		log.Errorln("Getting config for'" + toData.Server.HostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 
@@ -111,7 +111,7 @@ func main() {
 	sort.Sort(t3cutil.ATSConfigFiles(configs))
 
 	if err := cfgfile.WriteConfigs(configs, os.Stdout); err != nil {
-		log.Errorln("Writing configs for '" + *toData.Server.HostName + "': " + err.Error())
+		log.Errorln("Writing configs for '" + toData.Server.HostName + "': " + err.Error())
 		os.Exit(config.ExitCodeErrGeneric)
 	}
 

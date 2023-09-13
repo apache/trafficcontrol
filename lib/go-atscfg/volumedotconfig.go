@@ -41,7 +41,7 @@ type VolumeDotConfigOpts struct {
 // The paramData is the map of parameter names to values, for all parameters assigned to the given profile, with the config_file "storage.config".
 func MakeVolumeDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *VolumeDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -49,7 +49,7 @@ func MakeVolumeDotConfig(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 

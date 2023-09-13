@@ -23,12 +23,12 @@ import (
 	"testing"
 
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestServerCapabilities(t *testing.T, cl *toclient.Session, td TrafficControl) {
 	for _, sc := range td.ServerCapabilities {
-		resp, _, err := cl.CreateServerCapabilityV41(sc, toclient.RequestOptions{})
+		resp, _, err := cl.CreateServerCapability(sc, toclient.RequestOptions{})
 		assert.RequireNoError(t, err, "Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
 	}
 }

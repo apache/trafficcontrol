@@ -54,6 +54,13 @@ func RandInt() int {
 	return i
 }
 
+// RandIntForActive returns a random int 0-5
+func RandIntForActive() int {
+	mini := 0
+	maxi := 5
+	return rand.Intn(maxi-mini) + mini
+}
+
 // RandInt64 returns a random signed 64-bit int.
 func RandInt64() int64 {
 	i := rand.Int63()

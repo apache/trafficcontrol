@@ -39,14 +39,14 @@ type ATSDotRulesOpts struct {
 
 func MakeATSDotRules(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *ATSDotRulesOpts,
 ) (Cfg, error) {
 	if opt == nil {
 		opt = &ATSDotRulesOpts{}
 	}
 	warnings := []string{}
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 

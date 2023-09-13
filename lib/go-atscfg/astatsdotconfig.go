@@ -39,7 +39,7 @@ type AStatsDotConfigOpts struct {
 
 func MakeAStatsDotConfig(
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	opt *AStatsDotConfigOpts,
 ) (Cfg, error) {
 	if opt == nil {
@@ -47,7 +47,7 @@ func MakeAStatsDotConfig(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profile")
 	}
 

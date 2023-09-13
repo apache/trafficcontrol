@@ -26,10 +26,10 @@ import (
 
 // serversToLatest converts a []tc.Server to []tc.ServerV30.
 // This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
-func serversToLatest(svs tc.ServersV3Response) ([]atscfg.Server, error) {
+func serversToLatest(svs tc.ServersV4Response) ([]atscfg.Server, error) {
 	nss := []atscfg.Server{}
 	for _, sv := range svs.Response {
-		svLatest, err := serverToLatest(&sv)
+		svLatest, err := serverToLatest(sv)
 		if err != nil {
 			return nil, err // serverToLatest adds context
 		}
@@ -40,24 +40,66 @@ func serversToLatest(svs tc.ServersV3Response) ([]atscfg.Server, error) {
 
 // serverToLatest converts a tc.Server to tc.ServerV30.
 // This is necessary, because the old Traffic Ops client doesn't return the same type as the latest client.
-func serverToLatest(oldSv *tc.ServerV30) (*atscfg.Server, error) {
-	sv, err := oldSv.UpgradeToV40([]string{*oldSv.Profile})
-	if err != nil {
-		return nil, err
-	}
-	asv := atscfg.Server(sv)
+func serverToLatest(oldSv tc.ServerV40) (*atscfg.Server, error) {
+	asv := atscfg.Server(oldSv.Upgrade())
 	return &asv, nil
 }
 
-func dsesToLatest(dses []tc.DeliveryServiceNullableV30) []atscfg.DeliveryService {
-	newDSes := []tc.DeliveryServiceV4{}
+func dsesToLatest(dses []tc.DeliveryServiceV4) []atscfg.DeliveryService {
+	v5DSes := []tc.DeliveryServiceV5{}
 	for _, ds := range dses {
-		newDSes = append(newDSes, ds.UpgradeToV4())
+		v5DSes = append(v5DSes, ds.Upgrade())
 	}
-	return atscfg.ToDeliveryServices(newDSes)
+	return atscfg.ToDeliveryServices(v5DSes)
 }
 
-func serverUpdateStatusToLatest(status *tc.ServerUpdateStatus) atscfg.ServerUpdateStatus {
-	upgraded := status.Upgrade()
-	return atscfg.ServerUpdateStatus(upgraded)
+func serverUpdateStatusToLatest(status []tc.ServerUpdateStatusV40) []atscfg.ServerUpdateStatus {
+	nStats := []tc.ServerUpdateStatusV50{}
+	for _, stat := range status {
+		nStat := tc.ServerUpdateStatusV50{
+			HostName:             stat.HostName,
+			UpdatePending:        stat.UpdatePending,
+			RevalPending:         stat.RevalPending,
+			UseRevalPending:      stat.UseRevalPending,
+			HostId:               stat.HostId,
+			Status:               stat.Status,
+			ParentPending:        stat.ParentPending,
+			ConfigUpdateTime:     stat.ConfigUpdateTime,
+			ConfigApplyTime:      stat.ConfigApplyTime,
+			RevalidateUpdateTime: stat.RevalidateUpdateTime,
+			RevalidateApplyTime:  stat.RevalidateApplyTime,
+		}
+		nStats = append(nStats, nStat)
+	}
+	return atscfg.ToServerUpdateStatuses(nStats)
+}
+
+func deliveryServiceServersToLatest(dsServers []tc.DeliveryServiceServer) []tc.DeliveryServiceServerV5 {
+	nDss := []tc.DeliveryServiceServerV5{}
+	for _, dss := range dsServers {
+		dsServer := tc.DeliveryServiceServerV5{
+			Server:          dss.Server,
+			DeliveryService: dss.DeliveryService,
+			LastUpdated:     &dss.LastUpdated.Time,
+		}
+		nDss = append(nDss, dsServer)
+	}
+	return nDss
+}
+
+func parametersToLatest(params []tc.Parameter) []tc.ParameterV5 {
+	nParams := []tc.ParameterV5{}
+	for _, param := range params {
+		np := tc.ParameterV5{
+			ConfigFile:  param.ConfigFile,
+			ID:          param.ID,
+			LastUpdated: param.LastUpdated.Time,
+			Name:        param.Name,
+			Profiles:    param.Profiles,
+			Secure:      param.Secure,
+			Value:       param.Value,
+		}
+		nParams = append(nParams, np)
+	}
+	return nParams
 }

@@ -48,7 +48,7 @@ func MakeSSLMultiCertDotConfig(
 		opt = &SSLMultiCertDotConfigOpts{}
 	}
 	warnings := []string{}
-	if server.CDNName == nil {
+	if server.CDN == "" {
 		return Cfg{}, makeErr(warnings, "server missing CDNName")
 	}
 
@@ -89,15 +89,15 @@ func DeliveryServicesToSSLMultiCertDSes(dses []DeliveryService) (map[tc.Delivery
 	warnings := []string{}
 	sDSes := map[tc.DeliveryServiceName]sslMultiCertDS{}
 	for _, ds := range dses {
-		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == nil {
-			if ds.XMLID == nil {
+		if ds.Type == nil || ds.Protocol == nil || ds.XMLID == "" {
+			if ds.XMLID == "" {
 				warnings = append(warnings, "got unknown DS with nil values! Skipping!")
 			} else {
-				warnings = append(warnings, "got DS '"+*ds.XMLID+"' with nil values! Skipping!")
+				warnings = append(warnings, "got DS '"+ds.XMLID+"' with nil values! Skipping!")
 			}
 			continue
 		}
-		sDSes[tc.DeliveryServiceName(*ds.XMLID)] = sslMultiCertDS{Type: *ds.Type, Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
+		sDSes[tc.DeliveryServiceName(ds.XMLID)] = sslMultiCertDS{Type: tc.DSType(*ds.Type), Protocol: *ds.Protocol, ExampleURLs: ds.ExampleURLs}
 	}
 	return sDSes, warnings
 }

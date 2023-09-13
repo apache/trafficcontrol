@@ -85,18 +85,18 @@ func PreprocessConfigFile(server *atscfg.Server, cfgFile string) string {
 		log.Errorln("Preprocessing: this server had a missing or malformed IPv4 Service Interface, cannot replace __CACHE_IPV4__ directives!")
 	}
 
-	if server.HostName == nil || *server.HostName == "" {
+	if server.HostName == "" {
 		log.Errorln("Preprocessing: this server missing HostName, cannot replace __HOSTNAME__ directives!")
 	} else {
-		cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, *server.HostName, -1)
+		cfgFile = strings.Replace(cfgFile, `__HOSTNAME__`, server.HostName, -1)
 	}
-	if server.HostName == nil || *server.HostName == "" || server.DomainName == nil || *server.DomainName == "" {
+	if server.HostName == "" || server.DomainName == "" {
 		log.Errorln("Preprocessing: this server missing HostName or DomainName, cannot replace __FULL_HOSTNAME__ directives!")
 	} else {
-		cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, *server.HostName+`.`+*server.DomainName, -1)
+		cfgFile = strings.Replace(cfgFile, `__FULL_HOSTNAME__`, server.HostName+`.`+server.DomainName, -1)
 	}
-	if server.Cachegroup != nil && *server.Cachegroup != "" {
-		cfgFile = strings.Replace(cfgFile, `__CACHEGROUP__`, *server.Cachegroup, -1)
+	if server.CacheGroup != "" {
+		cfgFile = strings.Replace(cfgFile, `__CACHEGROUP__`, server.CacheGroup, -1)
 	} else {
 		log.Errorln("Preprocessing: this server missing Cachegroup, cannot replace __CACHEGROUP__ directives!")
 	}
@@ -150,8 +150,8 @@ func main() {
 	sort.Sort(t3cutil.ATSConfigFiles(dataFiles.Files))
 	if err := util.WriteConfigs(dataFiles.Files, os.Stdout); err != nil {
 		hostName := ""
-		if dataFiles.Data.Server.HostName != nil {
-			hostName = *dataFiles.Data.Server.HostName
+		if dataFiles.Data.Server.HostName == "" {
+			hostName = dataFiles.Data.Server.HostName
 		}
 		log.Errorln("Writing configs for server '" + hostName + "': " + err.Error())
 		os.Exit(ExitCodeErrGeneric)

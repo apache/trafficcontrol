@@ -24,14 +24,14 @@ import (
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	toclient "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	toclient "github.com/apache/trafficcontrol/traffic_ops/v5-client"
 )
 
 func CreateTestSteeringTargets(t *testing.T, cl *toclient.Session, td TrafficControl) {
 	for _, st := range td.SteeringTargets {
-		st.TypeID = util.IntPtr(GetTypeId(t, cl, *st.Type))
-		st.DeliveryServiceID = util.UInt64Ptr(uint64(GetDeliveryServiceId(t, cl, string(*st.DeliveryService))()))
-		st.TargetID = util.UInt64Ptr(uint64(GetDeliveryServiceId(t, cl, string(*st.Target))()))
+		st.TypeID = util.Ptr(GetTypeId(t, cl, *st.Type))
+		st.DeliveryServiceID = util.Ptr(uint64(GetDeliveryServiceId(t, cl, string(*st.DeliveryService))()))
+		st.TargetID = util.Ptr(uint64(GetDeliveryServiceId(t, cl, string(*st.Target))()))
 		resp, _, err := cl.CreateSteeringTarget(st, toclient.RequestOptions{})
 		assert.RequireNoError(t, err, "Creating steering target: %v - alerts: %+v", err, resp.Alerts)
 	}

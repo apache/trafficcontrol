@@ -45,8 +45,8 @@ func MakeSetDSCPDotConfig(
 	}
 	warnings := []string{}
 
-	if server.CDNName == nil {
-		return Cfg{}, makeErr(warnings, "server missing CDNName")
+	if server.CDN == "" {
+		return Cfg{}, makeErr(warnings, "server missing CDN")
 	}
 
 	// TODO verify prefix, suffix, and that it's a number? Perl doesn't.

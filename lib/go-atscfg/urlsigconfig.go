@@ -40,7 +40,7 @@ type URLSigConfigOpts struct {
 func MakeURLSigConfig(
 	fileName string,
 	server *Server,
-	serverParams []tc.Parameter,
+	serverParams []tc.ParameterV5,
 	allURLSigKeys map[tc.DeliveryServiceName]tc.URLSigKeys,
 	opt *URLSigConfigOpts,
 ) (Cfg, error) {
@@ -49,7 +49,7 @@ func MakeURLSigConfig(
 	}
 	warnings := []string{}
 
-	if len(server.ProfileNames) == 0 {
+	if len(server.Profiles) == 0 {
 		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 

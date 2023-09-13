@@ -21,7 +21,6 @@ package tcdata
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 
 	"github.com/apache/trafficcontrol/lib/go-log"
@@ -30,7 +29,7 @@ import (
 // LoadFixtures ...
 func (r *TCData) LoadFixtures(fixturesPath string) {
 
-	f, err := ioutil.ReadFile(fixturesPath)
+	f, err := os.ReadFile(fixturesPath)
 	if err != nil {
 		log.Errorf("Cannot unmarshal fixtures json %s", err)
 		os.Exit(1)

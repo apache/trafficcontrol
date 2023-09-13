@@ -61,7 +61,7 @@ type RegexRevalidateDotConfigOpts struct {
 func MakeRegexRevalidateDotConfig(
 	server *Server,
 	deliveryServices []DeliveryService,
-	globalParams []tc.Parameter,
+	globalParams []tc.ParameterV5,
 	jobs []InvalidationJob,
 	opt *RegexRevalidateDotConfigOpts,
 ) (Cfg, error) {
@@ -70,7 +70,7 @@ func MakeRegexRevalidateDotConfig(
 	}
 	warnings := []string{}
 
-	if server.CDNName == nil {
+	if server.CDN == "" {
 		return Cfg{}, makeErr(warnings, "server CDNName missing")
 	}
 
@@ -78,11 +78,11 @@ func MakeRegexRevalidateDotConfig(
 
 	dsNames := map[string]struct{}{}
 	for _, ds := range deliveryServices {
-		if ds.XMLID == nil {
+		if ds.XMLID == "" {
 			warnings = append(warnings, "got Delivery Service from Traffic Ops with a nil xmlId! Skipping!")
 			continue
 		}
-		dsNames[*ds.XMLID] = struct{}{}
+		dsNames[ds.XMLID] = struct{}{}
 	}
 
 	dsJobs := []InvalidationJob{}
