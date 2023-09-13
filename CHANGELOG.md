@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 - [#7665](https://github.com/apache/trafficcontrol/pull/7665) *Automation* Changes to Ansible role dataset_loader to add ATS 9 support
+- [#7802](https://github.com/apache/trafficcontrol/pull/7802) *Traffic Control Health Client* Fixed ReadMe.md typos and duplicates.
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client* Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal* Added Scope Query Param to SSO login.
