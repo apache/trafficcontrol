@@ -84,8 +84,6 @@ Requires Apache TrafficServer 8.1.0 or later.
   Specify the directory where log files are kept.  The default location
   is **/var/log/trafficcontrol/**
 
--l, -\-logging-dir=logging-directory
-
 -v, -\-verbose
 
   Logging verbosity.  Errors are logged to the default log file
@@ -98,7 +96,7 @@ Requires Apache TrafficServer 8.1.0 or later.
 The configuration file is a **JSON** file and is looked for by default
 at **/etc/trafficcontrol/tc-health-client.json**
 
-Sample configuarion file:
+Sample configuration file:
 
 ```
   {
