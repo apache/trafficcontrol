@@ -48,7 +48,7 @@ func serverToLatest(oldSv *tc.ServerV5) (*atscfg.Server, error) {
 }
 
 func dsesToLatest(dses []tc.DeliveryServiceV5) []atscfg.DeliveryService {
-	return atscfg.V4ToDeliveryServices(dses)
+	return atscfg.V5ToDeliveryServices(dses)
 }
 
 func jobsToLatest(jobs []tc.InvalidationJobV4) []atscfg.InvalidationJob {

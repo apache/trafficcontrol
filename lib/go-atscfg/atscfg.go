@@ -156,11 +156,13 @@ func ToDeliveryServices(dses []tc.DeliveryServiceV5) []DeliveryService {
 	return ad
 }
 
-// V40ToDeliveryServices converts a slice of the old traffic_ops/v4-client type to the local alias.
-func V4ToDeliveryServices(dses []tc.DeliveryServiceV5) []DeliveryService {
+// V50ToDeliveryServices converts a slice of the traffic_ops/v5-client type to the local alias.
+func V5ToDeliveryServices(dses []tc.DeliveryServiceV5) []DeliveryService {
 	ad := make([]DeliveryService, 0, len(dses))
 	for _, ds := range dses {
-		ad = append(ad, DeliveryService(ds))
+		if ds.Active != tc.DSActiveStateInactive {
+			ad = append(ad, DeliveryService(ds))
+		}
 	}
 	return ad
 }
