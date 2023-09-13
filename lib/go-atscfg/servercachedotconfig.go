@@ -48,7 +48,7 @@ func makeCacheDotConfigMid(
 
 	dses := map[tc.DeliveryServiceName]serverCacheConfigDS{}
 	for _, ds := range deliveryServices {
-		if &ds.XMLID == nil || &ds.Active == nil || ds.OrgServerFQDN == nil || ds.Type == nil {
+		if ds.XMLID == "" || ds.Active == "" || ds.OrgServerFQDN == nil || ds.Type == nil {
 			// TODO orgserverfqdn is nil for some DSes - MSO? Verify.
 			continue
 			//			return "", fmt.Errorf("getting delivery services: got DS with nil values! '%v' %v %+v\n", *ds.XMLID, *ds.ID, ds)

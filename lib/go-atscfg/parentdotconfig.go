@@ -778,10 +778,10 @@ type dsesSortByName []DeliveryService
 func (s dsesSortByName) Len() int      { return len(s) }
 func (s dsesSortByName) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
 func (s dsesSortByName) Less(i, j int) bool {
-	if &s[i].XMLID == nil || s[i].XMLID == "" {
+	if s[i].XMLID == "" {
 		return true
 	}
-	if &s[j].XMLID == nil || s[j].XMLID == "" {
+	if s[j].XMLID == "" {
 		return false
 	}
 	return s[i].XMLID < s[j].XMLID

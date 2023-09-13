@@ -341,7 +341,7 @@ func getServerConfigRemapDotConfigForMid(
 			}
 		}
 
-		if !tc.DSType(*ds.Type).UsesMidCache() && (!hasTopology || *ds.Topology == "") {
+		if ds.Type != nil && !tc.DSType(*ds.Type).UsesMidCache() && (!hasTopology || *ds.Topology == "") {
 			continue // Live local delivery services skip mids (except Topologies ignore DS types)
 		}
 
@@ -984,19 +984,19 @@ func remapFilterDSes(server *Server, dss []DeliveryServiceServer, dses []Deliver
 		if ds.LastHeaderRewrite == nil {
 			ds.LastHeaderRewrite = util.StrPtr("")
 		}
-		if &ds.XMLID == nil {
+		if ds.XMLID == "" {
 			warnings = append(warnings, "got Delivery Service with nil XMLID, skipping!")
 			continue
 		} else if ds.Type == nil {
 			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil Type, skipping!")
 			continue
-		} else if &ds.DSCP == nil {
+		} else if ds.DSCP == 0 {
 			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil DSCP, skipping!")
 			continue
 		} else if ds.ID == nil {
 			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil ID, skipping!")
 			continue
-		} else if &ds.Active == nil {
+		} else if ds.Active == "" {
 			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil Active, skipping!")
 			continue
 		} else if _, ok := dssMap[*ds.ID]; !ok && *ds.Topology == "" {
@@ -1161,8 +1161,8 @@ func makeFQDN(hostRegex string, ds *DeliveryService, server string, cdnDomain st
 		re = strings.Replace(re, `.*`, ``, -1)
 
 		hName := server
-		if tc.DSType(*ds.Type).IsDNS() {
-			if &ds.RoutingName == nil || ds.RoutingName == "" {
+		if ds.Type != nil && tc.DSType(*ds.Type).IsDNS() {
+			if ds.RoutingName == "" {
 				return "", errors.New("ds is dns, but missing routing name")
 			}
 			hName = ds.RoutingName

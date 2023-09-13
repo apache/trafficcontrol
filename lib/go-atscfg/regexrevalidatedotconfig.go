@@ -78,7 +78,7 @@ func MakeRegexRevalidateDotConfig(
 
 	dsNames := map[string]struct{}{}
 	for _, ds := range deliveryServices {
-		if &ds.XMLID == nil {
+		if ds.XMLID == "" {
 			warnings = append(warnings, "got Delivery Service from Traffic Ops with a nil xmlId! Skipping!")
 			continue
 		}

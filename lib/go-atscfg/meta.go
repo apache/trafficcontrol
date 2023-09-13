@@ -208,7 +208,7 @@ func addMetaObjConfigDir(
 	nameTopologies := makeTopologyNameMap(topologies)
 
 	for _, ds := range dses {
-		if &ds.XMLID == nil {
+		if ds.XMLID == "" {
 			warnings = append(warnings, "got Delivery Service with nil XMLID - not considering!")
 			continue
 		}
@@ -304,7 +304,7 @@ func getURISignedDSes(dses map[tc.DeliveryServiceName]DeliveryService) ([]tc.Del
 			warnings = append(warnings, "got delivery service with no id, skipping!")
 			continue
 		}
-		if &ds.XMLID == nil {
+		if ds.XMLID == "" {
 			warnings = append(warnings, "got delivery service with no xmlId (name), skipping!")
 			continue
 		}
@@ -359,7 +359,7 @@ func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, de
 				warnings = append(warnings, "got deliveryservice with nil id, skipping!")
 				continue
 			}
-			if &ds.XMLID == nil {
+			if ds.XMLID == "" {
 				warnings = append(warnings, "got deliveryservice with nil xmlId (name), skipping!")
 				continue
 			}
@@ -374,11 +374,11 @@ func filterConfigFileDSes(server *Server, deliveryServices []DeliveryService, de
 				warnings = append(warnings, "got deliveryservice with nil id, skipping!")
 				continue
 			}
-			if &ds.XMLID == nil {
+			if ds.XMLID == "" {
 				warnings = append(warnings, "got deliveryservice with nil xmlId (name), skipping!")
 				continue
 			}
-			if &ds.CDNID == nil || ds.CDNID != server.CDNID {
+			if ds.CDNID != server.CDNID {
 				continue
 			}
 			if ds.Active == tc.DSActiveStateInactive {

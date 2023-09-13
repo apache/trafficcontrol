@@ -108,7 +108,7 @@ func deliveryServicesToCDNDSes(dses []DeliveryService) (map[tc.DeliveryServiceNa
 	warnings := []string{}
 	sDSes := map[tc.DeliveryServiceName]cdnDS{}
 	for _, ds := range dses {
-		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || &ds.XMLID == nil {
+		if ds.OrgServerFQDN == nil || ds.QStringIgnore == nil || ds.XMLID == "" {
 			if &ds.XMLID == nil {
 				warnings = append(warnings, "got unknown DS with nil values! Skipping!")
 			} else {

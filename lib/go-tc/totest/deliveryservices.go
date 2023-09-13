@@ -30,7 +30,7 @@ import (
 
 func CreateTestDeliveryServices(t *testing.T, cl *toclient.Session, td TrafficControl) {
 	for _, ds := range td.DeliveryServices {
-		if &ds.XMLID == nil {
+		if ds.XMLID == "" {
 			t.Error("Found a Delivery Service in testing data with null or undefined XMLID")
 			continue
 		}

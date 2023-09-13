@@ -123,7 +123,7 @@ func MakeHeaderRewriteDotConfig(
 		if ids.Active == tc.DSActiveStateInactive {
 			continue
 		}
-		if &ids.XMLID == nil || ids.XMLID == "" {
+		if ids.XMLID == "" {
 			warnings = append(warnings, "deliveryServices had DS with nil xmlId (name)")
 			continue
 		}

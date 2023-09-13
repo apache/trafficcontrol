@@ -38,7 +38,7 @@ func GetAllConfigs(
 	toData *t3cutil.ConfigData,
 	cfg config.Cfg,
 ) ([]t3cutil.ATSConfigFile, error) {
-	if &toData.Server.HostName == nil || toData.Server.HostName == "" {
+	if toData.Server.HostName == "" {
 		return nil, errors.New("server hostname is nil")
 	}
 	// if 0 get dataconfig.go was unable to get DS capabilities using APIv5

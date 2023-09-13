@@ -118,7 +118,7 @@ func MakeHostingDotConfig(
 
 	filteredDSes := []DeliveryService{}
 	for _, ds := range deliveryServices {
-		if &ds.Active == nil || ds.Active == "" || ds.Type == nil || &ds.XMLID == nil || &ds.CDNID == nil || ds.ID == nil || ds.OrgServerFQDN == nil {
+		if ds.Active == "" || ds.Type == nil || ds.XMLID == "" || ds.CDNID == 0 || ds.ID == nil || ds.OrgServerFQDN == nil {
 			// some DSes have nil origins. I think MSO? TODO: verify
 			continue
 		}
@@ -181,7 +181,7 @@ func MakeHostingDotConfig(
 
 		seenOrigins := map[string]struct{}{}
 		for _, ds := range filteredDSes {
-			if ds.OrgServerFQDN == nil || &ds.XMLID == nil || &ds.Active == nil {
+			if ds.OrgServerFQDN == nil || ds.XMLID == "" || ds.Active == "" {
 				warnings = append(warnings, "got DS with nil values, skipping!")
 				continue
 			}

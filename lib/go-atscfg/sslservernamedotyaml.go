@@ -347,7 +347,7 @@ func dsUsesServer(
 	serverCapabilities map[int]map[ServerCapability]struct{},
 	dsRequiredCapabilities map[int]map[ServerCapability]struct{},
 ) (bool, error) {
-	if &ds.XMLID == nil || ds.XMLID == "" {
+	if ds.XMLID == "" {
 		return false, errors.New("ds missing xmlId")
 	} else if ds.ID == nil {
 		return false, errors.New("ds missing id")
