@@ -2179,19 +2179,34 @@
                 ]
             },
             "level": {
-                "type": "string"
+                "type": [
+                    "string",
+                    "null"
+                ]
             },
             "lastUpdated": {
-                "type": "string"
+                "type": [
+                    "string",
+                    "null"
+                ]
             },
             "user": {
-                "type": "string"
+                "type": [
+                    "string",
+                    "null"
+                ]
             },
             "id": {
-                "type": "integer"
+                "type": [
+                    "integer",
+                    "null"
+                ]
             },
             "message": {
-                "type": "string"
+                "type": [
+                    "string",
+                    "null"
+                ]
             }
         }
     }
