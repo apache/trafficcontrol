@@ -186,6 +186,12 @@
 			"value": "--config regex_revalidate.config"
 		},
 		{
+			"configFile": "plugin.config",
+			"name": "remap_stats.so",
+			"secure": false,
+			"value": "-p"
+		},
+		{
 			"configFile": "regex_revalidate.config",
 			"name": "location",
 			"secure": false,
