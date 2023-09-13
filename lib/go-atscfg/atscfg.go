@@ -237,9 +237,9 @@ type serverParentCacheGroupData struct {
 // Takes a server and a CG map. To create a CGMap from an API CacheGroup slice, use MakeCGMap.
 // If server's CacheGroup has no parent or secondary parent, returns InvalidID and "" with no error.
 func getParentCacheGroupData(server *Server, cgMap map[tc.CacheGroupName]tc.CacheGroupNullableV5) (serverParentCacheGroupData, error) {
-	if &server.CacheGroup == nil || server.CacheGroup == "" {
+	if server.CacheGroup == "" {
 		return serverParentCacheGroupData{}, errors.New("server missing cachegroup")
-	} else if &server.HostName == nil || server.HostName == "" {
+	} else if server.HostName == "" {
 		return serverParentCacheGroupData{}, errors.New("server missing hostname")
 	}
 	serverCG, ok := cgMap[tc.CacheGroupName(server.CacheGroup)]
@@ -365,7 +365,7 @@ func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 
 // topologyIncludesServerNullable returns whether the given topology includes the given server.
 func topologyIncludesServerNullable(topology tc.TopologyV5, server *Server) (bool, error) {
-	if &server.CacheGroup == nil || server.CacheGroup == "" {
+	if server.CacheGroup == "" {
 		return false, errors.New("server missing Cachegroup")
 	}
 	for _, node := range topology.Nodes {

@@ -60,13 +60,13 @@ func MakeHostingDotConfig(
 	}
 	warnings := []string{}
 
-	if &server.CDNID == nil || server.CDNID == 0 {
+	if server.CDNID == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing CDNID")
 	}
-	if &server.HostName == nil || server.HostName == "" {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server had no host name!")
 	}
-	if &server.ID == nil || server.ID == 0 {
+	if server.ID == 0 {
 		return Cfg{}, makeErr(warnings, "this server missing ID")
 	}
 
@@ -75,10 +75,10 @@ func MakeHostingDotConfig(
 
 	cdnServers := map[tc.CacheName]Server{}
 	for _, sv := range servers {
-		if &sv.HostName == nil || sv.HostName == "" {
+		if sv.HostName == "" {
 			warnings = append(warnings, "TO Servers had server missing HostName, skipping!")
 			continue
-		} else if &sv.CDNID == nil || sv.CDNID == 0 {
+		} else if sv.CDNID == 0 {
 			warnings = append(warnings, "TO Servers had server missing CDNID, skipping!")
 			continue
 		}
@@ -90,7 +90,7 @@ func MakeHostingDotConfig(
 
 	serverIDs := map[int]struct{}{}
 	for _, sv := range cdnServers {
-		if &sv.CDNID == nil || sv.CDNID == 0 {
+		if sv.CDNID == 0 {
 			warnings = append(warnings, "TO Servers had server missing CDNID, skipping!")
 			continue
 		}

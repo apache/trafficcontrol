@@ -287,9 +287,9 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 				break
 			}
 		}
-		if &server.ID == nil || server.ID == 0 {
+		if server.ID == 0 {
 			return errors.New("server '" + cacheHostName + " not found in servers")
-		} else if &server.CDN == nil || server.CDN == "" {
+		} else if server.CDN == "" {
 			return errors.New("server '" + cacheHostName + " missing CDNName")
 		} else if server.CDNID == 0 {
 			return errors.New("server '" + cacheHostName + " missing CDNID")
@@ -946,10 +946,10 @@ func ParamsToMultiMap(params []tc.Parameter) map[string][]string {
 func filterUnusedDSS(dsses []tc.DeliveryServiceServerV5, cdnID int, servers []atscfg.Server, dses []atscfg.DeliveryService) []atscfg.DeliveryServiceServer {
 	serverIDs := map[int]struct{}{}
 	for _, sv := range servers {
-		if &sv.ID == nil || sv.ID == 0 {
+		if sv.ID == 0 {
 			log.Errorln("filterUnusedDSS got server with nil id, skipping!")
 			continue
-		} else if &sv.CDNID == nil || sv.CDNID == 0 {
+		} else if sv.CDNID == 0 {
 			log.Errorln("filterUnusedDSS got server with nil cdnId, skipping!")
 			continue
 		} else if sv.CDNID != cdnID {
@@ -962,7 +962,7 @@ func filterUnusedDSS(dsses []tc.DeliveryServiceServerV5, cdnID int, servers []at
 		if ds.ID == nil {
 			log.Errorln("filterUnusedDSS got delivery service with nil id, skipping!")
 			continue
-		} else if &ds.CDNID == nil {
+		} else if ds.CDNID == 0 {
 			log.Errorln("filterUnusedDSS got delivery service with nil cdnId, skipping!")
 			continue
 		} else if ds.CDNID != cdnID {

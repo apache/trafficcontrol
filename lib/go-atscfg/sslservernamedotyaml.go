@@ -351,7 +351,7 @@ func dsUsesServer(
 		return false, errors.New("ds missing xmlId")
 	} else if ds.ID == nil {
 		return false, errors.New("ds missing id")
-	} else if &server.ID == nil || server.ID == 0 {
+	} else if server.ID == 0 {
 		return false, errors.New("server missing id")
 	} else if ds.Type == nil {
 		return false, errors.New("ds missing type")

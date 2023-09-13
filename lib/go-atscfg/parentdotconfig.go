@@ -313,11 +313,11 @@ func MakeParentDotConfigData(
 	parentAbstraction := &ParentAbstraction{}
 	warnings := []string{}
 
-	if &server.HostName == nil || server.HostName == "" {
+	if server.HostName == "" {
 		return nil, warnings, errors.New("server HostName missing")
-	} else if &server.CDN == nil || server.CDN == "" {
+	} else if server.CDN == "" {
 		return nil, warnings, errors.New("server CDNName missing")
-	} else if &server.CacheGroup == nil || server.CacheGroup == "" {
+	} else if server.CacheGroup == "" {
 		return nil, warnings, errors.New("server Cachegroup missing")
 	} else if len(server.Profiles) == 0 {
 		return nil, warnings, errors.New("server Profile missing")
@@ -404,16 +404,16 @@ func MakeParentDotConfigData(
 	cgPeers := map[int]serverWithParams{}   // map[serverID]server
 	cgServers := map[int]serverWithParams{} // map[serverID]server
 	for _, sv := range serversWithParams {
-		if &sv.ID == nil || sv.ID == 0 {
+		if sv.ID == 0 {
 			warnings = append(warnings, "TO servers had server with missing ID, skipping!")
 			continue
-		} else if &sv.CDN == nil || sv.CDN == "" {
+		} else if sv.CDN == "" {
 			warnings = append(warnings, "TO servers had server with missing CDNName, skipping!")
 			continue
-		} else if &sv.CacheGroup == nil || sv.CacheGroup == "" {
+		} else if sv.CacheGroup == "" {
 			warnings = append(warnings, "TO servers had server with missing Cachegroup, skipping!")
 			continue
-		} else if &sv.Status == nil || sv.Status == "" {
+		} else if sv.Status == "" {
 			warnings = append(warnings, "TO servers had server with missing Status, skipping!")
 			continue
 		} else if sv.Type == "" {
@@ -490,7 +490,7 @@ func MakeParentDotConfigData(
 
 	for _, ds := range dses {
 
-		if &ds.XMLID == nil || ds.XMLID == "" {
+		if ds.XMLID == "" {
 			warnings = append(warnings, "got ds with missing XMLID, skipping!")
 			continue
 		} else if ds.ID == nil {
@@ -736,21 +736,21 @@ func (ss serversWithParamsSortByRank) Less(i, j int) bool {
 		return ss[i].Params.Rank < ss[j].Params.Rank
 	}
 
-	if &ss[i].HostName == nil || ss[i].HostName == "" {
-		if &ss[j].HostName != nil || ss[j].HostName == "" {
+	if ss[i].HostName == "" {
+		if ss[j].HostName == "" {
 			return true
 		}
-	} else if &ss[j].HostName == nil || ss[j].HostName == "" {
+	} else if ss[j].HostName == "" {
 		return false
 	} else if ss[i].HostName != ss[j].HostName {
 		return ss[i].HostName < ss[j].HostName
 	}
 
-	if &ss[i].DomainName == nil || ss[i].DomainName == "" {
-		if &ss[j].DomainName != nil || ss[j].DomainName == "" {
+	if ss[i].DomainName == "" {
+		if ss[j].DomainName == "" {
 			return true
 		}
-	} else if &ss[j].DomainName == nil || ss[j].DomainName == "" {
+	} else if ss[j].DomainName == "" {
 		return false
 	} else if ss[i].DomainName != ss[j].DomainName {
 		return ss[i].DomainName < ss[j].DomainName
@@ -1515,16 +1515,16 @@ func getTopologyParents(
 	secondaryParentStrs := []*ParentAbstractionServiceParent{}
 
 	for _, sv := range serversWithParams {
-		if &sv.ID == nil || sv.ID == 0 {
+		if sv.ID == 0 {
 			warnings = append(warnings, "TO Servers server had nil ID, skipping")
 			continue
-		} else if &sv.CacheGroup == nil || sv.CacheGroup == "" {
+		} else if sv.CacheGroup == "" {
 			warnings = append(warnings, "TO Servers server had nil Cachegroup, skipping")
 			continue
-		} else if &sv.CDN == nil || sv.CDN == "" {
+		} else if sv.CDN == "" {
 			warnings = append(warnings, "TO servers had server with missing CDNName, skipping!")
 			continue
-		} else if &sv.Status == nil || sv.Status == "" {
+		} else if sv.Status == "" {
 			warnings = append(warnings, "TO servers had server with missing Status, skipping!")
 			continue
 		}
@@ -1635,7 +1635,7 @@ func getParentStrs(
 	secondaryParentInfo, seen = RemoveParentDuplicates(secondaryParentInfo, seen)
 
 	dsName := tc.DeliveryServiceName("")
-	if ds != nil && &ds.XMLID != nil || ds.XMLID == "" {
+	if ds != nil && ds.XMLID == "" {
 		dsName = tc.DeliveryServiceName(ds.XMLID)
 	}
 
@@ -1704,7 +1704,7 @@ func getMSOParentStrs(
 	secondaryParentInfo = append(secondaryParentInfo, nullParentInfo...)
 
 	dsName := tc.DeliveryServiceName("")
-	if ds != nil && &ds.XMLID != nil {
+	if ds != nil && ds.XMLID != "" {
 		dsName = tc.DeliveryServiceName(ds.XMLID)
 	}
 
@@ -1837,31 +1837,31 @@ func getOriginServers(
 	}
 
 	for _, cgSv := range cgServers {
-		if &cgSv.ID == nil || cgSv.ID == 0 {
+		if cgSv.ID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil ID, skipping!")
 			continue
-		} else if &cgSv.HostName == nil || cgSv.HostName == "" {
+		} else if cgSv.HostName == "" {
 			warnings = append(warnings, "getting origin servers: got server with nil HostName, skipping!")
 			continue
 		} else if cgSv.TCPPort == nil {
 			warnings = append(warnings, "getting origin servers: got server with nil TCPPort, skipping!")
 			continue
-		} else if &cgSv.CacheGroupID == nil || cgSv.CacheGroupID == 0 {
+		} else if cgSv.CacheGroupID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil CachegroupID, skipping!")
 			continue
-		} else if &cgSv.StatusID == nil || cgSv.StatusID == 0 {
+		} else if cgSv.StatusID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil StatusID, skipping!")
 			continue
-		} else if &cgSv.TypeID == nil || cgSv.TypeID == 0 {
+		} else if cgSv.TypeID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil TypeID, skipping!")
 			continue
 		} else if len(cgSv.Profiles) == 0 {
 			warnings = append(warnings, "getting origin servers: got server with no profile names, skipping!")
 			continue
-		} else if &cgSv.CDNID == nil || cgSv.CDNID == 0 {
+		} else if cgSv.CDNID == 0 {
 			warnings = append(warnings, "getting origin servers: got server with nil CDNID, skipping!")
 			continue
-		} else if &cgSv.DomainName == nil || cgSv.DomainName == "" {
+		} else if cgSv.DomainName == "" {
 			warnings = append(warnings, "getting origin servers: got server with nil DomainName, skipping!")
 			continue
 		}
@@ -1898,7 +1898,7 @@ func getDSOrigins(dses map[int]DeliveryService) (map[int]*originURI, []string, e
 		if ds.ID == nil {
 			return nil, warnings, errors.New("ds has nil ID")
 		}
-		if &ds.XMLID == nil || ds.XMLID == "" {
+		if ds.XMLID == "" {
 			return nil, warnings, errors.New("ds has nil XMLID")
 		}
 		if ds.OrgServerFQDN == nil {
@@ -1948,7 +1948,7 @@ func makeDSOrigins(dsses []DeliveryServiceServer, dses []DeliveryService, server
 
 	svMap := map[ServerID]Server{}
 	for _, sv := range servers {
-		if &sv.ID == nil || sv.ID == 0 {
+		if sv.ID == 0 {
 			warnings = append(warnings, "got server with missing ID, skipping!")
 		}
 		svMap[ServerID(sv.ID)] = sv

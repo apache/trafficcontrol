@@ -164,7 +164,7 @@ func GetPackages(cfg TCCfg) ([]Package, error) {
 		return nil, errors.New("getting server: " + err.Error())
 	} else if len(server.Profiles) == 0 {
 		return nil, errors.New("getting server: nil profile")
-	} else if &server.HostName == nil || server.HostName == "" {
+	} else if server.HostName == "" {
 		return nil, errors.New("getting server: nil hostName")
 	}
 	allPackageParams, reqInf, err := cfg.TOClient.GetConfigFileParameters(atscfg.PackagesParamConfigFile, nil)
@@ -209,7 +209,7 @@ func GetChkconfig(cfg TCCfg) ([]ChkConfigEntry, error) {
 		return nil, errors.New("getting server: " + err.Error())
 	} else if len(server.Profiles) == 0 {
 		return nil, errors.New("getting server: nil profile")
-	} else if &server.HostName == nil || server.HostName == "" {
+	} else if server.HostName == "" {
 		return nil, errors.New("getting server: nil hostName")
 	}
 

@@ -55,7 +55,7 @@ func MakeStorageDotConfig(
 		return Cfg{}, makeErr(warnings, "server missing Profiles")
 	}
 
-	if &server.HostName == nil || server.HostName == "" {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server missing HostName")
 	}
 

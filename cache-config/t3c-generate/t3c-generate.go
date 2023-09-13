@@ -80,7 +80,7 @@ func main() {
 	if toData.Server == nil {
 		log.Errorln("input had no server")
 		os.Exit(config.ExitCodeErrGeneric)
-	} else if &toData.Server.HostName == nil || toData.Server.HostName == "" {
+	} else if toData.Server.HostName == "" {
 		log.Errorln("input server had no host name")
 		os.Exit(config.ExitCodeErrGeneric)
 	}

@@ -58,7 +58,7 @@ func MakeLoggingDotYAML(
 	warnings := []string{}
 	requiredIndent := 0
 
-	if &server.HostName == nil || server.HostName == "" {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "this server missing HostName")
 	}
 

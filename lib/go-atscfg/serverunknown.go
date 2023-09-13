@@ -47,9 +47,9 @@ func MakeServerUnknown(
 	}
 	warnings := []string{}
 
-	if &server.HostName == nil || server.HostName == "" {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server missing HostName")
-	} else if &server.DomainName == nil || server.DomainName == "" {
+	} else if server.DomainName == "" {
 		return Cfg{}, makeErr(warnings, "server missing DomainName")
 	}
 

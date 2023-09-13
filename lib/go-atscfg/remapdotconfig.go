@@ -142,13 +142,13 @@ func MakeRemapDotConfig(
 		warnings = append(warnings, "opt.UseStrategies was false, but opt.UseStrategiesCore was set, which has no effect! Not using strategies, per opt.UseStrategies.")
 	}
 
-	if &server.HostName == nil || server.HostName == "" {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "server HostName missing")
-	} else if &server.ID == nil || server.ID == 0 {
+	} else if server.ID == 0 {
 		return Cfg{}, makeErr(warnings, "server ID missing")
-	} else if &server.CacheGroup == nil || server.CacheGroup == "" {
+	} else if server.CacheGroup == "" {
 		return Cfg{}, makeErr(warnings, "server Cachegroup missing")
-	} else if &server.DomainName == nil || server.DomainName == "" {
+	} else if server.DomainName == "" {
 		return Cfg{}, makeErr(warnings, "server DomainName missing")
 	}
 
@@ -990,9 +990,6 @@ func remapFilterDSes(server *Server, dss []DeliveryServiceServer, dses []Deliver
 		} else if ds.Type == nil {
 			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil Type, skipping!")
 			continue
-		} else if ds.DSCP == 0 {
-			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil DSCP, skipping!")
-			continue
 		} else if ds.ID == nil {
 			warnings = append(warnings, "got Delivery Service '"+ds.XMLID+"'  with nil ID, skipping!")
 			continue
@@ -1106,7 +1103,7 @@ func (ks keyVals) Less(i, j int) bool {
 
 // GetDSRequestFQDNs returns the FQDNs that clients will request from the edge.
 func GetDSRequestFQDNs(ds *DeliveryService, regexes []tc.DeliveryServiceRegex, server *Server, anyCastPartners map[string][]string, cdnDomain string) ([]string, error) {
-	if &server.HostName == nil || server.HostName == "" {
+	if server.HostName == "" {
 		return nil, errors.New("server missing hostname")
 	}
 
@@ -1174,7 +1171,7 @@ func makeFQDN(hostRegex string, ds *DeliveryService, server string, cdnDomain st
 
 func serverIsLastCacheForDS(server *Server, ds *DeliveryService, topologies map[TopologyName]tc.TopologyV5, cacheGroups map[tc.CacheGroupName]tc.CacheGroupNullableV5) (bool, error) {
 	if ds.Topology != nil && strings.TrimSpace(*ds.Topology) != "" {
-		if &server.CacheGroup == nil || server.CacheGroup == "" {
+		if server.CacheGroup == "" {
 			return false, errors.New("Server has no CacheGroup")
 		}
 		topology, ok := topologies[TopologyName(*ds.Topology)]
@@ -1203,7 +1200,7 @@ func noTopologyServerIsLastCacheForDS(server *Server, ds *DeliveryService, cgs m
 
 	// pre-topology parentage is based on Cachegroups
 
-	if &server.CacheGroup == nil || server.CacheGroup == "" {
+	if server.CacheGroup == "" {
 		// if the server has no CG (which TO shouldn't allow), it can't possibly have parents.
 		return true
 	}

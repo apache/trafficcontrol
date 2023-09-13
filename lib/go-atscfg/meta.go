@@ -60,19 +60,19 @@ func MakeConfigFilesList(
 	}
 	warnings := []string{}
 
-	if &server.CacheGroup == nil || server.CacheGroup == "" {
+	if server.CacheGroup == "" {
 		return nil, warnings, errors.New("this server missing Cachegroup")
-	} else if &server.CacheGroupID == nil || server.CacheGroupID == 0 {
+	} else if server.CacheGroupID == 0 {
 		return nil, warnings, errors.New("this server missing CachegroupID")
 	} else if server.TCPPort == nil {
 		return nil, warnings, errors.New("server missing TCPPort")
-	} else if &server.HostName == nil || server.HostName == "" {
+	} else if server.HostName == "" {
 		return nil, warnings, errors.New("server missing HostName")
-	} else if &server.CDNID == nil || server.CDNID == 0 {
+	} else if server.CDNID == 0 {
 		return nil, warnings, errors.New("server missing CDNID")
-	} else if &server.CDN == nil || server.CDN == "" {
+	} else if server.CDN == "" {
 		return nil, warnings, errors.New("server missing CDNName")
-	} else if &server.ID == nil || server.ID == 0 {
+	} else if server.ID == 0 {
 		return nil, warnings, errors.New("server missing ID")
 	} else if len(server.Profiles) == 0 {
 		return nil, warnings, errors.New("server missing Profile")
@@ -158,7 +158,7 @@ func addMetaObjConfigDir(
 ) ([]CfgMeta, []string, error) {
 	warnings := []string{}
 
-	if &server.CacheGroup == nil || server.CacheGroup == "" {
+	if server.CacheGroup == "" {
 		return nil, warnings, errors.New("server missing Cachegroup")
 	}
 

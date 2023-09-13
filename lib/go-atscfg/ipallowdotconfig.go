@@ -68,10 +68,10 @@ func MakeIPAllowDotConfig(
 	}
 	warnings := []string{}
 
-	if &server.CacheGroup == nil || server.CacheGroup == "" {
+	if server.CacheGroup == "" {
 		return Cfg{}, makeErr(warnings, "this server missing Cachegroup")
 	}
-	if &server.HostName == nil || server.HostName == "" {
+	if server.HostName == "" {
 		return Cfg{}, makeErr(warnings, "this server missing HostName")
 	}
 
@@ -148,7 +148,7 @@ func MakeIPAllowDotConfig(
 			cgMap[*cg.Name] = cg
 		}
 
-		if &server.CacheGroup == nil || server.CacheGroup == "" {
+		if server.CacheGroup == "" {
 			return Cfg{}, makeErr(warnings, "server had nil Cachegroup!")
 		}
 
@@ -173,10 +173,10 @@ func MakeIPAllowDotConfig(
 		// sort servers, to guarantee things like IP coalescing are deterministic
 		sort.Sort(serversSortByName(servers))
 		for _, childServer := range servers {
-			if &childServer.CacheGroup == nil || childServer.CacheGroup == "" {
+			if childServer.CacheGroup == "" {
 				warnings = append(warnings, "Servers had server with nil Cachegroup, skipping!")
 				continue
-			} else if &childServer.HostName == nil || childServer.HostName == "" {
+			} else if childServer.HostName == "" {
 				warnings = append(warnings, "Servers had server with nil HostName, skipping!")
 				continue
 			}
@@ -290,9 +290,9 @@ type serversSortByName []Server
 func (ss serversSortByName) Len() int      { return len(ss) }
 func (ss serversSortByName) Swap(i, j int) { ss[i], ss[j] = ss[j], ss[i] }
 func (ss serversSortByName) Less(i, j int) bool {
-	if &ss[j].HostName == nil || ss[j].HostName == "" {
+	if ss[j].HostName == "" {
 		return false
-	} else if &ss[i].HostName == nil || ss[i].HostName == "" {
+	} else if ss[i].HostName == "" {
 		return true
 	}
 	return ss[i].HostName < ss[j].HostName
