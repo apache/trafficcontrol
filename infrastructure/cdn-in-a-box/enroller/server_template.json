@@ -1,7 +1,7 @@
 {
   "hostName": "$MY_HOSTNAME",
   "domainName": "$MY_DOMAINNAME",
-  "cachegroup": "$MY_CACHE_GROUP",
+  "cacheGroup": "$MY_CACHE_GROUP",
   "interfaces": [
       {
         "ipAddresses": [],
@@ -11,10 +11,9 @@
       }
   ],
   "type": "$MY_TYPE",
-  "physLocation": "Apachecon North America 2018",
-  "profileNames": ["$MY_PROFILE"],
-  "cdnName": "$MY_CDN",
-  "updPending": false,
+  "physicalLocation": "Apachecon North America 2018",
+  "profiles": ["$MY_PROFILE"],
+  "cdn": "$MY_CDN",
   "status": "$MY_STATUS",
   "tcpPort": $MY_TCP_PORT,
   "httpsPort": $MY_HTTPS_PORT

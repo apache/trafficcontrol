@@ -138,21 +138,21 @@ func TestServerCapabilities(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetServerCapabilitiesV5(testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetServerCapabilities(testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "POST":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.CreateServerCapabilityV5(testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.CreateServerCapability(testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
 						})
 					case "PUT":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.UpdateServerCapabilityV5(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestBody, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.UpdateServerCapability(testCase.RequestOpts.QueryParameters["name"][0], testCase.RequestBody, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -200,13 +200,13 @@ func validateServerCapabilitiesSort() utils.CkReqFunc {
 
 func CreateTestServerCapabilities(t *testing.T) {
 	for _, sc := range testData.ServerCapabilities {
-		resp, _, err := TOSession.CreateServerCapabilityV5(sc, client.RequestOptions{})
+		resp, _, err := TOSession.CreateServerCapability(sc, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Unexpected error creating Server Capability '%s': %v - alerts: %+v", sc.Name, err, resp.Alerts)
 	}
 }
 
 func DeleteTestServerCapabilities(t *testing.T) {
-	serverCapabilities, _, err := TOSession.GetServerCapabilitiesV5(client.RequestOptions{})
+	serverCapabilities, _, err := TOSession.GetServerCapabilities(client.RequestOptions{})
 	assert.NoError(t, err, "Cannot get Server Capabilities: %v - alerts: %+v", err, serverCapabilities.Alerts)
 
 	for _, serverCapability := range serverCapabilities.Response {
@@ -215,7 +215,7 @@ func DeleteTestServerCapabilities(t *testing.T) {
 		// Retrieve the Server Capability to see if it got deleted
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("name", serverCapability.Name)
-		getServerCapability, _, err := TOSession.GetServerCapabilitiesV5(opts)
+		getServerCapability, _, err := TOSession.GetServerCapabilities(opts)
 		assert.NoError(t, err, "Error getting Server Capability '%s' after deletion: %v - alerts: %+v", serverCapability.Name, err, getServerCapability.Alerts)
 		assert.Equal(t, 0, len(getServerCapability.Response), "Expected Server Capability '%s' to be deleted, but it was found in Traffic Ops", serverCapability.Name)
 	}
