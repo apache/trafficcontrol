@@ -459,6 +459,7 @@
             "regexRemap": "rr1\nrr2",
             "regionalGeoBlocking": false,
             "remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua",
+            "requiredCapabilities": ["foo"],
             "routingName": "ccr-ds1",
             "signed": false,
             "signingAlgorithm": "url_sig",
@@ -467,6 +468,72 @@
             "tenantName": "tenant1",
             "type": "HTTP",
             "xmlId": "ds1",
+            "anonymousBlockingEnabled": true,
+            "maxRequestHeaderBytes": 131072
+        },
+        {
+            "active": "ACTIVE",
+            "cdnName": "cdn1",
+            "ccrDnsTtl": 3600,
+            "checkPath": "",
+            "consistentHashQueryParams": [],
+            "deepCachingType": "NEVER",
+            "displayName": "dsserveridDisplayName",
+            "dnsBypassCname": null,
+            "dnsBypassIp": "",
+            "dnsBypassIp6": "",
+            "dnsBypassTtl": 30,
+            "dscp": 40,
+            "edgeHeaderRewrite": "edgeHeader1\nedgeHeader2",
+            "exampleURLs": [
+                "http://ccr.ds1.example.net",
+                "https://ccr.ds1.example.net"
+            ],
+            "fqPacingRate": 0,
+            "geoLimit": 0,
+            "geoLimitCountries": [],
+            "geoLimitRedirectURL": null,
+            "geoProvider": 0,
+            "globalMaxMbps": 0,
+            "globalMaxTps": 0,
+            "httpBypassFqdn": "",
+            "infoUrl": "TBD",
+            "initialDispersion": 1,
+            "ipv6RoutingEnabled": true,
+            "logsEnabled": false,
+            "longDesc": "d s 1",
+            "longDesc1": "ds1",
+            "longDesc2": "ds1",
+            "matchList": [
+                {
+                    "pattern": ".*\\.ds1\\..*",
+                    "setNumber": 0,
+                    "type": "HOST_REGEXP"
+                }
+            ],
+            "maxDnsAnswers": 0,
+            "midHeaderRewrite": "midHeader1\nmidHeader2",
+            "missLat": 41.881944,
+            "missLong": -87.627778,
+            "multiSiteOrigin": false,
+            "orgServerFqdn": "http://origin.example.net",
+            "originShield": null,
+            "profileDescription": null,
+            "profileName": "ATS_EDGE_TIER_CACHE",
+            "protocol": 2,
+            "qstringIgnore": 1,
+            "rangeRequestHandling": 0,
+            "regexRemap": "rr1\nrr2",
+            "regionalGeoBlocking": false,
+            "remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua",
+            "routingName": "ccr-ds1",
+            "signed": false,
+            "signingAlgorithm": "url_sig",
+            "sslKeyVersion": 2,
+            "tenant": "tenant1",
+            "tenantName": "tenant1",
+            "type": "HTTP",
+            "xmlId": "dsserverid",
             "anonymousBlockingEnabled": true,
             "maxRequestHeaderBytes": 131072
         },
@@ -530,6 +597,7 @@
             "regexRemap": "rr1\nrr2",
             "regionalGeoBlocking": false,
             "remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/ds2plugin.lua",
+            "requiredCapabilities": ["bar"],
             "routingName": "ccr-ds2",
             "signed": false,
             "signingAlgorithm": "url_sig",
@@ -783,6 +851,7 @@
             "regexRemap": "rr1\nrr2",
             "regionalGeoBlocking": false,
             "remapText": "@plugin=tslua.so @pparam=/opt/trafficserver/etc/trafficserver/remapPlugin1.lua",
+            "requiredCapabilities": ["bar"],
             "routingName": "ccr-msods1",
             "signed": false,
             "signingAlgorithm": "url_sig",
@@ -977,6 +1046,7 @@
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "requiredCapabilities": ["ram", "disk"],
             "routingName": "cdn",
             "signed": false,
             "signingAlgorithm": null,
@@ -1040,6 +1110,7 @@
             "regexRemap": null,
             "regionalGeoBlocking": false,
             "remapText": null,
+            "requiredCapabilities": ["ram"],
             "routingName": "cdn",
             "signed": false,
             "signingAlgorithm": null,
@@ -1732,6 +1803,7 @@
             "qstringIgnore": 0,
             "rangeRequestHandling": 0,
             "regionalGeoBlocking": false,
+            "requiredCapabilities": ["ram"],
             "tenant": "tenant1",
             "topology": "top-with-caches-in-cdn1",
             "type": "HTTP",
@@ -1757,36 +1829,6 @@
             "typeName": "HOST_REGEXP",
             "setNumber": 1,
             "pattern": ".*"
-        }
-    ],
-    "deliveryservicesRequiredCapabilities": [
-        {
-            "xmlID": "ds1",
-            "RequiredCapability": "foo"
-        },
-        {
-            "xmlID": "ds2",
-            "RequiredCapability": "bar"
-        },
-        {
-            "xmlID": "msods1",
-            "RequiredCapability": "bar"
-        },
-        {
-            "xmlID": "ds-top-req-cap",
-            "RequiredCapability": "ram"
-        },
-        {
-            "xmlID": "ds-top-req-cap",
-            "RequiredCapability": "disk"
-        },
-        {
-            "xmlID": "ds-top-req-cap2",
-            "RequiredCapability": "ram"
-        },
-        {
-            "xmlID": "test-rm-ssc",
-            "RequiredCapability": "ram"
         }
     ],
     "deliveryServiceServerAssignments": [

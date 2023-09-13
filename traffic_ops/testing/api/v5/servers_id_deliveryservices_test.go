@@ -28,7 +28,7 @@ import (
 )
 
 func TestServersIDDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Tenants, Topologies, ServiceCategories, DeliveryServices, DeliveryServiceServerAssignments}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Tenants, Topologies, ServiceCategories, ServerCapabilities, ServerServerCapabilities, DeliveryServices, DeliveryServiceServerAssignments}, func() {
 
 		currentTime := time.Now().UTC().Add(-15 * time.Second)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
@@ -52,14 +52,14 @@ func TestServersIDDeliveryServices(t *testing.T) {
 					EndpointID:    GetServerID(t, "atlanta-edge-01"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"dsIds":   []int{GetDeliveryServiceId(t, "ds1")()},
+						"dsIds":   []int{GetDeliveryServiceId(t, "dsserverid")()},
 						"replace": true,
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK),
 						validateServersDeliveryServicesPost(
 							GetServerID(t, "atlanta-edge-01")(),
 							[]int{
-								GetDeliveryServiceId(t, "ds1")(),
+								GetDeliveryServiceId(t, "dsserverid")(),
 								GetDeliveryServiceId(t, "ds-based-top-with-no-mids")(),
 							},
 							2)),
@@ -100,7 +100,7 @@ func TestServersIDDeliveryServices(t *testing.T) {
 					EndpointID:    GetServerID(t, "cdn2-test-edge"),
 					ClientSession: TOSession,
 					RequestBody: map[string]interface{}{
-						"dsIds":   []int{GetDeliveryServiceId(t, "ds1")()},
+						"dsIds":   []int{GetDeliveryServiceId(t, "dsserverid")()},
 						"replace": true,
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusConflict)),

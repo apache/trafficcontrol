@@ -28,7 +28,7 @@ import (
 )
 
 func TestCacheGroupsDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, CacheGroupsDeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, ServerCapabilities, DeliveryServices, CacheGroupsDeliveryServices}, func() {
 
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, []int]{
 			"POST": {

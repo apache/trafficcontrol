@@ -270,16 +270,25 @@ func enrollDeliveryServicesRequiredCapability(toSession *session, r io.Reader) e
 	}
 	dsrc.DeliveryServiceID = dses.Response[0].ID
 
-	alerts, _, err := toSession.CreateDeliveryServicesRequiredCapability(dsrc, client.RequestOptions{})
+	dsUpdate := dses.Response[0]
+	dsUpdate.RequiredCapabilities = []string{*dsrc.RequiredCapability}
+
+	sc := tc.ServerCapabilityV5{
+		Name:        *dsrc.RequiredCapability,
+		Description: "description",
+	}
+
+	_, _, err = toSession.CreateServerCapability(sc, client.RequestOptions{})
+	if err != nil {
+		log.Infof("error creating Server Capability: %v", err)
+		return err
+	}
+
+	_, _, err = toSession.UpdateDeliveryService(*dsUpdate.ID, dsUpdate, client.RequestOptions{})
 	if err != nil {
 		log.Infof("error creating Delivery Services Required Capability: %v", err)
 		return err
 	}
-
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	err = enc.Encode(&alerts)
-
 	return err
 }
 

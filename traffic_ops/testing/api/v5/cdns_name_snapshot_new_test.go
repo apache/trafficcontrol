@@ -30,7 +30,7 @@ import (
 var baselineCRConfig tc.CRConfig
 
 func TestCDNNameSnapshotNew(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, ServerCapabilities, DeliveryServices}, func() {
 
 		methodTests := utils.V5TestCase{
 			"GET": {
