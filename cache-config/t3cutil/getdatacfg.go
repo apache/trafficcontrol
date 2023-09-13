@@ -248,7 +248,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 	oldServer := &atscfg.Server{}
 	if oldCfg != nil {
 		for _, toServer := range oldCfg.Servers {
-			if toServer.HostName != "nil" && toServer.HostName == oldCfg.MetaData.CacheHostName {
+			if toServer.HostName != "" && toServer.HostName == oldCfg.MetaData.CacheHostName {
 				oldServer = &toServer
 				break
 			}
@@ -550,7 +550,7 @@ func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName st
 			defer func(start time.Time) { log.Infof("jobsF took %v\n", time.Since(start)) }(time.Now())
 			{
 				reqHdr := (http.Header)(nil)
-				if oldCfg != nil && oldServer.CDN != "nil" && oldServer.CDN == server.CDN {
+				if oldCfg != nil && oldServer.CDN != "" && oldServer.CDN == server.CDN {
 					reqHdr = MakeReqHdr(oldCfg.MetaData.Jobs)
 				}
 				jobs, reqInf, err := toClient.GetJobs(reqHdr, server.CDN)
