@@ -321,7 +321,7 @@ func TestAPIInfo_WriteNotModifiedResponse(t *testing.T) {
 		request: r,
 		w:       w,
 	}
-	code, userErr, sysErr := inf.WriteNotModifiedResponse("test")
+	code, userErr, sysErr := inf.WriteNotModifiedResponse(time.Time{})
 	if code != http.StatusNotModified {
 		t.Errorf("WriteNotModifiedResponse should return a %d %s code, got: %d %s", http.StatusNotModified, http.StatusText(http.StatusNotModified), code, http.StatusText(code))
 	}

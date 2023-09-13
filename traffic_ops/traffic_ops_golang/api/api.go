@@ -720,13 +720,14 @@ func (inf APIInfo) WriteOKResponseWithSummary(resp any, count uint64) (int, erro
 }
 
 // WriteNotModifiedResponse writes a 304 Not Modified response with the given
-// object as the 'response' property of the response body.
+// time as the last modified time in the headers.
 //
 // This CANNOT be used by any APIInfo that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
-func (inf APIInfo) WriteNotModifiedResponse(resp any) (int, error, error) {
+func (inf APIInfo) WriteNotModifiedResponse(lastModified time.Time) (int, error, error) {
+	inf.w.Header().Set(rfc.LastModified, FormatLastModified(lastModified))
 	inf.w.WriteHeader(http.StatusNotModified)
-	WriteResp(inf.w, inf.request, resp)
+	setRespWritten(inf.request)
 	return http.StatusNotModified, nil, nil
 }
 

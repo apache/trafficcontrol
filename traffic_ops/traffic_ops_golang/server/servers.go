@@ -674,11 +674,8 @@ func Read(inf *api.APIInfo) (int, error, error) {
 	version := inf.Version
 
 	servers, serverCount, userErr, sysErr, errCode, maxTime := getServers(inf.RequestHeaders(), inf.Params, inf.Tx, inf.User, useIMS, *version, inf.Config.RoleBasedPermissions)
-	if useIMS && maxTime != nil {
-		inf.SetLastModified(*maxTime)
-	}
-	if errCode == http.StatusNotModified {
-		return inf.WriteNotModifiedResponse([]tc.ServerV5{})
+	if useIMS && maxTime != nil && errCode == http.StatusNotModified {
+		return inf.WriteNotModifiedResponse(*maxTime)
 	}
 	if userErr != nil || sysErr != nil {
 		return errCode, userErr, sysErr
