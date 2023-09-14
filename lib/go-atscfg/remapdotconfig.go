@@ -428,8 +428,8 @@ func getServerConfigRemapDotConfigForMid(
 			remapTags.RangeRequests = `@plugin=cache_range_requests.so`
 			if rqParam != "" {
 				remapTags.RangeRequests += rqParam
-				//this check may seem excessive, but I want to be sure we don't have --consider-ims in remap twice
-			} else if !strings.Contains(remapTags.RangeRequests, `@pparam=--consider-ims`) && *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice {
+			}
+			if !strings.Contains(remapTags.RangeRequests, `@pparam=--consider-ims`) && *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && rqParam != "" {
 				remapTags.RangeRequests += ` @pparam=--consider-ims`
 			}
 		}
