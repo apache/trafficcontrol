@@ -124,7 +124,11 @@ Response Structure
 
 ``POST``
 ========
-Creates a new federation.
+Creates a new :term:`Federation`.
+
+.. caution:: Despite the URL of this endpoint, this does `**not**` create a :term:`Federation` within any particular CDN. A :term:`Federation` is associated with a CDN purely because any :term:`Delivery Service` to which it is assigned is scoped to a CDN. Therefore, upon creation a :term:`Federation` is not associated with any CDN in particular.
+
+.. warning:: There is no restriction on using the special "ALL" CDN for :term:`Federations` - but this is highly discouraged, because many things treat that CDN specially and may not work properly if it is used as though it were a normal CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -135,15 +139,15 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+----------------------------------------------------------------+
-	| Name | Description                                                    |
-	+======+================================================================+
-	| name | The name of the CDN for which a new federation will be created |
-	+------+----------------------------------------------------------------+
+	+------+------------------------------------------------------------------------+
+	| Name | Description                                                            |
+	+======+========================================================================+
+	| name | The name of the CDN for which a new :term:`Federation` will be created |
+	+------+------------------------------------------------------------------------+
 
-:cname: The Canonical Name (CNAME) used by the federation
+:cname: The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
 
-	.. note:: The CNAME must end with a "``.``"
+	.. tip:: The CNAME must end with a "``.``"
 
 :description: An optional description of the federation
 :ttl:         Time to Live (TTL) for the name record used for ``cname``
@@ -169,14 +173,14 @@ Request Structure
 Response Structure
 ------------------
 :id:          The integral, unique identifier of the :term:`Federation`
-:cname:       The Canonical Name (CNAME) used by the federation
-:description: An optionally-present field containing a description of the field
+:cname:       The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
+:description: The description of the :term:`Federation`
+:lastUpdated: The date and time at which this federation was last modified, in :RFC:`3339` format
 
-	.. note:: This key will only be present if the description was provided when the federation was created
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.
 
-:lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
-:ttl:         Time to Live (TTL) for the ``cname``, in hours
-
+:ttl: :abbr:`TTL (Time to Live)` for the ``cname``, in hours
 
 .. code-block:: http
 	:caption: Response Example
@@ -195,7 +199,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "cdnfederation was created.",
+			"text": "Federation was created",
 			"level": "success"
 		}
 	],
@@ -204,5 +208,5 @@ Response Structure
 		"cname": "test.quest.",
 		"ttl": 48,
 		"description": "A test federation",
-		"lastUpdated": "2018-12-05 00:05:16+00"
+		"lastUpdated": "2018-12-05T00:05:16Z"
 	}}

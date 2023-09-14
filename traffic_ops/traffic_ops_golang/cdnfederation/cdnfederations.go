@@ -42,6 +42,7 @@ import (
 
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
 	"github.com/lib/pq"
 )
 
@@ -67,7 +68,18 @@ func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
 }
 
 func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
+func (*TOCDNFederation) InsertQuery() string {
+	return `
+	INSERT INTO federation (
+	cname,
+ 	ttl,
+ 	description
+  ) VALUES (
+ 	:cname,
+	:ttl,
+	:description
+	) RETURNING id, last_updated`
+}
 func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, _ string) string {
 	return selectMaxLastUpdatedQuery(where, orderBy, pagination)
 }
@@ -396,6 +408,9 @@ func selectByID() string {
 //go:embed select.sql
 var selectQuery string
 
+//go:embed insert.sql
+var insertQuery string
+
 func selectByCDNName() string {
 	return selectQuery
 }
@@ -409,19 +424,6 @@ UPDATE federation SET
 WHERE
   id=:id
 RETURNING last_updated`
-}
-
-func insertQuery() string {
-	return `
-	INSERT INTO federation (
-	cname,
- 	ttl,
- 	description
-  ) VALUES (
- 	:cname,
-	:ttl,
-	:description
-	) RETURNING id, last_updated`
 }
 
 func deleteQuery() string {
@@ -530,4 +532,40 @@ func ReadID(inf *api.APIInfo) (int, error, error) {
 		return http.StatusInternalServerError, nil, fmt.Errorf("%d CDN federations found by ID: %d", len(feds), id)
 	}
 	return inf.WriteOKResponse(feds[0])
+}
+
+func validate(fed tc.CDNFederationV5) error {
+	endsWithDot := validation.NewStringRule(
+		func(str string) bool {
+			return strings.HasSuffix(str, ".")
+		},
+		"must end with a period",
+	)
+
+	validateErrs := validation.Errors{
+		"cname": validation.Validate(fed.CName, validation.Required, is.DNSName, endsWithDot),
+		"ttl":   validation.Validate(fed.TTL, validation.Required, validation.Min(0)),
+	}
+
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+}
+
+// Create handles POST requests to `cdns/{{name}}/federations`.
+func Create(inf *api.APIInfo) (int, error, error) {
+	var fed tc.CDNFederationV5
+	if err := inf.DecodeBody(&fed); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
+	}
+
+	err := validate(fed)
+	if err != nil {
+		return http.StatusBadRequest, err, nil
+	}
+
+	err = inf.Tx.Tx.QueryRow(insertQuery, fed.CName, fed.TTL, fed.Description).Scan(&fed.ID, &fed.LastUpdated)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("inserting a CDN Federation: %w", err)
+	}
+
+	return inf.WriteCreatedResponse(fed, "Federation was created", "federations/"+strconv.Itoa(fed.ID))
 }

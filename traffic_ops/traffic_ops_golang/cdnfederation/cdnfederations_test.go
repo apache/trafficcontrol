@@ -20,8 +20,12 @@ package cdnfederation
  */
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
@@ -30,6 +34,8 @@ import (
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
@@ -205,4 +211,70 @@ func TestGetCDNFederations(t *testing.T) {
 	t.Run("getting user Tenant list fails", gettingUserTenantListFails)
 	t.Run("building where/orderby/pagination fails", buildingQueryPartsFails)
 	t.Run("everything works", everythingWorks)
+}
+
+func wrapContext(r *http.Request, key any, value any) *http.Request {
+	return r.WithContext(context.WithValue(r.Context(), key, value))
+}
+
+func testingInf(t *testing.T, body []byte) (*http.Request, sqlmock.Sqlmock, *sqlx.DB) {
+	t.Helper()
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open a stub database connection: %v", err)
+	}
+
+	db := sqlx.NewDb(mockDB, "sqlmock")
+
+	r := httptest.NewRequest(http.MethodPost, "/api/5.0/cdns/ALL/federations", bytes.NewReader(body))
+	r = wrapContext(r, api.ConfigContextKey, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 1000}})
+	r = wrapContext(r, api.DBContextKey, db)
+	r = wrapContext(r, api.TrafficVaultContextKey, &disabled.Disabled{})
+	r = wrapContext(r, api.ReqIDContextKey, uint64(0))
+	r = wrapContext(r, auth.CurrentUserKey, auth.CurrentUser{})
+	r = wrapContext(r, api.PathParamsKey, make(map[string]string))
+
+	mock.ExpectBegin()
+
+	return r, mock, db
+}
+
+func TestCreate(t *testing.T) {
+	newFed := tc.CDNFederationV5{
+		CName:       "test.quest.",
+		TTL:         5,
+		Description: nil,
+	}
+	bts, err := json.Marshal(newFed)
+	if err != nil {
+		t.Fatalf("marshaling testing request body: %v", err)
+	}
+
+	newFed.ID = 1
+	newFed.LastUpdated = time.Time{}.Add(time.Hour)
+
+	r, mock, db := testingInf(t, bts)
+	defer cleanup(t, mock, db)
+
+	rows := sqlmock.NewRows([]string{"id", "last_updated"})
+	rows.AddRow(newFed.ID, newFed.LastUpdated)
+	mock.ExpectQuery("INSERT").WillReturnRows(rows)
+
+	f := api.Wrap(Create, nil, nil)
+	w := httptest.NewRecorder()
+	f(w, r)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("Incorrect response code; want: %d, got: %d", http.StatusCreated, w.Code)
+	}
+
+	var created tc.CDNFederationV5Response
+	err = json.Unmarshal(w.Body.Bytes(), &created)
+	if err != nil {
+		t.Fatalf("Unmarshaling response: %v", err)
+	}
+
+	if created.Response != newFed {
+		t.Errorf("Didn't create the expected Federation; want: %#v, got: %#v", newFed, created.Response)
+	}
 }
