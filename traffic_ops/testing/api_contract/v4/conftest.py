@@ -1105,7 +1105,7 @@ def server_data_post(to_session: TOSession, request_template_data: list[JSONData
 		server["typeId"] = type_id
 
 	pytestconfig.cache.set("typeId", type_id)
-	
+
 	server["cachegroupId"]= cache_group_post_data["id"]
 
 	# Check if cdn already exists, otherwise create it
@@ -1698,7 +1698,7 @@ def cdn_federation_data_post(to_session: TOSession, request_template_data: list[
 	federation_federation_resolver_resp_obj = check_template_data(response, "federation_federation_resolver")
 
 	yield [cdn_name, cdn_federation_resp_obj, cdn_federation, federation_id, delivery_service_federation_resp_obj]
-	
+
 	msg = to_session.delete_federation_in_cdn(cdn_name=cdn_name, federation_id=federation_id)
 	logger.info("Deleting cdn_federation dara... %s", msg)
 	if msg is None:
@@ -1774,7 +1774,7 @@ def delivery_service_request_comments_data_post(to_session: TOSession,
 		logger.error("delivery_service_request_comments returned by Traffic Ops is missing an 'id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
 
-  
+
 @pytest.fixture(name="profile_parameters_post_data")
 def profile_parameters_post_data(to_session: TOSession, request_template_data: list[JSONData],
 		profile_post_data:dict[str, object], parameter_post_data:dict[str, object]
@@ -1860,7 +1860,7 @@ def federation_resolver_data_post(to_session: TOSession, request_template_data: 
 	type_object = create_or_get_existing(to_session, "types", "type", type_data,
 				      {"useInTable": "federation"})
 	federation_resolver["typeId"] = type_object["id"]
-	federation_resolver["ipAddress"] = ".".join(map(str, (randint(0, 255) 
+	federation_resolver["ipAddress"] = ".".join(map(str, (randint(0, 255)
                         for _ in range(4))))
 
 	logger.info("New federation_resolver data to hit POST method %s", federation_resolver)
@@ -1949,3 +1949,23 @@ def server_server_capabilities_data_post(to_session: TOSession, edge_type_data:N
 	if msg is None:
 		logger.error("Server Server Capability returned by Traffic Ops is missing a 'server_id' property")
 		pytest.fail("Response from delete request is empty, Failing test_case")
+
+
+@pytest.fixture(name="logs_data")
+def logs_data(to_session: TOSession, request_template_data: list[JSONData],
+        ) -> dict[str, object]:
+	"""
+    PyTest Fixture to retrieve log data from logs endpoint.
+    :param to_session: Fixture to get Traffic Ops session.
+    :returns: Log data obtained from logs endpoint.
+    """
+
+	change_logs = check_template_data(request_template_data["logs"], "logs")
+
+
+    # Hitting logs GET methed
+	response: tuple[JSONData, requests.Response] = to_session.get_change_logs(data=change_logs)
+	resp_obj = check_template_data(response[0], "change_logs")
+	change_log_id = resp_obj.get("id")
+
+	yield [change_log_id, resp_obj]

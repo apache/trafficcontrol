@@ -2252,5 +2252,54 @@
                 }
             }
         }
+    },
+    "logs":{
+        "type": "object",
+        "required": [
+            "ticketNum",
+            "level",
+            "lastUpdated",
+            "user",
+            "id",
+            "message"
+        ],
+        "properties": {
+            "ticketNum": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "level": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "lastUpdated": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "user": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            },
+            "id": {
+                "type": [
+                    "integer",
+                    "null"
+                ]
+            },
+            "message": {
+                "type": [
+                    "string",
+                    "null"
+                ]
+            }
+        }
     }
 }
