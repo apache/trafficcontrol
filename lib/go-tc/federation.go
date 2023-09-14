@@ -24,6 +24,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/apache/trafficcontrol/lib/go-util"
 
@@ -67,6 +68,39 @@ type CDNFederation struct {
 
 	// omitempty only works with primitive types and pointers
 	*DeliveryServiceIDs `json:"deliveryService,omitempty"`
+}
+
+// CDNFederationDeliveryService holds information about an assigned Delivery
+// Service within a CDNFederationV5 structure.
+type CDNFederationDeliveryService = struct {
+	ID    int    `json:"id" db:"ds_id"`
+	XMLID string `json:"xmlID" db:"xml_id"`
+}
+
+// CDNFederationV5 represents a Federation of some CDN as it appears in version
+// 5 of the Traffic Ops API.
+type CDNFederationV5 struct {
+	ID          int       `json:"id" db:"id"`
+	CName       string    `json:"cname" db:"cname"`
+	TTL         int       `json:"ttl" db:"ttl"`
+	Description *string   `json:"description" db:"description"`
+	LastUpdated time.Time `json:"lastUpdated" db:"last_updated"`
+
+	DeliveryService *CDNFederationDeliveryService `json:"deliveryService,omitempty"`
+}
+
+// CDNFederationsV5Response represents a Traffic Ops APIv5 response to a request
+// for one or more of a CDN's Federations.
+type CDNFederationsV5Response struct {
+	Response []CDNFederationV5 `json:"response"`
+	Alerts
+}
+
+// CDNFederationV5Response represents a Traffic Ops APIv5 response to a request
+// for a single CDN's Federations.
+type CDNFederationV5Response struct {
+	Response CDNFederationV5 `json:"response"`
+	Alerts
 }
 
 // DeliveryServiceIDs are pairs of identifiers for Delivery Services.
