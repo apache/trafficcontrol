@@ -19,6 +19,84 @@
 ``cdns/{{name}}/federations/{{ID}}``
 ************************************
 
+``GET``
+=======
+Retrieves a list of federations in use by a specific CDN.
+
+.. versionadded:: 5.0
+
+:Auth. Required: Yes
+:Roles Required: None
+:Permissions Required: CDN:READ, FEDERATION:READ, DELIVERY-SERVICE:READ
+:Response Type: Object
+
+Request Structure
+-----------------
+.. table:: Request Path Parameters
+
+	+------+---------------------------------------------------------------------------------------------+
+	| Name | Description                                                                                 |
+	+======+=============================================================================================+
+	| name | The name of the CDN for which the :term:`Federation` identified by ``ID`` will be inspected |
+	+------+---------------------------------------------------------------------------------------------+
+	|  ID  | An integral, unique identifier for the :term:`Federation` to be inspected                  |
+	+------+---------------------------------------------------------------------------------------------+
+
+.. code-block:: http
+	:caption: Request Example
+
+	GET /api/5.0/cdns/CDN-in-a-Box/federations/1 HTTP/1.1
+	Host: trafficops.infra.ciab.test
+	User-Agent: curl/7.62.0
+	Accept: */*
+	Cookie: mojolicious=...
+
+Response Structure
+------------------
+:cname:           The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
+:deliveryService: An object with keys that provide identifying information for the :term:`Delivery Service` using this :term:`Federation`
+
+	:id:    The integral, unique identifier for the :term:`Delivery Service`
+	:xmlID: The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
+
+		.. versionchanged:: 5.0
+			Prior to version 5, this field was known by the name ``xmlId`` - improperly formatted camelCase.
+
+:description: A human-readable description of the :term:`Federation`. This can be ``null`` as well as an empty string.
+:lastUpdated: The date and time at which this :term:`Federation` was last modified, in :RFC:`3339` format
+
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.
+
+:ttl: :abbr:`TTL (Time to Live)` for the ``cname``, in hours
+
+.. code-block:: http
+	:caption: Response Example
+
+	HTTP/1.1 200 OK
+	access-control-allow-credentials: true
+	access-control-allow-headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
+	access-control-allow-methods: POST,GET,OPTIONS,PUT,DELETE
+	access-control-allow-origin: *
+	content-type: application/json
+	set-cookie: mojolicious=...; Path=/; HttpOnly
+	whole-content-sha512: SJA7G+7G5KcOfCtnE3Dq5DCobWtGRUKSppiDkfLZoG5+paq4E1aZGqUb6vGVsd+TpPg75MLlhyqfdfCHnhLX/g==
+	x-server-name: traffic_ops_golang/
+	content-length: 170
+	date: Wed, 05 Dec 2018 00:35:40 GMT
+
+	{ "response": {
+		"id": 1,
+		"cname": "test.quest.",
+		"ttl": 48,
+		"description": "A test federation",
+		"lastUpdated": "2018-12-05T00:05:16Z",
+		"deliveryService": {
+			"id": 1,
+			"xmlID": "demo1"
+		}
+	}}
+
 ``PUT``
 =======
 Updates a federation.

@@ -1,3 +1,5 @@
+// Package cdnfederation is one of many, many packages that contain logic
+// pertaining to federations of CDNs and/or parts of CDNs.
 package cdnfederation
 
 /*
@@ -21,6 +23,7 @@ package cdnfederation
 
 import (
 	"database/sql"
+	_ "embed" // needed to embed SQL queries within Go variables
 	"errors"
 	"fmt"
 	"net/http"
@@ -28,14 +31,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/lib/pq"
 )
 
 // we need a type alias to define functions on
@@ -49,9 +56,7 @@ func (v *TOCDNFederation) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "federation")
 }
 
-func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
-func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
+func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
 	return `SELECT max(t) from (
 		SELECT max(federation.last_updated) as t from federation
 		join federation_deliveryservice fds on fds.federation = federation.id
@@ -61,17 +66,57 @@ func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, 
 		select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
 }
 
+func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
+func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
+func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, _ string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination)
+}
+
 func (v *TOCDNFederation) NewReadObj() interface{} { return &TOCDNFederation{} }
 func (v *TOCDNFederation) SelectQuery() string {
 	return selectByCDNName()
 }
-func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	cols := map[string]dbhelpers.WhereColumnInfo{
-		"id":    dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
-		"name":  dbhelpers.WhereColumnInfo{Column: "c.name", Checker: nil},
-		"cname": dbhelpers.WhereColumnInfo{Column: "federation.cname", Checker: nil},
+
+func paramColumnInfo(v api.Version) map[string]dbhelpers.WhereColumnInfo {
+	if v.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+		return map[string]dbhelpers.WhereColumnInfo{
+			"id": {
+				Column:  "federation.id",
+				Checker: api.IsInt,
+			},
+			"name": {
+				Column: "c.name",
+			},
+			"cname": {
+				Column: "federation.cname",
+			},
+			"xmlID": {
+				Column: "ds.xml_id",
+			},
+			"dsID": {
+				Column:  "ds.id",
+				Checker: api.IsInt,
+			},
+		}
 	}
-	return cols
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id": {
+			Column:  "federation.id",
+			Checker: api.IsInt,
+		},
+		"name": {
+			Column:  "c.name",
+			Checker: nil,
+		},
+		"cname": {
+			Column:  "federation.cname",
+			Checker: nil,
+		},
+	}
+}
+
+func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return paramColumnInfo(*v.ReqInfo.Version)
 }
 func (v *TOCDNFederation) DeleteQuery() string { return deleteQuery() }
 func (v *TOCDNFederation) UpdateQuery() string { return updateQuery() }
@@ -348,22 +393,11 @@ func selectByID() string {
 	// WHERE federation.id = :id (determined by dbhelper)
 }
 
+//go:embed select.sql
+var selectQuery string
+
 func selectByCDNName() string {
-	return `
-	SELECT
-	ds.tenant_id,
-	federation.id AS id,
-	federation.cname,
-	federation.ttl,
-	federation.description,
-	federation.last_updated,
-	ds.id AS ds_id,
-	ds.xml_id
-	FROM federation
-	JOIN federation_deliveryservice AS fd ON federation.id = fd.federation
-	JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice
-	JOIN cdn c ON c.id = ds.cdn_id`
-	// WHERE cdn.name = :cdn_name (determined by dbhelper)
+	return selectQuery
 }
 
 func updateQuery() string {
@@ -392,4 +426,108 @@ func insertQuery() string {
 
 func deleteQuery() string {
 	return `DELETE FROM federation WHERE id = :id`
+}
+
+func addTenancyStmt(where string) string {
+	if where == "" {
+		where = "WHERE "
+	} else {
+		where += " AND "
+	}
+	where += "ds.tenant_id = ANY(:tenantIDs)"
+	return where
+}
+
+func getCDNFederations(inf *api.APIInfo) ([]tc.CDNFederationV5, time.Time, int, error, error) {
+	tenantList, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
+	if err != nil {
+		return nil, time.Time{}, http.StatusInternalServerError, nil, fmt.Errorf("getting tenant list for user: %w", err)
+	}
+
+	cols := paramColumnInfo(*inf.Version)
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	if len(errs) > 0 {
+		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+	}
+	queryValues["tenantIDs"] = pq.Array(tenantList)
+
+	where = addTenancyStmt(where)
+	query := selectQuery + where + orderBy + pagination
+
+	if inf.UseIMS() {
+		cont, max := ims.TryIfModifiedSinceQuery(inf.Tx, inf.RequestHeaders(), queryValues, query)
+		if !cont {
+			log.Debugln("IMS HIT")
+			return nil, max, http.StatusNotModified, nil, nil
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		userErr, sysErr, code := api.ParseDBError(err)
+		return nil, time.Time{}, code, userErr, sysErr
+	}
+	defer log.Close(rows, "closing CDNFederation rows")
+
+	ret := []tc.CDNFederationV5{}
+	for rows.Next() {
+		fed := tc.CDNFederationV5{
+			DeliveryService: new(tc.CDNFederationDeliveryService),
+		}
+		var tenantID int
+		err := rows.Scan(
+			&tenantID,
+			&fed.ID,
+			&fed.CName,
+			&fed.TTL,
+			&fed.Description,
+			&fed.LastUpdated,
+			&fed.DeliveryService.ID,
+			&fed.DeliveryService.XMLID,
+		)
+		if err != nil {
+			return nil, time.Time{}, http.StatusInternalServerError, nil, fmt.Errorf("scanning a CDN Federation: %w", err)
+		}
+
+		ret = append(ret, fed)
+	}
+
+	return ret, time.Time{}, http.StatusOK, nil, nil
+}
+
+// Read handles GET requests to `cdns/{{name}}/federations`.
+func Read(inf *api.APIInfo) (int, error, error) {
+	api.DefaultSort(inf, "cname")
+	feds, max, code, userErr, sysErr := getCDNFederations(inf)
+	if userErr != nil || sysErr != nil {
+		return code, userErr, sysErr
+	}
+	if feds == nil {
+		return inf.WriteNotModifiedResponse(max)
+	}
+	return inf.WriteOKResponse(feds)
+}
+
+// ReadID handles GET requests to `cdns/{{name}}/federations/{{ID}}`.
+func ReadID(inf *api.APIInfo) (int, error, error) {
+	feds, max, code, userErr, sysErr := getCDNFederations(inf)
+	if userErr != nil || sysErr != nil {
+		return code, userErr, sysErr
+	}
+	if feds == nil {
+		return inf.WriteNotModifiedResponse(max)
+	}
+
+	id := inf.IntParams["id"]
+	if len(feds) == 0 {
+		return http.StatusNotFound, fmt.Errorf("no such Federation #%d in CDN %s", id, inf.Params["name"]), nil
+	}
+	if len(feds) > 1 {
+		return http.StatusInternalServerError, nil, fmt.Errorf("%d CDN federations found by ID: %d", len(feds), id)
+	}
+	return inf.WriteOKResponse(feds[0])
 }
