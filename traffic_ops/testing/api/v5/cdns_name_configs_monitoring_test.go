@@ -29,7 +29,7 @@ import (
 )
 
 func TestCDNNameConfigsMonitoring(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, ProfileParameters, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, ProfileParameters, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, ServerCapabilities, DeliveryServices}, func() {
 
 		methodTests := utils.V5TestCase{
 			"GET": {

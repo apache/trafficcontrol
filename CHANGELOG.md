@@ -179,6 +179,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7749](https://github.com/apache/trafficcontrol/pull/7749) *Traffic Ops* Fixes `tenants` v5 apis to respond with `RFC3339` date/time Format.
 
 ### Removed
+- [#7804](https://github.com/apache/trafficcontrol/pull/7804) Removed unneeded V5 client methods for `deliveryServiceRequiredcapabilities`.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed`misc/jira_github_issue_import.py`, the project does not use JIRA.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed `traffic_ops/install/bin/convert_profile/`, this script is outdated and is for use on an EOL ATS version.

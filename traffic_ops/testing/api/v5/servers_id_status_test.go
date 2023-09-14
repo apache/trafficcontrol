@@ -28,7 +28,7 @@ import (
 )
 
 func TestServersIDStatus(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, DeliveryServices, DeliveryServiceServerAssignments}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, ServiceCategories, Topologies, ServerCapabilities, ServerServerCapabilities, DeliveryServices, DeliveryServiceServerAssignments}, func() {
 
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.ServerPutStatus]{
 			"PUT": {

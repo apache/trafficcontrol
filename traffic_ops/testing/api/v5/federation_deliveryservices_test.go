@@ -31,7 +31,7 @@ import (
 )
 
 func TestFederationsDeliveryServices(t *testing.T) {
-	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, DeliveryServices, CDNFederations, FederationDeliveryServices}, func() {
+	WithObjs(t, []TCObj{CDNs, Types, Tenants, Parameters, Profiles, Statuses, Divisions, Regions, PhysLocations, CacheGroups, Servers, Topologies, ServiceCategories, ServerCapabilities, ServerServerCapabilities, DeliveryServices, CDNFederations, FederationDeliveryServices}, func() {
 
 		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.FederationDSPost]{
 			"GET": {
