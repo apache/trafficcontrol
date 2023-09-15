@@ -26,6 +26,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -202,7 +203,7 @@ func everythingWorks(t *testing.T) {
 	if l := len(feds); l != 1 {
 		t.Fatalf("Expected one federation to be returned; got: %d", l)
 	}
-	if feds[0] != fed {
+	if !reflect.DeepEqual(feds[0], fed) {
 		t.Errorf("expected a federation like '%#v', but instead found: %#v", fed, feds[0])
 	}
 }
