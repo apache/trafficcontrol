@@ -99,7 +99,7 @@ Response Structure
 
 ``PUT``
 =======
-Updates a federation.
+Updates a :term:`Federation`.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -110,13 +110,15 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------------------+
-	| Name | Description                                                                         |
-	+======+=====================================================================================+
-	| name | The name of the CDN for which the federation identified by ``ID`` will be inspected |
-	+------+-------------------------------------------------------------------------------------+
-	|  ID  | An integral, unique identifier for the federation to be inspected                   |
-	+------+-------------------------------------------------------------------------------------+
+	+------+-------------------------------------------------------------------------------------------+
+	| Name | Description                                                                               |
+	+======+===========================================================================================+
+	| name | The name of the CDN for which the :term:`Federation` identified by ``ID`` will be updated |
+	+------+-------------------------------------------------------------------------------------------+
+	|  ID  | An integral, unique identifier for the :term:`Federation` to be updated                   |
+	+------+-------------------------------------------------------------------------------------------+
+
+.. caution:: The name of the CDN doesn't actually matter. It doesn't even need to be the name of any existing CDN.
 
 :cname: The Canonical Name (CNAME) used by the federation
 
@@ -144,14 +146,14 @@ Request Structure
 
 Response Structure
 ------------------
-:cname:       The Canonical Name (CNAME) used by the federation
-:description: An optionally-present field containing a description of the field
+:cname:       The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
+:description: A human-readable description of the :term:`Federation`. This can be ``null`` as well as an empty string.
+:lastUpdated: The date and time at which this :term:`Federation` was last modified, in :RFC:`3339` format
 
-	.. note:: This key will only be present if the description was provided when the federation was created
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.
 
-:lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
-:ttl:         Time to Live (TTL) for the ``cname``, in hours
-
+:ttl: :abbr:`TTL (Time to Live)` for the ``cname``, in hours
 
 .. code-block:: http
 	:caption: Response Example
@@ -170,7 +172,7 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "cdnfederation was updated.",
+			"text": "Federation was updated",
 			"level": "success"
 		}
 	],
@@ -179,7 +181,7 @@ Response Structure
 		"cname": "foo.bar.",
 		"ttl": 48,
 		"description": null,
-		"lastUpdated": "2018-12-05 01:03:40+00"
+		"lastUpdated": "2018-12-05T01:03:40Z"
 	}}
 
 

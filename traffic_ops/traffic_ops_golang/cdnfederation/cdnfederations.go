@@ -131,7 +131,16 @@ func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return paramColumnInfo(*v.ReqInfo.Version)
 }
 func (v *TOCDNFederation) DeleteQuery() string { return deleteQuery() }
-func (v *TOCDNFederation) UpdateQuery() string { return updateQuery() }
+func (*TOCDNFederation) UpdateQuery() string {
+	return `
+UPDATE federation SET
+	cname = :cname,
+	ttl = :ttl,
+	description = :description
+WHERE
+  id=:id
+RETURNING last_updated`
+}
 
 // Fufills `Identifier' interface
 func (fed TOCDNFederation) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -415,16 +424,8 @@ func selectByCDNName() string {
 	return selectQuery
 }
 
-func updateQuery() string {
-	return `
-UPDATE federation SET
-	cname = :cname,
-	ttl = :ttl,
-	description = :description
-WHERE
-  id=:id
-RETURNING last_updated`
-}
+//go:embed update.sql
+var updateQuery string
 
 func deleteQuery() string {
 	return `DELETE FROM federation WHERE id = :id`
@@ -557,9 +558,15 @@ func Create(inf *api.APIInfo) (int, error, error) {
 		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
 	}
 
+	// You can't set this at creation time, but if it was in the request it
+	// would be shown in the response - we're supposed to ignore extra fields.
+	// This doesn't do that exactly, but it helps.
+	fed.DeliveryService = nil
+
 	err := validate(fed)
 	if err != nil {
-		return http.StatusBadRequest, err, nil
+		userErr, sysErr, code := api.ParseDBError(err)
+		return code, userErr, sysErr
 	}
 
 	err = inf.Tx.Tx.QueryRow(insertQuery, fed.CName, fed.TTL, fed.Description).Scan(&fed.ID, &fed.LastUpdated)
@@ -568,4 +575,33 @@ func Create(inf *api.APIInfo) (int, error, error) {
 	}
 
 	return inf.WriteCreatedResponse(fed, "Federation was created", "federations/"+strconv.Itoa(fed.ID))
+}
+
+// Update handles PUT requests to `cdns/{{name}}/federations/{{id}}`.
+func Update(inf *api.APIInfo) (int, error, error) {
+	var fed tc.CDNFederationV5
+	if err := inf.DecodeBody(&fed); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
+	}
+
+	id := inf.IntParams["id"]
+
+	// You can't set this via a PUT request, but if it was in the request it
+	// would be shown in the response - we're supposed to ignore extra fields.
+	// This doesn't do that exactly, but it helps.
+	fed.DeliveryService = nil
+	fed.ID = id
+
+	err := validate(fed)
+	if err != nil {
+		return http.StatusBadRequest, err, nil
+	}
+
+	err = inf.Tx.Tx.QueryRow(updateQuery, fed.CName, fed.TTL, fed.Description, id).Scan(&fed.LastUpdated)
+	if err != nil {
+		userErr, sysErr, code := api.ParseDBError(err)
+		return code, userErr, sysErr
+	}
+
+	return inf.WriteSuccessResponse(fed, "Federation was updated")
 }
