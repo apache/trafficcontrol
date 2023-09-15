@@ -43,7 +43,9 @@ Request Structure
 	+-----------+---------------------------------------------------------------------------------------------------------------+
 	| Name      | Description                                                                                                   |
 	+===========+===============================================================================================================+
-	| id        | Return only the federation that has this id                                                                   |
+	| id        | Return only the :term:`Federation` that has this ID                                                           |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| cname     | Return only those :term:`Federations` that have this CNAME                                                    |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|           | array                                                                                                         |
@@ -76,10 +78,7 @@ Response Structure
 	:id:    The integral, unique identifier for the :term:`Delivery Service`
 	:xmlId: The :term:`Delivery Service`'s uniquely identifying 'xml_id'
 
-:description: An optionally-present field containing a description of the field
-
-	.. note:: This key will only be present if the description was provided when the federation was created. Refer to the ``POST`` method of this endpoint to see how federations can be created.
-
+:description: A human-readable description of the :term:`Federation`. This can be ``null`` as well as an empty string.
 :lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
@@ -160,10 +159,7 @@ Response Structure
 ------------------
 :id:          The intergral, unique identifier of the :term:`Federation`
 :cname:       The Canonical Name (CNAME) used by the federation
-:description: An optionally-present field containing a description of the field
-
-	.. note:: This key will only be present if the description was provided when the federation was created
-
+:description: The description of the :term:`Federation`
 :lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
 :ttl:         Time to Live (TTL) for the ``cname``, in hours
 
