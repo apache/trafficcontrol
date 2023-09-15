@@ -254,7 +254,7 @@ func setFederationID(t *testing.T, cdnFederation tc.CDNFederationV5) {
 func CreateTestCDNFederations(t *testing.T) {
 	for _, federation := range testData.Federations {
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("xmlID", federation.DeliveryService.XMLID)
+		opts.QueryParameters.Set("xmlId", federation.DeliveryService.XMLID)
 		dsResp, _, err := TOSession.GetDeliveryServices(opts)
 		assert.RequireNoError(t, err, "Could not get Delivery Service by XML ID: %v", err)
 		assert.RequireEqual(t, 1, len(dsResp.Response), "Expected one Delivery Service, but got %d", len(dsResp.Response))
