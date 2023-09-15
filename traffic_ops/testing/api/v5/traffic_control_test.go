@@ -35,7 +35,7 @@ type TrafficControl struct {
 	DeliveryServiceServerAssignments                  []tc.DeliveryServiceServers             `json:"deliveryServiceServerAssignments"`
 	TopologyBasedDeliveryServicesRequiredCapabilities []tc.DeliveryServicesRequiredCapability `json:"topologyBasedDeliveryServicesRequiredCapabilities"`
 	Divisions                                         []tc.DivisionV5                         `json:"divisions"`
-	Federations                                       []tc.CDNFederation                      `json:"federations"`
+	Federations                                       []tc.CDNFederationV5                    `json:"federations"`
 	FederationResolvers                               []tc.FederationResolverV5               `json:"federation_resolvers"`
 	Jobs                                              []tc.InvalidationJobCreateV4            `json:"jobs"`
 	Origins                                           []tc.OriginV5                           `json:"origins"`

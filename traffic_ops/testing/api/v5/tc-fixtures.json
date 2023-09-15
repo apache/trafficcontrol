@@ -1867,7 +1867,7 @@
             "ttl": 48,
             "description": "the description",
             "deliveryService": {
-                "xmlId": "ds1"
+                "xmlID": "ds1"
             }
         },
         {
@@ -1875,7 +1875,7 @@
             "ttl": 34,
             "description": "fooya",
             "deliveryService": {
-                "xmlId": "ds1"
+                "xmlID": "ds1"
             }
         },
         {
@@ -1883,7 +1883,7 @@
             "ttl": 30,
             "description": "google",
             "deliveryService": {
-                "xmlId": "ds1"
+                "xmlID": "ds1"
             }
         }
     ],
