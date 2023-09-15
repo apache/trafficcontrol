@@ -599,13 +599,22 @@ func Update(inf *api.APIInfo) (int, error, error) {
 
 	id := inf.IntParams["id"]
 
+	var lastModified time.Time
+	err := inf.Tx.QueryRow("SELECT last_updated FROM federation WHERE id = $1", id).Scan(&lastModified)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting last modified time for Federation #%d: %w", id, err)
+	}
+	if !api.IsUnmodified(inf.RequestHeaders(), lastModified) {
+		return http.StatusPreconditionFailed, api.ResourceModifiedError, nil
+	}
+
 	// You can't set this via a PUT request, but if it was in the request it
 	// would be shown in the response - we're supposed to ignore extra fields.
 	// This doesn't do that exactly, but it helps.
 	fed.DeliveryService = nil
 	fed.ID = id
 
-	err := validate(fed)
+	err = validate(fed)
 	if err != nil {
 		return http.StatusBadRequest, err, nil
 	}
