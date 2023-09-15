@@ -130,7 +130,7 @@ func paramColumnInfo(v api.Version) map[string]dbhelpers.WhereColumnInfo {
 func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 	return paramColumnInfo(*v.ReqInfo.Version)
 }
-func (v *TOCDNFederation) DeleteQuery() string { return deleteQuery() }
+func (*TOCDNFederation) DeleteQuery() string { return `DELETE FROM federation WHERE id = :id` }
 func (*TOCDNFederation) UpdateQuery() string {
 	return `
 UPDATE federation SET
@@ -427,9 +427,8 @@ func selectByCDNName() string {
 //go:embed update.sql
 var updateQuery string
 
-func deleteQuery() string {
-	return `DELETE FROM federation WHERE id = :id`
-}
+//go:embed delete.sql
+var deleteQuery string
 
 func addTenancyStmt(where string) string {
 	if where == "" {
@@ -604,4 +603,18 @@ func Update(inf *api.APIInfo) (int, error, error) {
 	}
 
 	return inf.WriteSuccessResponse(fed, "Federation was updated")
+}
+
+// Delete handles DELETE requests to `cdns/{{name}}/federations/{{id}}`.
+func Delete(inf *api.APIInfo) (int, error, error) {
+	id := inf.IntParams["id"]
+
+	var fed tc.CDNFederationV5
+	err := inf.Tx.QueryRow(deleteQuery, id).Scan(&fed.CName, &fed.Description, &fed.ID, &fed.LastUpdated, &fed.TTL)
+	if err != nil {
+		userErr, sysErr, code := api.ParseDBError(err)
+		return code, userErr, sysErr
+	}
+
+	return inf.WriteSuccessResponse(fed, "Federation was deleted")
 }

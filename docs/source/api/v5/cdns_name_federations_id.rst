@@ -192,19 +192,24 @@ Deletes a specific federation.
 :Auth. Required: Yes
 :Roles Required: "admin"
 :Permissions Required: FEDERATION:DELETE, FEDERATION:READ, CDN:READ
-:Response Type:  ``undefined``
+:Response Type:  Object
+
+.. versionchanged:: 5.0
+	In earlier API versions, no ``response`` property is present in these responses.
 
 Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-------------------------------------------------------------------------------------+
-	| Name | Description                                                                         |
-	+======+=====================================================================================+
-	| name | The name of the CDN for which the federation identified by ``ID`` will be inspected |
-	+------+-------------------------------------------------------------------------------------+
-	|  ID  | An integral, unique identifier for the federation to be inspected                   |
-	+------+-------------------------------------------------------------------------------------+
+	+------+-------------------------------------------------------------------------------------------+
+	| Name | Description                                                                               |
+	+======+===========================================================================================+
+	| name | The name of the CDN for which the :term:`Federation` identified by ``ID`` will be deleted |
+	+------+-------------------------------------------------------------------------------------------+
+	|  ID  | An integral, unique identifier for the :term:`Federation` to be deleted                   |
+	+------+-------------------------------------------------------------------------------------------+
+
+.. caution:: The name of the CDN doesn't actually matter. It doesn't even need to be the name of any existing CDN.
 
 .. code-block:: http
 	:caption: Request Example
@@ -217,6 +222,12 @@ Request Structure
 
 Response Structure
 ------------------
+:cname:       The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
+:description: A human-readable description of the :term:`Federation`. This can be ``null`` as well as an empty string.
+:lastUpdated: The date and time at which this :term:`Federation` was last modified, in :RFC:`3339` format
+:ttl:         :abbr:`TTL (Time to Live)` for the ``cname``, in hours
+
+
 .. code-block:: http
 	:caption: Response Example
 
@@ -234,7 +245,14 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "cdnfederation was deleted.",
+			"text": "Federation was deleted",
 			"level": "success"
 		}
-	]}
+	],
+	"response": {
+		"id": 1,
+		"cname": "foo.bar.",
+		"ttl": 48,
+		"description": null,
+		"lastUpdated": "2018-12-05T01:03:40Z"
+	}}
