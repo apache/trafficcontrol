@@ -142,7 +142,7 @@ Response Structure
 	:routerPortName:    The human-readable name of the router responsible for reaching this server's interface.
 	:routerPortName:    The human-readable name of the port used by the router responsible for reaching this server's interface.
 
-:lastUpdated: The date and time at which this server description was last modified, in :RFC:3339 format
+:lastUpdated: The date and time at which this server description was last modified, in :RFC:`3339` format
 
 	.. versionchanged:: 5.0
 		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.
@@ -480,7 +480,7 @@ Response Structure
 	:routerPortName:    The human-readable name of the router responsible for reaching this server's interface.
 	:routerPortName:    The human-readable name of the port used by the router responsible for reaching this server's interface.
 
-:lastUpdated: The date and time at which this server description was last modified, in :RFC:3339 format
+:lastUpdated: The date and time at which this server description was last modified, in :RFC:`3339` format
 
 	.. versionchanged:: 5.0
 		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.

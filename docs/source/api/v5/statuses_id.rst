@@ -48,7 +48,7 @@ Response Structure
 ------------------
 :description: A short description of the status
 :id:          The integral, unique identifier of this status
-:lastUpdated: The date and time at which this status was last modified, in :rfc:3339 format
+:lastUpdated: The date and time at which this status was last modified, in :RFC:`3339` format
 :name:        The name of the status
 
 .. code-block:: http

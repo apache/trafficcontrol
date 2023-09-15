@@ -56,7 +56,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique, identifier for this coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in :rfc:3339 format
+:lastUpdated: The time and date at which this entry was last updated, in :RFC:`3339` format
 :latitude:    Latitude of the coordinate
 :longitude:   Longitude of the coordinate
 :name:        The name of the coordinate - typically this just reflects the name of the Cache Group for which the coordinate was created
@@ -159,7 +159,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique, identifier for the newly created coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in :rfc:3339 format
+:lastUpdated: The time and date at which this entry was last updated, in :RFC:`3339` format
 :latitude:    Latitude of the newly created coordinate
 :longitude:   Longitude of the newly created coordinate
 :name:        The name of the coordinate
@@ -233,7 +233,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique, identifier for the coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in :rfc:3339 format
+:lastUpdated: The time and date at which this entry was last updated, in :RFC:`3339` format
 :latitude:    Latitude of the coordinate
 :longitude:   Longitude of the coordinate
 :name:        The name of the coordinate
@@ -279,7 +279,7 @@ Deletes a coordinate
 Request Structure
 -----------------
 :id:          Integral, unique, identifier for the coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in :rfc:3339 format
+:lastUpdated: The time and date at which this entry was last updated, in :RFC:`3339` format
 :latitude:    Latitude of the coordinate
 :longitude:   Longitude of the coordinate
 :name:        The name of the coordinate

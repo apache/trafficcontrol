@@ -95,7 +95,7 @@ Response Structure
 :innerHeaderRewrite:        A set of :ref:`ds-inner-header-rw-rules`
 :ipv6RoutingEnabled:        A boolean that defines the :ref:`ds-ipv6-routing` setting on this :term:`Delivery Service`
 :lastHeaderRewrite:         A set of :ref:`ds-last-header-rw-rules`
-:lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :rfc:3339 format
+:lastUpdated:               The date and time at which this :term:`Delivery Service` was last updated, in :RFC:`3339` format
 
 	.. versionchanged:: 4.0
 		Prior to API version 4.0, this property used :ref:`non-rfc-datetime`.
