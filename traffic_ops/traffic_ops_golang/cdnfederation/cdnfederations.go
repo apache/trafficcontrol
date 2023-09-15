@@ -58,13 +58,26 @@ func (v *TOCDNFederation) GetLastUpdated() (*time.Time, bool, error) {
 }
 
 func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
-	return `SELECT max(t) from (
-		SELECT max(federation.last_updated) as t from federation
-		join federation_deliveryservice fds on fds.federation = federation.id
-		join deliveryservice ds on ds.id = fds.deliveryservice
-		join cdn c on c.id = ds.cdn_id ` + where + orderBy + pagination +
-		` UNION ALL
-		select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
+	return `
+	SELECT max(t)
+	FROM (
+		(
+			SELECT federation.last_updated AS t
+			FROM federation
+			JOIN federation_deliveryservice fds
+				ON fds.federation = federation.id
+			JOIN deliveryservice ds
+				ON ds.id = fds.deliveryservice
+			JOIN cdn c
+				ON c.id = ds.cdn_id ` + where + orderBy + pagination +
+		`)
+		UNION ALL
+		(
+			SELECT max(last_updated) AS t
+			FROM last_deleted l
+			WHERE l.table_name='federation'
+		)
+	) AS res`
 }
 
 func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
@@ -455,9 +468,9 @@ func getCDNFederations(inf *api.APIInfo) ([]tc.CDNFederationV5, time.Time, int, 
 	queryValues["tenantIDs"] = pq.Array(tenantList)
 
 	where = addTenancyStmt(where)
-	query := selectQuery + where + orderBy + pagination
 
 	if inf.UseIMS() {
+		query := selectMaxLastUpdatedQuery(where, orderBy, pagination)
 		cont, max := ims.TryIfModifiedSinceQuery(inf.Tx, inf.RequestHeaders(), queryValues, query)
 		if !cont {
 			log.Debugln("IMS HIT")
@@ -468,6 +481,7 @@ func getCDNFederations(inf *api.APIInfo) ([]tc.CDNFederationV5, time.Time, int, 
 		log.Debugln("Non IMS request")
 	}
 
+	query := selectQuery + where + orderBy + pagination
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		userErr, sysErr, code := api.ParseDBError(err)
