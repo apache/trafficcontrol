@@ -23,7 +23,6 @@ package cdnfederation
 
 import (
 	"database/sql"
-	_ "embed" // needed to embed SQL queries within Go variables
 	"errors"
 	"fmt"
 	"net/http"
@@ -427,21 +426,68 @@ func selectByID() string {
 	// WHERE federation.id = :id (determined by dbhelper)
 }
 
-//go:embed select.sql
-var selectQuery string
+const selectQuery = `
+SELECT
+	ds.tenant_id,
+	federation.id AS id,
+	federation.cname,
+	federation.ttl,
+	federation.description,
+	federation.last_updated,
+	ds.id AS ds_id,
+	ds.xml_id
+FROM federation
+JOIN
+	federation_deliveryservice AS fd
+	ON federation.id = fd.federation
+JOIN
+	deliveryservice AS ds
+	ON ds.id = fd.deliveryservice
+JOIN
+	cdn AS c
+	ON c.id = ds.cdn_id
+`
 
-//go:embed insert.sql
-var insertQuery string
+const insertQuery = `
+INSERT INTO federation (
+	cname,
+	ttl,
+	"description"
+) VALUES (
+	$1,
+	$2,
+	$3
+)
+RETURNING
+	id,
+	last_updated
+`
 
 func selectByCDNName() string {
 	return selectQuery
 }
 
-//go:embed update.sql
-var updateQuery string
+const updateQuery = `
+UPDATE federation SET
+	cname = $1,
+	ttl = $2,
+	"description" = $3
+WHERE
+  id = $4
+RETURNING
+	last_updated
+`
 
-//go:embed delete.sql
-var deleteQuery string
+const deleteQuery = `
+DELETE FROM federation
+WHERE id = $1
+RETURNING
+	cname,
+	"description",
+	id,
+	last_updated,
+	ttl
+`
 
 func addTenancyStmt(where string) string {
 	if where == "" {
