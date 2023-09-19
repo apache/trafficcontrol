@@ -112,7 +112,7 @@ Response Structure
 		{
 			"id": 1,
 			"cname": "test.quest.",
-			"ttl": 48,
+			"ttl": 68,
 			"description": "A test federation",
 			"lastUpdated": "2018-12-05T00:05:16Z",
 			"deliveryService": {
@@ -150,7 +150,10 @@ Request Structure
 	.. tip:: The CNAME must end with a "``.``"
 
 :description: An optional description of the federation
-:ttl:         Time to Live (TTL) for the name record used for ``cname``
+:ttl:         Time to Live (TTL) for the name record used for ``cname`` - minimum of 60
+
+	.. versionchanged:: 5.0
+		In earlier API versions, there is no enforced minimum (although Traffic Portal would never allow a value under 60).
 
 .. code-block:: http
 	:caption: Request Example
@@ -165,7 +168,7 @@ Request Structure
 
 	{
 		"cname": "test.quest.",
-		"ttl": 48,
+		"ttl": 68,
 		"description": "A test federation"
 	}
 
@@ -206,7 +209,7 @@ Response Structure
 	"response": {
 		"id": 1,
 		"cname": "test.quest.",
-		"ttl": 48,
+		"ttl": 68,
 		"description": "A test federation",
 		"lastUpdated": "2018-12-05T00:05:16Z"
 	}}

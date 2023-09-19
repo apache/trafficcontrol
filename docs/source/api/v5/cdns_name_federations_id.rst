@@ -88,7 +88,7 @@ Response Structure
 	{ "response": {
 		"id": 1,
 		"cname": "test.quest.",
-		"ttl": 48,
+		"ttl": 68,
 		"description": "A test federation",
 		"lastUpdated": "2018-12-05T00:05:16Z",
 		"deliveryService": {
@@ -120,12 +120,15 @@ Request Structure
 
 .. caution:: The name of the CDN doesn't actually matter. It doesn't even need to be the name of any existing CDN.
 
-:cname: The Canonical Name (CNAME) used by the federation
+:cname: The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
 
 	.. note:: The CNAME must end with a "``.``"
 
 :description: An optional description of the federation
-:ttl:         Time to Live (TTL) for the name record used for ``cname``
+:ttl:         Time to Live (TTL) for the name record used for ``cname`` - minimum of 60
+
+	.. versionchanged:: 5.0
+		In earlier API versions, there is no enforced minimum (although Traffic Portal would never allow a value under 60).
 
 .. code-block:: http
 	:caption: Request Example
@@ -140,7 +143,7 @@ Request Structure
 
 	{
 		"cname": "foo.bar.",
-		"ttl": 48
+		"ttl": 68
 	}
 
 
@@ -179,7 +182,7 @@ Response Structure
 	"response": {
 		"id": 1,
 		"cname": "foo.bar.",
-		"ttl": 48,
+		"ttl": 68,
 		"description": null,
 		"lastUpdated": "2018-12-05T01:03:40Z"
 	}}
@@ -227,7 +230,6 @@ Response Structure
 :lastUpdated: The date and time at which this :term:`Federation` was last modified, in :RFC:`3339` format
 :ttl:         :abbr:`TTL (Time to Live)` for the ``cname``, in hours
 
-
 .. code-block:: http
 	:caption: Response Example
 
@@ -252,7 +254,7 @@ Response Structure
 	"response": {
 		"id": 1,
 		"cname": "foo.bar.",
-		"ttl": 48,
+		"ttl": 68,
 		"description": null,
 		"lastUpdated": "2018-12-05T01:03:40Z"
 	}}

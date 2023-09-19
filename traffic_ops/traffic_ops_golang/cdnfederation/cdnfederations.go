@@ -624,13 +624,13 @@ func Create(inf *api.APIInfo) (int, error, error) {
 
 	err := validate(fed)
 	if err != nil {
-		userErr, sysErr, code := api.ParseDBError(err)
-		return code, userErr, sysErr
+		return http.StatusBadRequest, err, nil
 	}
 
 	err = inf.Tx.Tx.QueryRow(insertQuery, fed.CName, fed.TTL, fed.Description).Scan(&fed.ID, &fed.LastUpdated)
 	if err != nil {
-		return http.StatusInternalServerError, nil, fmt.Errorf("inserting a CDN Federation: %w", err)
+		userErr, sysErr, code := api.ParseDBError(err)
+		return code, userErr, fmt.Errorf("inserting a CDN Federation: %w", sysErr)
 	}
 
 	return inf.WriteCreatedResponse(fed, "Federation was created", "federations/"+strconv.Itoa(fed.ID))

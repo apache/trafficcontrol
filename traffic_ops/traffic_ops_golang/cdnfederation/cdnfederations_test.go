@@ -243,7 +243,7 @@ func testingInf(t *testing.T, body []byte) (*http.Request, sqlmock.Sqlmock, *sql
 func TestCreate(t *testing.T) {
 	newFed := tc.CDNFederationV5{
 		CName:       "test.quest.",
-		TTL:         5,
+		TTL:         420,
 		Description: nil,
 	}
 	bts, err := json.Marshal(newFed)
@@ -298,4 +298,15 @@ func TestValidate(t *testing.T) {
 	if !strings.Contains(err.Error(), "ttl") {
 		t.Errorf("Expected error message to mention 'ttl': %v", err)
 	}
+
+	fed.TTL = 60
+	fed.CName = "test.quest"
+	err = validate(fed)
+	if err == nil {
+		t.Fatal("Expected an error for a CNAME without a terminating '.', but didn't get one")
+	}
+	if !strings.Contains(err.Error(), "cname") {
+		t.Errorf("Expected error message to mention 'cname': %v", err)
+	}
+
 }

@@ -109,7 +109,7 @@ func TestCDNFederations(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.CDNFederationV5{
 						CName:       "new.cname.",
-						TTL:         34,
+						TTL:         64,
 						Description: util.Ptr("updated"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNFederationUpdateFields(map[string]interface{}{"CName": "new.cname."})),
@@ -120,7 +120,7 @@ func TestCDNFederations(t *testing.T) {
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
 					RequestBody: tc.CDNFederationV5{
 						CName:       "booya.com.",
-						TTL:         34,
+						TTL:         64,
 						Description: util.Ptr("fooya"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -130,7 +130,7 @@ func TestCDNFederations(t *testing.T) {
 					ClientSession: TOSession,
 					RequestBody: tc.CDNFederationV5{
 						CName:       "new.cname.",
-						TTL:         34,
+						TTL:         64,
 						Description: util.Ptr("updated"),
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
