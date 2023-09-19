@@ -604,7 +604,7 @@ func validate(fed tc.CDNFederationV5) error {
 
 	validateErrs := validation.Errors{
 		"cname": validation.Validate(fed.CName, validation.Required, is.DNSName, endsWithDot),
-		"ttl":   validation.Validate(fed.TTL, validation.Required, validation.Min(0)),
+		"ttl":   validation.Validate(fed.TTL, validation.Required, validation.Min(60)),
 	}
 
 	return util.JoinErrs(tovalidate.ToErrors(validateErrs))

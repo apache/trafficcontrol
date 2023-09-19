@@ -279,3 +279,23 @@ func TestCreate(t *testing.T) {
 		t.Errorf("Didn't create the expected Federation; want: %#v, got: %#v", newFed, created.Response)
 	}
 }
+
+func TestValidate(t *testing.T) {
+	fed := tc.CDNFederationV5{
+		CName: "test.quest.",
+		TTL:   60,
+	}
+	err := validate(fed)
+	if err != nil {
+		t.Errorf("Unexpected validation error: %v", err)
+	}
+
+	fed.TTL--
+	err = validate(fed)
+	if err == nil {
+		t.Fatal("Expected an error for TTL below minimum, but didn't get one")
+	}
+	if !strings.Contains(err.Error(), "ttl") {
+		t.Errorf("Expected error message to mention 'ttl': %v", err)
+	}
+}
