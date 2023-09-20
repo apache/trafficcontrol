@@ -1,3 +1,5 @@
+// Package cdnfederation is one of many, many packages that contain logic
+// pertaining to federations of CDNs and/or parts of CDNs.
 package cdnfederation
 
 /*
@@ -28,14 +30,19 @@ import (
 	"strings"
 	"time"
 
+	"github.com/apache/trafficcontrol/lib/go-log"
 	"github.com/apache/trafficcontrol/lib/go-tc"
 	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
 	"github.com/apache/trafficcontrol/lib/go-util"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
 	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation"
+	"github.com/go-ozzo/ozzo-validation/is"
+	"github.com/lib/pq"
 )
 
 // we need a type alias to define functions on
@@ -49,32 +56,103 @@ func (v *TOCDNFederation) GetLastUpdated() (*time.Time, bool, error) {
 	return api.GetLastUpdated(v.APIInfo().Tx, *v.ID, "federation")
 }
 
+func selectMaxLastUpdatedQuery(where, orderBy, pagination string) string {
+	return `
+	SELECT max(t)
+	FROM (
+		(
+			SELECT federation.last_updated AS t
+			FROM federation
+			JOIN federation_deliveryservice fds
+				ON fds.federation = federation.id
+			JOIN deliveryservice ds
+				ON ds.id = fds.deliveryservice
+			JOIN cdn c
+				ON c.id = ds.cdn_id ` + where + orderBy + pagination +
+		`)
+		UNION ALL
+		(
+			SELECT max(last_updated) AS t
+			FROM last_deleted l
+			WHERE l.table_name='federation'
+		)
+	) AS res`
+}
+
 func (v *TOCDNFederation) SetLastUpdated(t tc.TimeNoMod) { v.LastUpdated = &t }
-func (v *TOCDNFederation) InsertQuery() string           { return insertQuery() }
-func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, tableName string) string {
-	return `SELECT max(t) from (
-		SELECT max(federation.last_updated) as t from federation
-		join federation_deliveryservice fds on fds.federation = federation.id
-		join deliveryservice ds on ds.id = fds.deliveryservice
-		join cdn c on c.id = ds.cdn_id ` + where + orderBy + pagination +
-		` UNION ALL
-		select max(last_updated) as t from last_deleted l where l.table_name='federation') as res`
+func (*TOCDNFederation) InsertQuery() string {
+	return `
+	INSERT INTO federation (
+	cname,
+ 	ttl,
+ 	description
+  ) VALUES (
+ 	:cname,
+	:ttl,
+	:description
+	) RETURNING id, last_updated`
+}
+func (v *TOCDNFederation) SelectMaxLastUpdatedQuery(where, orderBy, pagination, _ string) string {
+	return selectMaxLastUpdatedQuery(where, orderBy, pagination)
 }
 
 func (v *TOCDNFederation) NewReadObj() interface{} { return &TOCDNFederation{} }
 func (v *TOCDNFederation) SelectQuery() string {
 	return selectByCDNName()
 }
-func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
-	cols := map[string]dbhelpers.WhereColumnInfo{
-		"id":    dbhelpers.WhereColumnInfo{Column: "federation.id", Checker: api.IsInt},
-		"name":  dbhelpers.WhereColumnInfo{Column: "c.name", Checker: nil},
-		"cname": dbhelpers.WhereColumnInfo{Column: "federation.cname", Checker: nil},
+
+func paramColumnInfo(v api.Version) map[string]dbhelpers.WhereColumnInfo {
+	if v.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+		return map[string]dbhelpers.WhereColumnInfo{
+			"id": {
+				Column:  "federation.id",
+				Checker: api.IsInt,
+			},
+			"name": {
+				Column: "c.name",
+			},
+			"cname": {
+				Column: "federation.cname",
+			},
+			"xmlID": {
+				Column: "ds.xml_id",
+			},
+			"dsID": {
+				Column:  "ds.id",
+				Checker: api.IsInt,
+			},
+		}
 	}
-	return cols
+	return map[string]dbhelpers.WhereColumnInfo{
+		"id": {
+			Column:  "federation.id",
+			Checker: api.IsInt,
+		},
+		"name": {
+			Column:  "c.name",
+			Checker: nil,
+		},
+		"cname": {
+			Column:  "federation.cname",
+			Checker: nil,
+		},
+	}
 }
-func (v *TOCDNFederation) DeleteQuery() string { return deleteQuery() }
-func (v *TOCDNFederation) UpdateQuery() string { return updateQuery() }
+
+func (v *TOCDNFederation) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
+	return paramColumnInfo(*v.ReqInfo.Version)
+}
+func (*TOCDNFederation) DeleteQuery() string { return `DELETE FROM federation WHERE id = :id` }
+func (*TOCDNFederation) UpdateQuery() string {
+	return `
+UPDATE federation SET
+	cname = :cname,
+	ttl = :ttl,
+	description = :description
+WHERE
+  id=:id
+RETURNING last_updated`
+}
 
 // Fufills `Identifier' interface
 func (fed TOCDNFederation) GetKeyFieldsInfo() []api.KeyFieldInfo {
@@ -348,9 +426,8 @@ func selectByID() string {
 	// WHERE federation.id = :id (determined by dbhelper)
 }
 
-func selectByCDNName() string {
-	return `
-	SELECT
+const selectQuery = `
+SELECT
 	ds.tenant_id,
 	federation.id AS id,
 	federation.cname,
@@ -359,37 +436,254 @@ func selectByCDNName() string {
 	federation.last_updated,
 	ds.id AS ds_id,
 	ds.xml_id
-	FROM federation
-	JOIN federation_deliveryservice AS fd ON federation.id = fd.federation
-	JOIN deliveryservice AS ds ON ds.id = fd.deliveryservice
-	JOIN cdn c ON c.id = ds.cdn_id`
-	// WHERE cdn.name = :cdn_name (determined by dbhelper)
-}
+FROM federation
+JOIN
+	federation_deliveryservice AS fd
+	ON federation.id = fd.federation
+JOIN
+	deliveryservice AS ds
+	ON ds.id = fd.deliveryservice
+JOIN
+	cdn AS c
+	ON c.id = ds.cdn_id
+`
 
-func updateQuery() string {
-	return `
-UPDATE federation SET
-	cname = :cname,
-	ttl = :ttl,
-	description = :description
-WHERE
-  id=:id
-RETURNING last_updated`
-}
-
-func insertQuery() string {
-	return `
-	INSERT INTO federation (
+const insertQuery = `
+INSERT INTO federation (
 	cname,
- 	ttl,
- 	description
-  ) VALUES (
- 	:cname,
-	:ttl,
-	:description
-	) RETURNING id, last_updated`
+	ttl,
+	"description"
+) VALUES (
+	$1,
+	$2,
+	$3
+)
+RETURNING
+	id,
+	last_updated
+`
+
+func selectByCDNName() string {
+	return selectQuery
 }
 
-func deleteQuery() string {
-	return `DELETE FROM federation WHERE id = :id`
+const updateQuery = `
+UPDATE federation SET
+	cname = $1,
+	ttl = $2,
+	"description" = $3
+WHERE
+  id = $4
+RETURNING
+	last_updated
+`
+
+const deleteQuery = `
+DELETE FROM federation
+WHERE id = $1
+RETURNING
+	cname,
+	"description",
+	id,
+	last_updated,
+	ttl
+`
+
+func addTenancyStmt(where string) string {
+	if where == "" {
+		where = "WHERE "
+	} else {
+		where += " AND "
+	}
+	where += "ds.tenant_id = ANY(:tenantIDs)"
+	return where
+}
+
+func getCDNFederations(inf *api.APIInfo) ([]tc.CDNFederationV5, time.Time, int, error, error) {
+	tenantList, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
+	if err != nil {
+		return nil, time.Time{}, http.StatusInternalServerError, nil, fmt.Errorf("getting tenant list for user: %w", err)
+	}
+
+	cols := paramColumnInfo(*inf.Version)
+
+	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
+	if len(errs) > 0 {
+		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+	}
+	queryValues["tenantIDs"] = pq.Array(tenantList)
+
+	where = addTenancyStmt(where)
+
+	if inf.UseIMS() {
+		query := selectMaxLastUpdatedQuery(where, orderBy, pagination)
+		cont, max := ims.TryIfModifiedSinceQuery(inf.Tx, inf.RequestHeaders(), queryValues, query)
+		if !cont {
+			log.Debugln("IMS HIT")
+			return nil, max, http.StatusNotModified, nil, nil
+		}
+		log.Debugln("IMS MISS")
+	} else {
+		log.Debugln("Non IMS request")
+	}
+
+	query := selectQuery + where + orderBy + pagination
+	rows, err := inf.Tx.NamedQuery(query, queryValues)
+	if err != nil {
+		userErr, sysErr, code := api.ParseDBError(err)
+		return nil, time.Time{}, code, userErr, sysErr
+	}
+	defer log.Close(rows, "closing CDNFederation rows")
+
+	ret := []tc.CDNFederationV5{}
+	for rows.Next() {
+		fed := tc.CDNFederationV5{
+			DeliveryService: new(tc.CDNFederationDeliveryService),
+		}
+		var tenantID int
+		err := rows.Scan(
+			&tenantID,
+			&fed.ID,
+			&fed.CName,
+			&fed.TTL,
+			&fed.Description,
+			&fed.LastUpdated,
+			&fed.DeliveryService.ID,
+			&fed.DeliveryService.XMLID,
+		)
+		if err != nil {
+			return nil, time.Time{}, http.StatusInternalServerError, nil, fmt.Errorf("scanning a CDN Federation: %w", err)
+		}
+
+		ret = append(ret, fed)
+	}
+
+	return ret, time.Time{}, http.StatusOK, nil, nil
+}
+
+// Read handles GET requests to `cdns/{{name}}/federations`.
+func Read(inf *api.APIInfo) (int, error, error) {
+	api.DefaultSort(inf, "cname")
+	feds, max, code, userErr, sysErr := getCDNFederations(inf)
+	if userErr != nil || sysErr != nil {
+		return code, userErr, sysErr
+	}
+	if feds == nil {
+		return inf.WriteNotModifiedResponse(max)
+	}
+	return inf.WriteOKResponse(feds)
+}
+
+// ReadID handles GET requests to `cdns/{{name}}/federations/{{ID}}`.
+func ReadID(inf *api.APIInfo) (int, error, error) {
+	feds, max, code, userErr, sysErr := getCDNFederations(inf)
+	if userErr != nil || sysErr != nil {
+		return code, userErr, sysErr
+	}
+	if feds == nil {
+		return inf.WriteNotModifiedResponse(max)
+	}
+
+	id := inf.IntParams["id"]
+	if len(feds) == 0 {
+		return http.StatusNotFound, fmt.Errorf("no such Federation #%d in CDN %s", id, inf.Params["name"]), nil
+	}
+	if len(feds) > 1 {
+		return http.StatusInternalServerError, nil, fmt.Errorf("%d CDN federations found by ID: %d", len(feds), id)
+	}
+	return inf.WriteOKResponse(feds[0])
+}
+
+func validate(fed tc.CDNFederationV5) error {
+	endsWithDot := validation.NewStringRule(
+		func(str string) bool {
+			return strings.HasSuffix(str, ".")
+		},
+		"must end with a period",
+	)
+
+	validateErrs := validation.Errors{
+		"cname": validation.Validate(fed.CName, validation.Required, is.DNSName, endsWithDot),
+		"ttl":   validation.Validate(fed.TTL, validation.Required, validation.Min(60)),
+	}
+
+	return util.JoinErrs(tovalidate.ToErrors(validateErrs))
+}
+
+// Create handles POST requests to `cdns/{{name}}/federations`.
+func Create(inf *api.APIInfo) (int, error, error) {
+	var fed tc.CDNFederationV5
+	if err := inf.DecodeBody(&fed); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
+	}
+
+	// You can't set this at creation time, but if it was in the request it
+	// would be shown in the response - we're supposed to ignore extra fields.
+	// This doesn't do that exactly, but it helps.
+	fed.DeliveryService = nil
+
+	err := validate(fed)
+	if err != nil {
+		return http.StatusBadRequest, err, nil
+	}
+
+	err = inf.Tx.Tx.QueryRow(insertQuery, fed.CName, fed.TTL, fed.Description).Scan(&fed.ID, &fed.LastUpdated)
+	if err != nil {
+		userErr, sysErr, code := api.ParseDBError(err)
+		return code, userErr, fmt.Errorf("inserting a CDN Federation: %w", sysErr)
+	}
+
+	return inf.WriteCreatedResponse(fed, "Federation was created", "federations/"+strconv.Itoa(fed.ID))
+}
+
+// Update handles PUT requests to `cdns/{{name}}/federations/{{id}}`.
+func Update(inf *api.APIInfo) (int, error, error) {
+	var fed tc.CDNFederationV5
+	if err := inf.DecodeBody(&fed); err != nil {
+		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
+	}
+
+	id := inf.IntParams["id"]
+
+	var lastModified time.Time
+	err := inf.Tx.QueryRow("SELECT last_updated FROM federation WHERE id = $1", id).Scan(&lastModified)
+	if err != nil {
+		return http.StatusInternalServerError, nil, fmt.Errorf("getting last modified time for Federation #%d: %w", id, err)
+	}
+	if !api.IsUnmodified(inf.RequestHeaders(), lastModified) {
+		return http.StatusPreconditionFailed, api.ResourceModifiedError, nil
+	}
+
+	// You can't set this via a PUT request, but if it was in the request it
+	// would be shown in the response - we're supposed to ignore extra fields.
+	// This doesn't do that exactly, but it helps.
+	fed.DeliveryService = nil
+	fed.ID = id
+
+	err = validate(fed)
+	if err != nil {
+		return http.StatusBadRequest, err, nil
+	}
+
+	err = inf.Tx.Tx.QueryRow(updateQuery, fed.CName, fed.TTL, fed.Description, id).Scan(&fed.LastUpdated)
+	if err != nil {
+		userErr, sysErr, code := api.ParseDBError(err)
+		return code, userErr, sysErr
+	}
+
+	return inf.WriteSuccessResponse(fed, "Federation was updated")
+}
+
+// Delete handles DELETE requests to `cdns/{{name}}/federations/{{id}}`.
+func Delete(inf *api.APIInfo) (int, error, error) {
+	id := inf.IntParams["id"]
+
+	var fed tc.CDNFederationV5
+	err := inf.Tx.QueryRow(deleteQuery, id).Scan(&fed.CName, &fed.Description, &fed.ID, &fed.LastUpdated, &fed.TTL)
+	if err != nil {
+		userErr, sysErr, code := api.ParseDBError(err)
+		return code, userErr, sysErr
+	}
+
+	return inf.WriteSuccessResponse(fed, "Federation was deleted")
 }

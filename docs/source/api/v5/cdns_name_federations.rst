@@ -32,18 +32,24 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+-----------+---------------------------------------------------------------------------------------------------------------+
-	| Name      | Description                                                                                                   |
-	+===========+===============================================================================================================+
-	| name      | The name of the CDN for which federations will be listed                                                      |
-	+-----------+---------------------------------------------------------------------------------------------------------------+
+	+-----------+------------------------------------------------------------------+
+	| Name      | Description                                                      |
+	+===========+==================================================================+
+	| name      | The name of the CDN for which :term:`Federations` will be listed |
+	+-----------+------------------------------------------------------------------+
 
 .. table:: Request Query Parameters
 
 	+-----------+---------------------------------------------------------------------------------------------------------------+
 	| Name      | Description                                                                                                   |
 	+===========+===============================================================================================================+
-	| id        | Return only the federation that has this id                                                                   |
+	| id        | Return only the :term:`Federation` that has this ID                                                           |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| cname     | Return only those :term:`Federations` that have this CNAME                                                    |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| dsID      | Return only those :term:`Federations` assigned to a :term:`Delivery Service` that has this ID                 |
+	+-----------+---------------------------------------------------------------------------------------------------------------+
+	| xmlID     | Return only those :term:`Federations` assigned to a :term:`Delivery Service` that has this :ref:`ds-xmlid`    |
 	+-----------+---------------------------------------------------------------------------------------------------------------+
 	| orderby   | Choose the ordering of the results - must be the name of one of the fields of the objects in the ``response`` |
 	|           | array                                                                                                         |
@@ -70,18 +76,22 @@ Request Structure
 
 Response Structure
 ------------------
-:cname:           The Canonical Name (CNAME) used by the federation
-:deliveryService: An object with keys that provide identifying information for the :term:`Delivery Service` using this federation
+:cname:           The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
+:deliveryService: An object with keys that provide identifying information for the :term:`Delivery Service` using this :term:`Federation`
 
 	:id:    The integral, unique identifier for the :term:`Delivery Service`
-	:xmlId: The :term:`Delivery Service`'s uniquely identifying 'xml_id'
+	:xmlID: The :term:`Delivery Service`'s uniquely identifying :ref:`ds-xmlid`
 
-:description: An optionally-present field containing a description of the field
+		.. versionchanged:: 5.0
+			Prior to version 5, this field was known by the name ``xmlId`` - improperly formatted camelCase.
 
-	.. note:: This key will only be present if the description was provided when the federation was created. Refer to the ``POST`` method of this endpoint to see how federations can be created.
+:description: A human-readable description of the :term:`Federation`. This can be ``null`` as well as an empty string.
+:lastUpdated: The date and time at which this :term:`Federation` was last modified, in :RFC:`3339` format
 
-:lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
-:ttl:         Time to Live (TTL) for the ``cname``, in hours
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.
+
+:ttl: :abbr:`TTL (Time to Live)` for the ``cname``, in hours
 
 .. code-block:: http
 	:caption: Response Example
@@ -102,19 +112,23 @@ Response Structure
 		{
 			"id": 1,
 			"cname": "test.quest.",
-			"ttl": 48,
+			"ttl": 68,
 			"description": "A test federation",
-			"lastUpdated": "2018-12-05 00:05:16+00",
+			"lastUpdated": "2018-12-05T00:05:16Z",
 			"deliveryService": {
 				"id": 1,
-				"xmlId": "demo1"
+				"xmlID": "demo1"
 			}
 		}
 	]}
 
 ``POST``
 ========
-Creates a new federation.
+Creates a new :term:`Federation`.
+
+.. caution:: Despite the URL of this endpoint, this does `**not**` create a :term:`Federation` within any particular CDN. A :term:`Federation` is associated with a CDN purely because any :term:`Delivery Service` to which it is assigned is scoped to a CDN. Therefore, upon creation a :term:`Federation` is not associated with any CDN in particular.
+
+.. warning:: There is no restriction on using the special "ALL" CDN for :term:`Federations` - but this is highly discouraged, because many things treat that CDN specially and may not work properly if it is used as though it were a normal CDN.
 
 :Auth. Required: Yes
 :Roles Required: "admin"
@@ -125,18 +139,21 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+----------------------------------------------------------------+
-	| Name | Description                                                    |
-	+======+================================================================+
-	| name | The name of the CDN for which a new federation will be created |
-	+------+----------------------------------------------------------------+
+	+------+------------------------------------------------------------------------+
+	| Name | Description                                                            |
+	+======+========================================================================+
+	| name | The name of the CDN for which a new :term:`Federation` will be created |
+	+------+------------------------------------------------------------------------+
 
-:cname: The Canonical Name (CNAME) used by the federation
+:cname: The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
 
-	.. note:: The CNAME must end with a "``.``"
+	.. tip:: The CNAME must end with a "``.``"
 
 :description: An optional description of the federation
-:ttl:         Time to Live (TTL) for the name record used for ``cname``
+:ttl:         Time to Live (TTL) for the name record used for ``cname`` - minimum of 60
+
+	.. versionchanged:: 5.0
+		In earlier API versions, there is no enforced minimum (although Traffic Portal would never allow a value under 60).
 
 .. code-block:: http
 	:caption: Request Example
@@ -151,7 +168,7 @@ Request Structure
 
 	{
 		"cname": "test.quest.",
-		"ttl": 48,
+		"ttl": 68,
 		"description": "A test federation"
 	}
 
@@ -159,14 +176,14 @@ Request Structure
 Response Structure
 ------------------
 :id:          The integral, unique identifier of the :term:`Federation`
-:cname:       The Canonical Name (CNAME) used by the federation
-:description: An optionally-present field containing a description of the field
+:cname:       The :abbr:`CNAME (Canonical Name)` used by the :term:`Federation`
+:description: The description of the :term:`Federation`
+:lastUpdated: The date and time at which this federation was last modified, in :RFC:`3339` format
 
-	.. note:: This key will only be present if the description was provided when the federation was created
+	.. versionchanged:: 5.0
+		In earlier versions of the API, this field was given in :ref:`non-rfc-datetime`.
 
-:lastUpdated: The date and time at which this federation was last modified, in :ref:`non-rfc-datetime`
-:ttl:         Time to Live (TTL) for the ``cname``, in hours
-
+:ttl: :abbr:`TTL (Time to Live)` for the ``cname``, in hours
 
 .. code-block:: http
 	:caption: Response Example
@@ -185,14 +202,14 @@ Response Structure
 
 	{ "alerts": [
 		{
-			"text": "cdnfederation was created.",
+			"text": "Federation was created",
 			"level": "success"
 		}
 	],
 	"response": {
 		"id": 1,
 		"cname": "test.quest.",
-		"ttl": 48,
+		"ttl": 68,
 		"description": "A test federation",
-		"lastUpdated": "2018-12-05 00:05:16+00"
+		"lastUpdated": "2018-12-05T00:05:16Z"
 	}}

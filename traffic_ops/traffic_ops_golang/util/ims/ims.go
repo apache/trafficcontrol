@@ -2,6 +2,7 @@ package ims
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"time"
 
@@ -61,12 +62,12 @@ func TryIfModifiedSinceQuery(tx *sqlx.Tx, h http.Header, queryValues map[string]
 		if rows != nil {
 			defer rows.Close()
 		}
+		if errors.Is(err, sql.ErrNoRows) {
+			return dontRunSecond, maxTime
+		}
 		if err != nil {
 			log.Errorf("Couldn't get the max last updated time: %v", err)
 			return runSecond, maxTime
-		}
-		if err == sql.ErrNoRows {
-			return dontRunSecond, maxTime
 		}
 		// This should only ever contain one row
 		if rows.Next() {

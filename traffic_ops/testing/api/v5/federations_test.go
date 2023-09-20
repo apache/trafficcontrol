@@ -49,18 +49,19 @@ func TestFederations(t *testing.T) {
 						validateAllFederationsFields([]map[string]interface{}{
 							{
 								"DeliveryService": "ds1",
+								// TODO: Why are these hard-coded copies of the test data?
 								"Mappings": []map[string]interface{}{
 									{
 										"CName": "the.cname.com.",
-										"TTL":   48,
+										"TTL":   68,
 									},
 									{
 										"CName": "booya.com.",
-										"TTL":   34,
+										"TTL":   64,
 									},
 									{
 										"CName": "google.com.",
-										"TTL":   30,
+										"TTL":   60,
 									},
 								},
 							},

@@ -812,7 +812,12 @@ func enrollFederation(toSession *session, r io.Reader) error {
 	}
 	opts := client.NewRequestOptions()
 	for _, mapping := range federation.Mappings {
-		var cdnFederation tc.CDNFederation
+		if mapping.CName == nil || mapping.TTL == nil {
+			err = fmt.Errorf("mapping found with null or undefined CName and/or TTL: %+v", mapping)
+			log.Errorln(err)
+			return err
+		}
+		var cdnFederation tc.CDNFederationV5
 		var cdnName string
 		{
 			xmlID := string(federation.DeliveryService)
@@ -831,9 +836,9 @@ func enrollFederation(toSession *session, r io.Reader) error {
 			}
 			deliveryService := deliveryServices.Response[0]
 			cdnName = *deliveryService.CDNName
-			cdnFederation = tc.CDNFederation{
-				CName: mapping.CName,
-				TTL:   mapping.TTL,
+			cdnFederation = tc.CDNFederationV5{
+				CName: *mapping.CName,
+				TTL:   *mapping.TTL,
 			}
 			resp, _, err := toSession.CreateCDNFederation(cdnFederation, cdnName, client.RequestOptions{})
 			if err != nil {
@@ -842,13 +847,8 @@ func enrollFederation(toSession *session, r io.Reader) error {
 				return err
 			}
 			cdnFederation = resp.Response
-			if cdnFederation.ID == nil {
-				err = fmt.Errorf("federation returned from creation through Traffic Ops with null or undefined ID")
-				log.Infoln(err)
-				return err
-			}
-			if alerts, _, err := toSession.CreateFederationDeliveryServices(*cdnFederation.ID, []int{*deliveryService.ID}, true, client.RequestOptions{}); err != nil {
-				err = fmt.Errorf("assigning Delivery Service %s to Federation with ID %d: %v - alerts: %+v", xmlID, *cdnFederation.ID, err, alerts.Alerts)
+			if alerts, _, err := toSession.CreateFederationDeliveryServices(cdnFederation.ID, []int{*deliveryService.ID}, true, client.RequestOptions{}); err != nil {
+				err = fmt.Errorf("assigning Delivery Service %s to Federation with ID %d: %v - alerts: %+v", xmlID, cdnFederation.ID, err, alerts.Alerts)
 				log.Infoln(err)
 				return err
 			}
@@ -865,10 +865,10 @@ func enrollFederation(toSession *session, r io.Reader) error {
 				log.Infoln(err)
 				return err
 			}
-			resp, _, err := toSession.CreateFederationUsers(*cdnFederation.ID, []int{*user.Response.ID}, true, client.RequestOptions{})
+			resp, _, err := toSession.CreateFederationUsers(cdnFederation.ID, []int{*user.Response.ID}, true, client.RequestOptions{})
 			if err != nil {
 				username := user.Response.Username
-				err = fmt.Errorf("assigning User '%s' to Federation with ID %d: %v - alerts: %+v", username, *cdnFederation.ID, err, resp.Alerts)
+				err = fmt.Errorf("assigning User '%s' to Federation with ID %d: %v - alerts: %+v", username, cdnFederation.ID, err, resp.Alerts)
 				log.Infoln(err)
 				return err
 			}
@@ -885,20 +885,20 @@ func enrollFederation(toSession *session, r io.Reader) error {
 				allResolverIDs = append(allResolverIDs, resolverIDs...)
 			}
 		}
-		if resp, _, err := toSession.AssignFederationFederationResolver(*cdnFederation.ID, allResolverIDs, true, client.RequestOptions{}); err != nil {
-			err = fmt.Errorf("assigning Federation Resolvers to Federation with ID %d: %v - alerts: %+v", *cdnFederation.ID, err, resp.Alerts)
+		if resp, _, err := toSession.AssignFederationFederationResolver(cdnFederation.ID, allResolverIDs, true, client.RequestOptions{}); err != nil {
+			err = fmt.Errorf("assigning Federation Resolvers to Federation with ID %d: %v - alerts: %+v", cdnFederation.ID, err, resp.Alerts)
 			log.Infoln(err)
 			return err
 		}
-		opts.QueryParameters.Set("id", strconv.Itoa(*cdnFederation.ID))
-		response, _, err := toSession.GetCDNFederationsByName(cdnName, opts)
+		opts.QueryParameters.Set("id", strconv.Itoa(cdnFederation.ID))
+		response, _, err := toSession.GetCDNFederations(cdnName, opts)
 		opts.QueryParameters.Del("id")
 		if err != nil {
-			err = fmt.Errorf("getting CDN Federation with ID %d: %v - alerts: %+v", *cdnFederation.ID, err, response.Alerts)
+			err = fmt.Errorf("getting CDN Federation with ID %d: %v - alerts: %+v", cdnFederation.ID, err, response.Alerts)
 			return err
 		}
 		if len(response.Response) < 1 {
-			err = fmt.Errorf("unable to GET a CDN Federation ID %d in CDN %s", *cdnFederation.ID, cdnName)
+			err = fmt.Errorf("unable to GET a CDN Federation ID %d in CDN %s", cdnFederation.ID, cdnName)
 			log.Infoln(err)
 			return err
 		}
@@ -908,7 +908,7 @@ func enrollFederation(toSession *session, r io.Reader) error {
 		enc.SetIndent("", "  ")
 		err = enc.Encode(&cdnFederation)
 		if err != nil {
-			err = fmt.Errorf("encoding CDNFederation %s with ID %d: %v", *cdnFederation.CName, *cdnFederation.ID, err)
+			err = fmt.Errorf("encoding CDNFederation %s with ID %d: %v", cdnFederation.CName, cdnFederation.ID, err)
 			log.Infoln(err)
 			return err
 		}

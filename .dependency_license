@@ -55,6 +55,7 @@ traffic_router/core/src/test/resources/api/.*/steering*, Apache-2.0
 traffic_router/core/src/test/resources/api/.*/federations/all, Apache-2.0
 BUILD_NUMBER$, Apache-2.0
 \.jks, Apache-2.0 # Java Key Store
+traffic_ops/traffic_ops_golang/.*\.sql, Apache-2.0 # embedded sql queries - can't have comment blocks due to github.com/jmoiron/sqlx library limitations
 
 # Images, created for this project or used under an Apache license.
 ^misc/logos/ATC-PNG\.png, Apache-2.0

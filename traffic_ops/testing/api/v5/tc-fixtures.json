@@ -1864,26 +1864,26 @@
     "federations": [
         {
             "cname": "the.cname.com.",
-            "ttl": 48,
+            "ttl": 68,
             "description": "the description",
             "deliveryService": {
-                "xmlId": "ds1"
+                "xmlID": "ds1"
             }
         },
         {
             "cname": "booya.com.",
-            "ttl": 34,
+            "ttl": 64,
             "description": "fooya",
             "deliveryService": {
-                "xmlId": "ds1"
+                "xmlID": "ds1"
             }
         },
         {
             "cname": "google.com.",
-            "ttl": 30,
+            "ttl": 60,
             "description": "google",
             "deliveryService": {
-                "xmlId": "ds1"
+                "xmlID": "ds1"
             }
         }
     ],

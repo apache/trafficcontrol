@@ -45,16 +45,14 @@ func GetFederationID(t *testing.T, cname string) func() int {
 	}
 }
 
-func setFederationID(t *testing.T, cdnFederation tc.CDNFederation) {
-	assert.RequireNotNil(t, cdnFederation.CName, "Federation CName was nil after posting.")
-	assert.RequireNotNil(t, cdnFederation.ID, "Federation ID was nil after posting.")
-	fedIDs[*cdnFederation.CName] = *cdnFederation.ID
+func setFederationID(t *testing.T, cdnFederation tc.CDNFederationV5) {
+	fedIDs[cdnFederation.CName] = cdnFederation.ID
 }
 
 func CreateTestCDNFederations(t *testing.T, cl *toclient.Session, dat TrafficControl) {
 	for _, federation := range dat.Federations {
 		opts := toclient.NewRequestOptions()
-		opts.QueryParameters.Set("xmlId", *federation.DeliveryServiceIDs.XmlId)
+		opts.QueryParameters.Set("xmlId", federation.DeliveryService.XMLID)
 		dsResp, _, err := cl.GetDeliveryServices(opts)
 		assert.RequireNoError(t, err, "Could not get Delivery Service by XML ID: %v", err)
 		assert.RequireEqual(t, 1, len(dsResp.Response), "Expected one Delivery Service, but got %d", len(dsResp.Response))
@@ -67,7 +65,7 @@ func CreateTestCDNFederations(t *testing.T, cl *toclient.Session, dat TrafficCon
 		setFederationID(t, resp.Response)
 		assert.RequireNotNil(t, resp.Response.ID, "Federation ID was nil after posting.")
 		assert.RequireNotNil(t, dsResp.Response[0].ID, "Delivery Service ID was nil.")
-		_, _, err = cl.CreateFederationDeliveryServices(*resp.Response.ID, []int{*dsResp.Response[0].ID}, false, toclient.NewRequestOptions())
+		_, _, err = cl.CreateFederationDeliveryServices(resp.Response.ID, []int{*dsResp.Response[0].ID}, false, toclient.NewRequestOptions())
 		assert.NoError(t, err, "Could not create Federation Delivery Service: %v", err)
 	}
 }
@@ -79,7 +77,7 @@ func DeleteTestCDNFederations(t *testing.T, cl *toclient.Session) {
 		assert.NoError(t, err, "Cannot delete federation #%d: %v - alerts: %+v", id, err, resp.Alerts)
 
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, _, err := cl.GetCDNFederationsByName(FederationCDNName, opts)
+		data, _, err := cl.GetCDNFederations(FederationCDNName, opts)
 		assert.Equal(t, 0, len(data.Response), "expected federation to be deleted")
 	}
 	fedIDs = make(map[string]int) // reset the global variable for the next test

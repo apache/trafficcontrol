@@ -45,7 +45,7 @@ func TestCDNFederations(t *testing.T) {
 		currentTimeRFC := currentTime.Format(time.RFC1123)
 		tomorrow := currentTime.AddDate(0, 0, 1).Format(time.RFC1123)
 
-		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.CDNFederation]{
+		methodTests := utils.TestCase[client.Session, client.RequestOptions, tc.CDNFederationV5]{
 			"GET": {
 				"NOT MODIFIED when NO CHANGES made": {
 					ClientSession: TOSession,
@@ -107,9 +107,9 @@ func TestCDNFederations(t *testing.T) {
 				"OK when VALID request": {
 					EndpointID:    GetFederationID(t, "google.com."),
 					ClientSession: TOSession,
-					RequestBody: tc.CDNFederation{
-						CName:       util.Ptr("new.cname."),
-						TTL:         util.Ptr(34),
+					RequestBody: tc.CDNFederationV5{
+						CName:       "new.cname.",
+						TTL:         64,
 						Description: util.Ptr("updated"),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCDNFederationUpdateFields(map[string]interface{}{"CName": "new.cname."})),
@@ -118,9 +118,9 @@ func TestCDNFederations(t *testing.T) {
 					EndpointID:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
 					RequestOpts:   client.RequestOptions{Header: http.Header{rfc.IfUnmodifiedSince: {currentTimeRFC}}},
-					RequestBody: tc.CDNFederation{
-						CName:       util.Ptr("booya.com."),
-						TTL:         util.Ptr(34),
+					RequestBody: tc.CDNFederationV5{
+						CName:       "booya.com.",
+						TTL:         64,
 						Description: util.Ptr("fooya"),
 					},
 					Expectations: utils.CkRequest(utils.HasError(), utils.HasStatus(http.StatusPreconditionFailed)),
@@ -128,9 +128,9 @@ func TestCDNFederations(t *testing.T) {
 				"PRECONDITION FAILED when updating with IFMATCH ETAG Header": {
 					EndpointID:    GetFederationID(t, "booya.com."),
 					ClientSession: TOSession,
-					RequestBody: tc.CDNFederation{
-						CName:       util.Ptr("new.cname."),
-						TTL:         util.Ptr(34),
+					RequestBody: tc.CDNFederationV5{
+						CName:       "new.cname.",
+						TTL:         64,
 						Description: util.Ptr("updated"),
 					},
 					RequestOpts:  client.RequestOptions{Header: http.Header{rfc.IfMatch: {rfc.ETag(currentTime)}}},
@@ -145,7 +145,7 @@ func TestCDNFederations(t *testing.T) {
 					switch method {
 					case "GET":
 						t.Run(name, func(t *testing.T) {
-							resp, reqInf, err := testCase.ClientSession.GetCDNFederationsByName(cdnName, testCase.RequestOpts)
+							resp, reqInf, err := testCase.ClientSession.GetCDNFederations(cdnName, testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
 								check(t, reqInf, resp.Response, resp.Alerts, err)
 							}
@@ -181,12 +181,11 @@ func TestCDNFederations(t *testing.T) {
 func validateCDNFederationUpdateFields(expectedResp map[string]interface{}) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected CDN Federation response to not be nil.")
-		CDNFederationResp := resp.(tc.CDNFederation)
+		CDNFederationResp := resp.(tc.CDNFederationV5)
 		for field, expected := range expectedResp {
 			switch field {
 			case "CName":
-				assert.RequireNotNil(t, CDNFederationResp.CName, "Expected CName to not be nil.")
-				assert.Equal(t, expected, *CDNFederationResp.CName, "Expected CName to be %v, but got %s", expected, *CDNFederationResp.CName)
+				assert.Equal(t, expected, CDNFederationResp.CName, "Expected CName to be %v, but got %s", expected, CDNFederationResp.CName)
 			default:
 				t.Errorf("Expected field: %v, does not exist in response", field)
 			}
@@ -196,11 +195,11 @@ func validateCDNFederationUpdateFields(expectedResp map[string]interface{}) util
 
 func validateCDNFederationPagination(paginationParam string) utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
-		paginationResp := resp.([]tc.CDNFederation)
+		paginationResp := resp.([]tc.CDNFederationV5)
 
 		opts := client.NewRequestOptions()
 		opts.QueryParameters.Set("orderby", "id")
-		respBase, _, err := TOSession.GetCDNFederationsByName(cdnName, opts)
+		respBase, _, err := TOSession.GetCDNFederations(cdnName, opts)
 		assert.RequireNoError(t, err, "Cannot get Federation Users: %v - alerts: %+v", err, respBase.Alerts)
 
 		CDNfederations := respBase.Response
@@ -220,10 +219,9 @@ func validateCDNFederationCNameSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected CDN Federation response to not be nil.")
 		var federationCNames []string
-		CDNFederationResp := resp.([]tc.CDNFederation)
-		for _, CDNFederation := range CDNFederationResp {
-			assert.RequireNotNil(t, CDNFederation.CName, "Expected CDN Federation CName to not be nil.")
-			federationCNames = append(federationCNames, *CDNFederation.CName)
+		CDNFederationResp := resp.([]tc.CDNFederationV5)
+		for _, CDNFederationV5 := range CDNFederationResp {
+			federationCNames = append(federationCNames, CDNFederationV5.CName)
 		}
 		assert.Equal(t, true, sort.StringsAreSorted(federationCNames), "List is not sorted by their names: %v", federationCNames)
 	}
@@ -233,9 +231,9 @@ func validateCDNFederationIDDescSort() utils.CkReqFunc {
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, alerts tc.Alerts, _ error) {
 		assert.RequireNotNil(t, resp, "Expected CDN Federation response to not be nil.")
 		var CDNFederationIDs []int
-		CDNFederationResp := resp.([]tc.CDNFederation)
+		CDNFederationResp := resp.([]tc.CDNFederationV5)
 		for _, federation := range CDNFederationResp {
-			CDNFederationIDs = append([]int{*federation.ID}, CDNFederationIDs...)
+			CDNFederationIDs = append([]int{federation.ID}, CDNFederationIDs...)
 		}
 		assert.Equal(t, true, sort.IntsAreSorted(CDNFederationIDs), "List is not sorted by their ids: %v", CDNFederationIDs)
 	}
@@ -249,16 +247,14 @@ func GetFederationID(t *testing.T, cname string) func() int {
 	}
 }
 
-func setFederationID(t *testing.T, cdnFederation tc.CDNFederation) {
-	assert.RequireNotNil(t, cdnFederation.CName, "Federation CName was nil after posting.")
-	assert.RequireNotNil(t, cdnFederation.ID, "Federation ID was nil after posting.")
-	fedIDs[*cdnFederation.CName] = *cdnFederation.ID
+func setFederationID(t *testing.T, cdnFederation tc.CDNFederationV5) {
+	fedIDs[cdnFederation.CName] = cdnFederation.ID
 }
 
 func CreateTestCDNFederations(t *testing.T) {
 	for _, federation := range testData.Federations {
 		opts := client.NewRequestOptions()
-		opts.QueryParameters.Set("xmlId", *federation.DeliveryServiceIDs.XmlId)
+		opts.QueryParameters.Set("xmlId", federation.DeliveryService.XMLID)
 		dsResp, _, err := TOSession.GetDeliveryServices(opts)
 		assert.RequireNoError(t, err, "Could not get Delivery Service by XML ID: %v", err)
 		assert.RequireEqual(t, 1, len(dsResp.Response), "Expected one Delivery Service, but got %d", len(dsResp.Response))
@@ -271,7 +267,7 @@ func CreateTestCDNFederations(t *testing.T) {
 		setFederationID(t, resp.Response)
 		assert.RequireNotNil(t, resp.Response.ID, "Federation ID was nil after posting.")
 		assert.RequireNotNil(t, dsResp.Response[0].ID, "Delivery Service ID was nil.")
-		_, _, err = TOSession.CreateFederationDeliveryServices(*resp.Response.ID, []int{*dsResp.Response[0].ID}, false, client.NewRequestOptions())
+		_, _, err = TOSession.CreateFederationDeliveryServices(resp.Response.ID, []int{*dsResp.Response[0].ID}, false, client.NewRequestOptions())
 		assert.NoError(t, err, "Could not create Federation Delivery Service: %v", err)
 	}
 }
@@ -283,7 +279,7 @@ func DeleteTestCDNFederations(t *testing.T) {
 		assert.NoError(t, err, "Cannot delete federation #%d: %v - alerts: %+v", id, err, resp.Alerts)
 
 		opts.QueryParameters.Set("id", strconv.Itoa(id))
-		data, _, err := TOSession.GetCDNFederationsByName(cdnName, opts)
+		data, _, err := TOSession.GetCDNFederations(cdnName, opts)
 		assert.Equal(t, 0, len(data.Response), "expected federation to be deleted")
 	}
 	fedIDs = make(map[string]int) // reset the global variable for the next test
