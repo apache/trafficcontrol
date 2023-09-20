@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [8.0.0] - 2023-09-19
+## [8.0.0] - 2023-09-20
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client*: Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal*: Added Scope Query Param to SSO login.
@@ -88,6 +88,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7764](https://github.com/apache/trafficcontrol/pull/7764) *Traffic Ops*: Collapsed DB migrations.
 - [#7767](https://github.com/apache/trafficcontrol/pull/7767) *Traffic Ops*: Fixed ASN update logic for APIv5.
 - [RFC3339](https://github.com/apache/trafficcontrol/issues/5911)
+    - [#7806](https://github.com/apache/trafficcontrol/pull/7806) *Traffic Ops*: Fixed `cdns/{{name}}/federations` and `cdns/{{name}}/federations/{{ID}}` v5 APIs to respond with `RFC3339` timestamps.
     - [#7759](https://github.com/apache/trafficcontrol/pull/7759) *Traffic Ops*: Fixed `/profiles/{{ID}}/parameters` and `profiles/name/{{name}}/parameters` v5 APIs to respond with `RFC3339` timestamps.
     - [#7734](https://github.com/apache/trafficcontrol/pull/7734) *Traffic Ops*: Fixed `/profiles` v5 APIs to respond with `RFC3339` timestamps.
     - [#7718](https://github.com/apache/trafficcontrol/pull/7718) *Traffic Ops*: `/servers` endpoint now responds with `RFC3339` timestamps for all timestamp fields. Cleaned up naming conventions and superfluous data.
