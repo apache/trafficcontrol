@@ -198,6 +198,30 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
 			cellRenderer: "updateCellRenderer"
 		},
 		{
+			headerName: "Reval Status",
+			hide: true,
+			filter: true,
+			cellRenderer: "checkCellRenderer",
+			valueGetter:  function(params) {
+				return !params.data.revalUpdateFailed;
+			},
+			tooltipValueGetter: function(params) {
+				return "The last server reval " + (params.data.revalUpdateFailed ? "failed" : "was successful");
+			},
+		},
+		{
+			headerName: "Config Status",
+			hide: true,
+			filter: true,
+			cellRenderer: "checkCellRenderer",
+			valueGetter:  function(params) {
+				return !params.data.configUpdateFailed;
+			},
+			tooltipValueGetter: function(params) {
+				return "The last server config update " + (params.data.configUpdateFailed ? "failed" : "was successful");
+			},
+		},
+		{
 			headerName: "Router Hostname",
 			field: "routerHostName",
 			hide: true
@@ -241,7 +265,7 @@ var TableServersController = function(servers, $scope, $state, $uibModal, locati
 			hide: true,
 			filter: "agDateColumnFilter",
 			relative: true
-		}
+		},
 	];
 
 	/** All of the statuses (populated on init). */
