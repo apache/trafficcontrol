@@ -1630,7 +1630,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 			DeliveryService: *ds.ID,
 		},
 		DeliveryServiceServer{
-			Server:          *server.ID,
+			Server:          server.ID,
 			DeliveryService: *ds2.ID,
 		},
 	}
@@ -5666,7 +5666,7 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "cache_range_requests.pparam",
 			ConfigFile: "remap.config",
 			Value:      "",
@@ -5823,7 +5823,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.Parameter{
+		tc.ParameterV5{
 			Name:       "cache_range_requests.pparam",
 			ConfigFile: "remap.config",
 			Value:      "",
