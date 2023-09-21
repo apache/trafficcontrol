@@ -42,7 +42,6 @@ import org.apache.traffic_control.traffic_router.core.router.TrafficRouterManage
 
 @SuppressWarnings("PMD.CyclomaticComplexity")
 public class NameServer {
-//	private static long negativeCachingTTL = 0L;
 	private static final int MAX_SUPPORTED_EDNS_VERS = 0;
 	private static final int MAX_ITERATIONS = 6;
 	private static final int NUM_SECTIONS = 4;
@@ -328,21 +327,8 @@ public class NameServer {
 
 			if (record instanceof SOARecord) {
 				final SOARecord soa = (SOARecord) record;
-//
-//				// Set the "minimum" attribute to be the maximum of the current minimum value and 900 (seconds)
-//				// This is done to increase the negative caching TTL, so as to maximize the time interval between
-//				// successive NXDOMAIN or NXRRSET responses.
-//				final long minimum = Math.max(soa.getMinimum(), negativeCachingTTL);
-//				final long ttl;
-//				// the value of the minimum field is less than the actual TTL; adjust
-//				if (minimum != 0 || soa.getTTL() > minimum) {
-//					ttl = minimum;
-//				} else {
-//					ttl = soa.getTTL();
-//				}
-//				record = new SOARecord(soa.getName(), DClass.IN, ttl, soa.getHost(), soa.getAdmin(),
-//						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(),
-//						minimum);
+
+				// the value of the minimum field is less than the actual TTL; adjust
 				if (soa.getMinimum() != 0 || soa.getTTL() > soa.getMinimum()) {
 					record = new SOARecord(soa.getName(), DClass.IN, soa.getMinimum(), soa.getHost(), soa.getAdmin(),
 							soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(),
@@ -446,14 +432,6 @@ public class NameServer {
 	public void setTrafficRouterManager(final TrafficRouterManager trafficRouterManager) {
 		this.trafficRouterManager = trafficRouterManager;
 	}
-
-//	public long getNegativeCachingTTL() {
-//		return negativeCachingTTL;
-//	}
-//
-//	public void setNegativeCachingTTL(final long negativeCachingTTL) {
-//		this.negativeCachingTTL = negativeCachingTTL;
-//	}
 
 	public void destroy() {
 		/*

@@ -157,7 +157,7 @@ public class ZoneManager extends Resolver {
 	}
 
 	public static void setNegativeCachingTTL(final JsonNode config) {
-		negativeCachingTTL = JsonUtils.optLong(config, "dns.negative.caching.ttl", 900L);
+		negativeCachingTTL = JsonUtils.optLong(config, "tld.soa.minimum", 900L);
 	}
 	public static long getNegativeCachingTTL() {
 		return negativeCachingTTL;
@@ -386,7 +386,7 @@ public class ZoneManager extends Resolver {
 		LOGGER.debug("Attempting to load " + zoneKey.getName());
 		final Name name = zoneKey.getName();
 		List<Record> records = zoneKey.getRecords();
-		// For SOA records, set the "minimum" to the value set in the dns.negative.caching.ttl parameter in
+		// For SOA records, set the "minimum" to the value set in the tld.soa.minimum parameter in
 		// CRConfig.json.
 		for (int i=0; i < records.size(); i++) {
 			if (records.get(i).getType() == Type.SOA) {
