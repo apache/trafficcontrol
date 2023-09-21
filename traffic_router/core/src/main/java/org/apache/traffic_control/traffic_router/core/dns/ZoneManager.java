@@ -54,6 +54,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.xbill.DNS.AAAARecord;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.CNAMERecord;
@@ -101,6 +102,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 public class ZoneManager extends Resolver {
 	private static final Logger LOGGER = LogManager.getLogger(ZoneManager.class);
 
+	private static long negativeCachingTTL = 0L;
 	private final TrafficRouter trafficRouter;
 	private static LoadingCache<ZoneKey, Zone> dynamicZoneCache = null;
 	private static LoadingCache<ZoneKey, Zone> zoneCache = null;
@@ -121,6 +123,15 @@ public class ZoneManager extends Resolver {
 		DYNAMIC, STATIC
 	}
 
+	public long getNegativeCachingTTL() {
+		return negativeCachingTTL;
+	}
+
+	public void setNegativeCachingTTL(final long negativeCachingTTL) {
+		this.negativeCachingTTL = negativeCachingTTL;
+	}
+
+	@Autowired
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) throws IOException {
 		initTopLevelDomain(tr.getCacheRegister());
 		initSignatureManager(tr.getCacheRegister(), trafficOpsUtils, trafficRouterManager);
@@ -377,6 +388,17 @@ public class ZoneManager extends Resolver {
 		LOGGER.debug("Attempting to load " + zoneKey.getName());
 		final Name name = zoneKey.getName();
 		List<Record> records = zoneKey.getRecords();
+		System.out.println("negative caching ttl is "+ negativeCachingTTL);
+		for (int i=0; i < records.size(); i++) {
+			if (records.get(i).getType() == Type.SOA) {
+				SOARecord soa = (SOARecord)records.get(i);
+				soa = new SOARecord(soa.getName(), DClass.IN, soa.getTTL(), soa.getHost(), soa.getAdmin(),
+						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(), negativeCachingTTL);
+				records.remove(i);
+				records.add(i, (Record) soa);
+				break;
+			}
+		}
 		zoneKey.updateTimestamp();
 
 		if (zoneKey instanceof SignedZoneKey) {

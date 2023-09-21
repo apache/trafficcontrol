@@ -267,6 +267,26 @@
 
 	<bean id="NameServer" class="org.apache.traffic_control.traffic_router.core.dns.NameServer">
 		<property name="trafficRouterManager" ref="trafficRouterManager" />
+	</bean>
+
+	<bean id="cacheRegister" class="org.apache.traffic_control.traffic_router.core.edge.CacheRegister" />
+	<bean id="trafficRouter" class="org.apache.traffic_control.traffic_router.core.router.TrafficRouter">
+<!--		<constructor-arg index="0" ref="cacheRegister"/>-->
+<!--		<constructor-arg index="1" ref="maxmindGeolocationService"/>-->
+<!--		<constructor-arg index="2" ref="maxmindGeolocationService"/>-->
+<!--		<constructor-arg index="3" ref="anonymousIpDatabaseService"/>-->
+<!--		<constructor-arg index="4" ref="statTracker"/>-->
+<!--		<constructor-arg index="5" ref="trafficOpsUtils"/>-->
+<!--		<constructor-arg index="6" ref="federationsRegistry"/>-->
+<!--		<constructor-arg index="7" ref="trafficRouterManager"/>-->
+<!--		<property name="cacheRegister" ref="cacheRegister" />-->
+	</bean>
+
+	<bean id="ZoneManager" class="org.apache.traffic_control.traffic_router.core.dns.ZoneManager">
+<!--		<constructor-arg index="0" ref="trafficRouter"/>-->
+<!--		<constructor-arg index="1" ref="statTracker"/>-->
+<!--		<constructor-arg index="2" ref="trafficOpsUtils"/>-->
+<!--		<constructor-arg index="3" ref="trafficRouterManager"/>-->
 		<property name="negativeCachingTTL" value="$[dns.negative.caching.ttl:900]" />
 	</bean>
 
