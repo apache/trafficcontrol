@@ -51,6 +51,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7784](https://github.com/apache/trafficcontrol/pull/7784) *Traffic Portal*: Added revert certificate functionality to the ssl-keys page.
 
 ### Changed
+- [#7808](https://github.com/apache/trafficcontrol/pull/7808) *Traffic Router* Set SOA `minimum` field to a custom value defined in the `dns.negative.caching.ttl` param.
 - [#7776](https://github.com/apache/trafficcontrol/pull/7776) *tc-health-client*: Added error message while issues interacting with Traffic Ops.
 - [#7766](https://github.com/apache/trafficcontrol/pull/7766) *Traffic Portal*: now uses Traffic Ops APIv5.
 - [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats*: now uses Traffic Ops APIv5.
