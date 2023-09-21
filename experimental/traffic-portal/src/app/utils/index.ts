@@ -19,6 +19,12 @@ export * from "./order-by";
 export * from "./time";
 
 /**
+ * Converts a class into an interface to be implemented by stripping it of
+ * its unimplementable (private and protected) properties.
+ */
+export type ClassToInterface<T> = {[K in keyof T]: T[K]};
+
+/**
  * These are the values that may be given to the `autocomplete` attribute of an
  * HTML form control.
  */

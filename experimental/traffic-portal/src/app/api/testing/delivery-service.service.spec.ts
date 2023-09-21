@@ -16,6 +16,7 @@
 import { TestBed } from "@angular/core/testing";
 import {
 	ProfileType,
+	type ResponseDeliveryServiceSSLKey,
 	type RequestAnyMapDeliveryService,
 	type RequestSteeringDeliveryService,
 	type ResponseDeliveryService
@@ -63,7 +64,7 @@ describe("DeliveryServiceService", () => {
 			serviceCategory: null,
 			tenantId: 1,
 			typeId: service.deliveryServiceTypes[0].id,
-			xmlId: "testquest",
+			xmlId: "xml",
 		};
 		testDS = await service.createDeliveryService(requestDS);
 		expect(testDS).toBeTruthy();
@@ -206,6 +207,27 @@ describe("DeliveryServiceService", () => {
 			expect(newDS.profileDescription).toBe(profile.description);
 			expect(newDS.profileName).toBe(profile.name);
 			expect(newDS.profileId).toBe(profile.id);
+		});
+	});
+
+	describe("SSL key methods", () => {
+		let keys: ResponseDeliveryServiceSSLKey[];
+		beforeEach(async () => {
+			keys = service.dsSSLKeys;
+			expect(keys.length).toBeGreaterThanOrEqual(1);
+		});
+
+		it("gets a DS's SSL Keys", async () => {
+			const key = keys[0];
+			const ds = await service.getDeliveryServices(key.deliveryservice);
+			if (!ds) {
+				return fail("found an SSL key with no corresponding DS");
+			}
+			await expectAsync(service.getSSLKeys(ds)).toBeResolvedTo(key);
+		});
+
+		it("throws an error when asked to retrieve keys for a non-existent DS", async () => {
+			await expectAsync(service.getSSLKeys("")).toBeRejected();
 		});
 	});
 

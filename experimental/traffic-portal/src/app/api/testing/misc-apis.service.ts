@@ -15,9 +15,9 @@
 import { Injectable } from "@angular/core";
 import type { OSVersions } from "trafficops-types";
 
-import { AlertService } from "src/app/shared/alert/alert.service";
+import type { ClassToInterface } from "src/app/utils";
 
-import type { MiscAPIsService as ConcreteMiscAPIsService } from "../misc-apis.service";
+import { MiscAPIsService as ConcreteMiscAPIsService } from "../misc-apis.service";
 
 import { APITestingService } from "./base-api.service";
 
@@ -28,7 +28,7 @@ import { APITestingService } from "./base-api.service";
  * API service.
  */
 @Injectable()
-export class MiscAPIsService extends APITestingService implements ConcreteMiscAPIsService {
+export class MiscAPIsService extends APITestingService implements ClassToInterface<ConcreteMiscAPIsService> {
 	/** Some static mock OS versions. */
 	public readonly osVersions = {
 		// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -37,7 +37,7 @@ export class MiscAPIsService extends APITestingService implements ConcreteMiscAP
 		"Rocky Linux 8": "rocky8"
 	};
 
-	constructor(public readonly alertsService: AlertService) {
+	constructor() {
 		super();
 	}
 

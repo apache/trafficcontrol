@@ -28,6 +28,8 @@ import type {
 	DataSetWithSummary,
 	TPSData,
 } from "src/app/models";
+import { LoggingService } from "src/app/shared/logging.service";
+import type { ClassToInterface } from "src/app/utils";
 
 import { CDNService, ProfileService, TypeService, UserService, DeliveryServiceService as ConcreteDeliveryServiceService } from "..";
 
@@ -80,7 +82,7 @@ function generateDataSet(start: Date, end: Date, step: number): GeneratedDataSet
  * DeliveryServiceService exposes API functionality related to Delivery Services.
  */
 @Injectable()
-export class DeliveryServiceService extends APITestingService implements ConcreteDeliveryServiceService {
+export class DeliveryServiceService extends APITestingService implements ClassToInterface<ConcreteDeliveryServiceService> {
 
 	public readonly deliveryServices = new Array<ResponseDeliveryService>();
 	private idCounter = 0;
@@ -156,7 +158,7 @@ export class DeliveryServiceService extends APITestingService implements Concret
 			useInTable: "deliveryservice"
 		}
 	];
-	private readonly dsSSLKeys: Array<ResponseDeliveryServiceSSLKey> = [{
+	public readonly dsSSLKeys: Array<ResponseDeliveryServiceSSLKey> = [{
 		cdn: "'",
 		certificate: {crt: "", csr: "", key: ""},
 		deliveryservice: "xml",
@@ -168,7 +170,8 @@ export class DeliveryServiceService extends APITestingService implements Concret
 		private readonly cdnService: CDNService,
 		private readonly profileService: ProfileService,
 		private readonly userService: UserService,
-		private readonly typeService: TypeService
+		private readonly typeService: TypeService,
+		public readonly log: LoggingService
 	) {
 		super();
 	}
@@ -553,7 +556,7 @@ export class DeliveryServiceService extends APITestingService implements Concret
 				label
 			},
 			fifthPercentile: total.fifthPercentile / 4,
-			max: Math.random()*4 >= 3 ? total.max : total.max / 4,
+			max: total.max / 4,
 			mean: total.mean / 4,
 			min: total.min + 0.1,
 			ninetyEighthPercentile: total.ninetyEighthPercentile / 4,

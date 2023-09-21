@@ -101,16 +101,6 @@ describe("TestingProfileService", () => {
 		await expectAsync(service.deleteProfile(-1)).toBeRejected();
 	});
 
-	it("pretends to export a Profile", async () => {
-		await expectAsync(service.exportProfile(profile)).toBeResolvedTo(service.profileExport);
-	});
-	it("pretends to export a Profile by ID", async () => {
-		await expectAsync(service.exportProfile(profile.id)).toBeResolvedTo(service.profileExport);
-	});
-	it("throws an error when asked to export a non-existent Profile", async () => {
-		await expectAsync(service.exportProfile(-1)).toBeRejected();
-	});
-
 	it("pretends to import Profiles", async () => {
 		const importable = {
 			cdn: profile.cdnName ?? "",

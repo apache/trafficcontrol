@@ -27,6 +27,8 @@ import type {
 	Servercheck,
 } from "trafficops-types";
 
+import type { ClassToInterface } from "src/app/utils";
+
 import { CDNService, PhysicalLocationService, ProfileService, TypeService, ServerService as ConcreteServerService } from "..";
 
 import { APITestingService } from "./base-api.service";
@@ -57,7 +59,7 @@ function serverCheck(server: ResponseServer): Servercheck {
  * ServerService exposes API functionality related to Servers.
  */
 @Injectable()
-export class ServerService extends APITestingService implements ConcreteServerService {
+export class ServerService extends APITestingService implements ClassToInterface<ConcreteServerService> {
 
 	public servers = new Array<ResponseServer>();
 
