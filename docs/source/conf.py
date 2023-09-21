@@ -30,7 +30,10 @@ import sys
 here = os.path.dirname(__file__)
 clientPath = os.path.join(here, '..', '..', 'traffic_control', 'clients', 'python')
 clientPath = os.path.abspath(clientPath)
+clonePath = os.path.join(here, "..", "..", "tools", "clone-ds-server-assignments")
+clonePath = os.path.abspath(clonePath)
 sys.path.insert(0, clientPath)
+sys.path.insert(0, clonePath)
 sys.path.insert(0, os.path.join(here, '_ext'))
 
 # -- Custom Lexical Analyzer for DNS -----------------------------------------

@@ -54,6 +54,7 @@ on:
       - 'dev/**'
       - 'Makefile'
       - 'cache-config/Makefile'
+      - 'tools/**'
   create:
   pull_request:
     paths-ignore:
@@ -85,6 +86,7 @@ on:
       - 'dev/**'
       - 'Makefile'
       - 'cache-config/Makefile'
+      - 'tools/**'
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
