@@ -54,7 +54,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.xbill.DNS.AAAARecord;
 import org.xbill.DNS.ARecord;
 import org.xbill.DNS.CNAMERecord;
@@ -123,15 +122,6 @@ public class ZoneManager extends Resolver {
 		DYNAMIC, STATIC
 	}
 
-	public long getNegativeCachingTTL() {
-		return negativeCachingTTL;
-	}
-
-	public void setNegativeCachingTTL(final long negativeCachingTTL) {
-		this.negativeCachingTTL = negativeCachingTTL;
-	}
-
-	@Autowired
 	public ZoneManager(final TrafficRouter tr, final StatTracker statTracker, final TrafficOpsUtils trafficOpsUtils, final TrafficRouterManager trafficRouterManager) throws IOException {
 		initTopLevelDomain(tr.getCacheRegister());
 		initSignatureManager(tr.getCacheRegister(), trafficOpsUtils, trafficRouterManager);
@@ -166,6 +156,13 @@ public class ZoneManager extends Resolver {
 		ZoneManager.signatureManager = sm;
 	}
 
+	public static void setNegativeCachingTTL(final JsonNode config) {
+		negativeCachingTTL = JsonUtils.optLong(config, "dns.negative.caching.ttl", 900L);
+	}
+	public static long getNegativeCachingTTL() {
+		return negativeCachingTTL;
+	}
+
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	protected static void initZoneCache(final TrafficRouter tr) {
 		synchronized(ZoneManager.class) {
@@ -183,6 +180,7 @@ public class ZoneManager extends Resolver {
 			final int maintenanceInterval = JsonUtils.optInt(config, "zonemanager.cache.maintenance.interval", 300); // default 5 minutes
 			final int initTimeout = JsonUtils.optInt(config, "zonemanager.init.timeout", 10);
 
+			setNegativeCachingTTL(config);
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, getDynamicZoneCacheSpec(config, poolSize));
 			final LoadingCache<ZoneKey, Zone> zc = createZoneCache(ZoneCacheType.STATIC);
 
@@ -388,14 +386,15 @@ public class ZoneManager extends Resolver {
 		LOGGER.debug("Attempting to load " + zoneKey.getName());
 		final Name name = zoneKey.getName();
 		List<Record> records = zoneKey.getRecords();
-		System.out.println("negative caching ttl is "+ negativeCachingTTL);
+		// For SOA records, set the "minimum" to the value set in the dns.negative.caching.ttl parameter in
+		// CRConfig.json.
 		for (int i=0; i < records.size(); i++) {
 			if (records.get(i).getType() == Type.SOA) {
 				SOARecord soa = (SOARecord)records.get(i);
 				soa = new SOARecord(soa.getName(), DClass.IN, soa.getTTL(), soa.getHost(), soa.getAdmin(),
-						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(), negativeCachingTTL);
+						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(), getNegativeCachingTTL());
 				records.remove(i);
-				records.add(i, (Record) soa);
+				records.add(i, soa);
 				break;
 			}
 		}

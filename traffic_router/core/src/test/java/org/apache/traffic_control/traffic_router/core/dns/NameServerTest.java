@@ -82,12 +82,6 @@ public class NameServerTest {
 	    ns = new NSRecord(m_an, DClass.IN, 12345L, m_an);
     }
 
-//    @Test
-//    public void TestNegativeCachingTTLGetterAndSetter() throws Exception {
-//        nameServer.setNegativeCachingTTL(900L);
-//        assertThat(nameServer.getNegativeCachingTTL(), equalTo(900L));
-//    }
-
     @Test
     public void TestARecordQueryWithClientSubnetOption() throws Exception {
         
