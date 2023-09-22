@@ -22,9 +22,9 @@ package datareq
 import (
 	"fmt"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/ds"
-	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/ds"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/todata"
 )
 
 func srvAPIBandwidthKbps(toData todata.TODataThreadsafe, lastStats threadsafe.LastStats) []byte {

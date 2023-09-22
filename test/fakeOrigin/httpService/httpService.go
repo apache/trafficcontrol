@@ -35,9 +35,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/test/fakeOrigin/dtp"
-	"github.com/apache/trafficcontrol/test/fakeOrigin/endpoint"
-	"github.com/apache/trafficcontrol/test/fakeOrigin/transcode"
+	"github.com/apache/trafficcontrol/v8/test/fakeOrigin/dtp"
+	"github.com/apache/trafficcontrol/v8/test/fakeOrigin/endpoint"
+	"github.com/apache/trafficcontrol/v8/test/fakeOrigin/transcode"
 )
 
 // EndpointRoutes contains the paths of all HTTP routes for a given config "endpoint"

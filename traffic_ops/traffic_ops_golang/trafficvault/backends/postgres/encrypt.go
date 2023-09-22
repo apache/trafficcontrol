@@ -26,7 +26,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres/hashicorpvault"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres/hashicorpvault"
 )
 
 // readKey reads the AES key (encoded in base64) used for encryption/decryption from either an on-disk file

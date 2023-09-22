@@ -32,9 +32,9 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/apache/trafficcontrol/lib/go-log"
-	tc "github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	log "github.com/apache/trafficcontrol/v8/lib/go-log"
+	tc "github.com/apache/trafficcontrol/v8/lib/go-tc"
+	client "github.com/apache/trafficcontrol/v8/traffic_ops/v5-client"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/kelseyhightower/envconfig"

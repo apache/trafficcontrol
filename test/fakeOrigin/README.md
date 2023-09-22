@@ -42,7 +42,7 @@ Local build pre-requesites:
 
 and/or just a modern version of Docker & docker-compose
 
-If you're building locally, just run ```go install github.com/apache/trafficcontrol/test/fakeOrigin@latest```
+If you're building locally, just run ```go install github.com/apache/trafficcontrol/v8/test/fakeOrigin@latest```
 
 If you're just using docker, clone this repository.
 

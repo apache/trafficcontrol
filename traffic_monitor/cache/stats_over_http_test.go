@@ -26,7 +26,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/poller"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/poller"
 )
 
 func TestStatsOverHTTPParse(t *testing.T) {

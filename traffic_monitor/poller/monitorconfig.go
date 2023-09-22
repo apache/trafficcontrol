@@ -23,10 +23,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/handler"
-	"github.com/apache/trafficcontrol/traffic_monitor/towrap" // TODO move to common
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/handler"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/towrap" // TODO move to common
 )
 
 type MonitorCfg struct {

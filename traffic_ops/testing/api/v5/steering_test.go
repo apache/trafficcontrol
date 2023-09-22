@@ -19,11 +19,11 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-util/assert"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/testing/api/utils"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
+	client "github.com/apache/trafficcontrol/v8/traffic_ops/v5-client"
 )
 
 func TestSteering(t *testing.T) {

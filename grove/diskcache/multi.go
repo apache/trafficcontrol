@@ -17,10 +17,10 @@ package diskcache
 import (
 	"errors"
 
-	"github.com/apache/trafficcontrol/grove/cacheobj"
-	"github.com/apache/trafficcontrol/grove/config"
+	"github.com/apache/trafficcontrol/v8/grove/cacheobj"
+	"github.com/apache/trafficcontrol/v8/grove/config"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 
 	"github.com/dchest/siphash"
 )

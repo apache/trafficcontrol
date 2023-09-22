@@ -22,9 +22,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/tc-health-client/testing/tests/hcutil"
-	"github.com/apache/trafficcontrol/tc-health-client/tmagent"
+	"github.com/apache/trafficcontrol/v8/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v8/tc-health-client/testing/tests/hcutil"
+	"github.com/apache/trafficcontrol/v8/tc-health-client/tmagent"
 )
 
 func startHealthClient() {

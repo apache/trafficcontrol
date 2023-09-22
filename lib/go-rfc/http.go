@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 // These are the names of HTTP Headers, for convenience and so that typos are

@@ -25,12 +25,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/health"
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
-	"github.com/apache/trafficcontrol/traffic_monitor/threadsafe"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/health"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/threadsafe"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/todata"
 )
 
 func srvTRState(

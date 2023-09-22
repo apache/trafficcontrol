@@ -24,9 +24,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	totest "github.com/apache/trafficcontrol/lib/go-tc/totestv4"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/config"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	totest "github.com/apache/trafficcontrol/v8/lib/go-tc/totestv4"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/testing/api/config"
 	_ "github.com/lib/pq"
 )
 

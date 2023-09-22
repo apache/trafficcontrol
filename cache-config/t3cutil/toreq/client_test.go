@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 )
 
 func TestRequestInfoStr(t *testing.T) {

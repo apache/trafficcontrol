@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
+	"github.com/apache/trafficcontrol/v8/lib/go-util/assert"
 )
 
 func TestParse(t *testing.T) {

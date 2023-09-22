@@ -31,10 +31,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-check-refs/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3c-check-refs/config"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 // Version is the application version.

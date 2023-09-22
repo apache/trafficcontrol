@@ -97,9 +97,9 @@ func Nop() Log { return &loggers{} }
 //	errLog := log.New(os.Stdout, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 //	mylib.MyFunc(liblog.New(errLog, nil, nil, nil), myArg)
 //
-// github.com/apache/trafficcontrol/lib/go-log example:
+// github.com/apache/trafficcontrol/v8/lib/go-log example:
 //
-//	import("github.com/apache/trafficcontrol/lib/go-log")
+//	import("github.com/apache/trafficcontrol/v8/lib/go-log")
 //
 //	log.Init(nil, os.Stderr, os.Stderr, nil, nil)
 //

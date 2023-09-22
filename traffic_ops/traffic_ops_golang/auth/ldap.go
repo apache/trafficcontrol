@@ -26,8 +26,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/config"
 
 	"github.com/go-ldap/ldap/v3"
 )

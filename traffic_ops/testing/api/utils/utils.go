@@ -28,12 +28,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
-	v3client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
-	v4client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
-	v5client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-util/assert"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
+	v3client "github.com/apache/trafficcontrol/v8/traffic_ops/v3-client"
+	v4client "github.com/apache/trafficcontrol/v8/traffic_ops/v4-client"
+	v5client "github.com/apache/trafficcontrol/v8/traffic_ops/v5-client"
 )
 
 // FindNeedle searches a "haystack" slice of values for the the "needle" value,

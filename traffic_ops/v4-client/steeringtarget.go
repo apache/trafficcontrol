@@ -19,8 +19,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 )
 
 // CreateSteeringTarget adds the given Steering Target to a Steering Delivery

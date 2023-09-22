@@ -36,11 +36,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
-	"github.com/apache/trafficcontrol/traffic_monitor/poller"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/dsdata"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/poller"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/todata"
 
 	jsoniter "github.com/json-iterator/go"
 )

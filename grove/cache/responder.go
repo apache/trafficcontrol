@@ -17,13 +17,13 @@ package cache
 import (
 	"net/http"
 
-	"github.com/apache/trafficcontrol/grove/cachedata"
-	"github.com/apache/trafficcontrol/grove/plugin"
-	"github.com/apache/trafficcontrol/grove/stat"
-	"github.com/apache/trafficcontrol/grove/web"
+	"github.com/apache/trafficcontrol/v8/grove/cachedata"
+	"github.com/apache/trafficcontrol/v8/grove/plugin"
+	"github.com/apache/trafficcontrol/v8/grove/stat"
+	"github.com/apache/trafficcontrol/v8/grove/web"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
 )
 
 // Responder is an object encapsulating the cache's response to the client. It holds all the data necessary to respond, log the response, and add the stats.

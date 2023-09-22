@@ -23,7 +23,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/config"
 )
 
 func TestTrafficOpsSessionThreadsafeUpdateSetsNonNilSessions(t *testing.T) {

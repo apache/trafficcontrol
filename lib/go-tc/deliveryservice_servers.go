@@ -18,7 +18,7 @@ package tc
 import (
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 // DeliveryServiceServerV5 is the struct used to represent a delivery service server, in the latest minor version for

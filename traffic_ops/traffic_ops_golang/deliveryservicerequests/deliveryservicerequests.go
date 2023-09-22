@@ -1,7 +1,7 @@
 // Package deliveryservicerequests contains the handler for the endpoint
 // responsible for issuing a request for Delivery Service creation via email -
 // not to be confused with package
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice/request.
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/deliveryservice/request.
 //
 // Deprecated: This package contains logic relating to a deprecated API
 // endpoint and is subject to removal in the future.
@@ -32,9 +32,9 @@ import (
 	"net/http"
 	"net/mail"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api"
 )
 
 const msg = "From: %s\r\nTo:%s\r\nContent-Type: text/html\r\nSubject: Delivery Service Request for %s\r\n\r\n%s"
