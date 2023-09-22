@@ -5578,6 +5578,151 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlice(t *testing.T) {
 	}
 }
 
+func TestMakeRemapDotConfigMidRangeRequestSliceNoAutoSelfHeal(t *testing.T) {
+	hdr := "myHeaderComment"
+
+	server := makeTestRemapServer()
+	server.Type = "MID"
+	servers := []Server{}
+
+	ds := DeliveryService{}
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
+
+	dses := []DeliveryService{ds}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "9",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.ParameterV5{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profiles[0]),
+		},
+		tc.ParameterV5{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profiles[0]),
+		},
+	}
+
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.ParameterV5{
+			Name:       "cache_range_requests.pparam",
+			ConfigFile: "remap.config",
+			Value:      selfHealParam,
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+	}
+
+	cdn := &tc.CDNV5{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	cfg, err := MakeRemapDotConfig(server, servers, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, hdr)
+
+	txtLines := strings.Split(txt, "\n")
+
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	}
+
+	remapLine := txtLines[2]
+	words := strings.Fields(remapLine)
+	if !strings.HasPrefix(remapLine, "map") {
+		t.Errorf("expected to start with 'map', actual '%v'", txt)
+	}
+
+	if strings.Contains(remapLine, "slice.so") {
+		t.Errorf("did not expected remap on mid server with ds slice range request handling to contain slice plugin, actual '%v'", txt)
+	}
+
+	if !strings.Contains(remapLine, "cache_range_requests.so") {
+		t.Errorf("expected remap on mid server with ds slice range request handling to contain cache_range_requests plugin, actual '%v'", txt)
+	}
+
+	if strings.Contains(remapLine, "--consider-ims") {
+		t.Errorf("expected remap on mid server with ds slice range request handling and '%s' param to not contain cache_range_requests plugin arg --consider-ims, actual '%v'", selfHealParam, txt)
+	}
+
+	if strings.Contains(remapLine, "pparam=--blockbytes") {
+		t.Errorf("did not expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
+	}
+	for _, word := range words {
+		if word == "@pparam=" {
+			t.Errorf("expected remap on mid server with empty 'cache_range_requests.pparam' to be skipped and not have empty '@pparam=' on remapline, actual %s", txt)
+		}
+	}
+}
+
 func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 	hdr := "myHeaderComment"
 
@@ -5666,12 +5811,6 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
 		},
-		tc.ParameterV5{
-			Name:       "cache_range_requests.pparam",
-			ConfigFile: "remap.config",
-			Value:      "",
-			Profiles:   []byte(`["dsprofile"]`),
-		},
 	}
 
 	cdn := &tc.CDNV5{
@@ -5725,6 +5864,166 @@ func TestMakeRemapDotConfigMidRangeRequestSlicePparam(t *testing.T) {
 	for _, word := range words {
 		if word == "@pparam=" {
 			t.Errorf("expected remap on mid server with empty 'cache_range_requests.pparam' to be skipped and not have empty '@pparam=' on remapline, actual %s", txt)
+		}
+	}
+}
+
+func TestMakeRemapDotConfigEdgeRangeRequestSliceNoAutoSelfHeal(t *testing.T) {
+	hdr := "myHeaderComment"
+
+	server := makeTestRemapServer()
+	server.Type = "EDGE"
+	servers := []Server{}
+
+	ds := DeliveryService{}
+	ds.ID = util.Ptr(48)
+	dsType := "HTTP_LIVE_NATNL"
+	ds.Type = &dsType
+	ds.OrgServerFQDN = util.Ptr("origin.example.test")
+	ds.MidHeaderRewrite = util.Ptr("")
+	ds.RangeRequestHandling = util.Ptr(tc.RangeRequestHandlingSlice)
+	ds.RemapText = util.Ptr("myremaptext")
+	ds.EdgeHeaderRewrite = nil
+	ds.SigningAlgorithm = util.Ptr("foo")
+	ds.XMLID = "mydsname"
+	ds.QStringIgnore = util.Ptr(int(tc.QueryStringIgnoreIgnoreInCacheKeyAndPassUp))
+	ds.RegexRemap = util.Ptr("")
+	ds.FQPacingRate = util.Ptr(0)
+	ds.DSCP = 0
+	ds.RoutingName = "myroutingname"
+	ds.MultiSiteOrigin = false
+	ds.OriginShield = util.Ptr("myoriginshield")
+	ds.ProfileID = util.Ptr(49)
+	ds.ProfileName = util.Ptr("dsprofile")
+	ds.Protocol = util.Ptr(int(tc.DSProtocolHTTPToHTTPS))
+	ds.AnonymousBlockingEnabled = false
+	ds.Active = tc.DSActiveStateActive
+	ds.RangeSliceBlockSize = util.Ptr(262144)
+
+	dses := []DeliveryService{ds}
+
+	dss := []DeliveryServiceServer{
+		DeliveryServiceServer{
+			Server:          server.ID,
+			DeliveryService: *ds.ID,
+		},
+	}
+
+	dsRegexes := []tc.DeliveryServiceRegexes{
+		tc.DeliveryServiceRegexes{
+			DSName: ds.XMLID,
+			Regexes: []tc.DeliveryServiceRegex{
+				tc.DeliveryServiceRegex{
+					Type:      string(tc.DSMatchTypeHostRegex),
+					SetNumber: 0,
+					Pattern:   `myliteralpattern__http__foo`,
+				},
+			},
+		},
+	}
+
+	serverParams := []tc.ParameterV5{
+		tc.ParameterV5{
+			Name:       "trafficserver",
+			ConfigFile: "package",
+			Value:      "9",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.ParameterV5{
+			Name:       "serverpkgval",
+			ConfigFile: "package",
+			Value:      "serverpkgval __HOSTNAME__ foo",
+			Profiles:   []byte(server.Profiles[0]),
+		},
+		tc.ParameterV5{
+			Name:       "dscp_remap_no",
+			ConfigFile: "package",
+			Value:      "notused",
+			Profiles:   []byte(server.Profiles[0]),
+		},
+	}
+
+	remapConfigParams := []tc.ParameterV5{
+		tc.ParameterV5{
+			Name:       "cache_range_requests.pparam",
+			ConfigFile: "remap.config",
+			Value:      "--no-modify-cachekey",
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+		tc.ParameterV5{
+			Name:       "not_location",
+			ConfigFile: "cachekey.config",
+			Value:      "notinconfig",
+			Profiles:   []byte(`["global"]`),
+		},
+		tc.ParameterV5{
+			Name:       "cache_range_requests.pparam",
+			ConfigFile: "remap.config",
+			Value:      selfHealParam,
+			Profiles:   []byte(`["dsprofile"]`),
+		},
+	}
+
+	cdn := &tc.CDNV5{
+		DomainName: "cdndomain.example",
+		Name:       "my-cdn-name",
+	}
+
+	topologies := []tc.TopologyV5{}
+	cgs := []tc.CacheGroupNullableV5{}
+	serverCapabilities := map[int]map[ServerCapability]struct{}{}
+	dsRequiredCapabilities := map[int]map[ServerCapability]struct{}{}
+	configDir := `/opt/trafficserver/etc/trafficserver`
+
+	cfg, err := MakeRemapDotConfig(server, servers, dses, dss, dsRegexes, serverParams, cdn, remapConfigParams, topologies, cgs, serverCapabilities, dsRequiredCapabilities, configDir, &RemapDotConfigOpts{HdrComment: hdr})
+	if err != nil {
+		t.Fatal(err)
+	}
+	txt := cfg.Text
+
+	txt = strings.TrimSpace(txt)
+
+	testComment(t, txt, hdr)
+
+	txtLines := strings.Split(txt, "\n")
+
+	if len(txtLines) != 3 { // comment, blank, and remap
+		t.Fatalf("expected a comment header, a blank line, and 1 remaps from HTTP_TO_HTTPS DS, actual: '%v' count %v", txt, len(txtLines))
+	}
+
+	remapLine := txtLines[2]
+	words := strings.Fields(remapLine)
+
+	if !strings.HasPrefix(remapLine, "map") {
+		t.Errorf("expected to start with 'map', actual '%v'", txt)
+	}
+
+	if 1 != strings.Count(remapLine, "cachekey.so") {
+		t.Errorf("expected remap on edge server to contain a single cachekey plugin, actual '%v'", txt)
+	}
+
+	if !strings.Contains(remapLine, "slice.so") {
+		t.Errorf("expected remap on edge server with ds slice range request handling to contain background fetch plugin, actual '%v'", txt)
+	}
+
+	if !strings.Contains(remapLine, "cache_range_requests.so") {
+		t.Errorf("expected remap on edge server with ds slice range request handling to contain cache_range_requests plugin, actual '%v'", txt)
+	}
+
+	if strings.Contains(remapLine, "--consider-ims") {
+		t.Errorf("expected remap on edge server with ds slice range request handling and '%s' param to not contain cache_range_requests plugin arg --consider-ims, actual '%v'", selfHealParam, txt)
+	}
+
+	if !strings.Contains(remapLine, "--no-modify-cachekey") {
+		t.Errorf("expected remap on edge server with ds slice range request handling to contain cache_range_requests plugin arg --no-modify-cachekey, actual '%v'", txt)
+	}
+
+	if !strings.Contains(remapLine, "pparam=--blockbytes=262144") {
+		t.Errorf("expected remap on edge server with ds slice range request handling to contain block size for the slice plugin, actual '%v'", txt)
+	}
+	for _, word := range words {
+		if word == "@pparam=" {
+			t.Errorf("expected remap on edge server with empty 'cache_range_requests.pparam' to be skipped and not have empty '@pparam=' on remapline, actual %s", txt)
 		}
 	}
 }
@@ -5808,12 +6107,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 		tc.ParameterV5{
 			Name:       "cache_range_requests.pparam",
 			ConfigFile: "remap.config",
-			Value:      "--consider-ims",
-			Profiles:   []byte(`["dsprofile"]`),
-		},
-		tc.ParameterV5{
-			Name:       "cache_range_requests.pparam",
-			ConfigFile: "remap.config",
 			Value:      "--no-modify-cachekey",
 			Profiles:   []byte(`["dsprofile"]`),
 		},
@@ -5822,12 +6115,6 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 			ConfigFile: "cachekey.config",
 			Value:      "notinconfig",
 			Profiles:   []byte(`["global"]`),
-		},
-		tc.ParameterV5{
-			Name:       "cache_range_requests.pparam",
-			ConfigFile: "remap.config",
-			Value:      "",
-			Profiles:   []byte(`["dsprofile"]`),
 		},
 	}
 
@@ -5859,6 +6146,7 @@ func TestMakeRemapDotConfigEdgeRangeRequestSlicePparam(t *testing.T) {
 	}
 
 	remapLine := txtLines[2]
+	t.Log(remapLine)
 	words := strings.Fields(remapLine)
 
 	if !strings.HasPrefix(remapLine, "map") {
