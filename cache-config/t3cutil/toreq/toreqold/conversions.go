@@ -20,8 +20,8 @@ package toreqold
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
 // serversToLatest converts a []tc.Server to []tc.ServerV30.

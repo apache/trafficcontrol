@@ -28,9 +28,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	client "github.com/apache/trafficcontrol/v8/traffic_ops/v4-client"
 )
 
 type Benchmark struct {

@@ -24,9 +24,9 @@ import (
 	"errors"
 	"net"
 
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/coveragezone"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/coveragezone"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
 // TODO implement, with Coverage Zone File + Maxmind DB

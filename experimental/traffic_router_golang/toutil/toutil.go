@@ -25,8 +25,8 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	client "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	client "github.com/apache/trafficcontrol/v8/traffic_ops/v3-client"
 )
 
 // MonitorAvailableStatuses returns a set of the status names that indicate a

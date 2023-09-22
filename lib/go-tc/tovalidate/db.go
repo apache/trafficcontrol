@@ -24,7 +24,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 	"github.com/jmoiron/sqlx"

@@ -32,8 +32,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
 const CookieCacheDir = `/var/lib/trafficcontrol-cache-config/`

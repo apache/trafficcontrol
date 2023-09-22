@@ -37,9 +37,9 @@ import (
 
 	"github.com/gofrs/flock"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 )
 
 const OneWeek = 604800

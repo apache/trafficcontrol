@@ -38,15 +38,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tocookie"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/tocookie"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/jmoiron/sqlx"
@@ -776,7 +776,7 @@ func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error
 }
 
 // IsResourceAuthorizedToCurrentUser is a convenience method used to call
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant.IsResourceAuthorizedToUserTx
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/tenant.IsResourceAuthorizedToUserTx
 // using an APIInfo structure to provide the current user and database transaction.
 func (inf *APIInfo) IsResourceAuthorizedToCurrentUser(resourceTenantID int) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(resourceTenantID, inf.User, inf.Tx.Tx)

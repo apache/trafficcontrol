@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/cache"
 )
 
 // CacheStatFilter fulfills the cache.Filter interface, for filtering stats. See the `NewCacheStatFilter` documentation for details on which query parameters are used to filter.

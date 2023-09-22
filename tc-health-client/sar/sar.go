@@ -30,7 +30,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-llog"
+	"github.com/apache/trafficcontrol/v8/lib/go-llog"
 )
 
 // SAR calls SARAddr if host is an IP address, or SARHost if host is an FQDN.

@@ -29,9 +29,9 @@ import (
 
 	"github.com/basho/riak-go-client"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
 const (

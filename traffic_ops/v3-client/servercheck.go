@@ -16,8 +16,8 @@
 package client
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 )
 
 // API_SERVERCHECK is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.

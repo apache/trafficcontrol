@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 )
 
 // UserCurrentResponseV4 is an alias to avoid client breaking changes. In-case of a minor or major version change, we replace the below alias with a new structure.

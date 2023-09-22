@@ -18,8 +18,8 @@ import "errors"
 import "net/http"
 import "net/url"
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
-import "github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+import "github.com/apache/trafficcontrol/v8/lib/go-tc"
+import "github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 
 // API_CAPABILITIES is Deprecated: will be removed in the next major version. Be aware this may not be the URI being requested, for clients created with Login and ClientOps.ForceLatestAPI false.
 const API_CAPABILITIES = apiBase + "/capabilities"

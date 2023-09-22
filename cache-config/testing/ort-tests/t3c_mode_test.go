@@ -24,8 +24,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/util"
+	"github.com/apache/trafficcontrol/v8/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v8/cache-config/testing/ort-tests/util"
 )
 
 func verifyPluginConfigs(t *testing.T) {

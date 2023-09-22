@@ -31,9 +31,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 // Options is a structure used to hold the route configuration options that can be supplied for the backend routes.

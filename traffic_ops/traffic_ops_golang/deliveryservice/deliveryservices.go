@@ -32,16 +32,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/auth"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/util/ims"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/util/ims"
 
 	"github.com/asaskevich/govalidator"
 	validation "github.com/go-ozzo/ozzo-validation"
@@ -84,11 +84,11 @@ func (ds *TODeliveryService) UnmarshalJSON(data []byte) error {
 }
 
 // APIInfo implements
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.APIInfoer.
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.APIInfoer.
 func (ds *TODeliveryService) APIInfo() *api.APIInfo { return ds.ReqInfo }
 
 // SetKeys implements part of the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Identifier
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Identifier
 // interface.
 func (ds *TODeliveryService) SetKeys(keys map[string]interface{}) {
 	i, _ := keys["id"].(int)
@@ -96,7 +96,7 @@ func (ds *TODeliveryService) SetKeys(keys map[string]interface{}) {
 }
 
 // GetKeys implements part of the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Identifier
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Identifier
 // interface.
 func (ds TODeliveryService) GetKeys() (map[string]interface{}, bool) {
 	if ds.ID == nil {
@@ -106,28 +106,28 @@ func (ds TODeliveryService) GetKeys() (map[string]interface{}, bool) {
 }
 
 // GetKeyFieldsInfo implements part of the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Identifier
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Identifier
 // interface.
 func (ds TODeliveryService) GetKeyFieldsInfo() []api.KeyFieldInfo {
 	return []api.KeyFieldInfo{{Field: "id", Func: api.GetIntKey}}
 }
 
 // GetAuditName implements part of the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Identifier
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Identifier
 // interface.
 func (ds *TODeliveryService) GetAuditName() string {
 	return ds.XMLID
 }
 
 // GetType implements part of the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Identifier
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Identifier
 // interface.
 func (ds *TODeliveryService) GetType() string {
 	return "ds"
 }
 
 // IsTenantAuthorized implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Tenantable
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Tenantable
 // interface.
 func (ds *TODeliveryService) IsTenantAuthorized(user *auth.CurrentUser) (bool, error) {
 	return isTenantAuthorized(ds.ReqInfo, &ds.DeliveryServiceV5)
@@ -664,9 +664,9 @@ func createConsistentHashQueryParams(tx *sql.Tx, dsID int, consistentHashQueryPa
 }
 
 // Read implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Reader
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Reader
 // interface (given that
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.APIInfoer
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.APIInfoer
 // is already implemented).
 func (ds *TODeliveryService) Read(h http.Header, useIMS bool) ([]interface{}, error, error, int, *time.Time) {
 	version := ds.APIInfo().Version
@@ -1310,11 +1310,11 @@ func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.
 }
 
 // Delete implements the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Deleter
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Deleter
 // interface (given that the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.APIInfoer
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.APIInfoer
 // and
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.Identifier
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Identifier
 // interfaces are already implemented).
 func (ds *TODeliveryService) Delete() (error, error, int) {
 	if ds.ID == nil {
@@ -1376,7 +1376,7 @@ func (ds *TODeliveryService) Delete() (error, error, int) {
 }
 
 // DeleteQuery implements part of the
-// github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api.GenericDeleter
+// github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.GenericDeleter
 // interface.
 func (*TODeliveryService) DeleteQuery() string {
 	return `DELETE FROM deliveryservice WHERE id = :id`

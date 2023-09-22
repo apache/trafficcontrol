@@ -27,17 +27,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/availableservers"
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/config"
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/coveragezone"
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/crconfigpoller"
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/crstatespoller"
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/fetch"
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/httpsrvr"
-	"github.com/apache/trafficcontrol/experimental/traffic_router_golang/toutil"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/availableservers"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/config"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/coveragezone"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/crconfigpoller"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/crstatespoller"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/fetch"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/httpsrvr"
+	"github.com/apache/trafficcontrol/v8/experimental/traffic_router_golang/toutil"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	to "github.com/apache/trafficcontrol/traffic_ops/v3-client"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	to "github.com/apache/trafficcontrol/v8/traffic_ops/v3-client"
 )
 
 // Version is the utility's version.

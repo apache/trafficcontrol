@@ -32,8 +32,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 
 	"github.com/basho/riak-go-client"
 )

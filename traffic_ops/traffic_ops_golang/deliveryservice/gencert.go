@@ -31,7 +31,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 const NewCertValidDuration = time.Hour * 24 * 365

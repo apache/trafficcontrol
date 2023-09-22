@@ -23,7 +23,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v8/lib/go-atscfg"
 )
 
 func TestAddBackends(t *testing.T) {

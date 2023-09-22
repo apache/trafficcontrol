@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
 
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"

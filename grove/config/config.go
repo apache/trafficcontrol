@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 )
 
 const bytesPerGibibyte = 1024 * 1024 * 1024

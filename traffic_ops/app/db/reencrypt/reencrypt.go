@@ -54,7 +54,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"

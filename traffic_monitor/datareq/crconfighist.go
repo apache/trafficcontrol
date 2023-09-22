@@ -20,7 +20,7 @@
 package datareq
 
 import (
-	"github.com/apache/trafficcontrol/traffic_monitor/towrap"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/towrap"
 
 	"github.com/json-iterator/go"
 )

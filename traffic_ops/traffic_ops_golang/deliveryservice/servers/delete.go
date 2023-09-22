@@ -26,11 +26,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/deliveryservice"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/deliveryservice"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/tenant"
 )
 
 // Delete handler for deleting the association between a Delivery Service and a Server

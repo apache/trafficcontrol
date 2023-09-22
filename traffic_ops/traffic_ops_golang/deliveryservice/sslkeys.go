@@ -28,13 +28,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/config"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/dbhelpers"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/tenant"
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/config"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/dbhelpers"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/tenant"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/trafficvault"
 )
 
 // GenerateSSLKeys generates a new private key, certificate signing request and

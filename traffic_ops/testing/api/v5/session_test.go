@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	client "github.com/apache/trafficcontrol/v8/traffic_ops/v5-client"
 
 	_ "github.com/lib/pq"
 )

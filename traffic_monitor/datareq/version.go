@@ -20,7 +20,7 @@
 package datareq
 
 import (
-	"github.com/apache/trafficcontrol/traffic_monitor/config"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/config"
 )
 
 func srvAPIVersion(staticAppData config.StaticAppData) []byte {

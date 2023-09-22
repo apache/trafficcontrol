@@ -23,7 +23,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/api"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api"
 )
 
 func GetSSLKeys(w http.ResponseWriter, r *http.Request) {

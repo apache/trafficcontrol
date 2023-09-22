@@ -18,8 +18,8 @@ package client
 import (
 	"net/url"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 )
 
 // apiRoles is the full path to the /roles API endpoint.

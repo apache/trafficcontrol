@@ -19,7 +19,7 @@ package v13
  * under the License.
  */
 
-import "github.com/apache/trafficcontrol/lib/go-tc"
+import "github.com/apache/trafficcontrol/v8/lib/go-tc"
 
 // Profiles -  ProfilesResponse to get the "response" top level key
 // swagger:response Profiles
