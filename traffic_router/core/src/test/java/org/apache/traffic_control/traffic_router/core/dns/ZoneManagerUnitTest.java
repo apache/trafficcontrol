@@ -96,11 +96,11 @@ public class ZoneManagerUnitTest {
 
     @Test
     public void testNegativeCachingTTLGetterAndSetter() throws Exception {
-        final File file = new File("src/test/db/cr-config.json");
+        final File file = new File("src/test/resources/publish/CrConfig5.json");
         final ObjectMapper mapper = new ObjectMapper();
         final JsonNode jo = mapper.readTree(file);
         zoneManager.setNegativeCachingTTL(jo);
-        assertThat(zoneManager.getNegativeCachingTTL(), equalTo(900L));
+        assertThat(zoneManager.getNegativeCachingTTL(), equalTo(1200L));
     }
 
     @Test

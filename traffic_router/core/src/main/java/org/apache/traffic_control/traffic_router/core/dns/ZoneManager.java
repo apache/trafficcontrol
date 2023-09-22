@@ -157,7 +157,14 @@ public class ZoneManager extends Resolver {
 	}
 
 	public static void setNegativeCachingTTL(final JsonNode config) {
-		negativeCachingTTL = JsonUtils.optLong(config, "tld.soa.minimum", 900L);
+		JsonNode node = null;
+		try {
+			node = JsonUtils.getJsonNode(JsonUtils.getJsonNode(config, "config"), "soa");
+		} catch (JsonUtilsException e) {
+			e.printStackTrace();
+		} finally {
+			negativeCachingTTL = JsonUtils.optLong(node, "minimum", 900L);
+		}
 	}
 	public static long getNegativeCachingTTL() {
 		return negativeCachingTTL;
