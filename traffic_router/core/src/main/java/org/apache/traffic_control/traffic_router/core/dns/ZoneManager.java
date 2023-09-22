@@ -161,7 +161,7 @@ public class ZoneManager extends Resolver {
 		try {
 			node = JsonUtils.getJsonNode(JsonUtils.getJsonNode(config, "config"), "soa");
 		} catch (JsonUtilsException e) {
-			e.printStackTrace();
+			LOGGER.warn("Couldn't find a JSON node for config or soa; continuing by setting the minimum value to 900", e);
 		} finally {
 			negativeCachingTTL = JsonUtils.optLong(node, "minimum", 900L);
 		}
