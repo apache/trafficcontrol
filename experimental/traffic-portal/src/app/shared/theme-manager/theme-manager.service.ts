@@ -12,8 +12,8 @@
 * limitations under the License.
 */
 
-import { DOCUMENT } from "@angular/common";
-import { EventEmitter, Inject, Injectable } from "@angular/core";
+import { DOCUMENT, isPlatformServer } from "@angular/common";
+import { EventEmitter, Inject, Injectable, PLATFORM_ID } from "@angular/core";
 
 import { LoggingService } from "../logging.service";
 
@@ -35,6 +35,7 @@ export interface Theme {
 export class ThemeManagerService {
 	private readonly storageKey = "current-theme-name";
 	private readonly linkClass = "themer";
+	private readonly isServer: boolean = false;
 
 	public themeChanged = new EventEmitter<Theme>();
 
@@ -51,7 +52,9 @@ export class ThemeManagerService {
 		return null;
 	}
 
-	constructor(@Inject(DOCUMENT) private readonly document: Document, private readonly log: LoggingService) {
+	constructor(@Inject(DOCUMENT) private readonly document: Document, private readonly log: LoggingService,
+		@Inject(PLATFORM_ID) private readonly platformId: object) {
+		this.isServer = isPlatformServer(this.platformId);
 		this.initTheme();
 	}
 
@@ -60,8 +63,14 @@ export class ThemeManagerService {
 	 */
 	public initTheme(): void {
 		const themeName = this.loadStoredTheme();
-		if(themeName) {
+		if (themeName) {
 			this.loadTheme(themeName);
+			return;
+		}
+		// If there is no stored theme and the user has a set preference for dark theme
+		// load the dark theme.
+		if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+			this.loadTheme(this.themes[1]);
 		}
 	}
 
@@ -80,7 +89,7 @@ export class ThemeManagerService {
 	 * @param theme Theme to load
 	 */
 	public loadTheme(theme: Theme): void {
-		if(theme.fileName === undefined) {
+		if (theme.fileName === undefined) {
 			this.clearTheme();
 			return;
 		}
@@ -94,7 +103,7 @@ export class ThemeManagerService {
 	 */
 	public clearTheme(): void {
 		const linkEl = this.getExistingThemeLinkElement();
-		if(linkEl) {
+		if (linkEl) {
 			this.document.head.removeChild(linkEl);
 			this.clearStoredTheme();
 			this.themeChanged.emit(this.themes[0]);
@@ -132,7 +141,9 @@ export class ThemeManagerService {
 	 * Clears theme saved in local storage
 	 */
 	private clearStoredTheme(): void {
-		this.localStorage?.removeItem(this.storageKey);
+		if (!this.isServer) {
+			this.localStorage?.removeItem(this.storageKey);
+		}
 	}
 
 	/**
