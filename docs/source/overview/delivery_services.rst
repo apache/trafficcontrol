@@ -676,7 +676,7 @@ Describes how HTTP "Range Requests" should be handled by the Delivery Service at
 3
 	Use the `slice <https://github.com/apache/trafficserver/tree/master/plugins/experimental/slice>`_ plugin to slice range based requests into deterministic chunks. (Aliased as "3 - Use slice plugin" in Traffic Portal forms)
 
-	.. note:: The ``-–consider-ims`` parameter will automatically be added to the remap line by :term:`t3c` for self healing. If any other range request parameters are being used you must also include ``--consider-ims`` to enable self healing.
+	.. note:: The ``-–consider-ims`` parameter will automatically be added to the remap line by :term:`t3c` for self healing. If any other range request parameters are being used you must also include ``--consider-ims`` to enable self healing. Automatic self healing can be disabled by adding a remap.config parameter with a value of ``no_self_healing``
 
 		.. versionadded:: ATCv4.1
 
