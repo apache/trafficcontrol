@@ -75,6 +75,8 @@ const DefaultInnerRemapConfigTemplateString = DefaultLastRemapConfigTemplateStri
 type LineTemplates map[string]*mustache.Template
 
 var RemapLineTemplates = LineTemplates{}
+var selfHealParam = `no_self_healing`
+var noSelfHeal bool
 
 // This parses but also maintains a cache of parsed templates
 func (lts *LineTemplates) parse(templateString string) (*mustache.Template, error) {
@@ -229,6 +231,10 @@ func classifyConfigParams(configParams []tc.ParameterV5) map[string][]tc.Paramet
 		key := param.ConfigFile
 		if "remap.config" == key {
 			key = param.Name
+			if param.Value == selfHealParam {
+				noSelfHeal = true
+				continue
+			}
 		}
 		configParamMap[key] = append(configParamMap[key], param)
 	}
@@ -410,6 +416,7 @@ func getServerConfigRemapDotConfigForMid(
 			cachekeyArgs = getQStringIgnoreRemap(atsMajorVersion)
 		}
 
+		noSelfHeal = false
 		dsConfigParamsMap := map[string][]tc.ParameterV5{}
 		if nil != ds.ProfileID {
 			dsConfigParamsMap = classifyConfigParams(profilesConfigParams[*ds.ProfileID])
@@ -424,12 +431,9 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if ds.RangeRequestHandling != nil && (*ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest || *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice) {
-			rqParam := paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
-			remapTags.RangeRequests = `@plugin=cache_range_requests.so`
-			if rqParam != "" {
-				remapTags.RangeRequests += rqParam
-			}
-			if !strings.Contains(remapTags.RangeRequests, `@pparam=--consider-ims`) && *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && rqParam != "" {
+			crrParam := paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			remapTags.RangeRequests = `@plugin=cache_range_requests.so` + crrParam
+			if *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && !strings.Contains(crrParam, "--consider-ims") && !noSelfHeal {
 				remapTags.RangeRequests += ` @pparam=--consider-ims`
 			}
 		}
@@ -703,6 +707,7 @@ func buildEdgeRemapLine(
 		remapTags.HeaderRewrite = `@plugin=header_rewrite.so @pparam=` + edgeHeaderRewriteConfigFileName(ds.XMLID)
 	}
 
+	noSelfHeal = false
 	dsConfigParamsMap := classifyConfigParams(remapConfigParams)
 
 	if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm != "" {
@@ -781,13 +786,9 @@ func buildEdgeRemapLine(
 		}
 
 		if crr {
-			rqParam := paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
-			rangeReqTxt += `@plugin=cache_range_requests.so `
-			if rqParam != "" {
-				rangeReqTxt += rqParam
-				//this check may seem excessive, but I want to be sure we don't have --consider-ims in remap twice
-			} else if !strings.Contains(rangeReqTxt, `@pparam=--consider-ims`) && *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && ds.RangeSliceBlockSize != nil {
-				rangeReqTxt += `@pparam=--consider-ims`
+			rangeReqTxt += `@plugin=cache_range_requests.so ` + paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			if *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && !strings.Contains(rangeReqTxt, "--consider-ims") && !noSelfHeal {
+				rangeReqTxt += ` @pparam=--consider-ims`
 			}
 		}
 	}
