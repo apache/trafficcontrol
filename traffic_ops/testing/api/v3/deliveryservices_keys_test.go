@@ -18,9 +18,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-util/assert"
 )
 
 func TestDeliveryServicesKeys(t *testing.T) {

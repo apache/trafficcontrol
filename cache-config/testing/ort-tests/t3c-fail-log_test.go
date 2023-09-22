@@ -18,7 +18,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v8/cache-config/testing/ort-tests/tcdata"
 )
 
 func TestT3cApplyFailMsg(t *testing.T) {

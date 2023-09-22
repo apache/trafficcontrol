@@ -24,10 +24,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/chash"
-	"github.com/apache/trafficcontrol/grove/icache"
+	"github.com/apache/trafficcontrol/v8/grove/chash"
+	"github.com/apache/trafficcontrol/v8/grove/icache"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 )
 
 // ParentSelectionType is the algorithm to use for selecting parents.

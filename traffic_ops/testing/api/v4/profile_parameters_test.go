@@ -23,12 +23,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	totest "github.com/apache/trafficcontrol/lib/go-tc/totestv4"
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	totest "github.com/apache/trafficcontrol/v8/lib/go-tc/totestv4"
+	"github.com/apache/trafficcontrol/v8/lib/go-util/assert"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/v8/traffic_ops/v4-client"
 )
 
 func TestProfileParameters(t *testing.T) {

@@ -23,10 +23,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_monitor/cache"
-	"github.com/apache/trafficcontrol/traffic_monitor/dsdata"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/cache"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/dsdata"
 )
 
 // UnpolledCaches is a structure containing a map of caches names (which have yet to be polled) to

@@ -19,9 +19,9 @@ import (
 	"net/http"
 	"testing"
 
-	totest "github.com/apache/trafficcontrol/lib/go-tc/totestv4"
-	"github.com/apache/trafficcontrol/traffic_ops/testing/api/utils"
-	client "github.com/apache/trafficcontrol/traffic_ops/v4-client"
+	totest "github.com/apache/trafficcontrol/v8/lib/go-tc/totestv4"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/testing/api/utils"
+	client "github.com/apache/trafficcontrol/v8/traffic_ops/v4-client"
 )
 
 func TestDeliveryServicesEligible(t *testing.T) {

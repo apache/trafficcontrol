@@ -21,5 +21,5 @@ package backends
  */
 
 import (
-	_ "github.com/apache/trafficcontrol/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres"
+	_ "github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/trafficvault/backends/postgres"
 )

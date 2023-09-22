@@ -37,10 +37,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	client "github.com/apache/trafficcontrol/traffic_ops/v5-client"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
+	client "github.com/apache/trafficcontrol/v8/traffic_ops/v5-client"
 
 	"github.com/Shopify/sarama"
 	"github.com/cihub/seelog"

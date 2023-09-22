@@ -27,12 +27,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/config"
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/torequest"
-	"github.com/apache/trafficcontrol/cache-config/t3c-apply/util"
-	"github.com/apache/trafficcontrol/cache-config/t3cutil"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	tcutil "github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3c-apply/config"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3c-apply/torequest"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3c-apply/util"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3cutil"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	tcutil "github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 // Version is the application version.

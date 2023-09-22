@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
 )
 
 type CacheObj struct {
@@ -65,7 +65,7 @@ func New(reqHeader http.Header, bytes []byte, code int, originCode int, proxyURL
 }
 
 // CanReuse is a helper wrapping
-// github.com/apache/trafficcontrol/lib/go-rfc.CanReuseStored, returning a
+// github.com/apache/trafficcontrol/v8/lib/go-rfc.CanReuseStored, returning a
 // boolean rather than an enumerated "Reuse" value, for when it's known whether
 // MustRevalidate can be used.
 func CanReuse(

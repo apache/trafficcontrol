@@ -20,7 +20,7 @@ package t3cutil
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 )
 
 // ActionLogAction is an action t3c performs which affects the state of the machine.

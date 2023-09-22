@@ -28,12 +28,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/apache/trafficcontrol/cache-config/t3cutil/toreq/torequtil"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v8/cache-config/t3cutil/toreq/torequtil"
+	"github.com/apache/trafficcontrol/v8/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 )
 
 /*func (cl *TOClient) GetProfileByName(profileName string) (tc.Profile, toclientlib.ReqInf, error) {

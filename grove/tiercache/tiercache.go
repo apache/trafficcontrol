@@ -15,10 +15,10 @@ package tiercache
 */
 
 import (
-	"github.com/apache/trafficcontrol/grove/cacheobj"
-	"github.com/apache/trafficcontrol/grove/icache"
+	"github.com/apache/trafficcontrol/v8/grove/cacheobj"
+	"github.com/apache/trafficcontrol/v8/grove/icache"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 )
 
 // TierCache wraps two icache.Caches and implements icache.Cache. Adding adds to both caches. Getting tries the first cache first, and if it isn't found, it then tries the second. Thus, the first should be smaller and faster (memory) and the second should be larger and slower (disk).

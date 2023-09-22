@@ -22,9 +22,9 @@ package main
 import (
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 func TestPreprocessConfigFile(t *testing.T) {

@@ -15,7 +15,7 @@ package plugin
 */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 )
 
 func init() {

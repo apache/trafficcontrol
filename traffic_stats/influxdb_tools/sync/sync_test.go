@@ -24,7 +24,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/apache/trafficcontrol/lib/go-util/assert"
+	"github.com/apache/trafficcontrol/v8/lib/go-util/assert"
 	influx "github.com/influxdata/influxdb/client/v2"
 	"github.com/influxdata/influxdb/models"
 )

@@ -15,8 +15,8 @@ package client
 import (
 	"fmt"
 
-	"github.com/apache/trafficcontrol/lib/go-tc"
-	"github.com/apache/trafficcontrol/traffic_ops/toclientlib"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 )
 
 // apiTOExtension is the API version-relative path to the /servercheck/extensions API

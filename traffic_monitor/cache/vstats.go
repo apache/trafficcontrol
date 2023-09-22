@@ -24,8 +24,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/apache/trafficcontrol/lib/go-log"
-	"github.com/apache/trafficcontrol/traffic_monitor/todata"
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/todata"
 	jsoniter "github.com/json-iterator/go"
 )
 

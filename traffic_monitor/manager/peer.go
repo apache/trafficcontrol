@@ -20,9 +20,9 @@ package manager
  */
 
 import (
-	"github.com/apache/trafficcontrol/lib/go-util"
-	"github.com/apache/trafficcontrol/traffic_monitor/health"
-	"github.com/apache/trafficcontrol/traffic_monitor/peer"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/health"
+	"github.com/apache/trafficcontrol/v8/traffic_monitor/peer"
 )
 
 // StartPeerManager listens for peer results, and when it gets one, it adds it to the peerStates list, and optimistically combines the good results into combinedStates

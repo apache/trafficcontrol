@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/apache/trafficcontrol/cache-config/testing/ort-tests/tcdata"
-	"github.com/apache/trafficcontrol/lib/go-atscfg"
+	"github.com/apache/trafficcontrol/v8/cache-config/testing/ort-tests/tcdata"
+	"github.com/apache/trafficcontrol/v8/lib/go-atscfg"
 )
 
 func TestT3cTOUpdates(t *testing.T) {

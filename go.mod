@@ -1,4 +1,4 @@
-module github.com/apache/trafficcontrol
+module github.com/apache/trafficcontrol/v8
 
 // Licensed to the Apache Software Foundation (ASF) under one
 // or more contributor license agreements.  See the NOTICE file
@@ -100,19 +100,4 @@ require (
 	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
 	gopkg.in/jcmturner/rpc.v1 v1.1.0 // indirect
-)
-
-// Although the Apache Traffic Control considers v7.0.1 stable, Go modules consider it unstable because its major version
-// is greater than 1, and without these retractions, a commit like 817a702a9de6 will have a computed vesion of
-// v1.1.4-0.20201118150121-817a702a9de6
-// With these retractions, the same commit will have a computed version of
-// v0.0.0-20201118150121-817a702a9de6
-// See https://pkg.go.dev/cmd/go@go1.15.15#hdr-Module_compatibility_and_semantic_versioning for details.
-retract (
-	v1.1.5-retractions
-	v1.1.4
-	v1.1.3
-	v1.1.2
-	v1.1.1
-	v1.1.0
 )

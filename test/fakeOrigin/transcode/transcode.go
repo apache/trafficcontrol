@@ -34,7 +34,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/apache/trafficcontrol/test/fakeOrigin/endpoint"
+	"github.com/apache/trafficcontrol/v8/test/fakeOrigin/endpoint"
 )
 
 type TranscodeMeta struct {

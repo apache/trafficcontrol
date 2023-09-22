@@ -22,8 +22,8 @@ package tc
 import (
 	"time"
 
-	"github.com/apache/trafficcontrol/lib/go-tc/tovalidate"
-	"github.com/apache/trafficcontrol/lib/go-util"
+	"github.com/apache/trafficcontrol/v8/lib/go-tc/tovalidate"
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 
 	validation "github.com/go-ozzo/ozzo-validation"
 )

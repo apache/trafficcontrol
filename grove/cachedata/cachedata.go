@@ -20,8 +20,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/apache/trafficcontrol/grove/web"
-	"github.com/apache/trafficcontrol/lib/go-rfc"
+	"github.com/apache/trafficcontrol/v8/grove/web"
+	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
 )
 
 // ParentResponseData contains data about the parent/origin response.
