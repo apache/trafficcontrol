@@ -12,8 +12,8 @@
 * limitations under the License.
 */
 
-import { DOCUMENT } from "@angular/common";
-import { EventEmitter, Inject, Injectable } from "@angular/core";
+import { DOCUMENT, isPlatformServer } from "@angular/common";
+import { EventEmitter, Inject, Injectable, PLATFORM_ID } from "@angular/core";
 
 import { LoggingService } from "../logging.service";
 
@@ -35,6 +35,7 @@ export interface Theme {
 export class ThemeManagerService {
 	private readonly storageKey = "current-theme-name";
 	private readonly linkClass = "themer";
+	private readonly isServer: boolean = false;
 
 	public themeChanged = new EventEmitter<Theme>();
 
@@ -51,7 +52,9 @@ export class ThemeManagerService {
 		return null;
 	}
 
-	constructor(@Inject(DOCUMENT) private readonly document: Document, private readonly log: LoggingService) {
+	constructor(@Inject(DOCUMENT) private readonly document: Document, private readonly log: LoggingService,
+		@Inject(PLATFORM_ID) private readonly platformId: object) {
+		this.isServer = isPlatformServer(this.platformId);
 		this.initTheme();
 	}
 
@@ -59,9 +62,18 @@ export class ThemeManagerService {
 	 * Initialize the theme service
 	 */
 	public initTheme(): void {
+		if (this.isServer) {
+			return;
+		}
 		const themeName = this.loadStoredTheme();
-		if(themeName) {
+		if (themeName) {
 			this.loadTheme(themeName);
+			return;
+		}
+		// If there is no stored theme and the user has a set preference for dark theme
+		// load the dark theme.
+		if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+			this.loadTheme(this.themes[1]);
 		}
 	}
 
@@ -80,24 +92,28 @@ export class ThemeManagerService {
 	 * @param theme Theme to load
 	 */
 	public loadTheme(theme: Theme): void {
-		if(theme.fileName === undefined) {
-			this.clearTheme();
-			return;
+		if (!this.isServer) {
+			if (theme.fileName === undefined) {
+				this.clearTheme();
+				return;
+			}
+			this.getThemeLinkElement().setAttribute("href", theme.fileName);
+			this.storeTheme(theme);
+			this.themeChanged.emit(theme);
 		}
-		this.getThemeLinkElement().setAttribute("href", theme.fileName);
-		this.storeTheme(theme);
-		this.themeChanged.emit(theme);
 	}
 
 	/**
 	 * Revert to the default theme
 	 */
 	public clearTheme(): void {
-		const linkEl = this.getExistingThemeLinkElement();
-		if(linkEl) {
-			this.document.head.removeChild(linkEl);
-			this.clearStoredTheme();
-			this.themeChanged.emit(this.themes[0]);
+		if (!this.isServer) {
+			const linkEl = this.getExistingThemeLinkElement();
+			if (linkEl) {
+				this.document.head.removeChild(linkEl);
+				this.clearStoredTheme();
+				this.themeChanged.emit(this.themes[0]);
+			}
 		}
 	}
 
@@ -120,10 +136,12 @@ export class ThemeManagerService {
 	 * @returns The stored theme name or null
 	 */
 	private loadStoredTheme(): Theme | null {
-		try {
-			return JSON.parse(this.localStorage?.getItem(this.storageKey) ?? "null");
-		} catch (e) {
-			this.log.error(`Unable to load theme from local storage: ${e}`);
+		if (!this.isServer) {
+			try {
+				return JSON.parse(this.localStorage?.getItem(this.storageKey) ?? "null");
+			} catch (e) {
+				this.log.error(`Unable to load theme from local storage: ${e}`);
+			}
 		}
 		return null;
 	}

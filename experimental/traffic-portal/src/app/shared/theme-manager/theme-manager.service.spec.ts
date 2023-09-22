@@ -35,7 +35,7 @@ describe("ThemeManagerService", () => {
 	});
 
 	it("init theme manager", () => {
-		const theme = {fileName: "some", name: "name"} as Theme;
+		const theme = {fileName: "dark-default-theme.css", name: "Dark"} as Theme;
 		service.themeChanged.subscribe((newTheme: Theme): void => {
 			expect(newTheme.fileName).toBe(theme.fileName);
 			expect(newTheme.name).toBe(theme.name);
@@ -47,7 +47,7 @@ describe("ThemeManagerService", () => {
 	});
 
 	it("set theme", () => {
-		const theme = {fileName: "some", name: "name"} as Theme;
+		const theme = {fileName: "dark-default-theme.css", name: "Dark"} as Theme;
 		const sub = service.themeChanged.subscribe((newTheme: Theme): void => {
 			expect(newTheme.fileName).toBe(theme.fileName);
 			expect(newTheme.name).toBe(theme.name);
@@ -65,7 +65,7 @@ describe("ThemeManagerService", () => {
 	});
 
 	it("clear theme", () => {
-		const theme = {fileName: "some", name: "name"} as Theme;
+		const theme = {fileName: "dark-default-theme.css", name: "Dark"} as Theme;
 
 		service.loadTheme(theme);
 		expect(theme).toEqual(JSON.parse(localStorage["current-theme-name"] ?? ""));
