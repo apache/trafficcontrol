@@ -45,10 +45,10 @@ jobs:
         uses: actions/checkout@master
         if: ${{ (github.repository_owner == 'apache' && github.ref == 'refs/heads/master' ) || github.event_name != 'schedule' }}
         id: checkout
-      - name: Install Python 3.10
+      - name: Install Python 3.11
         uses: actions/setup-python@v2
         if: ${{ steps.checkout.outcome == 'success' }}
-        with: { python-version: '3.10' } # Must be quoted to include the trailing 0
+        with: { python-version: '3.11' } # Must be quoted to include the trailing 0s of versions that have them
       - name: Install assign_triage_role Python module and dependencies
         if: ${{ steps.checkout.outcome == 'success' }}
         run: pip install .github/actions/assign-triage-role

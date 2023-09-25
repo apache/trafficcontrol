@@ -14,11 +14,12 @@ Assign Triage Role
 # limitations under the License.
 #
 import os
-from typing import Final, Optional
+from typing import Final
 
 ENV_GIT_AUTHOR_NAME: Final[str] = "GIT_AUTHOR_NAME"
 ENV_GITHUB_REPOSITORY: Final[str] = "GITHUB_REPOSITORY"
 ENV_GITHUB_REPOSITORY_OWNER: Final[str] = "GITHUB_REPOSITORY_OWNER"
+ENV_GITHUB_SERVER_URL: Final[str] = "GITHUB_SERVER_URL"
 ENV_GITHUB_TOKEN: Final[str] = "GITHUB_TOKEN"
 ENV_PR_GITHUB_TOKEN: Final[str] = "PR_GITHUB_TOKEN"
 ENV_GITHUB_REF_NAME: Final[str] = "GITHUB_REF_NAME"
@@ -42,7 +43,7 @@ def getenv(env_name: str) -> str:
 	"""
 	Gets environment variable :param env_name:
 	"""
-	env_var: Optional[str, None] = os.environ.get(env_name)
+	env_var = os.environ.get(env_name)
 	if env_var is None:
 		raise NameError(f"Environment variable {env_name} is not defined")
 	return env_var
@@ -51,6 +52,7 @@ def getenv(env_name: str) -> str:
 GIT_AUTHOR_NAME: Final[str] = getenv(ENV_GIT_AUTHOR_NAME)
 GITHUB_REPOSITORY: Final[str] = getenv(ENV_GITHUB_REPOSITORY)
 GITHUB_REPOSITORY_OWNER: Final[str] = getenv(ENV_GITHUB_REPOSITORY_OWNER)
+GITHUB_SERVER_URL: Final[str] = getenv(ENV_GITHUB_SERVER_URL)
 GITHUB_TOKEN: Final[str] = getenv(ENV_GITHUB_TOKEN)
 PR_GITHUB_TOKEN: Final[str] = getenv(ENV_PR_GITHUB_TOKEN)
 GITHUB_REF_NAME: Final[str] = getenv(ENV_GITHUB_REF_NAME)
