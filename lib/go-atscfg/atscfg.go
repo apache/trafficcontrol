@@ -133,10 +133,8 @@ func ToTopology(topology tc.Topology) tc.TopologyV5 {
 	nodes := []tc.TopologyNodeV5{}
 	for _, n := range topology.Nodes {
 		nodes = append(nodes, tc.TopologyNodeV5{
-			Id:          n.Id,
-			Cachegroup:  n.Cachegroup,
-			Parents:     n.Parents,
-			LastUpdated: &n.LastUpdated.Time,
+			Cachegroup: n.Cachegroup,
+			Parents:    n.Parents,
 		})
 	}
 	return tc.TopologyV5{
