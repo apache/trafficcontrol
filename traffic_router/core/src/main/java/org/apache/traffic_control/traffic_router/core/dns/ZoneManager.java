@@ -101,6 +101,7 @@ import com.google.common.util.concurrent.ListenableFutureTask;
 public class ZoneManager extends Resolver {
 	private static final Logger LOGGER = LogManager.getLogger(ZoneManager.class);
 
+	private static long negativeCachingTTL = 0L;
 	private final TrafficRouter trafficRouter;
 	private static LoadingCache<ZoneKey, Zone> dynamicZoneCache = null;
 	private static LoadingCache<ZoneKey, Zone> zoneCache = null;
@@ -155,6 +156,20 @@ public class ZoneManager extends Resolver {
 		ZoneManager.signatureManager = sm;
 	}
 
+	public static void setNegativeCachingTTL(final JsonNode config) {
+		JsonNode node = null;
+		try {
+			node = JsonUtils.getJsonNode(JsonUtils.getJsonNode(config, "config"), "soa");
+		} catch (JsonUtilsException e) {
+			LOGGER.warn("Couldn't find a JSON node for config or soa; continuing by setting the minimum value to 900", e);
+		} finally {
+			negativeCachingTTL = JsonUtils.optLong(node, "minimum", 900L);
+		}
+	}
+	public static long getNegativeCachingTTL() {
+		return negativeCachingTTL;
+	}
+
 	@SuppressWarnings({"PMD.CyclomaticComplexity", "PMD.NPathComplexity"})
 	protected static void initZoneCache(final TrafficRouter tr) {
 		synchronized(ZoneManager.class) {
@@ -172,6 +187,7 @@ public class ZoneManager extends Resolver {
 			final int maintenanceInterval = JsonUtils.optInt(config, "zonemanager.cache.maintenance.interval", 300); // default 5 minutes
 			final int initTimeout = JsonUtils.optInt(config, "zonemanager.init.timeout", 10);
 
+			setNegativeCachingTTL(config);
 			final LoadingCache<ZoneKey, Zone> dzc = createZoneCache(ZoneCacheType.DYNAMIC, getDynamicZoneCacheSpec(config, poolSize));
 			final LoadingCache<ZoneKey, Zone> zc = createZoneCache(ZoneCacheType.STATIC);
 
@@ -377,6 +393,17 @@ public class ZoneManager extends Resolver {
 		LOGGER.debug("Attempting to load " + zoneKey.getName());
 		final Name name = zoneKey.getName();
 		List<Record> records = zoneKey.getRecords();
+		// For SOA records, set the "minimum" to the value set in the tld.soa.minimum parameter in
+		// CRConfig.json.
+		for (int i=0; i < records.size(); i++) {
+			if (records.get(i).getType() == Type.SOA) {
+				SOARecord soa = (SOARecord)records.get(i);
+				soa = new SOARecord(soa.getName(), soa.getDClass(), soa.getTTL(), soa.getHost(), soa.getAdmin(),
+						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(), getNegativeCachingTTL());
+				records.set(i, soa);
+				break;
+			}
+		}
 		zoneKey.updateTimestamp();
 
 		if (zoneKey instanceof SignedZoneKey) {

@@ -54,6 +54,7 @@ import org.xbill.DNS.Zone;
 import org.xbill.DNS.NSRecord;
 import org.xbill.DNS.CNAMERecord;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -91,6 +92,15 @@ public class ZoneManagerUnitTest {
 
         zoneManager = spy(new ZoneManager(trafficRouter, new StatTracker(), null, mock(TrafficRouterManager.class)));
 
+    }
+
+    @Test
+    public void testNegativeCachingTTLGetterAndSetter() throws Exception {
+        final File file = new File("src/test/resources/publish/CrConfig5.json");
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode jo = mapper.readTree(file);
+        zoneManager.setNegativeCachingTTL(jo);
+        assertThat(zoneManager.getNegativeCachingTTL(), equalTo(1200L));
     }
 
     @Test

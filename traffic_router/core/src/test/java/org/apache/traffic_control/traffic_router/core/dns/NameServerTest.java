@@ -83,12 +83,6 @@ public class NameServerTest {
     }
 
     @Test
-    public void TestNegativeCachingTTLGetterAndSetter() throws Exception {
-        nameServer.setNegativeCachingTTL(900L);
-        assertThat(nameServer.getNegativeCachingTTL(), equalTo(900L));
-    }
-
-    @Test
     public void TestARecordQueryWithClientSubnetOption() throws Exception {
         
         Name name = Name.fromString("host1.example.com.");
