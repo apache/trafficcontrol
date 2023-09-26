@@ -76,7 +76,6 @@ const selfHealParam = `no_self_healing`
 type LineTemplates map[string]*mustache.Template
 
 var RemapLineTemplates = LineTemplates{}
-var selfHeal = true
 
 // This parses but also maintains a cache of parsed templates
 func (lts *LineTemplates) parse(templateString string) (*mustache.Template, error) {
@@ -225,8 +224,9 @@ func MakeRemapDotConfig(
 // This sticks the DS parameters in a map.
 // remap.config parameters use "<plugin>.pparam" key
 // cachekey.config parameters retain the 'cachekey.config' key.
-func classifyConfigParams(configParams []tc.ParameterV5) map[string][]tc.ParameterV5 {
+func classifyConfigParams(configParams []tc.ParameterV5) (map[string][]tc.ParameterV5, bool) {
 	configParamMap := map[string][]tc.ParameterV5{}
+	selfHeal := true
 	for _, param := range configParams {
 		key := param.ConfigFile
 		if "remap.config" == key {
@@ -238,7 +238,7 @@ func classifyConfigParams(configParams []tc.ParameterV5) map[string][]tc.Paramet
 		}
 		configParamMap[key] = append(configParamMap[key], param)
 	}
-	return configParamMap
+	return configParamMap, selfHeal
 }
 
 // For general <plugin>.pparam parameters.
@@ -416,10 +416,10 @@ func getServerConfigRemapDotConfigForMid(
 			cachekeyArgs = getQStringIgnoreRemap(atsMajorVersion)
 		}
 
-		selfHeal = true
+		selfHeal := true
 		dsConfigParamsMap := map[string][]tc.ParameterV5{}
 		if nil != ds.ProfileID {
-			dsConfigParamsMap = classifyConfigParams(profilesConfigParams[*ds.ProfileID])
+			dsConfigParamsMap, selfHeal = classifyConfigParams(profilesConfigParams[*ds.ProfileID])
 		}
 
 		if len(dsConfigParamsMap) > 0 {
@@ -707,8 +707,7 @@ func buildEdgeRemapLine(
 		remapTags.HeaderRewrite = `@plugin=header_rewrite.so @pparam=` + edgeHeaderRewriteConfigFileName(ds.XMLID)
 	}
 
-	selfHeal = true
-	dsConfigParamsMap := classifyConfigParams(remapConfigParams)
+	dsConfigParamsMap, selfHeal := classifyConfigParams(remapConfigParams)
 
 	if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm != "" {
 		if *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
