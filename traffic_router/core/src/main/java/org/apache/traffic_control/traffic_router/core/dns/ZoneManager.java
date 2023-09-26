@@ -398,10 +398,9 @@ public class ZoneManager extends Resolver {
 		for (int i=0; i < records.size(); i++) {
 			if (records.get(i).getType() == Type.SOA) {
 				SOARecord soa = (SOARecord)records.get(i);
-				soa = new SOARecord(soa.getName(), DClass.IN, soa.getTTL(), soa.getHost(), soa.getAdmin(),
+				soa = new SOARecord(soa.getName(), soa.getDClass(), soa.getTTL(), soa.getHost(), soa.getAdmin(),
 						soa.getSerial(), soa.getRefresh(), soa.getRetry(), soa.getExpire(), getNegativeCachingTTL());
-				records.remove(i);
-				records.add(i, soa);
+				records.set(i, soa);
 				break;
 			}
 		}

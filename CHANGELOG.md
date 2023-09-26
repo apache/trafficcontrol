@@ -51,7 +51,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7784](https://github.com/apache/trafficcontrol/pull/7784) *Traffic Portal*: Added revert certificate functionality to the ssl-keys page.
 
 ### Changed
-- [#7808](https://github.com/apache/trafficcontrol/pull/7808) *Traffic Router*: Set SOA `minimum` field to a custom value defined in the `tld.soa.minimum` param.
 - [#7776](https://github.com/apache/trafficcontrol/pull/7776) *tc-health-client*: Added error message while issues interacting with Traffic Ops.
 - [#7766](https://github.com/apache/trafficcontrol/pull/7766) *Traffic Portal*: now uses Traffic Ops APIv5.
 - [#7765](https://github.com/apache/trafficcontrol/pull/7765) *Traffic Stats*: now uses Traffic Ops APIv5.
@@ -182,6 +181,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops*: Fixed `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
 
 ### Removed
+- [#7808](https://github.com/apache/trafficcontrol/pull/7808) *Traffic Router*: Set SOA `minimum` field to a custom value defined in the `tld.soa.minimum` param, and remove the previously added `dns.negative.caching.ttl` property.
 - [#7804](https://github.com/apache/trafficcontrol/pull/7804) Removed unneeded V5 client methods for `deliveryServiceRequiredcapabilities`.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed components in `infrastructre/docker/`, not in use as cdn-in-a-box performs the same functionality.
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed `misc/jira_github_issue_import.py`, the project does not use JIRA.
