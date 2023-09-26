@@ -25,9 +25,19 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// SNIDotYAMLFileName is an unused constant that probably defines either the
+// name on disk of an sni.yaml ATS configuration file, the ConfigFile value of
+// Parameters that may influence the generation of such files, or both.
+//
+// TODO: replace instances of sni.yaml with this constant.
 const SNIDotYAMLFileName = "sni.yaml"
 
+// ContentTypeSNIDotYAML is the MIME type of the contents of an sni.yaml ATS
+// configuration file.
 const ContentTypeSNIDotYAML = ContentTypeYAML
+
+// LineCommentSNIDotYAML is the string used by the grammar of an sni.yaml file
+// to indicate the start of a line comment.
 const LineCommentSNIDotYAML = LineCommentYAML
 
 // SNIDotYAMLOpts contains settings to configure sni.yaml generation options.
@@ -49,6 +59,7 @@ type SNIDotYAMLOpts struct {
 	DefaultEnableH2 bool
 }
 
+// MakeSNIDotYAML constructs an sni.yaml ATS configuration file.
 func MakeSNIDotYAML(
 	server *Server,
 	servers []Server,

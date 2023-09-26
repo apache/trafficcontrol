@@ -27,8 +27,23 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// LoggingYAMLFileName is the name of a logging configuration file used by ATS
+// version 8 and later.
 const LoggingYAMLFileName = "logging.yaml"
+
+// ContentTypeLoggingDotYAML is the content type of the contents of a logging
+// configuration file used by ATS version 8 and later.
+//
+// Note YAML has no IANA standard mime type. This is one of several common
+// usages, and is likely to be the standardized value. If you're reading this,
+// please check IANA to see if YAML has been added, and change this to the IANA
+// definition if so. Also note we include 'charset=us-ascii' because YAML is
+// commonly UTF-8, but ATS is likely to be unable to handle UTF.
 const ContentTypeLoggingDotYAML = ContentTypeYAML
+
+// LineCommentLoggingDotYAML is the string used to indicate the beginning of a
+// line comment in the grammar of a logging configuration file used by ATS
+// version 8 and later.
 const LineCommentLoggingDotYAML = LineCommentHash
 
 // LoggingDotYAMLOpts contains settings to configure generation options.
@@ -47,6 +62,12 @@ type LoggingDotYAMLOpts struct {
 	ATSMajorVersion uint
 }
 
+// MakeLoggingDotYAML creates a logging.yaml for a given ATS Profile.
+//
+// serverParams is expected to be the map of Parameter Names to Values of all
+// Parameters assigned to the given Profile, that have the ConfigFile
+// "logging.config". That is, they must already be filtered BEFORE being passed
+// in here.
 func MakeLoggingDotYAML(
 	server *Server,
 	serverParams []tc.ParameterV5,

@@ -26,7 +26,12 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// ContentTypeURLSig is the MIME type of the contents of a url_sig.config ATS
+// configuration file.
 const ContentTypeURLSig = ContentTypeTextASCII
+
+// LineCommentURLSig is the string used to indicate the start of a line comment
+// in the grammar of a url_sig.config ATS configuration file.
 const LineCommentURLSig = LineCommentHash
 
 // URLSigConfigOpts contains settings to configure generation options.
@@ -37,6 +42,8 @@ type URLSigConfigOpts struct {
 	HdrComment string
 }
 
+// MakeURLSigConfig constructs a url_sig.config ATS configuration file for the
+// given server that has the given Parameters.
 func MakeURLSigConfig(
 	fileName string,
 	server *Server,

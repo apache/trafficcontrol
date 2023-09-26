@@ -23,9 +23,22 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// DropQStringDotConfigFileName is the name of the drop_qstring.config file -
+// this is also the ConfigFile value of Parameters that are able to affect the
+// contents of this file.
 const DropQStringDotConfigFileName = "drop_qstring.config"
+
+// DropQStringDotConfigParamName is the Name a Parameter must have to dictate
+// the contents of drop_qstring.config - Parameters by other Names (even in the
+// correct ConfigFile) are ignored.
 const DropQStringDotConfigParamName = "content"
+
+// ContentTypeDropQStringDotConfig is the MIME type of the contents of a
+// drop_qstring.config file.
 const ContentTypeDropQStringDotConfig = ContentTypeTextASCII
+
+// LineCommentDropQStringDotConfig is the string that signifies the start of a
+// line comment in the grammar of a drop_qstring.config file.
 const LineCommentDropQStringDotConfig = LineCommentHash
 
 // DropQStringDotConfigOpts contains settings to configure generation options.
@@ -36,6 +49,8 @@ type DropQStringDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeDropQStringDotConfig constructs a drop_qstring.config file for the given
+// server with the given Parameters and header comment content.
 func MakeDropQStringDotConfig(
 	server *Server,
 	serverParams []tc.ParameterV5,

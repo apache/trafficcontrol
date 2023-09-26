@@ -25,8 +25,17 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// VolumeFileName is the ConfigFile of Parameters which can influence the
+// generation of a volume.config ATS configuration file, if found on the Profile
+// of the server for which generation is taking place.
 const VolumeFileName = StorageFileName
+
+// ContentTypeVolumeDotConfig is the MIME type of the contents of a
+// volume.config ATS configuration file.
 const ContentTypeVolumeDotConfig = ContentTypeTextASCII
+
+// LineCommentVolumeDotConfig is the string used to indicate the beginning of a
+// line comment in the grammar of a volume.config ATS configuration file.
 const LineCommentVolumeDotConfig = LineCommentHash
 
 // VolumeDotConfigOpts contains settings to configure generation options.

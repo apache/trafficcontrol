@@ -24,7 +24,13 @@ import (
 	"strings"
 )
 
+// ContentTypeSetDSCPDotConfig is the MIME type of the contents of an ATS
+// configuration file used to set the DSCP of IP packets.
 const ContentTypeSetDSCPDotConfig = ContentTypeTextASCII
+
+// LineCommentSetDSCPDotConfig is the string that, in the grammar of an ATS
+// configuration file used to set the DSCP of IP packets, indicates that the
+// rest of the line is a comment.
 const LineCommentSetDSCPDotConfig = LineCommentHash
 
 // SetDSCPDotConfigOpts contains settings to configure generation options.
@@ -35,6 +41,8 @@ type SetDSCPDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeSetDSCPDotConfig constructs a configuration file for setting the DSCP of
+// IP packets with ATS.
 func MakeSetDSCPDotConfig(
 	fileName string,
 	server *Server,
@@ -58,7 +66,7 @@ func MakeSetDSCPDotConfig(
 
 	if _, err := strconv.Atoi(dscpNumStr); err != nil {
 		// TODO warn? We don't generally warn for client errors, because it can be an attack vector. Provide a more informative error return? Return a 404?
-		text = "An error occured generating the DSCP header rewrite file."
+		text = "An error occurred generating the DSCP header rewrite file."
 		dscpNumStr = "" // emulates Perl
 	}
 

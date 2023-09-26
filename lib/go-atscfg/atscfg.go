@@ -32,23 +32,103 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// InvalidID is used as a placeholder value when determining the ID of a parent
+// Cache Group.
+//
+// This is not strictly invalid; when a Cache Group's Parent's ID is "detected"
+// as this value, then it may simply mean that the Cache Group is "top-level",
+// and has no parent.
+//
+// TODO: unexport this? It's highly specific to this package, and isn't used
+// anywhere else.
 const InvalidID = -1
-const DefaultATSVersion = "5" // TODO Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
-// todo also unused
+
+// DefaultATSVersion is the version of Traffic Server assumed when one is not
+// directly specified in a server's Parameters.
+//
+// TODO: Emulates Perl; change to 6? ATC no longer officially supports ATS 5.
+const DefaultATSVersion = "5"
+
+// HeaderCommentDateFormat is an unused format for dates and times.
+//
+// TODO: Remove this, it's unused.
 const HeaderCommentDateFormat = "Mon Jan 2 15:04:05 MST 2006"
+
+// ContentTypeTextASCII is the MIME type for plain text using an ASCII
+// character set.
+//
+// TODO: Move to lib/go-rfc package?
 const ContentTypeTextASCII = `text/plain; charset=us-ascii`
 
+// LineCommentHash is the string that denotes the beginning of a line comment,
+// for grammars that use the number sign for line comments.
+//
+// TODO: Unexport? This is only used, it seems, to group multiple usages into a
+// single symbol not used outside this package. It's conceivable to want to
+// know the line comment string for a given grammar, but it's unlikely that
+// anyone importing this package would find an alias for "#" itself helpful,
+// with no other attached semantics.
 const LineCommentHash = "#"
+
+// ConfigSuffix is a suffix (or "file extension") appended to many
+// configuration file names, most notably those for the Header Rewrite Traffic
+// Server plugin.
+//
+// TODO: Unexport? This is only used by the header rewrite configuration file
+// generation functions, and doesn't have much practical purpose outside of
+// that limited usage.
 const ConfigSuffix = ".config"
+
+// TsDefaultRequestHeaderMaxSize is the default maximum request header size
+// that will be allowed by ATS unless otherwise specified on a server's
+// Profile.
+//
+// For more information, refer to the ATS documentation for the reconds.config
+// configuration option 'proxy.config.http.request_header_max_size'.
 const TsDefaultRequestHeaderMaxSize = 131072
 
+// DeliveryServiceID is used internally to represent a Delivery Service ID.
+//
+// TODO: Unexport? This isn't used outside of this package. Alternatively:
+// remove? lib/go-tc and cache-config/* use ints, so all this is doing is
+// causing spurious casting back and forth.
 type DeliveryServiceID int
+
+// ProfileID is used internally to represent a Profile ID.
+//
+// TODO: Unexport? This isn't used outside of this package. Alternatively:
+// remove? lib/go-tc and cache-config/* use ints, so all this is doing is
+// causing spurious casting back and forth.
 type ProfileID int
+
+// ServerID is used internally to represent a server ID.
+//
+// TODO: Unexport? This isn't used outside of this package. Alternatively:
+// remove? lib/go-tc and cache-config/* use ints, so all this is doing is
+// causing spurious casting back and forth.
 type ServerID int
 
+// ProfileName is used internally to represent a Profile Name.
 type ProfileName string
+
+// TopologyName is used internally to represent a Topology Name.
+//
+// Deprecated: github.com/apache/trafficcontrol/lib/go-tc provides the
+// an identical type by the same name, but that is the type actually used
+// by the Go client and Traffic Ops. Therefore, new code should use that
+// type instead of this one.
 type TopologyName string
+
+// CacheGroupType is used internally to represent the Name of the Type of a
+// Cache Group.
+//
+// TODO: Unexport? This isn't used outside of this package. Alternatively:
+// remove? lib/go-tc and cache-config/* use strings, so all this is doing is
+// causing spurious casting back and forth.
 type CacheGroupType string
+
+// ServerCapability is used to represent the Name of a Capability that a server
+// has OR that a Delivery Service requires.
 type ServerCapability string
 
 // Server is a tc.Server for the latest lib/go-tc and traffic_ops/vx-client type.
@@ -66,9 +146,10 @@ type DeliveryService tc.DeliveryServiceV5
 // but to only have to change it here, and the places where breaking symbol changes were made.
 type InvalidationJob tc.InvalidationJobV4
 
-// ServerUdpateStatus is a tc.ServerUdpateStatus for the latest lib/go-tc and traffic_ops/vx-client type.
-// This allows atscfg to not have to change the type everywhere it's used, every time ATC changes the base type,
-// but to only have to change it here, and the places where breaking symbol changes were made.
+// ServerUpdateStatus is a tc.ServerUpdateStatus for the latest lib/go-tc and
+// traffic_ops/vx-client type. This allows atscfg to not have to change the type
+// everywhere it's used, every time ATC changes the base type, but to only have
+// to change it here, and the places where breaking symbol changes were made.
 type ServerUpdateStatus tc.ServerUpdateStatusV5
 
 //type CDN tc.CDNV5
@@ -351,7 +432,6 @@ func trimParamUnderscoreNumSuffix(paramName string) string {
 }
 
 // topologyIncludesServer returns whether the given topology includes the given server.
-// todo also unused
 func topologyIncludesServer(topology tc.Topology, server *tc.Server) bool {
 	for _, node := range topology.Nodes {
 		if node.Cachegroup == server.Cachegroup {
@@ -379,6 +459,7 @@ func topologyIncludesServerNullable(topology tc.TopologyV5, server *Server) (boo
 // Caches immediately before the origin are the TopologyCacheTierLast, even for MSO.
 type TopologyCacheTier string
 
+// These are the allowed values for a TopologyCacheTier.
 const (
 	TopologyCacheTierFirst   = TopologyCacheTier("first")
 	TopologyCacheTierInner   = TopologyCacheTier("inner")
@@ -793,6 +874,12 @@ type DeliveryServiceServer struct {
 	DeliveryService int `json:"d"`
 }
 
+// JobsToInvalidationJobs converts a set of tc.Job structures into their
+// equivalent InvalidationJob structures, by calling JobToInvalidationJob on
+// each of them in turn.
+//
+// This will bail on the first error encountered when converting, so other jobs
+// afterward may also have problems, but they won't be reported.
 func JobsToInvalidationJobs(oldJobs []tc.Job) ([]InvalidationJob, error) {
 	jobs := make([]InvalidationJob, len(oldJobs), len(oldJobs))
 	err := error(nil)
@@ -805,14 +892,37 @@ func JobsToInvalidationJobs(oldJobs []tc.Job) ([]InvalidationJob, error) {
 	return jobs, nil
 }
 
-const JobV4TimeFormat = time.RFC3339Nano
-const JobLegacyTimeFormat = "2006-01-02 15:04:05-07"
-const JobLegacyRefetchSuffix = `##REFETCH##`
-const JobLegacyRefreshSuffix = `##REFRESH##`
-const JobLegacyParamPrefix = "TTL:"
-const JobLegacyParamSuffix = "h"
-const JobLegacyKeyword = "PURGE"
+// These are the formats for the "lastUpdated" timestamps of Content
+// Invalidation Jobs in different Traffic Ops API versions.
+const (
+	// The format in API versions 4.0 and later.
+	JobV4TimeFormat = time.RFC3339Nano
+	// The format in API versions prior to 4.0.
+	JobLegacyTimeFormat = "2006-01-02 15:04:05-07"
+)
 
+// These special suffixes when found on a rule override the default type of a
+// Content Invalidation Job.
+// Deprecated: these are no longer necessary in Traffic Ops API versions 4.0 and
+// later.
+const (
+	JobLegacyRefetchSuffix = `##REFETCH##`
+	JobLegacyRefreshSuffix = `##REFRESH##`
+)
+
+// These strings are used to parse legacy representations of Content
+// Invalidation Jobs.
+// Deprecated: When the Traffic Ops API version 4.0 representation of Content
+// Invalidation Jobs becomes standard (i.e. when 3.x API version support is
+// dropped) these will have no meaning or purpose.
+const (
+	JobLegacyParamPrefix = "TTL:"
+	JobLegacyParamSuffix = "h"
+	JobLegacyKeyword     = "PURGE"
+)
+
+// JobToInvalidationJob converts a tc.Job to an InvalidationJob. If the
+// conversion fails, an error is returned.
 func JobToInvalidationJob(jb tc.Job) (InvalidationJob, error) {
 	startTime := tc.Time{}
 	if err := json.Unmarshal([]byte(`"`+jb.StartTime+`"`), &startTime); err != nil {
@@ -838,7 +948,7 @@ func JobToInvalidationJob(jb tc.Job) (InvalidationJob, error) {
 	}, nil
 }
 
-// FilterServers returns the servers for which filter returns true
+// FilterServers returns the servers for which filter returns true.
 func FilterServers(servers []Server, filter func(sv *Server) bool) []Server {
 	// TODO add warning/error feature?
 	filteredServers := []Server{}

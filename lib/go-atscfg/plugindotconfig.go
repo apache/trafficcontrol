@@ -23,9 +23,21 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// PluginSeparator is the string used to separate Parameter Names from their
+// Values for lines in plugin.config configuration files.
 const PluginSeparator = " "
+
+// PluginFileName is the name of the configuration file used by ATS to configure
+// its plugins, as well as the ConfigFile value of Parameters that can affect
+// the contents of this file.
 const PluginFileName = "plugin.config"
+
+// ContentTypePluginDotConfig is the MIME type of the contents of a
+// plugin.config ATS configuration file.
 const ContentTypePluginDotConfig = ContentTypeTextASCII
+
+// LineCommentPluginDotConfig is the string that denotes the start of a line
+// comment in the grammar of a plugin.config ATS configuration file.
 const LineCommentPluginDotConfig = LineCommentHash
 
 // PluginDotConfigOpts contains settings to configure generation options.
@@ -36,6 +48,8 @@ type PluginDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakePluginDotConfig constructs a plugin.config configuration file for the
+// given server with the given Parameters and the given header comment content.
 func MakePluginDotConfig(
 	server *Server,
 	serverParams []tc.ParameterV5,

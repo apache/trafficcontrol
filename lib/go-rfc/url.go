@@ -19,16 +19,18 @@ package rfc
  * under the License.
  */
 
-import "encoding/json"
-import "fmt"
-import "net/url"
-import "strconv"
+import (
+	"encoding/json"
+	"fmt"
+	"net/url"
+	"strconv"
+)
 
 // URL is an alias of net/url.URL that implements JSON encoding and decoding, as well as scanning
 // from database driver values.
 type URL struct{ url.URL }
 
-// UnmarshalJSON implements the encoding/json.Unmarshaler interface
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (u *URL) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		u = nil
@@ -46,12 +48,12 @@ func (u *URL) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON implements the encoding/json.Marshaler interface
+// MarshalJSON implements the encoding/json.Marshaler interface.
 func (u URL) MarshalJSON() ([]byte, error) {
 	return json.Marshal(u.String())
 }
 
-// Scan implements the database/sql.Scanner interface
+// Scan implements the database/sql.Scanner interface.
 func (u *URL) Scan(src interface{}) error {
 	if src == nil {
 		u = nil

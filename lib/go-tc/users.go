@@ -299,7 +299,7 @@ type CurrentUserUpdateRequestUser struct {
 }
 
 // Upgrade converts an APIv3 and earlier "current user" to an APIv4 User.
-// Fields not present in earlier API versions need to be passed explicitly
+// Fields not present in earlier API versions need to be passed explicitly.
 func (u UserCurrent) Upgrade(registrationSent, lastAuthenticated *time.Time, ucdn string, changeLogCount int) UserV4 {
 	var ret UserV4
 	ret.AddressLine1 = util.CopyIfNotNil(u.AddressLine1)

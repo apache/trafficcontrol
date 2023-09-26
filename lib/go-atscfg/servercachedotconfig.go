@@ -27,6 +27,9 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// ServerCacheDotConfigIncludeInactiveDSes is the definition of whether or not
+// inactive Delivery Services should be considered when generating the contents
+// of a cache.config ATS configuration file.
 const ServerCacheDotConfigIncludeInactiveDSes = false
 
 func makeCacheDotConfigMid(
@@ -91,7 +94,7 @@ func makeCacheDotConfigMid(
 	}, nil
 }
 
-// TODO unit test
+// TODO unit test.
 func getOriginFQDNAndPort(origin string) (string, *int) {
 	origin = strings.TrimSpace(origin)
 	origin = strings.Replace(origin, `https://`, ``, -1)

@@ -26,6 +26,13 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// ContentTypeServerUnknownConfig is the MIME content type of the contents of
+// an arbitrary file not handled specially by t3c.
+//
+// Note that the actual grammar of such files is unknowable and may be more
+// appropriately represented by some other MIME type, but treating it as this
+// MIME type will never cause problems, since t3c is only capable of generating
+// such files as regular text files.
 const ContentTypeServerUnknownConfig = ContentTypeTextASCII
 
 // ServerUnknownOpts contains settings to configure generation options.
@@ -36,6 +43,8 @@ type ServerUnknownOpts struct {
 	HdrComment string
 }
 
+// MakeServerUnknown constructs an arbitrary file for a server that is not
+// handled specially and has no known (or knowable) semantics.
 func MakeServerUnknown(
 	fileName string,
 	server *Server,

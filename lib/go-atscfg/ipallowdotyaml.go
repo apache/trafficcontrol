@@ -30,22 +30,28 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
+// IPAllowYamlFileName is the name of the configuration file that controls IP
+// address-restricted access to various request methods.
+//
+// TODO: Replace instances of 'ip_allow.yaml' with this currently unused
+// constant.
 const IPAllowYamlFileName = `ip_allow.yaml`
+
+// ContentTypeIPAllowDotYAML is the MIME type of the contents of an
+// ip_allow.yaml file.
+//
+// Note YAML has no IANA standard mime type. This is one of several common
+// usages, and is likely to be the standardized value. If you're reading this,
+// please check IANA to see if YAML has been added, and change this to the IANA
+// definition if so. Also note we include 'charset=us-ascii' because YAML is
+// commonly UTF-8, but ATS is likely to be unable to handle UTF.
 const ContentTypeIPAllowDotYAML = ContentTypeYAML
+
+// LineCommentIPAllowDotYAML is the string used to signify the beginning of a
+// line comment in the grammar of an ip_allow.yaml file.
 const LineCommentIPAllowDotYAML = LineCommentHash
 
-// const ParamPurgeAllowIP = "purge_allow_ip"
-// const ParamCoalesceMaskLenV4 = "coalesce_masklen_v4"
-// const ParamCoalesceNumberV4 = "coalesce_number_v4"
-// const ParamCoalesceMaskLenV6 = "coalesce_masklen_v6"
-// const ParamCoalesceNumberV6 = "coalesce_number_v6"
-
-// const DefaultCoalesceMaskLenV4 = 24
-// const DefaultCoalesceNumberV4 = 5
-// const DefaultCoalesceMaskLenV6 = 48
-// const DefaultCoalesceNumberV6 = 5
-
-// AStatsDotConfigOpts contains settings to configure generation options.
+// IPAllowDotYAMLOpts contains settings to configure generation options.
 type IPAllowDotYAMLOpts struct {
 	// HdrComment is the header comment to include at the beginning of the file.
 	// This should be the text desired, without comment syntax (like # or //). The file's comment syntax will be added.
@@ -192,8 +198,19 @@ func (is ipAllowYAMLDatas) Less(i, j int) bool {
 	return false
 }
 
+// YAMLActionAllow specifies that the block to which it belongs specifies that
+// matching IP addresses should be explicitly allowed to use the associated HTTP
+// request methods.
 const YAMLActionAllow = "allow"
+
+// YAMLActionDeny specifies that the block to which it belongs specifies that
+// matching IP addresses should be explicitly NOT allowed to use the associated
+// HTTP request methods.
 const YAMLActionDeny = "deny"
+
+// YAMLMethodAll is a possible HTTP request method that may be given/denied to
+// IP addresses in ipallow.yaml configuration files, which has the special
+// meaning "all HTTP request methods".
 const YAMLMethodAll = "ALL"
 
 // yamlAllowAllButPushPurge is a helper func to build a ipAllowYAMLData for the given range string immediately allowing all Methods except Push and Purge.

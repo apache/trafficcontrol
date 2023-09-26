@@ -19,7 +19,12 @@ package atscfg
  * under the License.
  */
 
+// ContentTypeBGFetchDotConfig is the MIME type of the contents of a
+// bg_fetch.config file.
 const ContentTypeBGFetchDotConfig = ContentTypeTextASCII
+
+// LineCommentBGFetchDotConfig is the string understood by parsers of
+// bg_fetch.config files to be the beginning of a line comment.
 const LineCommentBGFetchDotConfig = LineCommentHash
 
 // BGFetchDotConfigOpts contains settings to configure generation options.
@@ -30,6 +35,8 @@ type BGFetchDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeBGFetchDotConfig constructs a 'bg_fetch.config' file for the given
+// server with the given header comment content.
 func MakeBGFetchDotConfig(
 	server *Server,
 	opt *BGFetchDotConfigOpts,

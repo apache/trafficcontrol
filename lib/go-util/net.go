@@ -29,6 +29,7 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-log"
 )
 
+// BitsPerByte is the number of bits in a byte.
 const BitsPerByte = 8
 
 // CoalesceIPs combines ips into CIDRs, by combining overlapping networks into networks of size coalesceMaskLen, if there are at least coalesceNumber IPs in the larger mask.
@@ -204,6 +205,13 @@ func IPToCIDR(ip net.IP) *net.IPNet {
 	return &net.IPNet{IP: ip, Mask: fullMask}
 }
 
+// IP4ToNum converts the passed string to a 32-bit unsigned integer where each
+// byte that makes up the number is one of the bytes of the IPv4 address.
+//
+// The address is encoded with each byte left-to-right making up the
+// most-to-least significant bytes in the resulting number. If the passed
+// string cannot be parsed as an IPv4 address in standard notation, an error is
+// returned.
 func IP4ToNum(ip string) (uint32, error) {
 	parts := strings.Split(ip, `.`)
 	if len(parts) != 4 {
@@ -226,6 +234,15 @@ func IP4ToNum(ip string) (uint32, error) {
 	return num, nil
 }
 
+// IP4InRange checks if the given string IP address falls within the specified
+// hyphen-delimited range.
+//
+// The range should be of the form "start-end" e.g. "192.0.2.0-192.0.2.255".
+// If either the input IP address or either end of this range fail to parse as
+// IP addresses - or if the range is malformed - an error is returned.
+//
+// The behavior of this utility is undefined if the start of the IP range does
+// not encode via IP4ToNum to a lower number than the end of the range.
 func IP4InRange(ip, ipRange string) (bool, error) {
 	ab := strings.Split(ipRange, `-`)
 	if len(ab) != 2 {

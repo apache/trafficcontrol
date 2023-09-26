@@ -25,8 +25,22 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// ATSDotRulesFileName is the name of a "rules" configuration file.
+//
+// TODO: This isn't actually correct. This is just the ConfigFile value that a
+// cache server's Profile's Drive_Prefix, Drive_Letters, RAM_Drive_Prefix, and
+// RAM_Drive_Letters Parameters must have for generation to be successful (in
+// fact it seems to panic if those aren't found), but the actual name of the
+// file for which MakeATSDotRules outputs content is '50-ats.rules'. Is this
+// misleading? Maybe it just doesn't even need to be exported? Or exist at all?
 const ATSDotRulesFileName = StorageFileName
+
+// ContentTypeATSDotRules is the MIME type of the contents of a 50-ats.rules
+// file.
 const ContentTypeATSDotRules = ContentTypeTextASCII
+
+// LineCommentATSDotRules is the string used by parsers of 50-ats.rules to
+// determine that the rest of the current line's content is a comment.
 const LineCommentATSDotRules = LineCommentHash
 
 // ATSDotRulesOpts contains settings to configure generation options.
@@ -37,6 +51,8 @@ type ATSDotRulesOpts struct {
 	HdrComment string
 }
 
+// MakeATSDotRules constructs a '50-ats.rules' file for the given server with
+// the given parameters and header comment content.
 func MakeATSDotRules(
 	server *Server,
 	serverParams []tc.ParameterV5,

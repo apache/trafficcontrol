@@ -28,26 +28,85 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
-const RegexRemapPrefix = "regex_remap_"
+// CacheUrlPrefix is an unused constant of unknown purpose.
+//
+// Deprecated: It's likely that this is related to the removed "Cache URL"
+// property of Delivery Services and the old "cacheurl" plugin for ATS which is
+// not supported by any supported version of ATS.
 const CacheUrlPrefix = "cacheurl_"
+
+// RefetchSuffix is a special suffix which, if present at the end of an asset
+// URL for a Content Invalidation Job, will cause ATS to treat matching URIs as
+// cache "misses" - effectively this forces ATS to fetch the asset anew from an
+// upstream cache server or origin.
 const RefetchSuffix = "##REFETCH##"
+
+// RefreshSuffix is a special suffix which, if present at the end of an asset
+// URL for a Content Invalidation Job, will cause ATS to treat matching URIs as
+// "stale" - effectively this forces ATS to retrieve confirmation from an
+// upstream cache server or origin that the cached content is still valid, and
+// according to their response either fetch the content anew or update its age
+// and caching validity markers (ETag, If-Unmodified-Since etc.).
 const RefreshSuffix = "##REFRESH##"
 
+// RemapFile is the name of a configuration file used by ATS to map client
+// requests.
+//
+// TODO: replace instances of "remap.config" with this constant.
 const RemapFile = "remap.config"
 
+// RegexRevalidateFileName is the name of a configuration file used by ATS to
+// revalidate or invalidate cached contents based on regular expression matches.
+// This is also the ConfigFile value of GLOBAL Parameters that modify how
+// content invalidation is handled.
 const RegexRevalidateFileName = "regex_revalidate.config"
+
+// RegexRevalidateMaxRevalDurationDaysParamName is the Name of a GLOBAL
+// Parameter that can be used to set the maximum duration (in days) of Content
+// Invalidation Requests.
 const RegexRevalidateMaxRevalDurationDaysParamName = "maxRevalDurationDays"
+
+// DefaultMaxRevalDurationDays is the maximum duration (in days) of Content
+// Invalidation Requests if not overridden by a Parameter.
 const DefaultMaxRevalDurationDays = 90
+
+// JobKeywordPurge is the "keyword" of "jobs" that determines if a "job"
+// represents a Content Invalidation Job - "jobs" with other "keywords" are
+// ignored.
+//
+// TODO: Figure out if this can be deprecated/removed, along with the check for
+// it; all "jobs" created through the API have this "keyword", and the notion of
+// generic-purpose "jobs" has been abandoned.
 const JobKeywordPurge = "PURGE"
+
+// RegexRevalidateMinTTL is a time.Duration that specifies the minimum duration
+// for which Content Invalidation Jobs will remain active. Content Invalidation
+// Jobs with TTLs less than this will use this duration instead.
 const RegexRevalidateMinTTL = time.Hour
 
+// A RevalType describes the type of revalidation to be performed by a content
+// invalidation job.
 type RevalType string
 
+// RevalTypeMiss represents the caching condition where the asset requested
+// could not be found in cache.
 const RevalTypeMiss = RevalType("MISS")
+
+// RevalTypeStale represents the caching condition where the asset requested is
+// in cache, but it has expired and must be revalidated upstream.
 const RevalTypeStale = RevalType("STALE")
+
+// RevalTypeDefault is the type of revalidation that will be performed by
+// default, if not otherwise specified.
 const RevalTypeDefault = RevalTypeStale
 
+// ContentTypeRegexRevalidateDotConfig is the MIME content type of the contents
+// of a regex_revalidate.config ATS configuration file.
 const ContentTypeRegexRevalidateDotConfig = ContentTypeTextASCII
+
+// LineCommentRegexRevalidateDotConfig is the string that indicates the
+// beginning of a line comment in the grammar of a regex_revalidate.config ATS
+// configuration file.
 const LineCommentRegexRevalidateDotConfig = LineCommentHash
 
 // RegexRevalidateDotConfigOpts contains settings to configure generation options.
@@ -58,6 +117,11 @@ type RegexRevalidateDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeRegexRevalidateDotConfig constructs a regex_revalidate.config file for
+// the given server, which is responsible for serving content for the given
+// Delivery Services, with the given set of "global" Parameters (NOT server or
+// Delivery Service Profile Parameters), and the given set of Content
+// Invalidation Jobs.
 func MakeRegexRevalidateDotConfig(
 	server *Server,
 	deliveryServices []DeliveryService,
@@ -195,11 +259,10 @@ func filterJobs(tcJobs []InvalidationJob, maxReval time.Duration, minTTL time.Du
 	return newJobs
 }
 
-// processRefetch determines the type of Invalidation, returns the corresponding jobtype
-// and "cleans" the regex URL for the asset to be invalidated. REFETCH trumps REFRESH,
-// whether in the AssetURL or as InvalidationType
+// processRefetch determines the type of Invalidation, returns the corresponding
+// jobtype and "cleans" the regex URL for the asset to be invalidated. REFETCH
+// trumps REFRESH, whether in the AssetURL or as InvalidationType.
 func processRefetch(invalidationType, assetURL string) (RevalType, string) {
-
 	if (len(invalidationType) > 0 && invalidationType == tc.REFETCH) || strings.HasSuffix(assetURL, RefetchSuffix) {
 		assetURL = strings.TrimSuffix(assetURL, RefetchSuffix)
 		return RevalTypeMiss, assetURL

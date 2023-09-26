@@ -69,10 +69,10 @@ type DeliveryServiceSSLKeys struct {
 // version 4 of the Traffic Ops API.
 type DeliveryServiceSSLKeysV4 = DeliveryServiceSSLKeysV40
 
-// DeliveryServiceSSLKeysV41 structures contain information about an SSL key
+// DeliveryServiceSSLKeysV40 structures contain information about an SSL key
 // certificate pair used by a Delivery Service.
 //
-// "V41" is used because this structure was first introduced in version 4.1 of
+// "V40" is used because this structure was first introduced in version 4.0 of
 // the Traffic Ops API.
 type DeliveryServiceSSLKeysV40 struct {
 	DeliveryServiceSSLKeysV15
@@ -383,6 +383,10 @@ func (r *CDNGenerateKSKReq) Sanitize() {
 	}
 }
 
+// GetRenewalKid extracts the value of the private "renewal_kid" field from the
+// key set. If the set does not contain that private field, or if it does but
+// the value is not a string, this returns nil, otherwise it will return a
+// pointer to the value of that field.
 func GetRenewalKid(set jwk.Set) *string {
 	v, ok := set.Field(`renewal_kid`)
 	if !ok {
@@ -396,8 +400,10 @@ func GetRenewalKid(set jwk.Set) *string {
 	}
 }
 
+// JWKSMap is a mapping of names of JSON Web Token Set to those sets.
 type JWKSMap map[string]jwk.Set
 
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (ksm *JWKSMap) UnmarshalJSON(data []byte) error {
 	var m map[string]json.RawMessage
 	if err := json.Unmarshal(data, &m); err != nil {

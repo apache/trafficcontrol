@@ -19,16 +19,18 @@ package rfc
  * under the License.
  */
 
-import "encoding/json"
-import "fmt"
-import "net/mail"
-import "strconv"
+import (
+	"encoding/json"
+	"fmt"
+	"net/mail"
+	"strconv"
+)
 
 // EmailAddress is an alias of net/mail.Address that implements JSON encoding and decoding, as well
 // as scanning from database driver values.
 type EmailAddress struct{ mail.Address }
 
-// UnmarshalJSON implements the encoding/json.Unmarshaler interface
+// UnmarshalJSON implements the encoding/json.Unmarshaler interface.
 func (a *EmailAddress) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		a = nil
@@ -46,12 +48,12 @@ func (a *EmailAddress) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// MarshalJSON implements the encoding/json.Marshaler interface
+// MarshalJSON implements the encoding/json.Marshaler interface.
 func (a EmailAddress) MarshalJSON() ([]byte, error) {
 	return json.Marshal(a.String())
 }
 
-// Scan implements the database/sql.Scanner interface
+// Scan implements the database/sql.Scanner interface.
 func (a *EmailAddress) Scan(src interface{}) error {
 	if src == nil {
 		a = nil

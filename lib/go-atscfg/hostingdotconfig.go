@@ -27,15 +27,39 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// HostingConfigFileName is the file name of a hosting.config file.
+//
+// TODO: Remove? This is unused, even internally in this package.
 const HostingConfigFileName = `hosting.config`
+
+// HostingConfigParamConfigFile is the ConfigFile value of Parameters which can
+// affect the contents of hosting.config files.
 const HostingConfigParamConfigFile = `storage.config`
+
+// ContentTypeHostingDotConfig is the MIME type of the contents of a
+// hosting.config file.
 const ContentTypeHostingDotConfig = ContentTypeTextASCII
+
+// LineCommentHostingDotConfig is the string used to indicate the beginning of a
+// line comment in the grammar of a hosting.config file.
 const LineCommentHostingDotConfig = LineCommentHash
 
+// ParamDrivePrefix is the Name of the Parameter that determines the path prefix
+// for disk storage caching block devices.
 const ParamDrivePrefix = "Drive_Prefix"
+
+// ParamRAMDrivePrefix is the Name of the Parameter that determines the path
+// prefix for RAM caching block devices.
 const ParamRAMDrivePrefix = "RAM_Drive_Prefix"
 
+// ServerHostingDotConfigMidIncludeInactive controls whether or not to include
+// configurations for inactive Delivery Services in hosting.config for mid-tier
+// cache servers.
 const ServerHostingDotConfigMidIncludeInactive = false
+
+// ServerHostingDotConfigEdgeIncludeInactive controls whether or not to include
+// configurations for inactive Delivery Services in hosting.config for edge-tier
+// cache servers.
 const ServerHostingDotConfigEdgeIncludeInactive = true
 
 // HostingDotConfigOpts contains settings to configure generation options.
@@ -46,6 +70,7 @@ type HostingDotConfigOpts struct {
 	HdrComment string
 }
 
+// MakeHostingDotConfig generates a hosting.config file for a server.
 func MakeHostingDotConfig(
 	server *Server,
 	servers []Server,

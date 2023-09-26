@@ -34,12 +34,34 @@ import (
 	"github.com/cbroglie/mustache"
 )
 
+// RemapConfigDropQstringConfigFile is the configuration file for the
+// `drop_qstring` plugin used in remap.config files.
 const RemapConfigDropQstringConfigFile = `drop_qstring.config`
+
+// ContentTypeRemapDotConfig is the MIME type of the contents of a remap.config
+// ATS configuration file.
 const ContentTypeRemapDotConfig = ContentTypeTextASCII
+
+// LineCommentRemapDotConfig is the string used to signal the beginning of a
+// line comment in the grammar of a remap.config ATS configuration file.
 const LineCommentRemapDotConfig = LineCommentHash
 
-const RemapConfigCachekeyDirective = `__CACHEKEY_DIRECTIVE__`
+// RemapConfigRangeDirective is a special string which, if found in a Delivery
+// Service's Raw Remap Text, will be replaced by t3c during configuration
+// generation with the parts of a remap.config file line that are necessary to
+// implement said Delivery Service's declared Range Request Handling.
 const RemapConfigRangeDirective = `__RANGE_DIRECTIVE__`
+
+// RemapConfigCachekeyDirective is a special string which, if found in a
+// Delivery Service's Raw Remap Text, will be replaced by t3c during
+// configuration generation with the parts of a remap.config file line that call
+// the 'cachekey.so' ATS plugin.
+const RemapConfigCachekeyDirective = `__CACHEKEY_DIRECTIVE__`
+
+// RemapConfigRegexRemapDirective is a special string which, if found in a
+// Delivery Service's Raw Remap Text, will be replaced by t3c during
+// configuration generation with the parts of a remap.config file line that call
+// the 'regex_remap.so' ATS plugin.
 const RemapConfigRegexRemapDirective = `__REGEX_REMAP_DIRECTIVE__`
 
 const RemapConfigTemplateFirst = `template.first`
@@ -94,7 +116,7 @@ func (rs *RemapTags) AnyMidOptionsSet() bool {
 type RemapDotConfigOpts struct {
 	// VerboseComments is whether to add informative comments to the generated file, about what was generated and why.
 	// Note this does not include the header comment, which is configured separately with HdrComment.
-	// These comments are human-readable and not guarnateed to be consistent between versions. Automating anything based on them is strongly discouraged.
+	// These comments are human-readable and not guaranteed to be consistent between versions. Automating anything based on them is strongly discouraged.
 	VerboseComments bool
 
 	// HdrComment is the header comment to include at the beginning of the file.
@@ -117,6 +139,7 @@ type RemapDotConfigOpts struct {
 	ATSMajorVersion uint
 }
 
+// MakeRemapDotConfig constructs a remap.config ATS configuration file.
 func MakeRemapDotConfig(
 	server *Server,
 	servers []Server,
@@ -199,7 +222,7 @@ func MakeRemapDotConfig(
 
 // This sticks the DS parameters in a map.
 // remap.config parameters use "<plugin>.pparam" key
-// cachekey.config parameters retain the 'cachekey.config' key
+// cachekey.config parameters retain the 'cachekey.config' key.
 func classifyConfigParams(configParams []tc.ParameterV5) map[string][]tc.ParameterV5 {
 	configParamMap := map[string][]tc.ParameterV5{}
 	for _, param := range configParams {
@@ -212,7 +235,7 @@ func classifyConfigParams(configParams []tc.ParameterV5) map[string][]tc.Paramet
 	return configParamMap
 }
 
-// For general <plugin>.pparam parameters
+// For general <plugin>.pparam parameters.
 func paramsStringFor(parameters []tc.ParameterV5, warnings *[]string) (paramsString string) {
 	uniquemap := map[string]int{}
 
@@ -238,7 +261,7 @@ func paramsStringFor(parameters []tc.ParameterV5, warnings *[]string) (paramsStr
 	return
 }
 
-// for parameters that use 'cachekey.config' as their key
+// for parameters that use 'cachekey.config' as their key.
 func paramsStringOldFor(parameters []tc.ParameterV5, warnings *[]string) (paramsString string) {
 	// check for duplicate parameters
 	uniquemap := map[string]int{}
@@ -263,7 +286,7 @@ func paramsStringOldFor(parameters []tc.ParameterV5, warnings *[]string) (params
 	return
 }
 
-// Handles special case for cachekey
+// Handles special case for cachekey.
 func cachekeyArgsFor(configParamsMap map[string][]tc.ParameterV5, warnings *[]string) (argsString string) {
 
 	hasCachekey := false
@@ -597,9 +620,17 @@ func getServerConfigRemapDotConfigForEdge(
 	return text, warnings, nil
 }
 
+// RemapLines represents the contents of a remap.config Apache Traffic Server
+// configuration file for a given Delivery Service.
 type RemapLines struct {
-	Pre  []string
+	// Pre contains lines to appear before the "main" text of a Delivery
+	// Service's remap.config content.
+	Pre []string
+	// Text contains the "main" text of a Delivery Service's remap.config
+	// content.
 	Text string
+	// Post contains lines to appear after the "main" text of a Delivery
+	// Service's remap.config content.
 	Post []string
 }
 
@@ -892,7 +923,7 @@ func getQStringIgnoreRemap(atsMajorVersion uint) string {
 }
 
 // makeServerPackageParamData returns a map[paramName]paramVal for this server, config file 'package'.
-// Returns the param data, and any warnings
+// Returns the param data, and any warnings.
 func makeServerPackageParamData(server *Server, serverParams []tc.ParameterV5) (map[string]string, []string) {
 	warnings := []string{}
 
@@ -931,7 +962,7 @@ func makeServerPackageParamData(server *Server, serverParams []tc.ParameterV5) (
 // remapFilterDSes filters Delivery Services to be used to generate remap.config for the given server.
 // Returned DSes are guaranteed to have a non-nil XMLID, Type, DSCP, ID, Active, and Topology.
 // If a DS has a nil Topology, OrgServerFQDN, FirstHeaderRewrite, InnerHeaderRewrite, or LastHeaderRewrite, "" is assigned.
-// Returns the filtered delivery services, and any warnings
+// Returns the filtered delivery services, and any warnings.
 func remapFilterDSes(server *Server, dss []DeliveryServiceServer, dses []DeliveryService) ([]DeliveryService, []string) {
 	warnings := []string{}
 	isMid := strings.HasPrefix(server.Type, string(tc.CacheTypeMid))

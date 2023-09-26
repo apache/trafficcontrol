@@ -135,11 +135,16 @@ type ParentAbstractionService struct {
 	DS DeliveryService
 }
 
-// ParentAbstractionServices implements sort.Interface
+// ParentAbstractionServices implements sort.Interface.
 type ParentAbstractionServices []*ParentAbstractionService
 
-func (ps ParentAbstractionServices) Len() int      { return len(ps) }
+// Len implements part of sort.Interface.
+func (ps ParentAbstractionServices) Len() int { return len(ps) }
+
+// Swap implements part of sort.Interface.
 func (ps ParentAbstractionServices) Swap(i, j int) { ps[i], ps[j] = ps[j], ps[i] }
+
+// Less implements part of sort.Interface.
 func (ps ParentAbstractionServices) Less(i, j int) bool {
 	if ps[i].DestDomain != ps[j].DestDomain {
 		return ps[i].DestDomain < ps[j].DestDomain
@@ -147,13 +152,23 @@ func (ps ParentAbstractionServices) Less(i, j int) bool {
 	return ps[i].Port < ps[j].Port
 }
 
+// ParentAbstractionServiceParentSecondaryMode is the "secondary parent mode" of
+// a Delivery Service parenting abstraction. Only certain values are allowed.
 type ParentAbstractionServiceParentSecondaryMode string
 
-const ParentAbstractionServiceParentSecondaryModeExhaust = ParentAbstractionServiceParentSecondaryMode("exhaust")
-const ParentAbstractionServiceParentSecondaryModeAlternate = ParentAbstractionServiceParentSecondaryMode("alternate")
-const ParentAbstractionServiceParentSecondaryModePeering = ParentAbstractionServiceParentSecondaryMode("peering")
-const ParentAbstractionServiceParentSecondaryModeInvalid = ParentAbstractionServiceParentSecondaryMode("")
+// The allowable values of a ParentAbstractionServiceParentSecondaryMode (with
+// the exception of ParentAbstractionServiceParentSecondaryModeInvalid, which
+// does not represent a valid ParentAbstractionServiceParentSecondaryMode).
+const (
+	ParentAbstractionServiceParentSecondaryModeExhaust   = ParentAbstractionServiceParentSecondaryMode("exhaust")
+	ParentAbstractionServiceParentSecondaryModeAlternate = ParentAbstractionServiceParentSecondaryMode("alternate")
+	ParentAbstractionServiceParentSecondaryModePeering   = ParentAbstractionServiceParentSecondaryMode("peering")
+	ParentAbstractionServiceParentSecondaryModeInvalid   = ParentAbstractionServiceParentSecondaryMode("")
+)
 
+// ParentAbstractionServiceParentSecondaryModeDefault is the "secondary parent
+// mode" that is used in parenting abstraction if one is not explicitly
+// configured.
 const ParentAbstractionServiceParentSecondaryModeDefault = ParentAbstractionServiceParentSecondaryModeAlternate
 
 // ToParentDotConfigVal returns the ATS parent.config secondary_mode= value for the enum.
@@ -169,17 +184,29 @@ func (mo ParentAbstractionServiceParentSecondaryMode) ToParentDotConfigVal() str
 	}
 }
 
+// A ParentAbstractionServiceRetryPolicy is a "retry policy" that will be used
+// by Delivery Service parenting.
 type ParentAbstractionServiceRetryPolicy string
 
-const ParentAbstractionServiceRetryPolicyRoundRobinIP = ParentAbstractionServiceRetryPolicy("round_robin_ip")
-const ParentAbstractionServiceRetryPolicyRoundRobinStrict = ParentAbstractionServiceRetryPolicy("round_robin_strict")
-const ParentAbstractionServiceRetryPolicyFirst = ParentAbstractionServiceRetryPolicy("first")
-const ParentAbstractionServiceRetryPolicyLatched = ParentAbstractionServiceRetryPolicy("latched")
-const ParentAbstractionServiceRetryPolicyConsistentHash = ParentAbstractionServiceRetryPolicy("consistent_hash")
-const ParentAbstractionServiceRetryPolicyInvalid = ParentAbstractionServiceRetryPolicy("")
+// These are the valid value of a ParentAbstractionServiceRetryPolicy - with the
+// exception of ParentAbstractionServiceRetryPolicyInvalid, which does not
+// represent a valid ParentAbstractionServiceRetryPolicy.
+const (
+	ParentAbstractionServiceRetryPolicyRoundRobinIP     = ParentAbstractionServiceRetryPolicy("round_robin_ip")
+	ParentAbstractionServiceRetryPolicyRoundRobinStrict = ParentAbstractionServiceRetryPolicy("round_robin_strict")
+	ParentAbstractionServiceRetryPolicyFirst            = ParentAbstractionServiceRetryPolicy("first")
+	ParentAbstractionServiceRetryPolicyLatched          = ParentAbstractionServiceRetryPolicy("latched")
+	ParentAbstractionServiceRetryPolicyConsistentHash   = ParentAbstractionServiceRetryPolicy("consistent_hash")
+	ParentAbstractionServiceRetryPolicyInvalid          = ParentAbstractionServiceRetryPolicy("")
+)
 
+// DefaultParentAbstractionServiceRetryPolicy is the "retry policy" that will be
+// used by Delivery Service parenting if one is not explicitly configured.
 const DefaultParentAbstractionServiceRetryPolicy = ParentAbstractionServiceRetryPolicyConsistentHash
 
+// ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy converts a parent
+// selection algorithm Parameter Value to a generic
+// ParentAbstractionServiceRetryPolicy.
 func ParentSelectAlgorithmToParentAbstractionServiceRetryPolicy(alg string) ParentAbstractionServiceRetryPolicy {
 	switch strings.TrimSpace(strings.ToLower(alg)) {
 	case "true":
@@ -230,6 +257,8 @@ func ParentSelectParamQStringHandlingToBool(paramVal string) *bool {
 	return nil
 }
 
+// ParentAbstractionServiceParent represents a single "parent" as an abstracted
+// concept.
 type ParentAbstractionServiceParent struct {
 	// FQDN is the parent FQDN that ATS will use. Note this may be an IP.
 	FQDN   string
@@ -248,6 +277,9 @@ func (a peersSort) Len() int           { return len(a) }
 func (a peersSort) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a peersSort) Less(i, j int) bool { return a[i].Key() < a[j].Key() }
 
+// RemoveParentDuplicates returns all values in the input list that have unique
+// outputs for their Key method. Earlier duplicates are used while later
+// occurrences of degenerate "Key"s are discarded.
 func RemoveParentDuplicates(inputs []*ParentAbstractionServiceParent, seens map[string]struct{}) ([]*ParentAbstractionServiceParent, map[string]struct{}) {
 	if seens == nil {
 		seens = make(map[string]struct{})
@@ -263,6 +295,9 @@ func RemoveParentDuplicates(inputs []*ParentAbstractionServiceParent, seens map[
 	return uniques, seens
 }
 
+// ParseRetryResponses parses a raw Parameter Value containing HTTP response
+// codes for scenarios when parents should be "retried" into a list of the
+// actual numeric codes.
 func ParseRetryResponses(resp string) ([]int, error) {
 	resp = strings.TrimSpace(resp)
 	if len(resp) > 2 && resp[0] == '"' {
@@ -284,9 +319,18 @@ func ParseRetryResponses(resp string) ([]int, error) {
 	return codes, nil
 }
 
+// DefaultSimpleRetryCodes is the set of HTTP response codes that are used to
+// indicate a parent should be "retried" if none are explicitly configured.
 var DefaultSimpleRetryCodes = []int{404}
+
+// DefaultUnavailableServerRetryCodes is the set of HTTP response codes that are
+// used to indicate a parent is "unavailable" and should be "retried" if none
+// are explicitly configured.
 var DefaultUnavailableServerRetryCodes = []int{503}
 
+// DefaultIgnoreQueryStringInParentSelection is used to decide whether a
+// request's query string should be used or dropped during selecting a parent
+// when that behavior is not explicitly configured.
 const DefaultIgnoreQueryStringInParentSelection = false
 
 func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfigOpts, atsMajorVersion uint) (string, []string, error) {
@@ -317,6 +361,10 @@ func parentAbstractionToParentDotConfig(pa *ParentAbstraction, opt *ParentConfig
 	return txt, warnings, nil
 }
 
+// ToParentDotConfigLine constructs a line in the parent.config Apache Traffic
+// Server configuration file for the abstraction with the given options and for
+// the given major version of Apache Traffic Server. It returns the line, any
+// warnings to be issued, and any error that occurred during generation.
 func (svc *ParentAbstractionService) ToParentDotConfigLine(opt *ParentConfigOpts, atsMajorVersion uint) (string, []string, error) {
 	warnings := []string{}
 	txt := ""
@@ -408,12 +456,20 @@ func intsToStrs(is []int) []string {
 	return strs
 }
 
+// ToParentDotConfigFormat converts the abstracted parent into a concrete piece
+// of a configuration file line for the parent.config parent configuration
+// implementation.
 func (pa *ParentAbstractionServiceParent) ToParentDotConfigFormat() string {
 	return pa.FQDN + ":" + strconv.Itoa(pa.Port) + "|" + strconv.FormatFloat(pa.Weight, 'f', -1, 64)
 }
 
+// ParentDotConfigParentSeparator is the string used to delimit multiple parents
+// on a line in a parent.config Apache Traffic Server configuration file.
 const ParentDotConfigParentSeparator = `;`
 
+// ParentAbstractionServiceParentsToParentDotConfigLine creates a line in the
+// parent.config implementation of a parenting configuration file given the set
+// of parents it should configure.
 func ParentAbstractionServiceParentsToParentDotConfigLine(parents []*ParentAbstractionServiceParent) string {
 	parentStrs := []string{}
 	for _, parent := range parents {

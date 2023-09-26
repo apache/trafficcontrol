@@ -30,29 +30,82 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// HeaderRewritePrefix is a prefix on filenames of configuration files for the
+// Header Rewrite ATS plugin for edge-tier cache servers. The rest of the
+// filename is dependent on the Delivery Service for which the file contains
+// rewrite rules.
 const HeaderRewritePrefix = "hdr_rw_"
+
+// HeaderRewriteMidPrefix is a prefix on filenames of configuration files for
+// the Header Rewrite ATS plugin for mid-tier cache servers. The rest of the
+// filename is dependent on the Delivery Service for which the file contains
+// rewrite rules.
 const HeaderRewriteMidPrefix = "hdr_rw_mid_"
+
+// ContentTypeHeaderRewriteDotConfig is the MIME type of the contents of a
+// configuration file for the Header Rewrite ATS plugin.
 const ContentTypeHeaderRewriteDotConfig = ContentTypeTextASCII
+
+// LineCommentHeaderRewriteDotConfig is the string used to signify the beginning
+// of a line comment in the grammar of configuration files for the Header
+// Rewrite ATS plugin.
 const LineCommentHeaderRewriteDotConfig = LineCommentHash
 
 // ServiceCategoryHeader is the internal service category header for logging the service category.
 // Note this is internal, and will never be set in an HTTP Request or Response by ATS.
 const ServiceCategoryHeader = "@CDN-SVC"
 
+// MaxOriginConnectionsNoMax is a value specially interpreted by ATS to mean "no
+// maximum origin connections".
+//
+// TODO: Remove this? It's not used anywhere, not even internally in this
+// package.
 const MaxOriginConnectionsNoMax = 0 // 0 indicates no limit on origin connections
 
+// HeaderRewriteFirstPrefix is a prefix on filenames of configuration files for
+// the Header Rewrite ATS plugin for cache servers at the first (or "edge") tier
+// of a Topology. The rest of the filename is dependent on the Delivery Service
+// for which the file contains rewrite rules.
 const HeaderRewriteFirstPrefix = HeaderRewritePrefix + "first_"
+
+// HeaderRewriteInnerPrefix is a prefix on filenames of configuration files for
+// the Header Rewrite ATS plugin for cache servers at any tier between the first
+// and last tier of a Topology. The rest of the filename is dependent on the
+// Delivery Service for which the file contains rewrite rules.
 const HeaderRewriteInnerPrefix = HeaderRewritePrefix + "inner_"
+
+// HeaderRewriteLastPrefix is a prefix on filenames of configuration files for
+// the Header Rewrite ATS plugin for cache servers at the last tier of a
+// Topology. The rest of the filename is dependent on the Delivery Service for
+// which the file contains rewrite rules.
 const HeaderRewriteLastPrefix = HeaderRewritePrefix + "last_"
 
+// FirstHeaderRewriteConfigFileName returns the full name of a configuration
+// file for the Header Rewrite ATS plugin for a cache server at the first tier
+// of a Topology.
+//
+// The dsName passed in should NOT be the Delivery Service's Display Name, it
+// should be its "XMLID".
 func FirstHeaderRewriteConfigFileName(dsName string) string {
 	return HeaderRewriteFirstPrefix + dsName + ConfigSuffix
 }
 
+// InnerHeaderRewriteConfigFileName returns the full name of a configuration
+// file for the Header Rewrite ATS plugin for a cache server at the first tier
+// of a Topology.
+//
+// The dsName passed in should NOT be the Delivery Service's Display Name, it
+// should be its "XMLID".
 func InnerHeaderRewriteConfigFileName(dsName string) string {
 	return HeaderRewriteInnerPrefix + dsName + ConfigSuffix
 }
 
+// LastHeaderRewriteConfigFileName returns the full name of a configuration
+// file for the Header Rewrite ATS plugin for a cache server at the first tier
+// of a Topology.
+//
+// The dsName passed in should NOT be the Delivery Service's Display Name, it
+// should be its "XMLID".
 func LastHeaderRewriteConfigFileName(dsName string) string {
 	return HeaderRewriteLastPrefix + dsName + ConfigSuffix
 }

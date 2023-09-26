@@ -29,19 +29,80 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
+// IPAllowConfigFileName is both the file name of ip_allow.config files and the
+// ConfigFile value of Parameters that can affect its contents.
 const IPAllowConfigFileName = `ip_allow.config`
+
+// ContentTypeIPAllowDotConfig is the MIME type of the contents of an
+// ip_allow.config file.
 const ContentTypeIPAllowDotConfig = ContentTypeTextASCII
+
+// LineCommentIPAllowDotConfig is the string that signifies the start of a line
+// comment in the grammar of an ip_allow.config file.
 const LineCommentIPAllowDotConfig = LineCommentHash
 
+// ParamPurgeAllowIP is the Name of Parameters which can specify an IP address
+// to be allowed ALL methods on the cache server (not just PURGE).
+//
+// TODO: replace instances of "purge_allow_ip" with this currently-unused
+// constant.
+// TODO: unexport? This is only used in this package.
 const ParamPurgeAllowIP = "purge_allow_ip"
+
+// ParamCoalesceMaskLenV4 is the Name of a Parameter which can be used to set
+// the mask length for IPv4 network specifications used to coalesce groups of
+// addresses in an ip_allow.config file.
+//
+// TODO: unexport? This is only used in this package.
 const ParamCoalesceMaskLenV4 = "coalesce_masklen_v4"
+
+// ParamCoalesceNumberV4 is the Name of a Parameter that can be used to set the
+// minimum number of IPv4 addresses in an ip_allow.config file that must be
+// covered by a mask in order to allow coalescing them.
+//
+// TODO: unexport? This is only used in this package.
 const ParamCoalesceNumberV4 = "coalesce_number_v4"
+
+// ParamCoalesceMaskLenV6 is the Name of a Parameter which can be used to set
+// the mask length for IPv6 network specifications used to coalesce groups of
+// addresses in an ip_allow.config file.
+//
+// TODO: unexport? This is only used in this package.
 const ParamCoalesceMaskLenV6 = "coalesce_masklen_v6"
+
+// ParamCoalesceNumberV6 is the Name of a Parameter that can be used to set the
+// minimum number of IPv6 addresses in an ip_allow.config file that must be
+// covered by a mask in order to allow coalescing them.
+//
+// TODO: unexport? This is only used in this package.
 const ParamCoalesceNumberV6 = "coalesce_number_v6"
 
+// DefaultCoalesceMaskLenV4 is the value that will be used for the mask length
+// for IPv4 network specifications used to coalesce groups of addresses in an
+// ip_allow.config file, if a value is not given by a Parameter.
+//
+// TODO: unexport? This is only used in this package.
 const DefaultCoalesceMaskLenV4 = 24
+
+// DefaultCoalesceNumberV4 is the value that will be used for the minimum number
+// of IPv4 addresses in an ip_allow.config file that must be covered by a mask
+// in order to allow coalescing them, if a value is not given by a Parameter.
+//
+// TODO: unexport? This is only used in this package.
 const DefaultCoalesceNumberV4 = 5
+
+// DefaultCoalesceMaskLenV6 is the value that will be used for the mask length
+// for IPv6 network specifications used to coalesce groups of addresses in an
+// ip_allow.config file, if a value is not given by a Parameter.
+//
+// TODO: unexport? This is only used in this package.
 const DefaultCoalesceMaskLenV6 = 48
+
+// DefaultCoalesceNumberV6 is the value that will be used for the minimum number
+// of IPv6 addresses in an ip_allow.config file that must be covered by a mask
+// in order to allow coalescing them, if a value is not given by a Parameter.
+//
+// TODO: unexport? This is only used in this package.
 const DefaultCoalesceNumberV6 = 5
 
 // IPAllowDotConfigOpts contains settings to configure generation options.
@@ -298,12 +359,31 @@ func (ss serversSortByName) Less(i, j int) bool {
 	return ss[i].HostName < ss[j].HostName
 }
 
+// ActionAllow specifies that IPs matching the line's pattern should be allowed
+// to use the explicitly listed HTTP request methods.
 const ActionAllow = "ip_allow"
+
+// ActionDeny specifies that IPs matching the line's pattern should NOT be
+// allowed to use the explicitly listed HTTP request methods.
 const ActionDeny = "ip_deny"
-const MethodAll = "ALL"
-const MethodPush = "PUSH"
-const MethodPurge = "PURGE"
-const MethodDelete = "DELETE"
+
+// These are the ATS HTTP request methods that may be granted using ipallow
+// configuration file rules.
+const (
+	// "ALL" has the special meaning "all HTTP Methods".
+	MethodAll = "ALL"
+	// MethodPush is a non-standard HTTP request method understood by Apache
+	// Traffic Server used to directly insert content for the requested URI into
+	// the cache.
+	MethodPush = "PUSH"
+	// MethodPurge is a non-standard HTTP request method understood by Apache
+	// Traffic Server used to directly remove the requested URI from the cache.
+	MethodPurge  = "PURGE"
+	MethodDelete = "DELETE"
+)
+
+// MethodSeparator is the string used as an infix operator in ipallow.config ATS
+// configuration files to express a union of allowed HTTP request methods.
 const MethodSeparator = `|`
 
 // allowAllButPushPurge is a helper func to build a ipAllowData for the given range string immediately allowing all Methods except Push and Purge.

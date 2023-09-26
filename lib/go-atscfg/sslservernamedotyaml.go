@@ -28,24 +28,53 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
-const ContentTypeYAML = "application/yaml; charset=us-ascii" // Note YAML has no IANA standard mime type. This is one of several common usages, and is likely to be the standardized value. If you're reading this, please check IANA to see if YAML has been added, and change this to the IANA definition if so. Also note we include 'charset=us-ascii' because YAML is commonly UTF-8, but ATS is likely to be unable to handle UTF.
+// ContentTypeYAML is the MIME type of YAML-format files and text.
+//
+// Note YAML has no IANA standard mime type. This is one of several common
+// usages, and is likely to be the standardized value. If you're reading this,
+// please check IANA to see if YAML has been added, and change this to the IANA
+// definition if so. Also note we include 'charset=us-ascii' because YAML is
+// commonly UTF-8, but ATS is likely to be unable to handle UTF.
+//
+// TODO: Move this into lib/go-rfc?
+const ContentTypeYAML = "application/yaml; charset=us-ascii"
+
+// LineCommentYAML is the string used to start a line comment in YAML syntax.
 const LineCommentYAML = LineCommentHash
 
+// SSLServerNameYAMLFileName is an unused constant that probably refers to the
+// name of an ATS ssl_server_name.yaml file on disk, the ConfigFile value of
+// Parameters that can affect the generation of such a file, or both.
 const SSLServerNameYAMLFileName = "ssl_server_name.yaml"
 
+// ContentTypeSSLServerNameYAML is the MIME type of the contents of an
+// ssl_server_name.yaml ATS configuration file.
 const ContentTypeSSLServerNameYAML = ContentTypeYAML
+
+// LineCommentSSLServerNameYAML is the string used to indicate the start of a
+// line comment in the grammar of an ssl_server_name.yaml ATS configuration
+// file.
 const LineCommentSSLServerNameYAML = LineCommentYAML
 
 // DefaultDefaultEnableH2 is whether Delivery Services will have HTTP/2 enabled by default if they don't have an explicit Parameter, and no Opt is passed to the Make func.
 // We disable by default, to prevent potentially enabling broken clients.
 const DefaultDefaultEnableH2 = false
 
+// A TLSVersion is a version of the TLS protocol.
+//
+// TODO: consolidate with the lib/go-tc TLS version constants.
 type TLSVersion string
 
-const TLSVersion1p0 = TLSVersion("1.0")
-const TLSVersion1p1 = TLSVersion("1.1")
-const TLSVersion1p2 = TLSVersion("1.2")
-const TLSVersion1p3 = TLSVersion("1.3")
+// These are valid, recognized versions of TLS.
+const (
+	TLSVersion1p0 TLSVersion = "1.0"
+	TLSVersion1p1 TLSVersion = "1.1"
+	TLSVersion1p2 TLSVersion = "1.2"
+	TLSVersion1p3 TLSVersion = "1.3"
+)
+
+// TLSVersionInvalid is used to represent an unrecognized or unsupported TLS
+// version.
 const TLSVersionInvalid = TLSVersion("")
 
 // StringToTLSVersion returns the TLSVersion or TLSVersionInvalid if the string is not a TLS Version enum.
@@ -63,7 +92,11 @@ func StringToTLSVersion(st string) TLSVersion {
 	return TLSVersionInvalid
 }
 
-// tlsVersionsToATS maps TLS version strings to the string used by ATS in ssl_server_name.yaml.
+// tlsVersionsToATS maps TLS version strings to the string used by ATS in
+// ssl_server_name.yaml.
+//
+// TODO: could this be a String method to make TLSVersion a fmt.Stringer and
+// remove a package-scope mutable variable?
 var tlsVersionsToATS = map[TLSVersion]string{
 	TLSVersion1p0: "TLSv1",
 	TLSVersion1p1: "TLSv1_1",
@@ -71,7 +104,54 @@ var tlsVersionsToATS = map[TLSVersion]string{
 	TLSVersion1p3: "TLSv1_3",
 }
 
+// SSLServerNameYAMLParamEnableH2 is the Name of a Parameter which, if found on
+// the Profile of a Delivery Service and having the ConfigFile value
+// "parent.config" - NOT ssl_server_name.yaml, which would cause it to be
+// ignored - will enable the use of the HTTP/2 protocol for Delivery Services if
+// its value begins with 'T', 't', 'Y', or 'y'.
+//
+// Examples of Values for these Parameters that would cause HTTP/2 to be enabled
+// are:
+//
+//	true
+//	TrUe
+//	Yes
+//	yno
+//	yFalse
+//	tFalse
+//	talse
+//	ts"<>an177otehucau$%*(@YDU)
+//
+// Examples of Values for these Parameters that would cause HTTP/2 to be
+// disabled are:
+//
+//	false
+//	No
+//	off
+//	on
+//	use
+//	enable
+//	1
+//	affirmative
+//	I wish to use this feature
+//	frue
+//	nYes
+//	s"<>an177otehucau$%*(@YDU)
 const SSLServerNameYAMLParamEnableH2 = "enable_h2"
+
+// SSLServerNameYAMLParamTLSVersions is the Name of a Parameter which, if found
+// on the Profile of a Delivery Service and having the ConfigFile value
+// "parent.config" - NOT ssl_server_name.yaml, which would cause it to be
+// ignored - will set the explicitly allowed TLS versions for communication with
+// edge-tier cache servers.
+//
+// The Value of such Parameters should be a list of TLS versions, which may be
+// separated by spaces, new lines, semicolons, or commas (but only one thereof,
+// and only consistently a single of those delimeters, not a mixture).
+//
+// Deprecated: Now that Delivery Services support setting TLS versions to be
+// explicitly allowed directly on their configuration, that feature should be
+// used rather than this Parameter.
 const SSLServerNameYAMLParamTLSVersions = "tls_versions"
 
 // DefaultDefaultTLSVersions is the list of TLS versions to enable by default, if no Parameter exists and no Opt is passed to the Make func.
@@ -104,6 +184,8 @@ type SSLServerNameYAMLOpts struct {
 	DefaultEnableH2 bool
 }
 
+// MakeSSLServerNameYAML constructs an ssl_server_name.yaml ATS configuration
+// file.
 func MakeSSLServerNameYAML(
 	server *Server,
 	servers []Server,

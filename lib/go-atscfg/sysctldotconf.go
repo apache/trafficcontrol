@@ -23,9 +23,20 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 )
 
+// SysctlSeparator is the string used to separate Parameter Names from their
+// Values on lines of a sysctl.conf ATS configuration file.
 const SysctlSeparator = " = "
+
+// SysctlFileName is the ConfigFile of Parameters which, if found on a server's
+// Profile, specify lines in the sysctl.conf ATS configuration file.
 const SysctlFileName = "sysctl.conf"
+
+// ContentTypeSysctlDotConf is the MIME type of the contents of a sysctl.conf
+// ATS configuration file.
 const ContentTypeSysctlDotConf = ContentTypeTextASCII
+
+// LineCommentSysctlDotConf is the string understood by parses of sysctl.conf to
+// be the beginning of a line comment.
 const LineCommentSysctlDotConf = LineCommentHash
 
 // SysCtlDotConfOpts contains settings to configure generation options.
@@ -36,6 +47,8 @@ type SysCtlDotConfOpts struct {
 	HdrComment string
 }
 
+// MakeSysCtlDotConf generates a sysctl.conf ATS configuration file for the
+// given server with the given Parameters.
 func MakeSysCtlDotConf(
 	server *Server,
 	serverParams []tc.ParameterV5,
