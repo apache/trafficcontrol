@@ -28,8 +28,6 @@ import org.apache.http.util.EntityUtils;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasItems;
-import static org.hamcrest.core.IsCollectionContaining.hasItem;
 import static org.junit.Assert.fail;
 
 import org.junit.After;
@@ -52,20 +50,20 @@ public class StatsTest {
 	public void before() throws LifecycleException {
 		httpClient = HttpClientBuilder.create().build();
 	}
-	
+
 	@After
 	public void after() throws Exception {
 		if (httpClient != null) httpClient.close();
 	}
-	
+
 	@Test
 	public void itGetsApplicationStats() throws Exception {
 		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/stats");
 
 		CloseableHttpResponse httpResponse = null;
-		
+
 		try {
-			
+
 			httpResponse = httpClient.execute(httpGet);
 			String responseContent = EntityUtils.toString(httpResponse.getEntity());
 
@@ -116,7 +114,7 @@ public class StatsTest {
 		HttpGet httpGet = new HttpGet("http://localhost:3333/crs/stats/ip/8.8.8.8");
 
 		CloseableHttpResponse response = null;
-		
+
 		try {
 			response = httpClient.execute(httpGet);
 			String actual = EntityUtils.toString(response.getEntity());

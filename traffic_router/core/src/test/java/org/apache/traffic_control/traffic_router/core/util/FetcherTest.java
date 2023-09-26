@@ -25,7 +25,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.ClassCastException;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
