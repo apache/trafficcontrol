@@ -184,6 +184,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops*: Fixed an issue where certificate chain validation failed based on leading or trailing whitespace.
 - [#7688](https://github.com/apache/trafficcontrol/pull/7688) *Traffic Ops*: Fixed secured parameters being visible when role has proper permissions.
 - [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops*: Fixed `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
+- [#7817](https://github.com/apache/trafficcontrol/pull/7817) *Traffic Control Cache Config (t3c)* fixed issue that would cause null ptr panic on client fallback.
 
 ### Removed
 - [#7804](https://github.com/apache/trafficcontrol/pull/7804) Removed unneeded V5 client methods for `deliveryServiceRequiredcapabilities`.
