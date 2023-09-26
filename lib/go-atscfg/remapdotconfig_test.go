@@ -1692,7 +1692,7 @@ func TestMakeRemapDotConfigMidSlicePluginRangeRequestHandling(t *testing.T) {
 	txt = strings.TrimSpace(txt)
 
 	if !strings.Contains(txt, "@pparam=--consider-ims") {
-		t.Fatalf("expected '--consider-ims' param with 'cache_range_requests.so' when using slice plugin to enable self healing, actual: %s", txt)
+		t.Errorf("expected '--consider-ims' param with 'cache_range_requests.so' when using slice plugin to enable self healing, actual: %s", txt)
 	}
 	testComment(t, txt, hdr)
 
