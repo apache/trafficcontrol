@@ -716,7 +716,6 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	alerts := tc.Alerts{}
-	//servers, err := read(inf.Tx, inf.IntParams["id"], inf.User)
 	servers, err := read(inf)
 	if err != nil {
 		alerts.AddNewAlert(tc.ErrorLevel, err.Error())
