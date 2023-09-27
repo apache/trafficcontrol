@@ -53,6 +53,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7652](https://github.com/apache/trafficcontrol/pull/7652) *Traffic Control Cache Config (t3c)*: added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt.
 - [#7674](https://github.com/apache/trafficcontrol/issues/7674) *Traffic Ops*: Add the ability to indicate if a server failed its revalidate/config update.
 - [#7784](https://github.com/apache/trafficcontrol/pull/7784) *Traffic Portal*: Added revert certificate functionality to the ssl-keys page.
+- [#7719](https://github.com/apache/trafficcontrol/pull/7719) *t3c* self-healing will be added automatically when using the slice plugin.
 
 ### Changed
 - [#7776](https://github.com/apache/trafficcontrol/pull/7776) *tc-health-client*: Added error message while issues interacting with Traffic Ops.

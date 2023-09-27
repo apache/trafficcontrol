@@ -71,6 +71,7 @@ const RemapConfigTemplateLast = `template.last`
 const DefaultFirstRemapConfigTemplateString = `map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{Dscp}}} {{{HeaderRewrite}}} {{{DropQstring}}} {{{Signing}}} {{{RegexRemap}}} {{{Cachekey}}} {{{RangeRequests}}} {{{Pacing}}} {{{RawText}}}`
 const DefaultLastRemapConfigTemplateString = `map {{{Source}}} {{{Destination}}} {{{Strategy}}} {{{HeaderRewrite}}} {{{Cachekey}}} {{{RangeRequests}}} {{{RawText}}}`
 const DefaultInnerRemapConfigTemplateString = DefaultLastRemapConfigTemplateString
+const selfHealParam = `no_self_healing`
 
 type LineTemplates map[string]*mustache.Template
 
@@ -223,16 +224,21 @@ func MakeRemapDotConfig(
 // This sticks the DS parameters in a map.
 // remap.config parameters use "<plugin>.pparam" key
 // cachekey.config parameters retain the 'cachekey.config' key.
-func classifyConfigParams(configParams []tc.ParameterV5) map[string][]tc.ParameterV5 {
+func classifyConfigParams(configParams []tc.ParameterV5) (map[string][]tc.ParameterV5, bool) {
 	configParamMap := map[string][]tc.ParameterV5{}
+	selfHeal := true
 	for _, param := range configParams {
 		key := param.ConfigFile
 		if "remap.config" == key {
 			key = param.Name
+			if param.Value == selfHealParam {
+				selfHeal = false
+				continue
+			}
 		}
 		configParamMap[key] = append(configParamMap[key], param)
 	}
-	return configParamMap
+	return configParamMap, selfHeal
 }
 
 // For general <plugin>.pparam parameters.
@@ -240,6 +246,9 @@ func paramsStringFor(parameters []tc.ParameterV5, warnings *[]string) (paramsStr
 	uniquemap := map[string]int{}
 
 	for _, param := range parameters {
+		if strings.TrimSpace(param.Value) == "" {
+			continue
+		}
 		paramsString += " @pparam=" + param.Value
 
 		// Try to extract argument
@@ -407,9 +416,10 @@ func getServerConfigRemapDotConfigForMid(
 			cachekeyArgs = getQStringIgnoreRemap(atsMajorVersion)
 		}
 
+		selfHeal := true
 		dsConfigParamsMap := map[string][]tc.ParameterV5{}
 		if nil != ds.ProfileID {
-			dsConfigParamsMap = classifyConfigParams(profilesConfigParams[*ds.ProfileID])
+			dsConfigParamsMap, selfHeal = classifyConfigParams(profilesConfigParams[*ds.ProfileID])
 		}
 
 		if len(dsConfigParamsMap) > 0 {
@@ -421,8 +431,11 @@ func getServerConfigRemapDotConfigForMid(
 		}
 
 		if ds.RangeRequestHandling != nil && (*ds.RangeRequestHandling == tc.RangeRequestHandlingCacheRangeRequest || *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice) {
-			remapTags.RangeRequests = `@plugin=cache_range_requests.so` +
-				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			crrParam := paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			remapTags.RangeRequests = `@plugin=cache_range_requests.so` + crrParam
+			if *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && !strings.Contains(crrParam, "--consider-ims") && selfHeal {
+				remapTags.RangeRequests += ` @pparam=--consider-ims`
+			}
 		}
 
 		isLastCache, err := serverIsLastCacheForDS(server, &ds, nameTopologies, cacheGroups)
@@ -694,7 +707,7 @@ func buildEdgeRemapLine(
 		remapTags.HeaderRewrite = `@plugin=header_rewrite.so @pparam=` + edgeHeaderRewriteConfigFileName(ds.XMLID)
 	}
 
-	dsConfigParamsMap := classifyConfigParams(remapConfigParams)
+	dsConfigParamsMap, selfHeal := classifyConfigParams(remapConfigParams)
 
 	if ds.SigningAlgorithm != nil && *ds.SigningAlgorithm != "" {
 		if *ds.SigningAlgorithm == tc.SigningAlgorithmURLSig {
@@ -772,8 +785,10 @@ func buildEdgeRemapLine(
 		}
 
 		if crr {
-			rangeReqTxt += `@plugin=cache_range_requests.so ` +
-				paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			rangeReqTxt += `@plugin=cache_range_requests.so ` + paramsStringFor(dsConfigParamsMap["cache_range_requests.pparam"], &warnings)
+			if *ds.RangeRequestHandling == tc.RangeRequestHandlingSlice && !strings.Contains(rangeReqTxt, "--consider-ims") && selfHeal {
+				rangeReqTxt += ` @pparam=--consider-ims`
+			}
 		}
 	}
 
