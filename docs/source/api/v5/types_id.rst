@@ -65,7 +65,7 @@ Response Structure
 ------------------
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in :RFC:3339 format
+:lastUpdated: The date and time at which this type was last updated, in :RFC:`3339` format
 
 	.. versionchanged:: 5.0
 		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.

@@ -71,7 +71,7 @@ Response Structure
 ------------------
 :active:      A boolean which indicates whether or not the :term:`Tenant` is active
 :id:          The integral, unique identifier of this :term:`Tenant`
-:lastUpdated: The date and time at which the :term:Tenant was last updated, in :RFC:3339 format
+:lastUpdated: The date and time at which the :term:Tenant was last updated, in :RFC:`3339` format
 
 	.. versionchanged:: 5.0
 		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
@@ -141,7 +141,7 @@ Response Structure
 ------------------
 :active:      A boolean which indicates whether or not the tenant is active
 :id:          The integral, unique identifier of this tenant
-:lastUpdated: The date and time at which the :term:Tenant was last updated, in :RFC:3339 format
+:lastUpdated: The date and time at which the :term:Tenant was last updated, in :RFC:`3339` format
 
 	.. versionchanged:: 5.0
 		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.

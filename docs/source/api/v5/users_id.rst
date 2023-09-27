@@ -66,7 +66,7 @@ Response Structure
 
 :id:                An integral, unique identifier for this user
 :lastAuthenticated: The date and time at which the user was last authenticated, in :rfc:`3339` format
-:lastUpdated:       The date and time at which the user was last modified, in :RFC:3339 format
+:lastUpdated:       The date and time at which the user was last modified, in :RFC:`3339` format
 :newUser:           A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:       The user's phone number
 :postalCode:        The postal code of the area in which the user resides
@@ -219,7 +219,7 @@ Response Structure
 
 :id:                An integral, unique identifier for this user
 :lastAuthenticated: The date and time at which the user was last authenticated, in :rfc:`3339` format
-:lastUpdated:       The date and time at which the user was last modified, in :RFC:3339 format
+:lastUpdated:       The date and time at which the user was last modified, in :RFC:`3339` format
 :newUser:           A meta field with no apparent purpose that is usually ``null`` unless explicitly set during creation or modification of a user via some API endpoint
 :phoneNumber:       The user's phone number
 :postalCode:        The postal code of the area in which the user resides

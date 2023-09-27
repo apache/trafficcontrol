@@ -56,7 +56,7 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique, identifier for this coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in :rfc:`3339`` format
+:lastUpdated: The time and date at which this entry was last updated, in :rfc:`3339` format
 
 	.. versionchanged:: 5.0
 		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.

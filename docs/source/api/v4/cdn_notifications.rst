@@ -57,7 +57,7 @@ Response Structure
 ------------------
 :id:           The integral, unique identifier of the notification
 :cdn:          The name of the CDN to which the notification belongs to
-:lastUpdated:  The time and date this server entry was last updated in :rfc:3339 format
+:lastUpdated:  The time and date this server entry was last updated in :rfc:`3339` format
 :notification: The content of the notification
 :user:         The user responsible for creating the notification
 
@@ -121,7 +121,7 @@ Response Structure
 ------------------
 :id:           The integral, unique identifier of the notification
 :cdn:          The name of the CDN to which the notification belongs to
-:lastUpdated:  The time and date this server entry was last updated in :rfc:3339 format
+:lastUpdated:  The time and date this server entry was last updated in :rfc:`3339` format
 :notification: The content of the notification
 :user:         The user responsible for creating the notification
 
