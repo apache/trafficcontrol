@@ -189,10 +189,18 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	}
 	rows.Close()
 	profileInterfaces := []interface{}{}
+	canReadSecureValue := false
+	if (prof.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && prof.APIInfo().Config.RoleBasedPermissions) || prof.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+		if prof.APIInfo().User.Can("PARAMETER:SECURE-READ") {
+			canReadSecureValue = true
+		}
+	} else if prof.APIInfo().User.PrivLevel == auth.PrivLevelAdmin {
+		canReadSecureValue = true
+	}
 	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent
 		if _, ok := prof.APIInfo().Params[IDQueryParam]; ok {
-			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.ReqInfo.User, *profile.ID)
+			profile.Parameters, err = ReadParameters(prof.ReqInfo.Tx, prof.ReqInfo.User, *profile.ID, canReadSecureValue)
 			if err != nil {
 				return nil, nil, errors.New("profile read reading parameters: " + err.Error()), http.StatusInternalServerError, nil
 			}
@@ -229,8 +237,7 @@ LEFT JOIN cdn c ON prof.cdn = c.id`
 	return query
 }
 
-func ReadParameters(tx *sqlx.Tx, user *auth.CurrentUser, profileID int) ([]tc.ParameterNullable, error) {
-	privLevel := user.PrivLevel
+func ReadParameters(tx *sqlx.Tx, user *auth.CurrentUser, profileID int, canReadSecureValue bool) ([]tc.ParameterNullable, error) {
 	queryValues := make(map[string]interface{})
 	queryValues["profile_id"] = profileID
 
@@ -252,7 +259,7 @@ func ReadParameters(tx *sqlx.Tx, user *auth.CurrentUser, profileID int) ([]tc.Pa
 		if param.Secure != nil {
 			isSecure = *param.Secure
 		}
-		if isSecure && (privLevel < auth.PrivLevelAdmin) {
+		if isSecure && !canReadSecureValue {
 			param.Value = &parameter.HiddenField
 		}
 		params = append(params, param)
@@ -429,10 +436,17 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	}
 	rows.Close()
 	profileInterfaces := []interface{}{}
+
+	canReadSecureValue := false
+	if inf.Config.RoleBasedPermissions &&
+		inf.User.Can("PARAMETER-SECURE:READ") {
+		canReadSecureValue = true
+	}
+
 	for _, p := range profileList {
 		// Attach Parameters if the 'param' parameter is sent
 		if _, ok := inf.Params["param"]; ok {
-			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID)
+			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, canReadSecureValue)
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
 				return
