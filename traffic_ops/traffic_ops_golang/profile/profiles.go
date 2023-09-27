@@ -190,12 +190,14 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	rows.Close()
 	profileInterfaces := []interface{}{}
 	canReadSecureValue := false
-	if (prof.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && prof.APIInfo().Config.RoleBasedPermissions) || prof.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
-		if prof.APIInfo().User.Can("PARAMETER:SECURE-READ") {
+	if prof.APIInfo() != nil && prof.APIInfo().Version != nil {
+		if (prof.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && prof.APIInfo().Config.RoleBasedPermissions) || prof.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+			if prof.APIInfo().User.Can("PARAMETER:SECURE-READ") {
+				canReadSecureValue = true
+			}
+		} else if prof.APIInfo().User.PrivLevel == auth.PrivLevelAdmin {
 			canReadSecureValue = true
 		}
-	} else if prof.APIInfo().User.PrivLevel == auth.PrivLevelAdmin {
-		canReadSecureValue = true
 	}
 	for _, profile := range profiles {
 		// Attach Parameters if the 'id' parameter is sent

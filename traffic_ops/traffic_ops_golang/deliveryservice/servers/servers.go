@@ -814,7 +814,6 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 
-	//inf.Tx, inf.IntParams["id"], inf.User
 	dsID := inf.IntParams["id"]
 	idRows, err := inf.Tx.Queryx(fmt.Sprintf(queryFormatString, ""), dsID)
 	if err != nil {
@@ -887,14 +886,12 @@ WHERE s.id in (select server from deliveryservice_server where deliveryservice =
 		}
 
 		canViewILOPswd := false
-		if inf.Version.LessThan(&api.Version{
-			Major: 4,
-			Minor: 0,
-		}) {
-			canViewILOPswd = inf.User.PrivLevel == auth.PrivLevelAdmin
-		} else {
-			// ToDo: add this perm to the admin role
-			canViewILOPswd = inf.Config.RoleBasedPermissions && inf.User.Can("SERVER:READ-ILO-PSWD")
+		if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+			if inf.User.Can("SERVER:READ-ILO-PSWD") {
+				canViewILOPswd = true
+			}
+		} else if inf.User.PrivLevel == auth.PrivLevelAdmin {
+			canViewILOPswd = true
 		}
 
 		if !canViewILOPswd {
