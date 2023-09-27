@@ -18,13 +18,12 @@ import re
 import sys
 from datetime import date, timedelta
 from http.client import NOT_FOUND
-from typing import Optional, Final
+from typing import Any, Hashable, NotRequired, Optional, Final, TypedDict
 from xml.dom import minidom
-from xml.dom.minidom import Node, Element
-
+from xml.dom.minidom import Node
 import yaml
+
 from github.Commit import Commit
-from github.ContentFile import ContentFile
 from github.GithubException import GithubException, UnknownObjectException
 from github.InputGitAuthor import InputGitAuthor
 from github.Issue import Issue
@@ -32,11 +31,37 @@ from github.MainClass import Github
 from github.NamedUser import NamedUser
 from github.Repository import Repository
 
-from assign_triage_role.constants import (GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE, ASF_YAML_FILE,
-	APACHE_LICENSE_YAML, GIT_AUTHOR_EMAIL_TEMPLATE, SINGLE_PR_TEMPLATE_FILE,
-	SINGLE_CONTRIBUTOR_TEMPLATE_FILE, PR_TEMPLATE_FILE, EMPTY_CONTRIB_LIST_LIST,
-	EMPTY_LIST_OF_CONTRIBUTORS, CONGRATS, EXPIRE, GITHUB_REPOSITORY, GIT_AUTHOR_NAME,
-	GITHUB_REPOSITORY_OWNER, MINIMUM_COMMITS, SINCE_DAYS_AGO, GITHUB_REF_NAME, PR_GITHUB_TOKEN)
+from assign_triage_role.constants import (
+	GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE,
+	ASF_YAML_FILE,
+	APACHE_LICENSE_YAML,
+	GIT_AUTHOR_EMAIL_TEMPLATE,
+	GITHUB_SERVER_URL,
+	SINGLE_PR_TEMPLATE_FILE,
+	SINGLE_CONTRIBUTOR_TEMPLATE_FILE,
+	PR_TEMPLATE_FILE,
+	EMPTY_CONTRIB_LIST_LIST,
+	EMPTY_LIST_OF_CONTRIBUTORS,
+	CONGRATS,
+	EXPIRE,
+	GITHUB_REPOSITORY,
+	GIT_AUTHOR_NAME,
+	GITHUB_REPOSITORY_OWNER,
+	MINIMUM_COMMITS,
+	SINCE_DAYS_AGO,
+	GITHUB_REF_NAME,
+	PR_GITHUB_TOKEN
+)
+
+class UpdateFileArgs(TypedDict):
+	path: str
+	message: str
+	content: str
+	sha: str
+	branch: str
+
+	author: NotRequired[InputGitAuthor]
+	committer: NotRequired[InputGitAuthor]
 
 
 class TriageRoleAssigner(Github):
@@ -50,7 +75,7 @@ class TriageRoleAssigner(Github):
 	target_branch_name: str
 	owner: str
 
-	def __init__(self, *args, **kwargs) -> None:
+	def __init__( self, *args: Any, **kwargs: Any) -> None:
 		super().__init__(*args, **kwargs)
 		repo_name = GITHUB_REPOSITORY
 		self.repo = self.get_repo(repo_name)
@@ -74,8 +99,7 @@ class TriageRoleAssigner(Github):
 		"""
 		return {user.login for user in self.repo.get_collaborators() if user.permissions.push}
 
-	def prs_by_contributor(self, committers: set[str]) -> dict[
-		NamedUser, list[(Issue, Issue)]]:
+	def prs_by_contributor(self, committers: set[str]) -> dict[NamedUser, list[tuple[Issue, Issue]]]:
 		"""
 		Returns a dict of Pull Requests, associated by committer, within the last
 		:var self.since_day: days of :var self.today:.
@@ -86,7 +110,7 @@ class TriageRoleAssigner(Github):
 		query = (f"repo:{repo_name} is:issue linked:pr is:closed closed:"
 		         f"{self.since_day()}..{self.today}")
 		linked_issues = self.search_issues(query=query)
-		prs_by_contributor: dict[NamedUser, list[(Issue, Issue)]] = {}
+		prs_by_contributor: dict[NamedUser, list[tuple[Issue, Issue]]] = {}
 		for linked_issue in linked_issues:
 			timeline = linked_issue.get_timeline()
 			pull_request: Optional[Issue] = None
@@ -95,14 +119,14 @@ class TriageRoleAssigner(Github):
 					continue
 				if event.event != GH_TIMELINE_EVENT_TYPE_CROSS_REFERENCE:
 					continue
-				pr_text: dict[str] = event.raw_data["source"]["issue"]
+				pr_text: dict[str, Any] = event.raw_data["source"]["issue"]
 				if "pull_request" not in pr_text:
 					continue
 				pull_request = Issue(self.repo.__getattribute__("_requester"), event.raw_headers,
 					pr_text, completed=True)
 			# Do not break, in case the Issue has ever been linked to more than 1 PR in the past
 			if pull_request is None:
-				raise Exception(
+				raise LookupError(
 					f"Unable to find a linked Pull Request for Issue {self.repo.full_name}#{linked_issue.number}")
 			# Skip unmerged PRs
 			if "merged_at" not in pull_request.pull_request.raw_data:
@@ -116,7 +140,7 @@ class TriageRoleAssigner(Github):
 		return prs_by_contributor
 
 	def ones_who_meet_threshold(self, prs_by_contributor: dict[NamedUser,
-	list[(Issue, Issue)]]) -> dict[str, list[(Issue, Issue)]]:
+	list[tuple[Issue, Issue]]]) -> dict[str, list[tuple[Issue, Issue]]]:
 		"""
 		Returns a dict of contributors who had at least self.minimum_commits Issue-closing Pull
 		Requests merged in the past self.since_days_ago days
@@ -135,8 +159,12 @@ class TriageRoleAssigner(Github):
 			if len(pull_requests) >= self.minimum_commits
 		}
 
-	def set_collaborators_in_asf_yaml(self, prs_by_contributor: dict[str, list[(Issue, Issue)]],
-			description: str) -> None:
+	def set_collaborators_in_asf_yaml(
+		self,
+		prs_by_contributor: dict[str, list[tuple[Issue, Issue]]],
+		description: str,
+		repo_url: str
+	) -> None:
 		"""
 		Writes the list of collaborators to .asf.yaml
 		"""
@@ -144,15 +172,24 @@ class TriageRoleAssigner(Github):
 		with open(ASF_YAML_FILE, encoding="utf-8") as stream:
 			github_key: Final[str] = "github"
 			collaborators_key: Final[str] = "collaborators"
-			asf_yaml: dict[str, dict] = yaml.safe_load(stream)
+			asf_yaml: dict[str, dict[Hashable, Any]] = yaml.safe_load(stream)
 		if github_key not in asf_yaml:
-			asf_yaml[github_key]: dict[str, dict]() = {}
+			asf_yaml[github_key] = {}
 		asf_yaml[github_key][collaborators_key] = collaborators
 
-		with open(os.path.join(os.path.dirname(__file__), APACHE_LICENSE_YAML),
-				encoding="utf-8") as stream:
-			apache_license = stream.read().format(DESCRIPTION=description,
-				ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago)
+		with open(
+			os.path.join(
+				os.path.dirname(__file__),
+				APACHE_LICENSE_YAML
+			),
+			encoding="utf-8"
+		) as stream:
+			apache_license = stream.read().format(
+				DESCRIPTION=description,
+				ISSUE_THRESHOLD=self.minimum_commits,
+				SINCE_DAYS_AGO=self.since_days_ago,
+				REPO_URL=repo_url
+			)
 
 		with open(ASF_YAML_FILE, "w", encoding="utf-8") as stream:
 			stream.write(apache_license)
@@ -171,8 +208,10 @@ class TriageRoleAssigner(Github):
 		with open(ASF_YAML_FILE, encoding="utf-8") as stream:
 			asf_yaml = stream.read()
 
-		asf_yaml_contentfile: ContentFile = self.repo.get_contents(ASF_YAML_FILE, source_branch_ref)
-		kwargs = {"path": ASF_YAML_FILE,
+		asf_yaml_contentfile = self.repo.get_contents(ASF_YAML_FILE, source_branch_ref)
+		if isinstance(asf_yaml_contentfile, list):
+			asf_yaml_contentfile = asf_yaml_contentfile[0]
+		kwargs: UpdateFileArgs = {"path": ASF_YAML_FILE,
 			"message": commit_message,
 			"content": asf_yaml,
 			"sha": asf_yaml_contentfile.sha,
@@ -186,7 +225,9 @@ class TriageRoleAssigner(Github):
 		except KeyError:
 			print("Committing using the default author")
 
-		commit: Commit = self.repo.update_file(**kwargs).get("commit")
+		commit = self.repo.update_file(**kwargs).get("commit")
+		if not isinstance(commit, Commit):
+			raise TypeError(f"expected a commit, but got: {type(commit)}")
 		print(f"Updated {ASF_YAML_FILE} on {self.repo.name} branch {source_branch_name}")
 		return commit
 
@@ -194,8 +235,10 @@ class TriageRoleAssigner(Github):
 		"""
 		Uses the GitHub API to get the contents of .asf.yaml
 		"""
-		return self.repo.get_contents(ASF_YAML_FILE,
-			f"refs/heads/{branch}").decoded_content.rstrip().decode()
+		asf_file = self.repo.get_contents(ASF_YAML_FILE, f"refs/heads/{branch}")
+		if isinstance(asf_file, list):
+			asf_file = asf_file[0]
+		return asf_file.decoded_content.rstrip().decode()
 
 	def branch_exists(self, branch: str) -> bool:
 		"""
@@ -210,7 +253,7 @@ class TriageRoleAssigner(Github):
 		return False
 
 	@staticmethod
-	def list_of_contributors(prs_by_contributor: dict[str, list[(Issue, Issue)]],
+	def list_of_contributors(prs_by_contributor: dict[str, list[tuple[Issue, Issue]]],
 			today: date) -> tuple[str, str, str]:
 		"""
 		Returns a list of contributors in a tuple, along with :var congrats: and :var expire:,
@@ -237,11 +280,13 @@ class TriageRoleAssigner(Github):
 		"""
 		Removes comments from the Pull Request body
 		"""
-		body: Element = minidom.parseString(f"<body>{pr_body}</body>").firstChild
+		body = minidom.parseString(f"<body>{pr_body}</body>").firstChild
+		if body is None:
+			raise ValueError("failed to parse PR body")
 		return "".join(node.toxml()
 			for node in body.childNodes if node.nodeType != Node.COMMENT_NODE)
 
-	def get_pr_body(self, prs_by_contributor: dict[str, list[(Issue, Issue)]]) -> str:
+	def get_pr_body(self, prs_by_contributor: dict[str, list[tuple[Issue, Issue]]]) -> str:
 		"""
 		Renders the Pull Request template
 		"""
@@ -255,7 +300,7 @@ class TriageRoleAssigner(Github):
 				encoding="utf-8") as stream:
 			pr_template = stream.read()
 
-		def contrib_list(contributor: str, pr_tuples: list[(Issue, Issue)]) -> str:
+		def contrib_list(contributor: str, pr_tuples: list[tuple[Issue, Issue]]) -> str:
 			pr_list = "\n".join(
 				pr_line_template.format(ISSUE_NUMBER=linked_issue.number, PR_NUMBER=pr.number
 				) for pr, linked_issue in pr_tuples)
@@ -270,11 +315,19 @@ class TriageRoleAssigner(Github):
 		list_of_contributors, congrats, expire = self.list_of_contributors(prs_by_contributor,
 			self.today)
 
-		pr_body = pr_template.format(CONTRIB_LIST_LIST=contrib_list_list,
-			MONTH=self.today.strftime("%B"), CONGRATS=congrats,
-			LIST_OF_CONTRIBUTORS=list_of_contributors, EXPIRE=expire,
-			ISSUE_THRESHOLD=self.minimum_commits, SINCE_DAYS_AGO=self.since_days_ago,
-			SINCE_DAY=self.since_day(), TODAY=self.today)
+		repo_url = "/".join((GITHUB_SERVER_URL, GITHUB_REPOSITORY))
+		pr_body = pr_template.format(
+			CONTRIB_LIST_LIST=contrib_list_list,
+			MONTH=self.today.strftime("%B"),
+			CONGRATS=congrats,
+			LIST_OF_CONTRIBUTORS=list_of_contributors,
+			EXPIRE=expire,
+			ISSUE_THRESHOLD=self.minimum_commits,
+			SINCE_DAYS_AGO=self.since_days_ago,
+			SINCE_DAY=self.since_day(),
+			TODAY=self.today,
+			REPO_URL=repo_url
+		)
 		# If on a fork, do not ping users or reference Issues or Pull Requests
 		if self.repo.parent is not None:
 			pr_body = re.sub(r"@(?!trafficcontrol)([A-Za-z0-9]+)", r"＠\1", pr_body)
@@ -283,7 +336,7 @@ class TriageRoleAssigner(Github):
 		print("Templated PR body")
 		return pr_body
 
-	def create_pr(self, prs_by_contributor: dict[str, list[(Issue, Issue)]], commit_message: str,
+	def create_pr(self, prs_by_contributor: dict[str, list[tuple[Issue, Issue]]], commit_message: str,
 			source_branch_name: str) -> None:
 		"""
 		Submits a Pull Request
@@ -321,7 +374,8 @@ class TriageRoleAssigner(Github):
 		committers = self.get_committers()
 		prs_by_contributor = self.ones_who_meet_threshold(self.prs_by_contributor(committers))
 		description = f"ATC Collaborators for {self.today.strftime('%B %Y')}"
-		self.set_collaborators_in_asf_yaml(prs_by_contributor, description)
+		repo_url = "/".join((GITHUB_SERVER_URL, GITHUB_REPOSITORY))
+		self.set_collaborators_in_asf_yaml(prs_by_contributor, description, repo_url)
 
 		source_branch_name: Final[str] = f"collaborators-{self.today.strftime('%Y-%m')}"
 		commit_message = description

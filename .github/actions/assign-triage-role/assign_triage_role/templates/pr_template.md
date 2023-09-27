@@ -10,18 +10,18 @@ This PR uses [`.asf.yaml`](https://s.apache.org/asfyamltriage) to assign the Git
 <hr/>
 {EXPIRE} If you want to be an Apache Traffic Control collaborator next month:
 
-1. Read our [contribution guidelines](https://github.com/apache/trafficcontrol/blob/master/CONTRIBUTING.md)
-2. Find an Issue to work on (recommended issues have the [good first issue](https://github.com/apache/trafficcontrol/issues?q=is:issue+is:open+label:"good+first+issue"+no:assignee) label) and ask to be assigned
+1. Read our [contribution guidelines]({REPO_URL}/blob/master/CONTRIBUTING.md)
+2. Find an Issue to work on (recommended issues have the [good first issue]({REPO_URL}/issues?q=is:issue+is:open+label:"good+first+issue"+no:assignee) label) and ask to be assigned
 3. Get coding! For questions on how to contribute, you can reach the ATC community on
     - The `#traffic-control` channel of the ASF Slack ([invite link](https://s.apache.org/tc-slack-request))
     - The ATC Dev [mailing list](https://trafficcontrol.apache.org/mailing_lists) ([archives](https://lists.apache.org/list?dev@trafficcontrol.apache.org:lte=5y:))
 <hr/>
 
 ## Which Traffic Control components are affected by this PR?
-- Other: [`.asf.yaml`](https://github.com/apache/trafficcontrol/blob/master/.asf.yaml)
+- Other: [`.asf.yaml`]({REPO_URL}/blob/master/.asf.yaml)
 
 ## What is the best way to verify this PR?
-Verify that the fixed Issues listed above are linked to [PRs from the past {SINCE_DAYS_AGO} days](https://github.com/apache/trafficcontrol/pulls?q=is:pr+linked:issue+merged:{SINCE_DAY}..{TODAY})
+Verify that the fixed Issues listed above are linked to [PRs from the past {SINCE_DAYS_AGO} days]({REPO_URL}/pulls?q=is:pr+linked:issue+merged:{SINCE_DAY}..{TODAY})
 
 ## PR submission checklist
 - [ ] This PR has tests
