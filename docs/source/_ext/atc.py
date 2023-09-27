@@ -17,7 +17,7 @@ behavior to the Sphinx runtime.
 #
 import os
 import re
-from typing import Any, Final, Optional
+from typing import Any, Final, Optional, Dict, List, Tuple
 
 from docutils import nodes, utils
 from sphinx.application import Sphinx
@@ -69,7 +69,7 @@ class ImplementationDetail(SphinxDirective):
 
 	label_text = "Implementation Detail"
 
-	def run(self) -> list[nodes.Node]:
+	def run(self) -> List[nodes.Node]:
 		"""
 		Converts the content of the directive into a proper Node.
 		"""
@@ -109,7 +109,7 @@ def atc_go_version(
 	unused_inliner: None,
 	unused_options: None=None,
 	unused_content: None=None
-) -> tuple[list[nodes.Node], list[nodes.Node]]:
+) -> Tuple[List[nodes.Node], List[nodes.Node]]:
 	"""
 	A role that inserts the Go version used/required by this version of ATC.
 
@@ -138,9 +138,9 @@ def issue_role(
 	text: str,
 	unused_lineno: None,
 	unused_inliner: None,
-	options: Optional[dict[str, Any]]=None,
-	content: Optional[list[Any]]=None
-) -> tuple[list[nodes.Node], list[nodes.Node]]:
+	options: Optional[Dict[str, Any]]=None,
+	content: Optional[List[Any]]=None
+) -> Tuple[List[nodes.Node], List[nodes.Node]]:
 	"""
 	A role that can be used to link to an Issue by number.
 
@@ -167,9 +167,9 @@ def pr_role(
 	text: str,
 	unused_lineno: None,
 	unused_inliner: None,
-	options: Optional[dict[str, Any]]=None,
-	content: Optional[list[Any]]=None
-) -> tuple[list[nodes.Node], list[nodes.Node]]:
+	options: Optional[Dict[str, Any]]=None,
+	content: Optional[List[Any]]=None
+) -> Tuple[List[nodes.Node], List[nodes.Node]]:
 	"""
 	A role that can be used to link to a Pull Request by number.
 
@@ -196,9 +196,9 @@ def atc_file_role(
 	text: str,
 	unused_lineno: None,
 	unused_inliner: None,
-	options: Optional[dict[str, Any]]=None,
-	content: Optional[list[Any]]=None
-) -> tuple[list[nodes.Node], list[nodes.Node]]:
+	options: Optional[Dict[str, Any]]=None,
+	content: Optional[List[Any]]=None
+) -> Tuple[List[nodes.Node], List[nodes.Node]]:
 	"""
 	A role that can be used to link to a file within the ATC repository.
 
@@ -224,9 +224,9 @@ def godoc_role(
 	text: str,
 	unused_lineno: None,
 	unused_inliner: None,
-	options: Optional[dict[str, Any]]=None,
-	content: Optional[list[Any]]=None
-) -> tuple[list[nodes.Node], list[nodes.Node]]:
+	options: Optional[Dict[str, Any]]=None,
+	content: Optional[List[Any]]=None
+) -> Tuple[List[nodes.Node], List[nodes.Node]]:
 	"""
 	Links to the GoDoc documentation for some package.
 
@@ -256,9 +256,9 @@ def atc_godoc_role(
 	text: str,
 	unused_lineno: None,
 	unused_inliner: None,
-	options: Optional[dict[str, Any]]=None,
-	content: Optional[list[Any]]=None
-) -> tuple[list[nodes.Node], list[nodes.Node]]:
+	options: Optional[Dict[str, Any]]=None,
+	content: Optional[List[Any]]=None
+) -> Tuple[List[nodes.Node], List[nodes.Node]]:
 	"""
 	A role that can be used to link to the GoDoc documentation for a symbol from
 	the ATC project. This is equivalent to using the ``godoc`` role, but allows
@@ -289,9 +289,9 @@ def to_godoc_role(
 	text: str,
 	unused_lineno: None,
 	unused_inliner: None,
-	options: Optional[dict[Any, Any]]=None,
-	content: Optional[list[Any]]=None
-) -> tuple[list[nodes.Node], list[nodes.Node]]:
+	options: Optional[Dict[Any, Any]]=None,
+	content: Optional[List[Any]]=None
+) -> Tuple[List[nodes.Node], List[nodes.Node]]:
 	"""
 	A role that can be used to link to the GoDoc documentation for a symbol from
 	within Traffic Ops's package. This is equivalent to using the ``godoc``
@@ -315,7 +315,7 @@ def to_godoc_role(
 	return [refnode], []
 
 
-def setup(app: Sphinx) -> dict[str, Any]:
+def setup(app: Sphinx) -> Dict[str, Any]:
 	"""
 	This is the function that adds all of the above declared directives and
 	roles to the Sphinx environment. In order to make use of a new directive or
