@@ -102,7 +102,7 @@ func TestGetSystemInfo(t *testing.T) {
 		t.Fatalf("creating transaction: %v", err)
 	}
 
-	sysinfo, err := getSystemInfo(tx, auth.PrivLevelReadOnly, 20*time.Second)
+	sysinfo, err := getSystemInfo(tx, auth.PrivLevelReadOnly, 20*time.Second, false)
 	if err != nil {
 		t.Fatalf("getSystemInfo expected: nil error, actual: %v", err)
 	}

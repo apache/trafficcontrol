@@ -37,6 +37,7 @@ import (
 	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/trafficvault/backends/disabled"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	sqlmock "gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
@@ -102,10 +103,16 @@ func TestCopyProfileInvalidExistingProfile(t *testing.T) {
 
 			inf := api.APIInfo{
 				Tx: db.MustBegin(),
+				Version: &api.Version{
+					Major: 5,
+					Minor: 0,
+				},
 				Params: map[string]string{
 					"existing_profile": c.profile.Response.ExistingName,
 					"new_profile":      c.profile.Response.Name,
 				},
+				Config: &config.Config{RoleBasedPermissions: true},
+				User:   &auth.CurrentUser{Capabilities: pq.StringArray{tc.PermParameterSecureRead}},
 			}
 
 			errs := copyProfile(&inf, &c.profile.Response)
