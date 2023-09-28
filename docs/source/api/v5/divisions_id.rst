@@ -21,7 +21,7 @@
 
 ``PUT``
 =======
-Updates a specific Division
+Updates a specific :term:`Division`
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -32,14 +32,14 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-----------------------------------------------------------+
-	| Name | Description                                               |
-	+======+===========================================================+
-	|  ID  | The integral, unique identifier of the requested Division |
-	+------+-----------------------------------------------------------+
+	+------+-------------------------------------------------------------------+
+	| Name | Description                                                       |
+	+======+===================================================================+
+	|  ID  | The integral, unique identifier of the requested :term:`Division` |
+	+------+-------------------------------------------------------------------+
 
 
-:name: The new name of the Division
+:name: The new name of the :term:`Division`
 
 .. code-block:: http
 	:caption: Request Example
@@ -56,9 +56,13 @@ Request Structure
 
 Response Structure
 ------------------
-:id:          An integral, unique identifier for this Division
-:lastUpdated: The date and time at which this Division was last modified, in :rfc:`3339`
-:name:        The Division name
+:id:          An integral, unique identifier for this :term:`Division`
+:lastUpdated: The date and time at which this :term:`Division` was last modified, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name: The :term:`Division` name
 
 .. code-block:: http
 	:caption: Response Example
@@ -89,7 +93,7 @@ Response Structure
 
 ``DELETE``
 ============
-Deletes a specific Division
+Deletes a specific :term:`Division`\ .
 
 :Auth. Required: Yes
 :Roles Required: "admin" or "operations"
@@ -100,11 +104,11 @@ Request Structure
 -----------------
 .. table:: Request Path Parameters
 
-	+------+-----------------------------------------------------------+
-	| Name | Description                                               |
-	+======+===========================================================+
-	|  ID  | The integral, unique identifier of the requested Division |
-	+------+-----------------------------------------------------------+
+	+------+-------------------------------------------------------------------+
+	| Name | Description                                                       |
+	+======+===================================================================+
+	|  ID  | The integral, unique identifier of the requested :term:`Division` |
+	+------+-------------------------------------------------------------------+
 
 
 .. code-block:: http
@@ -121,6 +125,7 @@ Request Structure
 
 Response Structure
 ------------------
+:id: The integral, unique identifier of the deleted :term:`Division`\ .
 
 .. code-block:: http
 	:caption: Response Example

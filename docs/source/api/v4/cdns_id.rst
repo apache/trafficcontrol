@@ -41,7 +41,7 @@ Request Structure
 :dnssecEnabled: If ``true``, this CDN will use DNSSEC, if ``false`` it will not
 :domainName:    The top-level domain (TLD) belonging to the CDN
 :name:          Name of the new CDN
-:ttlOverride:	Optional an nullable. A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
+:ttlOverride:   A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`. If this is not present in the request, it will be treated as though it were ``null``.
 
 	.. versionadded:: 4.1
 
@@ -64,7 +64,7 @@ Response Structure
 :domainName:    The top-level domain (TLD) assigned to the newly created CDN
 :id:            An integral, unique identifier for the newly created CDN
 :name:          The newly created CDN's name
-:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
+:ttlOverride:   A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`. If this is not present in the request, it will be treated as though it were ``null``.
 
 	.. versionadded:: 4.1
 

@@ -56,10 +56,14 @@ Request Structure
 Response Structure
 ------------------
 :id:          Integral, unique, identifier for this coordinate pair
-:lastUpdated: The time and date at which this entry was last updated, in :RFC:`3339` format
-:latitude:    Latitude of the coordinate
-:longitude:   Longitude of the coordinate
-:name:        The name of the coordinate - typically this just reflects the name of the Cache Group for which the coordinate was created
+:lastUpdated: The time and date at which this entry was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:latitude:  Latitude of the coordinate
+:longitude: Longitude of the coordinate
+:name:      The name of the coordinate - typically this just reflects the name of the :term:`Cache Group` for which the coordinate was created
 
 .. code-block:: http
 	:caption: Response Example
@@ -160,6 +164,10 @@ Response Structure
 ------------------
 :id:          Integral, unique, identifier for the newly created coordinate pair
 :lastUpdated: The time and date at which this entry was last updated, in :RFC:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :latitude:    Latitude of the newly created coordinate
 :longitude:   Longitude of the newly created coordinate
 :name:        The name of the coordinate
@@ -234,9 +242,13 @@ Response Structure
 ------------------
 :id:          Integral, unique, identifier for the coordinate pair
 :lastUpdated: The time and date at which this entry was last updated, in :RFC:`3339` format
-:latitude:    Latitude of the coordinate
-:longitude:   Longitude of the coordinate
-:name:        The name of the coordinate
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:latitude:  Latitude of the coordinate
+:longitude: Longitude of the coordinate
+:name:      The name of the coordinate
 
 .. code-block:: http
 	:caption: Response Example
@@ -280,9 +292,13 @@ Request Structure
 -----------------
 :id:          Integral, unique, identifier for the coordinate pair
 :lastUpdated: The time and date at which this entry was last updated, in :RFC:`3339` format
-:latitude:    Latitude of the coordinate
-:longitude:   Longitude of the coordinate
-:name:        The name of the coordinate
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:latitude:  Latitude of the coordinate
+:longitude: Longitude of the coordinate
+:name:      The name of the coordinate
 
 .. table:: Request Query Parameters
 

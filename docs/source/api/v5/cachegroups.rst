@@ -68,10 +68,14 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbacks:                     An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
-:fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
-:id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in :rfc:`3339`
+:fallbacks:         An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
+:fallbackToClosest: A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
+:id:                An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
+:lastUpdated:       The time and date at which this entry was last updated in :rfc:`3339`
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`
@@ -138,8 +142,8 @@ Request Structure
 
 	.. note:: The default value of ``fallbackToClosest`` is ``true``, and if it is ``null`` Traffic Control components will still interpret it as though it were ``true``.
 
-:latitude:                    An optional field which, if present, should be a floating-point number that will define the :ref:`cache-group-latitude` for the :term:`Cache Group`\ [#optional]_
-:localizationMethods:         Array of :ref:`cache-group-localization-methods` (as strings)
+:latitude:            An optional field which, if present, should be a floating-point number that will define the :ref:`cache-group-latitude` for the :term:`Cache Group`\ [#optional]_
+:localizationMethods: Array of :ref:`cache-group-localization-methods` (as strings)
 
 	.. tip:: This field has no defined meaning if the :ref:`cache-group-type` identified by ``typeId`` is not "EDGE_LOC".
 
@@ -179,10 +183,14 @@ Request Structure
 
 Response Structure
 ------------------
-:fallbacks:                     An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
-:fallbackToClosest:             A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
-:id:                            An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
-:lastUpdated:                   The time and date at which this entry was last updated in :rfc:`3339`
+:fallbacks:         An array of strings that are :ref:`Cache Group names <cache-group-name>` that are registered as :ref:`cache-group-fallbacks` for this :term:`Cache Group`\ [#fallbacks]_
+:fallbackToClosest: A boolean value that defines the :ref:`cache-group-fallback-to-closest` behavior of this :term:`Cache Group`\ [#fallbacks]_
+:id:                An integer that is the :ref:`cache-group-id` of the :term:`Cache Group`
+:lastUpdated:       The time and date at which this entry was last updated in :rfc:`3339`
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :latitude:                      A floating-point :ref:`cache-group-latitude` for the :term:`Cache Group`
 :localizationMethods:           An array of :ref:`cache-group-localization-methods` as strings
 :longitude:                     A floating-point :ref:`cache-group-longitude` for the :term:`Cache Group`

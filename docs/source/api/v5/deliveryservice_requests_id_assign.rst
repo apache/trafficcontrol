@@ -110,6 +110,9 @@ Response Structure
 ------------------
 The response contains a full representation of the newly assigned :term:`Delivery Service Request`.
 
+.. versionchanged:: 5.0
+	Prior to version 5.0 of the API, the ``lastUpdated`` field was in :ref:`non-rfc-datetime`.
+
 .. code-block:: http
 	:caption: Response Example
 

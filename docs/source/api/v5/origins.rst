@@ -90,13 +90,17 @@ Response Structure
 :ipAddress:         The IPv4 address of the :term:`Origin`
 :isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
 :lastUpdated:       The date and time at which this :term:`Origin` was last modified in :rfc:`3339` format
-:name:              The name of the :term:`Origin`
-:port:              The TCP port on which the :term:`Origin` listens
-:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
-:profileId:         The :ref:`profile-id` of the :term:`Profile` used by this :term:`Origin`
-:protocol:          The protocol used by this origin - will be one of 'http' or 'https'
-:tenant:            The name of the :term:`Tenant` that owns this :term:`Origin`
-:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:      The name of the :term:`Origin`
+:port:      The TCP port on which the :term:`Origin` listens
+:profile:   The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
+:profileId: The :ref:`profile-id` of the :term:`Profile` used by this :term:`Origin`
+:protocol:  The protocol used by this origin - will be one of 'http' or 'https'
+:tenant:    The name of the :term:`Tenant` that owns this :term:`Origin`
+:tenantId:  An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
 
 .. code-block:: http
 	:caption: Response Example
@@ -202,13 +206,17 @@ Response Structure
 :ipAddress:         The IPv4 address of the :term:`Origin`
 :isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
 :lastUpdated:       The date and time at which this :term:`Origin` was last modified in :rfc:`3339` format
-:name:              The name of the :term:`Origin`
-:port:              The TCP port on which the :term:`Origin` listens
-:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
-:profileId:         The :ref:`profile-id` the :term:`Profile` used by this :term:`Origin`
-:protocol:          The protocol used by this origin - will be one of 'http' or 'https'
-:tenant:            The name of the :term:`Tenant` that owns this :term:`Origin`
-:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:      The name of the :term:`Origin`
+:port:      The TCP port on which the :term:`Origin` listens
+:profile:   The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
+:profileId: The :ref:`profile-id` the :term:`Profile` used by this :term:`Origin`
+:protocol:  The protocol used by this origin - will be one of 'http' or 'https'
+:tenant:    The name of the :term:`Tenant` that owns this :term:`Origin`
+:tenantId:  An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
 
 .. code-block:: http
 	:caption: Response Example
@@ -321,13 +329,17 @@ Response Structure
 :ipAddress:         The IPv4 address of the :term:`Origin`
 :isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
 :lastUpdated:       The date and time at which this :term:`Origin` was last modified in :rfc:`3339` format
-:name:              The name of the :term:`Origin`
-:port:              The TCP port on which the :term:`Origin` listens
-:profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
-:profileId:         The :ref:`profile-id` the :term:`Profile` used by this :term:`Origin`
-:protocol:          The protocol used by this origin - will be one of 'http' or 'https'
-:tenant:            The name of the :term:`Tenant` that owns this :term:`Origin`
-:tenantId:          An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:      The name of the :term:`Origin`
+:port:      The TCP port on which the :term:`Origin` listens
+:profile:   The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`
+:profileId: The :ref:`profile-id` the :term:`Profile` used by this :term:`Origin`
+:protocol:  The protocol used by this origin - will be one of 'http' or 'https'
+:tenant:    The name of the :term:`Tenant` that owns this :term:`Origin`
+:tenantId:  An integral, unique identifier for the :term:`Tenant` that owns this :term:`Origin`
 
 .. code-block:: http
 	:caption: Response Example

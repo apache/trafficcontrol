@@ -30,8 +30,8 @@ Updates a :term:`Status`.
 
 Request Structure
 -----------------
-:description:	The description of the updated :term:`Status`
-:name:			The name of the updated :term:`Status`
+:description: The description of the updated :term:`Status`
+:name:        The name of the updated :term:`Status`
 
 .. code-block:: http
 	:caption: Request Example
@@ -49,7 +49,11 @@ Response Structure
 :description: A short description of the status
 :id:          The integral, unique identifier of this status
 :lastUpdated: The date and time at which this status was last modified, in :RFC:`3339` format
-:name:        The name of the status
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name: The name of the status
 
 .. code-block:: http
 	:caption: Response Example

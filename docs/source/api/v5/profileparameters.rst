@@ -52,9 +52,13 @@ Request Structure
 
 Response Structure
 ------------------
-:lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in :rfc:`3339`
-:parameter:   The :ref:`parameter-id` of a :term:`Parameter` assigned to ``profile``
-:profile:     The :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameter`` is assigned
+:lastUpdated: The date and time at which this :term:`Profile`/:term:`Parameter` association was last modified, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:parameter: The :ref:`parameter-id` of a :term:`Parameter` assigned to ``profile``
+:profile:   The :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` identified by ``parameter`` is assigned
 
 .. code-block:: http
 	:caption: Response Structure
@@ -152,7 +156,11 @@ Array Format
 
 Response Structure
 ------------------
-:lastUpdated: The date and time at which the :term:`Profile`/:term:`Parameter` assignment was last modified, in :rfc:`3339`
+:lastUpdated: The date and time at which the :term:`Profile`/:term:`Parameter` assignment was last modified, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :parameter:   :ref:`parameter-name` of the :term:`Parameter` which is assigned to ``profile``
 :parameterId: The :ref:`parameter-id` of the assigned :term:`Parameter`
 :profile:     :ref:`profile-name` of the :term:`Profile` to which the :term:`Parameter` is assigned

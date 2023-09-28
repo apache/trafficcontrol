@@ -39,7 +39,7 @@ Request Structure
 	+======+=============================================================================================+
 	| name | The name of the CDN for which the :term:`Federation` identified by ``ID`` will be inspected |
 	+------+---------------------------------------------------------------------------------------------+
-	|  ID  | An integral, unique identifier for the :term:`Federation` to be inspected                  |
+	|  ID  | An integral, unique identifier for the :term:`Federation` to be inspected                   |
 	+------+---------------------------------------------------------------------------------------------+
 
 .. code-block:: http

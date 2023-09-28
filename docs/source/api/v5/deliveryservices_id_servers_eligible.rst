@@ -46,21 +46,21 @@ Request Structure
 
 Response Structure
 ------------------
-:cachegroup:     A string which is the :ref:`Name of the Cache Group <cache-group-name>` to which the server belongs
-:cachegroupId:   An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
-:cdnId:          An integral, unique identifier the CDN to which the server belongs
-:cdnName:        The name of the CDN to which the server belongs
-:domainName:     The domain name part of the :abbr:`FQDN (Fully Qualified Domain Name)` of the server
-:guid:           Optionally represents an identifier used to uniquely identify the server
-:hostName:       The (short) hostname of the server
-:httpsPort:      The port on which the server listens for incoming HTTPS requests - 443 in most cases
-:id:             An integral, unique identifier for the server
-:iloIpAddress:   The IPv4 address of the lights-out-management port\ [#ilowikipedia]_
-:iloIpGateway:   The IPv4 gateway address of the lights-out-management port\ [#ilowikipedia]_
-:iloIpNetmask:   The IPv4 subnet mask of the lights-out-management port\ [#ilowikipedia]_
-:iloPassword:    The password of the of the lights-out-management user - displays as ``******`` unless the requesting user has the 'admin' role)\ [#ilowikipedia]_
-:iloUsername:    The user name for lights-out-management\ [#ilowikipedia]_
-:interfaces:     An array of interface and IP address information
+:cachegroup:   A string which is the :ref:`Name of the Cache Group <cache-group-name>` to which the server belongs
+:cachegroupId: An integer that is the :ref:`ID of the Cache Group <cache-group-id>` to which the server belongs
+:cdnId:        An integral, unique identifier the CDN to which the server belongs
+:cdnName:      The name of the CDN to which the server belongs
+:domainName:   The domain name part of the :abbr:`FQDN (Fully Qualified Domain Name)` of the server
+:guid:         Optionally represents an identifier used to uniquely identify the server
+:hostName:     The (short) hostname of the server
+:httpsPort:    The port on which the server listens for incoming HTTPS requests - 443 in most cases
+:id:           An integral, unique identifier for the server
+:iloIpAddress: The IPv4 address of the lights-out-management port\ [#ilowikipedia]_
+:iloIpGateway: The IPv4 gateway address of the lights-out-management port\ [#ilowikipedia]_
+:iloIpNetmask: The IPv4 subnet mask of the lights-out-management port\ [#ilowikipedia]_
+:iloPassword:  The password of the of the lights-out-management user - displays as ``******`` unless the requesting user has the 'admin' role)\ [#ilowikipedia]_
+:iloUsername:  The user name for lights-out-management\ [#ilowikipedia]_
+:interfaces:   An array of interface and IP address information
 
 	:max_bandwidth:  The maximum allowed bandwidth for this interface to be considered "healthy" by Traffic Monitor. This has no effect if `monitor` is not true. Values are in kb/s. The value `null` means "no limit".
 	:monitor:        A boolean indicating if Traffic Monitor should monitor this interface
@@ -76,7 +76,11 @@ Response Structure
 		:gateway:       The IPv4 or IPv6 gateway address of the server - applicable for the interface ``name``
 		:service_address:  A boolean determining if content will be routed to the IP address
 
-:lastUpdated:    The time and date at which this server was last updated, in :rfc:`3339`
+:lastUpdated: The time and date at which this server was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 :mgmtIpAddress:  The IPv4 address of the server's management port
 :mgmtIpGateway:  The IPv4 gateway of the server's management port
 :mgmtIpNetmask:  The IPv4 subnet mask of the server's management port

@@ -41,7 +41,7 @@ Request Structure
 :dnssecEnabled: If ``true``, this CDN will use DNSSEC, if ``false`` it will not
 :domainName:    The top-level domain (TLD) belonging to the CDN
 :name:          Name of the new CDN
-:ttlOverride:	Optional an nullable. A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
+:ttlOverride:   A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`. If this is not present in the request, it will be treated as though it were ``null``.
 
 .. code-block:: http
 	:caption: Request Example
@@ -61,8 +61,13 @@ Response Structure
 :dnssecEnabled: ``true`` if the CDN uses DNSSEC, ``false`` otherwise
 :domainName:    The top-level domain (TLD) assigned to the newly created CDN
 :id:            An integral, unique identifier for the newly created CDN
-:name:          The newly created CDN's name
-:ttlOverride:	A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
+:lastUpdated:   Date and time when the CDN was last modified in :rfc:`3339` Format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:        The newly created CDN's name
+:ttlOverride: A :abbr:`TTL (Time To Live)` value, in seconds, that, if set, overrides all set TTL values on :term:`Delivery Services` in this :abbr:`CDN (Content Delivery Network)`
 
 
 .. code-block:: http
@@ -90,7 +95,7 @@ Response Structure
 		"dnssecEnabled": false,
 		"domainName": "test",
 		"id": 4,
-		"lastUpdated": "2018-11-14 20:54:33+00",
+		"lastUpdated": "2018-11-14T20:54:33Z",
 		"name": "quest",
 		"ttlOverride": 60
 	}}

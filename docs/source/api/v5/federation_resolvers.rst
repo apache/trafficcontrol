@@ -70,8 +70,12 @@ Response Structure
 ------------------
 :id:          The integral, unique identifier of the resolver
 :ipAddress:   The IP address or :abbr:`CIDR (Classless Inter-Domain Routing)`-notation subnet of the resolver - may be IPv4 or IPv6
-:lastUpdated: The date and time at which this resolver was last updated, in :rfc:`3339`
-:type:        The :term:`Type` of the resolver
+:lastUpdated: The date and time at which this resolver was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:type: The :term:`Type` of the resolver
 
 .. code-block:: http
 	:caption: Response Example
