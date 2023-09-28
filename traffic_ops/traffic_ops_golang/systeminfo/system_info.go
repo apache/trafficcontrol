@@ -41,7 +41,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	canReadSecureValue := false
 	if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
-		canReadSecureValue = inf.User.Can(tc.ParameterSecureRead)
+		canReadSecureValue = inf.User.Can(tc.PermParameterSecureRead)
 	} else {
 		canReadSecureValue = inf.User.PrivLevel == auth.PrivLevelAdmin
 	}

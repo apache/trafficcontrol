@@ -886,7 +886,7 @@ WHERE s.id in (select server from deliveryservice_server where deliveryservice =
 
 		canViewILOPswd := false
 		if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
-			canViewILOPswd = inf.User.Can(tc.SecureServerRead)
+			canViewILOPswd = inf.User.Can(tc.PermSecureServerRead)
 		} else {
 			canViewILOPswd = inf.User.PrivLevel == auth.PrivLevelAdmin
 		}

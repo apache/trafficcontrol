@@ -235,7 +235,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	var adminPerms bool
 
 	if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
-		adminPerms = inf.User.Can(tc.CDNLocksDeleteOthers)
+		adminPerms = inf.User.Can(tc.PermCDNLocksDeleteOthers)
 	} else {
 		adminPerms = inf.User.PrivLevel == auth.PrivLevelAdmin
 	}

@@ -99,14 +99,14 @@ func (a AlertLevel) String() string {
 // names are prefixed with.
 const CachegroupCoordinateNamePrefix = "from_cachegroup_"
 
-// ParameterSecureRead is a string representing the permission to be able to read secure parameters.
-const ParameterSecureRead = "PARAMETER:SECURE-READ"
+// PermParameterSecureRead is a string representing the permission to be able to read secure parameters.
+const PermParameterSecureRead = "PARAMETER:SECURE-READ"
 
-// SecureServerRead is a string representing the permission to be able to read secure server properties.
-const SecureServerRead = "SECURE-SERVER:READ"
+// PermSecureServerRead is a string representing the permission to be able to read secure server properties.
+const PermSecureServerRead = "SECURE-SERVER:READ"
 
-// CDNLocksDeleteOthers is a string representing the permission to be able to delete other users' CDN locks.
-const CDNLocksDeleteOthers = "CDN-LOCK:DELETE-OTHERS"
+// PermCDNLocksDeleteOthers is a string representing the permission to be able to delete other users' CDN locks.
+const PermCDNLocksDeleteOthers = "CDN-LOCK:DELETE-OTHERS"
 
-// ICDNUCDNOverride is a string representing the permission to be able to override the ucdn parameter.
-const ICDNUCDNOverride = "ICDN:UCDN-OVERRIDE"
+// PermICDNUCDNOverride is a string representing the permission to be able to override the ucdn parameter.
+const PermICDNUCDNOverride = "ICDN:UCDN-OVERRIDE"

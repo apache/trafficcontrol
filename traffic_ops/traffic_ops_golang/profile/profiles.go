@@ -193,7 +193,7 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	inf := prof.APIInfo()
 	if inf != nil && inf.Version != nil {
 		if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions {
-			canReadSecureValue = inf.User.Can(tc.ParameterSecureRead)
+			canReadSecureValue = inf.User.Can(tc.PermParameterSecureRead)
 		} else {
 			canReadSecureValue = inf.User.PrivLevel == auth.PrivLevelAdmin
 		}
