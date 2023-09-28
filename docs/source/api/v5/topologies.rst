@@ -50,13 +50,17 @@ Request Structure
 
 Response Structure
 ------------------
-:description:           A short sentence that describes the :term:`Topology`.
-:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
-:name:                  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the :term:`Topology`
+:description: A short sentence that describes the :term:`Topology`.
+:lastUpdated: The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
 
-	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
+:nodes: An array of nodes in the :term:`Topology`
+
+	:cachegroup: The name of a :term:`Cache Group`
+	:parents:    The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Response Example
@@ -158,12 +162,12 @@ Create a new :term:`Topology`.
 
 Request Structure
 -----------------
-:description:           A short sentence that describes the topology.
-:name:                  The name of the topology. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the :term:`Topology`
+:description: A short sentence that describes the topology.
+:name:        The name of the topology. This can only be letters, numbers, and dashes.
+:nodes:       An array of nodes in the :term:`Topology`
 
-	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:cachegroup: The name of a :term:`Cache Group` with at least 1 server in it
+	:parents:    The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Request Example
@@ -247,13 +251,17 @@ Request Structure
 
 Response Structure
 ------------------
-:description:           A short sentence that describes the topology.
-:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
-:name:                  The name of the topology. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the :term:`Topology`
+:description: A short sentence that describes the topology.
+:lastUpdated: The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
 
-	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:  The name of the topology. This can only be letters, numbers, and dashes.
+:nodes: An array of nodes in the :term:`Topology`
+
+	:cachegroup: The name of a :term:`Cache Group`
+	:parents:    The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Response Example
@@ -372,7 +380,7 @@ Request Structure
 :nodes:                 An array of nodes in the :term:`Topology`
 
 	:cachegroup:            The name of a :term:`Cache Group` with at least 1 server in it
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	:parents:               The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Request Example
@@ -448,13 +456,17 @@ Request Structure
 
 Response Structure
 ------------------
-:description:           A short sentence that describes the :term:`Topology`.
-:lastUpdated:           The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
-:name:                  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
-:nodes:                 An array of nodes in the :term:`Topology`
+:description: A short sentence that describes the :term:`Topology`.
+:lastUpdated: The date and time at which this :term:`Topology` was last updated, in :rfc:`3339` format
 
-	:cachegroup:            The name of a :term:`Cache Group`
-	:parents:               The indices of the parents of this node in the nodes array, 0-indexed. 
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:  The name of the :term:`Topology`. This can only be letters, numbers, and dashes.
+:nodes: An array of nodes in the :term:`Topology`
+
+	:cachegroup: The name of a :term:`Cache Group`
+	:parents:    The indices of the parents of this node in the nodes array, 0-indexed.
 
 .. code-block:: http
 	:caption: Response Example

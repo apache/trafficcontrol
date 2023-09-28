@@ -85,15 +85,19 @@ Response Structure
 :comments:    Any and all human-readable comments
 :email:       The email address of the physical location's ``poc``
 :id:          An integral, unique identifier for the physical location
-:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339`
-:name:        The name of the physical location
-:phone:       A phone number where the the physical location's ``poc`` might be reached
-:poc:         The name of a "point of contact" for the physical location
-:region:      The name of the region within which the physical location lies
-:regionId:    An integral, unique identifier for the region within which the physical location lies
-:shortName:   An abbreviation of the ``name``
-:state:       An abbreviation of the name of the state or province within which this physical location lies
-:zip:         The zip code of the physical location
+:lastUpdated: The date and time at which the physical location was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:      The name of the physical location
+:phone:     A phone number where the the physical location's ``poc`` might be reached
+:poc:       The name of a "point of contact" for the physical location
+:region:    The name of the region within which the physical location lies
+:regionId:  An integral, unique identifier for the region within which the physical location lies
+:shortName: An abbreviation of the ``name``
+:state:     An abbreviation of the name of the state or province within which this physical location lies
+:zip:       The zip code of the physical location
 
 .. code-block:: http
 	:caption: Response Example

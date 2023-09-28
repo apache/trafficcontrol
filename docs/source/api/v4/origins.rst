@@ -89,7 +89,7 @@ Response Structure
 :ip6Address:        The IPv6 address of the :term:`Origin`
 :ipAddress:         The IPv4 address of the :term:`Origin`
 :isPrimary:         A boolean value which, when ``true`` specifies this :term:`Origin` as the 'primary' :term:`Origin` served by ``deliveryService``
-:lastUpdated:       The date and time at which this :term:`Origin` was last modified
+:lastUpdated:       The date and time at which this :term:`Origin` was last modified, in :ref:`non-rfc-datetime`
 :name:              The name of the :term:`Origin`
 :port:              The TCP port on which the :term:`Origin` listens
 :profile:           The :ref:`profile-name` of the :term:`Profile` used by this :term:`Origin`

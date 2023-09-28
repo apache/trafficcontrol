@@ -70,6 +70,9 @@ Response Structure
 :id:           An integral, unique identifier for this association between an :abbr:`ASN (Autonomous System Number)` and a :term:`Cache Group`
 :lastUpdated:  The time and date this server entry was last updated in :ref:`non-rfc-datetime`
 
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
 .. code-block:: http
 	:caption: Response Example
 

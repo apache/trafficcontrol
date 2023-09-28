@@ -83,6 +83,9 @@ Response Structure
 ------------------
 The response is an array of representations of :term:`Delivery Service Requests`.
 
+.. versionchanged:: 5.0
+	Prior to version 5.0 of the API, the ``lastUpdated`` field was in :ref:`non-rfc-datetime`.
+
 .. code-block:: http
 	:caption: Response Example
 
@@ -408,6 +411,9 @@ Response Structure
 ------------------
 The response will be a representation of the created :term:`Delivery Service Request`.
 
+.. versionchanged:: 5.0
+	Prior to version 5.0 of the API, the ``lastUpdated`` field was in :ref:`non-rfc-datetime`.
+
 .. code-block:: http
 	:caption: Response Example
 
@@ -677,6 +683,9 @@ Response Structure
 ------------------
 The response is a full representation of the edited :term:`Delivery Service Request`.
 
+.. versionchanged:: 5.0
+	Prior to version 5.0 of the API, the ``lastUpdated`` field was in :ref:`non-rfc-datetime`.
+
 .. code-block:: http
 	:caption: Response Example
 
@@ -904,10 +913,13 @@ Response Structure
 ------------------
 The response is a full representation of the deleted :term:`Delivery Service Request`.
 
+.. versionchanged:: 5.0
+	Prior to version 5.0 of the API, the ``lastUpdated`` field was in :ref:`non-rfc-datetime`.
+
 .. code-block:: http
 	:caption: Response Example
 
-	HTTP/1.1 200 OK	HTTP/1.1 200 OK
+	HTTP/1.1 200 OK HTTP/1.1 200 OK
 	Access-Control-Allow-Credentials: true
 	Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Set-Cookie, Cookie
 	Access-Control-Allow-Methods: POST,GET,OPTIONS,PUT,DELETE

@@ -55,9 +55,13 @@ Response Structure
 ------------------
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in :rfc:`3339`
-:name:        The name of this type
-:useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
+:lastUpdated: The date and time at which this type was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:       The name of this type
+:useInTable: The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
 
 .. code-block:: http
 	:caption: Response Example
@@ -124,9 +128,13 @@ Response Structure
 
 :description: A short description of this type
 :id:          An integral, unique identifier for this type
-:lastUpdated: The date and time at which this type was last updated, in :rfc:`3339`
-:name:        The name of this type
-:useInTable:  The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
+:lastUpdated: The date and time at which this type was last updated, in :rfc:`3339` format
+
+	.. versionchanged:: 5.0
+		Prior to version 5.0 of the API, this field was in :ref:`non-rfc-datetime`.
+
+:name:       The name of this type
+:useInTable: The name of the Traffic Ops database table that contains objects which are grouped, identified, or described by this type
 
 .. code-block:: http
 	:caption: Response Example
