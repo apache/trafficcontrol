@@ -1995,8 +1995,7 @@ def types_data_post(to_session: TOSession, request_template_data: list[JSONData]
 						base_name=type_name, object_type="types")
 	except KeyError as e:
 		raise TypeError(f"missing Type property '{e.args[0]}'") from e
-	print(name, type_name)
-	
+
 	logger.info("New Types data to hit POST method %s", types)
 	# Hitting Types POST method
 	response: tuple[JSONData, requests.Response] = to_session.create_types(data=types)
