@@ -112,7 +112,7 @@ func TestCopyProfileInvalidExistingProfile(t *testing.T) {
 					"new_profile":      c.profile.Response.Name,
 				},
 				Config: &config.Config{RoleBasedPermissions: true},
-				User:   &auth.CurrentUser{Capabilities: pq.StringArray{"PARAMETER:SECURE-READ"}},
+				User:   &auth.CurrentUser{Capabilities: pq.StringArray{tc.ParameterSecureRead}},
 			}
 
 			errs := copyProfile(&inf, &c.profile.Response)

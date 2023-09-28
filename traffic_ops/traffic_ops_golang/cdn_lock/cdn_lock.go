@@ -232,12 +232,11 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 	var result tc.CDNLock
 	var err error
-	adminPerms := inf.Config.RoleBasedPermissions && inf.User.Can("CDN-LOCK:DELETE-OTHERS")
+	var adminPerms bool
 
-	if inf.Version.LessThan(&api.Version{
-		Major: 4,
-		Minor: 0,
-	}) {
+	if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+		adminPerms = inf.User.Can(tc.CDNLocksDeleteOthers)
+	} else {
 		adminPerms = inf.User.PrivLevel == auth.PrivLevelAdmin
 	}
 	if adminPerms {

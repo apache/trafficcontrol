@@ -563,7 +563,7 @@ func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
 	}
 
 	if ucdn == "" {
-		if inf.User.Can("ICDN:UCDN-OVERRIDE") {
+		if inf.User.Can(tc.ICDNUCDNOverride) {
 			ucdn = inf.Params["ucdn"]
 			if ucdn == "" {
 				return "", errors.New("admin level ucdn requests require a ucdn query parameter")

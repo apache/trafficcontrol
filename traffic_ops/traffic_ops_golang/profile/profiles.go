@@ -190,13 +190,12 @@ func (prof *TOProfile) Read(h http.Header, useIMS bool) ([]interface{}, error, e
 	rows.Close()
 	profileInterfaces := []interface{}{}
 	canReadSecureValue := false
-	if prof.APIInfo() != nil && prof.APIInfo().Version != nil {
-		if (prof.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && prof.APIInfo().Config.RoleBasedPermissions) || prof.APIInfo().Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
-			if prof.APIInfo().User.Can("PARAMETER:SECURE-READ") {
-				canReadSecureValue = true
-			}
-		} else if prof.APIInfo().User.PrivLevel == auth.PrivLevelAdmin {
-			canReadSecureValue = true
+	inf := prof.APIInfo()
+	if inf != nil && inf.Version != nil {
+		if inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions {
+			canReadSecureValue = inf.User.Can(tc.ParameterSecureRead)
+		} else {
+			canReadSecureValue = inf.User.PrivLevel == auth.PrivLevelAdmin
 		}
 	}
 	for _, profile := range profiles {
@@ -439,16 +438,10 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	rows.Close()
 	profileInterfaces := []interface{}{}
 
-	canReadSecureValue := false
-	if inf.Config.RoleBasedPermissions &&
-		inf.User.Can("PARAMETER-SECURE:READ") {
-		canReadSecureValue = true
-	}
-
 	for _, p := range profileList {
 		// Attach Parameters if the 'param' parameter is sent
 		if _, ok := inf.Params["param"]; ok {
-			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, canReadSecureValue)
+			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, inf.User.Can("PARAMETER-SECURE:READ"))
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
 				return

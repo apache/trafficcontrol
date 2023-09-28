@@ -41,11 +41,9 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	canReadSecureValue := false
 	if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
-		if inf.User.Can("PARAMETER:SECURE-READ") {
-			canReadSecureValue = true
-		}
-	} else if inf.User.PrivLevel == auth.PrivLevelAdmin {
-		canReadSecureValue = true
+		canReadSecureValue = inf.User.Can(tc.ParameterSecureRead)
+	} else {
+		canReadSecureValue = inf.User.PrivLevel == auth.PrivLevelAdmin
 	}
 	api.RespWriter(w, r, inf.Tx.Tx)(getSystemInfo(inf.Tx, inf.User.PrivLevel, time.Duration(inf.Config.DBQueryTimeoutSeconds)*time.Second, canReadSecureValue))
 }
