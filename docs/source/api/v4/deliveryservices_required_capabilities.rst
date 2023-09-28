@@ -22,6 +22,8 @@
 .. deprecated:: 4.1
 	This endpoint will be removed in a future release, in favor of :ref:`ds-required-capabilities` being a part of :term:`Delivery Services`.
 
+.. versionremoved:: 5.0
+
 ``GET``
 =======
 Gets all associations of :term:`Server Capability` to :term:`Delivery Services`.
