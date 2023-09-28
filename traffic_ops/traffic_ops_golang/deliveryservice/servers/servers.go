@@ -716,7 +716,7 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 	defer inf.Close()
 
 	alerts := tc.Alerts{}
-	servers, err := read(inf.Tx, inf.IntParams["id"], inf.User)
+	servers, err := read(inf)
 	if err != nil {
 		alerts.AddNewAlert(tc.ErrorLevel, err.Error())
 		api.WriteAlerts(w, r, http.StatusInternalServerError, alerts)
@@ -767,7 +767,7 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
-func read(tx *sqlx.Tx, dsID int, user *auth.CurrentUser) ([]tc.DSServerV4, error) {
+func read(inf *api.APIInfo) ([]tc.DSServerV4, error) {
 	queryDataString :=
 		`,
 cg.name as cachegroup,
@@ -813,7 +813,8 @@ JOIN status st ON s.status = st.id
 JOIN type t ON s.type = t.id
 WHERE s.id in (select server from deliveryservice_server where deliveryservice = $1)`
 
-	idRows, err := tx.Queryx(fmt.Sprintf(queryFormatString, ""), dsID)
+	dsID := inf.IntParams["id"]
+	idRows, err := inf.Tx.Queryx(fmt.Sprintf(queryFormatString, ""), dsID)
 	if err != nil {
 		return nil, errors.New("error querying dss ids: " + err.Error())
 	}
@@ -828,12 +829,12 @@ WHERE s.id in (select server from deliveryservice_server where deliveryservice =
 		serverIDs = append(serverIDs, serverID)
 	}
 
-	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, tx.Tx)
+	serversMap, err := dbhelpers.GetServersInterfaces(serverIDs, inf.Tx.Tx)
 	if err != nil {
 		return nil, errors.New("unable to get server interfaces: " + err.Error())
 	}
 
-	rows, err := tx.Queryx(fmt.Sprintf(queryFormatString, queryDataString), dsID)
+	rows, err := inf.Tx.Queryx(fmt.Sprintf(queryFormatString, queryDataString), dsID)
 	if err != nil {
 		return nil, errors.New("error querying dss rows: " + err.Error())
 	}
@@ -883,7 +884,14 @@ WHERE s.id in (select server from deliveryservice_server where deliveryservice =
 			}
 		}
 
-		if user.PrivLevel < auth.PrivLevelAdmin {
+		canViewILOPswd := false
+		if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+			canViewILOPswd = inf.User.Can(tc.PermSecureServerRead)
+		} else {
+			canViewILOPswd = inf.User.PrivLevel == auth.PrivLevelAdmin
+		}
+
+		if !canViewILOPswd {
 			s.ILOPassword = util.StrPtr("")
 		}
 		servers = append(servers, s)

@@ -232,16 +232,21 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	tx := inf.Tx.Tx
 	var result tc.CDNLock
 	var err error
-	adminPerms := inf.Config.RoleBasedPermissions && inf.User.Can("CDN-LOCK:DELETE-OTHERS")
+	var adminPerms bool
 
-	if adminPerms || inf.User.PrivLevel == auth.PrivLevelAdmin {
+	if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+		adminPerms = inf.User.Can(tc.PermCDNLocksDeleteOthers)
+	} else {
+		adminPerms = inf.User.PrivLevel == auth.PrivLevelAdmin
+	}
+	if adminPerms {
 		err = inf.Tx.Tx.QueryRow(deleteAdminQuery, cdn).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, pq.Array(&result.SharedUserNames), &result.LastUpdated)
 	} else {
 		err = inf.Tx.Tx.QueryRow(deleteQuery, cdn, inf.User.UserName).Scan(&result.UserName, &result.CDN, &result.Message, &result.Soft, pq.Array(&result.SharedUserNames), &result.LastUpdated)
 	}
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			if inf.User.PrivLevel != auth.PrivLevelAdmin {
+			if !adminPerms {
 				api.HandleErr(w, r, tx, http.StatusForbidden, fmt.Errorf("deleting cdn lock with cdn name %s: operation forbidden", cdn), nil)
 				return
 			}

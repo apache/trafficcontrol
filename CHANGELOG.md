@@ -90,6 +90,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7814](https://github.com/apache/trafficcontrol/issues/7814) All Go components: Updated the module path to [`github.com/apache/trafficcontrol/v8`](https://pkg.go.dev/github.com/apache/trafficcontrol/v8). Module https://pkg.go.dev/github.com/apache/trafficcontrol will not receive further updates.
 
 ### Fixed
+- [#7819](https://github.com/apache/trafficcontrol/pull/7819) *Traffic Ops*: API v5 routes should not use `privLevel` comparisons.
 - [#7802](https://github.com/apache/trafficcontrol/pull/7802) *Traffic Control Health Client*: Fixed ReadMe.md typos and duplicates.
 - [#7764](https://github.com/apache/trafficcontrol/pull/7764) *Traffic Ops*: Collapsed DB migrations.
 - [#7767](https://github.com/apache/trafficcontrol/pull/7767) *Traffic Ops*: Fixed ASN update logic for APIv5.

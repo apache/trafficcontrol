@@ -31,6 +31,7 @@ import (
 	"github.com/apache/trafficcontrol/v8/lib/go-util"
 	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api"
 	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/auth"
+	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/config"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -495,7 +496,19 @@ func TestReadServers(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	actualSrvs, err := read(db.MustBegin(), dsID, &auth.CurrentUser{PrivLevel: 30})
+	params := make(map[string]int, 0)
+	params["id"] = dsID
+	inf := api.APIInfo{
+		Version: &api.Version{
+			Major: 5,
+			Minor: 0,
+		},
+		Tx:        db.MustBegin(),
+		IntParams: params,
+		User:      &auth.CurrentUser{PrivLevel: 30},
+		Config:    &config.Config{RoleBasedPermissions: true},
+	}
+	actualSrvs, err := read(&inf)
 	if err != nil {
 		t.Fatalf("an error '%s' occurred during read", err)
 	}

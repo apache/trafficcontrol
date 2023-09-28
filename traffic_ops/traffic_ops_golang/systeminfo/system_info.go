@@ -38,10 +38,17 @@ func Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer inf.Close()
-	api.RespWriter(w, r, inf.Tx.Tx)(getSystemInfo(inf.Tx, inf.User.PrivLevel, time.Duration(inf.Config.DBQueryTimeoutSeconds)*time.Second))
+
+	canReadSecureValue := false
+	if (inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && inf.Config.RoleBasedPermissions) || inf.Version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
+		canReadSecureValue = inf.User.Can(tc.PermParameterSecureRead)
+	} else {
+		canReadSecureValue = inf.User.PrivLevel == auth.PrivLevelAdmin
+	}
+	api.RespWriter(w, r, inf.Tx.Tx)(getSystemInfo(inf.Tx, inf.User.PrivLevel, time.Duration(inf.Config.DBQueryTimeoutSeconds)*time.Second, canReadSecureValue))
 }
 
-func getSystemInfo(tx *sqlx.Tx, privLevel int, timeout time.Duration) (*tc.SystemInfo, error) {
+func getSystemInfo(tx *sqlx.Tx, privLevel int, timeout time.Duration, canReadHiddenValue bool) (*tc.SystemInfo, error) {
 	q := `
 SELECT
   p.name,
@@ -64,7 +71,7 @@ WHERE
 		if err = rows.StructScan(&p); err != nil {
 			return nil, errors.New("sqlx scanning system info global parameters: " + err.Error())
 		}
-		if p.Secure != nil && *p.Secure && privLevel < auth.PrivLevelAdmin {
+		if p.Secure != nil && *p.Secure && !canReadHiddenValue {
 			continue
 		}
 		if p.Name != nil && p.Value != nil {

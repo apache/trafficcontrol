@@ -928,7 +928,7 @@ JOIN server_profile sp ON s.id = sp.server`
 			return nil, serverCount, nil, fmt.Errorf("getting servers: %w", err), http.StatusInternalServerError, nil
 		}
 		if (version.GreaterThanOrEqualTo(&api.Version{Major: 4}) && roleBasedPerms) || version.GreaterThanOrEqualTo(&api.Version{Major: 5}) {
-			if !user.Can("SECURE-SERVER:READ") {
+			if !user.Can(tc.PermSecureServerRead) {
 				s.ILOPassword = &HiddenField
 				s.XMPPPasswd = &HiddenField
 			}
