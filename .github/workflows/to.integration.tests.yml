@@ -103,7 +103,7 @@ jobs:
       id: tvdb
       uses: ./.github/actions/tvdb-init
     - name: Check Go Version
-      run: echo "::set-output name=value::$(cat GO_VERSION)"
+      run: echo "value=$(cat GO_VERSION)" >> $GITHUB_OUTPUT
       id: go-version
     - name: Install Go
       uses: actions/setup-go@v2
@@ -180,7 +180,7 @@ jobs:
       id: tvdb
       uses: ./.github/actions/tvdb-init
     - name: Check Go Version
-      run: echo "::set-output name=value::$(cat GO_VERSION)"
+      run: echo "value=$(cat GO_VERSION)" >> $GITHUB_OUTPUT
       id: go-version
     - name: Install Go
       uses: actions/setup-go@v2
@@ -259,7 +259,7 @@ jobs:
       id: tvdb
       uses: ./.github/actions/tvdb-init
     - name: Check Go Version
-      run: echo "::set-output name=value::$(cat GO_VERSION)"
+      run: echo "value=$(cat GO_VERSION)" >> $GITHUB_OUTPUT
       id: go-version
     - name: Install Go
       uses: actions/setup-go@v2

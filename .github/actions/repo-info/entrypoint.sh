@@ -70,6 +70,6 @@ if [[ -z "$ahead_by" ]]; then
 fi
 expected_rpm_name="${INPUT_REPO}-${latest_tag}-${ahead_by}.${_sha}.el${RHEL_VERSION}.${TARGET_ARCH}.rpm"
 
-echo "::set-output name=expected-rpm-name::${expected_rpm_name}"
+echo "expected-rpm-name=${expected_rpm_name}" >> $GITHUB_OUTPUT
 
 exit 0
