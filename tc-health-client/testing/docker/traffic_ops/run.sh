@@ -7,9 +7,9 @@ set -x
 # to you under the Apache License, Version 2.0 (the
 # "License"); you may not use this file except in compliance
 # with the License.  You may obtain a copy of the License at
-# 
+#
 #   http://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing,
 # software distributed under the License is distributed on an
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -102,7 +102,11 @@ source /etc/environment
 if [ -z "$INITIALIZED" ]; then init; fi
 
 # create the 'traffic_ops' database, tables and runs migrations
-(cd /opt/traffic_ops/app && db/admin --env=production reset > /admin.log 2>&1)
+pushd /opt/traffic_ops/app;
+db/admin --env=production reset > /admin.log 2>&1
+db/admin --env=production upgrade >> /admin.log 2>&1
+db/admin --env=production seed >> /admin.log 2>&1
+popd;
 
 # start traffic_ops
 start
