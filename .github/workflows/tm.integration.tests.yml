@@ -29,7 +29,6 @@ on:
       - GO_VERSION
       - traffic_monitor/**
       - lib/**
-  create:
   pull_request:
     paths:
       - .github/actions/tm-integration-tests/**

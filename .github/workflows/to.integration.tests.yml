@@ -37,7 +37,6 @@ on:
       - traffic_ops/traffic_ops_golang/**.go
       - vendor/**.go
       - vendor/modules.txt
-  create:
   pull_request:
     paths:
       - .github/actions/todb-init/**

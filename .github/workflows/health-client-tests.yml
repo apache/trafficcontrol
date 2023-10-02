@@ -44,7 +44,6 @@ on:
       - .github/actions/build-ats-test-rpm/**
       - .github/actions/repo-info/**
       - .github/actions/health-client-integration-tests/**
-  create:
   pull_request:
     paths:
       - .github/workflows/health-client-tests.yml

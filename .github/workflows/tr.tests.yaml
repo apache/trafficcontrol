@@ -34,7 +34,6 @@ on:
     paths:
       - .github/workflows/tr.tests.yaml
       - traffic_router/**
-  create:
   pull_request:
     paths:
       - .github/workflows/tr.tests.yaml

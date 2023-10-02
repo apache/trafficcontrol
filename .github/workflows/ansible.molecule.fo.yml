@@ -18,7 +18,6 @@
 name: Molecule - FO
 
 on:
-  create:
   push:
     paths:
       - .github/workflows/ansible.molecule.fo.yml
