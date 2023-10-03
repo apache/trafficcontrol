@@ -28,13 +28,14 @@ db_init() {
 
 	cd "$TC"
 	make traffic_ops/app/db/admin
-	(cd "$TC/dev/traffic_ops"
-
-	"$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" reset
-	"$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" upgrade
-	"$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" seed
-	"$ADMIN" -v -c ./traffic.vault.dbconf.yml -s "$TC/traffic_ops/app/db/trafficvault/create_tables.sql" -m "$TC/traffic_ops/app/db/trafficvault/migrations" reset
-	"$ADMIN" -v -c ./traffic.vault.dbconf.yml -s "$TC/traffic_ops/app/db/trafficvault/create_tables.sql" -m "$TC/traffic_ops/app/db/trafficvault/migrations" upgrade
+	(
+		cd "$TC/dev/traffic_ops"
+		"$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" reset
+		"$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" upgrade
+		"$ADMIN" -c ./dbconf.yml -s "$TC/traffic_ops/app/db/create_tables.sql" -S "$TC/traffic_ops/app/db/seeds.sql" -p "$TC/traffic_ops/app/db/patches.sql" -m "$TC/traffic_ops/app/db/migrations" seed
+		"$ADMIN" -v -c ./traffic.vault.dbconf.yml -s "$TC/traffic_ops/app/db/trafficvault/create_tables.sql" -m "$TC/traffic_ops/app/db/trafficvault/migrations" reset
+		"$ADMIN" -v -c ./traffic.vault.dbconf.yml -s "$TC/traffic_ops/app/db/trafficvault/create_tables.sql" -m "$TC/traffic_ops/app/db/trafficvault/migrations" upgrade
+	)
 }
 
 user=trafficops
