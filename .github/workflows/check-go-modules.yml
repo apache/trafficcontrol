@@ -26,7 +26,6 @@ on:
       - go.sum
       - GO_VERSION
       - vendor/**
-  create:
   pull_request:
     paths:
       - .github/check-go-modules/**

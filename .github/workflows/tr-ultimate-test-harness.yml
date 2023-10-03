@@ -28,7 +28,6 @@ on:
       - .github/workflows/tr-ultimate-test-harness.yml
       - dev/traffic_router/**
       - traffic_router/**
-  create:
   pull_request:
     paths:
       - .github/actions/tr-ultimate-test-harness/**

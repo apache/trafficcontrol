@@ -24,7 +24,6 @@ on:
       - .github/workflows/go.vet.yml
       - GO_VERSION
       - '**.go'
-  create:
   pull_request:
     paths:
       - .github/actions/go-vet

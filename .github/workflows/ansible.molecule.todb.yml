@@ -17,19 +17,18 @@
 ---
 name: Molecule - TODB
 
-on:
-  create:
-  push:
-    paths:
-      - .github/workflows/ansible.molecule.todb.yml
-      - infrastructure/ansible/roles/molecule_shared/**
-      - infrastructure/ansible/roles/traffic_opsdb/**
-  pull_request:
-    paths:
-      - .github/workflows/ansible.molecule.todb.yml
-      - infrastructure/ansible/roles/molecule_shared/**
-      - infrastructure/ansible/roles/traffic_opsdb/**
-    types: [opened, reopened, ready_for_review, synchronize]
+#on:
+#  push:
+#    paths:
+#      - .github/workflows/ansible.molecule.todb.yml
+#      - infrastructure/ansible/roles/molecule_shared/**
+#      - infrastructure/ansible/roles/traffic_opsdb/**
+#  pull_request:
+#    paths:
+#      - .github/workflows/ansible.molecule.todb.yml
+#      - infrastructure/ansible/roles/molecule_shared/**
+#      - infrastructure/ansible/roles/traffic_opsdb/**
+#    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
   lint:

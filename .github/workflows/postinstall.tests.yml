@@ -23,7 +23,6 @@ on:
       - .github/workflows/postinstall.tests.yml
       - traffic_ops/install/bin/_postinstall
       - traffic_ops/install/bin/postinstall.test.sh
-  create:
   pull_request:
     paths:
       - .github/workflows/postinstall.tests.yml

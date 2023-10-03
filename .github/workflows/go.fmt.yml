@@ -28,7 +28,6 @@ on:
       - .github/workflows/go.fmt.yml
       - GO_VERSION
       - "**.go"
-  create:
   pull_request:
     paths:
       - .github/actions/go-fmt

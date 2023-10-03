@@ -17,19 +17,18 @@
 ---
 name: Molecule - FO
 
-on:
-  create:
-  push:
-    paths:
-      - .github/workflows/ansible.molecule.fo.yml
-      - infrastructure/ansible/roles/molecule_shared/**
-      - infrastructure/ansible/roles/fakeOrigin/**
-  pull_request:
-    paths:
-      - .github/workflows/ansible.molecule.fo.yml
-      - infrastructure/ansible/roles/molecule_shared/**
-      - infrastructure/ansible/roles/fakeOrigin/**
-    types: [opened, reopened, ready_for_review, synchronize]
+#on:
+#  push:
+#    paths:
+#      - .github/workflows/ansible.molecule.fo.yml
+#      - infrastructure/ansible/roles/molecule_shared/**
+#      - infrastructure/ansible/roles/fakeOrigin/**
+#  pull_request:
+#    paths:
+#      - .github/workflows/ansible.molecule.fo.yml
+#      - infrastructure/ansible/roles/molecule_shared/**
+#      - infrastructure/ansible/roles/fakeOrigin/**
+#    types: [opened, reopened, ready_for_review, synchronize]
 
 jobs:
   lint:

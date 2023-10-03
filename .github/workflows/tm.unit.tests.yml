@@ -33,7 +33,6 @@ on:
       - '!**_test.go'
       - 'traffic_monitor/**_test.go'
       - vendor/modules.txt
-  create:
   pull_request:
     paths:
       - .github/actions/go-test/**

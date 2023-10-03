@@ -54,7 +54,6 @@ on:
       - 'dev/**'
       - 'Makefile'
       - 'cache-config/Makefile'
-  create:
   pull_request:
     paths-ignore:
       - '*.*'

@@ -19,7 +19,6 @@ name: Weasel License checks
 
 on:
   push:
-  create:
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
 

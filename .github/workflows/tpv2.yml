@@ -30,7 +30,6 @@ on:
       - '!**_test.go'
       - traffic_ops/app/db/**
       - traffic_ops/traffic_ops_golang/**.go
-  create:
   pull_request:
     paths:
       - experimental/traffic-portal/**

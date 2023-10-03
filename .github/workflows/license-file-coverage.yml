@@ -31,7 +31,6 @@ on:
       - .github/workflows/license-file-coverage.yml
       - .github/actions/license-file-coverage
       - LICENSE
-  create:
   pull_request:
     paths:
       - .github/workflows/license-file-coverage.yml
