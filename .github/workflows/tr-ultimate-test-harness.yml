@@ -26,12 +26,14 @@ on:
     paths:
       - .github/actions/tr-ultimate-test-harness/**
       - .github/workflows/tr-ultimate-test-harness.yml
+      - dev/traffic_ops/**
       - dev/traffic_router/**
       - traffic_router/**
   pull_request:
     paths:
       - .github/actions/tr-ultimate-test-harness/**
       - .github/workflows/tr-ultimate-test-harness.yml
+      - dev/traffic_ops/**
       - dev/traffic_router/**
       - traffic_router/**
     types: [ opened, reopened, ready_for_review, synchronize ]
