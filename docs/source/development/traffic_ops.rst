@@ -208,7 +208,7 @@ Options and Arguments
 	The :option:`command` specifies the operation to be performed on the database. It must be one of:
 
 	createdb
-		Creates the database for the current environment
+		Creates the database for the current environment.
 	create_migration
 		Creates a pair of timestamped up/down migrations titled NAME.
 	create_user
@@ -222,7 +222,7 @@ Options and Arguments
 	drop_user
 		Drops the user defined for the current environment
 	load_schema
-		Sets up the database for the current environment according to the SQL statements in ``app/db/create_tables.sql`` or ``app/db/trafficvault/create_tables.sql`` if the ``--trafficvault`` option is used
+		Sets up the database for the current environment according to the SQL statements in :atc-file:`traffic_ops/app/db/create_tables.sql` or :atc-file:`traffic_ops/app/db/trafficvault/create_tables.sql` if the ``--trafficvault`` option is used
 	migrate
 		Runs a migration on the database for the current environment
 	patch
@@ -232,13 +232,13 @@ Options and Arguments
 	reset
 		Creates the user defined for the current environment, drops the database for the current environment, creates a new one, loads the schema into it, and runs a single migration on it
 	seed
-		Executes the SQL statements from the ``app/db/seeds.sql`` file for loading static data. This command is not supported when using the ``--trafficvault`` option
+		Executes the SQL statements from the ``app/db/seeds.sql`` file for loading static data. This command is not supported when using the ``--trafficvault`` option. The seed data is constructed under the assumption all migrations for the release have been run, so ``migrate``/\ ``upgrade`` *must* be run first.
 	show_users
 		Displays a list of all users registered with the PostgreSQL server
 	status
 		Deprecated, ``status`` is now an alias for ``dbversion`` and will be removed in a future Traffic Control release.
 	upgrade
-		Performs a migration on the database for the current environment, then seeds it and patches it using the SQL statements from the ``app/db/patches.sql`` file
+		Performs a migration on the database for the current environment, then patches it using the SQL statements from the :atc-file:`traffic_ops/app/db/patches.sql` file.
 
 .. code-block:: bash
 	:caption: Example Usage
