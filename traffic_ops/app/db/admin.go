@@ -353,7 +353,6 @@ func reset() {
 func upgrade() {
 	runMigrations()
 	if !trafficVault {
-		seed()
 		patch()
 	}
 }
@@ -459,7 +458,7 @@ func seed() {
 	if trafficVault {
 		die("seed not supported for trafficvault environment")
 	}
-	fmt.Println("Seeding database w/ required data.")
+	fmt.Println("Seeding database with required data.")
 	seedsBytes, err := ioutil.ReadFile(dbSeedsPath)
 	if err != nil {
 		die("unable to read '" + dbSeedsPath + "': " + err.Error())
@@ -507,9 +506,9 @@ func patch() {
 	cmd.Stdin = bytes.NewBuffer(patchesBytes)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+dbPassword)
 	out, err := cmd.CombinedOutput()
-	fmt.Printf(string(out))
+	fmt.Println(string(out))
 	if err != nil {
-		die("Can't patch database w/ required data")
+		die("Can't patch database with required data")
 	}
 }
 
@@ -559,19 +558,22 @@ OPERATION      The operation to perform; one of the following:
     dbversion   - Prints the current migration timestamp
     drop_user   - Execute 'drop_user' the user for the current environment
                   (traffic_ops).
+    load_schema - Loads the database schema.
     patch       - Execute sql from db/patches.sql for loading post-migration data
                   patches (NOTE: not supported with --trafficvault option).
     redo        - Roll back the most recently applied migration, then run it again.
     reset       - Execute db 'dropdb', 'createdb', load_schema, migrate on the
                   database for the current environment.
     seed        - Execute sql from db/seeds.sql for loading static data (NOTE: not
-                  supported with --trafficvault option).
+                  supported with --trafficvault option). This MUST ONLY be done
+				  after the schema is loaded and migrations have been run.
     show_users  - Execute sql to show all of the user for the current environment.
     status      - Prints the current migration timestamp (Deprecated, status is now an
                   alias for dbversion and will be removed in a future Traffic
                   Control release).
-    upgrade     - Execute migrate, seed, and patches on the database for the current
-                  environment.`)
+    upgrade     - Execute migrate and patch on the database for the current
+                  environment.`,
+	)
 	return buff.String()
 }
 

@@ -149,6 +149,7 @@ cd /opt/traffic_ops/app
 (
 db/admin --env=production reset
 db/admin --env=production upgrade
+db/admin --env=production seed
 db/admin --trafficvault --env=production reset
 db/admin --trafficvault --env=production upgrade
 ) >> /var/log/traffic_ops/to_admin.log 2>&1) || {
