@@ -17,7 +17,7 @@
 ---
 name: Molecule - TODB
 
-#on:
+on:
 #  push:
 #    paths:
 #      - .github/workflows/ansible.molecule.todb.yml
