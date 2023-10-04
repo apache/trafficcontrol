@@ -26,6 +26,7 @@ on:
     paths:
       - .github/actions/tr-ultimate-test-harness/**
       - .github/workflows/tr-ultimate-test-harness.yml
+      - dev/traffic_ops/**
       - dev/traffic_router/**
       - traffic_router/**
   create:
@@ -33,6 +34,7 @@ on:
     paths:
       - .github/actions/tr-ultimate-test-harness/**
       - .github/workflows/tr-ultimate-test-harness.yml
+      - dev/traffic_ops/**
       - dev/traffic_router/**
       - traffic_router/**
     types: [ opened, reopened, ready_for_review, synchronize ]
