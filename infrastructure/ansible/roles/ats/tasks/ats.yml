@@ -49,10 +49,7 @@
 - name: Run ORT Badass
   shell:
     executable: "{{ lookup('pipe','command -v bash') }}"
-    cmd: >-
-      {%- if ort_version is not defined or ort_version == omit -%}
-        pkill -9 t3c || true; t3c apply --run-mode=badass --git=yes --cache-host-name='{{ (ansible_nodename.split('.')) | first }}' -vv --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --wait-for-parents=false 2>&1 | tee /tmp/trafficcontrol-cache-config/badass_out; exit ${PIPESTATUS[0]}
-      {%- endif -%}
+    cmd: "pkill -9 t3c || true; t3c apply --run-mode=badass --git=yes --cache-host-name='{{ (ansible_nodename.split('.')) | first }}' -vv --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --wait-for-parents=false 2>&1 | tee /tmp/trafficcontrol-cache-config/badass_out; exit ${PIPESTATUS[0]}"
   no_log: True
 
 - name: Reboot
