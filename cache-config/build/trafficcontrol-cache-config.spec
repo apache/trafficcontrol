@@ -26,7 +26,7 @@ Source0:  trafficcontrol-cache-config-%{version}.tgz
 URL:      https://github.com/apache/trafficcontrol/
 Vendor:   Apache Software Foundation
 Packager: dev at trafficcontrol dot Apache dot org
-Requires: git, perl
+Requires: git
 
 %description
 Installs Traffic Control Cache Configuration utilities. See the `t3c` application.
@@ -143,9 +143,6 @@ mkdir -p "${RPM_BUILD_ROOT}"/var/log/trafficcontrol-cache-config
 mkdir -p ${RPM_BUILD_ROOT}/"$mandir"/"$man1dir"
 mkdir -p ${RPM_BUILD_ROOT}/usr/lib/systemd/system
 
-cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/traffic_ops_ort.pl ${RPM_BUILD_ROOT}/"$installdir"
-cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/supermicro_udev_mapper.pl ${RPM_BUILD_ROOT}/"$installdir"
-
 src=src/github.com/apache/trafficcontrol/cache-config
 cp -p ${RPM_SOURCE_DIR}/trafficcontrol-cache-config-%{version}/build/atstccfg.logrotate "${RPM_BUILD_ROOT}"/etc/logrotate.d/atstccfg
 touch ${RPM_BUILD_ROOT}/var/log/trafficcontrol-cache-config/atstccfg.log
@@ -225,8 +222,6 @@ fi
 %files
 %license LICENSE
 %attr(755, root, root)
-/usr/bin/traffic_ops_ort.pl
-/usr/bin/supermicro_udev_mapper.pl
 /usr/bin/t3c
 /usr/bin/t3c-apply
 /usr/bin/t3c-check
