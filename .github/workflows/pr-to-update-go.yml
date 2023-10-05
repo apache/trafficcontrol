@@ -49,7 +49,7 @@ jobs:
         if: ${{ steps.checkout.outcome == 'success' }}
         run: python3 -m pr_to_update_go --update-version-only
       - name: Check Go version
-        run: echo "::set-output name=value::$(cat GO_VERSION)"
+        run: echo "value=$(cat GO_VERSION)" >> $GITHUB_OUTPUT
         id: go-version
       - name: Install Go
         uses: actions/setup-go@v2
