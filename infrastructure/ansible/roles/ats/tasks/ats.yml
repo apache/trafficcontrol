@@ -22,23 +22,6 @@
   retries: 5
   delay: 5
 
-- name: Deploy the udev device mapper script to a more reliable location
-  # with /opt on separate lvm part, udev on boot may fail
-  copy:
-    remote_src: true
-    src: >-
-      {%- if ort_version is not defined or ort_version == omit or ort_version >= '6.0.0-11351' -%}
-        /usr/bin/supermicro_udev_mapper.pl
-      {%- else -%}
-        /opt/ort/supermicro_udev_mapper.pl
-      {%- endif -%}
-    dest: /bin/supermicro_udev_mapper.pl
-    remote_src: true
-    owner: root
-    group: root
-    mode: 0755
-  ignore_errors: true
-
 - name: Deploy ORT/t3c Crontab
   template:
     src: crontab.j2
@@ -67,10 +50,8 @@
   shell:
     executable: "{{ lookup('pipe','command -v bash') }}"
     cmd: >-
-      {%- if ort_version is not defined or ort_version == omit or ort_version >= '6.0.0-11351' -%}
+      {%- if ort_version is not defined or ort_version == omit -%}
         pkill -9 t3c || true; t3c apply --run-mode=badass --git=yes --cache-host-name='{{ (ansible_nodename.split('.')) | first }}' -vv --traffic-ops-url='{{ ort_traffic_ops_url }}' --traffic-ops-user='{{ ort_traffic_ops_username }}' --traffic-ops-password='{{ ort_traffic_ops_password }}' --wait-for-parents=false 2>&1 | tee /tmp/trafficcontrol-cache-config/badass_out; exit ${PIPESTATUS[0]}
-      {%- else -%}
-        pkill -9 _ort || true; traffic_ops_ort.pl -dispersion=0 --wait_for_parents=0 --login_dispersion=0 --retries=1 badass warn {{ ort_traffic_ops_url }} '{{ ort_traffic_ops_username }}:{{ ort_traffic_ops_password }}' 2>&1 | tee /tmp/badass_out; exit ${PIPESTATUS[0]}
       {%- endif -%}
   no_log: True
 
