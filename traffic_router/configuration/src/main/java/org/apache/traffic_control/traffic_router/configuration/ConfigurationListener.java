@@ -22,7 +22,7 @@ public interface ConfigurationListener {
      * 
      * @param username The username of the user triggering the change.
      */
-    void configurationChanged(String username);
+    void configurationChanged()
 
     /**
      * Called when an error occurs while processing the configuration change.
@@ -30,13 +30,13 @@ public interface ConfigurationListener {
      * @param username The username of the user triggering the change.
      * @param error    The error message describing the issue.
      */
-    void configurationError(String username, String error);
+    void configurationError();
 
     /**
      * Called when the configuration change is successfully applied.
      * 
      * @param username The username of the user triggering the change.
      */
-    void configurationApplied(String username);
+    void configurationApplied();
 
 }
