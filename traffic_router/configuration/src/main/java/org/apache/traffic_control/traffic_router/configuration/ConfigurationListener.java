@@ -16,5 +16,27 @@
 package org.apache.traffic_control.traffic_router.configuration;
 
 public interface ConfigurationListener {
-	void configurationChanged();
+
+    /**
+     * Called when the configuration has changed.
+     * 
+     * @param username The username of the user triggering the change.
+     */
+    void configurationChanged(String username);
+
+    /**
+     * Called when an error occurs while processing the configuration change.
+     * 
+     * @param username The username of the user triggering the change.
+     * @param error    The error message describing the issue.
+     */
+    void configurationError(String username, String error);
+
+    /**
+     * Called when the configuration change is successfully applied.
+     * 
+     * @param username The username of the user triggering the change.
+     */
+    void configurationApplied(String username);
+
 }
