@@ -37,6 +37,7 @@ services:
   # db is the Traffic Ops database running in postgresql.  Only trafficops needs to have access to it.
   # All other components access the database thru the Traffic Ops API
   db:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: traffic_ops/Dockerfile-db
@@ -52,6 +53,7 @@ services:
 
   # trafficops runs Traffic Ops in a container.
   trafficops:
+    platform: linux/amd64
     build:
       context: ../../
       dockerfile: infrastructure/cdn-in-a-box/traffic_ops/Dockerfile
@@ -80,6 +82,7 @@ services:
   # trafficportal defines the web interface for Traffic Ops.  It uses only the API exposed by Traffic Ops
   # and passes any /api/... routes directly to Traffic Ops
   trafficportal:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: traffic_portal/Dockerfile
@@ -99,6 +102,7 @@ services:
       - shared:/shared
 
   trafficportalv2:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: traffic_portal_v2/Dockerfile
@@ -119,6 +123,7 @@ services:
 
   # trafficmonitor is an HTTP service that monitors the caches in a CDN for a variety of metrics
   trafficmonitor:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: traffic_monitor/Dockerfile
@@ -139,6 +144,7 @@ services:
 
   # tchealthclient
   tchealthclient:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: health/Dockerfile
@@ -159,6 +165,7 @@ services:
 
   # trafficrouter routes clients to the most optimal cache
   trafficrouter:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: traffic_router/Dockerfile
@@ -179,6 +186,7 @@ services:
 
   # trafficstats collect traffic information
   trafficstats:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: traffic_stats/Dockerfile
@@ -199,6 +207,7 @@ services:
       - shared:/shared
 
   influxdb:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: traffic_stats/Dockerfile-influxdb
@@ -213,6 +222,7 @@ services:
 
   # edge cache
   edge:
+    platform: linux/amd64
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -237,6 +247,7 @@ services:
 
   # mid cache 1
   mid-01:
+    platform: linux/amd64
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -261,6 +272,7 @@ services:
 
   # mid cache 2
   mid-02:
+    platform: linux/amd64
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/cache/Dockerfile
@@ -285,6 +297,7 @@ services:
 
   # origin provides the content to be distributed through the CDN caches
   origin:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: origin/Dockerfile
@@ -300,6 +313,7 @@ services:
 
   # enroller provides a way to register component instances with traffic_ops
   enroller:
+    platform: linux/amd64
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/enroller/Dockerfile
@@ -327,6 +341,7 @@ services:
     domainname: infra.ciab.test
 
   smtp:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: smtp/Dockerfile
@@ -341,6 +356,7 @@ services:
 
   # static provides the MaxMind databases and coverage-zone.json, which used to be served by Traffic Ops Perl.
   static:
+    platform: linux/amd64
     build:
       context: ../..
       dockerfile: infrastructure/cdn-in-a-box/static/Dockerfile
