@@ -53,6 +53,7 @@ type Parameter struct {
 	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
 	Secure      bool            `json:"secure" db:"secure"`
 	Value       string          `json:"value" db:"value"`
+	Comment     string          `json:"comment,omitempty" db:"comment"`
 }
 
 // ParameterNullable is exactly like Parameter except that its properties are
