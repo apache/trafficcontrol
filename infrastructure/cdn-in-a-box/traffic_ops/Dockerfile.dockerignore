@@ -23,5 +23,6 @@
 # - https://github.com/docker/compose/pull/6865
 # - https://docs.docker.com/develop/develop-images/build_enhancements/
 *
+!.github/actions/to-integration-tests/*.pem
 !infrastructure/cdn-in-a-box/
 !traffic_router/core/src/test/resources/geo/GeoLite2-City.mmdb.gz
