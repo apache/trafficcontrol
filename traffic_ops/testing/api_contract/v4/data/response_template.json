@@ -2253,7 +2253,7 @@
             }
         }
     },
-    "logs":{
+    "logs": {
         "type": "object",
         "required": [
             "ticketNum",
@@ -2299,6 +2299,25 @@
                     "string",
                     "null"
                 ]
+            }
+        }
+    },
+    "delivery_service_server": {
+        "type": "object",
+        "required": [
+            "server",
+            "deliveryService",
+            "lastUpdated"
+        ],
+        "properties": {
+            "server": {
+                "type": "integer"
+            },
+            "deliveryService": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
             }
         }
     }
