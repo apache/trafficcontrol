@@ -52,6 +52,10 @@ elif [[ ! -x "$python_bin" && "$python_version" == 2 ]]; then
 	echo "Python ${python_version} is required to run - or test - _postinstall.py against Python 2" >&2;
 fi
 
+if [[ "$python_version" == 2 ]]; then
+	echo "Python version 2 is deprecated" >&2;
+fi
+
 readonly TO_PASSWORD=twelve;
 readonly ROOT_DIR="$(mktemp -d)";
 

@@ -32,6 +32,10 @@ if [[ -z "$python_bin" ]]; then
 	exit 1
 fi
 
+if [[ "$python_bin" =~ 2(\.\d){0,2}$ ]]; then
+	echo "Python version 2 is deprecated, please upgrade your system's Python (found at $python_bin) to a newer version" >/dev/stderr
+fi
+
 # above options don't require any of the extra processing -- just kick off the script with
 # options intact.
 if [[ -v action && "$action" == "bypass" ]]; then
