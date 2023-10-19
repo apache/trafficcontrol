@@ -217,6 +217,9 @@ The postinstall script can also be run non-interactively using :atc-file:`traffi
 .. versionchanged:: ATCv8
 	The values in ``input.json`` for the ``"hidden"`` properties have been changed from ``"1"`` and ``"0"`` to ``true`` and ``false``.
 
+.. versionchanged:: ATCv8
+	Python 2.x is no longer supported by the postinstall script.
+
 .. _to-upgrading:
 
 Upgrading
