@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed Perl dependency
-- [#7841](https://github.com/apache/trafficcontrol/pull/7841) *Postinstall* Removed Perl implementation
+- [#7841](https://github.com/apache/trafficcontrol/pull/7841) *Postinstall* Removed Perl implementation and Python 2.x support
 
 ## [8.0.0] - 2023-09-20
 ### Added
