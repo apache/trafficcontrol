@@ -26,14 +26,10 @@ for arg in "$@"; do
 done
 
 PATH+=:/usr/libexec/
-python_bin="$(command -v {python,platform-python}{3{{.,}{9,8,7,6},},2{7,.7,},} | head -n1)"
+python_bin="$(command -v {python,platform-python}{3{{.,}{12,11,10,9,8,7,6},},} | head -n1)"
 if [[ -z "$python_bin" ]]; then
-	echo 'No python3 or python2 executable was found. Python is required to run the Postinstall script.' >/dev/stderr
+	echo 'No python3 executable was found. Python is required to run the Postinstall script.' >/dev/stderr
 	exit 1
-fi
-
-if [[ "$python_bin" =~ 2(\.\d){0,2}$ ]]; then
-	echo "Python version 2 is deprecated, please upgrade your system's Python (found at $python_bin) to a newer version" >/dev/stderr
 fi
 
 # above options don't require any of the extra processing -- just kick off the script with
