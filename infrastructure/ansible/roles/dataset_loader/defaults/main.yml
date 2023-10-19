@@ -830,12 +830,6 @@ dl_ds_default_profile_layers:
           value: INT 500
     mid:
       common:
-        - name: location
-          configFile: 40-ats.rules
-          value: "/etc/udev/rules.d/"
-        - name: udev_syncds
-          configFile: 40-ats.rules
-          value: 'KERNEL==\"sd*\", DRIVERS==\"mpt3sas\", PROGRAM=\"/bin/supermicro_udev_mapper.pl %k\", SYMLINK+=\"ats/%c\", OWNER=\"ats\"'
         - name: weight
           configFile: parent.config
           value: '1.0'
