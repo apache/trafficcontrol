@@ -103,6 +103,14 @@ COPY $TRAFFIC_OPS_RPM /traffic_ops.rpm
 RUN rpm -Uvh /traffic_ops.rpm && \
 	rm /traffic_ops.rpm
 
+COPY .github/actions/to-integration-tests/intermediate.crt.pem \
+	.github/actions/to-integration-tests/intermediate.key.pem \
+	.github/actions/to-integration-tests/rootca.crt.pem \
+	.github/actions/to-integration-tests/rootca.key.pem \
+	.github/actions/to-integration-tests/server.crt.pem \
+	.github/actions/to-integration-tests/server.key.pem \
+	/etc/pki/tls/traffic_ops/
+
 COPY infrastructure/cdn-in-a-box/enroller/server_template.json \
 	infrastructure/cdn-in-a-box/traffic_ops/config.sh \
 	infrastructure/cdn-in-a-box/traffic_ops/run-go.sh \

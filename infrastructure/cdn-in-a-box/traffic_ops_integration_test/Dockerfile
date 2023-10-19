@@ -73,6 +73,7 @@ COPY ./infrastructure/cdn-in-a-box/traffic_ops_integration_test/config.sh /opt/i
 COPY ./traffic_ops/testing/api/v3/tc-fixtures.json /opt/integration/app/tc-fixtures-v3.json
 COPY ./traffic_ops/testing/api/v4/tc-fixtures.json /opt/integration/app/tc-fixtures-v4.json
 COPY ./traffic_ops/testing/api/v5/tc-fixtures.json /opt/integration/app/tc-fixtures-v5.json
+COPY ./traffic_ops/testing/api/v5/client-intermediate-chain.crt.pem  ./traffic_ops/testing/api/v5/client.key.pem /opt/integration/app/
 COPY --from=integration-builder \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v3_integration_test \
     /go/src/github.com/apache/trafficcontrol/traffic_ops/testing/api/traffic_ops_v4_integration_test \
