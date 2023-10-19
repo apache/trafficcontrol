@@ -127,8 +127,6 @@ initBuildArea() {
 		buildManpage 't3c-preprocess';
 	)
 
-	cp -p traffic_ops_ort.pl "$dest";
-	cp -p supermicro_udev_mapper.pl "$dest";
 	mkdir -p "${dest}/build";
 
 	echo "build_rpm.sh lsing for logrotate";

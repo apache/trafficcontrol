@@ -42,13 +42,6 @@
     path: /opt/ort
     state: directory
 
-- name: Create an empty ORT file
-  copy:
-    dest: "/opt/ort/traffic_ops_ort.pl"
-    content: |
-      #!/usr/bin/perl
-      # empty for Grove, prevents systems previously running ORT from overriding TO Update Flag
-
 - name: Create an empty t3c file
   copy:
     dest: "/usr/bin/t3c"
