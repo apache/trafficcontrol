@@ -20,6 +20,10 @@ FROM grafana/grafana:5.4.3
 USER root
 ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm
 
+RUN sed -i -e 's/deb.debian.org/archive.debian.org/g' \
+           -e 's|security.debian.org|archive.debian.org/|g' \
+           -e '/stretch-updates/d' /etc/apt/sources.list
+
 RUN apt-get update && \
     apt-get install -y dnsutils net-tools gettext-base p7zip-full netcat && \
     rm -rf /var/lib/apt/lists/*
