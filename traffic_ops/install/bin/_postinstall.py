@@ -1293,7 +1293,7 @@ def main(
 		paramconf = generate_param_conf(user_input[PARAM_CONF_FILE], PARAM_CONF_FILE, automatic, root_dir)
 		postinstall_cfg = os.path.join(root_dir, POST_INSTALL_CFG.lstrip('/'))
 		if not os.path.isfile(postinstall_cfg):
-			with open(postinstall_cfg, "w+", encoding="utf-88") as conf_file:
+			with open(postinstall_cfg, "w+", encoding="utf-8") as conf_file:
 				print("{}", file=conf_file)
 	except OSError as e:
 		logging.critical("Writing configuration: %s", e)
