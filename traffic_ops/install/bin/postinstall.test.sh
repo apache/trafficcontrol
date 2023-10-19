@@ -460,7 +460,7 @@ if conf['traffic_ops_golang']['key']!= key:
 	print('Incorrect key in cdn.conf, expected:', key, 'got:', conf['traffic_ops_golang']['key'], file=sys.stderr)
 	exit(1)
 
-if conf['traffic_ops_golang']['port'] != '443':
+if conf['traffic_ops_golang']['port'] != "443" and conf["traffic_ops_golang"]["port"] != 443:
 	print('Incorrect traffic_ops_golang.port, expected: 443, got:', conf['traffic_ops_golang']['port'], file=sys.stderr)
 	exit(1)
 
