@@ -38,7 +38,7 @@ Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Di
 Requires:         libidn-devel, libcurl-devel, libcap
 Requires:         postgresql13 >= 13.2
 Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey, perl-Crypt-ScryptKDF
-Requires:         python(abi)
+Requires:         python(abi), python3
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
 Requires(postun): /usr/sbin/userdel
 
