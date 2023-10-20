@@ -1156,6 +1156,7 @@ CREATE TABLE IF NOT EXISTS parameter (
     value text NOT NULL,
     last_updated timestamp with time zone NOT NULL DEFAULT now(),
     secure boolean DEFAULT false NOT NULL,
+    comment text NOT NULL,
     CONSTRAINT unique_param UNIQUE (name, config_file, value),
     CONSTRAINT idx_89644_primary PRIMARY KEY (id)
 );
