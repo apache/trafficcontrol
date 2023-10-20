@@ -95,6 +95,7 @@ type ParameterV50 struct {
 	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
 	Secure      bool            `json:"secure" db:"secure"`
 	Value       string          `json:"value" db:"value"`
+	Comment     string          `json:"comment" db:"value"`
 }
 
 // ParameterNullableV5 is an alias for the latest minor version for the major version 5.

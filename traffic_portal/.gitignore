@@ -18,6 +18,7 @@
 .tmp
 .sass-cache
 server/log/access.log
+pnpm-lock.yaml
 node_modules
 app/dist
 Gemfile.lock
