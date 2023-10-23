@@ -48,6 +48,7 @@ const (
 	ConfigFileQueryParam = "configFile"
 	IDQueryParam         = "id"
 	ValueQueryParam      = "value"
+	CommentQueryParam    = "comment"
 )
 
 var (
@@ -86,6 +87,7 @@ func (v *TOParameter) ParamColumns() map[string]dbhelpers.WhereColumnInfo {
 		NameQueryParam:       {Column: "p.name"},
 		SecureQueryParam:     {Column: "p.secure", Checker: api.IsBool},
 		ValueQueryParam:      {Column: "p.value"},
+		CommentQueryParam:    {Column: "p.comment"},
 	}
 }
 func (v *TOParameter) UpdateQuery() string { return updateQuery() }
@@ -216,11 +218,13 @@ func insertQuery() string {
 name,
 config_file,
 value,
-secure) VALUES (
+secure,
+comment) VALUES (
 :name,
 :config_file,
 :value,
-:secure) RETURNING id,last_updated`
+:secure,
+:comment) RETURNING id,last_updated`
 	return query
 }
 
@@ -233,6 +237,7 @@ p.last_updated,
 p.name,
 p.value,
 p.secure,
+p.comment,
 COALESCE(array_to_json(array_agg(pr.name) FILTER (WHERE pr.name IS NOT NULL)), '[]') AS profiles
 FROM parameter p
 LEFT JOIN profile_parameter pp ON p.id = pp.parameter
@@ -247,14 +252,15 @@ config_file=:config_file,
 id=:id,
 name=:name,
 value=:value,
-secure=:secure
+secure=:secure,
+comment=:comment
 WHERE id=:id RETURNING last_updated`
 	return query
 }
 
 // ParametersGroupBy ...
 func ParametersGroupBy() string {
-	groupBy := ` GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure`
+	groupBy := ` GROUP BY p.config_file, p.id, p.last_updated, p.name, p.value, p.secure, p.comment`
 	return groupBy
 }
 
@@ -282,6 +288,7 @@ func GetParameters(w http.ResponseWriter, r *http.Request) {
 		NameQueryParam:       {Column: "p.name"},
 		SecureQueryParam:     {Column: "p.secure", Checker: api.IsBool},
 		ValueQueryParam:      {Column: "p.value"},
+		CommentQueryParam:    {Column: "p.comment"},
 	}
 	if _, ok := inf.Params["orderby"]; !ok {
 		inf.Params["orderby"] = "name"
@@ -316,7 +323,7 @@ func GetParameters(w http.ResponseWriter, r *http.Request) {
 	params := tc.ParameterNullableV5{}
 	paramsList := []tc.ParameterNullableV5{}
 	for rows.Next() {
-		if err = rows.Scan(&params.ConfigFile, &params.ID, &params.LastUpdated, &params.Name, &params.Value, &params.Secure, &params.Profiles); err != nil {
+		if err = rows.Scan(&params.ConfigFile, &params.ID, &params.LastUpdated, &params.Name, &params.Value, &params.Secure, &params.Comment, &params.Profiles); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting parameter(s): %w", err))
 			return
 		}
@@ -389,10 +396,11 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 			    name,
 			    config_file,
 			    value,
-			    secure
+			    secure,
+			    comment
 			    ) VALUES (
-			        $1, $2, $3, $4
-			    ) RETURNING id, name, config_file, value, last_updated, secure 
+			        $1, $2, $3, $4, $5
+			    ) RETURNING id, name, config_file, value, last_updated, secure, comment 
 		`
 		err = tx.QueryRow(
 			query,
@@ -400,6 +408,7 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 			parameter.ConfigFile,
 			parameter.Value,
 			parameter.Secure,
+			parameter.Comment,
 		).Scan(
 
 			&objParam.ID,
@@ -408,6 +417,7 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 			&objParam.Value,
 			&objParam.LastUpdated,
 			&objParam.Secure,
+			&objParam.Comment,
 		)
 
 		if err != nil {
@@ -459,9 +469,10 @@ func UpdateParameter(w http.ResponseWriter, r *http.Request) {
 		config_file = $1,
 		name = $2,
 		value = $3,
-		secure = $4
+		secure = $4,
+		comment = $5
 	WHERE
-		p.id = $5
+		p.id = $6
 	RETURNING
 		p.id,
 		p.last_updated
@@ -473,6 +484,7 @@ func UpdateParameter(w http.ResponseWriter, r *http.Request) {
 		parameter.Name,
 		parameter.Value,
 		parameter.Secure,
+		parameter.Comment,
 		requestedID,
 	).Scan(
 		&parameter.ID,

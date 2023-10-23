@@ -96,7 +96,8 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
         { "name": "Config File", "visible": true, "searchable": true },
         { "name": "Value", "visible": true, "searchable": true },
         { "name": "Secure", "visible": true, "searchable": true },
-        { "name": "Profiles", "visible": true, "searchable": true }
+        { "name": "Profiles", "visible": true, "searchable": true },
+        { "name": "Comment", "visible": true, "searchable": true }
     ];
 
     $scope.contextMenuItems = [
