@@ -11,6 +11,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7614](https://github.com/apache/trafficcontrol/pull/7614) *Traffic Ops* The database upgrade process no longer overwrites changes users may have made to the initially seeded data.
 - [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed perl dependency
 
+### Fixed
+- [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
+
 ## [8.0.0] - 2023-09-20
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client*: Added peer monitor flag while using `strategies.yaml`.
