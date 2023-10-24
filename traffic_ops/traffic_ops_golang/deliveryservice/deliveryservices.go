@@ -388,7 +388,7 @@ func createV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 		return nil, http.StatusInternalServerError, nil, sysErr
 	}
 	if authorized, err := isTenantAuthorized(inf, &ds); err != nil {
-		return nil, http.StatusInternalServerError, nil, fmt.Errorf("checking tenant: %w", err)
+		return nil, http.StatusBadRequest, err, fmt.Errorf("checking tenant: %w", err)
 	} else if !authorized {
 		return nil, http.StatusForbidden, errors.New("not authorized on this tenant"), nil
 	}
