@@ -37,12 +37,6 @@ export const cachegroups = {
 					Name: "1st Parent"
 				}
 			],
-			check: [
-				{
-					description: "check CSV link from CacheGroup page",
-					Name: "Export as CSV"
-				}
-			],
 			create: [
 				{
 					Description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
@@ -138,12 +132,6 @@ export const cachegroups = {
 					Name: "1st Parent"
 				}
 			],
-			check: [
-				{
-					description: "check CSV link from CacheGroup page",
-					Name: "Export as CSV"
-				}
-			],
 			create: [
 				{
 					Description: "create a CacheGroup",
@@ -190,12 +178,6 @@ export const cachegroups = {
 				{
 					description: "display first table column",
 					Name: "1st Parent"
-				}
-			],
-			check: [
-				{
-					description: "check CSV link from CacheGroup page",
-					Name: "Export as CSV"
 				}
 			],
 			create: [

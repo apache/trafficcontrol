@@ -18,206 +18,249 @@
  */
 
 /**
- * @param {*} cacheGroups
+ * @typedef CacheGroup
+ * @property {number} id
+ * @property {string} name
+ * @property {number} shortName
+ * @property {number} latitude
+ * @property {number} longitude
+ * @property {string} parentCachegroupName
+ * @property {string} secondaryParentCachegroupName
+ * @property {string} typeName
+ * @property {string} lastUpdated
+ */
+
+/**
+ * @param {CacheGroup} cacheGroup
+ * @returns  {string}
+ */
+const getHref = (cacheGroup) => `#!/cache-groups/${cacheGroup.id}`;
+
+/**
+ * @param {CacheGroup[]} cacheGroups
  * @param {*} $scope
  * @param {*} $state
  * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
- * @param {import("angular").IWindowService} $window
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../api/CacheGroupService")} cacheGroupService
  * @param {import("../../../models/MessageModel")} messageModel
  */
-var TableCacheGroupsController = function(cacheGroups, $scope, $state, $uibModal, $window, locationUtils, cacheGroupService, messageModel) {
+var TableCacheGroupsController = function (
+    cacheGroups,
+    $scope,
+    $state,
+    $uibModal,
+    locationUtils,
+    cacheGroupService,
+    messageModel
+) {
+    /**** Constants, scope data, etc. ****/
 
-    let cacheGroupsTable;
-
-    var queueServerUpdates = function(cacheGroup, cdnId) {
-        cacheGroupService.queueServerUpdates(cacheGroup.id, cdnId);
-    };
-
-    var clearServerUpdates = function(cacheGroup, cdnId) {
-        cacheGroupService.clearServerUpdates(cacheGroup.id, cdnId);
-    };
-
-    var deleteCacheGroup = function(cacheGroup) {
-        cacheGroupService.deleteCacheGroup(cacheGroup.id)
-            .then(function(result) {
-                messageModel.setMessages(result.alerts, false);
-                $scope.refresh();
-            });
-    };
-
-    var confirmQueueServerUpdates = function(cacheGroup) {
-        var params = {
-            title: 'Queue Server Updates: ' + cacheGroup.name,
-            message: "Please select a CDN"
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-            controller: 'DialogSelectController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                collection: function(cdnService) {
-                    return cdnService.getCDNs();
-                }
-            }
-        });
-        modalInstance.result.then(function(cdn) {
-            queueServerUpdates(cacheGroup, cdn.id);
-        }, function () {
-            // do nothing
-        });
-    };
-
-    var confirmClearServerUpdates = function(cacheGroup) {
-        var params = {
-            title: 'Clear Server Updates: ' + cacheGroup.name,
-            message: "Please select a CDN"
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/select/dialog.select.tpl.html',
-            controller: 'DialogSelectController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                },
-                collection: function(cdnService) {
-                    return cdnService.getCDNs();
-                }
-            }
-        });
-        modalInstance.result.then(function(cdn) {
-            clearServerUpdates(cacheGroup, cdn.id);
-        }, function () {
-            // do nothing
-        });
-    };
-
-    var confirmDelete = function(cacheGroup) {
-        var params = {
-            title: 'Delete Cache Group: ' + cacheGroup.name,
-            key: cacheGroup.name
-        };
-        var modalInstance = $uibModal.open({
-            templateUrl: 'common/modules/dialog/delete/dialog.delete.tpl.html',
-            controller: 'DialogDeleteController',
-            size: 'md',
-            resolve: {
-                params: function () {
-                    return params;
-                }
-            }
-        });
-        modalInstance.result.then(function() {
-            deleteCacheGroup(cacheGroup);
-        }, function () {
-            // do nothing
-        });
-    };
-
-
-    $scope.cacheGroups = cacheGroups;
-
-    $scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
-
+    /** The columns of the ag-grid table */
     $scope.columns = [
-        { "name": "Name", "visible": true, "searchable": true },
-        { "name": "Short Name", "visible": true, "searchable": true },
-        { "name": "Type", "visible": true, "searchable": true },
-        { "name": "1st Parent", "visible": true, "searchable": true },
-        { "name": "2nd Parent", "visible": true, "searchable": true },
-        { "name": "Latitude", "visible": true, "searchable": true },
-        { "name": "Longitude", "visible": true, "searchable": true }
+        {
+            headerName: "Name",
+            field: "name",
+            hide: false,
+        },
+        {
+            headerName: "Short Name",
+            field: "shortName",
+            hide: false,
+        },
+        {
+            headerName: "Type",
+            field: "typeName",
+            hide: false,
+        },
+        {
+            headerName: "1st Parent",
+            field: "parentCachegroupName",
+            hide: false,
+        },
+        {
+            headerName: "2nd Parent",
+            field: "secondaryParentCachegroupName",
+            hide: false,
+        },
+        {
+            headerName: "Latitude",
+            field: "latitude",
+            hide: false,
+        },
+        {
+            headerName: "Longitude",
+            field: "longitude",
+            hide: false,
+        },
+        {
+            headerName: "ID",
+            field: "id",
+            filter: "agNumberColumnFilter",
+            hide: true,
+        },
+        {
+            headerName: "Last Updated",
+            field: "lastUpdated",
+            hide: true,
+            filter: "agDateColumnFilter",
+        },
     ];
 
-    $scope.contextMenuItems = [
+    /** @type {import("../agGrid/CommonGridController").CGC.DropDownOption[]} */
+    $scope.dropDownOptions = [
         {
-            text: 'Open in New Tab',
-            click: function ($itemScope) {
-                $window.open('/#!/cache-groups/' + $itemScope.cg.id, '_blank');
-            }
+            name: "createCacheGroupMenuItem",
+            href: "#!/cache-groups/new",
+            text: "Create New Cache Group",
+            type: 2,
         },
-        null, // Dividier
-        {
-            text: 'Edit',
-            click: function ($itemScope) {
-                $scope.editCacheGroup($itemScope.cg.id);
-            }
-        },
-        {
-            text: 'Delete',
-            click: function ($itemScope) {
-                confirmDelete($itemScope.cg);
-            }
-        },
-        null, // Dividier
-        {
-            text: 'Queue Server Updates',
-            click: function ($itemScope) {
-                confirmQueueServerUpdates($itemScope.cg);
-            }
-        },
-        {
-            text: 'Clear Server Updates',
-            click: function ($itemScope) {
-                confirmClearServerUpdates($itemScope.cg);
-            }
-        },
-        null, // Dividier
-        {
-            text: 'Manage ASNs',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cache-groups/' + $itemScope.cg.id + '/asns');
-            }
-        },
-        {
-            text: 'Manage Servers',
-            click: function ($itemScope) {
-                locationUtils.navigateToPath('/cache-groups/' + $itemScope.cg.id + '/servers');
-            }
-        }
     ];
 
-    $scope.editCacheGroup = function(id) {
-        locationUtils.navigateToPath('/cache-groups/' + id);
+    /** Reloads all resolved data for the view. */
+    $scope.refresh = () => {
+        $state.reload();
     };
 
-    $scope.createCacheGroup = function() {
-        locationUtils.navigateToPath('/cache-groups/new');
-    };
-
-    $scope.refresh = function() {
-        $state.reload(); // reloads all the resolves for the view
-    };
-
-    $scope.toggleVisibility = function(colName) {
-        const col = cacheGroupsTable.column(colName + ':name');
-        col.visible(!col.visible());
-        cacheGroupsTable.rows().invalidate().draw();
-    };
-
-    angular.element(document).ready(function () {
-        cacheGroupsTable = $('#cacheGroupsTable').DataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": [],
-            "columns": $scope.columns,
-            "initComplete": function(settings, json) {
-                try {
-                    // need to create the show/hide column checkboxes and bind to the current visibility
-                    $scope.columns = JSON.parse(localStorage.getItem('DataTables_cacheGroupsTable_/')).columns;
-                } catch (e) {
-                    console.error("Failure to retrieve required column info from localStorage (key=DataTables_cacheGroupsTable_/):", e);
-                }
-            }
+    /**
+     * Deletes a Cache Group if confirmation is given.
+     * @param {CacheGroup} cacheGroup
+     */
+    function confirmDelete(cacheGroup) {
+        const params = {
+            title: `Delete Cache Group: ${cacheGroup.name}`,
+            key: cacheGroup.name,
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: "common/modules/dialog/delete/dialog.delete.tpl.html",
+            controller: "DialogDeleteController",
+            size: "md",
+            resolve: { params },
         });
-    });
+        modalInstance.result
+            .then(() => {
+                cacheGroupService
+                    .deleteCacheGroup(cacheGroup.id)
+                    .then((result) => {
+                        messageModel.setMessages(result.alerts, false);
+                        $scope.refresh();
+                    });
+            })
+            .catch((e) => console.error("failed to delete Cache Group:", e));
+    }
 
+    /**
+     * Queues servers updates on a Cache Group if CDN is selected
+     * @param {CacheGroup} cacheGroup
+     */
+    function confirmQueueServerUpdates(cacheGroup) {
+        const params = {
+            title: `Queue Server Updates: ${cacheGroup.name}`,
+            message: "Please select a CDN",
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: "common/modules/dialog/select/dialog.select.tpl.html",
+            controller: "DialogSelectController",
+            size: "md",
+            resolve: {
+                params,
+                collection: (cdnService) => cdnService.getCDNs(),
+            },
+        });
+        modalInstance.result.then((cdn) =>
+            cacheGroupService.queueServerUpdates(cacheGroup.id, cdn.id)
+        );
+    }
+
+    /**
+     * Clears servers updates on a Cache Group if confirmation is given.
+     * @param {CacheGroup} cacheGroup
+     */
+    function confirmClearServerUpdates(cacheGroup) {
+        const params = {
+            title: `Clear Server Updates: ${cacheGroup.name}`,
+            message: "Please select a CDN",
+        };
+        const modalInstance = $uibModal.open({
+            templateUrl: "common/modules/dialog/select/dialog.select.tpl.html",
+            controller: "DialogSelectController",
+            size: "md",
+            resolve: {
+                params,
+                collection: (cdnService) => cdnService.getCDNs(),
+            },
+        });
+        modalInstance.result.then((cdn) => {
+            cacheGroupService.clearServerUpdates(cacheGroup.id, cdn.id);
+        });
+    }
+
+    /** @type {import("../agGrid/CommonGridController").CGC.ContextMenuOption[]} */
+    $scope.contextMenuOptions = [
+        {
+            getHref,
+            getText: (cacheGroup) => `Open ${cacheGroup.name} in a new tab`,
+            newTab: true,
+            type: 2,
+        },
+        { type: 0 },
+        {
+            getHref,
+            text: "Edit",
+            type: 2,
+        },
+        {
+            onClick: (cacheGroup) => confirmDelete(cacheGroup),
+            text: "Delete",
+            type: 1,
+        },
+        { type: 0 },
+        {
+            onClick: (cacheGroup) => confirmQueueServerUpdates(cacheGroup),
+            text: "Queue Server Updates",
+            type: 1,
+        },
+        {
+            onClick: (cacheGroup) => confirmClearServerUpdates(cacheGroup),
+            text: "Clear Server Updates",
+            type: 1,
+        },
+        { type: 0 },
+        {
+            getHref: (cacheGroup) => `#!/cache-groups/${cacheGroup.id}/asns`,
+            text: "Manage ASNs",
+            type: 2,
+        },
+        {
+            getHref: (cacheGroup) => `#!/cache-groups/${cacheGroup.id}/servers`,
+            text: "Manage Servers",
+            type: 2,
+        },
+    ];
+
+    /** Options, configuration, data and callbacks for the ag-grid table. */
+    /** @type {import("../agGrid/CommonGridController").CGC.GridSettings} */
+    $scope.gridOptions = {
+        onRowClick: function (row) {
+            locationUtils.navigateToPath(`/cache-groups/${row.data.id}`);
+        },
+    };
+
+    $scope.cacheGroups = cacheGroups.map((cacheGroup) => ({
+        ...cacheGroup,
+        lastUpdated: new Date(
+            cacheGroup.lastUpdated.replace(" ", "T").replace("+00", "Z")
+        ),
+    }));
 };
 
-TableCacheGroupsController.$inject = ['cacheGroups', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'cacheGroupService', 'messageModel'];
+TableCacheGroupsController.$inject = [
+    "cacheGroups",
+    "$scope",
+    "$state",
+    "$uibModal",
+    "locationUtils",
+    "cacheGroupService",
+    "messageModel",
+];
 module.exports = TableCacheGroupsController;

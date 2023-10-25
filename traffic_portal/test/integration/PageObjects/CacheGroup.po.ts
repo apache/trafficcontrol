@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor';
+import { browser, by, element } from "protractor";
 
+import { SideNavigationPage } from "./SideNavigationPage.po";
 import { randomize } from "../config";
-import { BasePage } from './BasePage.po';
-import { SideNavigationPage } from '../PageObjects/SideNavigationPage.po';
 
 interface CreateCacheGroup {
     Type: string;
@@ -37,133 +36,145 @@ interface UpdateCacheGroup {
     Type: string;
     FailoverCG?: string;
 }
-export class CacheGroupPage extends BasePage {
-    private btnCreateCacheGroups = element(by.name('createCacheGroupButton'));
-    private txtName = element(by.name("name"))
-    private txtShortName = element(by.name("shortName"));
-    private txtType = element(by.name("type"));
-    private txtLatitude = element(by.name("latitude"));
-    private txtLongtitude = element(by.name("longitude"));
-    private txtParentCacheGroup = element(by.name("parentCacheGroup"));
-    private txtSecondaryParentCG = element(by.name("secondaryParentCacheGroup"));
-    private txtFailoverCG = element(by.name("fallbackOptions"));
-    private txtSearch = element(by.id('cacheGroupsTable_filter')).element(by.css('label input'));
-    private txtConfirmCacheGroupName = element(by.name("confirmWithNameInput"));
-    private btnDelete = element(by.buttonText('Delete'));
-    private randomize = randomize;
-    private btnTableColumn = element(by.className("caret"))
+
+export class CacheGroupPage extends SideNavigationPage {
+    private txtName = element(by.name("name"));
+
     async OpenTopologyMenu() {
-        let snp = new SideNavigationPage();
-        await snp.ClickTopologyMenu();
+        await this.ClickTopologyMenu();
     }
+
+    /**
+     * Navigates the browser to the Cache Groups table page.
+     */
     async OpenCacheGroupsPage() {
-        let snp = new SideNavigationPage();
-        await snp.NavigateToCacheGroupsPage();
+        await this.NavigateToCacheGroupsPage();
     }
 
-    public async CreateCacheGroups(cachegroup: CreateCacheGroup, outputMessage: string): Promise<boolean> {
-        let result = false
-        let basePage = new BasePage();
-        if (cachegroup.Type == "EDGE_LOC") {
-            if (cachegroup.FailoverCG === undefined) {
-                throw new Error(`cachegroups with Type 'EDGE_LOC' must have FailoverCG`);
-            }
-            await this.btnCreateCacheGroups.click();
-            await this.txtName.sendKeys(cachegroup.Name + this.randomize);
-            await this.txtShortName.sendKeys(cachegroup.ShortName + this.randomize);
-            await this.txtType.sendKeys(cachegroup.Type);
-            await this.txtLatitude.sendKeys(cachegroup.Latitude);
-            await this.txtLongtitude.sendKeys(cachegroup.Longitude);
-            await this.txtParentCacheGroup.sendKeys(cachegroup.ParentCacheGroup);
-            await this.txtSecondaryParentCG.sendKeys(cachegroup.SecondaryParentCG);
-            await this.txtFailoverCG.sendKeys(cachegroup.FailoverCG);
-        } else {
-            await this.btnCreateCacheGroups.click();
-            await this.txtName.sendKeys(cachegroup.Name + this.randomize);
-            await this.txtShortName.sendKeys(cachegroup.ShortName + this.randomize);
-            await this.txtType.sendKeys(cachegroup.Type);
-            await this.txtLatitude.sendKeys(cachegroup.Latitude);
-            await this.txtLongtitude.sendKeys(cachegroup.Longitude);
-            await this.txtParentCacheGroup.sendKeys(cachegroup.ParentCacheGroup);
-            await this.txtSecondaryParentCG.sendKeys(cachegroup.SecondaryParentCG);
+    /**
+     * Creates a given Cache Group.
+     *
+     * @param cachegroup The CacheGroup to create.
+     * @param outputMessage The expected output message
+     * @returns Whether or not creation succeeded, which is judged by comparing
+     * the displayed Alert message to outputMessage - they must match
+     * *exactly*!
+     */
+    public async CreateCacheGroups(
+        cachegroup: CreateCacheGroup,
+        outputMessage: string
+    ): Promise<boolean> {
+        await this.OpenCacheGroupsPage();
+        await element(by.buttonText("More")).click();
+        await element(by.linkText("Create New Cache Group")).click();
+
+        if (
+            cachegroup.Type == "EDGE_LOC" &&
+            cachegroup.FailoverCG === undefined
+        ) {
+            throw new Error(
+                `cachegroups with Type 'EDGE_LOC' must have FailoverCG`
+            );
         }
-        await basePage.ClickCreate();
-        await basePage.GetOutputMessage().then(function (value) {
-            if (outputMessage == value) {
-                result = true;
-            } else {
-                result = false;
-            }
-        })
-        return result;
-    }
 
-    public async SearchCacheGroups(nameCG: string): Promise<boolean> {
-        let name = nameCG + this.randomize;
-        await this.txtSearch.clear();
-        await this.txtSearch.sendKeys(name);
-        if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) === true) {
-            await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            return true;
+        const actions = [
+            this.txtName.sendKeys(cachegroup.Name + randomize),
+            element(by.name("shortName")).sendKeys(cachegroup.ShortName),
+            element(by.name("type")).sendKeys(cachegroup.Type),
+            element(by.name("latitude")).sendKeys(cachegroup.Latitude),
+            element(by.name("longitude")).sendKeys(cachegroup.Longitude),
+            element(by.name("parentCacheGroup")).sendKeys(
+                cachegroup.ParentCacheGroup
+            ),
+            element(by.name("secondaryParentCacheGroup")).sendKeys(
+                cachegroup.SecondaryParentCG
+            ),
+        ];
+
+        if (cachegroup.Type == "EDGE_LOC" && cachegroup.FailoverCG) {
+            actions.push(
+                element(by.name("fallbackOptions")).sendKeys(
+                    cachegroup.FailoverCG
+                )
+            );
         }
-        return false;
+
+        await Promise.all(actions);
+        await this.ClickCreate();
+        return this.GetOutputMessage().then((v) => outputMessage === v);
     }
 
-    public async UpdateCacheGroups(cachegroup: UpdateCacheGroup, outputMessage: string | undefined): Promise<boolean | undefined> {
+    /**
+     * Searches the Cache Groups table for a specific Cache Group, and navigates to its details
+     * page.
+     *
+     * @param nameCG The Name of the Cache Group for which to search.
+     */
+    public async SearchCacheGroups(nameCG: string): Promise<void> {
+        nameCG += randomize;
+        await this.OpenCacheGroupsPage();
+        const searchInput = element(by.id("quickSearch"));
+        await searchInput.clear();
+        await searchInput.sendKeys(nameCG);
+        await element(by.cssContainingText("span", nameCG)).click();
+    }
+
+    /**
+     * Updates a Cache Group's Name.
+     *
+     * @param cachegroup A definition of the CacheGroup renaming.
+     * @param outputMessage The expected output message
+     * @returns Whether or not renaming succeeded.
+     */
+    public async UpdateCacheGroups(
+        cachegroup: UpdateCacheGroup,
+        outputMessage: string | undefined
+    ): Promise<boolean | undefined> {
         let result: boolean | undefined = false;
-        let basePage = new BasePage();
-        let snp = new SideNavigationPage();
         if (cachegroup.Type == "EDGE_LOC") {
-            const name = cachegroup.FailoverCG + this.randomize;
-            await this.txtFailoverCG.click();
-            if (await browser.isElementPresent(element(by.css(`select[name="fallbackOptions"] > option[label="${name}"]`)))) {
-                await element(by.css(`select[name="fallbackOptions"] > option[label="${name}"]`)).click();
+            const name = cachegroup.FailoverCG + randomize;
+            await element(by.name("fallbackOptions")).click();
+            if (
+                await browser.isElementPresent(
+                    element(
+                        by.css(
+                            `select[name="fallbackOptions"] > option[label="${name}"]`
+                        )
+                    )
+                )
+            ) {
+                await element(
+                    by.css(
+                        `select[name="fallbackOptions"] > option[label="${name}"]`
+                    )
+                ).click();
             } else {
                 result = undefined;
             }
         }
-        await this.txtType.sendKeys(cachegroup.Type);
-        await snp.ClickUpdate();
+        await element(by.name("type")).sendKeys(cachegroup.Type);
+        await this.ClickUpdate();
         if (result !== undefined) {
-            await basePage.GetOutputMessage().then(function (value) {
-                if (outputMessage === value) {
-                    result = true;
-                } else {
-                    result = false;
-                }
-            })
+            await this.GetOutputMessage().then((v) => outputMessage === v);
         }
         return result;
     }
-    public async DeleteCacheGroups(nameCG: string, outputMessage: string) {
-        let result = false;
-        let basePage = new BasePage();
-        let snp = new SideNavigationPage();
-        let name = nameCG + this.randomize;
-        await this.btnDelete.click();
-        await this.txtConfirmCacheGroupName.sendKeys(name);
-        if (await basePage.ClickDeletePermanently() == true) {
-            result = await basePage.GetOutputMessage().then(function (value) {
-                if (value.indexOf(outputMessage) > -1) {
-                    return true
-                } else {
-                    return false;
-                }
-            })
-        } else {
-            await basePage.ClickCancel();
-        }
-        await snp.NavigateToCacheGroupsPage();
-        return result;
-    }
-    public async CheckCSV(name: string): Promise<boolean> {
-        return element(by.cssContainingText("span", name)).isPresent();
-    }
-    public async ToggleTableColumn(name: string): Promise<boolean> {
-        await this.btnTableColumn.click();
-        const result = await element(by.cssContainingText("th", name)).isPresent();
-        await element(by.cssContainingText("label", name)).click();
-        await this.btnTableColumn.click();
-        return !result;
+
+    /**
+     * Deletes a Cache Group.
+     *
+     * @param nameCG The Name of the Cache Group to be deleted.
+     * @param outputMessage The expected output message
+     * @returns Whether or not the deletion succeeded.
+     */
+    public async DeleteCacheGroups(
+        nameCG: string,
+        outputMessage: string
+    ): Promise<boolean> {
+        nameCG += randomize;
+        await element(by.buttonText("Delete")).click();
+        await element(by.name("confirmWithNameInput")).sendKeys(nameCG);
+        await this.ClickDeletePermanently();
+        return (await this.GetOutputMessage()) === outputMessage;
     }
 }

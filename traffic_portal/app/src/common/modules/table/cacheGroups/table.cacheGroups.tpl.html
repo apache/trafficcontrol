@@ -18,54 +18,14 @@ under the License.
 -->
 
 <div class="x_panel">
-    <div class="x_title">
-        <ol class="breadcrumb pull-left">
-            <li class="active">Cache Groups</li>
-        </ol>
-        <div class="pull-right" role="group" ng-if="!settings.isNew">
-            <button name="createCacheGroupButton" class="btn btn-primary" title="Create Cache Group" ng-click="createCacheGroup()"><i class="fa fa-plus"></i></button>
-            <button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-            <div id="toggleColumns" class="btn-group" role="group" title="Select Table Columns" uib-dropdown is-open="columnSettings.isopen">
-                <button type="button" class="btn btn-default dropdown-toggle" uib-dropdown-toggle aria-haspopup="true" aria-expanded="false">
-                    <i class="fa fa-columns"></i>&nbsp;
-                    <span class="caret"></span>
-                </button>
-                <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
-                        <div class="checkbox">
-                            <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
-                        </div>
-                    </li>
-                </menu>
-            </div>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-    <div class="x_content">
-        <br>
-        <table id="cacheGroupsTable" class="table responsive-utilities jambo_table">
-            <thead>
-            <tr class="headings">
-                <th>Name</th>
-                <th>Short Name</th>
-                <th>Type</th>
-                <th>1st Parent</th>
-                <th>2nd Parent</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-click="editCacheGroup(cg.id)" ng-repeat="cg in ::cacheGroups" context-menu="contextMenuItems">
-                <td data-search="^{{::cg.name}}$">{{::cg.name}}</td>
-                <td data-search="^{{::cg.shortName}}$">{{::cg.shortName}}</td>
-                <td data-search="^{{::cg.typeName}}$">{{::cg.typeName}}</td>
-                <td data-search="^{{::cg.parentCachegroupName}}$">{{::cg.parentCachegroupName}}</td>
-                <td data-search="^{{::cg.secondaryParentCachegroupName}}$">{{::cg.secondaryParentCachegroupName}}</td>
-                <td data-search="^{{::cg.latitude}}$">{{::cg.latitude}}</td>
-                <td data-search="^{{::cg.longitude}}$">{{::cg.longitude}}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    <common-grid-controller
+        title="Cache Groups"
+        table-name="cacheGroups"
+        options="gridOptions"
+        data="cacheGroups"
+        columns="columns"
+        drop-down-options="dropDownOptions"
+        context-menu-options="contextMenuOptions"
+    >
+    </common-grid-controller>
 </div>
