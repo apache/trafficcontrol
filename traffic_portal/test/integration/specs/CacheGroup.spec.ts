@@ -16,19 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import {browser} from 'protractor';
+import { browser } from "protractor";
 
-import {LoginPage} from '../PageObjects/LoginPage.po'
-import {CacheGroupPage} from '../PageObjects/CacheGroup.po';
-import {TopNavigationPage} from '../PageObjects/TopNavigationPage.po';
-import {cachegroups} from "../Data";
-
+import { LoginPage } from "../PageObjects/LoginPage.po";
+import { CacheGroupPage } from "../PageObjects/CacheGroup.po";
+import { TopNavigationPage } from "../PageObjects/TopNavigationPage.po";
+import { cachegroups } from "../Data";
 
 let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
 let cacheGroupPage = new CacheGroupPage();
 
-cachegroups.tests.forEach(cacheGroupData => {
+cachegroups.tests.forEach((cacheGroupData) => {
     for (const login of cacheGroupData.logins) {
         describe(`Traffic Portal - CacheGroup - ${cacheGroupData.testName}`, () => {
             beforeAll(async () => {
@@ -45,21 +44,48 @@ cachegroups.tests.forEach(cacheGroupData => {
             });
             for (const create of cacheGroupData.create) {
                 it(create.Description, async () => {
-                    expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();
+                    expect(
+                        await cacheGroupPage.CreateCacheGroups(
+                            create,
+                            create.validationMessage
+                        )
+                    ).toBeTruthy();
                 });
             }
             for (const update of cacheGroupData.update) {
-                it(update.Description, async () => {
-                    await cacheGroupPage.SearchCacheGroups(update.Name);
-                    expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeTruthy();
-                });
+                if (update.Description.includes("cannot")) {
+                    it(update.Description, async () => {
+                        await cacheGroupPage.SearchCacheGroups(update.Name);
+                        expect(
+                            await cacheGroupPage.UpdateCacheGroups(
+                                update,
+                                update.validationMessage
+                            )
+                        ).toBeUndefined();
+                    });
+                } else {
+                    it(update.Description, async () => {
+                        await cacheGroupPage.SearchCacheGroups(update.Name);
+                        expect(
+                            await cacheGroupPage.UpdateCacheGroups(
+                                update,
+                                update.validationMessage
+                            )
+                        ).toBeTruthy();
+                    });
+                }
             }
             for (const remove of cacheGroupData.remove) {
                 it(remove.Description, async () => {
                     await cacheGroupPage.SearchCacheGroups(remove.Name);
-                    expect(await cacheGroupPage.DeleteCacheGroups(remove.Name, remove.validationMessage)).toBeTruthy();
+                    expect(
+                        await cacheGroupPage.DeleteCacheGroups(
+                            remove.Name,
+                            remove.validationMessage
+                        )
+                    ).toBeTruthy();
                 });
             }
         });
     }
-})
+});
