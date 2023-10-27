@@ -42,6 +42,7 @@ func getTestParameters() []tc.ParameterNullable {
 	ID := 1
 	param := "paramname1"
 	val := "val1"
+	cmt := "cmt"
 
 	testParameter := tc.ParameterNullable{
 		ConfigFile:  &configFile,
@@ -51,6 +52,7 @@ func getTestParameters() []tc.ParameterNullable {
 		Profiles:    json.RawMessage(`["foo","bar"]`),
 		Secure:      &secureFlag,
 		Value:       &val,
+		Comment:     &cmt,
 	}
 	parameters = append(parameters, testParameter)
 
@@ -59,6 +61,7 @@ func getTestParameters() []tc.ParameterNullable {
 	testParameter2.Value = &val
 	testParameter2.ConfigFile = &configFile
 	testParameter2.Profiles = json.RawMessage(`["foo","baz"]`)
+	testParameter2.Comment = &cmt
 	parameters = append(parameters, testParameter2)
 
 	return parameters
@@ -88,6 +91,7 @@ func TestGetParameters(t *testing.T) {
 			ts.Profiles,
 			ts.Secure,
 			ts.Value,
+			ts.Comment,
 		)
 	}
 	mock.ExpectBegin()
