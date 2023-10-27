@@ -35,12 +35,13 @@ const getHref = cdn => `#!/cdns/${cdn.id}`;
 /**
  * @param {CDN[]} cdns
  * @param {*} $scope
+ * @param {*} $state
  * @param {import("../../../service/utils/angular.ui.bootstrap").IModalService} $uibModal
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  * @param {import("../../../api/CDNService")} cdnService
  * @param {import("../../../models/MessageModel")} messageModel
  */
-var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnService, messageModel) {
+var TableCDNsController = function(cdns, $scope, $state, $uibModal, locationUtils, cdnService, messageModel) {
 
 	/**** Constants, scope data, etc. ****/
 
@@ -98,6 +99,10 @@ var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnSe
 		type: 1
 	}];
 
+	/** Reloads all resolved data for the view. */
+	$scope.refresh = function() {
+		$state.reload();
+	};
 
 	/**
 	 * Deletes a CDN if confirmation is given.
@@ -253,5 +258,5 @@ var TableCDNsController = function(cdns, $scope, $uibModal, locationUtils, cdnSe
 
 };
 
-TableCDNsController.$inject = ["cdns", "$scope", "$uibModal", "locationUtils", "cdnService", "messageModel"];
+TableCDNsController.$inject = ["cdns", "$scope", '$state', "$uibModal", "locationUtils", "cdnService", "messageModel"];
 module.exports = TableCDNsController;
