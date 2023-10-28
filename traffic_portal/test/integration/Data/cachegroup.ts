@@ -27,16 +27,6 @@ export const cachegroups = {
 					"password": "pa$$word"
 				}
 			],
-			toggle:[
-				{
-					description: "hide first table column",
-					Name: "1st Parent"
-				},
-				{
-					description: "redisplay first table column",
-					Name: "1st Parent"
-				}
-			],
 			create: [
 				{
 					Description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
@@ -122,16 +112,6 @@ export const cachegroups = {
 					"password": "pa$$word"
 				}
 			],
-			toggle:[
-				{
-					description: "hide first table column",
-					Name: "1st Parent"
-				},
-				{
-					description: "display first table column",
-					Name: "1st Parent"
-				}
-			],
 			create: [
 				{
 					Description: "create a CacheGroup",
@@ -168,16 +148,6 @@ export const cachegroups = {
 				{
 					"username": "TPOperator",
 					"password": "pa$$word"
-				}
-			],
-			toggle:[
-				{
-					description: "hide first table column",
-					Name: "1st Parent"
-				},
-				{
-					description: "display first table column",
-					Name: "1st Parent"
 				}
 			],
 			create: [
