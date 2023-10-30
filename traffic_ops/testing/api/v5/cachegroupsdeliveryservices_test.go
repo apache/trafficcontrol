@@ -42,10 +42,8 @@ func TestCacheGroupsDeliveryServices(t *testing.T) {
 					EndpointID:    GetCacheGroupId(t, "cachegroup3"),
 					ClientSession: TOSession,
 					RequestBody: []int{
-						GetDeliveryServiceId(t, "ds1")(),
-						GetDeliveryServiceId(t, "ds2")(),
 						GetDeliveryServiceId(t, "ds3")(),
-						GetDeliveryServiceId(t, "ds3")(),
+						GetDeliveryServiceId(t, "ds4")(),
 						GetDeliveryServiceId(t, "DS5")(),
 					},
 					Expectations: utils.CkRequest(utils.NoError(), utils.HasStatus(http.StatusOK), validateCGDSServerAssignments()),

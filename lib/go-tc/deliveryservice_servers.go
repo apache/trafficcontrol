@@ -430,6 +430,7 @@ func (server DSServerV4) Upgrade() DSServerV5 {
 			MgmtIPGateway:      server.MgmtIPGateway,
 			MgmtIPNetmask:      server.MgmtIPNetmask,
 			OfflineReason:      server.OfflineReason,
+			Profiles:           server.ProfileNames,
 			PhysicalLocation:   util.CoalesceToDefault(server.PhysLocation),
 			PhysicalLocationID: util.CoalesceToDefault(server.PhysLocationID),
 			Rack:               server.Rack,

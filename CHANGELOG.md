@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
+- [#7878](https://github.com/apache/trafficcontrol/pull/7878) *Traffic Ops, Traffic Portal* Fixed the case where TO was failing to assign delivery services to a server, due to a bug in the way the list of preexisting delivery services was being returned.
 
 ## [8.0.0] - 2023-09-20
 ### Added

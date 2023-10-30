@@ -305,7 +305,7 @@ func ValidateDSCapabilities(dsIDs []int, serverName string, tx *sql.Tx) (error, 
 	for id, caps := range dsCaps {
 		for _, dsrc := range caps {
 			if !util.ContainsStr(sCaps, dsrc) {
-				return errors.New(fmt.Sprintf("cache %s cannot assign delivery service %d without having the required delivery service capabilities: %v", serverName, id, dsCaps)), nil, http.StatusBadRequest
+				return errors.New(fmt.Sprintf("cache %s cannot assign delivery service %d without having the required delivery service capabilities: %v", serverName, id, caps)), nil, http.StatusBadRequest
 			}
 		}
 	}

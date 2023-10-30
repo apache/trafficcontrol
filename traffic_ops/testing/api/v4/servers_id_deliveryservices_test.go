@@ -193,7 +193,7 @@ func validateServersDeliveryServicesPost(serverID int, expectedDSID []int, expec
 	return func(t *testing.T, _ toclientlib.ReqInf, resp interface{}, _ tc.Alerts, _ error) {
 		serverDeliveryServices, _, err := TOSession.GetServerIDDeliveryServices(serverID, client.RequestOptions{})
 		assert.RequireNoError(t, err, "Error getting Server Delivery Services: %v - alerts: %+v", err, serverDeliveryServices.Alerts)
-		assert.RequireEqual(t, expectedDSCount, len(serverDeliveryServices.Response), "Expected Two Delivery Service returned Got: %d", len(serverDeliveryServices.Response))
+		assert.RequireEqual(t, expectedDSCount, len(serverDeliveryServices.Response), "Expected %d Delivery Service returned Got: %d", expectedDSCount, len(serverDeliveryServices.Response))
 		for i := 0; i < len(expectedDSID); i++ {
 			validateServersDeliveryServices(expectedDSID[i])(t, toclientlib.ReqInf{}, serverDeliveryServices.Response, tc.Alerts{}, nil)
 
