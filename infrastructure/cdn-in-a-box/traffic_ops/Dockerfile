@@ -85,6 +85,7 @@ RUN set -o nounset -o errexit -o xtrace && \
 		perl-TermReadKey     \
 		perl-Test-CPAN-Meta  \
 		perl-WWW-Curl;       \
+	dnf module -y install python38; \
 	dnf clean all
 
 FROM trafficops-dependencies AS trafficops
