@@ -26,7 +26,7 @@ for arg in "$@"; do
 done
 
 PATH+=:/usr/libexec/
-python_bin="$(command -v {python,platform-python}{3{{.,}{12,11,10,9,8,7,6},},} | head -n1)"
+python_bin="$(command -v {python,platform-python}{3{{.,}{12..6},},} | head -n1)"
 if [[ -z "$python_bin" ]]; then
 	echo 'No python3 executable was found. Python is required to run the Postinstall script.' >/dev/stderr
 	exit 1
