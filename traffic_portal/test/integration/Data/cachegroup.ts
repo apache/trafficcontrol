@@ -95,12 +95,12 @@ export const cachegroups = {
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache1",
-					validationMessage: "was deleted"
+					validationMessage: "cache group was deleted."
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache3",
-					validationMessage: "was deleted"
+					validationMessage: "cache group was deleted."
 				}
 			]
 		},
