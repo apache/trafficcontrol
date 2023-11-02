@@ -320,6 +320,11 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			hide: true
 		},
 		{
+			headerName: "Required Capability(ies)",
+			field: "requiredCapabilities",
+			hide: true
+		},
+		{
 			headerName: "Routing Name",
 			field: "routingName",
 			hide: true

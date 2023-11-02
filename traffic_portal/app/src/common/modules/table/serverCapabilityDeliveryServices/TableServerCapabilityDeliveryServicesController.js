@@ -50,13 +50,6 @@ var TableServerCapabilityDeliveryServicesController = function(serverCapability,
 
 	$scope.contextMenuItems = [
 		{
-			text: 'Remove Capability from Delivery Service',
-			click: function ($itemScope) {
-				$scope.confirmRemoveCapability($itemScope.ds);
-			}
-		},
-		null, // Divider
-		{
 			text: 'Edit Delivery Service',
 			click: function ($itemScope) {
 				$scope.editDeliveryService($itemScope.ds);
@@ -66,32 +59,8 @@ var TableServerCapabilityDeliveryServicesController = function(serverCapability,
 
 	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
-	$scope.confirmRemoveCapability = function(ds, $event) {
-		if ($event) {
-			$event.stopPropagation(); // this kills the click event so it doesn't trigger anything else
-		}
-
-		const params = {
-			title: 'Remove Required Server Capability from Delivery Service?',
-			message: 'Are you sure you want to remove the ' + serverCapability.name + ' server capability requirement from the ' + ds.xmlID + ' delivery service?'
-		};
-		const modalInstance = $uibModal.open({
-			templateUrl: 'common/modules/dialog/confirm/dialog.confirm.tpl.html',
-			controller: 'DialogConfirmController',
-			size: 'md',
-			resolve: {
-				params: function () {
-					return params;
-				}
-			}
-		});
-		modalInstance.result.then(function() {
-			removeCapability(ds.deliveryServiceID);
-		});
-	};
-
 	$scope.editDeliveryService = function(ds) {
-		deliveryServiceService.getDeliveryService(ds.deliveryServiceID)
+		deliveryServiceService.getDeliveryService(ds.id)
 			.then(function(result) {
 				let path = '/delivery-services/' + result.id + '?dsType=' + result.type;
 				locationUtils.navigateToPath(path);

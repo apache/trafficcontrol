@@ -35,15 +35,11 @@ under the License.
             <thead>
             <tr>
                 <th>XML ID (Key)</th>
-                <th></th>
             </tr>
             </thead>
             <tbody>
             <tr ng-click="editDeliveryService(ds)" ng-repeat="ds in ::deliveryServices" context-menu="contextMenuItems">
-                <td data-search="^{{::ds.xmlID}}$">{{::ds.xmlID}}</td>
-                <td style="text-align: right;">
-                    <a class="link action-link" title="Remove Required Capability from Delivery Service" ng-click="confirmRemoveCapability(ds, $event)"><i class="fa fa-sm fa-chain-broken"></i></a>
-                </td>
+                <td data-search="^{{::ds.xmlId}}$">{{::ds.xmlId}}</td>
             </tr>
             </tbody>
         </table>

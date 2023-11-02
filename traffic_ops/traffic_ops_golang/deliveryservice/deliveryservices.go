@@ -1443,10 +1443,10 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		"profile":          {Column: "ds.profile", Checker: api.IsInt},
 		"type":             {Column: "ds.type", Checker: api.IsInt},
 		"logsEnabled":      {Column: "ds.logs_enabled", Checker: api.IsBool},
-		"tenant":           {Column: "ds.tenant_id", Checker: api.IsInt},
 		"signingAlgorithm": {Column: "ds.signing_algorithm"},
-		"topology":         {Column: "ds.topology"},
 		"serviceCategory":  {Column: "ds.service_category"},
+		"tenant":           {Column: "ds.tenant_id", Checker: api.IsInt},
+		"topology":         {Column: "ds.topology"},
 	}
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(params, queryParamsToSQLCols)
@@ -1491,6 +1491,11 @@ func readGetDeliveryServices(h http.Header, params map[string]string, tx *sqlx.T
 		where += " AND ds.tenant_id = ANY(CAST(:accessibleTo AS bigint[])) "
 		queryValues["accessibleTo"] = pq.Array(accessibleTenants)
 	}
+
+	if reqCap, ok := params["requiredCapability"]; ok {
+		where += " AND '" + reqCap + "'=ANY(ds.required_capabilities)"
+	}
+
 	query := SelectDeliveryServicesQuery + where + orderBy + pagination
 	log.Debugln("generated deliveryServices query: " + query)
 	log.Debugf("executing with values: %++v\n", queryValues)

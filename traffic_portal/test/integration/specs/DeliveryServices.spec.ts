@@ -67,9 +67,9 @@ describe("Delivery Services", () => {
 				});
 			}
 
-			for (const {serverHostname, xmlID, validationMessage} of data.assignServer){
+			for (const {serverHostname, xmlId, validationMessage} of data.assignServer){
 				it("assigns servers to a Delivery Service", async () => {
-					await deliveryservicesPage.SearchDeliveryService(xmlID);
+					await deliveryservicesPage.SearchDeliveryService(xmlId);
 					expect(await deliveryservicesPage.AssignServerToDeliveryService(serverHostname)).toBe(validationMessage);
 				});
 			}

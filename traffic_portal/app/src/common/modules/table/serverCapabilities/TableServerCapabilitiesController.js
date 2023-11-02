@@ -83,13 +83,13 @@ var TableServerCapabilitiesController = function(serverCapabilities, $scope, $st
 		{
 			text: 'View Delivery Services',
 			click: function ($itemScope) {
-				locationUtils.navigateToPath('/server-capabilities/' + $itemScope.sc.name + '/delivery-services');
+				locationUtils.navigateToPath('/server-capabilities/delivery-services?name=' + $itemScope.sc.name);
 			}
 		},
 		{
 			text: 'View Servers',
 			click: function ($itemScope) {
-				locationUtils.navigateToPath('/server-capabilities/' + $itemScope.sc.name + '/servers');
+				locationUtils.navigateToPath('/server-capabilities/servers?name=' + $itemScope.sc.name );
 			}
 		}
 	];
