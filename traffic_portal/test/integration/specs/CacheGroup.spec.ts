@@ -34,6 +34,7 @@ cachegroups.tests.forEach((cacheGroupData) => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
+                await cacheGroupPage.OpenTopologyMenu();
                 await cacheGroupPage.OpenCacheGroupsPage();
             });
             afterAll(async () => {
