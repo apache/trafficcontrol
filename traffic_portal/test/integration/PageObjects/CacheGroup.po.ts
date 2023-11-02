@@ -155,9 +155,8 @@ export class CacheGroupPage extends SideNavigationPage {
         await element(by.name("type")).sendKeys(cachegroup.Type);
         await this.ClickUpdate();
         if (result !== undefined) {
-            await this.GetOutputMessage().then((v) => outputMessage === v);
+            return (await this.GetOutputMessage()) === outputMessage;
         }
-        return result;
     }
 
     /**
