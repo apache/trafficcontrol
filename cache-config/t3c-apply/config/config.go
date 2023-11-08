@@ -681,8 +681,7 @@ func getOSSvcManagement() SvcManagement {
 		_svcManager = SystemD
 	} else if isCommandAvailable(Service) {
 		_svcManager = SystemV
-	}
-	if !isCommandAvailable(Chkconfig) {
+	} else {
 		return Unknown
 	}
 
