@@ -191,6 +191,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7688](https://github.com/apache/trafficcontrol/pull/7688) *Traffic Ops*: Fixed secured parameters being visible when role has proper permissions.
 - [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops*: Fixed `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
 - [#7817](https://github.com/apache/trafficcontrol/pull/7817) *Traffic Control Cache Config (t3c)* fixed issue that would cause null ptr panic on client fallback.
+- [#7866](https://github.com/apache/trafficcontrol/pull/7866) (Traffic Control Cache Config (t3c)* fixed rpm db check to work with rocky linux 9)
 
 ### Removed
 - [#7808](https://github.com/apache/trafficcontrol/pull/7808) *Traffic Router*: Set SOA `minimum` field to a custom value defined in the `tld.soa.minimum` param, and remove the previously added `dns.negative.caching.ttl` property.
