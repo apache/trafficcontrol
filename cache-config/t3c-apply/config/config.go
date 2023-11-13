@@ -552,10 +552,10 @@ If any of the related flags are also set, they override the mode's default behav
 			rpmDBisOk = verifySqliteRpmDB(rpmDir + "/" + sqliteRpmDB)
 			toInfoLog = append(toInfoLog, fmt.Sprintf("RPM database is ok: %t", rpmDBisOk))
 		} else {
-			toInfoLog = append(toInfoLog, "/bin/sqlite3 not available, RPM database no checked")
+			toInfoLog = append(toInfoLog, "/bin/sqlite3 not available, RPM database not checked")
 		}
 	} else if rpmDBType == rpmDBBdb {
-		toInfoLog = append(toInfoLog, fmt.Sprintf("RPM database is bdb %s", rpmDBBdb))
+		toInfoLog = append(toInfoLog, fmt.Sprintf("RPM database is %s", rpmDBBdb))
 		rpmDBisOk = verifyRpmDB(rpmDir)
 		toInfoLog = append(toInfoLog, fmt.Sprintf("RPM database is ok: %t", rpmDBisOk))
 	} else {
