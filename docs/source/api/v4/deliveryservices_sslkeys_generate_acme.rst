@@ -53,7 +53,7 @@ Request Structure
 		"key": "ds-01",
 		"deliveryservice": "ds-01",
 		"version": "3",
-		"hostname": "tr.ds-01.ott.kabletown.com",
+		"hostname": "tr.ds-01.mycdn.ciab.test",
 		"cdn":"test-cdn"
 	}
 

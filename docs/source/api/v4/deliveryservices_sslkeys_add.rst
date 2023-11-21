@@ -55,7 +55,7 @@ Request Structure
 
 	{
 		"cdn": "test-cdn",
-		"hostname": "tr.ds-01.ott.kabletown.com",
+		"hostname": "tr.ds-01.mycdn.ciab.test",
 		"key": "ds-01",
 		"version": "1",
 		"certificate": {

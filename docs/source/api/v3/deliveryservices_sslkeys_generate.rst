@@ -55,9 +55,9 @@ Request Structure
 		"key": "ds-01",
 		"businessUnit": "CDN Engineering",
 		"version": "3",
-		"hostname": "tr.ds-01.ott.kabletown.com",
+		"hostname": "tr.ds-01.mycdn.ciab.test",
 		"country": "US",
-		"organization": "Kabletown",
+		"organization": "CDN",
 		"city": "Denver",
 		"state": "Colorado"
 	}
