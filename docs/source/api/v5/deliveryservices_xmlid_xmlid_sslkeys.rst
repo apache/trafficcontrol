@@ -89,7 +89,7 @@ Response Structure
 		"cdn": "qa",
 		"businessUnit": "CDN_Eng",
 		"city": "Denver",
-		"organization": "KableTown",
+		"organization": "CDN",
 		"hostname": "foober.com",
 		"country": "US",
 		"state": "Colorado",
