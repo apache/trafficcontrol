@@ -39,6 +39,10 @@ Request Structure
 	:csr: The csr file for the :term:`Delivery Service` identified by ``key``
 	:key: The private key for the :term:`Delivery Service` identified by ``key``
 
+:hostname:        The desired hostname of the :term:`Delivery Service`
+
+	.. note:: In most cases, this must be the same as the :term:`Delivery Service` URL'
+
 :key:     The :ref:`ds-xmlid` of the :term:`Delivery Service` to which these keys will be assigned
 :version: An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 
@@ -50,6 +54,8 @@ Request Structure
 	Content-Type: application/json
 
 	{
+		"cdn": "test-cdn",
+		"hostname": "tr.ds-01.ott.kabletown.com",
 		"key": "ds-01",
 		"version": "1",
 		"certificate": {
