@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed perl dependency
 - Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
 
+### Fixed
+- [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
+
 ## [8.0.0] - 2023-09-20
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client*: Added peer monitor flag while using `strategies.yaml`.
