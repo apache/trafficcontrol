@@ -40,7 +40,7 @@
  * @param {import("../../../api/ServerCapabilityService")} serverCapabilityService
  * @param {import("../../../api/ServiceCategoryService")} serviceCategoryService
  */
-var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serverCapabilityService, serviceCategoryService) {
+var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin, topologies, type, types, $scope, formUtils, tenantUtils, deliveryServiceUtils, locationUtils, deliveryServiceService, cdnService, profileService, tenantService, propertiesModel, userModel, serverCapabilityService, serviceCategoryService) {
 
 	/**
 	 * This is used to cache TLS version settings when the checkbox is toggled.
@@ -100,6 +100,8 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	$scope.hasGeoLimitCountries = function(ds) {
 		return ds !== undefined && (ds.geoLimit === 1 || ds.geoLimit === 2);
 	}
+
+	$scope.navigateToPath = (path, unsavedChanges) => locationUtils.navigateToPath(path, unsavedChanges);
 
 	$scope.loadGeoLimitCountriesRaw = function (ds) {
 		if($scope.hasGeoLimitCountries(ds)) {
@@ -559,5 +561,5 @@ var FormDeliveryServiceController = function(deliveryService, dsCurrent, origin,
 	}
 };
 
-FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serverCapabilityService", "serviceCategoryService"];
+FormDeliveryServiceController.$inject = ["deliveryService", "dsCurrent", "origin", "topologies", "type", "types", "$scope", "formUtils", "tenantUtils", "deliveryServiceUtils", "locationUtils", "deliveryServiceService", "cdnService", "profileService", "tenantService", "propertiesModel", "userModel", "serverCapabilityService", "serviceCategoryService"];
 module.exports = FormDeliveryServiceController;
