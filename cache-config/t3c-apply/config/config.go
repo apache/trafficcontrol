@@ -353,7 +353,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 
 	const useStrategiesFlagName = "use-strategies"
 	const defaultUseStrategies = t3cutil.UseStrategiesFlagFalse
-	useStrategiesPtr := getopt.EnumLong(useStrategiesFlagName, 0, []string{string(t3cutil.UseStrategiesFlagTrue), string(t3cutil.UseStrategiesFlagCore), string(t3cutil.UseStrategiesFlagCore), ""}, "", "[true | core| false] whether to generate config using strategies.yaml instead of parent.config. If true use the parent_select plugin, if 'core' use ATS core strategies, if false use parent.config.")
+	useStrategiesPtr := getopt.EnumLong(useStrategiesFlagName, 0, []string{string(t3cutil.UseStrategiesFlagTrue), string(t3cutil.UseStrategiesFlagCore), string(t3cutil.UseStrategiesFlagFalse), ""}, "", "[true | core| false] whether to generate config using strategies.yaml instead of parent.config. If true use the parent_select plugin, if 'core' use ATS core strategies, if false use parent.config.")
 
 	const useLocalATSVersionFlagName = "local-ats-version"
 	useLocalATSVersionPtr := getopt.BoolLong(useLocalATSVersionFlagName, 0, "[true | false] whether to use the local installed ATS version for config generation. If false, attempt to use the Server Package Parameter and fall back to ATS 5. If true and the local ATS version cannot be found, an error will be logged and the version set to ATS 5. Default is false")
