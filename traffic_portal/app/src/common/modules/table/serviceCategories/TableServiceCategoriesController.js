@@ -18,36 +18,79 @@
  */
 
 /**
- * @param {*} serviceCategories
+ *@typedef ServiceCategory
+ * @property {string} name
+ * @property {string} lastUpdated
+ */
+
+/**
+ * @param {ServiceCategory} serviceCategories
  * @param {*} $scope
  * @param {*} $state
  * @param {import("../../../service/utils/LocationUtils")} locationUtils
  */
-var TableServiceCategoriesController = function(serviceCategories, $scope, $state, locationUtils) {
+var TableServiceCategoriesController = function (
+    serviceCategories,
+    $scope,
+    $state,
+    locationUtils
+) {
+    /**** Constants, scope data, etc. ****/
 
-    $scope.serviceCategories = serviceCategories;
+    /** The columns of the ag-grid table */
+    $scope.columns = [
+        {
+            headerName: "Name",
+            field: "name",
+            hide: false,
+        },
+        {
+            headerName: "Last Updated",
+            field: "lastUpdated",
+            hide: true,
+            filter: "agDateColumnFilter",
+        },
+    ];
 
-    $scope.editServiceCategory = function(name) {
-        locationUtils.navigateToPath('/service-categories/edit?name=' + encodeURIComponent(name));
+    /** @type {import("../agGrid/CommonGridController").CGC.DropDownOption[]} */
+    $scope.dropDownOptions = [
+        {
+            name: "createServiceCategoryMenuItem",
+            href: "#!/service-categories/new",
+            text: "Create New Service Category",
+            type: 2,
+        },
+    ];
+
+    /** Reloads all resolved data for the view. */
+    $scope.refresh = () => {
+        $state.reload();
     };
 
-    $scope.createServiceCategory = function() {
-        locationUtils.navigateToPath('/service-categories/new');
+    /** Options, configuration, data and callbacks for the ag-grid table. */
+    /** @type {import("../agGrid/CommonGridController").CGC.GridSettings} */
+    $scope.gridOptions = {
+        onRowClick: (row) => {
+            locationUtils.navigateToPath(
+                `/service-categories/edit?name=${encodeURIComponent(
+                    row.data.name
+                )}`
+            );
+        },
     };
 
-    $scope.refresh = function() {
-        $state.reload(); // reloads all the resolves for the view
-    };
-
-    angular.element(document).ready(function () {
-        $('#serviceCategoriesTable').dataTable({
-            "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
-            "iDisplayLength": 25,
-            "aaSorting": []
-        });
-    });
-
+    $scope.serviceCategories = serviceCategories.map((serviceCategory) => ({
+        ...serviceCategory,
+        lastUpdated: new Date(
+            serviceCategory.lastUpdated.replace(" ", "T").replace("+00", "Z")
+        ),
+    }));
 };
 
-TableServiceCategoriesController.$inject = ['serviceCategories', '$scope', '$state', 'locationUtils'];
+TableServiceCategoriesController.$inject = [
+    "serviceCategories",
+    "$scope",
+    "$state",
+    "locationUtils",
+];
 module.exports = TableServiceCategoriesController;
