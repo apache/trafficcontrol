@@ -27,8 +27,9 @@
  * @param {import("../../../api/ParameterService")} parameterService
  * @param {import("../../../api/ProfileService")} profileService
  * @param {import("../../../models/MessageModel")} messageModel
+ * @param {import("../../../models/PropertiesModel")} propertiesModel
  */
-var TableParametersController = function(parameters, $scope, $state, $uibModal, $window, locationUtils, parameterService, profileService, messageModel) {
+var TableParametersController = function(parameters, $scope, $state, $uibModal, $window, locationUtils, parameterService, profileService, messageModel, propertiesModel) {
 
     let parametersTable;
 
@@ -154,6 +155,13 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
         return true;
     };
 
+    $scope.show = function (colName) {
+        if (colName === "Comment") {
+            return propertiesModel.properties.parameters.comment.show;
+        }
+        return true;
+    }
+
     angular.element(document).ready(function () {
         parametersTable = $('#parametersTable').DataTable({
             "aLengthMenu": [[25, 50, 100, -1], [25, 50, 100, "All"]],
@@ -176,5 +184,5 @@ var TableParametersController = function(parameters, $scope, $state, $uibModal, 
 
 };
 
-TableParametersController.$inject = ['parameters', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'parameterService', 'profileService', 'messageModel'];
+TableParametersController.$inject = ['parameters', '$scope', '$state', '$uibModal', '$window', 'locationUtils', 'parameterService', 'profileService', 'messageModel', 'propertiesModel'];
 module.exports = TableParametersController;
