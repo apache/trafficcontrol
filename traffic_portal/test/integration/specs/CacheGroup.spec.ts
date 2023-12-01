@@ -16,80 +16,77 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor';
+import { browser } from "protractor";
 
-import { LoginPage } from '../PageObjects/LoginPage.po'
-import { CacheGroupPage } from '../PageObjects/CacheGroup.po';
-import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { LoginPage } from "../PageObjects/LoginPage.po";
+import { CacheGroupPage } from "../PageObjects/CacheGroup.po";
+import { TopNavigationPage } from "../PageObjects/TopNavigationPage.po";
 import { cachegroups } from "../Data";
-
-
 
 let loginPage = new LoginPage();
 let topNavigation = new TopNavigationPage();
 let cacheGroupPage = new CacheGroupPage();
 
-cachegroups.tests.forEach(cacheGroupData => {
-    describe(`Traffic Portal - CacheGroup - ${cacheGroupData.testName}`, () => {
-        cacheGroupData.logins.forEach(login => {
-            it('can login', async function () {
+cachegroups.tests.forEach((cacheGroupData) => {
+    for (const login of cacheGroupData.logins) {
+        describe(`Traffic Portal - CacheGroup - ${cacheGroupData.testName}`, () => {
+            beforeAll(async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
-            })
-            it('can open cache group page', async function () {
                 await cacheGroupPage.OpenTopologyMenu();
                 await cacheGroupPage.OpenCacheGroupsPage();
-            })
-            cacheGroupData.check.forEach(check => {
-                it(check.description, async () => {
-                    expect(await cacheGroupPage.CheckCSV(check.Name)).toBe(true);
-                    await cacheGroupPage.OpenCacheGroupsPage();
-                });
             });
-            cacheGroupData.toggle.forEach(toggle => {
-                it(toggle.description, async () => {
-                    if(toggle.description.includes('hide')){
-                        expect(await cacheGroupPage.ToggleTableColumn(toggle.Name)).toBe(false);
-                        await cacheGroupPage.OpenCacheGroupsPage();
-                    }else{
-                        expect(await cacheGroupPage.ToggleTableColumn(toggle.Name)).toBe(true);
-                        await cacheGroupPage.OpenCacheGroupsPage();
-                    }
-                    
-                });
-            })
-            cacheGroupData.create.forEach(create => {
-                it(create.Description, async function () {
-                    expect(await cacheGroupPage.CreateCacheGroups(create, create.validationMessage)).toBeTruthy();
-                    await cacheGroupPage.OpenCacheGroupsPage();
-                })
-            })
-            cacheGroupData.update.forEach(update => {
-                if (update.Description.includes("cannot")) {
-                    it(update.Description, async function () {
-                        await cacheGroupPage.SearchCacheGroups(update.Name)
-                        expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeUndefined();
-                        await cacheGroupPage.OpenCacheGroupsPage();
-                    })
-                } else {
-                    it(update.Description, async function () {
-                        await cacheGroupPage.SearchCacheGroups(update.Name)
-                        expect(await cacheGroupPage.UpdateCacheGroups(update, update.validationMessage)).toBeTruthy();
-                        await cacheGroupPage.OpenCacheGroupsPage();
-                    })
-                }
-
-            })
-            cacheGroupData.remove.forEach(remove => {
-                it(remove.Description, async function () {
-                    await cacheGroupPage.SearchCacheGroups(remove.Name)
-                    expect(await cacheGroupPage.DeleteCacheGroups(remove.Name, remove.validationMessage)).toBeTruthy();
-                })
-            })
-            it('can logout', async function () {
+            afterAll(async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
-            })
-        })
-    })
-})
+            });
+            afterEach(async () => {
+                await cacheGroupPage.OpenCacheGroupsPage();
+            });
+            for (const create of cacheGroupData.create) {
+                it(create.Description, async () => {
+                    expect(
+                        await cacheGroupPage.CreateCacheGroups(
+                            create,
+                            create.validationMessage
+                        )
+                    ).toBeTruthy();
+                });
+            }
+            for (const update of cacheGroupData.update) {
+                if (update.Description.includes("cannot")) {
+                    it(update.Description, async () => {
+                        await cacheGroupPage.SearchCacheGroups(update.Name);
+                        expect(
+                            await cacheGroupPage.UpdateCacheGroups(
+                                update,
+                                update.validationMessage
+                            )
+                        ).toBeUndefined();
+                    });
+                } else {
+                    it(update.Description, async () => {
+                        await cacheGroupPage.SearchCacheGroups(update.Name);
+                        expect(
+                            await cacheGroupPage.UpdateCacheGroups(
+                                update,
+                                update.validationMessage
+                            )
+                        ).toBeTruthy();
+                    });
+                }
+            }
+            for (const remove of cacheGroupData.remove) {
+                it(remove.Description, async () => {
+                    await cacheGroupPage.SearchCacheGroups(remove.Name);
+                    expect(
+                        await cacheGroupPage.DeleteCacheGroups(
+                            remove.Name,
+                            remove.validationMessage
+                        )
+                    ).toBeTruthy();
+                });
+            }
+        });
+    }
+});

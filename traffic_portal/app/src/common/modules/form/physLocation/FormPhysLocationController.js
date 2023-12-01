@@ -42,7 +42,7 @@ var FormPhysLocationController = function(physLocation, $scope, $location, formU
         { name: 'shortName', type: 'text', required: true, maxLength: 100 },
         { name: 'address', type: 'text', required: true, maxLength: 128 },
         { name: 'city', type: 'text', required: true, maxLength: 128 },
-        { name: 'state', type: 'text', required: true, maxLength: 2 },
+        { name: 'state', type: 'text', required: true, maxLength: 4 },
         { name: 'zip', type: 'text', required: true, maxLength: 11 },
         { name: 'poc', type: 'text', required: false, maxLength: 128 },
         { name: 'phone', type: 'text', required: false, maxLength: 45 },

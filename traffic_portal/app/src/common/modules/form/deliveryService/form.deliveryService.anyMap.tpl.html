@@ -23,7 +23,7 @@ under the License.
             <li ng-if="!settings.isRequest"><a href="/#!/delivery-services">Delivery Services</a></li>
             <li ng-if="settings.isRequest"><a href="/#!/delivery-service-requests">Delivery Service Requests</a></li>
             <li ng-if="settings.isRequest" class="active">{{dsRequest.changeType}}</li>
-            <li class="active">{{deliveryServiceName}}</li>
+            <li><a ng-click="navigateToPath('/delivery-services/' + deliveryService.id + '?dsType=' + deliveryService.type)">{{deliveryServiceName}}</a></li>
         </ol>
         <div class="pull-right" role="group" ng-if="settings.isRequest">
             <div class="btn-group" role="group" uib-dropdown is-open="status.isopen">

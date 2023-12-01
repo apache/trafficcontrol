@@ -78,7 +78,7 @@ var ChartTPSController = function(deliveryService, $scope, $timeout, $filter, $q
 		var normalizedChartData = [];
 
 		if (angular.isDefined(series)) {
-			series.values.forEach(function(seriesItem) {
+			series.values?.forEach(function(seriesItem) {
 				if (moment(seriesItem[0]).isSame(start) || moment(seriesItem[0]).isAfter(start)) {
 					normalizedChartData.push([ moment(seriesItem[0]).valueOf(), seriesItem[1] ]);
 				}

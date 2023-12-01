@@ -30,17 +30,20 @@ Generates an SSL certificate, csr, and private key for a :term:`Delivery Service
 
 Request Structure
 -----------------
-:city:     A required field which will represent the resident city of the generated SSL certificate
-:country:  A required field which will represent the resident country of the generated SSL certificate
-:hostname: The desired hostname of the :term:`Delivery Service`
+:authType:        The certificate provider correlating to an :abbr:`ACME (Automatic Certificate Management Environment)` account in :ref:`cdn.conf` or Let's Encrypt.
+:businessUnit:    A required field which will represent the business unit for which the SSL certificate was generated
+:cdn:             A required field which will represent the CDN of the :term:`Delivery Service` for which keys will be generated
+:city:            A required field which will represent the resident city of the generated SSL certificate
+:country:         A required field which will represent the resident country of the generated SSL certificate
+:deliveryService: The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated
+:hostname:        The desired hostname of the :term:`Delivery Service`
 
 	.. note:: In most cases, this must be the same as the :term:`Delivery Service` URL'
 
-:key:          The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated
-:organization: A required field which will represent the organization for which the SSL certificate was generated
-:state:        A required field which will represent the resident state or province of the generated SSL certificate
-:businessUnit: A required field which will represent the business unit for which the SSL certificate was generated
-:version:      An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
+:key:             The :ref:`ds-xmlid` of the :term:`Delivery Service` for which keys will be generated
+:organization:    A required field which will represent the organization for which the SSL certificate was generated
+:state:           A required field which will represent the resident state or province of the generated SSL certificate
+:version:         An integer that defines the "version" of the key - which may be thought of as the sequential generation; that is, the higher the number the more recent the key
 
 .. code-block:: http
 	:caption: Request Example
@@ -49,12 +52,13 @@ Request Structure
 	Content-Type: application/json
 
 	{
+		"cdn": "test-cdn",
 		"key": "ds-01",
 		"businessUnit": "CDN Engineering",
 		"version": "3",
-		"hostname": "tr.ds-01.ott.kabletown.com",
+		"hostname": "tr.ds-01.mycdn.ciab.test",
 		"country": "US",
-		"organization": "Kabletown",
+		"organization": "CDN",
 		"city": "Denver",
 		"state": "Colorado"
 	}

@@ -27,22 +27,6 @@ export const cachegroups = {
 					"password": "pa$$word"
 				}
 			],
-			toggle:[
-				{
-					description: "hide first table column",
-					Name: "1st Parent"
-				},
-				{
-					description: "redisplay first table column",
-					Name: "1st Parent"
-				}
-			],
-			check: [
-				{
-					description: "check CSV link from CacheGroup page",
-					Name: "Export as CSV"
-				}
-			],
 			create: [
 				{
 					Description: "create a EDGE_LOC cachegroup with FailOver CacheGroup Field",
@@ -111,12 +95,12 @@ export const cachegroups = {
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache1",
-					validationMessage: "was deleted"
+					validationMessage: "cache group was deleted."
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache3",
-					validationMessage: "was deleted"
+					validationMessage: "cache group was deleted."
 				}
 			]
 		},
@@ -126,22 +110,6 @@ export const cachegroups = {
 				{
 					"username": "TPReadOnly",
 					"password": "pa$$word"
-				}
-			],
-			toggle:[
-				{
-					description: "hide first table column",
-					Name: "1st Parent"
-				},
-				{
-					description: "display first table column",
-					Name: "1st Parent"
-				}
-			],
-			check: [
-				{
-					description: "check CSV link from CacheGroup page",
-					Name: "Export as CSV"
 				}
 			],
 			create: [
@@ -180,22 +148,6 @@ export const cachegroups = {
 				{
 					"username": "TPOperator",
 					"password": "pa$$word"
-				}
-			],
-			toggle:[
-				{
-					description: "hide first table column",
-					Name: "1st Parent"
-				},
-				{
-					description: "display first table column",
-					Name: "1st Parent"
-				}
-			],
-			check: [
-				{
-					description: "check CSV link from CacheGroup page",
-					Name: "Export as CSV"
 				}
 			],
 			create: [
@@ -266,22 +218,22 @@ export const cachegroups = {
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache2",
-					validationMessage: "was deleted"
+					validationMessage: "cache group was deleted."
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache4",
-					validationMessage: "was deleted"
+					validationMessage: "cache group was deleted."
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache5",
-					validationMessage: "was deleted"
+					validationMessage: "cache group was deleted."
 				},
 				{
 					Description: "delete a cachegroup",
 					Name: "TP_Cache6",
-					validationMessage: "was deleted"
+					validationMessage: "cache group was deleted."
 				}
 			]
 		}

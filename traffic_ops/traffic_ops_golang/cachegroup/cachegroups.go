@@ -1405,8 +1405,7 @@ func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	alertMessage := fmt.Sprintf("%s was deleted.", ID)
-	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
+	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
 	return
 }

@@ -191,29 +191,6 @@ func directoryExists(dir string) (bool, os.FileInfo) {
 	return info.IsDir(), info
 }
 
-const rpmDir = "/var/lib/rpm"
-
-// verifies the rpm database files. if there is any database corruption
-// it will return false
-func verifyRpmDB() bool {
-	exclude := regexp.MustCompile(`(^\.|^__)`)
-	dbFiles, err := os.ReadDir(rpmDir)
-	if err != nil {
-		return false
-	}
-	for _, file := range dbFiles {
-		if exclude.Match([]byte(file.Name())) {
-			continue
-		}
-		cmd := exec.Command("/usr/lib/rpm/rpmdb_verify", rpmDir+"/"+file.Name())
-		err := cmd.Run()
-		if err != nil || cmd.ProcessState.ExitCode() > 0 {
-			return false
-		}
-	}
-	return true
-}
-
 // derives the ATS Installation directory from
 // the rpm config file list.
 func GetTSPackageHome() string {
@@ -249,6 +226,68 @@ func GetTSPackageHome() string {
 		}
 	}
 	return tsHome
+}
+
+const (
+	rpmDBBdb             = "bdb"
+	rpmDBSquLite         = "sqlite"
+	rpmDBUnknown         = "unknown"
+	rpmDBVerifyCmd       = "/usr/lib/rpm/rpmdb_verify"
+	sqliteRpmDbVerifyCmd = "/bin/sqlite3"
+	rpmDir               = "/var/lib/rpm"
+	sqliteRpmDB          = "rpmdb.sqlite"
+)
+
+// getRpmDBBackend uses "%_db_backend" macro to get the database type
+func getRpmDBBackend() (string, error) {
+	var outBuf bytes.Buffer
+	cmd := exec.Command("/bin/rpm", "-E", "%_db_backend")
+	cmd.Stdout = &outBuf
+	err := cmd.Run()
+	if err != nil {
+		return rpmDBUnknown, err
+	}
+	return strings.TrimSpace(outBuf.String()), nil
+}
+
+// isSqliteInstalled looks to see if the sqlite3 executable
+// is installed which is needed to do the db verify
+func isSqliteInstalled() bool {
+	sqliteUtil := isCommandAvailable("/bin/sqlite3")
+	return sqliteUtil
+}
+
+// verifies the rpm database files. if there is any database corruption
+// it will return false
+func verifyRpmDB(rpmDir string) bool {
+	exclude := regexp.MustCompile(`(^\.|^__)`)
+	dbFiles, err := os.ReadDir(rpmDir)
+	if err != nil {
+		return false
+	}
+	for _, file := range dbFiles {
+		if exclude.Match([]byte(file.Name())) {
+			continue
+		}
+		cmd := exec.Command(rpmDBVerifyCmd, rpmDir+"/"+file.Name())
+		err := cmd.Run()
+		if err != nil || cmd.ProcessState.ExitCode() > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// verifySqliteRpmDB runs PRAGMA quick_check
+// requires /bin/sqlite3
+func verifySqliteRpmDB(sqliteDB string) bool {
+	args := []string{sqliteDB, `PRAGMA quick_check`}
+	cmd := exec.Command(sqliteRpmDbVerifyCmd, args...)
+	err := cmd.Run()
+	if err != nil || cmd.ProcessState.ExitCode() > 0 {
+		return false
+	}
+	return true
 }
 
 func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
@@ -499,7 +538,29 @@ If any of the related flags are also set, they override the mode's default behav
 		os.Setenv("TO_PASS", toPass)
 	}
 
-	rpmDBisOk := verifyRpmDB()
+	rpmDBisOk := true
+	rpmDBType, err := getRpmDBBackend()
+	if err != nil {
+		toInfoLog = append(toInfoLog, fmt.Sprintf("error getting db type: %s", err.Error()))
+		rpmDBType = rpmDBUnknown
+	}
+
+	if rpmDBType == rpmDBSquLite {
+		sqliteUtil := isSqliteInstalled()
+		toInfoLog = append(toInfoLog, fmt.Sprintf("RPM database is %s", rpmDBSquLite))
+		if sqliteUtil {
+			rpmDBisOk = verifySqliteRpmDB(rpmDir + "/" + sqliteRpmDB)
+			toInfoLog = append(toInfoLog, fmt.Sprintf("RPM database is ok: %t", rpmDBisOk))
+		} else {
+			toInfoLog = append(toInfoLog, "/bin/sqlite3 not available, RPM database not checked")
+		}
+	} else if rpmDBType == rpmDBBdb {
+		toInfoLog = append(toInfoLog, fmt.Sprintf("RPM database is %s", rpmDBBdb))
+		rpmDBisOk = verifyRpmDB(rpmDir)
+		toInfoLog = append(toInfoLog, fmt.Sprintf("RPM database is ok: %t", rpmDBisOk))
+	} else {
+		toInfoLog = append(toInfoLog, fmt.Sprintf("RPM DB type is %s DB check will be skipped", rpmDBUnknown))
+	}
 
 	if *installPackagesPtr && !rpmDBisOk {
 		if t3cutil.StrToMode(*runModePtr) == t3cutil.ModeBadAss {
@@ -509,7 +570,6 @@ If any of the related flags are also set, they override the mode's default behav
 		}
 	}
 
-	toInfoLog = append(toInfoLog, fmt.Sprintf("rpm database is ok: %t", rpmDBisOk))
 	// set TSHome
 	var tsHome = ""
 	if *tsHomePtr != "" {
