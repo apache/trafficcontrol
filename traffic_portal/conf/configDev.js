@@ -23,18 +23,18 @@ module.exports = {
     useSSL: true, // set to true if you plan to use https (self-signed or trusted certs).
     // These ports are chosen to not collide with the default CDN-in-a-Box
     // exposed port numbers
-    port: 60444,
-    sslPort: 60443,
+    port: 8080,
+    sslPort: 9090,
     // if useSSL is true, generate ssl certs and provide the proper locations.
     ssl: {
-        key:    './localhost.key',
-        cert:   './localhost.crt',
-        ca:     [ './localhost.crt' ]
+        key:    '/etc/pki/tls/private/localhost.key',
+        cert:   '/etc/pki/tls/certs/localhost.crt',
+        ca:     [ '/etc/pki/tls/certs/ca-bundle.crt' ]
     },
     // set api 'base_url' to the traffic ops api url (all api calls made from the traffic portal will be proxied to the api base_url)
     // this is the default exposed port for the CDN-in-a-Box Traffic Ops service
     api: {
-        base_url: 'https://localhost:6443/api/'
+        base_url: 'https://localhost:8443/api/'
     },
     // default static files location (this is where the traffic portal html, css and javascript was installed. rpm installs these files at /opt/traffic_portal/public
     files: {
@@ -42,7 +42,7 @@ module.exports = {
     },
     // default log location (this is where traffic_portal logs are written)
     log: {
-        stream: './server/log/access.log'
+        stream: '/var/log/traffic_portal/access.log'
     },
     reject_unauthorized: 0 // 0 if using self-signed certs, 1 if trusted certs
 };

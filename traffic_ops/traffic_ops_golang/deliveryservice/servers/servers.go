@@ -945,7 +945,7 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 	}
 
 	where += `
-ds.id in (
+(ds.id in (
 	SELECT deliveryService FROM deliveryservice_server WHERE server = :server
 ) OR ds.id in (
 	SELECT id FROM deliveryservice
@@ -955,7 +955,18 @@ ds.id in (
 			SELECT name FROM cachegroup
 			WHERE id = (
 				SELECT cachegroup FROM server WHERE id = :server
-			))))
+			))))) 
+AND
+(( 
+(SELECT (t.name = 'ORG') FROM type t JOIN server s ON s.type = t.id WHERE s.id = :server) 
+OR 
+(SELECT COALESCE(ARRAY_AGG(ssc.server_capability), '{}') 
+FROM server_server_capability ssc 
+WHERE ssc."server" = :server) 
+@> 
+(
+SELECT COALESCE(ds.required_capabilities, '{}')
+)))
 `
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
