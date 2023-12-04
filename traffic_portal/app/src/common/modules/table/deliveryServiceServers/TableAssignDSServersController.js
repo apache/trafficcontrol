@@ -33,7 +33,7 @@ var TableAssignDSServersController = function(deliveryService, servers, assigned
 		},
 		{
 			headerName: "Cache Group",
-			field: "cachegroup",
+			field: "cacheGroup",
 		},
 		{
 			headerName: "Profile(s)",
