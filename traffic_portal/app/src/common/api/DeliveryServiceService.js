@@ -26,6 +26,7 @@
  * @property {string[]} [exampleURLs]
  * @property {number} [id]
  * @property {string} [lastUpdated]
+ * @property {string[]} requiredCapabilities
  * @property {string} routingName
  * @property {boolean} signed
  * @property {null|number} [sslKeyVersion]
@@ -157,10 +158,10 @@ class DeliveryServiceService {
 	 * Gets the server capabilities required by the identified Delivery Service.
 	 *
 	 * @param {number} deliveryServiceID The ID of the Delivery Service in question.
-	 * @returns {Promise<DSRequiredCapability[]>} The Server Capabilities required by the DS with the given ID.
+	 * @returns {Promise<DeliveryService[]>} The Server Capabilities required by the DS with the given ID.
 	 */
 	async getServerCapabilities(deliveryServiceID) {
-		const result = await this.$http.get(`${this.ENV.api.unstable}deliveryservices_required_capabilities`, { params: { deliveryServiceID } });
+		const result = await this.$http.get(`${this.ENV.api.unstable}deliveryservices`, { params: { deliveryServiceID } });
 		return result.data.response;
 	};
 
@@ -182,25 +183,6 @@ class DeliveryServiceService {
 	async addServerCapability(deliveryServiceID, requiredCapability) {
 		try {
 			const result = await this.$http.post(`${this.ENV.api.unstable}deliveryservices_required_capabilities`, { deliveryServiceID, requiredCapability });
-			return result.data;
-		} catch (err) {
-			if (err.data && err.data.alerts) {
-				this.messageModel.setMessages(err.data.alerts, false);
-			}
-			throw err;
-		}
-	}
-
-	/**
-	 * Removes the requirement of a particular Capability from the identified Delivery Service.
-	 *
-	 * @param {number} deliveryServiceID The ID of the Delivery Service from which a Capability requirement will be removed.
-	 * @param {string} requiredCapability The name of the Capability being removed as a requirement.
-	 * @returns {Promise<{alerts: {text: string; level: string}[]}>} The full API response.
-	 */
-	async removeServerCapability(deliveryServiceID, requiredCapability) {
-		try {
-			const result = await this.$http.delete(`${this.ENV.api.unstable}deliveryservices_required_capabilities`, { params: { deliveryServiceID, requiredCapability } });
 			return result.data;
 		} catch (err) {
 			if (err.data && err.data.alerts) {

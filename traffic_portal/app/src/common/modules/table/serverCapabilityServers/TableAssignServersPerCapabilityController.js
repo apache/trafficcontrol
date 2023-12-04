@@ -41,7 +41,7 @@ var TableAssignServersPerCapabilityController = function(servers, serverCapabili
         },
         {
             headerName: "CDN",
-            field: "cdnName",
+            field: "cdn",
             hide: false
         }
     ];

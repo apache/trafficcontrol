@@ -320,6 +320,11 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 			hide: true
 		},
 		{
+			headerName: "Required Capability(ies)",
+			field: "requiredCapabilities",
+			hide: true
+		},
+		{
 			headerName: "Routing Name",
 			field: "routingName",
 			hide: true
@@ -652,14 +657,14 @@ function TableDeliveryServicesController(tableName, deliveryServices, steeringTa
 
 	$scope.contextMenuOptions = [
 		{
-			getHref: ds => `/delivery-services/${ds.id}?dsType=${ds.type}`,
+			getHref: ds => `#!/delivery-services/${ds.id}?dsType=${ds.type}`,
 			getText: ds => `Open ${ds.xmlId} in a new tab`,
 			newTab: true,
 			type: 2
 		},
 		{type: 0},
 		{
-			getHref: ds => `/delivery-services/${ds.id}?dsType=${ds.type}`,
+			getHref: ds => `#!/delivery-services/${ds.id}?dsType=${ds.type}`,
 			text: "Edit",
 			type: 2
 		},
