@@ -78,7 +78,6 @@ type TOData struct {
 	ServerCachegroups      map[tc.CacheName]tc.CacheGroupName
 	ServerDeliveryServices map[tc.CacheName][]tc.DeliveryServiceName
 	ServerTypes            map[tc.CacheName]tc.CacheType
-	SameIpServers          map[tc.CacheName]map[tc.CacheName]bool
 }
 
 // New returns a new empty TOData object, initializing pointer members.
@@ -90,7 +89,6 @@ func New() *TOData {
 		DeliveryServiceTypes:   map[tc.DeliveryServiceName]tc.DSTypeCategory{},
 		DeliveryServiceRegexes: NewRegexes(),
 		ServerCachegroups:      map[tc.CacheName]tc.CacheGroupName{},
-		SameIpServers:          map[tc.CacheName]map[tc.CacheName]bool{},
 	}
 }
 
@@ -115,12 +113,6 @@ func (d TODataThreadsafe) Get() TOData {
 }
 
 func (d TODataThreadsafe) set(newTOData TOData) {
-	d.m.Lock()
-	*d.toData = newTOData
-	d.m.Unlock()
-}
-
-func (d TODataThreadsafe) SetForTest(newTOData TOData) {
 	d.m.Lock()
 	*d.toData = newTOData
 	d.m.Unlock()
@@ -185,12 +177,6 @@ func (d TODataThreadsafe) Update(to towrap.TrafficOpsSessionThreadsafe, cdn stri
 	newTOData.ServerTypes, err = getServerTypes(mc)
 	if err != nil {
 		return fmt.Errorf("getting server types from monitoring config: %v", err)
-	}
-
-	if val, ok := mc.Config["tm.sameipservers.enabled"]; ok && val.(string) == "true" {
-		newTOData.SameIpServers = getSameIPServers(mc)
-	} else {
-		newTOData.SameIpServers = make(map[tc.CacheName]map[tc.CacheName]bool)
 	}
 
 	d.set(newTOData)
@@ -354,48 +340,6 @@ func getServerTypes(mc tc.TrafficMonitorConfigMap) (map[tc.CacheName]tc.CacheTyp
 		serverTypes[tc.CacheName(server)] = t
 	}
 	return serverTypes, nil
-}
-
-// getSameIPServers gets the caches that have the same VIP
-func getSameIPServers(mc tc.TrafficMonitorConfigMap) map[tc.CacheName]map[tc.CacheName]bool {
-	sameIPServers := map[tc.CacheName]map[tc.CacheName]bool{}
-
-	// get service addresses
-	serviceAddress := map[string][]string{}
-	for server, serverData := range mc.TrafficServer {
-		for _, intf := range serverData.Interfaces {
-			for _, addr := range intf.IPAddresses {
-				if addr.ServiceAddress {
-					if _, ok := serviceAddress[addr.Address]; !ok {
-						serviceAddress[addr.Address] = []string{}
-					}
-					serviceAddress[addr.Address] = append(serviceAddress[addr.Address], server)
-				}
-			}
-		}
-	}
-
-	for server, serverData := range mc.TrafficServer {
-		for _, intf := range serverData.Interfaces {
-			for _, addr := range intf.IPAddresses {
-				if addr.ServiceAddress {
-					// if service addresses belongs to more than one server
-					if len(serviceAddress[addr.Address]) > 1 {
-						if _, ok := sameIPServers[tc.CacheName(server)]; !ok {
-							sameIPServers[tc.CacheName(server)] = map[tc.CacheName]bool{}
-						}
-						for _, partner := range serviceAddress[addr.Address] {
-							if partner != server {
-								sameIPServers[tc.CacheName(server)][tc.CacheName(partner)] = true
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return sameIPServers
 }
 
 // canUseMonitorConfig returns true if we can prefer monitor config data to crconfig data.

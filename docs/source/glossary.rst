@@ -41,11 +41,6 @@ Glossary
 		- :term:`forward proxy`: Used by Traffic Control for Mid-tier :dfn:`cache servers`.
 		- transparent proxy: These are not used by Traffic Control. If you are interested you can learn more about transparent proxies on `wikipedia <http://en.wikipedia.org/wiki/Proxy_server#Transparent_proxy>`_.
 
-	anycast group
-	Anycast group
-	Anycast Group
-        A group of caching HTTP proxy servers that have the same service address that is equal cost multi path routed at the last hop
-
 	Cache Group
 	Cache Groups
 		A group of caching HTTP proxy servers that together create a combined larger cache using consistent hashing. Traffic Router treats all servers in a :dfn:`Cache Group` as though they are in the  same geographic location, though they are in fact only in the same general area. A :dfn:`Cache Group` has one single set of geographical coordinates even if the :term:`cache servers` that make up the :dfn:`Cache Group` are actually in :term:`Physical Locations`. The :term:`cache servers` in a :dfn:`Cache Group` are not aware of the other :term:`cache servers` in the group - there is no clustering software or communications between :term:`cache servers` in a :dfn:`Cache Group`.
