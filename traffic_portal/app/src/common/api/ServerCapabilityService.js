@@ -133,7 +133,7 @@ var ServerCapabilityService = function($http, ENV, locationUtils, messageModel) 
 	};
 
 	this.getServerCapabilityDeliveryServices = function(capabilityName) {
-		return $http.get(ENV.api.unstable + 'deliveryservices_required_capabilities', { params: { requiredCapability: capabilityName } }).then(
+		return $http.get(ENV.api.unstable + 'deliveryservices', { params: { requiredCapability: capabilityName } }).then(
 			function (result) {
 				return result.data.response;
 			},

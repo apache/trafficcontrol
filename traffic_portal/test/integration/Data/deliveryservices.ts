@@ -350,7 +350,7 @@ export const deliveryservices = {
 			assignServer: [
 				{
 					serverHostname: "DSTest",
-					xmlID: "TPServiceNew1",
+					xmlId: "TPServiceNew1",
 					validationMessage: "server assignments complete"
 				}
 			],
@@ -394,7 +394,7 @@ export const deliveryservices = {
 			assignServer: [
 				{
 					serverHostname: "DSTest",
-					xmlID: "dstestro1",
+					xmlId: "dstestro1",
 					validationMessage: "missing required Permissions: SERVER:UPDATE, DELIVERY-SERVICE:UPDATE"
 				}
 			],
@@ -444,7 +444,7 @@ export const deliveryservices = {
 			assignServer: [
 				{
 					serverHostname: "DSTest",
-					xmlID: "opTPServiceNew1",
+					xmlId: "opTPServiceNew1",
 					validationMessage: "server assignments complete"
 				}
 			],
