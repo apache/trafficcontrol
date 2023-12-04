@@ -25,12 +25,10 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/apache/trafficcontrol/v8/lib/go-log"
-	"github.com/apache/trafficcontrol/v8/lib/go-rfc"
 	"github.com/apache/trafficcontrol/v8/traffic_monitor/poller"
 	"github.com/apache/trafficcontrol/v8/traffic_monitor/todata"
 
@@ -55,7 +53,6 @@ const LOADAVG_SHIFT = 65536
 
 func init() {
 	registerDecoder("stats_over_http", statsOverHTTPParse, statsOverHTTPPrecompute)
-	hostnameRegex = regexp.MustCompile(`(?:http|https)/\d+\.\d+ ([A-Za-z0-9\-]{0,61})`)
 }
 
 type stats_over_httpData struct {
@@ -73,14 +70,6 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 	var err error
 
 	ctx := pollCTX.(*poller.HTTPPollCtx)
-
-	via := ctx.HTTPHeader.Get(rfc.Via)
-	if via != "" {
-		viaRegexSubmatch := hostnameRegex.FindStringSubmatch(via)
-		if len(viaRegexSubmatch) > 0 {
-			cacheName = viaRegexSubmatch[1]
-		}
-	}
 
 	ctype := ctx.HTTPHeader.Get("Content-Type")
 
@@ -104,8 +93,6 @@ func statsOverHTTPParse(cacheName string, data io.Reader, pollCTX interface{}) (
 	}
 
 	statMap := sohData.Global
-
-	statMap[rfc.Via] = cacheName
 
 	if stats.Loadavg, err = parseLoadAvg(statMap); err != nil {
 		return stats, nil, fmt.Errorf("Error parsing loadavg for cache '%s': %v", cacheName, err)

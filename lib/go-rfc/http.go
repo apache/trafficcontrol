@@ -43,7 +43,6 @@ const (
 	Age                = "Age"                 // RFC7234§5.1
 	Location           = "Location"            // RFC7231§7.1.2
 	Authorization      = "Authorization"       // RFC7235§4.2
-	Via                = "Via"                 // RFC3261§8.1.1.7
 	Cookie             = "Cookie"              // RFC7873
 )
 
