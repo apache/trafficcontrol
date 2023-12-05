@@ -51,6 +51,8 @@ import {
 } from "./deliveryservice/invalidation-jobs/new-invalidation-job-dialog/new-invalidation-job-dialog.component";
 import { NewDeliveryServiceComponent } from "./deliveryservice/new-delivery-service/new-delivery-service.component";
 import { ISOGenerationFormComponent } from "./misc/isogeneration-form/isogeneration-form.component";
+import { OriginDetailComponent } from "./origins/detail/origin-detail.component";
+import { OriginsTableComponent } from "./origins/table/origins-table.component";
 import { ParameterDetailComponent } from "./parameters/detail/parameter-detail.component";
 import { ParametersTableComponent } from "./parameters/table/parameters-table.component";
 import { ProfileDetailComponent } from "./profiles/profile-detail/profile-detail.component";
@@ -118,6 +120,8 @@ export const ROUTES: Routes = [
 	{ component: CoordinatesTableComponent, path: "coordinates" },
 	{ component: TypesTableComponent, path: "types" },
 	{ component: TypeDetailComponent, path: "types/:id"},
+	{ component: OriginsTableComponent, path: "origins" },
+	{ component: OriginDetailComponent, path: "origins/:id"},
 	{ component: ParametersTableComponent, path: "parameters" },
 	{ component: ParameterDetailComponent, path: "parameters/:id" },
 	{ component: StatusesTableComponent, path: "statuses" },
@@ -175,6 +179,8 @@ export const ROUTES: Routes = [
 		TopologyDetailsComponent,
 		TypeDetailComponent,
 		TypesTableComponent,
+		OriginDetailComponent,
+		OriginsTableComponent,
 		UpdatePasswordDialogComponent,
 		UpdateStatusComponent,
 		UserDetailsComponent,

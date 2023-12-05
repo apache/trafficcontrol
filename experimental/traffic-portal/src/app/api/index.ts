@@ -42,6 +42,7 @@ export * from "./server.service";
 export * from "./topology.service";
 export * from "./type.service";
 export * from "./user.service";
+export * from "./origin.service";
 
 /**
  * The API Module contains all logic used to access the Traffic Ops API.
