@@ -373,6 +373,8 @@ func CreatePhysLocation(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "physLocation was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/phys_locations?name=%s", inf.Version, physLocation.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, physLocation)
+	changeLogMsg := fmt.Sprintf("PHYSLOCATION: %s, ID:%d, ACTION: Created physLocation", physLocation.Name, physLocation.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -454,6 +456,8 @@ func UpdatePhysLocation(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "physLocation was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, physLocation)
+	changeLogMsg := fmt.Sprintf("PHYSLOCATION: %s, ID:%d, ACTION: Updated physLocation", physLocation.Name, physLocation.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -506,6 +510,8 @@ func DeletePhysLocation(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "phys_location was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID:%s, ACTION: Deleted physLocation", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

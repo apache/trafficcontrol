@@ -511,6 +511,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/profiles?id=%d", inf.Version, profile.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, profile)
+	changeLogMsg := fmt.Sprintf("PROFILE: %s, ID:%d, ACTION: Created profile", profile.Name, profile.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -572,6 +574,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, profile)
+	changeLogMsg := fmt.Sprintf("PROFILE: %s, ID:%d, ACTION: Updated profile", profile.Name, profile.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -633,6 +637,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID:%d, ACTION: Deleted profile", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

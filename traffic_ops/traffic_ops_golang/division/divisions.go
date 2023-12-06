@@ -248,6 +248,8 @@ func CreateDivision(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "division was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/divisons?name=%s", inf.Version, div.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, div)
+	changeLogMsg := fmt.Sprintf("DIVISION: %s, ID:%d, ACTION: Created division", div.Name, div.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -297,6 +299,8 @@ func UpdateDivision(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "division was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, div)
+	changeLogMsg := fmt.Sprintf("DIVISION: %s, ID:%d, ACTION: Updated division", div.Name, div.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -350,6 +354,8 @@ func DeleteDivision(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "division was deleted.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, inf.Params)
+	changeLogMsg := fmt.Sprintf("ID:%s, ACTION: Deleted division", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

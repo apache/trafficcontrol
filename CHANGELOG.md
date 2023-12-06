@@ -98,7 +98,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7814](https://github.com/apache/trafficcontrol/issues/7814) All Go components: Updated the module path to [`github.com/apache/trafficcontrol/v8`](https://pkg.go.dev/github.com/apache/trafficcontrol/v8). Module https://pkg.go.dev/github.com/apache/trafficcontrol will not receive further updates.
 
 ### Fixed
-- []() *Traffic Ops* Fixed the `ASN` routes in API version 5, to produce changelog entries.
+- []() *Traffic Ops* Fixed missing changelog entries to v5 routes.
 - [#7885](https://github.com/apache/trafficcontrol/pull/7885) *Traffic Portal* Fixed the issue where Compare Profiles page was not being displayed.
 - [#7879](https://github.com/apache/trafficcontrol/7879) *Traffic Ops, Traffic Portal*: Fixed broken capability links for delivery service and added required capability as a column in DS table.
 - [#7878](https://github.com/apache/trafficcontrol/pull/7878) *Traffic Ops, Traffic Portal*: Fixed the case where TO was failing to assign delivery services to a server, due to a bug in the way the list of preexisting delivery services was being returned.
