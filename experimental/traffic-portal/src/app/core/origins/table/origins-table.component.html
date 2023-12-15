@@ -14,17 +14,20 @@ limitations under the License.
 
 <mat-card class="page-content">
 	<div class="search-container">
-		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Types" inputmode="search" role="search" accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()" />
+		<input type="search" name="fuzzControl" aria-label="Fuzzy Search Origins" inputmode="search" role="search"
+					 accesskey="/" placeholder="Fuzzy Search" [formControl]="fuzzControl" (input)="updateURL()"/>
 	</div>
 	<tp-generic-table
-		[data]="types | async"
+		[data]="origins | async"
 		[cols]="columnDefs"
 		[fuzzySearch]="fuzzySubject"
-		context="types"
+		context="origins"
 		[doubleClickLink]="doubleClickLink"
 		[contextMenuItems]="contextMenuItems"
 		(contextMenuAction)="handleContextMenu($event)">
 	</tp-generic-table>
 </mat-card>
 
-<a class="page-fab" mat-fab title="Create a new Type" *ngIf="auth.hasPermission('TYPE:CREATE')" routerLink="new"><mat-icon>add</mat-icon></a>
+<a class="page-fab" mat-fab title="Create a new Origin" *ngIf="auth.hasPermission('ORIGIN:CREATE')" routerLink="new">
+	<mat-icon>add</mat-icon>
+</a>

@@ -19,9 +19,11 @@ import {
 	CacheGroupService,
 	CDNService,
 	ChangeLogsService,
+	CoordinateService,
 	DeliveryServiceService,
 	InvalidationJobService,
 	MiscAPIsService,
+	OriginService,
 	PhysicalLocationService,
 	ProfileService,
 	ServerService,
@@ -33,9 +35,11 @@ import {
 import { CacheGroupService as TestingCacheGroupService } from "./cache-group.service";
 import { CDNService as TestingCDNService } from "./cdn.service";
 import { ChangeLogsService as TestingChangeLogsService} from "./change-logs.service";
+import { CoordinateService as TestingCoordinateService } from "./coordinate.service";
 import { DeliveryServiceService as TestingDeliveryServiceService } from "./delivery-service.service";
 import { InvalidationJobService as TestingInvalidationJobService } from "./invalidation-job.service";
 import { MiscAPIsService as TestingMiscAPIsService } from "./misc-apis.service";
+import { OriginService as TestingOriginService } from "./origin.service";
 import { PhysicalLocationService as TestingPhysicalLocationService } from "./physical-location.service";
 import { ProfileService as TestingProfileService } from "./profile.service";
 import { ServerService as TestingServerService } from "./server.service";
@@ -56,9 +60,11 @@ import { UserService as TestingUserService } from "./user.service";
 		{provide: CacheGroupService, useClass: TestingCacheGroupService},
 		{provide: ChangeLogsService, useClass: TestingChangeLogsService},
 		{provide: CDNService, useClass: TestingCDNService},
+		{provide: CoordinateService, useClass: TestingCoordinateService},
 		{provide: DeliveryServiceService, useClass: TestingDeliveryServiceService},
 		{provide: InvalidationJobService, useClass: TestingInvalidationJobService},
 		{provide: MiscAPIsService, useClass: TestingMiscAPIsService},
+		{provide: OriginService, useClass: TestingOriginService},
 		{provide: PhysicalLocationService, useClass: TestingPhysicalLocationService},
 		{provide: ProfileService, useClass: TestingProfileService},
 		{provide: ServerService, useClass: TestingServerService},

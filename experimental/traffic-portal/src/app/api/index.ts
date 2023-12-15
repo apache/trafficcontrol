@@ -20,9 +20,11 @@ import { ChangeLogsService } from "src/app/api/change-logs.service";
 
 import { CacheGroupService } from "./cache-group.service";
 import { CDNService } from "./cdn.service";
+import { CoordinateService } from "./coordinate.service";
 import { DeliveryServiceService } from "./delivery-service.service";
 import { InvalidationJobService } from "./invalidation-job.service";
 import { MiscAPIsService } from "./misc-apis.service";
+import { OriginService } from "./origin.service";
 import { PhysicalLocationService } from "./physical-location.service";
 import { ProfileService } from "./profile.service";
 import { ServerService } from "./server.service";
@@ -43,6 +45,7 @@ export * from "./topology.service";
 export * from "./type.service";
 export * from "./user.service";
 export * from "./origin.service";
+export * from "./coordinate.service";
 
 /**
  * The API Module contains all logic used to access the Traffic Ops API.
@@ -65,6 +68,8 @@ export * from "./origin.service";
 		TopologyService,
 		TypeService,
 		UserService,
+		OriginService,
+		CoordinateService,
 	]
 })
 export class APIModule { }
