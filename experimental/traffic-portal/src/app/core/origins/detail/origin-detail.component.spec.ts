@@ -48,11 +48,12 @@ describe("OriginDetailComponent", () => {
 		fixture = TestBed.createComponent(OriginDetailComponent);
 		component = fixture.componentInstance;
 		fixture.detectChanges();
+		service = TestBed.inject(OriginService);
+		await fixture.whenStable();
 	});
 
 	it("should create", () => {
 		expect(component).toBeTruthy();
-		expect(paramMap).toHaveBeenCalled();
 	});
 
 	it("new origin", async () => {

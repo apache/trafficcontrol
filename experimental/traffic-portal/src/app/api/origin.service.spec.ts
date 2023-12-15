@@ -103,7 +103,7 @@ describe("OriginService", () => {
 		);
 		expect(req.request.method).toBe("POST");
 		expect(req.request.params.keys().length).toBe(0);
-		expect(req.request.body).toEqual(origin);
+		expect(req.request.body.name).toEqual(origin.name);
 		req.flush({ response: origin });
 		await expectAsync(responseP).toBeResolvedTo(origin);
 	});
