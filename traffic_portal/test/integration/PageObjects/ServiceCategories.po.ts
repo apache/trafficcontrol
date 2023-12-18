@@ -16,104 +16,96 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser, by, element } from 'protractor';
+import { by, element } from "protractor";
 
-import { randomize } from '../config';
-import { BasePage } from './BasePage.po';
-import { SideNavigationPage } from './SideNavigationPage.po';
+import { randomize } from "../config";
+import { SideNavigationPage } from "./SideNavigationPage.po";
 
 interface CreateServiceCategory {
     Name: string;
-    validationMessage?: string;
 }
 
 interface UpdateServiceCategory {
     description: string;
     NewName: string;
-    validationMessage?: string;
 }
 
 interface DeleteServiceCategory {
     Name: string;
-    validationMessage?: string;
 }
 
-export class ServiceCategoriesPage extends BasePage {
-
-    private btnCreateServiceCategories = element(by.name("createServiceCategoryButton"));
-    private txtSearch = element(by.id('serviceCategoriesTable_filter')).element(by.css('label input'));
-    private txtName = element(by.id('name'));
-
-    private btnDelete = element(by.buttonText('Delete'));
-    private txtConfirmName = element(by.name('confirmWithNameInput'));
-    private randomize = randomize;
-
+export class ServiceCategoriesPage extends SideNavigationPage {
+    private txtName = element(by.name("name"));
     async OpenServicesMenu() {
-        let snp = new SideNavigationPage();
-        await snp.ClickServicesMenu();
+        await this.ClickServicesMenu();
     }
 
+    /**
+     * Navigates the browser to the Service Categories table page.
+     */
     async OpenServiceCategoriesPage() {
-        let snp = new SideNavigationPage();
-        await snp.NavigateToServiceCategoriesPage();
+        await this.NavigateToServiceCategoriesPage();
     }
 
-    public async CreateServiceCategories(serviceCategories: CreateServiceCategory): Promise<boolean> {
-        let result = false;
-        let basePage = new BasePage();
-        await this.btnCreateServiceCategories.click();
-        await this.txtName.sendKeys(serviceCategories.Name + this.randomize);
-        await basePage.ClickCreate();
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (value.indexOf(serviceCategories.validationMessage ?? "") > -1) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
+    public async CreateServiceCategories(
+        serviceCategories: CreateServiceCategory,
+        outputMessage: string
+    ): Promise<boolean> {
+        await this.OpenServiceCategoriesPage();
+        await element(by.buttonText("More")).click();
+        await element(by.linkText("Create New Service Category")).click();
+        this.txtName.sendKeys(serviceCategories.Name + randomize);
+        await this.ClickCreate();
+        return this.GetOutputMessage().then(
+            (v) => v.indexOf(outputMessage ?? "") > -1
+        );
     }
 
-    public async SearchServiceCategories(nameServiceCategories: string): Promise<boolean> {
-        let name = nameServiceCategories + this.randomize;
-        await this.txtSearch.clear();
-        await this.txtSearch.sendKeys(name);
-        if (await browser.isElementPresent(element(by.xpath("//td[@data-search='^" + name + "$']"))) == true) {
-            await element(by.xpath("//td[@data-search='^" + name + "$']")).click();
-            return true;
-        }
-        return false;
+    public async SearchServiceCategories(
+        nameServiceCategories: string
+    ): Promise<void> {
+        nameServiceCategories += randomize;
+        await this.OpenServiceCategoriesPage();
+        const searchInput = element(by.id("quickSearch"));
+        await searchInput.clear();
+        await searchInput.sendKeys(nameServiceCategories);
+        await element(
+            by.cssContainingText("span", nameServiceCategories)
+        ).click();
     }
 
-    public async UpdateServiceCategories(serviceCategories: UpdateServiceCategory): Promise<boolean | undefined> {
-        let basePage = new BasePage();
+    public async UpdateServiceCategories(
+        serviceCategories: UpdateServiceCategory,
+        outputMessage: string
+    ): Promise<boolean | undefined> {
         switch (serviceCategories.description) {
             case "update service categories name":
                 await this.txtName.clear();
-                await this.txtName.sendKeys(serviceCategories.NewName + this.randomize);
-                await basePage.ClickUpdate();
+                await this.txtName.sendKeys(
+                    serviceCategories.NewName + randomize
+                );
+                await this.ClickUpdate();
                 break;
             default:
                 return undefined;
         }
-        return await basePage.GetOutputMessage().then(value => serviceCategories.validationMessage === value || (serviceCategories.validationMessage !== undefined && value.includes(serviceCategories.validationMessage)));
+        return await this.GetOutputMessage().then(
+            (v) =>
+                outputMessage === v ||
+                (outputMessage !== undefined && v.includes(outputMessage))
+        );
     }
 
-    public async DeleteServiceCategories(serviceCategories: DeleteServiceCategory): Promise<boolean> {
-        let name = serviceCategories.Name + this.randomize;
-        let result = false;
-        let basePage = new BasePage();
-        await this.btnDelete.click();
-        await this.txtConfirmName.sendKeys(name);
-        await basePage.ClickDeletePermanently();
-        result = await basePage.GetOutputMessage().then(function (value) {
-            if (value.indexOf(serviceCategories.validationMessage ?? "") > -1) {
-                return true;
-            } else {
-                return false;
-            }
-        })
-        return result;
-
+    public async DeleteServiceCategories(
+        serviceCategories: DeleteServiceCategory,
+        outputMessage: string
+    ): Promise<boolean> {
+        const name = serviceCategories.Name + randomize;
+        await element(by.buttonText("Delete")).click();
+        await element(by.name("confirmWithNameInput")).sendKeys(name);
+        await this.ClickDeletePermanently();
+        return this.GetOutputMessage().then(
+            (v) => v.indexOf(outputMessage ?? "") > -1
+        );
     }
 }
