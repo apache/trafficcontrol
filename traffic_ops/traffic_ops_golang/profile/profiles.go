@@ -429,7 +429,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	profile := tc.ProfileV5{}
 	var profileList []tc.ProfileV5
 	for rows.Next() {
-		if err = rows.Scan(&profile.Description, &profile.ID, &profile.LastUpdated, &profile.Name, &profile.RoutingDisabled, &profile.Type, &profile.CDNID, &profile.CDNName); err != nil {
+		if err = rows.StructScan(&profile); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting profile(s): %w", err))
 			return
 		}
@@ -439,9 +439,9 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	profileInterfaces := []interface{}{}
 
 	for _, p := range profileList {
-		// Attach Parameters if the 'param' parameter is sent
-		if _, ok := inf.Params["param"]; ok {
-			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, inf.User.Can("PARAMETER-SECURE:READ"))
+		// Attach Parameters if the 'id' parameter is sent
+		if _, ok := inf.Params["id"]; ok {
+			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, inf.User.Can("PARAMETER:SECURE-READ"))
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
 				return
