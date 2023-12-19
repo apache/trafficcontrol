@@ -441,7 +441,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	for _, p := range profileList {
 		// Attach Parameters if the 'id' parameter is sent
 		if _, ok := inf.Params["id"]; ok {
-			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, inf.User.Can("PARAMETER:SECURE-READ"))
+			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, inf.User.Can(tc.PermParameterSecureRead))
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
 				return
