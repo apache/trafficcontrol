@@ -78,6 +78,8 @@ class CollectionUtils {
 	 * @returns {T[]}
 	 */
 	uniqArray(array1, array2, key) {
+		array1 = array1 || [];
+		array2 = array2 || [];
 		/** @type {Set<unknown>} */
 		const keys = new Set();
 		/** @type {T[]} */
