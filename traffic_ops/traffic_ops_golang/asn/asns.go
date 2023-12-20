@@ -313,6 +313,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/asns?id=%d", inf.Version, asn.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, asn)
+	changeLogMsg := fmt.Sprintf("ASN: %d, ID:%d, ACTION: Created asn", asn.ASN, asn.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -372,6 +374,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, asn)
+	changeLogMsg := fmt.Sprintf("ASN: %d, ID:%d, ACTION: Updated asn", asn.ASN, asn.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -417,6 +421,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "asn was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID: %s, ACTION: Deleted asn", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

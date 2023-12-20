@@ -411,6 +411,10 @@ func CreateProfileParameter(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "All Requested ProfileParameters were created.")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, objProfileParams)
+	for _, profileParam := range profileParams {
+		changeLogMsg := fmt.Sprintf("PROFILEPARAMETER Profile ID: %d, ParameterID:%d, ACTION: Created profileParameter", profileParam.ProfileID, profileParam.ParameterID)
+		api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
+	}
 	return
 
 }
@@ -471,6 +475,8 @@ func DeleteProfileParameter(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile_parameter"+
 		" was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("PROFILEPARAMETER Profile ID: %s, ParameterID:%s, ACTION: Deleted profileParameter", profileID, parameterID)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

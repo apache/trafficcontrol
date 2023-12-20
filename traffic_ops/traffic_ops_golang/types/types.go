@@ -326,6 +326,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "type was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/type?name=%s", inf.Version, typ.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, typ)
+	changeLogMsg := fmt.Sprintf("TYPE: %s, ID:%d, ACTION: Created type", typ.Name, typ.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -373,6 +375,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "type was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, typ)
+	changeLogMsg := fmt.Sprintf("TYPE: %s, ID:%d, ACTION: Updated type", typ.Name, typ.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -418,6 +422,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	alertMessage := fmt.Sprintf("type was deleted.")
 	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID:%s, ACTION: Deleted type", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

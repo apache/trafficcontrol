@@ -632,7 +632,8 @@ func Create(inf *api.APIInfo) (int, error, error) {
 		userErr, sysErr, code := api.ParseDBError(err)
 		return code, userErr, fmt.Errorf("inserting a CDN Federation: %w", sysErr)
 	}
-
+	changeLogMsg := fmt.Sprintf("CDNFEDERATION: %s, ID:%d, ACTION: Created cdnFederation", fed.CName, fed.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, inf.Tx.Tx)
 	return inf.WriteCreatedResponse(fed, "Federation was created", "federations/"+strconv.Itoa(fed.ID))
 }
 
@@ -671,6 +672,8 @@ func Update(inf *api.APIInfo) (int, error, error) {
 		return code, userErr, sysErr
 	}
 
+	changeLogMsg := fmt.Sprintf("CDNFEDERATION: %s, ID:%d, ACTION: Updated cdnFederation", fed.CName, id)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, inf.Tx.Tx)
 	return inf.WriteSuccessResponse(fed, "Federation was updated")
 }
 
@@ -684,6 +687,7 @@ func Delete(inf *api.APIInfo) (int, error, error) {
 		userErr, sysErr, code := api.ParseDBError(err)
 		return code, userErr, sysErr
 	}
-
+	changeLogMsg := fmt.Sprintf("CDNFEDERATION:%s, ID:%d, ACTION: Deleted cdnFederation", fed.CName, fed.ID)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, inf.Tx.Tx)
 	return inf.WriteSuccessResponse(fed, "Federation was deleted")
 }

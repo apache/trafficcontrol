@@ -1193,6 +1193,8 @@ func CreateCacheGroup(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/cachegroups?name=%s", inf.Version, *cg.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cg)
+	changeLogMsg := fmt.Sprintf("CACHEGROUP: %s, ID:%d, ACTION: Created cachegroup", *cg.Name, *cg.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -1334,6 +1336,8 @@ func UpdateCacheGroup(w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cache group was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, cg)
+	changeLogMsg := fmt.Sprintf("CACHEGROUP: %s, ID:%d, ACTION: Updated cachegroup", *cg.Name, *cg.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -1408,6 +1412,8 @@ func DeleteCacheGroup(w http.ResponseWriter, r *http.Request) {
 	alertMessage := fmt.Sprintf("%s was deleted.", ID)
 	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID:%d, ACTION: Deleted cachegroup", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

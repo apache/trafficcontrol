@@ -151,7 +151,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, code, usrErr, sysErr)
 		return
 	}
-	if rows.Next() {
+	defer rows.Close()
+	for rows.Next() {
 		if err = rows.Scan(&cdn.ID, &cdn.LastUpdated); err != nil {
 			usrErr, sysErr, code := api.ParseDBError(err)
 			api.HandleErr(w, r, tx, code, usrErr, sysErr)
@@ -162,6 +163,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/cdns?name=%s", inf.Version, cdn.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, cdn)
+	changeLogMsg := fmt.Sprintf("CDN: %s, ID:%d, ACTION: Created cdn", cdn.Name, cdn.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -221,6 +224,8 @@ WHERE id=$5 RETURNING last_updated, id`
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "cdn was updated.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, cdn)
+	changeLogMsg := fmt.Sprintf("CDN: %s, ID:%d, ACTION: Updated cdn", cdn.Name, cdn.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -271,6 +276,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	api.WriteAlerts(w, r, http.StatusOK, tc.CreateAlerts(tc.SuccessLevel, "cdn was deleted."))
+	changeLogMsg := fmt.Sprintf("ID:%d, ACTION: Deleted cdn", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 func validateRequest(r *http.Request, v *api.Version) (tc.CDNV5, error) {
