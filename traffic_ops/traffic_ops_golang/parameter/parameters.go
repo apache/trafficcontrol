@@ -424,6 +424,10 @@ func CreateParameter(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "All Requested Parameters were created.")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, objParam)
+	for _, param := range params {
+		changeLogMsg := fmt.Sprintf("PARAMETER: %s, ID:%d, ACTION: Created parameter", param.Name, param.ID)
+		api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
+	}
 	return
 }
 
@@ -489,6 +493,8 @@ func UpdateParameter(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "parameter was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, parameter)
+	changeLogMsg := fmt.Sprintf("PARAMETER: %s, ID:%d, ACTION: Updated parameter", parameter.Name, parameter.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -533,6 +539,8 @@ func DeleteParameter(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "parameter"+
 		" was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID:%s, ACTION: Deleted parameter", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

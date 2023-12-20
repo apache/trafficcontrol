@@ -578,6 +578,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/origins?id=%d", inf.Version, org.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, org)
+	changeLogMsg := fmt.Sprintf("ORIGIN: %s, ID:%d, ACTION: Created origin", org.Name, org.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx.Tx)
 }
 
 // Update a Origin for APIv5.
@@ -670,6 +672,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	origin.ID = requestedOriginId
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was updated.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, origin)
+	changeLogMsg := fmt.Sprintf("ORIGIN: %s, ID:%d, ACTION: Updated origin", origin.Name, origin.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx.Tx)
 	return
 }
 
@@ -741,6 +745,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "origin was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID:%d, ACTION: Deleted origin", origin.ID)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 
