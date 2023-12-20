@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
+- [#7887](https://github.com/apache/trafficcontrol/pull/7887) *Traffic Ops* Limit Delivery Services returned for GET /servers/{id}/deliveryservices to ones in the same CDN
 
 ## [8.0.0] - 2023-09-20
 ### Added
