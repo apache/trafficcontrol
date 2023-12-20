@@ -120,9 +120,11 @@ func (a AuthBase) GetWrapper(privLevelRequired int) Middleware {
 					return
 				}
 			} else {
-				if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
-					api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
-					return
+				if v.Major < 5 {
+					if !cfg.RoleBasedPermissions && user.PrivLevel < privLevelRequired {
+						api.HandleErr(w, r, nil, http.StatusForbidden, errors.New("Forbidden."), nil)
+						return
+					}
 				}
 			}
 			api.AddUserToReq(r, user)
