@@ -106,6 +106,16 @@ describe("ProfileService", () => {
 		await expectAsync(responseP).toBeResolvedTo(profile);
 	});
 
+	it("updates existing Profiles", async () => {
+		const responseP = service.updateProfile(profile);
+		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles/${profile.id}`);
+		expect(req.request.method).toBe("PUT");
+		expect(req.request.params.keys().length).toBe(0);
+		expect(req.request.body).toBe(profile);
+		req.flush({response: profile});
+		await expectAsync(responseP).toBeResolvedTo(profile);
+	});
+
 	it("deletes existing Profiles", async () => {
 		const responseP = service.deleteProfile(profile);
 		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles/${profile.id}`);
@@ -126,7 +136,7 @@ describe("ProfileService", () => {
 		await expectAsync(responseP).toBeResolvedTo(profile);
 	});
 
-	it("sends requests to import Profiles", async () => {
+	it("sends requests for importing Profiles", async () => {
 		const responseP = service.importProfile(importProfile);
 		const req = httpTestingController.expectOne(`/api/${service.apiVersion}/profiles/import`);
 		expect(req.request.method).toBe("POST");

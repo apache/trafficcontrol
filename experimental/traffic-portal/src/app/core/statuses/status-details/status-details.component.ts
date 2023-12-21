@@ -116,7 +116,7 @@ export class StatusDetailsComponent {
 					lastUpdated: this.statusDetails.lastUpdated,
 					name: this.statusDetailsForm.controls.name.value
 				};
-				this.statusDetails = await this.api.updateStatusDetail(editData);
+				this.statusDetails = await this.api.updateStatus(editData);
 			}
 		}
 	}

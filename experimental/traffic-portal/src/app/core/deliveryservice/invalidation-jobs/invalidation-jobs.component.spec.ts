@@ -15,7 +15,7 @@ import { HttpClientModule } from "@angular/common/http";
 import { type ComponentFixture, TestBed } from "@angular/core/testing";
 import { FormsModule, ReactiveFormsModule } from "@angular/forms";
 import { MatDialog, MatDialogModule } from "@angular/material/dialog";
-import { Router } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { type Observable, of, ReplaySubject } from "rxjs";
 import { GeoLimit, GeoProvider, JobType, ResponseInvalidationJob } from "trafficops-types";
@@ -119,6 +119,8 @@ describe("InvalidationJobsComponent", () => {
 			ttlHours: 178
 		});
 
+		const paramMap = spyOn(TestBed.inject(ActivatedRoute).snapshot.paramMap, "get");
+		paramMap.and.returnValue(String(ds.id));
 		fixture = TestBed.createComponent(InvalidationJobsComponent);
 		component = fixture.componentInstance;
 		component.deliveryservice = ds;

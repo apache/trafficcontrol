@@ -28,7 +28,10 @@ import type {
 	ResponseRegion,
 } from "trafficops-types";
 
-import { ServerService } from "./server.service";
+import { CacheGroupService as ConcreteCacheGroupService } from "../cache-group.service";
+import { ServerService } from "../server.service";
+
+import { APITestingService } from "./base-api.service";
 
 /**
  * The names of properties of {@link ResponseCacheGroup}s that define its
@@ -88,32 +91,29 @@ function isRequest(x: CacheGroupQueueRequest | CDN | string | number): x is Cach
  * CDNService expose API functionality relating to CDNs.
  */
 @Injectable()
-export class CacheGroupService {
+export class CacheGroupService extends APITestingService implements ConcreteCacheGroupService {
 	private lastID = 10;
 
-	private readonly asns: Array<ResponseASN> = [{
+	public readonly asns: Array<ResponseASN> = [{
 		asn: 0,
 		cachegroup: "Mid",
 		cachegroupId: 1,
 		id: 1,
 		lastUpdated: new Date()
-	}
-	];
-	private readonly divisions: Array<ResponseDivision> = [{
+	}];
+	public readonly divisions: Array<ResponseDivision> = [{
 		id: 1,
 		lastUpdated: new Date(),
 		name: "Div1"
-	}
-	];
-	private readonly regions: Array<ResponseRegion> = [{
+	}];
+	public readonly regions: Array<ResponseRegion> = [{
 		division: 1,
 		divisionName: "div1",
 		id: 1,
 		lastUpdated: new Date(),
 		name: "Reg1"
-	}
-	];
-	private readonly cacheGroups: Array<ResponseCacheGroup> = [
+	}];
+	public readonly cacheGroups: Array<ResponseCacheGroup> = [
 		{
 			fallbackToClosest: true,
 			fallbacks: [],
@@ -183,16 +183,17 @@ export class CacheGroupService {
 			typeName: "TC_LOC"
 		}
 	];
-	private readonly coordinates: Array<ResponseCoordinate> = [{
+	public readonly coordinates: Array<ResponseCoordinate> = [{
 		id: 1,
 		lastUpdated: new Date(),
 		latitude: 0,
 		longitude: 0,
 		name: "Coord1"
-	}
-	];
+	}];
 
-	constructor(private readonly servers: ServerService) {}
+	constructor(private readonly servers: ServerService) {
+		super();
+	}
 
 	public async getCacheGroups(idOrName: number | string): Promise<ResponseCacheGroup>;
 	public async getCacheGroups(): Promise<Array<ResponseCacheGroup>>;
@@ -244,7 +245,7 @@ export class CacheGroupService {
 	 * not).
 	 * @returns The parentage portion of a Cache Group.
 	 */
-	private getParents(parentID: number | null | undefined, secondaryParentID: number | null | undefined): AllParentage {
+	public getParents(parentID: number | null | undefined, secondaryParentID: number | null | undefined): AllParentage {
 		let parent: Parentage = {
 			parentCachegroupId: null,
 			parentCachegroupName: null
@@ -442,7 +443,7 @@ export class CacheGroupService {
 		}
 		const updPendingValue = action === "queue";
 		const serverNames = [];
-		for (const server of this.servers.servers) {
+		for (const server of await this.servers.getServers()) {
 			if (server.cachegroupId === cachegroupID && (server.cdnId === cdn || server.cdnName === cdn)) {
 				server.updPending = updPendingValue;
 				serverNames.push(server.hostName);
@@ -456,9 +457,9 @@ export class CacheGroupService {
 			serverNames,
 		};
 	}
+
 	public async getDivisions(): Promise<Array<ResponseDivision>>;
 	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
-
 	/**
 	 * Gets an array of divisions from Traffic Ops.
 	 *
@@ -519,20 +520,20 @@ export class CacheGroupService {
 	/**
 	 * Deletes an existing division.
 	 *
-	 * @param id Id of the division to delete.
+	 * @param division The Division to be deleted, or just its ID.
 	 * @returns The deleted division.
 	 */
-	public async deleteDivision(id: number): Promise<ResponseDivision> {
+	public async deleteDivision(division: number | ResponseDivision): Promise<ResponseDivision> {
+		const id = typeof(division) === "number" ? division : division.id;
 		const index = this.divisions.findIndex(d => d.id === id);
 		if (index === -1) {
-			throw new Error(`no such Division: ${id}`);
+			throw new Error(`no such Division: #${id}`);
 		}
 		return this.divisions.splice(index, 1)[0];
 	}
 
 	public async getRegions(): Promise<Array<ResponseRegion>>;
 	public async getRegions(nameOrID: string | number): Promise<ResponseRegion>;
-
 	/**
 	 * Gets an array of regions from Traffic Ops.
 	 *
@@ -581,8 +582,12 @@ export class CacheGroupService {
 	 * @returns The created region.
 	 */
 	public async createRegion(region: RequestRegion): Promise<ResponseRegion> {
+		const div = this.divisions.find(d => d.id === region.division);
+		if (!div) {
+			throw new Error(`no such Division: #${region.division}`);
+		}
 		const reg = {
-			divisionName: this.divisions.find(d => d.id === region.division)?.name ?? "",
+			divisionName: div.name,
 			...region,
 			id: ++this.lastID,
 			lastUpdated: new Date()
@@ -592,21 +597,21 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Deletes an existing region.
+	 * Deletes an existing Region.
 	 *
-	 * @param id Id of the region to delete.
-	 * @returns The deleted region.
+	 * @param region The Region to be deleted, or just its ID.
 	 */
-	public async deleteRegion(id: number | ResponseRegion): Promise<ResponseRegion> {
+	public async deleteRegion(region: number | ResponseRegion): Promise<void> {
+		const id = typeof(region) === "number" ? region : region.id;
 		const index = this.regions.findIndex(d => d.id === id);
 		if (index === -1) {
-			throw new Error(`no such Region: ${id}`);
+			throw new Error(`no such Region: #${id}`);
 		}
-		return this.regions.splice(index, 1)[0];
+		this.regions.splice(index, 1);
 	}
+
 	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
 	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
-
 	/**
 	 * Gets an array of coordinates from Traffic Ops.
 	 *
@@ -667,20 +672,20 @@ export class CacheGroupService {
 	/**
 	 * Deletes an existing coordinate.
 	 *
-	 * @param id Id of the coordinate to delete.
+	 * @param coordinate The coordinate to delete, or just its ID.
 	 * @returns The deleted coordinate.
 	 */
-	public async deleteCoordinate(id: number): Promise<ResponseCoordinate> {
+	public async deleteCoordinate(coordinate: number | ResponseCoordinate): Promise<void> {
+		const id = typeof(coordinate) === "number" ? coordinate : coordinate.id;
 		const index = this.coordinates.findIndex(c => c.id === id);
 		if (index === -1) {
-			throw new Error(`no such Coordinate: ${id}`);
+			throw new Error(`no such Coordinate: #${id}`);
 		}
-		return this.coordinates.splice(index, 1)[0];
+		this.coordinates.splice(index, 1);
 	}
 
 	public async getASNs(): Promise<Array<ResponseASN>>;
 	public async getASNs(id: number): Promise<ResponseASN>;
-
 	/**
 	 * Gets an array of ASNs from Traffic Ops.
 	 *
@@ -721,10 +726,15 @@ export class CacheGroupService {
 	 * @returns The created ASN.
 	 */
 	public async createASN(asn: RequestASN): Promise<ResponseASN> {
+		const cg = this.cacheGroups.find(c => c.id === asn.cachegroupId);
+		if (!cg) {
+			throw new Error(`no such Cache Group #${asn.cachegroupId}`);
+		}
+
 		const sn = {
 			...asn,
-			cachegroup: this.cacheGroups.find(cg => cg.id === asn.cachegroupId)?.name ?? "",
-			cachegroupId: asn.cachegroupId,
+			cachegroup: cg.name,
+			cachegroupId: cg.id,
 			id: ++this.lastID,
 			lastUpdated: new Date()
 		};
@@ -738,11 +748,12 @@ export class CacheGroupService {
 	 * @param asn The ASN to be deleted or ID of the ASN to delete..
 	 * @returns The deleted asn.
 	 */
-	public async deleteASN(asn: ResponseASN | number): Promise<ResponseASN> {
-		const index = this.asns.findIndex(a => a.asn === asn);
+	public async deleteASN(asn: number | ResponseASN): Promise<void> {
+		const id = typeof(asn) === "number" ? asn : asn.id;
+		const index = this.asns.findIndex(a => a.id === id);
 		if (index === -1) {
-			throw new Error(`no such asn: ${asn}`);
+			throw new Error(`no such asn: #${id}`);
 		}
-		return this.asns.splice(index, 1)[0];
+		this.asns.splice(index, 1);
 	}
 }

@@ -104,10 +104,10 @@ export class UpdateStatusComponent implements OnInit {
 		let observables;
 		if (this.isOffline) {
 			observables = this.servers.map(
-				async x=> this.api.updateStatus(x, this.status?.name ?? "", this.offlineReason)
+				async x=>this.api.updateServerStatus(x, this.status?.name ?? "", this.offlineReason)
 			);
 		} else {
-			observables = this.servers.map(async x=>this.api.updateStatus(x, this.status?.name ?? ""));
+			observables = this.servers.map(async x=>this.api.updateServerStatus(x, this.status?.name ?? ""));
 		}
 		try {
 			await Promise.all(observables);

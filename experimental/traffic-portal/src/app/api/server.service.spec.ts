@@ -144,6 +144,12 @@ describe("ServerService", () => {
 			await expectAsync(resp).toBeResolvedTo(server);
 		});
 
+		it("throws an error for invalid server update method call signatures", async () => {
+			const resp = (service as {updateServer: (id: number) => Promise<ResponseServer>}).updateServer(server.id);
+			httpTestingController.expectNone({method: "PUT"});
+			await expectAsync(resp).toBeRejected();
+		});
+
 		it("updates a server", async ()  => {
 			const resp = service.updateServer(server);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}`);
@@ -211,7 +217,7 @@ describe("ServerService", () => {
 			await expectAsync(responseP).toBeRejected();
 		});
 		it("updates a server's status", async () => {
-			const responseP = service.updateStatus(server, status);
+			const responseP = service.updateServerStatus(server, status);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}/status`);
 			expect(req.request.method).toBe("PUT");
 			// We specifically don't care whether the offline reason truly isn't
@@ -223,7 +229,7 @@ describe("ServerService", () => {
 		});
 		it("updates a server's status with an offlineReason", async () => {
 			const offlineReason = "because I told you to";
-			const responseP = service.updateStatus(server.id, status.name, offlineReason);
+			const responseP = service.updateServerStatus(server.id, status.name, offlineReason);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}/status`);
 			expect(req.request.method).toBe("PUT");
 			expect(req.request.body).toEqual({offlineReason, status: status.name});
@@ -239,7 +245,7 @@ describe("ServerService", () => {
 			await expectAsync(responseP).toBeResolvedTo(status);
 		});
 		it("updates an existing status", async () => {
-			const responseP = service.updateStatusDetail(status);
+			const responseP = service.updateStatus(status);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/statuses/${status.id}`);
 			expect(req.request.method).toBe("PUT");
 			expect(req.request.body).toEqual(status);
@@ -261,6 +267,84 @@ describe("ServerService", () => {
 			expect(req.request.body).toBeNull();
 			req.flush({response: status});
 			await expectAsync(responseP).toBeResolvedTo(status);
+		});
+	});
+
+	describe("Capability methods", () => {
+		const cap = {
+			lastUpdated: new Date(),
+			name: "test"
+		};
+
+		it("sends requests for multiple capabilities", async () => {
+			const responseP = service.getCapabilities();
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: [cap]});
+			await expectAsync(responseP).toBeResolvedTo([cap]);
+		});
+		it("sends requests for a single capability by name", async () => {
+			const responseP = service.getCapabilities(cap.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: [cap]});
+			await expectAsync(responseP).toBeResolvedTo(cap);
+		});
+		it("throws an error when TO presents it with multiple matches by name", async () => {
+			const responseP = service.getCapabilities(cap.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: [cap, {...cap, name: `${cap.name}-duplicate`}]});
+			await expectAsync(responseP).toBeRejected();
+		});
+		it("throws an error when fetching a non-existent capability", async () => {
+			const responseP = service.getCapabilities(cap.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: []});
+			await expectAsync(responseP).toBeRejected();
+		});
+		it("sends requests for creating a new capability", async () => {
+			const responseP = service.createCapability(cap);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("POST");
+			expect(req.request.body).toEqual(cap);
+			req.flush({response: cap});
+			await expectAsync(responseP).toBeResolvedTo(cap);
+		});
+		it("sends requests for updating an existing capability", async () => {
+			const responseP = service.updateCapability(cap.name, cap);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("PUT");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			expect(req.request.body).toEqual(cap);
+			req.flush({response: cap});
+			await expectAsync(responseP).toBeResolvedTo(cap);
+		});
+		it("sends requests for deleting an existing capability", async () => {
+			const responseP = service.deleteCapability(cap);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			req.flush({alerts: [{level: "success", text: "capability deleted"}]});
+			await expectAsync(responseP).toBeResolvedTo(undefined);
+		});
+		it("sends requests for deleting an existing capability by name", async () => {
+			const responseP = service.deleteCapability(cap.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(cap.name);
+			req.flush({alerts: [{level: "success", text: "capability deleted"}]});
+			await expectAsync(responseP).toBeResolvedTo(undefined);
 		});
 	});
 

@@ -48,19 +48,21 @@ export class TopologyService {
 		},
 	];
 
+	public async getTopologies(): Promise<Array<ResponseTopology>>;
+	public async getTopologies(name: string): Promise<ResponseTopology>;
 	/**
 	 * Gets one or all Topologies from Traffic Ops
 	 *
 	 * @param name The unique name of a single Topology to be returned
 	 * @returns An Array of Topologies
 	 */
-	public async getTopologies(name?: string): Promise<Array<ResponseTopology>> {
+	public async getTopologies(name?: string): Promise<Array<ResponseTopology> | ResponseTopology> {
 		if (name !== undefined) {
 			const topology = this.topologies.find(t => t.name === name);
 			if (!topology) {
 				throw new Error(`no such Topology ${name}`);
 			}
-			return [topology];
+			return topology;
 		}
 		return this.topologies;
 	}
@@ -91,7 +93,7 @@ export class TopologyService {
 			}
 			const responseNode: ResponseTopologyNode = {
 				cachegroup: node.cachegroup,
-				parents: node.parents || [],
+				parents: node.parents,
 			};
 			return responseNode;
 		});

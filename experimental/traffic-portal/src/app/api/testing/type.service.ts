@@ -12,7 +12,11 @@
 * limitations under the License.
 */
 import { Injectable } from "@angular/core";
-import {RequestType, TypeFromResponse} from "trafficops-types";
+import type { RequestType, TypeFromResponse } from "trafficops-types";
+
+import type { TypeService as ConcreteTypeService } from "../type.service";
+
+import { APITestingService } from "./base-api.service";
 
 /** The allowed values for the 'useInTables' query parameter of GET requests to /types. */
 type UseInTable = "cachegroup" |
@@ -28,9 +32,9 @@ type UseInTable = "cachegroup" |
  * TypeService exposes API functionality relating to Types.
  */
 @Injectable()
-export class TypeService {
+export class TypeService extends APITestingService implements ConcreteTypeService {
 	private lastID = 20;
-	private readonly types = [
+	public readonly types = [
 		{
 			description: "Mid Logical Location",
 			id: 1,
@@ -57,13 +61,6 @@ export class TypeService {
 			id: 4,
 			lastUpdated: new Date(),
 			name: "TC_LOC",
-			useInTable: "cachegroup"
-		},
-		{
-			description: "Traffic Router Logical Location",
-			id: 15,
-			lastUpdated: new Date(),
-			name: "TR_LOC",
 			useInTable: "cachegroup"
 		},
 		{
@@ -137,12 +134,19 @@ export class TypeService {
 			useInTable: "deliveryservice"
 		},
 		{
-			description: "Edge Cache",
+			description: "Traffic Router Logical Location",
 			id: 15,
+			lastUpdated: new Date(),
+			name: "TR_LOC",
+			useInTable: "cachegroup"
+		},
+		{
+			description: "Edge-tier Cache Server",
+			id: 16,
 			lastUpdated: new Date(),
 			name: "EDGE",
 			useInTable: "server"
-		}
+		},
 	];
 
 	public async getTypes(idOrName: number | string): Promise<TypeFromResponse>;
@@ -193,10 +197,11 @@ export class TypeService {
 	/**
 	 * Deletes an existing type.
 	 *
-	 * @param id Id of the type to delete.
-	 * @returns The deleted type.
+	 * @param type The Type to be deleted, or just its ID.
+	 * @returns The deleted Type.
 	 */
-	public async deleteType(id: number): Promise<TypeFromResponse> {
+	public async deleteType(type: number | TypeFromResponse): Promise<TypeFromResponse> {
+		const id = typeof(type) === "number" ? type : type.id;
 		const index = this.types.findIndex(t => t.id === id);
 		if (index === -1) {
 			throw new Error(`no such Type: ${id}`);
@@ -218,5 +223,25 @@ export class TypeService {
 		};
 		this.types.push(t);
 		return t;
+	}
+
+	/**
+	 * Replaces the current definition of a type with the one given.
+	 *
+	 * @param type The new type.
+	 * @returns The updated type.
+	 */
+	public async updateType(type: TypeFromResponse): Promise<TypeFromResponse> {
+		const idx = this.types.findIndex(t => t.id === type.id);
+		if (idx < 0) {
+			throw new Error(`no such Type #${type.id}`);
+		}
+
+		const inserted = {
+			...type,
+			lastUpdated: new Date()
+		};
+		this.types[idx] = inserted;
+		return inserted;
 	}
 }

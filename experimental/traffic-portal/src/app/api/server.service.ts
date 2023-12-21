@@ -218,7 +218,7 @@ export class ServerService extends APIService {
 	}
 
 	/**
-	 * Updates a server's status.
+	 * Updates a server's Status.
 	 *
 	 * @param server Either the server that will have its status changed, or the
 	 * integral, unique identifier thereof.
@@ -227,7 +227,11 @@ export class ServerService extends APIService {
 	 * @param offlineReason The reason why the server was placed into a
 	 * non-ONLINE or REPORTED status.
 	 */
-	public async updateStatus(server: number | ResponseServer, newStatus: string | ResponseStatus, offlineReason?: string): Promise<void> {
+	public async updateServerStatus(
+		server: number | ResponseServer,
+		newStatus: string | ResponseStatus,
+		offlineReason?: string
+	): Promise<void> {
 		const id = typeof(server) === "number" ? server : server.id;
 		const status = typeof(newStatus) === "string" ? newStatus : newStatus.name;
 		return this.put(`servers/${id}/status`, {offlineReason, status}).toPromise();
@@ -244,22 +248,22 @@ export class ServerService extends APIService {
 	}
 
 	/**
-	 * Updates status Details.
+	 * Replaces an existing Status with the new provided definition for it.
 	 *
-	 * @param status The status to update.
-	 * @returns The updated status.
+	 * @param status The Status being updated.
+	 * @returns The updated Status.
 	 */
-	public async updateStatusDetail(status: ResponseStatus): Promise<ResponseStatus> {
+	public async updateStatus(status: ResponseStatus): Promise<ResponseStatus> {
 		return this.put<ResponseStatus>(`statuses/${status.id}`, status).toPromise();
 	}
 
 	/**
 	 * Deletes an existing Status.
 	 *
-	 * @param statusId The Status ID
+	 * @param status The Status being deleted, or just its ID.
 	 */
-	public async deleteStatus(statusId: number | ResponseStatus): Promise<ResponseStatus> {
-		const id = typeof (statusId) === "number" ? statusId : statusId.id;
+	public async deleteStatus(status: number | ResponseStatus): Promise<ResponseStatus> {
+		const id = typeof (status) === "number" ? status : status.id;
 		return this.delete<ResponseStatus>(`statuses/${id}`).toPromise();
 	}
 

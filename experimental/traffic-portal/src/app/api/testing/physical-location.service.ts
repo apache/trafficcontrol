@@ -14,13 +14,17 @@
 import { Injectable } from "@angular/core";
 import type { RequestPhysicalLocation, ResponsePhysicalLocation } from "trafficops-types";
 
+import type { PhysicalLocationService as ConcretePhysicalLocationService } from "../physical-location.service";
+
+import { APITestingService } from "./base-api.service";
+
 /**
  * PhysicalLocationService exposes API functionality relating to PhysicalLocations.
  */
 @Injectable()
-export class PhysicalLocationService {
+export class PhysicalLocationService extends APITestingService implements ConcretePhysicalLocationService {
 	private lastID = 1;
-	private readonly physicalLocations: Array<ResponsePhysicalLocation> = [{
+	public readonly physicalLocations: Array<ResponsePhysicalLocation> = [{
 		address: "street",
 		city: "city",
 		comments: null,

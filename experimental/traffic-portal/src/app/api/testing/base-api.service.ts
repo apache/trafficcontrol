@@ -12,63 +12,48 @@
 * limitations under the License.
 */
 
-import { HttpClient, HttpHeaders, type HttpParams } from "@angular/common/http";
+import { type HttpClient, HttpHeaders, HttpRequest, HttpParams } from "@angular/common/http";
 import type { Observable } from "rxjs";
-import { map } from "rxjs/operators";
-import type { Alert } from "trafficops-types";
 
 import { environment } from "src/environments/environment";
 
-import { hasProperty, isArray } from "../utils";
-
-/**
- * The type of parameters that can be sent in a query string.
- *
- * We're not using @angular/routing.Params because that's too permissive. It's
- * front-end only, so it allows you to pass arbitrary data, even if it's not
- * really representable in a URL query string.
- */
-export type QueryParams = Record<Exclude<PropertyKey, symbol>, string | number | boolean> | HttpParams;
-
-/**
- * Checks if something is an Alert.
- *
- * @param x The thing to check.
- * @returns `true` if `x` is an Alert (or at least close enough), `false`
- * otherwise.
- */
-function isAlert(x: unknown): x is Alert {
-	if (typeof(x) !== "object" || !x) {
-		return false;
-	}
-
-	return hasProperty(x, "level", "string") && hasProperty(x, "text", "string");
-}
-
-/**
- * Checks if an arbitrary object parsed from a response body is Alerts. This is
- * useful for methods that typically return non-JSON data - except in the event
- * of failures.
- *
- * @param x The object to check.
- * @returns `true` if `x` has an `alerts` array, `false` otherwise.
- */
-export function hasAlerts(x: object): x is ({alerts: Alert[]}) {
-	if (!hasProperty(x, "alerts")) {
-		return false;
-	}
-	return isArray(x.alerts, isAlert);
-}
+import type { APIService, QueryParams } from "../base-api.service";
 
 /**
  * This is the base class from which all other API classes inherit.
  */
-export abstract class APIService {
+export abstract class APITestingService implements APIService {
 	/**
 	 * The API version used by the service(s) - this will be overridden by the
 	 * environment if a different API version is therein found.
 	 */
-	public apiVersion = "4.0";
+	public readonly apiVersion = environment.apiVersion;
+
+	/**
+	 * This exists to satisfy typing requirements, but always has the actual,
+	 * underlying value of `undefined`, so **do not use it**.
+	 */
+	public http!: HttpClient;
+
+	/**
+	 * Holds a stack of the requests the API service has "sent". Most tests
+	 * probably won't need this, but since we need to implement `do` anyway I
+	 * figured this was an easy, useful way to satisfy typings.
+	 */
+	public requestStack = new Array<HttpRequest<unknown>>();
+
+	/**
+	 * These are the default options sent in HttpClient methods - if subclasses
+	 * make raw requests, they are encouraged to extend this rather than duplicate
+	 * it.
+	 */
+	public readonly defaultOptions = {
+		// This is part of the HTTP spec. I can't - and shouldn't - change it.
+		// eslint-disable-next-line @typescript-eslint/naming-convention
+		headers: new HttpHeaders({"Content-Type": "application/json"}),
+		observe: "response" as "response",
+		responseType: "json" as "json",
+	};
 
 	/**
 	 * Sends an HTTP DELETE request to the API.
@@ -155,52 +140,41 @@ export abstract class APIService {
 	}
 
 	/**
-	 * Sends an HTTP request to the API.
+	 * Sends an HTTP request to the API. The testing implementation should be
+	 * treated as having the concrete return type `void`, because **it does not
+	 * return any value**. Instead, it pushes a request to the
+	 * {@link APITestingService.requestStack}.
 	 *
 	 * @param method The HTTP request method to use, e.g. "GET".
 	 * @param path The request path.
 	 * @param body Optional request body (will be JSON.stringify'd).
-	 * @param params Option query parameters to send in the request.
+	 * @param qParams Option query parameters to send in the request.
 	 * @returns An Observable that emits the server response.
 	 */
-	public do<T>(method: string, path: string, body?: object, params?: QueryParams): Observable<T> {
+	public do<T>(method: string, path: string, body?: object, qParams?: QueryParams): Observable<T> {
+
+		const params = qParams instanceof HttpParams ? qParams : new HttpParams({fromObject: qParams});
 
 		const options = {
 			body,
 			params,
 			...this.defaultOptions
 		};
-		return this.http.request<{response: T}>(method, `/api/${this.apiVersion}/${path.replace(/^\/+/, "")}`, options).pipe(map(
-			r => {
-				if (!r.body) {
-					throw new Error(`${method} ${path} returned no response body - ${r.status} ${r.statusText}`);
-				}
-				return r.body.response;
-			}
-		));
-	}
 
-	/**
-	 * These are the default options sent in HttpClient methods - if subclasses
-	 * make raw requests, they are encouraged to extend this rather than duplicate
-	 * it.
-	 */
-	public readonly defaultOptions = {
-		// This is part of the HTTP spec. I can't - and shouldn't - change it.
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		headers: new HttpHeaders({"Content-Type": "application/json"}),
-		observe: "response" as const,
-		responseType: "json" as const,
-	};
-
-	/**
-	 * Constructs the service and sets the API version based on the execution environment.
-	 *
-	 * @param http The Angular HTTP client service.
-	 */
-	constructor(public readonly http: HttpClient) {
-		if (environment.apiVersion) {
-			this.apiVersion = environment.apiVersion;
+		switch(method.toUpperCase()) {
+			case "GET":
+			case "HEAD":
+			case "OPTIONS":
+			case "DELETE":
+				this.requestStack.push(new HttpRequest(method, `/api/${this.apiVersion}/${path.replace(/^\/+/, "")}`, options));
+				break;
+			case "PUT":
+			case "POST":
+			case "PATCH":
+				this.requestStack.push(new HttpRequest(method, `/api/${this.apiVersion}/${path.replace(/^\/+/, "")}`, body, options));
+				break;
 		}
+
+		return undefined as unknown as Observable<T>;
 	}
 }
