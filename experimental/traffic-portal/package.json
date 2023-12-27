@@ -40,12 +40,14 @@
     "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCustom",
     "coverage:ci": "ng test --code-coverage --watch=false --browsers=ChromeHeadlessCustom",
     "lint": "ng lint",
-    "e2e": "npm run e2e:build && ./node_modules/.bin/nightwatch --config './nightwatch/nightwatch.conf.js'",
+    "e2e": "ng e2e",
     "e2e:build": "./node_modules/.bin/tsc -p ./nightwatch/tsconfig.e2e.json",
     "e2e:ci": "npm run e2e:build && ./node_modules/.bin/nightwatch --env chrome_headless --config './nightwatch/nightwatch.conf.js'",
     "dev:ssr": "ng run traffic-portal:serve-ssr",
     "serve:ssr": "pushd dist/traffic-portal && node ./server/main.js && popd",
-    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production"
+    "build:ssr": "ng build --configuration production && ng run traffic-portal:server:production",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "private": true,
   "dependencies": {
@@ -83,6 +85,7 @@
     "@angular-eslint/template-parser": "^16.0.3",
     "@angular/cli": "^16.0.4",
     "@angular/compiler-cli": "^16.0.4",
+    "@cypress/schematic": "^2.5.1",
     "@nightwatch/schematics": "^1.0.0",
     "@types/argparse": "^2.0.2",
     "@types/chart.js": "^2.9.34",
@@ -111,7 +114,8 @@
     "karma-junit-reporter": "^2.0.1",
     "nightwatch": "^2.6.17",
     "ts-node": "~8.3.0",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "cypress": "latest"
   },
   "optionalDependencies": {
     "@compodoc/compodoc": "^1.1.18"
