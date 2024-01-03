@@ -3,19 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [unreleased]
-### Added
-- [#7812](https://github.com/apache/trafficcontrol/pull/7812) *Traffic Portal*: Expose the `configUpdateFailed` and `revalUpdateFailed` fields on the server table.
-
-### Changed
-- [#7614](https://github.com/apache/trafficcontrol/pull/7614) *Traffic Ops* The database upgrade process no longer overwrites changes users may have made to the initially seeded data.
-- [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed perl dependency
-- Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
-
-### Fixed
-- [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
-
-## [8.0.0] - 2023-09-20
+## [8.0.0] - 2024-01-03
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client*: Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal*: Added Scope Query Param to SSO login.
