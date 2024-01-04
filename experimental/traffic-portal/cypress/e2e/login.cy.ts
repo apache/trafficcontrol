@@ -15,7 +15,6 @@
 describe("Login Page", () => {
 	beforeEach(() => {
 		cy.visit("/login");
-		// cy.contains("dismiss").click();
 	});
 	it("Clears the form when the 'Clear' button is clicked", () => {
 		const usernameInput = cy.get("input").first();
@@ -40,13 +39,6 @@ describe("Login Page", () => {
 	});
 
 	it("Logs in", () => {
-		cy.fixture("login").then(
-			({username, password}: {username: string; password: string}) => {
-				cy.get("input").first().type(username);
-				cy.get("input").last().type(password);
-				cy.contains("button", "Login").click();
-				cy.window().its("location.pathname").should("eq", "/core");
-			}
-		);
+		cy.login();
 	});
 });

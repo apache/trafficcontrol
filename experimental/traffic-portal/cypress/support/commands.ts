@@ -12,23 +12,6 @@
 * limitations under the License.
 */
 
-// ***********************************************
-// This example namespace declaration will help
-// with Intellisense and code completion in your
-// IDE or Text Editor.
-// ***********************************************
-// declare namespace Cypress {
-//   interface Chainable<Subject = any> {
-//     customCommand(param: any): typeof customCommand;
-//   }
-// }
-//
-// function customCommand(param: any): void {
-//   console.warn(param);
-// }
-//
-// NOTE: You can use it like so:
-// Cypress.Commands.add('customCommand', customCommand);
 //
 // ***********************************************
 // This example commands.js shows you how to
@@ -42,16 +25,37 @@
 //
 //
 // -- This is a parent command --
-// Cypress.Commands.add("login", (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add("dismiss", { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+/**
+ * Logs in as the configured testing user. This ends with the URL at /core.
+ */
+function login(): void {
+	cy.visit("login");
+	cy.fixture("login").then(
+		({username, password}: {username: string; password: string}) => {
+			cy.get("input").first().type(username);
+			cy.get("input").last().type(password);
+			cy.contains("button", "Login").click();
+			cy.window().its("location.pathname").should("eq", "/core");
+		}
+	);
+}
+
+// This is how Cypress is organized; we don't have control over it.
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace Cypress {
+	// All declarations in the namespace must match in type, and Cypress itself
+	// uses `any`, so we are powerless to do something better here.
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	// This type parameter is necessary because it makes the interface match the
+	// expanded definition provided by Cypress itself.
+	/* eslint-disable @typescript-eslint/no-unused-vars */
+	// We shouldn't document Cypress interfaces.
+	// eslint-disable-next-line jsdoc/require-jsdoc
+	interface Chainable<Subject = any> {
+		login(): typeof login;
+	}
+	/* eslint-enable @typescript-eslint/no-explicit-any */
+	/* eslint-enable @typescript-eslint/no-unused-vars */
+}
+Cypress.Commands.add("login", login);
