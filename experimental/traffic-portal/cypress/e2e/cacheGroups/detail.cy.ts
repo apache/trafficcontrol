@@ -26,7 +26,7 @@ describe("Cache Group edit/creation page", () => {
 				cy.get("mat-card").find("input[name=name]").should("be.enabled").should("have.value", cg.name);
 				cy.get("mat-card").find("input[name=id]").should("not.be.enabled").should("have.value", String(cg.id));
 				cy.get("mat-card").find("input[name=lastUpdated]").should("not.be.enabled");
-				cy.get("mat-card").find("button").contains("Save");
+				cy.get("mat-card").find("button").contains("Save").should("not.be.disabled");
 
 			}
 		);
@@ -37,6 +37,6 @@ describe("Cache Group edit/creation page", () => {
 		cy.get("mat-card").find("input[name=name]").should("be.enabled").should("have.value", "");
 		cy.get("mat-card").find("input[name=id]").should("not.exist");
 		cy.get("mat-card").find("input[name=lastUpdated]").should("not.exist");
-		cy.get("mat-card").find("button").contains("Save");
+		cy.get("mat-card").find("button").contains("Save").should("not.be.disabled");
 	});
 });
