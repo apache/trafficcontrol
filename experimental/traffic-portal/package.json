@@ -100,6 +100,7 @@
     "axios": "^0.27.2",
     "chromedriver": "^119.0.1",
     "codelyzer": "^6.0.0",
+    "cypress": "^13.6.2",
     "eslint": "^8.39.0",
     "eslint-plugin-import": "^2.25.3",
     "eslint-plugin-jsdoc": "^37.0.3",
@@ -114,8 +115,7 @@
     "karma-junit-reporter": "^2.0.1",
     "nightwatch": "^2.6.17",
     "ts-node": "~8.3.0",
-    "typescript": "^4.9.5",
-    "cypress": "latest"
+    "typescript": "^4.9.5"
   },
   "optionalDependencies": {
     "@compodoc/compodoc": "^1.1.18"
