@@ -13,14 +13,12 @@
  */
 
 describe("Cache Groups Spec", () => {
+	before(() => {
+		cy.login();
+	});
 	it("Loads elements", async () => {
-		await browser.page.common()
-			.section.sidebar
-			.navigateToNode("cacheGroups", ["serversContainer", "cacheGroupsContainer"]);
-		await browser.waitForElementPresent("input[name=fuzzControl]");
-		await browser.elements("css selector", "div.ag-row", rows => {
-			browser.assert.ok(rows.status === 0);
-			browser.assert.ok((rows.value as []).length >= 2);
-		});
+		cy.visit("/core/cache-groups");
+		cy.get("body").find("input[name=fuzzControl]");
+		cy.find("div.ag-row").should("have.length.at.least", 2);
 	});
 });
