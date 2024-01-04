@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-describe("Cache Groups Spec", () => {
+describe("Cache Groups table", () => {
 	before(() => {
 		cy.login();
 	});
