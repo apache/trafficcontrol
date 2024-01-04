@@ -47,7 +47,7 @@ import type {
 	TypeFromResponse
 } from "trafficops-types";
 
-import type { CreatedData } from "./nightwatch/globals/globals";
+import type { CreatedData } from "./cypress/support/testing.data";
 
 /**
  * Creates mock data needed for E2E testing.
@@ -65,7 +65,7 @@ import type { CreatedData } from "./nightwatch/globals/globals";
  * @returns The data that was created and the unique string that was appended to
  * all names that are required to be unique.
  */
-async function createData(toURL: string, apiVersion: string, adminUser: string, adminPass: string): Promise<[CreatedData, string]> {
+async function createData(toURL: string, apiVersion: string, adminUser: string, adminPass: string): Promise<CreatedData> {
 	const apiUrl = `${toURL}/api/${apiVersion}`;
 	const client = axios.create({
 		httpsAgent: new https.Agent({
@@ -104,12 +104,6 @@ async function createData(toURL: string, apiVersion: string, adminUser: string, 
 		client.defaults.headers.common = {Cookie: accessToken};
 	}
 
-	const id = (new Date()).getTime().toString();
-
-	const cdn: CDN = {
-		dnssecEnabled: false, domainName: `tests${id}.com`, name: `testCDN${id}`
-	};
-
 	let resp = await client.get(`${apiUrl}/types`);
 	const types: Array<TypeFromResponse> = resp.data.response;
 	const httpType = types.find(typ => typ.name === "HTTP" && typ.useInTable === "deliveryservice");
@@ -133,9 +127,17 @@ async function createData(toURL: string, apiVersion: string, adminUser: string, 
 		throw new Error("Unable to find `EDGE` type");
 	}
 
-	const data = {} as CreatedData;
+	const id = (new Date()).getTime().toString();
+	const data = {
+		uniqueString: id
+	} as CreatedData;
+
 	let url = `${apiUrl}/cdns`;
 	try {
+		const cdn: CDN = {
+			dnssecEnabled: false, domainName: `tests${id}.com`, name: `testCDN${id}`
+		};
+
 		resp = await client.post(url, JSON.stringify(cdn));
 		const respCDN = resp.data.response;
 		data.cdn = respCDN;
@@ -366,7 +368,7 @@ async function createData(toURL: string, apiVersion: string, adminUser: string, 
 		throw ae;
 	}
 
-	return [data, id];
+	return data;
 }
 
 /** The schema for the Traffic Ops connection configuration file. */
@@ -390,8 +392,8 @@ export default defineConfig({
 		setupNodeEvents(on) {
 			on("before:run", async () => {
 				const toConfig: TOConfig = JSON.parse(await fs.readFile("cypress/fixtures/to.config.json", {encoding: "utf-8"}));
-				const [data, uniqueString] = await createData(toConfig.toURL, toConfig.apiVersion, toConfig.adminUser, toConfig.adminPass);
-				let formattedData = JSON.stringify({data, uniqueString}, null, "\t");
+				const data = await createData(toConfig.toURL, toConfig.apiVersion, toConfig.adminUser, toConfig.adminPass);
+				let formattedData = JSON.stringify(data, null, "\t");
 				formattedData += "\n";
 				return fs.writeFile("cypress/fixtures/test.data.json", formattedData);
 			});

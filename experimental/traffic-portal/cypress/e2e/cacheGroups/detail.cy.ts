@@ -12,22 +12,16 @@
  * limitations under the License.
  */
 
-import type { CreatedData } from "nightwatch/globals/globals";
+import type { CreatedData } from "cypress/support/testing.data";
 
-/** Foo. */
-interface TestingData {
-	data: CreatedData;
-	uniqueString: string;
-}
-
-describe("Cache Group Detail Spec", () => {
+describe("Cache Group edit/creation page", () => {
 	beforeEach(() => {
 		cy.login();
 	});
 	it("Edits an existing Cache Group", () => {
 		cy.fixture("test.data").then(
-			(data: TestingData) => {
-				const cg = data.data.cacheGroup;
+			(data: CreatedData) => {
+				const cg = data.cacheGroup;
 				cy.visit(`/core/cache-groups/${cg.id}`);
 				cy.get("mat-card").find("input[name=name]").should("be.enabled").should("have.value", cg.name);
 				cy.get("mat-card").find("input[name=id]").should("not.be.enabled").should("have.value", String(cg.id));
