@@ -12,21 +12,13 @@
  * limitations under the License.
  */
 
-import { EnhancedPageObject } from "nightwatch";
-
-/**
- * Defines the PageObject for ASN Details.
- */
-export type AsnDetailPageObject = EnhancedPageObject<{}, typeof asnDetailPageObject.elements>;
-
-const asnDetailPageObject = {
-	elements: {
-		asn: "input[name='asn']",
-		cachegroup: "mat-select[name='cachegroup']",
-		id: "input[name='id']",
-		lastUpdated: "input[name='lastUpdated']",
-		saveBtn: "button[type='submit']",
-	},
-};
-
-export default asnDetailPageObject;
+describe("ASN table page", () => {
+	beforeEach(() => {
+		cy.login();
+	});
+	it("Loads elements", async () => {
+		cy.visit("/core/asns");
+		cy.find("input[name=fuzzControl]");
+		cy.find("div.ag-row").should("have.length.at.least", 1);
+	});
+});
