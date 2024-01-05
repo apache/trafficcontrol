@@ -12,12 +12,13 @@
 * limitations under the License.
 */
 
-describe("Servers Table Spec", () => {
-	it("Filter by hostname", async () => {
-		const page = browser.page.servers.serversTable();
-		await page.section.serversTable.open();
-		await browser.waitForElementPresent("input[name=fuzzControl]");
-		page.section.serversTable.searchText("edge");
-		await page.assert.urlContains("search=edge");
+describe("Servers table page", () => {
+	beforeEach(() => {
+		cy.login();
+	});
+	it("Filters servers by hostname", () => {
+		cy.visit("/core/servers");
+		cy.get("input[name=fuzzControl]").focus().type("edge");
+		cy.window().its("location.search").should("contain", "search=edge");
 	});
 });
