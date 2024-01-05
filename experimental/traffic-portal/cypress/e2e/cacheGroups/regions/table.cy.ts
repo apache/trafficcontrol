@@ -12,21 +12,13 @@
  * limitations under the License.
  */
 
-import { EnhancedPageObject } from "nightwatch";
-
-/**
- * Defines the PageObject for Region Details.
- */
-export type RegionDetailPageObject = EnhancedPageObject<{}, typeof regionDetailPageObject.elements>;
-
-const regionDetailPageObject = {
-	elements: {
-		division: "mat-select[name='division']",
-		id: "input[name='id']",
-		lastUpdated: "input[name='lastUpdated']",
-		name: "input[name='name']",
-		saveBtn: "button[type='submit']",
-	},
-};
-
-export default regionDetailPageObject;
+describe("Regions table page", () => {
+	beforeEach(() => {
+		cy.login();
+	});
+	it("Loads elements", async () => {
+		cy.visit("regions");
+		cy.find("input[name=fuzzControl]");
+		cy.find("div.ag-row").should("have.length.at.least", 3);
+	});
+});
