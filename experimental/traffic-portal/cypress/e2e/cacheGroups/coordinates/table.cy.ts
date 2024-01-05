@@ -12,22 +12,13 @@
  * limitations under the License.
  */
 
-import { EnhancedPageObject } from "nightwatch";
-
-/**
- * Defines the PageObject for Coordinate Details.
- */
-export type CoordinateDetailPageObject = EnhancedPageObject<{}, typeof coordinateDetailPageObject.elements>;
-
-const coordinateDetailPageObject = {
-	elements: {
-		id: "input[name='id']",
-		lastUpdated: "input[name='lastUpdated']",
-		latitude: "input[name='latitude']",
-		longitude: "input[name='longitude']",
-		name: "input[name='name']",
-		saveBtn: "button[type='submit']",
-	},
-};
-
-export default coordinateDetailPageObject;
+describe("Coordinates table page", () => {
+	beforeEach(() => {
+		cy.login();
+	});
+	it("Loads elements", async () => {
+		cy.visit("/core/coordinates");
+		cy.find("input[name=fuzzControl]");
+		cy.find("div.ag-row").should("have.length.at.least", 2);
+	});
+});
