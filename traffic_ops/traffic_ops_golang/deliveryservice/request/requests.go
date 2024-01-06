@@ -200,7 +200,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: add this functionality to the query builder in dbhelpers
 	if xmlID, ok := inf.Params["xmlId"]; ok {
-		where = dbhelpers.AppendWhere(where, "(r.deliveryservice->>'xmlId' = :xmlId) OR (r.original->>'xmlId' = :xmlId)")
+		where = dbhelpers.AppendWhere(where, "((r.deliveryservice->>'xmlId' = :xmlId) OR (r.original->>'xmlId' = :xmlId))")
 		queryValues["xmlId"] = xmlID
 	}
 
