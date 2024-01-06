@@ -12,21 +12,13 @@
  * limitations under the License.
  */
 
-import { EnhancedPageObject } from "nightwatch";
-
-/**
- * Defines the PageObject for Status Details.
- */
-export type StatusDetailPageObject = EnhancedPageObject<{}, typeof statusDetailPageObject.elements>;
-
-const statusDetailPageObject = {
-	elements: {
-		description: "input[name='description']",
-		id: "input[name='id']",
-		lastUpdated: "input[name='lastUpdated']",
-		name: "input[name='name']",
-		saveBtn: "button[type='submit']",
-	},
-};
-
-export default statusDetailPageObject;
+describe("Statuses table page", () => {
+	beforeEach(() => {
+		cy.login();
+	});
+	it("Loads elements", () => {
+		cy.visit("/core/statuses");
+		cy.get("input[name=fuzzControl]");
+		cy.get("div.ag-row").should("have.length.at.least", 2);
+	});
+});
