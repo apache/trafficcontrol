@@ -12,15 +12,13 @@
  * limitations under the License.
  */
 
-describe("Change Logs Spec", () => {
-	it("Filter by text", async () => {
-		await browser.page.common()
-			.section.sidebar
-			.navigateToNode("changeLogs", ["otherContainer"]);
-		const page = browser.page.users.changeLogs();
-		await browser.waitForElementPresent("input[name=fuzzControl]");
-
-		page.section.changeLogsTable.searchText("test");
-		await page.assert.urlContains("search=test");
+describe("Change Logs table page", () => {
+	beforeEach(() => {
+		cy.login();
+	});
+	it("Filters by text", () => {
+		cy.visit("/core/change-logs");
+		cy.get("input[name=fuzzControl]").click().focus().type("test");
+		cy.window().its("location.search").should("contain", "search=test");
 	});
 });
