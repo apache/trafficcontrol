@@ -51,7 +51,7 @@ export interface CreatedData {
 	steeringDS: ResponseDeliveryService;
 	tenant: ResponseTenant;
 	type: TypeFromResponse;
-	statuses: ResponseStatus;
+	status: ResponseStatus;
 	profile: ResponseProfile;
 	uniqueString: string;
 }
