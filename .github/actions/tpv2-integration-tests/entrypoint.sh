@@ -31,7 +31,7 @@ envsubst <${GITHUB_WORKSPACE}/.github/actions/tpv2-integration-tests/config.json
 node ./server/main.js -C config.json > "${GITHUB_WORKSPACE}/tp.log" 2>&1 &
 
 timeout 3m bash <<TMOUT
-	while ! curl -k "https://localhost/api/4.0/ping" >/dev/null 2>&1; do
+	while ! curl -k "https://localhost:6443/api/4.0/ping" >/dev/null 2>&1; do
 		echo "waiting for TO API"
 		sleep 5
 	done
