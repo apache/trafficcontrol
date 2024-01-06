@@ -55,3 +55,11 @@ export interface CreatedData {
 	profile: ResponseProfile;
 	uniqueString: string;
 }
+
+/**
+ * Contains data used by the E2E tests to authenticate with Traffic Ops.
+ */
+export interface LoginData {
+	username: string;
+	password: string;
+}
