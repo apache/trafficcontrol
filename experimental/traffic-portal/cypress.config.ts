@@ -293,7 +293,7 @@ async function createData(toURL: string, apiVersion: string, adminUser: string, 
 		url = `${apiUrl}/statuses`;
 		resp = await client.post(url, JSON.stringify(status));
 		const respStatus: ResponseStatus = resp.data.response;
-		data.statuses = respStatus;
+		data.status = respStatus;
 
 		const profile: RequestProfile = {
 			cdn: respCDN.id,
