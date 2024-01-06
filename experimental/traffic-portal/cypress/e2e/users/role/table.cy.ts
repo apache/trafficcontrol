@@ -12,15 +12,13 @@
  * limitations under the License.
  */
 
-describe("Roles Spec", () => {
+describe("Roles table page", () => {
+	beforeEach(() => {
+		cy.login();
+	});
 	it("Loads elements", async () => {
-		await browser.page.common()
-			.section.sidebar
-			.navigateToNode("roles", ["usersContainer"]);
-		await browser.waitForElementPresent("input[name=fuzzControl]");
-		await browser.elements("css selector", "div.ag-row", rows => {
-			browser.assert.ok(rows.status === 0);
-			browser.assert.ok((rows.value as []).length >= 1);
-		});
+		cy.visit("/core/roles");
+		cy.get("input[name=fuzzControl]");
+		cy.get("div.ag-row").should("have.length.at.least", 1);
 	});
 });
