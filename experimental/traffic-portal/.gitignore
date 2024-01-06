@@ -22,8 +22,6 @@
 /dist
 /.angular
 /.npm
-/nightwatch/tests_output
-/nightwatch/screens
 /tests_output
 /logs
 # Only exists if Bazel was run
