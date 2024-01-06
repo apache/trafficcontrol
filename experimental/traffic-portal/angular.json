@@ -183,19 +183,6 @@
             "production": {}
           }
         },
-        "nightwatch-run": {
-          "builder": "@nightwatch/schematics:nightwatch",
-          "options": {
-            "devServerTarget": "traffic-portal:serve",
-            "tsConfig": "./nightwatch/tsconfig.e2e.json",
-            "config": "./nightwatch/nightwatch.conf.js"
-          },
-          "configurations": {
-            "production": {
-              "devServerTarget": "traffic-portal:serve:production"
-            }
-          }
-        },
         "e2e": {
           "builder": "@cypress/schematic:cypress",
           "options": {
