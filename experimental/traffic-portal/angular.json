@@ -128,7 +128,7 @@
             "lintFilePatterns": [
               "src/**/*.ts",
               "src/**/*.html",
-              "nightwatch/**/*.ts"
+              "cypress/**/*.ts"
             ]
           }
         },
