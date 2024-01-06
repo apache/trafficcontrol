@@ -12,20 +12,13 @@
  * limitations under the License.
  */
 
-import { EnhancedPageObject } from "nightwatch";
-
-/**
- * Defines the PageObject for Tenant Details.
- */
-export type TenantDetailPageObject = EnhancedPageObject<{}, typeof tenantDetailPageObject.elements>;
-
-const tenantDetailPageObject = {
-	elements: {
-		active: "input[name='active']",
-		name: "input[name='name']",
-		parent: "input[name='parentTenant-tree-select']",
-		saveBtn: "button[type='submit']",
-	},
-};
-
-export default tenantDetailPageObject;
+describe("Tenants table page", () => {
+	beforeEach(() => {
+		cy.login();
+	});
+	it("Loads elements", () => {
+		cy.visit("/core/tenants");
+		cy.get("input[name=fuzzControl]");
+		cy.get("div.ag-row").should("have.length.at.least", 2);
+	});
+});
