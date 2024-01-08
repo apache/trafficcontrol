@@ -34,6 +34,8 @@ export class CoordinateService extends APIService {
 	): Promise<ResponseCoordinate>;
 	/**
 	 * Gets Coordinates from Traffic Ops.
+	 *
+	 * @returns An Array of all Coordinates from Traffic Ops.
 	 */
 	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
 

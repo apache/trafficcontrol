@@ -34,6 +34,8 @@ export class OriginService extends APIService {
 	): Promise<RequestOriginResponse>;
 	/**
 	 * Gets Origins from Traffic Ops.
+	 *
+	 * @returns An Array of all Origins from Traffic Ops.
 	 */
 	public async getOrigins(): Promise<Array<RequestOriginResponse>>;
 	/**
