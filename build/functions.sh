@@ -93,7 +93,16 @@ getBuildNumber() {
 	local in_git=''
 	if isInGitTree; then
 		local commits sha
-		commits="$(git rev-list HEAD 2>/dev/null | wc -l | awk '{print $1}')" # awk is for BSD compatibility
+		# The number of commits since the last tag
+		if ! commits="$(git describe --tags \
+			--match='RELEASE-[0-9].[0-9].[0-9]' \
+			--match='RELEASE-[0-9][0-9].[0-9][0-9].[0-9][0-9]' \
+			--match='v[0-9].[0-9].[0-9]' \
+			--match='v[0-9][0-9].[0-9][0-9].[0-9][0-9]' |
+			awk -F- '{print $(NF-1)}')";
+		then
+			commits=0
+		fi
 		sha="$(git rev-parse --short=8 HEAD)"
 		echo "$commits.$sha"
 	else

@@ -340,7 +340,7 @@ export async function getVersion(path?: string): Promise<ServerVersion> {
 	};
 
 	try {
-		ver.commits = String(execSync("git rev-list HEAD", {encoding: "utf8"}).split("\n").length);
+		ver.commits = String(execSync("git describe --tags --match=RELEASE-[0-9].[0-9].[0-9] --match=RELEASE-[0-9][0-9].[0-9][0-9].[0-9][0-9] --match=v[0-9].[0-9].[0-9] --match=v[0-9][0-9].[0-9][0-9].[0-9][0-9]", {encoding: "utf8"}).split("-").slice(-2)[0]);
 		ver.hash = execSync("git rev-parse --short=8 HEAD", {encoding: "utf8"}).trimEnd();
 	} catch (e) {
 		console.warn("getting git parts of version:", e);
