@@ -267,7 +267,6 @@ jobs:
             traffic_ops/traffic_ops_golang/out.log
             experimental/traffic-portal/logs
             experimental/traffic-portal/cypress/screenshots
-            tp.log
 
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
