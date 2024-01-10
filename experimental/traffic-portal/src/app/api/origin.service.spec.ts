@@ -140,6 +140,66 @@ describe("OriginService", () => {
 		await expectAsync(responseP).toBeResolved();
 	});
 
+	it("sends requests for multiple origins by ID", async () => {
+		const responseParams = service.getOrigins(origin.id);
+		const req = httpTestingController.expectOne(
+			(r) => r.url === `/api/${service.apiVersion}/origins`
+		);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("id")).toBe(String(origin.id));
+		const data = {
+			response: [
+				{
+					cachegroup: null,
+					cachegroupId: null,
+					coordinate: null,
+					coordinateId: null,
+					deliveryService: "test",
+					deliveryServiceId: 1,
+					fqdn: "origin.infra.ciab.test",
+					id: 1,
+					ip6Address: null,
+					ipAddress: null,
+					isPrimary: false,
+					lastUpdated: new Date(),
+					name: "test",
+					port: null,
+					profile: null,
+					profileId: null,
+					protocol: "http" as never,
+					tenant: "root",
+					tenantId: 1,
+				},
+				{
+					cachegroup: null,
+					cachegroupId: null,
+					coordinate: null,
+					coordinateId: null,
+					deliveryService: "test",
+					deliveryServiceId: 1,
+					fqdn: "origin.infra.ciab.test",
+					id: 1,
+					ip6Address: null,
+					ipAddress: null,
+					isPrimary: false,
+					lastUpdated: new Date(),
+					name: "test2",
+					port: null,
+					profile: null,
+					profileId: null,
+					protocol: "http" as never,
+					tenant: "root",
+					tenantId: 1,
+				},
+			],
+		};
+		req.flush(data);
+		await expectAsync(responseParams).toBeRejectedWithError(
+			`Traffic Ops responded with 2 Origins by identifier ${origin.id}`
+		);
+	});
+
 	afterEach(() => {
 		httpTestingController.verify();
 	});

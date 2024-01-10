@@ -79,6 +79,38 @@ describe("CoordinateService", () => {
 		await expectAsync(responseP).toBeResolvedTo(coordinate);
 	});
 
+	it("sends requests for multiple coordinates by ID", async () => {
+		const responseParams = service.getCoordinates(coordinate.id);
+		const req = httpTestingController.expectOne(
+			(r) => r.url === `/api/${service.apiVersion}/coordinates`
+		);
+		expect(req.request.method).toBe("GET");
+		expect(req.request.params.keys().length).toBe(1);
+		expect(req.request.params.get("id")).toBe(String(coordinate.id));
+		const data = {
+			response: [
+				{
+					id: 1,
+					lastUpdated: new Date(),
+					latitude: 1.0,
+					longitude: -1.0,
+					name: "test_coordinate1",
+				},
+				{
+					id: 1,
+					lastUpdated: new Date(),
+					latitude: 1.0,
+					longitude: -1.0,
+					name: "test_coordinate2",
+				},
+			],
+		};
+		req.flush(data);
+		await expectAsync(responseParams).toBeRejectedWithError(
+			`Traffic Ops responded with 2 Coordinates by identifier ${coordinate.id}`
+		);
+	});
+
 	afterEach(() => {
 		httpTestingController.verify();
 	});
