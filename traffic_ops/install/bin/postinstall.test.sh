@@ -39,7 +39,7 @@ done;
 python_bin="${python_bin:-/usr/bin/python3}";
 
 if [[ ! -x "$python_bin" ]]; then
-	echo "Python 3.8+ is required to run - or test - _postinstall.py" >&2;
+	echo "Python 3.6+ is required to run - or test - _postinstall.py" >&2;
 	exit 1;
 fi
 

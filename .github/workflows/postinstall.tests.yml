@@ -31,7 +31,7 @@ on:
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 env:
-  PYTHON3_VERSION: '3.8'
+  PYTHON3_VERSION: '3.6'
 
 jobs:
   postinstall-tests:
