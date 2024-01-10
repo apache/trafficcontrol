@@ -121,3 +121,21 @@ type APIInfoer interface {
 	SetInfo(*Info)
 	APIInfo() *Info
 }
+
+// APIInfoImpl implements APIInfo via the APIInfoer interface. The purpose of
+// this is somewhat unclear.
+type APIInfoImpl struct {
+	ReqInfo *Info
+}
+
+// SetInfo sets the APIInfo of the APIInfoImpl to the given APIInfo. The
+// purpose of this is somewhat unclear.
+func (val *APIInfoImpl) SetInfo(inf *Info) {
+	val.ReqInfo = inf
+}
+
+// APIInfo returns the APIInfoer's APIInfo. The purpose of this is somewhat
+// unclear.
+func (val APIInfoImpl) APIInfo() *Info {
+	return val.ReqInfo
+}
