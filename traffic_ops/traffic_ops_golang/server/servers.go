@@ -669,7 +669,7 @@ and p.id = $1
 }
 
 // Read is the handler for GET requests to /servers.
-func Read(inf *api.APIInfo) (int, error, error) {
+func Read(inf *api.Info) (int, error, error) {
 	useIMS := inf.UseIMS()
 	version := inf.Version
 
@@ -1273,7 +1273,7 @@ func deleteInterfaces(id int, tx *sql.Tx) (error, error, int) {
 }
 
 // Update is the handler for PUT requests to /servers.
-func Update(inf *api.APIInfo) (int, error, error) {
+func Update(inf *api.Info) (int, error, error) {
 	id := inf.IntParams["id"]
 
 	// Get original server
@@ -1641,7 +1641,7 @@ func insertServerProfile(id int, pName []string, tx *sql.Tx) (error, error, int)
 	return nil, nil, http.StatusOK
 }
 
-func createV3(inf *api.APIInfo) (int, error, error) {
+func createV3(inf *api.Info) (int, error, error) {
 	var server tc.ServerV30
 
 	if err := inf.DecodeBody(&server); err != nil {
@@ -1774,7 +1774,7 @@ func createV3(inf *api.APIInfo) (int, error, error) {
 	return http.StatusCreated, nil, nil
 }
 
-func createV5(inf *api.APIInfo) (int, error, error) {
+func createV5(inf *api.Info) (int, error, error) {
 	var server tc.ServerV5
 
 	if err := inf.DecodeBody(&server); err != nil {
@@ -1874,7 +1874,7 @@ func createV5(inf *api.APIInfo) (int, error, error) {
 	return code, userErr, sysErr
 }
 
-func createV4(inf *api.APIInfo) (int, error, error) {
+func createV4(inf *api.Info) (int, error, error) {
 	var server tc.ServerV40
 
 	if err := inf.DecodeBody(&server); err != nil {
@@ -2162,7 +2162,7 @@ func createServerV3(tx *sqlx.Tx, server tc.ServerV30) (int64, error) {
 }
 
 // Create is the handler for POST requests to /servers.
-func Create(inf *api.APIInfo) (int, error, error) {
+func Create(inf *api.Info) (int, error, error) {
 	switch inf.Version.Major {
 	case 3:
 		return createV3(inf)
@@ -2226,7 +2226,7 @@ func getActiveDeliveryServicesThatOnlyHaveThisServerAssigned(id int, serverType 
 }
 
 // Delete is the handler for DELETE requests to the /servers API endpoint.
-func Delete(inf *api.APIInfo) (int, error, error) {
+func Delete(inf *api.Info) (int, error, error) {
 	id := inf.IntParams["id"]
 	tx := inf.Tx.Tx
 	serverInfo, exists, err := dbhelpers.GetServerInfo(id, tx)

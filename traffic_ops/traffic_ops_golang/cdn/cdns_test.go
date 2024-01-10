@@ -86,7 +86,7 @@ func TestReadCDNs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}, Version: &api.Version{Major: 5, Minor: 0}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}, Version: &api.Version{Major: 5, Minor: 0}}
 	obj := TOCDN{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.CDNNullable{},
@@ -141,7 +141,7 @@ func TestInterfaces(t *testing.T) {
 func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_cdn"
-	reqInfo := api.APIInfo{Tx: nil, Params: map[string]string{"dsId": "1"}, Version: &api.Version{Major: 5, Minor: 0}}
+	reqInfo := api.Info{Tx: nil, Params: map[string]string{"dsId": "1"}, Version: &api.Version{Major: 5, Minor: 0}}
 	c := TOCDN{CDNNullable: tc.CDNNullable{Name: &n}, APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo}}
 	err, _ := c.Validate()
 	errs := util.JoinErrsStr(test.SortErrors(test.SplitErrors(err)))
@@ -211,7 +211,7 @@ func TestTOCDNUpdate(t *testing.T) {
 	mock.ExpectQuery("select last_updated").WithArgs(1).WillReturnRows(rows)
 
 	// Create a new APIInfo object with required information
-	reqInfo := api.APIInfo{
+	reqInfo := api.Info{
 		Tx:     db.MustBegin(),
 		Params: map[string]string{"dsId": "1"},
 		User: &auth.CurrentUser{

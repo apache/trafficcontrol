@@ -81,7 +81,7 @@ func TestGetASNs(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOASNV11{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
@@ -156,7 +156,7 @@ func TestCheckNumberForUpdate(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin()}
+	reqInfo := api.Info{Tx: db.MustBegin()}
 	asnNum := 2
 	cachegroupID := 10
 	id := 1
@@ -194,7 +194,7 @@ func TestASNExistsForUpdateFailure(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin()}
+	reqInfo := api.Info{Tx: db.MustBegin()}
 	asnNum := 2
 	cachegroupID := 10
 	id := 1
@@ -230,7 +230,7 @@ func TestASNExistsForUpdateSuccess(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin()}
+	reqInfo := api.Info{Tx: db.MustBegin()}
 	asnNum := 2
 	cachegroupID := 10
 	id := 1
@@ -264,7 +264,7 @@ func TestASNExists(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin()}
+	reqInfo := api.Info{Tx: db.MustBegin()}
 	asnNum := 2
 	cachegroupID := 10
 	asn := TOASNV11{

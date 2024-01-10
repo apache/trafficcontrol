@@ -79,7 +79,7 @@ func TestGetProfileParameters(t *testing.T) {
 	mock.ExpectCommit()
 
 	txx := db.MustBegin()
-	reqInfo := api.APIInfo{Tx: txx, Params: map[string]string{"profile": "1"}}
+	reqInfo := api.Info{Tx: txx, Params: map[string]string{"profile": "1"}}
 	obj := TOProfileParameter{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.ProfileParameterNullable{},

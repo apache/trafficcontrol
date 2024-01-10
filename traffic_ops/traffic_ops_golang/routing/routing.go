@@ -378,7 +378,7 @@ func HandleBackendRoute(cfg *config.Config, route config.BackendRoute, w http.Re
 	var userErr, sysErr error
 	var errCode int
 	var user auth.CurrentUser
-	var inf *api.APIInfo
+	var inf *api.Info
 
 	user, userErr, sysErr, errCode = api.GetUserFromReq(w, r, cfg.Secrets[0])
 	if userErr != nil || sysErr != nil {

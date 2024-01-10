@@ -61,13 +61,13 @@ func (e errorConstant) Error() string {
 	return string(e)
 }
 
-// NilRequestError is returned by APIInfo methods when the request internally
-// referred to by the APIInfo cannot be found.
-const NilRequestError = errorConstant("method called on APIInfo with nil request")
+// NilRequestError is returned by Info methods when the request internally
+// referred to by the Info cannot be found.
+const NilRequestError = errorConstant("method called on Info with nil request")
 
-// NilTransactionError is returned by APIInfo methods when the transaction
-// internally referred to by the APIInfo cannot be found.
-const NilTransactionError = errorConstant("method called on APIInfo with nil transaction")
+// NilTransactionError is returned by Info methods when the transaction
+// internally referred to by the Info cannot be found.
+const NilTransactionError = errorConstant("method called on Info with nil transaction")
 
 // ResourceModifiedError is a user-safe error that indicates a precondition
 // failure.
@@ -200,7 +200,7 @@ func WriteIMSHitResp(w http.ResponseWriter, r *http.Request, t time.Time) {
 
 // HandleErr handles an API error, rolling back the transaction, writing the given statusCode and userErr to the user, and logging the sysErr. If userErr is nil, the text of the HTTP statusCode is written.
 //
-// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common APIInfo use case.
+// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common Info use case.
 //
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func HandleErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error) {
@@ -233,7 +233,7 @@ func HandleErrOptionalDeprecation(w http.ResponseWriter, r *http.Request, tx *sq
 //
 // The alternative may be nil if there is no alternative and the deprecation message will be selected appropriately.
 //
-// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common APIInfo use case.
+// The tx may be nil, if there is no transaction. Passing a nil tx is strongly discouraged if a transaction exists, because it will result in copy-paste errors for the common Info use case.
 //
 // This is a helper for the common case; not using this in unusual cases is perfectly acceptable.
 func HandleDeprecatedErr(w http.ResponseWriter, r *http.Request, tx *sql.Tx, statusCode int, userErr error, sysErr error, alternative *string) {
@@ -507,7 +507,7 @@ func Parse(r io.Reader, tx *sql.Tx, v ParseValidator) error {
 	return nil
 }
 
-type APIInfo struct {
+type Info struct {
 	Params    map[string]string
 	IntParams map[string]int
 	User      *auth.CurrentUser
@@ -523,9 +523,9 @@ type APIInfo struct {
 
 // NewInfo get and returns the context info needed by handlers. It also returns any user error, any system error, and the status code which should be returned to the client if an error occurred.
 //
-// It is encouraged to call APIInfo.Tx.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.
+// It is encouraged to call Info.Tx.Tx.Commit() manually when all queries are finished, to release database resources early, and also to return an error to the user if the commit failed.
 //
-// NewInfo guarantees the returned APIInfo.Tx is non-nil and APIInfo.Tx.Tx is nil or valid, even if a returned error is not nil. Hence, it is safe to pass the Tx.Tx to HandleErr when this returns errors.
+// NewInfo guarantees the returned Info.Tx is non-nil and Info.Tx.Tx is nil or valid, even if a returned error is not nil. Hence, it is safe to pass the Tx.Tx to HandleErr when this returns errors.
 //
 // Close() must be called to free resources, and should be called in a defer immediately after NewInfo(), to finish the transaction.
 //
@@ -550,39 +550,39 @@ type APIInfo struct {
 //	  }
 //	  api.WriteResp(w, r, respObj)
 //	}
-func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*APIInfo, error, error, int) {
+func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (*Info, error, error, int) {
 	db, err := GetDB(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
+		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting db: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	cfg, err := GetConfig(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
+		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting config: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	tv, err := GetTrafficVault(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting TrafficVault: " + err.Error()), nil, http.StatusInternalServerError
+		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting TrafficVault: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	reqID, err := getReqID(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
+		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting reqID: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	version := GetRequestedAPIVersion(r.URL.Path)
 
 	user, err := auth.GetCurrentUser(r.Context())
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
+		return &Info{Tx: &sqlx.Tx{}}, errors.New("getting user: " + err.Error()), nil, http.StatusInternalServerError
 	}
 	params, intParams, userErr, sysErr, errCode := AllParams(r, requiredParams, intParamNames)
 	if userErr != nil || sysErr != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
+		return &Info{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
 	}
-	dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in APIInfo.Close(), which already will rollback the transaction (which is all cancel will do.)
+	dbCtx, cancelTx := context.WithTimeout(r.Context(), time.Duration(cfg.DBQueryTimeoutSeconds)*time.Second) //only place we could call cancel here is in Info.Close(), which already will rollback the transaction (which is all cancel will do.)
 	tx, err := db.BeginTxx(dbCtx, nil)                                                                        // must be last, MUST not return an error if this succeeds, without closing the tx
 	if err != nil {
-		return &APIInfo{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
+		return &Info{Tx: &sqlx.Tx{}, CancelTx: cancelTx}, userErr, errors.New("could not begin transaction: " + err.Error()), http.StatusInternalServerError
 	}
-	return &APIInfo{
+	return &Info{
 		Config:    cfg,
 		ReqID:     reqID,
 		Version:   version,
@@ -610,7 +610,7 @@ INSERT INTO log (
 
 // CreateChangeLog creates a new changelog message at the APICHANGE level for
 // the current user.
-func (inf APIInfo) CreateChangeLog(msg string) {
+func (inf Info) CreateChangeLog(msg string) {
 	_, err := inf.Tx.Tx.Exec(createChangeLogQuery, ApiChange, msg, inf.User.ID)
 	if err != nil {
 		log.Errorf("Inserting chage log level '%s' message '%s' for user '%s': %v", ApiChange, msg, inf.User.UserName, err)
@@ -619,7 +619,7 @@ func (inf APIInfo) CreateChangeLog(msg string) {
 
 // UseIMS returns whether or not If-Modified-Since constraints should be used to
 // service the given request.
-func (inf APIInfo) UseIMS() bool {
+func (inf Info) UseIMS() bool {
 	if inf.request == nil || inf.Config == nil {
 		return false
 	}
@@ -643,7 +643,7 @@ func WriteNotModifiedResponse(t time.Time, w http.ResponseWriter, r *http.Reques
 // Callers must pass in a query that will return one row containing one column
 // that is the representative date/time of the last update of the requested
 // object(s), and optionally any values for placeholder arguments in the query.
-func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, error, error) {
+func (inf Info) CheckPrecondition(query string, args ...interface{}) (int, error, error) {
 	if inf.request == nil {
 		return http.StatusInternalServerError, nil, NilRequestError
 	}
@@ -687,7 +687,7 @@ func (inf APIInfo) CheckPrecondition(query string, args ...interface{}) (int, er
 // Close implements the io.Closer interface. It should be called in a defer immediately after NewInfo().
 //
 // Close will commit the transaction, if it hasn't been rolled back.
-func (inf *APIInfo) Close() {
+func (inf *Info) Close() {
 	defer inf.CancelTx()
 	if err := inf.Tx.Tx.Commit(); err != nil && err != sql.ErrTxDone {
 		log.Errorln("committing transaction: " + err.Error())
@@ -697,9 +697,9 @@ func (inf *APIInfo) Close() {
 // WriteOKResponse writes a 200 OK response with the given object as the
 // 'response' property of the response body.
 //
-// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
-func (inf APIInfo) WriteOKResponse(resp any) (int, error, error) {
+func (inf Info) WriteOKResponse(resp any) (int, error, error) {
 	WriteResp(inf.w, inf.request, resp)
 	return http.StatusOK, nil, nil
 }
@@ -708,13 +708,13 @@ func (inf APIInfo) WriteOKResponse(resp any) (int, error, error) {
 // the 'response' property of the response body, and the given count as the
 // `count` property of the response's summary.
 //
-// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
 //
 // Deprecated: Summary sections on responses were intended to cover up for a
 // deficiency in jQuery-based tables on the front-end, so now that we aren't
 // using those anymore it serves no purpose.
-func (inf APIInfo) WriteOKResponseWithSummary(resp any, count uint64) (int, error, error) {
+func (inf Info) WriteOKResponseWithSummary(resp any, count uint64) (int, error, error) {
 	WriteRespWithSummary(inf.w, inf.request, resp, count)
 	return http.StatusOK, nil, nil
 }
@@ -722,9 +722,9 @@ func (inf APIInfo) WriteOKResponseWithSummary(resp any, count uint64) (int, erro
 // WriteNotModifiedResponse writes a 304 Not Modified response with the given
 // time as the last modified time in the headers.
 //
-// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
-func (inf APIInfo) WriteNotModifiedResponse(lastModified time.Time) (int, error, error) {
+func (inf Info) WriteNotModifiedResponse(lastModified time.Time) (int, error, error) {
 	inf.w.Header().Set(rfc.LastModified, FormatLastModified(lastModified))
 	inf.w.WriteHeader(http.StatusNotModified)
 	setRespWritten(inf.request)
@@ -734,7 +734,7 @@ func (inf APIInfo) WriteNotModifiedResponse(lastModified time.Time) (int, error,
 // WriteSuccessResponse writes the given response object as the `response`
 // property of the response body, with the accompanying message as a
 // success-level Alert.
-func (inf APIInfo) WriteSuccessResponse(resp any, message string) (int, error, error) {
+func (inf Info) WriteSuccessResponse(resp any, message string) (int, error, error) {
 	WriteAlertsObj(inf.w, inf.request, http.StatusOK, tc.CreateAlerts(tc.SuccessLevel, message), resp)
 	return http.StatusOK, nil, nil
 }
@@ -744,7 +744,7 @@ func (inf APIInfo) WriteSuccessResponse(resp any, message string) (int, error, e
 // accompanying message as a success-level Alert. It also sets the Location
 // header to the given path. This will be automatically prefaced with the
 // correct path to the API version the client requested.
-func (inf APIInfo) WriteCreatedResponse(resp any, message, path string) (int, error, error) {
+func (inf Info) WriteCreatedResponse(resp any, message, path string) (int, error, error) {
 	inf.w.Header().Set(rfc.Location, strings.Join([]string{"/api", inf.Version.String(), strings.TrimPrefix(path, "/")}, "/"))
 	inf.w.WriteHeader(http.StatusCreated)
 	WriteAlertsObj(inf.w, inf.request, http.StatusCreated, tc.CreateAlerts(tc.SuccessLevel, message), resp)
@@ -752,33 +752,33 @@ func (inf APIInfo) WriteCreatedResponse(resp any, message, path string) (int, er
 }
 
 // RequestHeaders returns the headers sent by the client in the API request.
-func (inf APIInfo) RequestHeaders() http.Header {
+func (inf Info) RequestHeaders() http.Header {
 	return inf.request.Header
 }
 
 // SetLastModified sets the "last modified" header on the response writer.
 //
-// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
-func (inf APIInfo) SetLastModified(t time.Time) {
+func (inf Info) SetLastModified(t time.Time) {
 	inf.w.Header().Set(rfc.LastModified, FormatLastModified(t))
 }
 
 // DecodeBody reads the client request's body and attempts to decode it into the
 // provided reference.
-func (inf APIInfo) DecodeBody(ref any) error {
+func (inf Info) DecodeBody(ref any) error {
 	return json.NewDecoder(inf.request.Body).Decode(ref)
 }
 
-// SendMail is a convenience method used to call SendMail using an APIInfo structure's configuration.
-func (inf *APIInfo) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
+// SendMail is a convenience method used to call SendMail using an Info structure's configuration.
+func (inf *Info) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
 	return SendMail(to, msg, inf.Config)
 }
 
 // IsResourceAuthorizedToCurrentUser is a convenience method used to call
 // github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/tenant.IsResourceAuthorizedToUserTx
-// using an APIInfo structure to provide the current user and database transaction.
-func (inf *APIInfo) IsResourceAuthorizedToCurrentUser(resourceTenantID int) (bool, error) {
+// using an Info structure to provide the current user and database transaction.
+func (inf *Info) IsResourceAuthorizedToCurrentUser(resourceTenantID int) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(resourceTenantID, inf.User, inf.Tx.Tx)
 }
 
@@ -812,7 +812,7 @@ func SendMail(to rfc.EmailAddress, msg []byte, cfg *config.Config) (int, error, 
 //
 // If Influx connections are not enabled, this will return `nil` - but also no error. It is expected
 // that the caller will handle this situation appropriately.
-func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
+func (inf *Info) CreateInfluxClient() (*influx.Client, error) {
 	if !inf.Config.InfluxEnabled {
 		return nil, nil
 	}
@@ -867,16 +867,16 @@ func (inf *APIInfo) CreateInfluxClient() (*influx.Client, error) {
 	return &client, e
 }
 
-// APIInfoImpl implements APIInfo via the APIInfoer interface
+// APIInfoImpl implements Info via the APIInfoer interface
 type APIInfoImpl struct {
-	ReqInfo *APIInfo
+	ReqInfo *Info
 }
 
-func (val *APIInfoImpl) SetInfo(inf *APIInfo) {
+func (val *APIInfoImpl) SetInfo(inf *Info) {
 	val.ReqInfo = inf
 }
 
-func (val APIInfoImpl) APIInfo() *APIInfo {
+func (val APIInfoImpl) Info() *Info {
 	return val.ReqInfo
 }
 
@@ -1448,7 +1448,7 @@ func AddLastModifiedHdr(w http.ResponseWriter, t time.Time) {
 }
 
 // DefaultSort sorts alphabetically for a given readerType (eg: TOCDN, TODeliveryService, TOOrigin etc).
-func DefaultSort(readerType *APIInfo, param string) {
+func DefaultSort(readerType *Info, param string) {
 	if _, ok := readerType.Params["orderby"]; !ok {
 		readerType.Params["orderby"] = param
 	}

@@ -44,7 +44,7 @@ func TestInsert(t *testing.T) {
 	defer db.Close()
 
 	mock.ExpectBegin()
-	inf := api.APIInfo{
+	inf := api.Info{
 		Params:    nil,
 		IntParams: nil,
 		User: &auth.CurrentUser{

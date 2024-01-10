@@ -86,7 +86,7 @@ func TestGetType(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOType{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
@@ -129,7 +129,7 @@ func createDummyType(field string) *TOType {
 		Major: 2,
 		Minor: 0,
 	}
-	apiInfo := api.APIInfo{
+	apiInfo := api.Info{
 		Version: &version,
 	}
 	return &TOType{

@@ -114,9 +114,10 @@ type Tenantable interface {
 	IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 }
 
-// APIInfoer is an interface that guarantees the existance of a variable through its setters and getters.
-// Every CRUD operation uses this login session context
+// APIInfoer is an interface that guarantees the existence of a variable through
+// its setters and getters. Every CRUD operation uses this login session
+// context.
 type APIInfoer interface {
-	SetInfo(*APIInfo)
-	APIInfo() *APIInfo
+	SetInfo(*Info)
+	APIInfo() *Info
 }

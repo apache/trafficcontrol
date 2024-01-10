@@ -235,7 +235,7 @@ func GetSSLKeysByXMLID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getSslKeys(inf *api.APIInfo, ctx context.Context) (tc.DeliveryServiceSSLKeysV4, error) {
+func getSslKeys(inf *api.Info, ctx context.Context) (tc.DeliveryServiceSSLKeysV4, error) {
 	xmlID := inf.Params["xmlid"]
 	version := inf.Params["version"]
 	decode := inf.Params["decode"]

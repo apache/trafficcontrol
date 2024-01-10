@@ -68,7 +68,7 @@ func TestInvalidSteeringTargetType(t *testing.T) {
 	m["deliveryservice"] = "3"
 	stObj := &TOSteeringTargetV11{
 		APIInfoImpl: api.APIInfoImpl{
-			ReqInfo: &api.APIInfo{
+			ReqInfo: &api.Info{
 				Params:    m,
 				IntParams: nil,
 				User:      nil,

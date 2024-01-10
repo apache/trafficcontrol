@@ -267,11 +267,11 @@ func TestParseRestrictFKConstraint(t *testing.T) {
 	}
 }
 
-func TestAPIInfo_WriteOKResponse(t *testing.T) {
+func TestInfo_WriteOKResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	inf := APIInfo{
+	inf := Info{
 		request: r,
 		w:       w,
 	}
@@ -290,11 +290,11 @@ func TestAPIInfo_WriteOKResponse(t *testing.T) {
 		t.Errorf("incorrect response status code; want: %d, got: %d", http.StatusOK, w.Code)
 	}
 }
-func TestAPIInfo_WriteOKResponseWithSummary(t *testing.T) {
+func TestInfo_WriteOKResponseWithSummary(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	inf := APIInfo{
+	inf := Info{
 		request: r,
 		w:       w,
 	}
@@ -313,11 +313,11 @@ func TestAPIInfo_WriteOKResponseWithSummary(t *testing.T) {
 		t.Errorf("incorrect response status code; want: %d, got: %d", http.StatusOK, w.Code)
 	}
 }
-func TestAPIInfo_WriteNotModifiedResponse(t *testing.T) {
+func TestInfo_WriteNotModifiedResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	inf := APIInfo{
+	inf := Info{
 		request: r,
 		w:       w,
 	}
@@ -337,11 +337,11 @@ func TestAPIInfo_WriteNotModifiedResponse(t *testing.T) {
 	}
 }
 
-func TestAPIInfo_WriteSuccessResponse(t *testing.T) {
+func TestInfo_WriteSuccessResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 
-	inf := APIInfo{
+	inf := Info{
 		request: r,
 		w:       w,
 	}
@@ -376,11 +376,11 @@ func TestAPIInfo_WriteSuccessResponse(t *testing.T) {
 	}
 }
 
-func TestAPIInfo_WriteCreatedResponse(t *testing.T) {
+func TestInfo_WriteCreatedResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodPost, "/", nil)
 
-	inf := APIInfo{
+	inf := Info{
 		request: r,
 		Version: &Version{Major: 420, Minor: 9001},
 		w:       w,
@@ -419,11 +419,11 @@ func TestAPIInfo_WriteCreatedResponse(t *testing.T) {
 	}
 }
 
-func TestAPIInfo_RequestHeaders(t *testing.T) {
+func TestInfo_RequestHeaders(t *testing.T) {
 	r := httptest.NewRequest(http.MethodGet, "/", nil)
 	r.Header.Set("test", "quest")
 
-	inf := APIInfo{
+	inf := Info{
 		request: r,
 	}
 	testHdr := inf.RequestHeaders().Get("test")
@@ -433,9 +433,9 @@ func TestAPIInfo_RequestHeaders(t *testing.T) {
 
 }
 
-func TestAPIInfo_SetLastModified(t *testing.T) {
+func TestInfo_SetLastModified(t *testing.T) {
 	w := httptest.NewRecorder()
-	inf := APIInfo{w: w}
+	inf := Info{w: w}
 	tm := time.Now().Truncate(time.Second).UTC()
 	inf.SetLastModified(tm)
 
@@ -453,8 +453,8 @@ func TestAPIInfo_SetLastModified(t *testing.T) {
 	}
 }
 
-func TestAPIInfo_DecodeBody(t *testing.T) {
-	inf := APIInfo{
+func TestInfo_DecodeBody(t *testing.T) {
+	inf := Info{
 		request: httptest.NewRequest(http.MethodConnect, "/", strings.NewReader(`{"test": "quest"}`)),
 	}
 

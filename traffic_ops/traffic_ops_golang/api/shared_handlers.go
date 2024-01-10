@@ -642,7 +642,7 @@ func DeprecatedCreateHandler(creator Creator, alternative *string) http.HandlerF
 	)
 }
 
-func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *APIInfo) ([]Creator, error) {
+func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *Info) ([]Creator, error) {
 	buf := ioutil.NopCloser(bytes.NewReader(data))
 
 	var genericInt interface{}
@@ -682,7 +682,7 @@ func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *APIInfo) (
 // return - in order - an HTTP response status code, a user-facing error (if one
 // occurred), and a system-only error not safe for exposure to clients (if one
 // occurred).
-type Handler = func(*APIInfo) (int, error, error)
+type Handler = func(*Info) (int, error, error)
 
 // Wrap wraps an API endpoint handler in the more generic HTTP request handler
 // type from the http package. This constructs and provides the APIInfo for the

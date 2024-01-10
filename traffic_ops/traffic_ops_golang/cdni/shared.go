@@ -44,9 +44,9 @@ const (
 	AllFootprintQuery = `SELECT footprint_type, footprint_value::text[], capability_id FROM cdni_footprints`
 
 	limitsQuery = `
-SELECT limit_id, scope_type, scope_value, limit_type, maximum_hard, maximum_soft, cl.telemetry_id, cl.telemetry_metric, t.id, t.type, tm.name, cl.capability_id 
-FROM cdni_limits AS cl 
-LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id 
+SELECT limit_id, scope_type, scope_value, limit_type, maximum_hard, maximum_soft, cl.telemetry_id, cl.telemetry_metric, t.id, t.type, tm.name, cl.capability_id
+FROM cdni_limits AS cl
+LEFT JOIN cdni_telemetry as t ON telemetry_id = t.id
 LEFT JOIN cdni_telemetry_metrics as tm ON telemetry_metric = tm.name`
 
 	InsertCapabilityUpdateQuery     = `INSERT INTO cdni_capability_updates (ucdn, data, async_status_id, request_type, host) VALUES ($1, $2, $3, $4, $5)`
@@ -456,7 +456,7 @@ func PutConfigurationResponse(w http.ResponseWriter, r *http.Request) {
 	api.WriteResp(w, r, msg)
 }
 
-func getCapabilityIdFromFootprints(updatedData CapacityLimit, ucdn string, inf *api.APIInfo) (int, error) {
+func getCapabilityIdFromFootprints(updatedData CapacityLimit, ucdn string, inf *api.Info) (int, error) {
 	tableAbbr := ""
 	selectClause := ""
 	whereClause := ""
@@ -534,7 +534,7 @@ func validateHostExists(host string, tx *sql.Tx) (int, error, error) {
 	return http.StatusOK, nil, nil
 }
 
-func checkBearerToken(bearerToken string, inf *api.APIInfo) (string, error) {
+func checkBearerToken(bearerToken string, inf *api.Info) (string, error) {
 	if bearerToken == "" {
 		return "", errors.New("bearer token is required")
 	}

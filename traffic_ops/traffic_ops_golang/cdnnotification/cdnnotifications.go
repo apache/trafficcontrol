@@ -33,10 +33,10 @@ import (
 
 const readQuery = `
 SELECT cn.id,
-	cn.cdn, 
+	cn.cdn,
 	cn.last_updated,
-	cn.user, 
-	cn.notification 
+	cn.user,
+	cn.notification
 FROM cdn_notification as cn
 INNER JOIN cdn ON cdn.name = cn.cdn
 INNER JOIN tm_user ON tm_user.username = cn.user
@@ -164,7 +164,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alert.Text, respObj)
 }
 
-func deleteCDNNotification(inf *api.APIInfo) (tc.Alert, tc.CDNNotification, error, error, int) {
+func deleteCDNNotification(inf *api.Info) (tc.Alert, tc.CDNNotification, error, error, int) {
 	var userErr error
 	var sysErr error
 	var statusCode = http.StatusOK
