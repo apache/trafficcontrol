@@ -45,7 +45,7 @@ No parameters available.
 Response Structure
 ------------------
 :commitHash:    The `Git <https://git-scm.com/>`_ commit hash that Traffic Ops was built at.
-:commits:       The number of commits in the branch of the commit that Traffic Ops was built at, including that commit. Calculated by extracting the commit count from running ``git describe --tags``.
+:commits:       The number of commits in the branch of the commit that Traffic Ops was built at, including that commit. Calculated by extracting the commit count from running ``git describe --tags --long``.
 :goVersion:     The version of `Go <https://golang.org/>`_ that was used to build Traffic Ops.
 :release:       The major version of CentOS or Red Hat Enterprise Linux that the build environment was running.
 :name:          The human-readable name of the `RPM <https://rpm-packaging-guide.github.io/#packaging-software>`_ file.

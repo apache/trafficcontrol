@@ -94,7 +94,7 @@ getBuildNumber() {
 	if isInGitTree; then
 		local commits sha
 		# The number of commits since the last tag
-		if ! commits="$(git describe --tags \
+		if ! commits="$(git describe --long --tags \
 			--match='RELEASE-[0-9].[0-9].[0-9]' \
 			--match='RELEASE-[0-9][0-9].[0-9][0-9].[0-9][0-9]' \
 			--match='v[0-9].[0-9].[0-9]' \
