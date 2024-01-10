@@ -694,12 +694,12 @@ The "Generic 'CRUDer'", as it's known, is a pattern of API endpoint development 
 
 .. seealso:: The :to-godoc:`api.GenericCreate`, :to-godoc:`api.GenericDelete`, :to-godoc:`api.GenericRead`, and :to-godoc:`api.GenericUpdate` helpers are often used to provide the default operations of creating, deleting, reading, and updating objects, respectively. When the API endpoint being written is only meant to perform these basic operations on an object or objects stored in the database, these should be totally sufficient.
 
-This method offers a lot of functionality "out-of-the-box" as compared to the `APIInfo`_ method, but because of that is also restrictive. For example, it is not possible to write an endpoint that returns data not encoded as JSON using this method. That's an uncommon use-case, but not unheard-of.
+This method offers a lot of functionality "out-of-the-box" as compared to the `API Info`_ method, but because of that is also restrictive. For example, it is not possible to write an endpoint that returns data not encoded as JSON using this method. That's an uncommon use-case, but not unheard-of.
 
 This method is best used for basic creation, reading, update, and deletion operations performed on simple objects with no structural differences across API versions.
 
-APIInfo
-"""""""
+API Info
+""""""""
 Endpoint handlers can also be defined by simply implementing the :godoc:`net/http.HandlerFunc` interface. The :godoc:`net/http.Request` reference passed into such handlers provides identifying information for the authenticated user (where applicable) in its context.
 
 To easily obtain the information needed to identify a user and their associated permissions, as well as server configuration information and a database transaction handle, authors should use the :to-godoc:`api.NewInfo` function which will return all of that information in a single structure as well as any errors encountered during the process and an appropriate HTTP response code in case of such errors.
