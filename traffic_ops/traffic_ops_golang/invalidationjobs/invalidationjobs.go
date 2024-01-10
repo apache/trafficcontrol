@@ -1562,7 +1562,7 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 	return nil
 }
 
-// Checks if the current user's (identified in the APIInfo) tenant has permissions to
+// Checks if the current user's (identified in the api.Info) tenant has permissions to
 // edit a Delivery Service. `ds` is expected to be the integral, unique identifer of the
 // Delivery Service in question.
 //
@@ -1586,7 +1586,7 @@ func IsUserAuthorizedToModifyDSID(inf *api.Info, ds uint) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
-// Checks if the current user's (identified in the APIInfo) tenant has permissions to
+// Checks if the current user's (identified in the api.Info) tenant has permissions to
 // edit a Delivery Service. `ds` is expected to be the "xml_id" of the
 // Delivery Service in question.
 //
@@ -1610,7 +1610,7 @@ func IsUserAuthorizedToModifyDSXMLID(inf *api.Info, ds string) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
-// Checks if the current user's (identified in the APIInfo) tenant has permissions to
+// Checks if the current user's (identified in the api.Info) tenant has permissions to
 // edit on par with the user identified by `u`. `u` is expected to be the integral,
 // unique identifer of the user in question (not the current, requesting user).
 //
@@ -1634,7 +1634,7 @@ func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.Info, u uint) (bool, erro
 	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
-// Checks if the current user's (identified in the APIInfo) tenant has permissions to
+// Checks if the current user's (identified in the api.Info) tenant has permissions to
 // edit on par with the user identified by `u`. `u` is expected to be the username of
 // the user in question (not the current, requesting user).
 //

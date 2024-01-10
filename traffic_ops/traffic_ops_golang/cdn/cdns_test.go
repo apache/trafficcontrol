@@ -210,7 +210,7 @@ func TestTOCDNUpdate(t *testing.T) {
 	// Expect a query to select last_updated from the database with an argument of 1
 	mock.ExpectQuery("select last_updated").WithArgs(1).WillReturnRows(rows)
 
-	// Create a new APIInfo object with required information
+	// Create a new api.Info object with required information
 	reqInfo := api.Info{
 		Tx:     db.MustBegin(),
 		Params: map[string]string{"dsId": "1"},

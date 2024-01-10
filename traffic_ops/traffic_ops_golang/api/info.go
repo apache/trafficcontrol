@@ -170,7 +170,7 @@ func NewInfo(r *http.Request, requiredParams []string, intParamNames []string) (
 		return &Info{Tx: &sqlx.Tx{}}, userErr, sysErr, errCode
 	}
 
-	// only place we could call cancel here is in APIInfo.Close(), which already
+	// only place we could call cancel here is in Info.Close(), which already
 	// will rollback the transaction (which is all cancel will do.)
 	// must be last, MUST not return an error if this succeeds, without closing
 	// the tx
@@ -255,7 +255,7 @@ func (inf *Info) Close() {
 // WriteOKResponse writes a 200 OK response with the given object as the
 // 'response' property of the response body.
 //
-// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
 func (inf Info) WriteOKResponse(resp any) (int, error, error) {
 	WriteResp(inf.w, inf.request, resp)
@@ -266,7 +266,7 @@ func (inf Info) WriteOKResponse(resp any) (int, error, error) {
 // the 'response' property of the response body, and the given count as the
 // `count` property of the response's summary.
 //
-// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
 //
 // Deprecated: Summary sections on responses were intended to cover up for a
@@ -280,7 +280,7 @@ func (inf Info) WriteOKResponseWithSummary(resp any, count uint64) (int, error, 
 // WriteNotModifiedResponse writes a 304 Not Modified response with the given
 // time as the last modified time in the headers.
 //
-// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
 func (inf Info) WriteNotModifiedResponse(lastModified time.Time) (int, error, error) {
 	inf.w.Header().Set(rfc.LastModified, FormatLastModified(lastModified))
@@ -316,7 +316,7 @@ func (inf Info) RequestHeaders() http.Header {
 
 // SetLastModified sets the "last modified" header on the response writer.
 //
-// This CANNOT be used by any APIInfo that wasn't constructed for the caller by
+// This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
 func (inf Info) SetLastModified(t time.Time) {
 	inf.w.Header().Set(rfc.LastModified, FormatLastModified(t))
@@ -328,7 +328,7 @@ func (inf Info) DecodeBody(ref any) error {
 	return json.NewDecoder(inf.request.Body).Decode(ref)
 }
 
-// SendMail is a convenience method used to call SendMail using an APIInfo
+// SendMail is a convenience method used to call SendMail using an Info
 // structure's configuration.
 func (inf *Info) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
 	return SendMail(to, msg, inf.Config)
@@ -336,8 +336,7 @@ func (inf *Info) SendMail(to rfc.EmailAddress, msg []byte) (int, error, error) {
 
 // IsResourceAuthorizedToCurrentUser is a convenience method used to call
 // github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/tenant.IsResourceAuthorizedToUserTx
-// using an APIInfo structure to provide the current user and database
-// transaction.
+// using an Info structure to provide the current user and database transaction.
 func (inf *Info) IsResourceAuthorizedToCurrentUser(resourceTenantID int) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(resourceTenantID, inf.User, inf.Tx.Tx)
 }

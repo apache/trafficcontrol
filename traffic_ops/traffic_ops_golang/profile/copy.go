@@ -74,7 +74,7 @@ func CopyProfileHandler(w http.ResponseWriter, r *http.Request) {
 func copyProfile(inf *api.Info, p *tc.ProfileCopy) errorDetails {
 	if inf == nil || p == nil {
 		return errorDetails{
-			sysErr:  errors.New("copyProfile received nil APIInfo or ProfileCopy reference"),
+			sysErr:  errors.New("copyProfile received nil api.Info or ProfileCopy reference"),
 			errCode: http.StatusInternalServerError,
 		}
 	}

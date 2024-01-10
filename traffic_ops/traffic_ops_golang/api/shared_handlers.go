@@ -678,14 +678,14 @@ func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *Info) ([]C
 	return creatorSlice, nil
 }
 
-// A Handler is an API endpoint handlers. The take in APIInfo helper objects and
+// A Handler is an API endpoint handlers. They take in Info helper objects and
 // return - in order - an HTTP response status code, a user-facing error (if one
 // occurred), and a system-only error not safe for exposure to clients (if one
 // occurred).
 type Handler = func(*Info) (int, error, error)
 
 // Wrap wraps an API endpoint handler in the more generic HTTP request handler
-// type from the http package. This constructs and provides the APIInfo for the
+// type from the http package. This constructs and provides the Info for the
 // underlying Handler. If the handler requires any request path and/or query
 // string parameters, those should be declared in requiredParams. Likewise, if
 // any of those parameters are required to be integral, they should be named in
@@ -693,7 +693,7 @@ type Handler = func(*Info) (int, error, error)
 // Note that this will still require the normal routing middleware for
 // authentication and context setup.
 // Also note that handlers utilizing this need not defer closing of the provided
-// APIInfo, as this will handle that for them.
+// Info, as this will handle that for them.
 // Finally, make sure this is ONLY used on versioned endpoints; this will return
 // an internal error if there is no associated API version.
 func Wrap(h Handler, requiredParams, intParams []string) http.HandlerFunc {
