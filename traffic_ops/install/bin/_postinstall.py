@@ -187,7 +187,7 @@ class CDNConfig(NamedTuple):
 
 	gen_secret: bool
 	num_secrets: int
-	port: int
+	port: str
 	num_workers: int
 	url: str
 	ldap_conf_location: str
@@ -953,7 +953,8 @@ def generate_cdn_conf(questions: List[Question], fname: str, automatic: bool, ro
 		raise ValueError(f"invalid 'keepSecrets' config_var value: {e}") from e
 
 	try:
-		port = int(cdn_conf["port"])
+		port = cdn_conf["port"]
+		int(port)
 	except KeyError as e:
 		raise ValueError("missing 'port' config_var") from e
 	except ValueError as e:
