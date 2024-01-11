@@ -3,8 +3,9 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [8.0.0] - 2024-01-17
+## [8.0.0] - 2024-01-24
 ### Added
+- [#7896](https://github.com/apache/trafficcontrol/pull/7896) *ATC Build system*: Count commits since the last release, not commits.
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client*: Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal*: Added Scope Query Param to SSO login.
 - [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops*: Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
