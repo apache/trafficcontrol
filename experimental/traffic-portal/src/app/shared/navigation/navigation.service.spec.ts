@@ -15,13 +15,14 @@ import { HttpClientModule } from "@angular/common/http";
 import { TestBed } from "@angular/core/testing";
 import { MatButtonModule } from "@angular/material/button";
 import { MatMenuModule } from "@angular/material/menu";
+import { Title } from "@angular/platform-browser";
 import { RouterTestingModule } from "@angular/router/testing";
 import { of } from "rxjs";
 
 import { UserService } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
-import { HeaderNavigation, NavigationService } from "src/app/shared/navigation/navigation.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 import { type TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 
 describe("NavigationService", () => {
@@ -64,14 +65,15 @@ describe("NavigationService", () => {
 		expect(logOutSpy).toHaveBeenCalled();
 	});
 
-	it("set header component", () => {
+	it("sets the page title and header", () => {
 		expect(mockHeaderComp).toBeTruthy();
-		expect(mockHeaderComp?.hidden).toBeFalse();
-		expect(mockHeaderComp?.title).toBe("");
+		expect(mockHeaderComp.hidden).toBeFalse();
+		expect(mockHeaderComp.title).toBe("");
 
-		service.headerHidden.next(true);
-		service.headerTitle.next("something else");
-		service.horizontalNavsUpdated.next(new Array<HeaderNavigation>());
-		service.verticalNavsUpdated.next(new Array<HeaderNavigation>());
+		const title = "something else";
+		const titleService = TestBed.inject(Title);
+
+		service.headerTitle.next(title);
+		expect(titleService.getTitle()).toBe(title);
 	});
 });
