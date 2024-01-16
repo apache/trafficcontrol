@@ -91,6 +91,23 @@ func ExampleErrors_SetUserErrorf() {
 	fmt.Println(e.String())
 	// Output: 500 Internal Server Error, SystemError='<nil>', UserError='test: quest'
 }
+func ExampleErrors() {
+	handler := func(fail bool) Errors {
+		if fail {
+			return NewSystemErrorString("failed")
+		}
+		return nil
+	}
+
+	var errs error = handler(true)
+	fmt.Println(errs)
+
+	errs = handler(false)
+	fmt.Println(errs)
+
+	// Output: failed
+	// <nil>
+}
 
 func ExampleErrs_Code() {
 	var e *Errs
