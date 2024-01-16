@@ -35,13 +35,14 @@ import logging
 import os
 import ssl
 import sys
-import urllib
 
 from http import cookiejar
+from typing import Dict
+from urllib import request as urllibRequest, error as urllibError
 
 __version__ = "0.0.1"
 
-#: This is the custom log-level used for
+#: This is the custom log-level used for "trace"-level messages
 TRACE_LEVEL = 5
 
 #: This is used during config parsing to output helpful error messages
@@ -80,7 +81,7 @@ class Config:
 		"""
 		return f'{{"u":"{self.username}","p":"{self.password}"}}'.encode()
 
-def unmarshal_config(dct: dict, insecure: bool) -> Config:
+def unmarshal_config(dct: Dict[str, str], insecure: bool) -> Config:
 	"""
 	Constructs a new Config object from the passed dict.
 
@@ -96,7 +97,7 @@ def unmarshal_config(dct: dict, insecure: bool) -> Config:
 
 	return Config(dct["base_url"], dct["user"], dct["pass"], insecure)
 
-def get_cookie(cfg: Config) -> urllib.request.URLopener:
+def get_cookie(cfg: Config) -> urllibRequest.OpenerDirector:
 	"""
 	Authenticates with Traffic Ops as directed by the passed configuration, and returns a URLopener
 	that stores and passes the mojolicious cookie, so that it doesn't need to be manually managed.
@@ -104,14 +105,14 @@ def get_cookie(cfg: Config) -> urllib.request.URLopener:
 	login_url = f"{cfg.base_url}/api/2.0/user/login"
 	logging.log(TRACE_LEVEL, "posting %s", login_url)
 	headers = {"Content-Type": "application/json"}
-	req = urllib.request.Request(login_url, headers=headers, data=cfg.payload(), method="POST")
+	req = urllibRequest.Request(login_url, headers=headers, data=cfg.payload(), method="POST")
 	ctx = ssl.SSLContext()
 	ctx.check_hostname = False
 	ctx.verify_mode = ssl.CERT_NONE if cfg.insecure else ssl.CERT_REQUIRED
 
-	opener = urllib.request.build_opener(
-		urllib.request.HTTPSHandler(context=ctx),
-		urllib.request.HTTPCookieProcessor(cookiejar.CookieJar())
+	opener = urllibRequest.build_opener(
+		urllibRequest.HTTPSHandler(context=ctx),
+		urllibRequest.HTTPCookieProcessor(cookiejar.CookieJar())
 	)
 	resp = opener.open(req)
 	code = resp.getcode()
@@ -121,13 +122,13 @@ def get_cookie(cfg: Config) -> urllib.request.URLopener:
 
 	return opener
 
-def renew_certs(cfg: Config, opener: urllib.request.URLopener):
+def renew_certs(cfg: Config, opener: urllibRequest.OpenerDirector):
 	"""
 	Performs the request to automatically renew certificates.
 	"""
 	url = f"{cfg.base_url}/api/2.0/letsencrypt/autorenew"
 	logging.log(TRACE_LEVEL, "getting %s", url) # We're actually POSTing
-	req = urllib.request.Request(url, method="POST", headers={"Content-Type": "application/json"})
+	req = urllibRequest.Request(url, method="POST", headers={"Content-Type": "application/json"})
 	resp = opener.open(req)
 	code = resp.getcode()
 	body = resp.read()
@@ -141,7 +142,7 @@ def main(log_level: int, cfg_or_file: str, insecure: bool) -> int:
 	"""
 	The main routine of the script.
 	"""
-	logging.addLevelName("TRACE", TRACE_LEVEL)
+	logging.addLevelName(TRACE_LEVEL, "TRACE")
 
 	if log_level <= 1:
 		logging.getLogger().setLevel(logging.INFO)
@@ -181,14 +182,14 @@ def main(log_level: int, cfg_or_file: str, insecure: bool) -> int:
 	lwp = None
 	try:
 		lwp = get_cookie(config)
-	except (ConnectionError, urllib.error.HTTPError) as e:
+	except (ConnectionError, urllibError.HTTPError) as e:
 		logging.error("Error trying to update keys: %s", e)
 		logging.log(TRACE_LEVEL, "", stack_info=True, exc_info=True)
 		return 1
 
 	try:
 		renew_certs(config, lwp)
-	except (ConnectionError, urllib.error.HTTPError) as e:
+	except (ConnectionError, urllibError.HTTPError) as e:
 		logging.error("Error trying to update keys: %s", e)
 		logging.log(TRACE_LEVEL, "", stack_info=True, exc_info=True)
 		return 1 #Perl returned zero here, I refuse to follow suit.
