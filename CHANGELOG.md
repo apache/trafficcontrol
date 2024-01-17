@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [8.0.0] - 2024-01-03
+## [8.0.0] - 2024-01-17
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client*: Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal*: Added Scope Query Param to SSO login.
