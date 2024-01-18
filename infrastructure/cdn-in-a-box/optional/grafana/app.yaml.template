@@ -1,0 +1,10 @@
+apiVersion: 1
+
+apps:
+  - type: 'trafficcontrol-scenes-app'
+    org_id: 1
+    org_name: 'apache'
+    disabled: false
+    jsonData:
+      apiUrl: http://default-url.com
+      isApiKeySet: true

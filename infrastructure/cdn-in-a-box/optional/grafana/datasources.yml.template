@@ -51,3 +51,14 @@ datasources:
   database: deliveryservice_stats
   basicAuth: false
   isDefault: false
+
+- name: telegraf
+  isDefault: false
+  url: http://$INFLUXDB_HOST:$INFLUXDB_PORT
+  type: influxdb
+  user: $INFLUXDB_ADMIN_USER
+  jsonData:
+    dbName: telegraf
+    httpMode: GET
+  secureJsonData:
+    password: $INFLUXDB_ADMIN_PASSWORD
