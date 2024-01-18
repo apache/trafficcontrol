@@ -148,14 +148,16 @@ var TableDeliveryServiceServersController = function(deliveryService, servers, f
 	};
 
 	/** @type {import("../agGrid/CommonGridController").CGC.TitleButton} */
-	$scope.titleButton = {
-		onClick: function() {
-			locationUtils.navigateToPath("topologies/edit?name=" + encodeURIComponent($scope.deliveryService.topology));
-		},
-		getText: function() {
-			return "[ " + $scope.deliveryService.topology + " topology ]";
-		}
-	};
+	if($scope.deliveryService.topology) {
+		$scope.titleButton = {
+			onClick: function() {
+				locationUtils.navigateToPath("topologies/edit?name=" + encodeURIComponent($scope.deliveryService.topology));
+			},
+			getText: function() {
+				return "[ " + $scope.deliveryService.topology + " topology ]";
+			}
+		};
+	}
 
 	/** @type {import("../agGrid/CommonGridController").CGC.TitleBreadCrumbs} */
 	$scope.breadCrumbs = [{
