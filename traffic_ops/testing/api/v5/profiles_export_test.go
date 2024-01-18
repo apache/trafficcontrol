@@ -55,7 +55,7 @@ func TestProfilesExport(t *testing.T) {
 						t.Run(name, func(t *testing.T) {
 							resp, reqInf, err := testCase.ClientSession.ExportProfile(testCase.EndpointID(), testCase.RequestOpts)
 							for _, check := range testCase.Expectations {
-								check(t, reqInf, resp, resp.Alerts, err)
+								check(t, reqInf, resp, tc.Alerts{}, err)
 							}
 						})
 					}
