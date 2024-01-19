@@ -6,5 +6,5 @@ apps:
     org_name: 'apache'
     disabled: false
     jsonData:
-      apiUrl: http://default-url.com
+      apiUrl: https://trafficcontrol.apache.org/
       isApiKeySet: true

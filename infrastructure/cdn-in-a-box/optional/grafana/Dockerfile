@@ -29,6 +29,7 @@ ADD enroller/server_template.json \
     optional/grafana/run-grafana.sh \
     optional/grafana/datasources.yml.template \
     optional/grafana/app.yaml.template \
+    optional/grafana/trafficcontrol-scenes/dist \
     $TRAFFIC_TS_RPM \
     /
 
@@ -42,7 +43,7 @@ COPY dns/set-dns.sh \
      dns/insert-self-into-dns.sh \
      /usr/local/sbin/
 
-COPY optional/grafana/trafficcontrol-scenes/dist /var/lib/grafana/plugins/trafficcontrol-scenes
+COPY optional/grafana/trafficcontrol-scenes/dist /var/lib/grafana/plugins/trafficcontrol-scenes-app
 
 ENTRYPOINT [ "/run-grafana.sh" ]
 EXPOSE 443
