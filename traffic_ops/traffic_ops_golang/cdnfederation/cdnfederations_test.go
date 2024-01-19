@@ -108,7 +108,7 @@ func gettingUserTenantListFails(t *testing.T) {
 
 	err := errors.New("unknown failure")
 	mock.ExpectQuery("WITH RECURSIVE").WillReturnError(err)
-	_, _, code, userErr, sysErr := getCDNFederations(&api.APIInfo{Tx: tx, User: &auth.CurrentUser{TenantID: 1}})
+	_, _, code, userErr, sysErr := getCDNFederations(&api.Info{Tx: tx, User: &auth.CurrentUser{TenantID: 1}})
 
 	if code != http.StatusInternalServerError {
 		t.Errorf("Incorrect response code when getting user tenants fails; want: %d, got: %d", http.StatusInternalServerError, code)
@@ -141,7 +141,7 @@ func buildingQueryPartsFails(t *testing.T) {
 
 	mock.ExpectQuery("WITH RECURSIVE").WillReturnRows(rows)
 
-	inf := api.APIInfo{
+	inf := api.Info{
 		Params: map[string]string{
 			"dsID": "not an integer",
 		},
@@ -193,7 +193,7 @@ func everythingWorks(t *testing.T) {
 	fedRows.AddRow(1, fed.ID, fed.CName, fed.TTL, fed.Description, fed.LastUpdated, fed.DeliveryService.ID, fed.DeliveryService.XMLID)
 	mock.ExpectQuery("SELECT").WillReturnRows(fedRows)
 
-	feds, _, _, userErr, sysErr := getCDNFederations(&api.APIInfo{Tx: tx, User: &auth.CurrentUser{TenantID: 1}, Version: &api.Version{Major: 5}})
+	feds, _, _, userErr, sysErr := getCDNFederations(&api.Info{Tx: tx, User: &auth.CurrentUser{TenantID: 1}, Version: &api.Version{Major: 5}})
 	if userErr != nil {
 		t.Errorf("Unexpected user-facing error: %v", userErr)
 	}

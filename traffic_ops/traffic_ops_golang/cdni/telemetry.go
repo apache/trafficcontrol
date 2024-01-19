@@ -26,7 +26,7 @@ import (
 	"github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api"
 )
 
-func getTelemetries(inf *api.APIInfo, ucdn string) (Capabilities, error) {
+func getTelemetries(inf *api.Info, ucdn string) (Capabilities, error) {
 	capRows, err := inf.Tx.Tx.Query(CapabilityQuery, FciTelemetry, ucdn)
 	if err != nil {
 		return Capabilities{}, fmt.Errorf("querying capabilities: %w", err)

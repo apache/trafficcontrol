@@ -86,7 +86,7 @@ func TestValidate(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	tx := db.MustBegin()
 
-	reqInfo := api.APIInfo{Tx: tx}
+	reqInfo := api.Info{Tx: tx}
 	// invalid name, empty domainname
 	ts := TOStaticDNSEntry{APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo}}
 	err, _ = ts.Validate()

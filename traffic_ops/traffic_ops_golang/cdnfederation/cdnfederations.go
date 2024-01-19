@@ -499,7 +499,7 @@ func addTenancyStmt(where string) string {
 	return where
 }
 
-func getCDNFederations(inf *api.APIInfo) ([]tc.CDNFederationV5, time.Time, int, error, error) {
+func getCDNFederations(inf *api.Info) ([]tc.CDNFederationV5, time.Time, int, error, error) {
 	tenantList, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
 		return nil, time.Time{}, http.StatusInternalServerError, nil, fmt.Errorf("getting tenant list for user: %w", err)
@@ -562,7 +562,7 @@ func getCDNFederations(inf *api.APIInfo) ([]tc.CDNFederationV5, time.Time, int, 
 }
 
 // Read handles GET requests to `cdns/{{name}}/federations`.
-func Read(inf *api.APIInfo) (int, error, error) {
+func Read(inf *api.Info) (int, error, error) {
 	api.DefaultSort(inf, "cname")
 	feds, max, code, userErr, sysErr := getCDNFederations(inf)
 	if userErr != nil || sysErr != nil {
@@ -575,7 +575,7 @@ func Read(inf *api.APIInfo) (int, error, error) {
 }
 
 // ReadID handles GET requests to `cdns/{{name}}/federations/{{ID}}`.
-func ReadID(inf *api.APIInfo) (int, error, error) {
+func ReadID(inf *api.Info) (int, error, error) {
 	feds, max, code, userErr, sysErr := getCDNFederations(inf)
 	if userErr != nil || sysErr != nil {
 		return code, userErr, sysErr
@@ -611,7 +611,7 @@ func validate(fed tc.CDNFederationV5) error {
 }
 
 // Create handles POST requests to `cdns/{{name}}/federations`.
-func Create(inf *api.APIInfo) (int, error, error) {
+func Create(inf *api.Info) (int, error, error) {
 	var fed tc.CDNFederationV5
 	if err := inf.DecodeBody(&fed); err != nil {
 		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
@@ -638,7 +638,7 @@ func Create(inf *api.APIInfo) (int, error, error) {
 }
 
 // Update handles PUT requests to `cdns/{{name}}/federations/{{id}}`.
-func Update(inf *api.APIInfo) (int, error, error) {
+func Update(inf *api.Info) (int, error, error) {
 	var fed tc.CDNFederationV5
 	if err := inf.DecodeBody(&fed); err != nil {
 		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
@@ -678,7 +678,7 @@ func Update(inf *api.APIInfo) (int, error, error) {
 }
 
 // Delete handles DELETE requests to `cdns/{{name}}/federations/{{id}}`.
-func Delete(inf *api.APIInfo) (int, error, error) {
+func Delete(inf *api.Info) (int, error, error) {
 	id := inf.IntParams["id"]
 
 	var fed tc.CDNFederationV5

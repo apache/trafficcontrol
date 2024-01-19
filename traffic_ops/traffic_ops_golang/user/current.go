@@ -488,7 +488,7 @@ func ReplaceCurrent(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, "User profile was successfully updated", user)
 }
 
-func validateV4(user tc.UserV4, inf *api.APIInfo) (error, error) {
+func validateV4(user tc.UserV4, inf *api.Info) (error, error) {
 	validateErrs := validation.Errors{
 		"email":    validation.Validate(user.Email, validation.Required, is.Email),
 		"fullName": validation.Validate(user.FullName, validation.Required),

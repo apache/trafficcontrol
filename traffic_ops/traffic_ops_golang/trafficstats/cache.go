@@ -64,7 +64,7 @@ AND time < $end
 GROUP BY time(%s, %s), cdn%s`
 )
 
-func cacheConfigFromRequest(r *http.Request, i *api.APIInfo) (tc.TrafficCacheStatsConfig, int, error) {
+func cacheConfigFromRequest(r *http.Request, i *api.Info) (tc.TrafficCacheStatsConfig, int, error) {
 	c := tc.TrafficCacheStatsConfig{}
 	statsConfig, rc, e := tsConfigFromRequest(r, i)
 	if e != nil {

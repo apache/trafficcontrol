@@ -351,7 +351,7 @@ func TestDeleteHandler(t *testing.T) {
 // The constructed handler will return an error if fail is true, or nothing
 // special otherwise.
 func testingHandler(fail bool) Handler {
-	return func(inf *APIInfo) (int, error, error) {
+	return func(inf *Info) (int, error, error) {
 		if fail {
 			return http.StatusBadRequest, errors.New("testing user error"), errors.New("testing system error")
 		}

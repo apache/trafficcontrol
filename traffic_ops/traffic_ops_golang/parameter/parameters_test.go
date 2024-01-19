@@ -94,7 +94,7 @@ func TestGetParameters(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{
+	reqInfo := api.Info{
 		Tx:     db.MustBegin(),
 		User:   &auth.CurrentUser{PrivLevel: 30},
 		Params: map[string]string{"name": "1"},

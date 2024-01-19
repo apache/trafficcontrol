@@ -85,7 +85,7 @@ func (ds *TODeliveryService) UnmarshalJSON(data []byte) error {
 
 // APIInfo implements
 // github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.APIInfoer.
-func (ds *TODeliveryService) APIInfo() *api.APIInfo { return ds.ReqInfo }
+func (ds *TODeliveryService) APIInfo() *api.Info { return ds.ReqInfo }
 
 // SetKeys implements part of the
 // github.com/apache/trafficcontrol/v8/traffic_ops/traffic_ops_golang/api.Identifier
@@ -281,7 +281,7 @@ func CreateV41(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, []tc.DeliveryServiceV41{*res})
 }
 
-func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
+func createV30(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV30 tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
 	ds := tc.DeliveryServiceV31{DeliveryServiceV30: dsV30}
 	res, status, userErr, sysErr := createV31(w, r, inf, ds)
 	if res != nil {
@@ -290,7 +290,7 @@ func createV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 t
 	return nil, status, userErr, sysErr
 }
 
-func createV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+func createV31(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV31 tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
 	tx := inf.Tx.Tx
 	dsNullable := tc.DeliveryServiceNullableV30(dsV31)
 	ds := dsNullable.UpgradeToV4()
@@ -349,7 +349,7 @@ func recreateTLSVersions(versions []string, dsid int, tx *sql.Tx) error {
 }
 
 // createV40 creates the given ds in the database, and returns the DS with its id and other fields created on insert set. On error, the HTTP status code, user error, and system error are returned. The status code SHOULD NOT be used, if both errors are nil.
-func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+func createV40(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV4 tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
 	ds, code, userErr, sysErr := createV41(w, r, inf, tc.DeliveryServiceV41{DeliveryServiceV40: dsV4}, omitExtraLongDescFields)
 	if userErr != nil || sysErr != nil || ds == nil {
 		return nil, code, userErr, sysErr
@@ -363,7 +363,7 @@ func createV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 tc
 // created on insert set. On error, an HTTP status code, user error, and system
 // error are returned. The status code SHOULD NOT be used, if both errors are
 // nil.
-func createV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceV41, omitExtraLongDescFields bool) (*tc.DeliveryServiceV41, int, error, error) {
+func createV41(w http.ResponseWriter, r *http.Request, inf *api.Info, ds tc.DeliveryServiceV41, omitExtraLongDescFields bool) (*tc.DeliveryServiceV41, int, error, error) {
 	res, code, userErr, sysErr := createV50(w, r, inf, ds.Upgrade(), omitExtraLongDescFields, ds.LongDesc1, ds.LongDesc2)
 	if res != nil {
 		ds := res.Downgrade()
@@ -377,7 +377,7 @@ func createV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.D
 // created on insert set. On error, an HTTP status code, user error, and system
 // error are returned. The status code SHOULD NOT be used, if both errors are
 // nil.
-func createV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds tc.DeliveryServiceV5, omitExtraLongDescFields bool, longDesc1, longDesc2 *string) (*tc.DeliveryServiceV5, int, error, error) {
+func createV50(w http.ResponseWriter, r *http.Request, inf *api.Info, ds tc.DeliveryServiceV5, omitExtraLongDescFields bool, longDesc1, longDesc2 *string) (*tc.DeliveryServiceV5, int, error, error) {
 	var err error
 	tx := inf.Tx.Tx
 	userErr, sysErr := Validate(tx, &ds)
@@ -893,7 +893,7 @@ func UpdateV50(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, *res)
 }
 
-func updateV30(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV30 *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
+func updateV30(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV30 *tc.DeliveryServiceV30) (*tc.DeliveryServiceV30, int, error, error) {
 	dsV31 := tc.DeliveryServiceV31{DeliveryServiceV30: *dsV30}
 	// query the DB for existing 3.1 fields in order to "upgrade" this 3.0 request into a 3.1 request
 	query := `
@@ -918,7 +918,7 @@ WHERE
 	return nil, status, userErr, sysErr
 }
 
-func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
+func updateV31(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV31 *tc.DeliveryServiceV31) (*tc.DeliveryServiceV31, int, error, error) {
 	dsNull := tc.DeliveryServiceNullableV30(*dsV31)
 	ds := dsNull.UpgradeToV4()
 	dsV41 := ds
@@ -983,7 +983,7 @@ func updateV31(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV31 *
 	return &oldRes, http.StatusOK, nil, nil
 }
 
-func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
+func updateV40(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV40 *tc.DeliveryServiceV40, omitExtraLongDescFields bool) (*tc.DeliveryServiceV40, int, error, error) {
 	ds, code, userErr, sysErr := updateV41(w, r, inf, &tc.DeliveryServiceV41{DeliveryServiceV40: *dsV40}, omitExtraLongDescFields)
 	if userErr != nil || sysErr != nil || ds == nil {
 		return nil, code, userErr, sysErr
@@ -991,7 +991,7 @@ func updateV40(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV40 *
 	d := ds.DeliveryServiceV40
 	return &d, code, nil, nil
 }
-func updateV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 *tc.DeliveryServiceV41, omitExtraLongDescFields bool) (*tc.DeliveryServiceV41, int, error, error) {
+func updateV41(w http.ResponseWriter, r *http.Request, inf *api.Info, dsV4 *tc.DeliveryServiceV41, omitExtraLongDescFields bool) (*tc.DeliveryServiceV41, int, error, error) {
 	upgraded := dsV4.Upgrade()
 	res, code, userErr, sysErr := updateV50(w, r, inf, &upgraded, omitExtraLongDescFields, dsV4.LongDesc1, dsV4.LongDesc2)
 	if userErr != nil || sysErr != nil || res == nil {
@@ -1001,7 +1001,7 @@ func updateV41(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, dsV4 *t
 	return &ds, code, userErr, sysErr
 }
 
-func updateV50(w http.ResponseWriter, r *http.Request, inf *api.APIInfo, ds *tc.DeliveryServiceV5, omitExtraLongDescFields bool, longDesc1, longDesc2 *string) (*tc.DeliveryServiceV5, int, error, error) {
+func updateV50(w http.ResponseWriter, r *http.Request, inf *api.Info, ds *tc.DeliveryServiceV5, omitExtraLongDescFields bool, longDesc1, longDesc2 *string) (*tc.DeliveryServiceV5, int, error, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 	userErr, sysErr := Validate(tx, ds)
@@ -2367,7 +2367,7 @@ func getTenantID(tx *sql.Tx, ds tc.DeliveryServiceV5) (*int, error) {
 	return id, err
 }
 
-func isTenantAuthorized(inf *api.APIInfo, ds *tc.DeliveryServiceV5) (bool, error) {
+func isTenantAuthorized(inf *api.Info, ds *tc.DeliveryServiceV5) (bool, error) {
 	tx := inf.Tx.Tx
 	user := inf.User
 

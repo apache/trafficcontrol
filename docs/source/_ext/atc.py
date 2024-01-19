@@ -301,7 +301,7 @@ def to_godoc_role(
 
 	Example:
 
-		API endpoints make heavy use of :to-godoc:`api#APIInfo` objects.
+		API endpoints make heavy use of :to-godoc:`api#Info` objects.
 	"""
 	if options is None:
 		options = {}
