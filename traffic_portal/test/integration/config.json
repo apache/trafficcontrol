@@ -33,7 +33,7 @@
     "baseUrl": "https://localhost",
     "login": {
       "username": "admin",
-      "password": "twelve12"
+      "password": "twelve"
     },
     "junitReporter": false
   }

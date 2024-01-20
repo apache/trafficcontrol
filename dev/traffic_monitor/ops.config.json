@@ -1,6 +1,6 @@
 {
 	"username": "admin",
-	"password": "twelve12",
+	"password": "twelve",
 	"url": "https://trafficops:443/",
 	"insecure": true,
 	"cdnName": "dev",

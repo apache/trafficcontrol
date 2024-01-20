@@ -227,7 +227,7 @@ describe("CurrentUserService", () => {
 	});
 
 	it("logs users in", async () => {
-		expect(await service.login("test-admin", "twelve12!")).toBeTrue();
+		expect(await service.login("test-admin", "twelve!")).toBeTrue();
 		expect(await service.login("test-admin", "a misspelled password")).toBeFalse();
 		expect(await service.login("there's no token that includes apostrophes")).toBeFalse();
 	});

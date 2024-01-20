@@ -43,7 +43,7 @@ services:
         ports:
             - 5432:5432
         environment:
-            - POSTGRES_PASSWORD=twelve12
+            - POSTGRES_PASSWORD=twelve
         hostname: db
         networks:
             - ciab
