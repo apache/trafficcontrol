@@ -37,7 +37,7 @@ import (
 
 type GenericCreator interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *Info
 	SetKeys(map[string]interface{})
 	SetLastUpdated(tc.TimeNoMod)
 	InsertQuery() string
@@ -45,7 +45,7 @@ type GenericCreator interface {
 
 type GenericReader interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *Info
 	ParamColumns() map[string]dbhelpers.WhereColumnInfo
 	NewReadObj() interface{}
 	SelectQuery() string
@@ -54,7 +54,7 @@ type GenericReader interface {
 
 type GenericUpdater interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *Info
 	SetLastUpdated(tc.TimeNoMod)
 	UpdateQuery() string
 	GetLastUpdated() (*time.Time, bool, error)
@@ -62,14 +62,14 @@ type GenericUpdater interface {
 
 type GenericDeleter interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *Info
 	DeleteQuery() string
 }
 
 // GenericOptionsDeleter can use any key listed in DeleteKeyOptions() to delete a resource.
 type GenericOptionsDeleter interface {
 	GetType() string
-	APIInfo() *APIInfo
+	APIInfo() *Info
 	DeleteKeyOptions() map[string]dbhelpers.WhereColumnInfo
 	DeleteQueryBase() string
 }

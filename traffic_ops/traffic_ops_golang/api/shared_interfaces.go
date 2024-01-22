@@ -114,9 +114,28 @@ type Tenantable interface {
 	IsTenantAuthorized(user *auth.CurrentUser) (bool, error)
 }
 
-// APIInfoer is an interface that guarantees the existance of a variable through its setters and getters.
-// Every CRUD operation uses this login session context
+// APIInfoer is an interface that guarantees the existence of a variable through
+// its setters and getters. Every CRUD operation uses this login session
+// context.
 type APIInfoer interface {
-	SetInfo(*APIInfo)
-	APIInfo() *APIInfo
+	SetInfo(*Info)
+	APIInfo() *Info
+}
+
+// APIInfoImpl implements APIInfo via the APIInfoer interface. The purpose of
+// this is somewhat unclear.
+type APIInfoImpl struct {
+	ReqInfo *Info
+}
+
+// SetInfo sets the APIInfo of the APIInfoImpl to the given Info. The purpose of
+// this is somewhat unclear.
+func (val *APIInfoImpl) SetInfo(inf *Info) {
+	val.ReqInfo = inf
+}
+
+// APIInfo returns the APIInfoer's Info. The purpose of this is somewhat
+// unclear.
+func (val APIInfoImpl) APIInfo() *Info {
+	return val.ReqInfo
 }

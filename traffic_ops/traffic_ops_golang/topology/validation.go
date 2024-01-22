@@ -186,7 +186,7 @@ func checkForCycles(nodes []tc.TopologyNode) ([]string, error) {
 	return cacheGroups, util.JoinErrs(errs)
 }
 
-func checkForCyclesAcrossTopologies(info *api.APIInfo, topologyNodes []tc.TopologyNode, name string) error {
+func checkForCyclesAcrossTopologies(info *api.Info, topologyNodes []tc.TopologyNode, name string) error {
 	var (
 		nodes                  []tc.TopologyNode
 		topologiesByCacheGroup map[string][]string

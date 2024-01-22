@@ -21,6 +21,6 @@
 	"private": true,
 	"license": "Apache-2.0",
   "dependencies": {
-    "pm2": "^5.2.2"
+    "pm2": "^5.3.1"
   }
 }

@@ -137,7 +137,7 @@ func TestReadCacheGroups(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
 	obj := TOCacheGroup{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.CacheGroupNullable{},
@@ -205,7 +205,7 @@ func TestValidate(t *testing.T) {
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT\\s+name,\\s+use_in_table").WillReturnRows(rows)
 	tx := db.MustBegin()
-	reqInfo := api.APIInfo{Tx: tx}
+	reqInfo := api.Info{Tx: tx}
 
 	// invalid name, shortname, loattude, and longitude
 	id := 1
@@ -335,7 +335,7 @@ func TestBadTypeParamCacheGroups(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"type": "wrong"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"type": "wrong"}}
 	obj := TOCacheGroup{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.CacheGroupNullable{},

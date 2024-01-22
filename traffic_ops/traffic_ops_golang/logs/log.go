@@ -171,7 +171,7 @@ FROM "log" as l JOIN tm_user as u ON l.tm_user = u.id`
 
 const countQuery = `SELECT count(l.tm_user) FROM log as l`
 
-func getLogV40(inf *api.APIInfo, days int) ([]tc.Log, uint64, error) {
+func getLogV40(inf *api.Info, days int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
 
@@ -222,7 +222,7 @@ func getLogV40(inf *api.APIInfo, days int) ([]tc.Log, uint64, error) {
 	return ls, count, nil
 }
 
-func getLog(inf *api.APIInfo, days int, limit int) ([]tc.Log, uint64, error) {
+func getLog(inf *api.Info, days int, limit int) ([]tc.Log, uint64, error) {
 	var count = uint64(0)
 	var whereCount string
 	if _, ok := inf.Params["limit"]; !ok {

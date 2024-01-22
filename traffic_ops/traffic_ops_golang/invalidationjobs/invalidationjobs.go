@@ -272,7 +272,7 @@ const deleteQueryV4 = `
 DELETE
 FROM job
 WHERE job.id=$1
-RETURNING 
+RETURNING
 	job.id,
 	job.asset_url,
 	(
@@ -1562,7 +1562,7 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 	return nil
 }
 
-// Checks if the current user's (identified in the APIInfo) tenant has permissions to
+// Checks if the current user's (identified in the api.Info) tenant has permissions to
 // edit a Delivery Service. `ds` is expected to be the integral, unique identifer of the
 // Delivery Service in question.
 //
@@ -1573,7 +1573,7 @@ func setRevalFlags(d interface{}, tx *sql.Tx) error {
 //
 // Note: If no such delivery service exists, the return values shall indicate that the
 // user isn't authorized.
-func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (bool, error) {
+func IsUserAuthorizedToModifyDSID(inf *api.Info, ds uint) (bool, error) {
 	var t uint
 	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM deliveryservice WHERE id=$1`, ds)
 	if err := row.Scan(&t); err != nil {
@@ -1586,7 +1586,7 @@ func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (bool, error) {
 	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
-// Checks if the current user's (identified in the APIInfo) tenant has permissions to
+// Checks if the current user's (identified in the api.Info) tenant has permissions to
 // edit a Delivery Service. `ds` is expected to be the "xml_id" of the
 // Delivery Service in question.
 //
@@ -1597,7 +1597,7 @@ func IsUserAuthorizedToModifyDSID(inf *api.APIInfo, ds uint) (bool, error) {
 //
 // Note: If no such delivery service exists, the return values shall indicate that the
 // user isn't authorized.
-func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (bool, error) {
+func IsUserAuthorizedToModifyDSXMLID(inf *api.Info, ds string) (bool, error) {
 	var t uint
 	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM deliveryservice WHERE xml_id=$1`, ds)
 	if err := row.Scan(&t); err != nil {
@@ -1610,7 +1610,7 @@ func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (bool, error) 
 	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
-// Checks if the current user's (identified in the APIInfo) tenant has permissions to
+// Checks if the current user's (identified in the api.Info) tenant has permissions to
 // edit on par with the user identified by `u`. `u` is expected to be the integral,
 // unique identifer of the user in question (not the current, requesting user).
 //
@@ -1621,7 +1621,7 @@ func IsUserAuthorizedToModifyDSXMLID(inf *api.APIInfo, ds string) (bool, error) 
 //
 // Note: If no such delivery service exists, the return values shall indicate that the
 // user isn't authorized.
-func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.APIInfo, u uint) (bool, error) {
+func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.Info, u uint) (bool, error) {
 	var t uint
 	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM tm_user WHERE id=$1`, u)
 	if err := row.Scan(&t); err != nil {
@@ -1634,7 +1634,7 @@ func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.APIInfo, u uint) (bool, e
 	return tenant.IsResourceAuthorizedToUserTx(int(t), inf.User, inf.Tx.Tx)
 }
 
-// Checks if the current user's (identified in the APIInfo) tenant has permissions to
+// Checks if the current user's (identified in the api.Info) tenant has permissions to
 // edit on par with the user identified by `u`. `u` is expected to be the username of
 // the user in question (not the current, requesting user).
 //
@@ -1645,7 +1645,7 @@ func IsUserAuthorizedToModifyJobsMadeByUserID(inf *api.APIInfo, u uint) (bool, e
 //
 // Note: If no such delivery service exists, the return values shall indicate that the
 // user isn't authorized.
-func IsUserAuthorizedToModifyJobsMadeByUsername(inf *api.APIInfo, u string) (bool, error) {
+func IsUserAuthorizedToModifyJobsMadeByUsername(inf *api.Info, u string) (bool, error) {
 	var t uint
 	row := inf.Tx.Tx.QueryRow(`SELECT tenant_id FROM tm_user WHERE username=$1`, u)
 	if err := row.Scan(&t); err != nil {

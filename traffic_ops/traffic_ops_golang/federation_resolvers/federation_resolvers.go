@@ -235,7 +235,7 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	api.WriteRespAlertObj(w, r, tc.SuccessLevel, alert.Text, respObj)
 }
 
-func deleteFederationResolver(inf *api.APIInfo) (tc.Alert, tc.FederationResolver, error, error, int) {
+func deleteFederationResolver(inf *api.Info) (tc.Alert, tc.FederationResolver, error, error, int) {
 	var userErr error
 	var sysErr error
 	var statusCode = http.StatusOK

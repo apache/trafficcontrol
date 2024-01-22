@@ -31,6 +31,7 @@ import {
 	TypeService
 } from "src/app/api";
 import { APITestingModule } from "src/app/api/testing";
+import { FileUtilsService } from "src/app/shared/file-utils.service";
 import { SharedModule } from "src/app/shared/shared.module";
 
 import { ISOGenerationFormComponent } from "./isogeneration-form.component";
@@ -72,14 +73,24 @@ describe("ISOGenerationFormComponent", () => {
 				SharedModule,
 				NoopAnimationsModule
 			],
-			providers: [{
-				provide: "Window",
-				useValue: {
-					open: (): void => {
-						// do nothing
+			providers: [
+				{
+					provide: "Window",
+					useValue: {
+						open: (): void => {
+							// do nothing
+						}
+					}
+				},
+				{
+					provide: FileUtilsService,
+					useValue: {
+						download: (): void => {
+							// do nothing
+						}
 					}
 				}
-			}]
+			]
 		}).compileComponents();
 
 		fixture = TestBed.createComponent(ISOGenerationFormComponent);

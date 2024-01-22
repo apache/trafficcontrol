@@ -75,7 +75,7 @@ func TestReadSCsV5(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"serverId": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"serverId": "1"}}
 	obj := TOServerServerCapabilityV5{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.ServerServerCapabilityV5{},
@@ -254,7 +254,7 @@ func TestReadSCs(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"serverId": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"serverId": "1"}}
 	obj := TOServerServerCapability{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.ServerServerCapability{},

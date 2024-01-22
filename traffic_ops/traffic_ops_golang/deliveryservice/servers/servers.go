@@ -767,7 +767,7 @@ func GetReadAssigned(w http.ResponseWriter, r *http.Request) {
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, servers)
 }
 
-func read(inf *api.APIInfo) ([]tc.DSServerV4, error) {
+func read(inf *api.Info) ([]tc.DSServerV4, error) {
 	queryDataString :=
 		`,
 cg.name as cachegroup,
@@ -959,13 +959,13 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 			)))
 	AND d.cdn_id = (SELECT cdn_id FROM server WHERE id = :server)))
 AND
-(( 
-(SELECT (t.name = 'ORG') FROM type t JOIN server s ON s.type = t.id WHERE s.id = :server) 
-OR 
-(SELECT COALESCE(ARRAY_AGG(ssc.server_capability), '{}') 
-FROM server_server_capability ssc 
-WHERE ssc."server" = :server) 
-@> 
+((
+(SELECT (t.name = 'ORG') FROM type t JOIN server s ON s.type = t.id WHERE s.id = :server)
+OR
+(SELECT COALESCE(ARRAY_AGG(ssc.server_capability), '{}')
+FROM server_server_capability ssc
+WHERE ssc."server" = :server)
+@>
 (
 SELECT COALESCE(ds.required_capabilities, '{}')
 )))

@@ -13,6 +13,7 @@
 */
 import { isPlatformBrowser } from "@angular/common";
 import { Inject, Injectable, PLATFORM_ID } from "@angular/core";
+import { Title } from "@angular/platform-browser";
 import { ReplaySubject } from "rxjs";
 
 import { UserService } from "src/app/api";
@@ -71,9 +72,21 @@ export class NavigationService {
 		private readonly api: UserService,
 		@Inject(PLATFORM_ID) private readonly platformId: object,
 		private readonly log: LoggingService,
+		private readonly pageTitle: Title,
 	) {
+		this.horizontalNavsUpdated = new ReplaySubject(1);
+		this.verticalNavsUpdated = new ReplaySubject(1);
+		this.headerTitle = new ReplaySubject(1);
+		this.headerTitle.next("Welcome to Traffic Portal!");
+		this.headerHidden = new ReplaySubject(1);
+		this.headerHidden.next(false);
 		if (isPlatformBrowser(this.platformId)) {
 			this.tpv1Url = window.localStorage.getItem(LOCAL_TPV1_URL) ?? this.tpv1Url;
+			this.headerTitle.subscribe(
+				title => {
+					this.pageTitle.setTitle(title);
+				}
+			);
 		}
 		this.horizontalNavs = new Map<string, HeaderNavigation>([
 			["Home", {
@@ -108,12 +121,6 @@ export class NavigationService {
 					type: "button"
 				}],
 		]);
-		this.horizontalNavsUpdated = new ReplaySubject(1);
-		this.verticalNavsUpdated = new ReplaySubject(1);
-		this.headerTitle = new ReplaySubject(1);
-		this.headerTitle.next("Welcome to Traffic Portal!");
-		this.headerHidden = new ReplaySubject(1);
-		this.headerHidden.next(false);
 		this.horizontalNavsUpdated.next(this.buildHorizontalNavs());
 		this.verticalNavsUpdated.next(this.buildVerticalNavs());
 

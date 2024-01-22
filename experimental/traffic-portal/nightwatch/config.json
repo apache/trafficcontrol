@@ -1,9 +1,0 @@
-{
-	"adminPass": "twelve12",
-	"adminUser": "admin",
-	"disableColors": false,
-	"retryAssertionTimeoutMS": 5000,
-	"to_url": "https://localhost:6443",
-	"tp_url": "http://localhost:4200",
-	"waitForConditionTimeoutMS": 5000
-}
