@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
 
 ### Fixed
+- [#7917](https://github.com/apache/trafficcontrol/pull/7917) *Traffic Ops* Removed `Alerts` field from struct `ProfileExportResponse`.
 - [#7918](https://github.com/apache/trafficcontrol/pull/7918) *Traffic Portal* Fixed topology link under DS-Servers tables page
 - [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
 
