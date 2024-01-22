@@ -9,10 +9,6 @@ export const getTpsPanel = () => {
       rawQuery: true,
       resultFormat: 'time_series',
       measurement: 'tps_2xx',
-      hide: false,
-      tags: {
-        deliveryservice: `$deliveryservice`,
-      },
     },
     {
       refId: 'B',
