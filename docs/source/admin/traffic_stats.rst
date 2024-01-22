@@ -91,35 +91,9 @@ To easily create databases, retention policies, and continuous queries, run :pro
 
 Configuring Grafana
 -------------------
-In Traffic Portal the :menuselection:`Other --> Grafana` menu item can be configured to display Grafana graphs using InfluxDB data (when not configured, this menu item will not appear). In order for this to work correctly, you will need two things:
-
-#. A :term:`Parameter` with the graph URL (more information below)
-#. The graphs created in Grafana. See below for how to create some simple graphs in Grafana. These instructions assume that InfluxDB has been configured and that data has been written to it. If this is not true, you will not see any graphs.
-
-To create a graph in Grafana, you can follow these basic steps:
-
-#. Login to Grafana as an administrative user
-#. Click on :menuselection:`Data Sources --> Add New`
-#. Enter the necessary information to configure your data source
-#. Click on :menuselection:`Home --> New` at the bottom
-#. Click on :menuselection:`"Collapsed Menu Icon" Button --> Add Panel --> Graph`
-#. Where it says :guilabel:`No Title (click here)` click and choose edit
-#. Choose your data source at the bottom
-#. You can have Grafana help you create a query, or you can create your own.
-
-	.. code-block:: postgresql
-		:caption: Sample Query
-
-		SELECT sum(value)*1000 FROM "monthly"."bandwidth.cdn.1min" GROUP BY time(60s), cdn;
-
-#. Once you have the graph the way you want it, click the :guilabel:`Save Dashboard` button at the top
-#. You should now have a new saved graph
-
-In order for Traffic Portal users to see Grafana graphs, Grafana will need to allow anonymous access. Information on how to configure anonymous access can be found on the configuration page of the `Grafana Website  <http://docs.grafana.org/installation/configuration/#authanonymous>`_.
-
-Traffic Portal uses custom dashboards to display information about individual :term:`Delivery Services` or :term:`Cache Groups`. In order for the custom graphs to display correctly, the Javascript files in :atc-file:`traffic_stats/grafana/`  need to be in the :file:`/usr/share/grafana/public/dashboards/` directory on the Grafana server. If your Grafana server is the same as your Traffic Stats server the RPM install process will take care of putting the files in place. If your Grafana server is different from your Traffic Stats server, you will need to manually copy the files to the correct directory.
-
-.. seealso:: More information on custom scripted graphs can be found in the `scripted dashboards <http://docs.grafana.org/reference/scripting/>`_ section of the Grafana documentation.
+- Traffic Control using Scenes for building dynamic Grafana dashboards, the Scenes app is built under: :file:`/var/lib/grafana/plugins/trafficcontrol-scenes-app`
+- To see Traffic Control dashboards, go to: :file:`https://grafanaHost/a/trafficcontrol-scenes-app`
+.. seealso:: More information on Grafana Scenes can be found in `Grafana Scenes introduction <https://grafana.com/blog/2023/08/03/new-in-grafana-10-grafana-scenes-for-building-dynamic-dashboarding-experiences/>`_
 
 Configuring Traffic Portal for Traffic Stats
 --------------------------------------------
