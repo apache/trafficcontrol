@@ -53,12 +53,12 @@ datasources:
   isDefault: false
 
 - name: telegraf
-  isDefault: false
-  url: http://$INFLUXDB_HOST:$INFLUXDB_PORT
   type: influxdb
+  access: proxy
+  orgId: 1
+  url: http://$INFLUXDB_HOST:$INFLUXDB_PORT
+  password: $INFLUXDB_ADMIN_PASSWORD
   user: $INFLUXDB_ADMIN_USER
-  jsonData:
-    dbName: telegraf
-    httpMode: GET
-  secureJsonData:
-    password: $INFLUXDB_ADMIN_PASSWORD
+  database: telegraf
+  basicAuth: false
+  isDefault: false
