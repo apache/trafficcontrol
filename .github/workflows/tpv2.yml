@@ -286,7 +286,7 @@ jobs:
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
-          ATC_COMPONENT: -o traffic_portal_v2
+          ATC_COMPONENT: traffic_portal_v2
       - name: Upload RPM
         uses: actions/upload-artifact@v2
         with:
