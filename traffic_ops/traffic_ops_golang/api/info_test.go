@@ -330,15 +330,9 @@ func TestInfo_WriteOKResponse(t *testing.T) {
 		request: r,
 		w:       w,
 	}
-	code, userErr, sysErr := inf.WriteOKResponse("test")
-	if code != http.StatusOK {
-		t.Errorf("WriteOKResponse should return a %d %s code, got: %d %s", http.StatusOK, http.StatusText(http.StatusOK), code, http.StatusText(code))
-	}
-	if userErr != nil {
-		t.Errorf("Unexpected user error: %v", userErr)
-	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error: %v", sysErr)
+	err := inf.WriteOKResponse("test")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
 	}
 
 	if w.Code != http.StatusOK {
@@ -354,15 +348,9 @@ func TestInfo_WriteOKResponseWithSummary(t *testing.T) {
 		request: r,
 		w:       w,
 	}
-	code, userErr, sysErr := inf.WriteOKResponseWithSummary("test", 42)
-	if code != http.StatusOK {
-		t.Errorf("WriteOKResponseWithSummary should return a %d %s code, got: %d %s", http.StatusOK, http.StatusText(http.StatusOK), code, http.StatusText(code))
-	}
-	if userErr != nil {
-		t.Errorf("Unexpected user error: %v", userErr)
-	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error: %v", sysErr)
+	err := inf.WriteOKResponseWithSummary("test", 42)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
 	}
 
 	if w.Code != http.StatusOK {
@@ -378,15 +366,9 @@ func TestInfo_WriteNotModifiedResponse(t *testing.T) {
 		request: r,
 		w:       w,
 	}
-	code, userErr, sysErr := inf.WriteNotModifiedResponse(time.Time{})
-	if code != http.StatusNotModified {
-		t.Errorf("WriteNotModifiedResponse should return a %d %s code, got: %d %s", http.StatusNotModified, http.StatusText(http.StatusNotModified), code, http.StatusText(code))
-	}
-	if userErr != nil {
-		t.Errorf("Unexpected user error: %v", userErr)
-	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error: %v", sysErr)
+	err := inf.WriteNotModifiedResponse(time.Time{})
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
 	}
 
 	if w.Code != http.StatusNotModified {
@@ -402,15 +384,9 @@ func TestInfo_WriteSuccessResponse(t *testing.T) {
 		request: r,
 		w:       w,
 	}
-	code, userErr, sysErr := inf.WriteSuccessResponse("test", "quest")
-	if code != http.StatusOK {
-		t.Errorf("WriteSuccessResponse should return a %d %s code, got: %d %s", http.StatusOK, http.StatusText(http.StatusOK), code, http.StatusText(code))
-	}
-	if userErr != nil {
-		t.Errorf("Unexpected user error: %v", userErr)
-	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error: %v", sysErr)
+	err := inf.WriteSuccessResponse("test", "quest")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
 	}
 
 	if w.Code != http.StatusOK {
@@ -442,15 +418,9 @@ func TestInfo_WriteCreatedResponse(t *testing.T) {
 		Version: &Version{Major: 420, Minor: 9001},
 		w:       w,
 	}
-	code, userErr, sysErr := inf.WriteCreatedResponse("test", "quest", "mypath")
-	if code != http.StatusCreated {
-		t.Errorf("WriteCreatedResponse should return a %d %s code, got: %d %s", http.StatusCreated, http.StatusText(http.StatusCreated), code, http.StatusText(code))
-	}
-	if userErr != nil {
-		t.Errorf("Unexpected user error: %v", userErr)
-	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error: %v", sysErr)
+	err := inf.WriteCreatedResponse("test", "quest", "mypath")
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
 	}
 
 	if w.Code != http.StatusCreated {
