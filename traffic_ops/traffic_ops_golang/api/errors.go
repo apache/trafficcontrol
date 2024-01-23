@@ -221,7 +221,7 @@ func NewSystemErrorf(format string, args ...any) Errors {
 // and has the appropriate response code.
 func NewUserError(err error) Errors {
 	return &Errs{
-		code:        http.StatusInternalServerError,
+		code:        http.StatusBadRequest,
 		systemError: nil,
 		userError:   err,
 	}
@@ -231,7 +231,7 @@ func NewUserError(err error) Errors {
 // having the appropriate response code and containing the given message.
 func NewUserErrorString(err string) Errors {
 	return &Errs{
-		code:        http.StatusInternalServerError,
+		code:        http.StatusBadRequest,
 		systemError: nil,
 		userError:   errors.New(err),
 	}
@@ -243,7 +243,7 @@ func NewUserErrorString(err string) Errors {
 // wrapping).
 func NewUserErrorf(format string, args ...any) Errors {
 	return &Errs{
-		code:        http.StatusInternalServerError,
+		code:        http.StatusBadRequest,
 		systemError: nil,
 		userError:   fmt.Errorf(format, args...),
 	}

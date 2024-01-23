@@ -160,15 +160,15 @@ func ExampleNewSystemErrorf() {
 }
 func ExampleNewUserError() {
 	fmt.Println(NewUserError(errors.New("testquest")).String())
-	// Output: 500 Internal Server Error, SystemError='<nil>', UserError='testquest'
+	// Output: 400 Bad Request, SystemError='<nil>', UserError='testquest'
 }
 func ExampleNewUserErrorString() {
 	fmt.Println(NewUserErrorString("testquest").String())
-	// Output: 500 Internal Server Error, SystemError='<nil>', UserError='testquest'
+	// Output: 400 Bad Request, SystemError='<nil>', UserError='testquest'
 }
 func ExampleNewUserErrorf() {
 	fmt.Println(NewUserErrorf("test: %w", errors.New("quest")).String())
-	// Output: 500 Internal Server Error, SystemError='<nil>', UserError='test: quest'
+	// Output: 400 Bad Request, SystemError='<nil>', UserError='test: quest'
 }
 func ExampleNewResourceModifiedError() {
 	fmt.Println(NewResourceModifiedError().String())
