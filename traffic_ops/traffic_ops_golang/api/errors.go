@@ -23,6 +23,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 // Errs is the concrete implementation of Errors, which is used so that we can
@@ -257,4 +259,15 @@ func NewResourceModifiedError() Errors {
 		systemError: nil,
 		userError:   ResourceModifiedError,
 	}
+}
+
+// NewUserErrorFromErrorList creates a new user-facing error (400 Bad Request)
+// by concatenating the given list of errors. Uniquely, this can return nil
+// if the passed slice is empty (or nil).
+func NewUserErrorFromErrorList(errs []error) Errors {
+	err := util.JoinErrs(errs)
+	if err == nil {
+		return nil
+	}
+	return NewUserError(err)
 }
