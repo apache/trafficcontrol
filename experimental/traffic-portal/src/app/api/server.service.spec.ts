@@ -14,7 +14,7 @@
  */
 import { HttpClientTestingModule, HttpTestingController } from "@angular/common/http/testing";
 import { TestBed } from "@angular/core/testing";
-import { type ResponseServer } from "trafficops-types";
+import { ResponseServerCapability, type ResponseServer } from "trafficops-types";
 
 import { ServerService } from "./server.service";
 
@@ -154,7 +154,15 @@ describe("ServerService", () => {
 			await expectAsync(resp).toBeResolvedTo(server);
 		});
 
-		it("delete a server", async ()  => {
+		it("throws an error for invalid call signatures to updateServer", async () => {
+			const responseP = (service as unknown as {updateServer: (id: number) => Promise<ResponseServer>}).updateServer(
+				server.id
+			);
+			httpTestingController.expectNone({method: "PUT"});
+			await expectAsync(responseP).toBeRejected();
+		});
+
+		it("deletes a server", async ()  => {
 			const resp = service.deleteServer(server);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}`);
 			expect(req.request.method).toBe("DELETE");
@@ -164,7 +172,7 @@ describe("ServerService", () => {
 			await expectAsync(resp).toBeResolvedTo(server);
 		});
 
-		it("delete a server by ID", async ()  => {
+		it("deletes a server by ID", async ()  => {
 			const resp = service.deleteServer(server.id);
 			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/servers/${server.id}`);
 			expect(req.request.method).toBe("DELETE");
@@ -264,6 +272,77 @@ describe("ServerService", () => {
 		});
 	});
 
+	describe("Capability-related methods", () => {
+		const capability: ResponseServerCapability = {
+			lastUpdated: new Date(),
+			name: "testquest",
+		};
+
+		it("sends requests for multiple capabilities", async () => {
+			const responseP = service.getCapabilities();
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: [capability]});
+			await expectAsync(responseP).toBeResolvedTo([capability]);
+		});
+		it("sends requests for a single capability by name", async () => {
+			const responseP = service.getCapabilities(capability.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(capability.name);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: [capability]});
+			await expectAsync(responseP).toBeResolvedTo(capability);
+		});
+		it("throws an error when fetching a non-existent capability", async () => {
+			const responseP = service.getCapabilities(capability.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(capability.name);
+			expect(req.request.method).toBe("GET");
+			req.flush({response: []});
+			await expectAsync(responseP).toBeRejected();
+		});
+		it("creates a new capability", async () => {
+			const responseP = service.createCapability(capability);
+			const req = httpTestingController.expectOne(`/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("POST");
+			expect(req.request.body).toEqual(capability);
+			req.flush({response: capability});
+			await expectAsync(responseP).toBeResolvedTo(capability);
+		});
+		it("updates an existing capability", async () => {
+			const responseP = service.updateCapability(capability.name, capability);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("PUT");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(capability.name);
+			expect(req.request.body).toEqual(capability);
+			req.flush({response: capability});
+			await expectAsync(responseP).toBeResolvedTo(capability);
+		});
+		it("deletes server_capabilities", async () => {
+			const responseP = service.deleteCapability(capability);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(capability.name);
+			expect(req.request.body).toBeNull();
+			req.flush({alerts: []});
+			await expectAsync(responseP).toBeResolved();
+		});
+		it("deletes server_capabilities by name", async () => {
+			const responseP = service.deleteCapability(capability.name);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/server_capabilities`);
+			expect(req.request.method).toBe("DELETE");
+			expect(req.request.params.keys().length).toBe(1);
+			expect(req.request.params.get("name")).toBe(capability.name);
+			expect(req.request.body).toBeNull();
+			req.flush({alerts: []});
+			await expectAsync(responseP).toBeResolved();
+		});
+	});
+
 	describe("other methods", () => {
 		const serverCheck = {
 			adminState: "ONLINE",
@@ -311,6 +390,42 @@ describe("ServerService", () => {
 			const response = {action: "dequeue" as const, serverId: server.id};
 			req.flush({response});
 			await expectAsync(responseP).toBeResolvedTo(response);
+		});
+		it("queues revalidations on a server", async () => {
+			const responseP = service.queueReval(server);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/servers/${server.id}/update`);
+			expect(req.request.method).toBe("POST");
+			expect(req.request.params.get("reval_updated")).toBe("true");
+			expect(req.request.body).toBeNull();
+			req.flush({alerts: []});
+			await expectAsync(responseP).toBeResolved();
+		});
+		it("queues revalidations on a server by ID", async () => {
+			const responseP = service.queueReval(server.id);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/servers/${server.id}/update`);
+			expect(req.request.method).toBe("POST");
+			expect(req.request.params.get("reval_updated")).toBe("true");
+			expect(req.request.body).toBeNull();
+			req.flush({alerts: []});
+			await expectAsync(responseP).toBeResolved();
+		});
+		it("de-queues revalidations on a server", async () => {
+			const responseP = service.clearReval(server);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/servers/${server.id}/update`);
+			expect(req.request.method).toBe("POST");
+			expect(req.request.params.get("reval_updated")).toBe("false");
+			expect(req.request.body).toBeNull();
+			req.flush({alerts: []});
+			await expectAsync(responseP).toBeResolved();
+		});
+		it("de-queues revalidations on a server by ID", async () => {
+			const responseP = service.clearReval(server.id);
+			const req = httpTestingController.expectOne(r => r.url === `/api/${service.apiVersion}/servers/${server.id}/update`);
+			expect(req.request.method).toBe("POST");
+			expect(req.request.params.get("reval_updated")).toBe("false");
+			expect(req.request.body).toBeNull();
+			req.flush({alerts: []});
+			await expectAsync(responseP).toBeResolved();
 		});
 		it("sends a request for multiple Serverchecks", async () => {
 			const responseP = service.getServerChecks();

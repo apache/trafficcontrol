@@ -416,7 +416,7 @@ export class ServersTableComponent implements OnInit {
 				);
 				const result = await ref.afterClosed().toPromise();
 				if (typeof(result) === "number") {
-					if (data.title.indexOf("Clear") > -1) {
+					if (data.title.includes("Clear")) {
 						await this.cdn.dequeueServerUpdates(result);
 					} else {
 						await this.cdn.queueServerUpdates(result);

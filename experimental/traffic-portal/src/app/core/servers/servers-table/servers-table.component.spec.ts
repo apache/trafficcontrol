@@ -274,22 +274,61 @@ describe("ServersTableComponent", () => {
 		const service = TestBed.inject(ServerService);
 		const queueSpy = spyOn(service, "queueUpdates");
 		const clearSpy = spyOn(service, "clearUpdates");
+		const revalSpy = spyOn(service, "queueReval");
+		const clearRevalSpy = spyOn(service, "clearReval");
+
 		expect(queueSpy).not.toHaveBeenCalled();
 		expect(clearSpy).not.toHaveBeenCalled();
+		expect(revalSpy).not.toHaveBeenCalled();
+		expect(clearRevalSpy).not.toHaveBeenCalled();
 
 		component.handleContextMenu({action: "queue", data: server});
 		expect(queueSpy).toHaveBeenCalledTimes(1);
 		expect(clearSpy).not.toHaveBeenCalled();
+		expect(revalSpy).not.toHaveBeenCalled();
+		expect(clearRevalSpy).not.toHaveBeenCalled();
 
 		component.handleContextMenu({action: "queue", data: [server, server]});
 		expect(queueSpy).toHaveBeenCalledTimes(3);
+		expect(clearSpy).not.toHaveBeenCalled();
+		expect(revalSpy).not.toHaveBeenCalled();
+		expect(clearRevalSpy).not.toHaveBeenCalled();
 
 		component.handleContextMenu({action: "dequeue", data: server});
 		expect(queueSpy).toHaveBeenCalledTimes(3);
 		expect(clearSpy).toHaveBeenCalledTimes(1);
+		expect(revalSpy).not.toHaveBeenCalled();
+		expect(clearRevalSpy).not.toHaveBeenCalled();
 
 		component.handleContextMenu({action: "dequeue", data: [server, server]});
+		expect(queueSpy).toHaveBeenCalledTimes(3);
 		expect(clearSpy).toHaveBeenCalledTimes(3);
+		expect(revalSpy).not.toHaveBeenCalled();
+		expect(clearRevalSpy).not.toHaveBeenCalled();
+
+		component.handleContextMenu({action: "reval", data: server});
+		expect(queueSpy).toHaveBeenCalledTimes(3);
+		expect(clearSpy).toHaveBeenCalledTimes(3);
+		expect(revalSpy).toHaveBeenCalledTimes(1);
+		expect(clearRevalSpy).not.toHaveBeenCalled();
+
+		component.handleContextMenu({action: "reval", data: [server, server]});
+		expect(queueSpy).toHaveBeenCalledTimes(3);
+		expect(clearSpy).toHaveBeenCalledTimes(3);
+		expect(revalSpy).toHaveBeenCalledTimes(3);
+		expect(clearRevalSpy).not.toHaveBeenCalled();
+
+		component.handleContextMenu({action: "unreval", data: server});
+		expect(queueSpy).toHaveBeenCalledTimes(3);
+		expect(clearSpy).toHaveBeenCalledTimes(3);
+		expect(revalSpy).toHaveBeenCalledTimes(3);
+		expect(clearRevalSpy).toHaveBeenCalledTimes(1);
+
+		component.handleContextMenu({action: "unreval", data: [server, server]});
+		expect(queueSpy).toHaveBeenCalledTimes(3);
+		expect(clearSpy).toHaveBeenCalledTimes(3);
+		expect(revalSpy).toHaveBeenCalledTimes(3);
+		expect(clearRevalSpy).toHaveBeenCalledTimes(3);
 
 		expectAsync(component.handleContextMenu({action: "not a real action", data: []})).toBeRejected();
 	}));

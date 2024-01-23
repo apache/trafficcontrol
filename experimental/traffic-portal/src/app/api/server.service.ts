@@ -225,7 +225,7 @@ export class ServerService extends APIService {
 	 * @returns The 'response' property of the TO server's response. See TO API
 	 * docs.
 	 */
-	public async queueReval(server: number | ResponseServer): Promise<ServerQueueResponse> {
+	public async queueReval(server: number | ResponseServer): Promise<void> {
 		const id = typeof(server) === "number" ? server : server.id;
 		const params = {
 			// This param casing is in the API specification, so it must have
@@ -235,7 +235,7 @@ export class ServerService extends APIService {
 			// TODO: This is really confusing; `reval_updated = true` means that
 			// revalidations **haven't** been updated, and need to be done.
 		};
-		return this.post<ServerQueueResponse>(`servers/${id}/update`, undefined, params).toPromise();
+		return this.post(`servers/${id}/update`, undefined, params).toPromise();
 	}
 
 	/**
@@ -246,7 +246,7 @@ export class ServerService extends APIService {
 	 * @returns The 'response' property of the TO server's response. See TO API
 	 * docs.
 	 */
-	public async clearReval(server: number | ResponseServer): Promise<ServerQueueResponse> {
+	public async clearReval(server: number | ResponseServer): Promise<void> {
 		const id = typeof(server) === "number" ? server : server.id;
 		const params = {
 			// This param casing is in the API specification, so it must have
@@ -257,7 +257,7 @@ export class ServerService extends APIService {
 			// that revalidations **have** been updated, and no longer need to
 			// be done.
 		};
-		return this.post<ServerQueueResponse>(`servers/${id}/update`, undefined, params).toPromise();
+		return this.post(`servers/${id}/update`, undefined, params).toPromise();
 	}
 
 	/**
