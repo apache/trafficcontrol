@@ -270,3 +270,25 @@ jobs:
 
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
+  pkg-build:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 5
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ${{ github.workspace }}/.npm
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('experimental/traffic-portal/**/package*.json') }}-
+      - name: Build RPM
+        uses: ./.github/actions/build-rpms
+        env:
+          ATC_COMPONENT: -o traffic_portal_v2
+      - name: Upload RPM
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ github.job }}
+          path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
