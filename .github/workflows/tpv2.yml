@@ -256,6 +256,7 @@ jobs:
         run: |
           cd experimental/traffic-portal
           npx ng build
+          npx ng run traffic-portal:server
       - name: Run everything and test
         uses: ./.github/actions/tpv2-integration-tests
       - name: Upload Report
@@ -266,7 +267,10 @@ jobs:
           path: |
             traffic_ops/traffic_ops_golang/out.log
             experimental/traffic-portal/logs
-            experimental/traffic-portal/cypress/screenshots
+            experimental/traffic-portal/nightwatch/junit
+            experimental/traffic-portal/nightwatch/screens
+            experimental/traffic-portal/tests_output
+            tp.log
 
       - name: Save Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh save ${{ env.ALPINE_VERSION }}
