@@ -30,9 +30,6 @@ services:
   trafficops:
     ports:
       - "6443:443"
-  trafficportalv2:
-    ports:
-      - "8443:443"
   trafficportal:
     ports:
       - "443:443"

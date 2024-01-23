@@ -45,6 +45,7 @@ initBuildArea() {
 	cd "$TP_DIR" || \
 		 { echo "Could not cd to $TP_DIR: $?"; return 1; }
 
+	chown -R "$(id -u):$(id -g)" .
 	echo "Installing npm dependencies"
 	npm ci || \
 		{ echo "Could not install packages from $TP_DIR: $?"; return 1; }

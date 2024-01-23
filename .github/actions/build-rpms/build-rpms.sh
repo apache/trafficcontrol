@@ -22,6 +22,10 @@ trap 'echo "Error on line ${LINENO} of ${0}"; exit 1' ERR
 export DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1
 
 pkg_command=(./pkg -v)
+if [[ "$ATC_COMPONENT" == "traffic_portal_v2" ]]; then
+	pkg_command=(./pkg -v -o)
+fi
+
 # If the Action is being run on a Pull Request
 if [[ "$GITHUB_REF" == refs/pull/*/merge ]]; then
 	sudo apt-get install jq
