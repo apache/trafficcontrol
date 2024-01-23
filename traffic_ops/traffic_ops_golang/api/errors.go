@@ -271,3 +271,14 @@ func NewUserErrorFromErrorList(errs []error) Errors {
 	}
 	return NewUserError(err)
 }
+
+// NewNotFoundError creates an Errors that contains an HTTP Not Found status
+// code and the given error message as a user-visible error (supports wrapping
+// with the '%w' format specifier verb).
+func NewNotFoundError(format string, args ...any) Errors {
+	return &Errs{
+		code:        http.StatusNotFound,
+		systemError: nil,
+		userError:   fmt.Errorf(format, args...),
+	}
+}
