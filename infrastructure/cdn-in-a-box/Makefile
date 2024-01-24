@@ -40,7 +40,21 @@ TC_DIR := $(CIAB_DIR_RELATIVE)../..
 PKG_COMMAND := $(TC_DIR)/pkg
 PKG_FLAGS := -v -$(RHEL_VERSION)
 BUILD_SUFFIX := _build
-BUILD_NUMBER := $(shell bash -c 'set -o pipefail -o xtrace; git describe --long --tags --match="RELEASE-[0-9].[0-9].[0-9]" --match="RELEASE-[0-9][0-9].[0-9][0-9].[0-9][0-9]" --match="v[0-9].[0-9].[0-9]" --match="v[0-9][0-9].[0-9][0-9].[0-9][0-9]" | awk -F- "{print \$$(NF-1)}"' || echo 0).$(shell git rev-parse --short=8 HEAD)
+BUILD_NUMBER := $(shell bash -c ' \
+	set -o errexit -o pipefail -o xtrace; \
+	git rev-parse --is-inside-work-tree >/dev/null; \
+	output="$$(git describe \
+		--long \
+		--tags \
+		--match="RELEASE-[0-9].[0-9].[0-9]" \
+		--match="RELEASE-[0-9][0-9].[0-9][0-9].[0-9][0-9]" \
+		--match="v[0-9].[0-9].[0-9]" \
+		--match="v[0-9][0-9].[0-9][0-9].[0-9][0-9]" | \
+		awk -F- "{print \$$(NF-1)}" || \
+		echo 0)"; \
+	output+=".$$(git rev-parse --short=8 HEAD)"; \
+	echo "$$output"' || \
+	cat $(TC_DIR)/BUILD_NUMBER)
 BUILD_ARCH   := $(shell docker run --name=ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch --rm $(BASE_IMAGE):$(RHEL_VERSION) rpm --eval %_arch )
 TC_VERSION := $(shell cat "$(TC_DIR)/VERSION")
 TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
