@@ -12,8 +12,12 @@
  * limitations under the License.
  */
 
+import { HarnessLoader } from "@angular/cdk/testing";
+import { TestbedHarnessEnvironment } from "@angular/cdk/testing/testbed";
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatButtonHarness } from "@angular/material/button/testing";
 import { MatDialogModule } from "@angular/material/dialog";
+import { MatDialogHarness } from "@angular/material/dialog/testing";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
@@ -29,6 +33,7 @@ describe("OriginDetailComponent", () => {
 	let fixture: ComponentFixture<OriginDetailComponent>;
 	let route: ActivatedRoute;
 	let paramMap: jasmine.Spy;
+	let loader: HarnessLoader;
 	let service: OriginService;
 
 	const navSvc = jasmine.createSpyObj([], {
@@ -39,7 +44,7 @@ describe("OriginDetailComponent", () => {
 		await TestBed.configureTestingModule({
 			declarations: [OriginDetailComponent],
 			imports: [APITestingModule, RouterTestingModule, MatDialogModule],
-			providers: [{ provide: NavigationService, useValue: navSvc }],
+			providers: [{provide: NavigationService, useValue: navSvc}],
 		}).compileComponents();
 
 		route = TestBed.inject(ActivatedRoute);
@@ -49,6 +54,7 @@ describe("OriginDetailComponent", () => {
 		component = fixture.componentInstance;
 		fixture.detectChanges();
 		service = TestBed.inject(OriginService);
+		loader = TestbedHarnessEnvironment.documentRootLoader(fixture);
 		await fixture.whenStable();
 	});
 
@@ -82,4 +88,37 @@ describe("OriginDetailComponent", () => {
 		expect(component.origin.name).toBe(origin.name);
 		expect(component.new).toBeFalse();
 	});
+
+	it("deletes existing Origins", async () => {
+		const spy = spyOn(service, "deleteOrigin").and.callThrough();
+		let cgs = await service.getOrigins();
+		const initialLength = cgs.length;
+		if (initialLength < 1) {
+			return fail("need at least one Cache Group");
+		}
+		const cg = cgs[0];
+		component.origin = cg;
+		component.new = false;
+
+		const asyncExpectation = expectAsync(component.deleteOrigin()).toBeResolvedTo(undefined);
+		const dialogs = await loader.getAllHarnesses(MatDialogHarness);
+		if (dialogs.length !== 1) {
+			return fail(`failed to open dialog; ${dialogs.length} dialogs found`);
+		}
+		const dialog = dialogs[0];
+		const buttons = await dialog.getAllHarnesses(MatButtonHarness.with({text: /^[cC][oO][nN][fF][iI][rR][mM]$/}));
+		if (buttons.length !== 1) {
+			return fail(`'confirm' button not found; ${buttons.length} buttons found`);
+		}
+		await buttons[0].click();
+
+		expect(spy).toHaveBeenCalledOnceWith(cg);
+
+		cgs = await service.getOrigins();
+		expect(cgs).not.toContain(cg);
+		expect(cgs.length).toBe(initialLength - 1);
+
+		await asyncExpectation;
+	});
+
 });
