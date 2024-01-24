@@ -1,0 +1,6 @@
+{
+	"adminPass": "twelve12",
+	"adminUser": "admin",
+	"apiVersion": "4.1",
+	"toURL": "https://localhost:6443"
+}

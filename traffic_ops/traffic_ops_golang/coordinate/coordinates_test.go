@@ -85,7 +85,7 @@ func TestReadCoordinates(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"id": "1"}}
 	obj := TOCoordinate{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.CoordinateNullable{},

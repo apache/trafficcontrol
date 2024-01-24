@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 - [#7812](https://github.com/apache/trafficcontrol/pull/7812) *Traffic Portal*: Expose the `configUpdateFailed` and `revalUpdateFailed` fields on the server table.
 - [#7870](https://github.com/apache/trafficcontrol/pull/7870) *Traffic Portal*: Adds a hyperlink to the DSR page to the DS itself for ease of navigation.
+- [#7896](https://github.com/apache/trafficcontrol/pull/7896) *ATC Build system*: Count commits since the last release, not commits
 
 ### Changed
 - [#7614](https://github.com/apache/trafficcontrol/pull/7614) *Traffic Ops* The database upgrade process no longer overwrites changes users may have made to the initially seeded data.
@@ -14,6 +15,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
 
 ### Fixed
+- [#7917](https://github.com/apache/trafficcontrol/pull/7917) *Traffic Ops* Removed `Alerts` field from struct `ProfileExportResponse`.
+- [#7918](https://github.com/apache/trafficcontrol/pull/7918) *Traffic Portal* Fixed topology link under DS-Servers tables page
 - [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
 
 ## [8.0.0] - 2023-09-20
@@ -98,7 +101,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7814](https://github.com/apache/trafficcontrol/issues/7814) All Go components: Updated the module path to [`github.com/apache/trafficcontrol/v8`](https://pkg.go.dev/github.com/apache/trafficcontrol/v8). Module https://pkg.go.dev/github.com/apache/trafficcontrol will not receive further updates.
 
 ### Fixed
-- [#7879](https://github.com/comcast-cdn/trafficcontrol/pull/7879) *Traffic Ops, Traffic Portal*: Fixed broken capability links for delivery service and added required capability as a column in DS table.
+- [#7891](https://github.com/apache/trafficcontrol/pull/7891) *Traffic Ops*: Created clause to distinguish api versions < 5 when handling 403 in middleware wrappers and updated job routes for v4 and v5
+- [#7890](https://github.com/apache/trafficcontrol/pull/7890) *Traffic Ops*: Fixed missing changelog entries to v5 routes.
+- [#7887](https://github.com/apache/trafficcontrol/pull/7887) *Traffic Ops*: Limit Delivery Services returned for GET /servers/{id}/deliveryservices to ones in the same CDN
+- [#7885](https://github.com/apache/trafficcontrol/pull/7885) *Traffic Portal*: Fixed the issue where Compare Profiles page was not being displayed.
+- [#7879](https://github.com/apache/trafficcontrol/7879) *Traffic Ops, Traffic Portal*: Fixed broken capability links for delivery service and added required capability as a column in DS table.
 - [#7878](https://github.com/apache/trafficcontrol/pull/7878) *Traffic Ops, Traffic Portal*: Fixed the case where TO was failing to assign delivery services to a server, due to a bug in the way the list of preexisting delivery services was being returned.
 - [#7819](https://github.com/apache/trafficcontrol/pull/7819) *Traffic Ops*: API v5 routes should not use `privLevel` comparisons.
 - [#7802](https://github.com/apache/trafficcontrol/pull/7802) *Traffic Control Health Client*: Fixed ReadMe.md typos and duplicates.

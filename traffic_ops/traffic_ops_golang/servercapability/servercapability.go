@@ -239,6 +239,8 @@ func UpdateServerCapability(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
+	changeLogMsg := fmt.Sprintf("CAPABILITY NAME:%s, ACTION: Updated serverCapability", sc.Name)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -284,6 +286,8 @@ func CreateServerCapability(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/server_capabilities?name=%s", inf.Version, sc.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
+	changeLogMsg := fmt.Sprintf("CAPABILITY NAME:%s, ACTION: Created serverCapability", sc.Name)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -337,6 +341,8 @@ func DeleteServerCapability(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "server capability was deleted.")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, name)
+	changeLogMsg := fmt.Sprintf("CAPABILITY NAME:%s, ACTION: Deleted serverCapability", name)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

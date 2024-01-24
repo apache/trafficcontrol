@@ -429,7 +429,7 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	profile := tc.ProfileV5{}
 	var profileList []tc.ProfileV5
 	for rows.Next() {
-		if err = rows.Scan(&profile.Description, &profile.ID, &profile.LastUpdated, &profile.Name, &profile.RoutingDisabled, &profile.Type, &profile.CDNID, &profile.CDNName); err != nil {
+		if err = rows.StructScan(&profile); err != nil {
 			api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("error getting profile(s): %w", err))
 			return
 		}
@@ -439,9 +439,9 @@ func Read(w http.ResponseWriter, r *http.Request) {
 	profileInterfaces := []interface{}{}
 
 	for _, p := range profileList {
-		// Attach Parameters if the 'param' parameter is sent
-		if _, ok := inf.Params["param"]; ok {
-			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, inf.User.Can("PARAMETER-SECURE:READ"))
+		// Attach Parameters if the 'id' parameter is sent
+		if _, ok := inf.Params["id"]; ok {
+			p.Parameters, err = ReadParameters(inf.Tx, inf.User, p.ID, inf.User.Can(tc.PermParameterSecureRead))
 			if err != nil {
 				api.HandleErr(w, r, tx.Tx, http.StatusInternalServerError, nil, fmt.Errorf("profile read: error reading parameters for a profile: %w", err))
 				return
@@ -511,6 +511,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/profiles?id=%d", inf.Version, profile.ID))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, profile)
+	changeLogMsg := fmt.Sprintf("PROFILE: %s, ID:%d, ACTION: Created profile", profile.Name, profile.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -572,6 +574,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, profile)
+	changeLogMsg := fmt.Sprintf("PROFILE: %s, ID:%d, ACTION: Updated profile", profile.Name, profile.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -633,6 +637,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "profile was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID:%d, ACTION: Deleted profile", id)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

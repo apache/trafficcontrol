@@ -16,65 +16,84 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { browser } from 'protractor';
+import { browser } from "protractor";
 
-import { LoginPage } from '../PageObjects/LoginPage.po';
-import { TopNavigationPage } from '../PageObjects/TopNavigationPage.po';
+import { LoginPage } from "../PageObjects/LoginPage.po";
+import { TopNavigationPage } from "../PageObjects/TopNavigationPage.po";
 import { api } from "../config";
-import { ServiceCategoriesPage } from '../PageObjects/ServiceCategories.po';
+import { ServiceCategoriesPage } from "../PageObjects/ServiceCategories.po";
 import { serviceCategories } from "../Data";
 
 const loginPage = new LoginPage();
 const topNavigation = new TopNavigationPage();
 const serviceCategoriesPage = new ServiceCategoriesPage();
 
-describe('Setup API for Service Categories Test', () => {
-    it('Setup', async () => {
+describe("Setup API for Service Categories Test", () => {
+    it("Setup", async () => {
         await api.UseAPI(serviceCategories.setup);
     });
 });
-serviceCategories.tests.forEach(async serviceCategoriesData => {
-    serviceCategoriesData.logins.forEach(login => {
+serviceCategories.tests.forEach(async (serviceCategoriesData) => {
+    serviceCategoriesData.logins.forEach((login) => {
         describe(`Traffic Portal - ServiceCategories - ${login.description}`, () => {
-            it('can login', async () => {
+            it("can login", async () => {
                 browser.get(browser.params.baseUrl);
                 await loginPage.Login(login);
                 expect(await loginPage.CheckUserName(login)).toBeTruthy();
             });
-            it('can open service categories page', async () => {
+            it("can open service categories page", async () => {
                 await serviceCategoriesPage.OpenServicesMenu();
                 await serviceCategoriesPage.OpenServiceCategoriesPage();
             });
 
-            serviceCategoriesData.add.forEach(add => {
+            serviceCategoriesData.add.forEach((add) => {
                 it(add.description, async () => {
-                    expect(await serviceCategoriesPage.CreateServiceCategories(add)).toBeTruthy();
+                    expect(
+                        await serviceCategoriesPage.CreateServiceCategories(
+                            add,
+                            add.validationMessage
+                        )
+                    ).toBeTruthy();
                     await serviceCategoriesPage.OpenServiceCategoriesPage();
                 });
             });
-            serviceCategoriesData.update.forEach(update => {
+            serviceCategoriesData.update.forEach((update) => {
                 it(update.description, async () => {
-                    await serviceCategoriesPage.SearchServiceCategories(update.Name);
-                    expect(await serviceCategoriesPage.UpdateServiceCategories(update)).toBeTruthy();
+                    await serviceCategoriesPage.SearchServiceCategories(
+                        update.Name
+                    );
+                    expect(
+                        await serviceCategoriesPage.UpdateServiceCategories(
+                            update,
+                            update.validationMessage
+                        )
+                    ).toBeTruthy();
                     await serviceCategoriesPage.OpenServiceCategoriesPage();
                 });
             });
-            serviceCategoriesData.remove.forEach(remove => {
+            serviceCategoriesData.remove.forEach((remove) => {
                 it(remove.description, async () => {
-                    await serviceCategoriesPage.SearchServiceCategories(remove.Name);
-                    expect(await serviceCategoriesPage.DeleteServiceCategories(remove)).toBeTruthy();
+                    await serviceCategoriesPage.SearchServiceCategories(
+                        remove.Name
+                    );
+                    expect(
+                        await serviceCategoriesPage.DeleteServiceCategories(
+                            remove,
+                            remove.validationMessage
+                        )
+                    ).toBeTruthy();
                     await serviceCategoriesPage.OpenServiceCategoriesPage();
                 });
             });
-            it('can logout', async () => {
+            it("can logout", async () => {
                 expect(await topNavigation.Logout()).toBeTruthy();
             });
         });
     });
 });
 
-describe('Clean Up API for Service Categories Test', () => {
-    it('Cleanup', async () => {
+describe("Clean Up API for Service Categories Test", () => {
+    it("Cleanup", async () => {
         await api.UseAPI(serviceCategories.cleanup);
     });
 });

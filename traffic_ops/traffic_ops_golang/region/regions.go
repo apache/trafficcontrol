@@ -305,6 +305,8 @@ func Create(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "region is created.")
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, rg)
+	changeLogMsg := fmt.Sprintf("REGION: %s, ID:%d, ACTION: Created region", rg.Name, rg.ID)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -350,6 +352,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "region was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, rg)
+	changeLogMsg := fmt.Sprintf("REGION: %s, ID:%d, ACTION: Updated region", rg.Name, rg.ID)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -425,6 +429,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "region was deleted.")
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("ID:%s, ACTION: Deleted region", requestedRegionId)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

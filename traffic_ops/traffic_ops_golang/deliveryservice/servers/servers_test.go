@@ -498,7 +498,7 @@ func TestReadServers(t *testing.T) {
 
 	params := make(map[string]int, 0)
 	params["id"] = dsID
-	inf := api.APIInfo{
+	inf := api.Info{
 		Version: &api.Version{
 			Major: 5,
 			Minor: 0,

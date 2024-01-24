@@ -40,7 +40,7 @@ TC_DIR := $(CIAB_DIR_RELATIVE)../..
 PKG_COMMAND := $(TC_DIR)/pkg
 PKG_FLAGS := -v -$(RHEL_VERSION)
 BUILD_SUFFIX := _build
-BUILD_NUMBER := $(shell git rev-list HEAD 2>/dev/null | wc -l | tr -d '[[:space:]]').$(shell git rev-parse --short=8 HEAD)
+BUILD_NUMBER := $(shell bash -c 'set -o pipefail -o xtrace; git describe --long --tags --match="RELEASE-[0-9].[0-9].[0-9]" --match="RELEASE-[0-9][0-9].[0-9][0-9].[0-9][0-9]" --match="v[0-9].[0-9].[0-9]" --match="v[0-9][0-9].[0-9][0-9].[0-9][0-9]" | awk -F- "{print \$$(NF-1)}"' || echo 0).$(shell git rev-parse --short=8 HEAD)
 BUILD_ARCH   := $(shell docker run --name=ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch --rm $(BASE_IMAGE):$(RHEL_VERSION) rpm --eval %_arch )
 TC_VERSION := $(shell cat "$(TC_DIR)/VERSION")
 TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
@@ -115,7 +115,7 @@ TCH_DIST_RPM := $(TC_DIR)/dist/trafficcontrol-health-client-$(SPECIAL_SAUCE)
 .PHONY: all build-builders clean debug native nearly-all pull-builders very-clean
 
 # Default target; builds all pre-requisite rpms from source trees
-all: $(ATS_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TM_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TP2_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(TS_RPM_RELATIVE) $(TCH_RPM_RELATIVE)
+all: $(ATS_RPM_RELATIVE) $(ORT_RPM_RELATIVE) $(TM_RPM_RELATIVE) $(TP_RPM_RELATIVE) $(TO_RPM_RELATIVE) $(TR_RPM_RELATIVE) $(TOMCAT_RPM_RELATIVE) $(TS_RPM_RELATIVE) $(TCH_RPM_RELATIVE)
 
 ifneq ($(filter build-builders,$(MAKECMDGOALS)),)
 PKG_FLAGS += -b

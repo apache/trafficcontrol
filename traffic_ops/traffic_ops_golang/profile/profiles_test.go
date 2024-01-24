@@ -97,7 +97,7 @@ func TestGetProfiles(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"name": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"name": "1"}}
 
 	obj := TOProfile{
 		api.APIInfoImpl{ReqInfo: &reqInfo},

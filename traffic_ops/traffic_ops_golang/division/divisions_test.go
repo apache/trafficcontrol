@@ -73,7 +73,7 @@ func TestGetDivisions(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 	obj := TODivision{
 		api.APIInfoImpl{ReqInfo: &reqInfo},
 		tc.DivisionNullable{},

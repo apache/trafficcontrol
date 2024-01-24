@@ -18,30 +18,13 @@ under the License.
 -->
 
 <div class="x_panel">
-    <div class="x_title">
-        <ol class="breadcrumb pull-left">
-            <li class="active">Service Categories</li>
-        </ol>
-        <div class="pull-right">
-            <button name="createServiceCategoryButton" class="btn btn-primary" title="Create Service Category" ng-click="createServiceCategory()"><i class="fa fa-plus"></i></button>
-            <button type=button class="btn btn-default" title="Refresh" ng-click="refresh()"><i class="fa fa-refresh"></i></button>
-        </div>
-        <div class="clearfix"></div>
-    </div>
-    <div class="x_content">
-        <br>
-        <table id="serviceCategoriesTable" class="table responsive-utilities jambo_table">
-            <thead>
-            <tr class="headings">
-                <th>Name</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr ng-click="editServiceCategory(sc.name)" ng-repeat="sc in ::serviceCategories">
-                <td name="name" data-search="^{{::sc.name}}$">{{::sc.name}}</td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    <common-grid-controller
+        table-title="Service Categories"
+        table-name="serviceCategories"
+        options="gridOptions"
+        data="serviceCategories"
+        columns="columns"
+        drop-down-options="dropDownOptions"
+    >
+    </common-grid-controller>
 </div>
-

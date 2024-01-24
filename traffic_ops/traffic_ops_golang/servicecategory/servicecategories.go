@@ -335,6 +335,8 @@ func CreateServiceCategory(w http.ResponseWriter, r *http.Request) {
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "service category was created.")
 	w.Header().Set(rfc.Location, fmt.Sprintf("/api/%s/service_category?name=%s", inf.Version, sc.Name))
 	api.WriteAlertsObj(w, r, http.StatusCreated, alerts, sc)
+	changeLogMsg := fmt.Sprintf("SERVICECATEGORY: %s ACTION: Created serviceCategory", sc.Name)
+	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -380,6 +382,8 @@ func UpdateServiceCategory(w http.ResponseWriter, r *http.Request) {
 	}
 	alerts := tc.CreateAlerts(tc.SuccessLevel, "service category was updated")
 	api.WriteAlertsObj(w, r, http.StatusOK, alerts, sc)
+	changeLogMsg := fmt.Sprintf("SERVICECATEGORY: %s, ACTION: Updated serviceCategory", sc.Name)
+	api.CreateChangeLogRawTx(api.Updated, changeLogMsg, inf.User, tx)
 	return
 }
 
@@ -432,6 +436,8 @@ func DeleteServiceCategory(w http.ResponseWriter, r *http.Request) {
 	alertMessage := fmt.Sprintf("%s was deleted.", name)
 	alerts := tc.CreateAlerts(tc.SuccessLevel, alertMessage)
 	api.WriteAlerts(w, r, http.StatusOK, alerts)
+	changeLogMsg := fmt.Sprintf("SERVICECATEGORY: %s, ACTION: Deleted serviceCategory", name)
+	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, tx)
 	return
 }
 

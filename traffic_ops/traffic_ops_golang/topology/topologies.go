@@ -110,7 +110,7 @@ func DowngradeTopologyNodes(nodes []tc.TopologyNodeV5) []tc.TopologyNode {
 }
 
 // ValidateTopology validates a v5 topology to make sure that the supplied fields are valid.
-func ValidateTopology(topology tc.TopologyV5, reqInfo *api.APIInfo) (tc.Alerts, error, error) {
+func ValidateTopology(topology tc.TopologyV5, reqInfo *api.Info) (tc.Alerts, error, error) {
 	var alertsObject tc.Alerts
 	currentTopoName := reqInfo.Params["name"]
 	nameRule := validation.NewStringRule(tovalidate.IsAlphanumericUnderscoreDash, "must consist of only alphanumeric, dash, or underscore characters.")
@@ -275,7 +275,7 @@ func (topology *TOTopology) Validate() (error, error) {
 	return util.JoinErrs(tovalidate.ToErrors(rules)), nil
 }
 
-func nodesInOtherTopologies(info *api.APIInfo, topologyNodes []tc.TopologyNode) ([]tc.TopologyNode, map[string][]string, error) {
+func nodesInOtherTopologies(info *api.Info, topologyNodes []tc.TopologyNode) ([]tc.TopologyNode, map[string][]string, error) {
 	currentTopoName := info.Params["name"]
 	baseError := errors.New("unable to verify that there are no cycles across all topologies")
 	where := `WHERE name != :topology_name`
@@ -1333,7 +1333,7 @@ func selectMaxLastUpdatedQuery(where string) string {
 	select max(last_updated) as ti from last_deleted l where l.table_name='topology') as res`
 }
 
-func checkIfTopologyCanBeAlteredByCurrentUser(info *api.APIInfo, nodes []tc.TopologyNode) (error, error, int) {
+func checkIfTopologyCanBeAlteredByCurrentUser(info *api.Info, nodes []tc.TopologyNode) (error, error, int) {
 	cachegroups := getCachegroupNames(nodes)
 	serverIDs, err := dbhelpers.GetServerIDsFromCachegroupNames(info.Tx.Tx, cachegroups)
 	if err != nil {

@@ -76,7 +76,7 @@ func TestReadStatusesV5(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOStatusV5{
 		APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo},
@@ -157,7 +157,7 @@ func TestReadStatuses(t *testing.T) {
 	mock.ExpectQuery("SELECT").WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	reqInfo := api.APIInfo{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
+	reqInfo := api.Info{Tx: db.MustBegin(), Params: map[string]string{"dsId": "1"}}
 
 	obj := TOStatus{
 		APIInfoImpl: api.APIInfoImpl{ReqInfo: &reqInfo},

@@ -38,7 +38,7 @@ module.exports = angular.module('trafficPortal.private.profiles.diff', [])
 							 * @param {{params: {id: unknown}[]}} profile2
 							 * @param {import("../../../../../common/service/utils/CollectionUtils")} collectionUtils
 							 */
-							 profilesParams: function(profile1, profile2, collectionUtils) {
+							profilesParams: function(profile1, profile2, collectionUtils) {
 								return collectionUtils.uniqArray(profile1.params, profile2.params, 'id');
 							},
 							showAll: function() {

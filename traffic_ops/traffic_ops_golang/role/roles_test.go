@@ -91,7 +91,7 @@ func TestInterfaces(t *testing.T) {
 func TestValidate(t *testing.T) {
 	// invalid name, empty domainname
 	n := "not_a_valid_role"
-	reqInfo := api.APIInfo{}
+	reqInfo := api.Info{}
 	role := tc.Role{}
 	role.Name = &n
 	r := TORole{

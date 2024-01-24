@@ -162,8 +162,6 @@ type ProfileExportResponse struct {
 	// Parameters associated to the profile
 	//
 	Parameters []ProfileExportImportParameterNullable `json:"parameters"`
-
-	Alerts
 }
 
 // ProfileImportRequest is an object of the form used by Traffic Ops

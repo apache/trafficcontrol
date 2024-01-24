@@ -90,7 +90,7 @@ Optional arguments:
   -p PORT, --port PORT  Specify the port on which Traffic Portal will listen
                         (Default: 4200)
   -d DIST_PATH, --browser-folder DIST_PATH
-                        Specifiy locaiton for the folder that holds the 
+                        Specifiy locaiton for the folder that holds the
                         browser files
   -c CERT_PATH, --cert-path CERT_PATH
                         Specify a location for an SSL certificate to be used
@@ -164,8 +164,9 @@ use the command `ng test` (dependencies must first be installed). This will
 attempt to open Chrome, Firefox and Opera, so ideally you would have those
 installed prior to running the tests.
 
-End-to-end testing uses NightwatchJS and can be run by using `ng e2e`. More
-detailed instructions can be found in the `nightwatch/` folder
+End-to-end testing uses [Cypress](https://www.cypress.io/) and can be run by
+using `ng e2e`. More detailed instructions can be found in the README in the
+`cypress/` directory.
 
 ## Extending Traffic Portal
 Traffic Portal supports extending functionality through the use of Angular modules.
