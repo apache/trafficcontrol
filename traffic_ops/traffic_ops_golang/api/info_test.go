@@ -772,3 +772,70 @@ func ExampleInfo_DefaultSort() {
 	// Output: testquest
 	// testquest
 }
+
+func TestInfo_HandleErrors(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodPost, "/", nil)
+
+	inf := Info{
+		request: r,
+		w:       w,
+		Tx:      &sqlx.Tx{},
+	}
+
+	code := http.StatusFailedDependency
+	inf.HandleErrors(NewErrors(code, errors.New("test"), errors.New("quest")))
+
+	if w.Code != code {
+		t.Errorf("incorrect response status code; want: %d, got: %d", code, w.Code)
+	}
+
+	var alerts tc.Alerts
+	if err := json.NewDecoder(w.Body).Decode(&alerts); err != nil {
+		t.Fatalf("couldn't decode response body: %v", err)
+	}
+
+	if len(alerts.Alerts) != 1 {
+		t.Fatalf("expected exactly one alert; got: %d", len(alerts.Alerts))
+	}
+	alert := alerts.Alerts[0]
+	if alert.Level != tc.ErrorLevel.String() {
+		t.Errorf("Incorrect alert level; want: %s, got: %s", tc.ErrorLevel, alert.Level)
+	}
+	if alert.Text != "test" {
+		t.Errorf("Incorrect alert text; want: 'test', got: '%s'", alert.Text)
+	}
+}
+
+func TestInfo_HandleDBError(t *testing.T) {
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodPost, "/", nil)
+
+	inf := Info{
+		request: r,
+		w:       w,
+		Tx:      &sqlx.Tx{},
+	}
+
+	inf.HandleDBError(errors.New("a non-parsable error"))
+
+	if code := http.StatusInternalServerError; w.Code != code {
+		t.Errorf("incorrect response status code; want: %d, got: %d", code, w.Code)
+	}
+
+	var alerts tc.Alerts
+	if err := json.NewDecoder(w.Body).Decode(&alerts); err != nil {
+		t.Fatalf("couldn't decode response body: %v", err)
+	}
+
+	if len(alerts.Alerts) != 1 {
+		t.Fatalf("expected exactly one alert; got: %d", len(alerts.Alerts))
+	}
+	alert := alerts.Alerts[0]
+	if alert.Level != tc.ErrorLevel.String() {
+		t.Errorf("Incorrect alert level; want: %s, got: %s", tc.ErrorLevel, alert.Level)
+	}
+	if expected := http.StatusText(http.StatusInternalServerError); alert.Text != expected {
+		t.Errorf("Incorrect alert text; want: '%s', got: '%s'", expected, alert.Text)
+	}
+}

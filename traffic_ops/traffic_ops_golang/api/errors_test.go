@@ -174,3 +174,18 @@ func ExampleNewResourceModifiedError() {
 	fmt.Println(NewResourceModifiedError().String())
 	// Output: 412 Precondition Failed, SystemError='<nil>', UserError='resource was modified since the time specified by the request headers'
 }
+func ExampleNewUserErrorFromErrorList() {
+	errs := []error{}
+	fmt.Println(NewUserErrorFromErrorList(errs))
+
+	errs = append(errs, errors.New("Test"))
+	errs = append(errs, errors.New("Quest"))
+	fmt.Println(NewUserErrorFromErrorList(errs))
+
+	// Output: <nil>
+	// Test, Quest
+}
+func ExampleNewNotFoundError() {
+	fmt.Println(NewNotFoundError("test: %s", "quest").String())
+	// Output: 404 Not Found, SystemError='<nil>', UserError='test: quest'
+}
