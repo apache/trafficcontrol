@@ -18,11 +18,10 @@
  */
 
 import { SceneApp, SceneAppPage } from "@grafana/scenes";
+import { ROUTES } from "const";
+import { getServerScene } from "pages/Server/scene";
 import React, { ReactElement, useMemo } from "react";
-
-import { ROUTES } from "src/constants";
-import { getServerScene } from "src/pages/Server/scene";
-import { prefixRoute } from "src/utils/utils.routing";
+import { prefixRoute } from "utils/utils.routing";
 
 const getScene = (): SceneApp =>
 	new SceneApp({

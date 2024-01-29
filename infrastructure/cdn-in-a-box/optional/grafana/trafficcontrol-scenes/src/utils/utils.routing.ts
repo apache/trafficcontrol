@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { PLUGIN_BASE_URL } from "../constants";
+import { PLUGIN_BASE_URL } from "const";
 
 /**
  * Prefixes the route with the base URL of the plugin

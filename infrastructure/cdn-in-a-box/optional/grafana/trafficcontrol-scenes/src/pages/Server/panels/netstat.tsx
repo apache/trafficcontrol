@@ -18,8 +18,7 @@
  */
 
 import { PanelBuilders, SceneObject, SceneQueryRunner } from "@grafana/scenes";
-
-import { INFLUXDB_DATASOURCES_REF } from "src/constants";
+import { INFLUXDB_DATASOURCES_REF } from "const";
 
 export const getNetstatPanel = (): SceneObject => {
 	const defaultQuery = {

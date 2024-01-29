@@ -18,10 +18,9 @@
  */
 
 import { SceneApp, SceneAppPage } from "@grafana/scenes";
+import { ROUTES } from "const";
 import React, { ReactElement, useMemo } from "react";
-
-import { ROUTES } from "src/constants";
-import { prefixRoute } from "src/utils/utils.routing";
+import { prefixRoute } from "utils/utils.routing";
 
 import { getCacheGroupScene } from "./scene";
 

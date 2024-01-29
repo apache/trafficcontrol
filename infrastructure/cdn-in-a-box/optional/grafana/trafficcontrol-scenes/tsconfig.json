@@ -2,7 +2,7 @@
 	"compilerOptions": {
 		"allowUnreachableCode": false,
 		"allowUnusedLabels": false,
-		"baseUrl": "./",
+		"baseUrl": "./src",
 		"declaration": false,
 		"downlevelIteration": true,
 		"experimentalDecorators": true,
@@ -11,6 +11,7 @@
 		"moduleResolution": "node",
 		"noImplicitReturns": true,
 		"noImplicitOverride": false,
+		"esModuleInterop": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"outDir": "./dist",

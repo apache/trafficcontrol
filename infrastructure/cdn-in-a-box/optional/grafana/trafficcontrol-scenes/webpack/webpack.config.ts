@@ -12,6 +12,7 @@
  * limitations under the License.
  */
 /* eslint-disable */
+
 import path from "path";
 
 import CopyWebpackPlugin from "copy-webpack-plugin";

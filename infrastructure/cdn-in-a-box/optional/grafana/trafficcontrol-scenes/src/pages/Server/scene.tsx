@@ -29,8 +29,7 @@ import {
 	SceneVariableSet,
 	VariableValueSelectors,
 } from "@grafana/scenes";
-
-import { INFLUXDB_DATASOURCES_REF } from "src/constants";
+import { INFLUXDB_DATASOURCES_REF } from "const";
 
 import {
 	getBandwidthPanel,

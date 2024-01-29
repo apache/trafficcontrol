@@ -18,10 +18,9 @@
  */
 
 import { AppRootProps } from "@grafana/data";
+import { Routes } from "components/Routes";
 import React, { ReactElement } from "react";
-
-import { Routes } from "src/components/Routes";
-import { PluginPropsContext } from "src/utils/utils.plugin";
+import { PluginPropsContext } from "utils/utils.plugin";
 
 /**
  * Renders the component by providing the PluginPropsContext to its children.

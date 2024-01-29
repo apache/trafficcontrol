@@ -17,14 +17,13 @@
  * under the License.
  */
 
+import { ROUTES } from "const";
+import { CacheGroupPage } from "pages/CacheGroup";
+import { DeliveryServicePage } from "pages/DeliveryService";
+import { ServerPage } from "pages/Server";
 import React, { ReactElement } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
-
-import { ROUTES } from "src/constants";
-import { CacheGroupPage } from "src/pages/CacheGroup";
-import { DeliveryServicePage } from "src/pages/DeliveryService";
-import { ServerPage } from "src/pages/Server";
-import { prefixRoute } from "src/utils/utils.routing";
+import { prefixRoute } from "utils/utils.routing";
 
 export const Routes = (): ReactElement => (
 	<Switch>

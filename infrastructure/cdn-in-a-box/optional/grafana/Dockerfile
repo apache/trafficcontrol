@@ -25,6 +25,8 @@ RUN npm install
 
 COPY optional/grafana/trafficcontrol-scenes/ ./
 
+# COPY ../../misc/logos/ATC-PNG.png ./img/logo-atc.svg
+
 RUN npm run build
 
 FROM grafana/grafana:10.2.3-ubuntu
