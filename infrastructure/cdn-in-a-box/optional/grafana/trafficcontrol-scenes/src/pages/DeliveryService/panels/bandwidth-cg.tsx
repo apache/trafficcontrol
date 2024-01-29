@@ -17,29 +17,31 @@
  * under the License.
  */
 
-import { SceneQueryRunner, PanelBuilders } from '@grafana/scenes';
-import { INFLUXDB_DATASOURCES_REF } from '../../../constants';
+import { PanelBuilders, SceneQueryRunner, VizPanel } from "@grafana/scenes";
 
-export const getBandwidthByCGPanel = () => {
-  const bandwidthByCacheGroupQuery = {
-    refId: 'A',
-    query: `SELECT mean(value) FROM "monthly"."kbps.cg.1min" WHERE deliveryservice='$deliveryservice' AND cachegroup != 'all' and $timeFilter GROUP BY time(60s), cachegroup`,
-    rawQuery: true,
-    resultFormat: 'time_series',
-    alias: '$tag_cachegroup',
-  };
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
 
-  const qr = new SceneQueryRunner({
-    datasource: INFLUXDB_DATASOURCES_REF.DELIVERYSERVICE_STATS,
-    queries: [bandwidthByCacheGroupQuery],
-  });
+export const getBandwidthByCGPanel = (): VizPanel => {
+	const bandwidthByCacheGroupQuery = {
+		alias: "$tag_cachegroup",
+		query: "SELECT mean(value) FROM \"monthly\".\"kbps.cg.1min\" WHERE deliveryservice='$deliveryservice'"
+			+ "AND cachegroup != 'all' and $timeFilter GROUP BY time(60s), cachegroup",
+		rawQuery: true,
+		refId: "A",
+		resultFormat: "time_series",
+	};
 
-  return PanelBuilders.timeseries()
-    .setTitle('Bandwidth by CacheGroup')
-    .setData(qr)
-    .setOption('legend', { showLegend: true, calcs: ['max'] })
-    .setCustomFieldConfig('axisCenteredZero', true)
-    .setCustomFieldConfig('spanNulls', true)
-    .setUnit('bps')
-    .build();
+	const qr = new SceneQueryRunner({
+		datasource: INFLUXDB_DATASOURCES_REF.deliveryServiceStats,
+		queries: [bandwidthByCacheGroupQuery],
+	});
+
+	return PanelBuilders.timeseries()
+		.setTitle("Bandwidth by CacheGroup")
+		.setData(qr)
+		.setOption("legend", {calcs: ["max"], showLegend: true})
+		.setCustomFieldConfig("axisCenteredZero", true)
+		.setCustomFieldConfig("spanNulls", true)
+		.setUnit("bps")
+		.build();
 };

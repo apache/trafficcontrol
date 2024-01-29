@@ -18,59 +18,66 @@
  */
 
 import {
-  SceneTimeRange,
-  EmbeddedScene,
-  SceneFlexLayout,
-  SceneFlexItem,
-  SceneControlsSpacer,
-  SceneRefreshPicker,
-  SceneTimePicker,
-  QueryVariable,
-  SceneVariableSet,
-  VariableValueSelectors,
-} from '@grafana/scenes';
-import { getBandwidthPanel } from './panels/bandwidth';
-import { getConnectionsPanel } from './panels/connections';
-import { INFLUXDB_DATASOURCES_REF } from '../../constants';
+	EmbeddedScene,
+	QueryVariable,
+	SceneControlsSpacer,
+	SceneFlexItem,
+	SceneFlexLayout,
+	SceneRefreshPicker,
+	SceneTimePicker,
+	SceneTimeRange,
+	SceneVariableSet,
+	VariableValueSelectors,
+} from "@grafana/scenes";
 
-export function getCacheGroupScene() {
-  const timeRange = new SceneTimeRange({
-    from: 'now-6h',
-    to: 'now',
-  });
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
 
-  const cachegroup = new QueryVariable({
-    name: 'cachegroup',
-    datasource: INFLUXDB_DATASOURCES_REF.CACHE_STATS,
-    query: 'SHOW TAG VALUES ON "cache_stats" FROM "monthly"."bandwidth" with key = "cachegroup"',
-  });
+import { getBandwidthPanel } from "./panels/bandwidth";
+import { getConnectionsPanel } from "./panels/connections";
 
-  return new EmbeddedScene({
-    $timeRange: timeRange,
-    $variables: new SceneVariableSet({
-      variables: [cachegroup],
-    }),
-    body: new SceneFlexLayout({
-      direction: 'column',
-      children: [
-        new SceneFlexItem({
-          minHeight: 300,
-          body: getBandwidthPanel(),
-        }),
-        new SceneFlexItem({
-          minHeight: 300,
-          body: getConnectionsPanel(),
-        }),
-      ],
-    }),
-    controls: [
-      new VariableValueSelectors({}),
-      new SceneControlsSpacer(),
-      new SceneTimePicker({ isOnCanvas: true }),
-      new SceneRefreshPicker({
-        intervals: ['5s', '1m', '1h'],
-        isOnCanvas: true,
-      }),
-    ],
-  });
+/**
+ * Function to get the cache group scene.
+ *
+ * @returns The embedded scene representing the cache group.
+ */
+export function getCacheGroupScene(): EmbeddedScene {
+	const timeRange = new SceneTimeRange({
+		from: "now-6h",
+		to: "now",
+	});
+
+	const cachegroup = new QueryVariable({
+		datasource: INFLUXDB_DATASOURCES_REF.cacheStats,
+		name: "cachegroup",
+		query: 'SHOW TAG VALUES ON "cache_stats" FROM "monthly"."bandwidth" with key = "cachegroup"',
+	});
+
+	return new EmbeddedScene({
+		$timeRange: timeRange,
+		$variables: new SceneVariableSet({
+			variables: [cachegroup],
+		}),
+		body: new SceneFlexLayout({
+			children: [
+				new SceneFlexItem({
+					body: getBandwidthPanel(),
+					minHeight: 300,
+				}),
+				new SceneFlexItem({
+					body: getConnectionsPanel(),
+					minHeight: 300,
+				}),
+			],
+			direction: "column",
+		}),
+		controls: [
+			new VariableValueSelectors({}),
+			new SceneControlsSpacer(),
+			new SceneTimePicker({isOnCanvas: true}),
+			new SceneRefreshPicker({
+				intervals: ["5s", "1m", "1h"],
+				isOnCanvas: true,
+			}),
+		],
+	});
 }

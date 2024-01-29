@@ -17,28 +17,30 @@
  * under the License.
  */
 
-import { SceneQueryRunner, PanelBuilders } from '@grafana/scenes';
-import { INFLUXDB_DATASOURCES_REF } from '../../../constants';
+import { PanelBuilders, SceneQueryRunner, VizPanel } from "@grafana/scenes";
 
-export const getConnectionsPanel = () => {
-  const connectionQuery = {
-    refId: 'A',
-    query:
-      'SELECT mean("value") FROM "monthly"."connections.1min" WHERE ("cachegroup" = \'$cachegroup\') AND $timeFilter GROUP BY time($interval), "hostname" fill(null)',
-    rawQuery: true,
-    resultFormat: 'time_series',
-  };
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
 
-  const qr = new SceneQueryRunner({
-    datasource: INFLUXDB_DATASOURCES_REF.CACHE_STATS,
-    queries: [connectionQuery],
-  });
+export const getConnectionsPanel = (): VizPanel => {
+	const connectionQuery = {
+		query:
+			"SELECT mean(\"value\") FROM \"monthly\".\"connections.1min\" WHERE (\"cachegroup\" = '$cachegroup')"
+			+ "AND $timeFilter GROUP BY time($interval), \"hostname\" fill(null)",
+		rawQuery: true,
+		refId: "A",
+		resultFormat: "time_series",
+	};
 
-  return PanelBuilders.timeseries()
-    .setTitle('Connections (stacked)')
-    .setCustomFieldConfig('fillOpacity', 20)
-    .setData(qr)
-    .setOption('legend', { showLegend: true, calcs: ['max'] })
-    .setCustomFieldConfig('spanNulls', true)
-    .build();
+	const qr = new SceneQueryRunner({
+		datasource: INFLUXDB_DATASOURCES_REF.cacheStats,
+		queries: [connectionQuery],
+	});
+
+	return PanelBuilders.timeseries()
+		.setTitle("Connections (stacked)")
+		.setCustomFieldConfig("fillOpacity", 20)
+		.setData(qr)
+		.setOption("legend", {calcs: ["max"], showLegend: true})
+		.setCustomFieldConfig("spanNulls", true)
+		.build();
 };

@@ -17,21 +17,20 @@
  * under the License.
  */
 
-import React from 'react';
-import { Redirect, Route, Switch } from 'react-router-dom';
-import { prefixRoute } from '../../utils/utils.routing';
-import { ROUTES } from '../../constants';
-import { ServerPage } from '../../pages/Server';
-import { DeliveryServicePage } from '../../pages/DeliveryService';
-import { CacheGroupPage } from '../../pages/CacheGroup';
+import React, { ReactElement } from "react";
+import { Redirect, Route, Switch } from "react-router-dom";
 
-export const Routes = () => {
-  return (
-    <Switch>
-      <Route path={prefixRoute(`${ROUTES.CacheGroup}`)} component={CacheGroupPage} />
-      <Route path={prefixRoute(`${ROUTES.DeliveryService}`)} component={DeliveryServicePage} />
-      <Route path={prefixRoute(`${ROUTES.Server}`)} component={ServerPage} />
-      <Redirect to={prefixRoute(ROUTES.CacheGroup)} />
-    </Switch>
-  );
-};
+import { ROUTES } from "src/constants";
+import { CacheGroupPage } from "src/pages/CacheGroup";
+import { DeliveryServicePage } from "src/pages/DeliveryService";
+import { ServerPage } from "src/pages/Server";
+import { prefixRoute } from "src/utils/utils.routing";
+
+export const Routes = (): ReactElement => (
+	<Switch>
+		<Route path={prefixRoute(`${ROUTES.cacheGroup}`)} component={CacheGroupPage}/>
+		<Route path={prefixRoute(`${ROUTES.deliveryService}`)} component={DeliveryServicePage}/>
+		<Route path={prefixRoute(`${ROUTES.server}`)} component={ServerPage}/>
+		<Redirect to={prefixRoute(ROUTES.cacheGroup)}/>
+	</Switch>
+);

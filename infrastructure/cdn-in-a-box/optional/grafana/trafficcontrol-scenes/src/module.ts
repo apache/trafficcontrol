@@ -17,7 +17,8 @@
  * under the License.
  */
 
-import { AppPlugin } from '@grafana/data';
-import { App } from './components/App';
+import { AppPlugin } from "@grafana/data";
+
+import { App } from "src/components/App";
 
 export const plugin = new AppPlugin<{}>().setRootPage(App);

@@ -17,27 +17,29 @@
  * under the License.
  */
 
-import { PanelBuilders, SceneQueryRunner } from '@grafana/scenes';
-import { INFLUXDB_DATASOURCES_REF } from '../../../constants';
+import { PanelBuilders, SceneQueryRunner, VizPanel } from "@grafana/scenes";
 
-export const getWrapCountPanel = () => {
-  const defaultQuery = {
-    refId: 'A',
-    query: `SELECT mean("vol1_wrap_count") AS "vol1", mean("vol2_wrap_count") AS "vol2" FROM "monthly"."wrap_count.1min" WHERE hostname='$hostname' AND $timeFilter GROUP BY time($interval) fill(null)`,
-    rawQuery: true,
-    resultFormat: 'time_series',
-    alias: '$col',
-  };
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
 
-  const qr = new SceneQueryRunner({
-    datasource: INFLUXDB_DATASOURCES_REF.CACHE_STATS,
-    queries: [defaultQuery],
-  });
+export const getWrapCountPanel = (): VizPanel => {
+	const defaultQuery = {
+		alias: "$col",
+		query: "SELECT mean(\"vol1_wrap_count\") AS \"vol1\", mean(\"vol2_wrap_count\") AS \"vol2\" " +
+			"FROM \"monthly\".\"wrap_count.1min\" WHERE hostname='$hostname' AND $timeFilter GROUP BY time($interval) fill(null)",
+		rawQuery: true,
+		refId: "A",
+		resultFormat: "time_series",
+	};
 
-  return PanelBuilders.timeseries()
-    .setTitle('Wrap Count')
-    .setData(qr)
-    .setCustomFieldConfig('spanNulls', true)
-    .setCustomFieldConfig('fillOpacity', 20)
-    .build();
+	const qr = new SceneQueryRunner({
+		datasource: INFLUXDB_DATASOURCES_REF.cacheStats,
+		queries: [defaultQuery],
+	});
+
+	return PanelBuilders.timeseries()
+		.setTitle("Wrap Count")
+		.setData(qr)
+		.setCustomFieldConfig("spanNulls", true)
+		.setCustomFieldConfig("fillOpacity", 20)
+		.build();
 };

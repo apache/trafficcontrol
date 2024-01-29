@@ -17,26 +17,27 @@
  * under the License.
  */
 
-import React, { useMemo } from 'react';
-import { SceneApp, SceneAppPage } from '@grafana/scenes';
-import { ROUTES } from '../../constants';
-import { prefixRoute } from '../../utils/utils.routing';
-import { getDeliveryServiceScene } from './scene';
+import { SceneApp, SceneAppPage } from "@grafana/scenes";
+import React, { ReactElement, useMemo } from "react";
 
-const getScene = () =>
-  new SceneApp({
-    pages: [
-      new SceneAppPage({
-        title: 'Delivery Services',
-        url: prefixRoute(`${ROUTES.DeliveryService}`),
-        hideFromBreadcrumbs: true,
-        getScene: getDeliveryServiceScene,
-      }),
-    ],
-  });
+import { ROUTES } from "src/constants";
+import { getDeliveryServiceScene } from "src/pages/DeliveryService/scene";
+import { prefixRoute } from "src/utils/utils.routing";
 
-export const DeliveryServicePage = () => {
-  const scene = useMemo(() => getScene(), []);
+const getScene = (): SceneApp =>
+	new SceneApp({
+		pages: [
+			new SceneAppPage({
+				getScene: getDeliveryServiceScene,
+				hideFromBreadcrumbs: true,
+				title: "Delivery Services",
+				url: prefixRoute(`${ROUTES.deliveryService}`),
+			}),
+		],
+	});
 
-  return <scene.Component model={scene} />;
+export const DeliveryServicePage = (): ReactElement => {
+	const scene = useMemo(() => getScene(), []);
+
+	return <scene.Component model={scene}/>;
 };

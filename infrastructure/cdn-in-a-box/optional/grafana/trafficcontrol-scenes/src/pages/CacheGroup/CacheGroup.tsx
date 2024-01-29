@@ -17,25 +17,27 @@
  * under the License.
  */
 
-import React, {useMemo} from 'react';
-import {SceneApp, SceneAppPage} from '@grafana/scenes';
-import {ROUTES} from '../../constants';
-import {prefixRoute} from '../../utils/utils.routing';
-import {getCacheGroupScene} from './scene';
+import { SceneApp, SceneAppPage } from "@grafana/scenes";
+import React, { ReactElement, useMemo } from "react";
 
-const getScene = () =>
+import { ROUTES } from "src/constants";
+import { prefixRoute } from "src/utils/utils.routing";
+
+import { getCacheGroupScene } from "./scene";
+
+const getScene = (): SceneApp =>
 	new SceneApp({
 		pages: [
 			new SceneAppPage({
-				title: 'Cache Groups',
-				url: prefixRoute(`${ROUTES.CacheGroup}`),
-				hideFromBreadcrumbs: true,
 				getScene: getCacheGroupScene,
+				hideFromBreadcrumbs: true,
+				title: "Cache Groups",
+				url: prefixRoute(`${ROUTES.cacheGroup}`),
 			}),
 		],
 	});
 
-export const CacheGroupPage = () => {
+export const CacheGroupPage = (): ReactElement => {
 	const scene = useMemo(() => getScene(), []);
 
 	return <scene.Component model={scene}/>;

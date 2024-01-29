@@ -12,5 +12,5 @@
 * limitations under the License.
 */
 
-export const SOURCE_DIR = 'src';
-export const DIST_DIR = 'dist';
+export const SOURCE_DIR = "src";
+export const DIST_DIR = "dist";

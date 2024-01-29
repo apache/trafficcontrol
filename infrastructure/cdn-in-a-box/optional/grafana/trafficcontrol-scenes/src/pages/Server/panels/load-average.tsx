@@ -17,27 +17,29 @@
  * under the License.
  */
 
-import { PanelBuilders, SceneQueryRunner } from '@grafana/scenes';
-import { INFLUXDB_DATASOURCES_REF } from '../../../constants';
+import { PanelBuilders, SceneQueryRunner, VizPanel } from "@grafana/scenes";
 
-export const getLoadAveragePanel = () => {
-  const defaultQuery = {
-    refId: 'A',
-    query: `SELECT mean("load1") AS "load1", mean("load5") AS "load5", mean("load15") AS "load15" FROM "system" WHERE host='$hostname' AND $timeFilter GROUP BY time($interval) fill(null)`,
-    rawQuery: true,
-    resultFormat: 'time_series',
-    alias: '$col',
-  };
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
 
-  const qr = new SceneQueryRunner({
-    datasource: INFLUXDB_DATASOURCES_REF.TELEGRAF,
-    queries: [defaultQuery],
-  });
+export const getLoadAveragePanel = (): VizPanel => {
+	const defaultQuery = {
+		alias: "$col",
+		query: "SELECT mean(\"load1\") AS \"load1\", mean(\"load5\") AS \"load5\", mean(\"load15\") AS \"load15\" FROM \"system\"" +
+			" WHERE host='$hostname' AND $timeFilter GROUP BY time($interval) fill(null)",
+		rawQuery: true,
+		refId: "A",
+		resultFormat: "time_series",
+	};
 
-  return PanelBuilders.timeseries()
-    .setTitle('Load Average')
-    .setData(qr)
-    .setCustomFieldConfig('fillOpacity', 20)
-    .setCustomFieldConfig('spanNulls', true)
-    .build();
+	const qr = new SceneQueryRunner({
+		datasource: INFLUXDB_DATASOURCES_REF.telegraf,
+		queries: [defaultQuery],
+	});
+
+	return PanelBuilders.timeseries()
+		.setTitle("Load Average")
+		.setData(qr)
+		.setCustomFieldConfig("fillOpacity", 20)
+		.setCustomFieldConfig("spanNulls", true)
+		.build();
 };

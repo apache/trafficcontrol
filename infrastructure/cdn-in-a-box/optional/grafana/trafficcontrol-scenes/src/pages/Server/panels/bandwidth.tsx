@@ -17,28 +17,29 @@
  * under the License.
  */
 
-import { SceneQueryRunner, PanelBuilders } from '@grafana/scenes';
-import { INFLUXDB_DATASOURCES_REF } from '../../../constants';
+import { PanelBuilders, SceneQueryRunner, VizPanel } from "@grafana/scenes";
 
-export const getBandwidthPanel = () => {
-  const defaultBandwidthQuery = {
-    refId: 'A',
-    query: `SELECT mean(value) FROM "monthly"."bandwidth.1min" WHERE hostname='$hostname' AND $timeFilter GROUP BY time(60s)`,
-    rawQuery: true,
-    resultFormat: 'time_series',
-    alias: 'bandwidth',
-  };
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
 
-  const qr = new SceneQueryRunner({
-    datasource: INFLUXDB_DATASOURCES_REF.CACHE_STATS,
-    queries: [defaultBandwidthQuery],
-  });
+export const getBandwidthPanel = (): VizPanel => {
+	const defaultBandwidthQuery = {
+		alias: "bandwidth",
+		query: "SELECT mean(value) FROM \"monthly\".\"bandwidth.1min\" WHERE hostname='$hostname' AND $timeFilter GROUP BY time(60s)",
+		rawQuery: true,
+		refId: "A",
+		resultFormat: "time_series",
+	};
 
-  return PanelBuilders.timeseries()
-    .setTitle('Bandwidth')
-    .setData(qr)
-    .setCustomFieldConfig('fillOpacity', 20)
-    .setOption('legend', { showLegend: true, calcs: ['max'] })
-    .setUnit('kbps')
-    .build();
+	const qr = new SceneQueryRunner({
+		datasource: INFLUXDB_DATASOURCES_REF.cacheStats,
+		queries: [defaultBandwidthQuery],
+	});
+
+	return PanelBuilders.timeseries()
+		.setTitle("Bandwidth")
+		.setData(qr)
+		.setCustomFieldConfig("fillOpacity", 20)
+		.setOption("legend", {calcs: ["max"], showLegend: true})
+		.setUnit("kbps")
+		.build();
 };

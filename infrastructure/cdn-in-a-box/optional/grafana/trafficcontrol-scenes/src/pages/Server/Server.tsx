@@ -17,26 +17,27 @@
  * under the License.
  */
 
-import React, { useMemo } from 'react';
-import { SceneApp, SceneAppPage } from '@grafana/scenes';
-import { ROUTES } from '../../constants';
-import { prefixRoute } from '../../utils/utils.routing';
-import { getServerScene } from './scene';
+import { SceneApp, SceneAppPage } from "@grafana/scenes";
+import React, { ReactElement, useMemo } from "react";
 
-const getScene = () =>
-  new SceneApp({
-    pages: [
-      new SceneAppPage({
-        title: 'Server',
-        url: prefixRoute(`${ROUTES.Server}`),
-        hideFromBreadcrumbs: true,
-        getScene: getServerScene,
-      }),
-    ],
-  });
+import { ROUTES } from "src/constants";
+import { getServerScene } from "src/pages/Server/scene";
+import { prefixRoute } from "src/utils/utils.routing";
 
-export const ServerPage = () => {
-  const scene = useMemo(() => getScene(), []);
+const getScene = (): SceneApp =>
+	new SceneApp({
+		pages: [
+			new SceneAppPage({
+				getScene: getServerScene,
+				hideFromBreadcrumbs: true,
+				title: "Server",
+				url: prefixRoute(`${ROUTES.server}`),
+			}),
+		],
+	});
 
-  return <scene.Component model={scene} />;
+export const ServerPage = (): ReactElement => {
+	const scene = useMemo(() => getScene(), []);
+
+	return <scene.Component model={scene}/>;
 };

@@ -17,4 +17,4 @@
  * under the License.
  */
 
-export * from './App';
+export * from "./App";

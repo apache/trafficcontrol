@@ -17,17 +17,28 @@
  * under the License.
  */
 
-import React from 'react';
-import { AppRootProps } from '@grafana/data';
-import { PluginPropsContext } from '../../utils/utils.plugin';
-import { Routes } from '../Routes';
+import { AppRootProps } from "@grafana/data";
+import React, { ReactElement } from "react";
 
+import { Routes } from "src/components/Routes";
+import { PluginPropsContext } from "src/utils/utils.plugin";
+
+/**
+ * Renders the component by providing the PluginPropsContext to its children.
+ *
+ * @returns {ReactElement} The rendered component.
+ */
 export class App extends React.PureComponent<AppRootProps> {
-  render() {
-    return (
-      <PluginPropsContext.Provider value={this.props}>
-        <Routes />
-      </PluginPropsContext.Provider>
-    );
-  }
+	/**
+	 * Renders the component and returns the JSX element.
+	 *
+	 * @returns The JSX element representing the rendered component.
+	 */
+	public render(): ReactElement<AppRootProps> {
+		return (
+			<PluginPropsContext.Provider value={this.props}>
+				<Routes/>
+			</PluginPropsContext.Provider>
+		);
+	}
 }

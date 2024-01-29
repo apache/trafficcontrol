@@ -17,48 +17,53 @@
  * under the License.
  */
 
-import { SceneQueryRunner, PanelBuilders } from '@grafana/scenes';
-import { INFLUXDB_DATASOURCES_REF } from '../../../constants';
+import { PanelBuilders, SceneQueryRunner, VizPanel } from "@grafana/scenes";
 
-export const getTpsPanel = () => {
-  const tpsQueries = [
-    {
-      refId: 'A',
-      query: `SELECT mean(value) FROM "monthly"."tps_2xx.ds.1min" WHERE $timeFilter AND deliveryservice='$deliveryservice' GROUP BY time(60s) ORDER BY asc`,
-      rawQuery: true,
-      resultFormat: 'time_series',
-      measurement: 'tps_2xx',
-    },
-    {
-      refId: 'B',
-      query: `SELECT mean(value) FROM \"monthly\".\"tps_3xx.ds.1min\" WHERE $timeFilter AND deliveryservice='$deliveryservice' GROUP BY time(60s) ORDER BY asc`,
-      rawQuery: true,
-      resultFormat: 'time_series',
-    },
-    {
-      refId: 'C',
-      query: `SELECT mean(value) FROM \"monthly\".\"tps_4xx.ds.1min\" WHERE $timeFilter AND deliveryservice='$deliveryservice' GROUP BY time(60s) ORDER BY asc`,
-      rawQuery: true,
-      resultFormat: 'time_series',
-    },
-    {
-      refId: 'D',
-      query: `SELECT mean(value) FROM \"monthly\".\"tps_5xx.ds.1min\" WHERE $timeFilter AND deliveryservice='$deliveryservice' GROUP BY time(60s) ORDER BY asc`,
-      rawQuery: true,
-      resultFormat: 'time_series',
-    },
-  ];
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
 
-  const qr = new SceneQueryRunner({
-    datasource: INFLUXDB_DATASOURCES_REF.DELIVERYSERVICE_STATS,
-    queries: [...tpsQueries],
-  });
+export const getTpsPanel = (): VizPanel => {
+	const tpsQueries = [
+		{
+			measurement: "tps_2xx",
+			query: "SELECT mean(value) FROM \"monthly\".\"tps_2xx.ds.1min\" WHERE $timeFilter AND deliveryservice='$deliveryservice'" +
+				" GROUP BY time(60s) ORDER BY asc",
+			rawQuery: true,
+			refId: "A",
+			resultFormat: "time_series",
+		},
+		{
+			query: "SELECT mean(value) FROM \"monthly\".\"tps_3xx.ds.1min\" WHERE $timeFilter AND deliveryservice='$deliveryservice'" +
+				" GROUP BY time(60s) ORDER BY asc",
+			rawQuery: true,
+			refId: "B",
+			resultFormat: "time_series",
+		},
+		{
+			query: "SELECT mean(value) FROM \"monthly\".\"tps_4xx.ds.1min\" WHERE $timeFilter AND deliveryservice='$deliveryservice'" +
+				" GROUP BY time(60s) ORDER BY asc",
+			rawQuery: true,
+			refId: "C",
+			resultFormat: "time_series",
+		},
+		{
+			query: "SELECT mean(value) FROM \"monthly\".\"tps_5xx.ds.1min\" WHERE $timeFilter AND deliveryservice='$deliveryservice' " +
+				"GROUP BY time(60s) ORDER BY asc",
+			rawQuery: true,
+			refId: "D",
+			resultFormat: "time_series",
+		},
+	];
 
-  return PanelBuilders.timeseries()
-    .setTitle('TPS')
-    .setData(qr)
-    .setOption('legend', { showLegend: true, calcs: ['max'] })
-    .setCustomFieldConfig('axisCenteredZero', true)
-    .setCustomFieldConfig('spanNulls', true)
-    .build();
+	const qr = new SceneQueryRunner({
+		datasource: INFLUXDB_DATASOURCES_REF.deliveryServiceStats,
+		queries: [...tpsQueries],
+	});
+
+	return PanelBuilders.timeseries()
+		.setTitle("TPS")
+		.setData(qr)
+		.setOption("legend", {calcs: ["max"], showLegend: true})
+		.setCustomFieldConfig("axisCenteredZero", true)
+		.setCustomFieldConfig("spanNulls", true)
+		.build();
 };

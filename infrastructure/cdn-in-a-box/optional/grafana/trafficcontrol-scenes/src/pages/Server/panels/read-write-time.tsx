@@ -17,37 +17,40 @@
  * under the License.
  */
 
-import { PanelBuilders, SceneQueryRunner } from '@grafana/scenes';
-import { INFLUXDB_DATASOURCES_REF } from '../../../constants';
+import { PanelBuilders, SceneQueryRunner, VizPanel } from "@grafana/scenes";
 
-export const getReadWriteTimePanel = () => {
-  const defaultQueries = [
-    {
-      refId: 'A',
-      query: `SELECT non_negative_derivative(sum("read_time"), 10s) AS "read_time" FROM "diskio" WHERE host='$hostname' AND $timeFilter GROUP BY time($interval) fill(null)`,
-      rawQuery: true,
-      resultFormat: 'time_series',
-      alias: '$col',
-    },
-    {
-      refId: 'B',
-      query: `SELECT non_negative_derivative(sum("write_time"), 10s) AS "write_time" FROM "diskio" WHERE host='$hostname' AND $timeFilter GROUP BY time($interval) fill(null)`,
-      rawQuery: true,
-      resultFormat: 'time_series',
-      alias: '$col',
-    },
-  ];
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
 
-  const qr = new SceneQueryRunner({
-    datasource: INFLUXDB_DATASOURCES_REF.TELEGRAF,
-    queries: [...defaultQueries],
-  });
+export const getReadWriteTimePanel = (): VizPanel => {
+	const defaultQueries = [
+		{
+			alias: "$col",
+			query: "SELECT non_negative_derivative(sum(\"read_time\"), 10s) AS \"read_time\" FROM \"diskio\" " +
+				" WHERE host='$hostname' AND $timeFilter GROUP BY time($interval) fill(null)",
+			rawQuery: true,
+			refId: "A",
+			resultFormat: "time_series",
+		},
+		{
+			alias: "$col",
+			query: "SELECT non_negative_derivative(sum(\"write_time\"), 10s) AS \"write_time\" FROM \"diskio\" " +
+				" WHERE host='$hostname' AND $timeFilter GROUP BY time($interval) fill(null)",
+			rawQuery: true,
+			refId: "B",
+			resultFormat: "time_series",
+		},
+	];
 
-  return PanelBuilders.timeseries()
-    .setTitle('Read/Write Time')
-    .setData(qr)
-    .setCustomFieldConfig('spanNulls', true)
-    .setCustomFieldConfig('fillOpacity', 20)
-    .setUnit('ns')
-    .build();
+	const qr = new SceneQueryRunner({
+		datasource: INFLUXDB_DATASOURCES_REF.telegraf,
+		queries: [...defaultQueries],
+	});
+
+	return PanelBuilders.timeseries()
+		.setTitle("Read/Write Time")
+		.setData(qr)
+		.setCustomFieldConfig("spanNulls", true)
+		.setCustomFieldConfig("fillOpacity", 20)
+		.setUnit("ns")
+		.build();
 };

@@ -18,37 +18,45 @@
  */
 
 import {
-	SceneTimeRange,
 	EmbeddedScene,
-	SceneFlexLayout,
-	SceneFlexItem,
+	QueryVariable,
 	SceneControlsSpacer,
+	SceneFlexItem,
+	SceneFlexLayout,
 	SceneRefreshPicker,
 	SceneTimePicker,
-	QueryVariable,
+	SceneTimeRange,
 	SceneVariableSet,
 	VariableValueSelectors,
 } from "@grafana/scenes";
+
+import { INFLUXDB_DATASOURCES_REF } from "src/constants";
+
 import {
 	getBandwidthPanel,
 	getConnectionsPanel,
 	getCPUPanel,
-	getMemoryPanel,
 	getLoadAveragePanel,
+	getMemoryPanel,
+	getNetstatPanel,
 	getReadWriteTimePanel,
 	getWrapCountPanel,
-	getNetstatPanel,
 } from "./panels";
-import { INFLUXDB_DATASOURCES_REF } from "../../constants";
 
-export function getServerScene() {
+/**
+ * Returns an EmbeddedScene with a specific time range and variables, consisting of multiple
+ * SceneFlexLayout and SceneFlexItem components for displaying various panels and controls.
+ *
+ * @returns The EmbeddedScene with the specified time range, variables, body, and controls.
+ */
+export function getServerScene(): EmbeddedScene {
 	const timeRange = new SceneTimeRange({
 		from: "now-6h",
 		to: "now",
 	});
 
 	const hostname = new QueryVariable({
-		datasource: INFLUXDB_DATASOURCES_REF.CACHE_STATS,
+		datasource: INFLUXDB_DATASOURCES_REF.cacheStats,
 		name: "hostname",
 		query: 'SHOW TAG VALUES ON "cache_stats" FROM "monthly"."bandwidth" with key = "hostname"',
 	});
@@ -59,64 +67,64 @@ export function getServerScene() {
 			variables: [hostname],
 		}),
 		body: new SceneFlexLayout({
-			direction: "column",
 			children: [
 				new SceneFlexItem({
-					height: 250,
 					body: getBandwidthPanel(),
+					height: 250,
 				}),
 				new SceneFlexItem({
-					height: 250,
 					body: getConnectionsPanel(),
+					height: 250,
 				}),
 				new SceneFlexLayout({
-					direction: "row",
-					height: 250,
 					children: [
 						new SceneFlexItem({
-							width: "50%",
 							body: getCPUPanel(),
+							width: "50%",
 						}),
 						new SceneFlexItem({
-							width: "50%",
 							body: getMemoryPanel(),
+							width: "50%",
 						}),
 					],
-				}),
-				new SceneFlexLayout({
 					direction: "row",
 					height: 250,
+				}),
+				new SceneFlexLayout({
 					children: [
 						new SceneFlexItem({
-							width: "50%",
 							body: getLoadAveragePanel(),
+							width: "50%",
 						}),
 						new SceneFlexItem({
-							width: "50%",
 							body: getReadWriteTimePanel(),
+							width: "50%",
 						}),
 					],
-				}),
-				new SceneFlexLayout({
 					direction: "row",
 					height: 250,
+				}),
+				new SceneFlexLayout({
 					children: [
 						new SceneFlexItem({
-							width: "50%",
 							body: getWrapCountPanel(),
+							width: "50%",
 						}),
 						new SceneFlexItem({
-							width: "50%",
 							body: getNetstatPanel(),
+							width: "50%",
 						}),
 					],
+					direction: "row",
+					height: 250,
 				}),
 			],
+			direction: "column",
 		}),
 		controls: [
 			new VariableValueSelectors({}),
 			new SceneControlsSpacer(),
-			new SceneTimePicker({ isOnCanvas: true }),
+			new SceneTimePicker({isOnCanvas: true}),
 			new SceneRefreshPicker({
 				intervals: ["5s", "1m", "1h"],
 				isOnCanvas: true,
