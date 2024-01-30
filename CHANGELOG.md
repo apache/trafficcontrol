@@ -86,7 +86,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7814](https://github.com/apache/trafficcontrol/issues/7814) All Go components: Updated the module path to [`github.com/apache/trafficcontrol/v8`](https://pkg.go.dev/github.com/apache/trafficcontrol/v8). Module https://pkg.go.dev/github.com/apache/trafficcontrol will not receive further updates.
 
 ### Fixed
-- [#7891](https://github.com/apache/trafficcontrol/pull/7891) *Traffic Ops*: Created clause to distinguish api versions < 5 when handling 403 in middleware wrappers and updated job routes for v4 and v5
+- [#7891](https://github.com/apache/trafficcontrol/pull/7891) *Traffic Ops*: Updated job routes for v4 and v5.
 - [#7890](https://github.com/apache/trafficcontrol/pull/7890) *Traffic Ops*: Fixed missing changelog entries to v5 routes.
 - [#7887](https://github.com/apache/trafficcontrol/pull/7887) *Traffic Ops*: Limit Delivery Services returned for GET /servers/{id}/deliveryservices to ones in the same CDN
 - [#7885](https://github.com/apache/trafficcontrol/pull/7885) *Traffic Portal*: Fixed the issue where Compare Profiles page was not being displayed.
