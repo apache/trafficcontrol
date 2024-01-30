@@ -13,8 +13,8 @@
 			"name": "ntheanh201"
 		},
 		"logos": {
-			"small": "img/logo.svg",
-			"large": "img/logo.svg"
+			"small": "https://raw.githubusercontent.com/apache/trafficcontrol/master/misc/logos/ATC-SVG.svg",
+			"large": "https://raw.githubusercontent.com/apache/trafficcontrol/master/misc/logos/ATC-SVG.svg"
 		},
 		"screenshots": [],
 		"version": "%VERSION%",
