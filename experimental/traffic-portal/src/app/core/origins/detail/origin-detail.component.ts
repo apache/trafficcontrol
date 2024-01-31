@@ -137,7 +137,7 @@ export class OriginDetailComponent implements OnInit {
 		});
 		ref.afterClosed().subscribe((result) => {
 			if (result) {
-				this.originService.deleteOrigin(this.origin.id);
+				this.originService.deleteOrigin(this.origin);
 				this.location.back();
 			}
 		});

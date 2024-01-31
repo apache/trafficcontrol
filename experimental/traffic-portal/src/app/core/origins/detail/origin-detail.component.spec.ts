@@ -18,6 +18,7 @@ import { ComponentFixture, TestBed } from "@angular/core/testing";
 import { MatButtonHarness } from "@angular/material/button/testing";
 import { MatDialogModule } from "@angular/material/dialog";
 import { MatDialogHarness } from "@angular/material/dialog/testing";
+import { NoopAnimationsModule } from "@angular/platform-browser/animations";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 import { ReplaySubject } from "rxjs";
@@ -43,7 +44,7 @@ describe("OriginDetailComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [OriginDetailComponent],
-			imports: [APITestingModule, RouterTestingModule, MatDialogModule],
+			imports: [APITestingModule, RouterTestingModule, MatDialogModule, NoopAnimationsModule],
 			providers: [{provide: NavigationService, useValue: navSvc}],
 		}).compileComponents();
 
@@ -91,13 +92,13 @@ describe("OriginDetailComponent", () => {
 
 	it("deletes existing Origins", async () => {
 		const spy = spyOn(service, "deleteOrigin").and.callThrough();
-		let cgs = await service.getOrigins();
-		const initialLength = cgs.length;
+		let orgs = await service.getOrigins();
+		const initialLength = orgs.length;
 		if (initialLength < 1) {
-			return fail("need at least one Cache Group");
+			return fail("need at least one Origin");
 		}
-		const cg = cgs[0];
-		component.origin = cg;
+		const org = orgs[0];
+		component.origin = org;
 		component.new = false;
 
 		const asyncExpectation = expectAsync(component.deleteOrigin()).toBeResolvedTo(undefined);
@@ -112,11 +113,11 @@ describe("OriginDetailComponent", () => {
 		}
 		await buttons[0].click();
 
-		expect(spy).toHaveBeenCalledOnceWith(cg);
+		expect(spy).toHaveBeenCalledOnceWith(org);
 
-		cgs = await service.getOrigins();
-		expect(cgs).not.toContain(cg);
-		expect(cgs.length).toBe(initialLength - 1);
+		orgs = await service.getOrigins();
+		expect(orgs).not.toContain(org);
+		expect(orgs.length).toBe(initialLength - 1);
 
 		await asyncExpectation;
 	});
