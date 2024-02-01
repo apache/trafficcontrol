@@ -25,6 +25,8 @@ Group:    Applications/Communications
 License:  Apache License, Version 2.0
 URL:      https://github.com/apache/trafficcontrol
 Source:   %{_sourcedir}/traffic_stats-%{traffic_control_version}.tgz
+AutoReqProv: no
+Requires: nodejs >= 20.0.0
 
 %description
 Installs traffic_stats which performs the follwing functions:
@@ -50,6 +52,10 @@ godir=src/github.com/apache/trafficcontrol/traffic_stats/influxdb_tools
 	cp -R "$TC_DIR"/traffic_stats/influxdb_tools/* .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
+# build trafficcontrol-scenes
+cd ${$TC_DIR}/traffic_stats/trafficcontrol-scenes
+npm run build
+
 %install
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin
@@ -60,6 +66,8 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/run
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log/traffic_stats
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
+mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/trafficcontrol-scenes-app/node_modules
+mkdir -p "${RPM_BUILD_ROOT}"/var/lib/grafana/plugins/trafficcontrol-scenes-app
 
 src=src/github.com/apache/trafficcontrol/traffic_stats
 cp -p "$src"/traffic_stats         "${RPM_BUILD_ROOT}"/opt/traffic_stats/bin/traffic_stats
@@ -67,6 +75,7 @@ cp "$src"/traffic_stats.cfg        "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/tr
 cp "$src"/traffic_stats_seelog.xml "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf/traffic_stats_seelog.xml
 cp "$src"/traffic_stats.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffic_stats
 cp "$src"/traffic_stats.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/traffic_stats
+cp -r "$src"/trafficcontrol-scenes/dist/* "${RPM_BUILD_ROOT}"/var/lib/grafana/plugins/trafficcontrol-scenes-app/
 cp "$src"/influxdb_tools/sync_ts_databases  "${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools/
 cp "$src"/influxdb_tools/create_ts_databases  "${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools/
 
@@ -123,10 +132,12 @@ fi
 %dir /opt/traffic_stats/var/log
 %dir /opt/traffic_stats/var/run
 %dir /opt/traffic_stats/var/log/traffic_stats
+%dir /var/lib/grafana/plugins/trafficcontrol-scenes-app
 %dir /opt/traffic_stats/influxdb_tools
 
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/traffic_stats
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
+%attr(644, traffic_stats, traffic_stats) /var/lib/grafana/plugins/trafficcontrol-scenes-app
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/create_ts_databases
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/sync_ts_databases
 

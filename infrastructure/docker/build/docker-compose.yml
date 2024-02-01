@@ -167,6 +167,7 @@ services:
           - linux/arm64
     volumes:
       - ../../..:/trafficcontrol:z
+      - ../../../.npm:/root/.npm:z
 
   grove_build:
     image: apache/traffic_grove_builder:master
