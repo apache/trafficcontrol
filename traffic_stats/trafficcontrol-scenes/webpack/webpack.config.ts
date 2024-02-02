@@ -11,7 +11,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/* eslint-disable */
 
 import path from "path";
 
@@ -30,10 +29,10 @@ const pluginJson = getPluginJson();
 const config = async (env): Promise<Configuration> => {
 	const baseConfig: Configuration = {
 		cache: {
-			type: "filesystem",
 			buildDependencies: {
 				config: [__filename],
 			},
+			type: "filesystem",
 		},
 
 		context: path.join(process.cwd(), SOURCE_DIR),
@@ -92,14 +91,14 @@ const config = async (env): Promise<Configuration> => {
 						options: {
 							jsc: {
 								baseUrl: path.resolve(__dirname, "src"),
-								target: "es2015",
 								loose: false,
 								parser: {
-									syntax: "typescript",
-									tsx: true,
 									decorators: false,
 									dynamicImport: true,
+									syntax: "typescript",
+									tsx: true,
 								},
+								target: "es2015",
 							},
 						},
 					},
@@ -113,28 +112,28 @@ const config = async (env): Promise<Configuration> => {
 					use: ["style-loader", "css-loader", "sass-loader"],
 				},
 				{
-					test: /\.(png|jpe?g|gif|svg)$/,
-					type: "asset/resource",
 					generator: {
 						// Keep publicPath relative for host.com/grafana/ deployments
-						publicPath: `public/plugins/${pluginJson.id}/img/`,
-						outputPath: "img/",
 						filename: Boolean(env.production)
 							? "[hash][ext]"
 							: "[file]",
+						outputPath: "img/",
+						publicPath: `public/plugins/${pluginJson.id}/img/`,
 					},
+					test: /\.(png|jpe?g|gif|svg)$/,
+					type: "asset/resource",
 				},
 				{
-					test: /\.(woff|woff2|eot|ttf|otf)(\?v=\d+\.\d+\.\d+)?$/,
-					type: "asset/resource",
 					generator: {
 						// Keep publicPath relative for host.com/grafana/ deployments
-						publicPath: `public/plugins/${pluginJson.id}/fonts/`,
-						outputPath: "fonts/",
 						filename: Boolean(env.production)
 							? "[hash][ext]"
 							: "[name][ext]",
+						outputPath: "fonts/",
+						publicPath: `public/plugins/${pluginJson.id}/fonts/`,
 					},
+					test: /\.(woff|woff2|eot|ttf|otf)(\?v=\d+\.\d+\.\d+)?$/,
+					type: "asset/resource",
 				},
 			],
 		},
@@ -161,16 +160,16 @@ const config = async (env): Promise<Configuration> => {
 					// To `compiler.options.output`
 					{from: "plugin.json", to: "."},
 					{from: "**/*.json", to: "."}, // TODO<Add an error for checking the basic structure of the repo>
-					{from: "**/*.svg", to: ".", noErrorOnMissing: true}, // Optional
-					{from: "**/*.png", to: ".", noErrorOnMissing: true}, // Optional
-					{from: "**/*.html", to: ".", noErrorOnMissing: true}, // Optional
-					{from: "img/**/*", to: ".", noErrorOnMissing: true}, // Optional
-					{from: "libs/**/*", to: ".", noErrorOnMissing: true}, // Optional
-					{from: "static/**/*", to: ".", noErrorOnMissing: true}, // Optional
+					{from: "**/*.svg", noErrorOnMissing: true, to: "."}, // Optional
+					{from: "**/*.png", noErrorOnMissing: true, to: "."}, // Optional
+					{from: "**/*.html", noErrorOnMissing: true, to: "."}, // Optional
+					{from: "img/**/*", noErrorOnMissing: true, to: "."}, // Optional
+					{from: "libs/**/*", noErrorOnMissing: true, to: "."}, // Optional
+					{from: "static/**/*", noErrorOnMissing: true, to: "."}, // Optional
 					{
 						from: "**/query_help.md",
-						to: ".",
 						noErrorOnMissing: true,
+						to: ".",
 					}, // Optional
 				],
 			}),
@@ -181,16 +180,16 @@ const config = async (env): Promise<Configuration> => {
 					files: ["plugin.json"],
 					rules: [
 						{
-							search: /\%VERSION\%/g,
 							replace: getPackageJson().version,
+							search: /\%VERSION\%/g,
 						},
 						{
-							search: /\%TODAY\%/g,
 							replace: new Date().toISOString().substring(0, 10),
+							search: /\%TODAY\%/g,
 						},
 						{
-							search: /\%PLUGIN_ID\%/g,
 							replace: pluginJson.id,
+							search: /\%PLUGIN_ID\%/g,
 						},
 					],
 				},
@@ -221,8 +220,8 @@ const config = async (env): Promise<Configuration> => {
 
 	if (isWSL()) {
 		baseConfig.watchOptions = {
-			poll: 3000,
 			ignored: /node_modules/,
+			poll: 3000,
 		};
 	}
 

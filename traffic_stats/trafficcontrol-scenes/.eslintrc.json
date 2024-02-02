@@ -239,7 +239,7 @@
             "format": [
               "camelCase",
               "UPPER_CASE",
-							"PascalCase"
+              "PascalCase"
             ],
             "leadingUnderscore": "allow",
             "trailingUnderscore": "allow"

@@ -11,7 +11,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-/* eslint-disable */
 
 import fs from "fs";
 import os from "os";
@@ -67,6 +66,7 @@ export async function getEntries(): Promise<Record<string, string>> {
 		const pluginName = path.relative(process.cwd(), pluginPath).replace(/src\/?/i, "");
 		const entryName = pluginName === "" ? "module" : `${pluginName}/module`;
 
+		// @ts-ignore
 		result[entryName] = module;
 		return result;
 	}, result), {});

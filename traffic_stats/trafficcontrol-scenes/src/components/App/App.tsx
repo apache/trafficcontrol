@@ -24,8 +24,6 @@ import { PluginPropsContext } from "utils/utils.plugin";
 
 /**
  * Renders the component by providing the PluginPropsContext to its children.
- *
- * @returns {ReactElement} The rendered component.
  */
 export class App extends React.PureComponent<AppRootProps> {
 	/**
