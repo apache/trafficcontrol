@@ -29,9 +29,13 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         yum -y install dnf || exit 1; \
     fi
 
+RUN set -o pipefail && \
+    curl -sLf https://rpm.nodesource.com/setup_16.x | bash
+
 RUN dnf install -y epel-release && \
     dnf install -y \
         jq \
+        nodejs \
         nmap-ncat \
         net-tools \
         # find is required by to-access.sh

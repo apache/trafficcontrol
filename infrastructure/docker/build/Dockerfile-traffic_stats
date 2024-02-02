@@ -42,6 +42,9 @@ RUN rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-* && \
 ### traffic_stats specific requirements
 FROM common-dependencies AS traffic-stats
 
+RUN	curl -sL https://rpm.nodesource.com/setup_20.x | bash - && \
+	yum -y install nodejs
+
 COPY GO_VERSION /
 RUN set -o nounset -o errexit; \
 	rpm_arch="$(rpm --eval %_arch)" && \
