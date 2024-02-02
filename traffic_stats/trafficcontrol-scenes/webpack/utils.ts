@@ -21,7 +21,12 @@ import { glob } from "glob";
 
 import { SOURCE_DIR } from "./constants";
 
-export function isWSL() {
+/**
+ * Check if the current environment is Windows Subsystem for Linux (WSL).
+ *
+ * @returns true if the current environment is WSL, false otherwise
+ */
+export function isWSL(): boolean {
 	if (process.platform !== "linux") {
 		return false;
 	}
@@ -37,20 +42,35 @@ export function isWSL() {
 	}
 }
 
+/**
+ * getPackageJson
+ *
+ * @returns package.json content
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/explicit-function-return-type
 export function getPackageJson() {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	return require(path.resolve(process.cwd(), "package.json"));
 }
 
+/**
+ * Check if a README.md file exists in the SOURCE_DIR directory.
+ *
+ * @returns true if README.md exists, false otherwise
+ */
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/explicit-function-return-type
 export function getPluginJson() {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
 	return require(path.resolve(process.cwd(), `${SOURCE_DIR}/plugin.json`));
-}
-
-export function hasReadme() {
-	return fs.existsSync(path.resolve(process.cwd(), SOURCE_DIR, "README.md"));
 }
 
 // Support bundling nested plugins by finding all plugin.json files in src directory
 // then checking for a sibling module.[jt]sx? file.
+/**
+ * Asynchronously retrieves entries for plugins.
+ *
+ * @returns a Promise that resolves to a record of plugin entries
+ */
 export async function getEntries(): Promise<Record<string, string>> {
 	const pluginsJson = await glob("**/src/**/plugin.json", { absolute: true });
 
