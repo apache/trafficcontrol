@@ -15,18 +15,6 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM node:16-alpine as plugin-build-stage
-
-WORKDIR /app
-
-COPY optional/grafana/trafficcontrol-scenes/package*.json ./
-
-RUN npm install
-
-COPY optional/grafana/trafficcontrol-scenes/ ./
-
-RUN npm run build
-
 FROM grafana/grafana:10.2.3-ubuntu
 
 USER root
@@ -46,15 +34,15 @@ ADD enroller/server_template.json \
 
 RUN cd ~ \
     && 7z x /traffic_stats.rpm \
-    && 7z e traffic_stats-*.cpio *.js -r \
+    && 7z e traffic_stats-*.cpio module.js plugin.json module.js.map -r \
+    && mkdir -p /var/lib/grafana/plugins/trafficcontrol-scenes-app/ \
+    && mv plugin.json module.js.map module.js /var/lib/grafana/plugins/trafficcontrol-scenes-app/ \
     && rm /traffic_stats.rpm \
     && rm ~/traffic_stats-*.cpio
 
 COPY dns/set-dns.sh \
      dns/insert-self-into-dns.sh \
      /usr/local/sbin/
-
-COPY --from=plugin-build-stage /app/dist /var/lib/grafana/plugins/trafficcontrol-scenes-app
 
 ENTRYPOINT [ "/run-grafana.sh" ]
 EXPOSE 443
