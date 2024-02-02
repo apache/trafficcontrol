@@ -53,8 +53,11 @@ godir=src/github.com/apache/trafficcontrol/traffic_stats/influxdb_tools
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
 # build trafficcontrol-scenes
-cd ${$TC_DIR}/traffic_stats/trafficcontrol-scenes
-npm run build
+scenesdir=src/github.com/apache/trafficcontrol/traffic_stats/trafficcontrol-scenes
+( mkdir -p "$scenesdir" && \
+	cd "$scenesdir" && \
+	npm run build
+) || { echo "Could not copy trafficcontrol-scenes at $(pwd): $!"; exit 1; }
 
 %install
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats
@@ -66,7 +69,6 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/run
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log/traffic_stats
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
-mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/trafficcontrol-scenes-app/node_modules
 mkdir -p "${RPM_BUILD_ROOT}"/var/lib/grafana/plugins/trafficcontrol-scenes-app
 
 src=src/github.com/apache/trafficcontrol/traffic_stats
