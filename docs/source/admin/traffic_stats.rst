@@ -91,9 +91,33 @@ To easily create databases, retention policies, and continuous queries, run :pro
 
 Configuring Grafana
 -------------------
-- Traffic Control using Scenes for building dynamic Grafana dashboards, the Scenes app is built under: :file:`/var/lib/grafana/plugins/trafficcontrol-scenes-app`
-- To see Traffic Control dashboards, go to: :file:`https://grafanaHost/a/trafficcontrol-scenes-app`
-.. seealso:: More information on Grafana Scenes can be found in `Grafana Scenes introduction <https://grafana.com/blog/2023/08/03/new-in-grafana-10-grafana-scenes-for-building-dynamic-dashboarding-experiences/>`_
+Grafana can be configured to display graphs using InfluxDB data.
+See below for how to create some simple graphs in Grafana. These instructions assume that InfluxDB has been configured and that data has been written to it. If this is not true, you will not see any graphs.
+
+To create a graph in Grafana, you can follow these basic steps:
+
+#. Login to Grafana as an administrative user
+#. Click on :menuselection:`Data Sources --> Add New`
+#. Enter the necessary information to configure your data source
+#. Click on :menuselection:`Home --> New` at the bottom
+#. Click on :menuselection:`"Collapsed Menu Icon" Button --> Add Panel --> Graph`
+#. Where it says :guilabel:`No Title (click here)` click and choose edit
+#. Choose your data source at the bottom
+#. You can have Grafana help you create a query, or you can create your own.
+
+	.. code-block:: postgresql
+		:caption: Sample Query
+
+		SELECT sum(value)*1000 FROM "monthly"."bandwidth.cdn.1min" GROUP BY time(60s), cdn;
+
+#. Once you have the graph the way you want it, click the :guilabel:`Save Dashboard` button at the top
+#. You should now have a new saved graph
+
+Grafana uses Grafana Scenes to display information about individual :term:`Delivery Services` or :term:`Cache Groups`. In order for the custom graphs to display correctly, the built files of :atc-file:`traffic_stats/trafficcontrol-scenes/`  need to be placed in the :file:`/var/lib/grafana/plugins/trafficcontrol-scenes-app` directory on the Grafana server. If your Grafana server is the same as your Traffic Stats server the RPM install process will take care of putting the files in place. If your Grafana server is different from your Traffic Stats server, you will need to manually copy the files to the correct directory.
+
+To view dynamic dashboards from Grafana Scenes, visit: ``https://grafanaHost/a/trafficcontrol-scenes-app``
+
+.. seealso:: More information on Grafana Scenes can be found in the `blog post <https://grafana.com/blog/2023/09/12/grafana-scenes-is-generally-available-start-building-highly-interactive-apps-today/>`_ of Grafana.
 
 Configuring Traffic Portal for Traffic Stats
 --------------------------------------------
