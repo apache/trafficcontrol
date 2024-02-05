@@ -79,10 +79,16 @@ initBuildArea() {
 								{ echo "Could not build create_ts_databases binary"; return 1; })
 
   # compile trafficcontrol-scenes
-  echo "Installing npm dependencies"
+  echo "Installing grafana scenes npm dependencies"
   (cd trafficcontrol-scenes
     npm i || \
-    		{ echo "Could not install packages from $TS_DIR/trafficcontrol-scenes: $?"; return 1; }
+        { echo "Could not install packages from $TS_DIR/trafficcontrol-scenes: $?"; return 1; }
+  )
+
+  echo "Build grafana scenes"
+  (cd trafficcontrol-scenes
+    npm run build || \
+      	{ echo "Could not build $TS_DIR/trafficcontrol-scenes: $?"; return 1; }
   )
 
 	rsync -aLv ./ "$ts_dest"/ || \

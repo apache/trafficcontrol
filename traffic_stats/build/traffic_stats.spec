@@ -25,8 +25,6 @@ Group:    Applications/Communications
 License:  Apache License, Version 2.0
 URL:      https://github.com/apache/trafficcontrol
 Source:   %{_sourcedir}/traffic_stats-%{traffic_control_version}.tgz
-AutoReqProv: no
-Requires: nodejs >= 20.0.0
 
 %description
 Installs traffic_stats which performs the follwing functions:
@@ -56,7 +54,7 @@ godir=src/github.com/apache/trafficcontrol/traffic_stats/influxdb_tools
 scenesdir=src/github.com/apache/trafficcontrol/traffic_stats/trafficcontrol-scenes
 ( mkdir -p "$scenesdir" && \
 	cd "$scenesdir" && \
-	npm run build
+	cp -R "$TC_DIR"/traffic_stats/trafficcontrol-scenes/* .
 ) || { echo "Could not copy trafficcontrol-scenes at $(pwd): $!"; exit 1; }
 
 %install
@@ -139,7 +137,7 @@ fi
 
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/bin/traffic_stats
 %attr(755, traffic_stats, traffic_stats) /etc/init.d/traffic_stats
-%attr(644, traffic_stats, traffic_stats) /var/lib/grafana/plugins/trafficcontrol-scenes-app
+%attr(755, traffic_stats, traffic_stats) /var/lib/grafana/plugins/trafficcontrol-scenes-app
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/create_ts_databases
 %attr(755, traffic_stats, traffic_stats) /opt/traffic_stats/influxdb_tools/sync_ts_databases
 
