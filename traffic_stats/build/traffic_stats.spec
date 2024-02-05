@@ -50,7 +50,7 @@ godir=src/github.com/apache/trafficcontrol/traffic_stats/influxdb_tools
 	cp -R "$TC_DIR"/traffic_stats/influxdb_tools/* .
 ) || { echo "Could not copy go program at $(pwd): $!"; exit 1; }
 
-# build trafficcontrol-scenes
+# copy trafficcontrol-scenes
 scenesdir=src/github.com/apache/trafficcontrol/traffic_stats/trafficcontrol-scenes
 ( mkdir -p "$scenesdir" && \
 	cd "$scenesdir" && \
