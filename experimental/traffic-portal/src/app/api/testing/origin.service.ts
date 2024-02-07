@@ -16,7 +16,6 @@ import type { RequestOrigin, RequestOriginResponse } from "trafficops-types";
 
 import {
 	CacheGroupService,
-	CoordinateService,
 	DeliveryServiceService,
 	ProfileService,
 	UserService,
@@ -53,7 +52,6 @@ export class OriginService {
 
 	constructor(
 		private readonly userService: UserService,
-		private readonly coordinateService: CoordinateService,
 		private readonly cacheGroupService: CacheGroupService,
 		private readonly profileService: ProfileService,
 		private readonly dsService: DeliveryServiceService
@@ -136,7 +134,7 @@ export class OriginService {
 		}
 		let coordinate = null;
 		if (!!origin?.coordinateId) {
-			coordinate = await this.coordinateService.getCoordinates(
+			coordinate = await this.cacheGroupService.getCoordinates(
 				origin.coordinateId
 			);
 		}
