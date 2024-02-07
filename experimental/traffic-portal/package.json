@@ -24,7 +24,7 @@
     "Traffic Portal"
   ],
   "engines": {
-    "node": ">=16.14.0"
+    "node": ">=18.0.0"
   },
   "engineStrict": true,
   "scripts": {
@@ -101,7 +101,7 @@
     "cypress": "^13.6.2",
     "eslint": "^8.39.0",
     "eslint-plugin-import": "^2.25.3",
-    "eslint-plugin-jsdoc": "^37.0.3",
+    "eslint-plugin-jsdoc": "^48.0.5",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "geckodriver": "^3.2.0",
     "jasmine-core": "^3.10.1",
