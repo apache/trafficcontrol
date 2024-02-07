@@ -74,10 +74,10 @@ export class OriginService extends APIService {
 	}
 
 	/**
-	 * Deletes an existing origin.
+	 * Deletes an existing Origin.
 	 *
-	 * @param originOrId Id of the origin to delete.
-	 * @returns The deleted origin.
+	 * @param originOrId The ID of the Origin to delete.
+	 * @returns The deleted Origin.
 	 */
 	public async deleteOrigin(
 		originOrId: number | RequestOriginResponse
@@ -87,10 +87,10 @@ export class OriginService extends APIService {
 	}
 
 	/**
-	 * Creates a new origin.
+	 * Creates a new Origin.
 	 *
-	 * @param origin The origin to create.
-	 * @returns The created origin.
+	 * @param origin The Origin to create.
+	 * @returns The created Origin.
 	 */
 	public async createOrigin(
 		origin: RequestOrigin
@@ -99,10 +99,10 @@ export class OriginService extends APIService {
 	}
 
 	/**
-	 * Replaces the current definition of an origin with the one given.
+	 * Replaces the current definition of an Origin with the one given.
 	 *
-	 * @param origin The new origin.
-	 * @returns The updated origin.
+	 * @param origin The new Origin.
+	 * @returns The updated Origin.
 	 */
 	public async updateOrigin(
 		origin: RequestOriginResponse

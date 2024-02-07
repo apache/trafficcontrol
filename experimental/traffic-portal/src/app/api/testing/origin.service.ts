@@ -23,7 +23,7 @@ import {
 } from "..";
 
 /**
- * CoordinateService exposes API functionality relating to Coordinates.
+ * OriginService exposes API functionality relating to Origins.
  */
 @Injectable()
 export class OriginService {
@@ -59,18 +59,26 @@ export class OriginService {
 		private readonly dsService: DeliveryServiceService
 	) {}
 
-	public async getOrigins(): Promise<Array<RequestOriginResponse>>;
-	public async getOrigins(
-		nameOrID: string | number
-	): Promise<RequestOriginResponse>;
-
 	/**
-	 * Gets one or all Coordinates from Traffic Ops.
+	 * Gets a specific Origin.
 	 *
-	 * @param nameOrID If given, returns only the ResponseCoordinate with the given name
-	 * (string) or ID (number).
-	 * @returns An Array of ResponseCoordinate objects - or a single ResponseCoordinate object if 'nameOrID'
-	 * was given.
+	 * @param nameOrID Either the integral, unique identifier (number) or name
+	 * (string) of the Origin to be returned.
+	 * @returns The requested Origin.
+	 */
+	public async getOrigins(nameOrID: number | string): Promise<RequestOriginResponse>;
+	/**
+	 * Gets all Origins.
+	 *
+	 * @returns All stored Origins.
+	 */
+	public async getOrigins(): Promise<Array<RequestOriginResponse>>;
+	/**
+	 * Gets one or all Origins.
+	 *
+	 * @param nameOrID Optionally the integral, unique identifier (number) or
+	 * name (string) of a single Origin to be returned.
+	 * @returns The requested Origin(s).
 	 */
 	public async getOrigins(
 		nameOrID?: string | number

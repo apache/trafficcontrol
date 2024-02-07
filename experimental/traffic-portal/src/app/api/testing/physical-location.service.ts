@@ -37,16 +37,26 @@ export class PhysicalLocationService {
 		zip: "0000"
 	}];
 
-	public async getPhysicalLocations(): Promise<Array<ResponsePhysicalLocation>>;
-	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
-
 	/**
-	 * Gets one or all of PhysicalLocations from Traffic Ops.
+	 * Gets all Physical Locations.
 	 *
-	 * @param nameOrID If given, returns only the ResponsePhysicalLocation with the given name
-	 * (string) or ID (number).
-	 * @returns An Array of ResponsePhysicalLocation objects - or a single ResponsePhysicalLocation object if 'nameOrID'
-	 * was given.
+	 * @returns All stored Physical Locations.
+	 */
+	public async getPhysicalLocations(): Promise<Array<ResponsePhysicalLocation>>;
+	/**
+	 * Gets a specific Physical Location.
+	 *
+	 * @param nameOrID The name (string) or ID (number) of the Physical Location
+	 * to be returned.
+	 * @returns The requested Physical Location.
+	 */
+	public async getPhysicalLocations(nameOrID: string | number): Promise<ResponsePhysicalLocation>;
+	/**
+	 * Gets one or all Physical Location(s).
+	 *
+	 * @param nameOrID If given, returns only the PhysicalLocation with the
+	 * given name (string) or ID (number).
+	 * @returns The requested Physical Location(s).
 	 */
 	public async getPhysicalLocations(nameOrID?: string | number): Promise<Array<ResponsePhysicalLocation> | ResponsePhysicalLocation> {
 		if(nameOrID) {

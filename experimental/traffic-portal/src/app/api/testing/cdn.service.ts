@@ -39,15 +39,26 @@ export class CDNService {
 		}
 	];
 
-	public async getCDNs(id: number): Promise<ResponseCDN>;
+	/**
+	 * Gets all CDNs.
+	 *
+	 * @returns All CDNs.
+	 */
 	public async getCDNs(): Promise<Array<ResponseCDN>>;
 	/**
-	 * Gets one or all CDNs from Traffic Ops
+	 * Gets a specific CDN.
 	 *
-	 * @param id The integral, unique identifier of a single CDN to be returned
-	 * @returns Either a Map of CDN names to full CDN objects, or a single CDN, depending on whether `id` was
+	 * @param id The integral, unique identifier of the single CDN to be
+	 * returned.
+	 * @returns The requested CDN.
+	 */
+	public async getCDNs(id: number): Promise<ResponseCDN>;
+	/**
+	 * Gets one or all CDNs.
+	 *
+	 * @param id The integral, unique identifier of a single CDN to be returned.
+	 * @returns Either all CDNs or a single CDN, depending on whether `id` was
 	 * 	passed.
-	 * (In the event that `id` is passed but does not match any CDN, `null` will be emitted)
 	 */
 	public async getCDNs(id?: number): Promise<Array<ResponseCDN> | ResponseCDN> {
 		if (id !== undefined) {

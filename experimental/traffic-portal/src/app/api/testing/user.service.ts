@@ -219,13 +219,26 @@ export class UserService {
 		return true;
 	}
 
+	/**
+	 * Gets a specific User.
+	 *
+	 * @param nameOrID The username (string) or ID (number) of the User to
+	 * fetch.
+	 * @returns The requested User.
+	 */
 	public async getUsers(nameOrID: string | number): Promise<ResponseUser>;
+	/**
+	 * Gets all stored Users.
+	 *
+	 * @returns All Users that are visible to the current user's Tenant.
+	 */
 	public async getUsers(): Promise<Array<ResponseUser>>;
 	/**
-	 * Gets an array of all users in Traffic Ops.
+	 * Gets one or all Users.
 	 *
-	 * @param nameOrID If given, returns only the User with the given username (string) or ID (number).
-	 * @returns An Array of User objects - or a single User object if 'nameOrID' was given.
+	 * @param nameOrID If given, returns only the User with the given username
+	 * (string) or ID (number).
+	 * @returns The requested User(s).
 	 */
 	public async getUsers(nameOrID?: string | number): Promise<Array<ResponseUser> | ResponseUser> {
 		if (nameOrID) {

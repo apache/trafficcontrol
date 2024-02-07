@@ -132,21 +132,34 @@ export class ProfileService extends APIService {
 	}
 
 	/**
-	 * Import profile
+	 * Imports a Profile along with all its associated Parameters.
 	 *
-	 * @param importJSON JSON object for import.
-	 * @returns profile response for imported object.
+	 * @param importJSON The specification of the Profile to be imported/created.
+	 * @returns The created Profile.
 	 */
 	public async importProfile(importJSON: ProfileImport): Promise<ProfileImportResponse>{
 		return this.post<ProfileImportResponse>("profiles/import", importJSON).toPromise();
 	}
 
-	public async getParameters(id: number): Promise<ResponseParameter>;
+	/**
+	 * Retrieves all Parameters from Traffic Ops.
+	 *
+	 * @returns The requested Parameters.
+	 */
 	public async getParameters(): Promise<Array<ResponseParameter>>;
 	/**
-	 * Retrieves Parameters from the API.
+	 * Retrieves a single Parameter from Traffic Ops.
 	 *
-	 * @param id Specify either the integral, unique identifier (number) of a specific Parameter to retrieve.
+	 * @param id The integral, unique identifier of the specific Parameter to
+	 * retrieve.
+	 * @returns The requested Parameter(s).
+	 */
+	public async getParameters(id: number): Promise<ResponseParameter>;
+	/**
+	 * Retrieves a Parameter or Parameters from the API.
+	 *
+	 * @param id If given, only the Parameter with this integral, unique
+	 * identifier will be returned.
 	 * @returns The requested Parameter(s).
 	 */
 	public async getParameters(id?: number): Promise<Array<ResponseParameter> | ResponseParameter> {
@@ -163,10 +176,10 @@ export class ProfileService extends APIService {
 	}
 
 	/**
-	 * Deletes an existing parameter.
+	 * Deletes an existing Parameter.
 	 *
-	 * @param typeOrId Id of the parameter to delete.
-	 * @returns The deleted parameter.
+	 * @param typeOrId The ID of the Parameter to delete.
+	 * @returns The deleted Parameter.
 	 */
 	public async deleteParameter(typeOrId: number | ResponseParameter): Promise<void> {
 		const id = typeof(typeOrId) === "number" ? typeOrId : typeOrId.id;
@@ -174,20 +187,20 @@ export class ProfileService extends APIService {
 	}
 
 	/**
-	 * Creates a new parameter.
+	 * Creates a new Parameter.
 	 *
-	 * @param parameter The parameter to create.
-	 * @returns The created parameter.
+	 * @param parameter The Parameter to create.
+	 * @returns The created Parameter.
 	 */
 	public async createParameter(parameter: RequestParameter): Promise<ResponseParameter> {
 		return this.post<ResponseParameter>("parameters", parameter).toPromise();
 	}
 
 	/**
-	 * Replaces the current definition of a parameter with the one given.
+	 * Replaces the current definition of a Parameter with the one given.
 	 *
-	 * @param parameter The new parameter.
-	 * @returns The updated parameter.
+	 * @param parameter The new Parameter.
+	 * @returns The updated Parameter.
 	 */
 	public async updateParameter(parameter: ResponseParameter): Promise<ResponseParameter> {
 		const path = `parameters/${parameter.id}`;

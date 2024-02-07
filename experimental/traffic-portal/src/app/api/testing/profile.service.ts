@@ -144,12 +144,25 @@ export class ProfileService {
 		}
 	];
 
-	public async getProfiles(idOrName: number | string): Promise<ResponseProfile>;
+	/**
+	 * Retrieves all Profiles.
+	 *
+	 * @returns The requested Profiles.
+	 */
 	public async getProfiles(): Promise<Array<ResponseProfile>>;
 	/**
-	 * Retrieves Profiles from the API.
+	 * Retrieves a specific Profile from the API.
 	 *
-	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Profile to retrieve, or its name (string).
+	 * @param idOrName Specify either the integral, unique identifier (number)
+	 * of a specific Profile to retrieve, or its name (string).
+	 * @returns The requested Profile.
+	 */
+	public async getProfiles(idOrName: number | string): Promise<ResponseProfile>;
+	/**
+	 * Retrieves one or allProfiles from the API.
+	 *
+	 * @param idOrName If given, only the Profile with this integral, unique
+	 * identifier (number) or name (string) will be returned.
 	 * @returns The requested Profile(s).
 	 */
 	public async getProfiles(idOrName?: number | string): Promise<Array<ResponseProfile> | ResponseProfile> {
@@ -183,10 +196,10 @@ export class ProfileService {
 	}
 
 	/**
-	 * Creates a new profile.
+	 * Creates a new Profile.
 	 *
-	 * @param profile The profile to create.
-	 * @returns The created profile.
+	 * @param profile The Profile to create.
+	 * @returns The created Profile.
 	 */
 	public async createProfile(profile: RequestProfile): Promise<ResponseProfile> {
 		const t = {
@@ -200,9 +213,9 @@ export class ProfileService {
 	}
 
 	/**
-	 * Updates an existing profile.
+	 * Updates an existing Profile.
 	 *
-	 * @param profile the profile to update.
+	 * @param profile the Profile to update.
 	 * @returns The success message.
 	 */
 	public async updateProfile(profile: ResponseProfile): Promise<ResponseProfile> {
@@ -230,10 +243,10 @@ export class ProfileService {
 	}
 
 	/**
-	 * import profile from json or text file
+	 * Imports a Profile along with all its associated Parameters.
 	 *
-	 * @param profile imported date for profile creation.
-	 * @returns The created profile which is profileImportResponse with id added.
+	 * @param profile The specification of the Profile to be imported/created.
+	 * @returns The created Profile.
 	 */
 	public async importProfile(profile: ProfileImport): Promise<ProfileImportResponse> {
 		const t = {
@@ -256,13 +269,26 @@ export class ProfileService {
 		}
 	];
 
-	public async getParameters(id: number): Promise<ResponseParameter>;
+	/**
+	 * Gets all Parameters.
+	 *
+	 * @returns The requested Parameters.
+	 */
 	public async getParameters(): Promise<Array<ResponseParameter>>;
 	/**
-	 * Gets one or all Parameters from Traffic Ops
+	 * Gets a specific Parameter.
 	 *
-	 * @param id The integral, unique identifier (number) of a single parameter to be returned.
-	 * @returns The requested parameter(s).
+	 * @param id The integral, unique identifier of the specific Parameter to be
+	 * returned.
+	 * @returns The requested parameter.
+	 */
+	public async getParameters(id: number): Promise<ResponseParameter>;
+	/**
+	 * Gets one or all Parameters.
+	 *
+	 * @param id If given, only the Parameter with this unique, integral
+	 * identifier will be returned.
+	 * @returns The requested Parameter(s).
 	 */
 	public async getParameters(id?: number): Promise<ResponseParameter | Array<ResponseParameter>> {
 		if (id !== undefined) {
@@ -290,10 +316,10 @@ export class ProfileService {
 	}
 
 	/**
-	 * Creates a new parameter.
+	 * Creates a new Parameter.
 	 *
-	 * @param parameter The parameter to create.
-	 * @returns The created parameter.
+	 * @param parameter The Parameter to create.
+	 * @returns The created Parameter.
 	 */
 	public async createParameter(parameter: RequestParameter): Promise<ResponseParameter> {
 		const t = {
@@ -327,8 +353,9 @@ export class ProfileService {
 	/**
 	 * Retrieves Profiles associated with a Parameter from the API.
 	 *
-	 * @param parameter Either a {@link ResponseParameter} or an integral, unique identifier of a Parameter, for which the
-	 * Profiles are to be retrieved.
+	 * @param parameter Either a {@link ResponseParameter} or an integral,
+	 * unique identifier of a Parameter, for which the Profiles are to be
+	 * retrieved.
 	 * @returns The requested Profile(s).
 	 */
 	public async getProfilesByParam(parameter: number| ResponseParameter): Promise<Array<ResponseProfile>> {

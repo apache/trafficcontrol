@@ -111,12 +111,25 @@ export class ServerService {
 		private readonly profileService: ProfileService
 	){}
 
-	public async getServers(idOrName: number | string): Promise<ResponseServer>;
+	/**
+	 * Retrieves all servers.
+	 *
+	 * @returns The requested servers.
+	 */
 	public async getServers(): Promise<Array<ResponseServer>>;
 	/**
-	 * Retrieves servers from the API.
+	 * Retrieves a specific server.
 	 *
-	 * @param idOrName Specify either the integral, unique identifier (number) of a specific Server to retrieve, or its hostname (string).
+	 * @param idOrName Either the (short) hostname (string) of the server to be
+	 * returned, or its ID (number).
+	 * @returns The requested server.
+	 */
+	public async getServers(idOrName: number | string): Promise<ResponseServer>;
+	/**
+	 * Retrieves one or all servers.
+	 *
+	 * @param idOrName Specify either the integral, unique identifier (number)
+	 * of a specific Server to retrieve, or its hostname (string).
 	 * @returns The requested server(s).
 	 */
 	public async getServers(idOrName?: number | string): Promise<Array<ResponseServer> | ResponseServer> {
@@ -216,13 +229,24 @@ export class ServerService {
 		return this.servers[index];
 	}
 
+	/**
+	 * Fetches server "check" stats.
+	 *
+	 * @returns All Serverchecks Traffic Ops has.
+	 */
 	public async getServerChecks(): Promise<Servercheck[]>;
+	/**
+	 * Fetches a server's "check" stats.
+	 *
+	 * @param id The ID of the server whose "checks" will be returned.
+	 * @returns The Servercheck for the server identified by `id`.
+	 */
 	public async getServerChecks(id: number): Promise<Servercheck>;
 	/**
-	 * Fetches server "check" stats from Traffic Ops.
+	 * Fetches server "check" stats.
 	 *
-	 * @param id If given, will return only the checks for the server with that ID.
-	 * @todo Ideally this filter would be implemented server-side; the data set gets huge.
+	 * @param id If given, will return only the checks for the server with that
+	 * ID.
 	 * @returns Serverchecks - or a single Servercheck if ID was given.
 	 */
 	public async getServerChecks(id?: number): Promise<Servercheck | Servercheck[]> {
@@ -236,12 +260,25 @@ export class ServerService {
 		return this.servers.map(serverCheck);
 	}
 
-	public async getStatuses(idOrName: number | string): Promise<ResponseStatus>;
+	/**
+	 * Retrieves all Statuses.
+	 *
+	 * @returns The requested Statuses.
+	 */
 	public async getStatuses(): Promise<Array<ResponseStatus>>;
 	/**
-	 * Retrieves Statuses from the API.
+	 * Retrieves a specific Status.
 	 *
-	 * @param idOrName An optional ID (number) or Name (string) used to fetch a single Status thereby identified.
+	 * @param idOrName The ID (number) or Name (string) of a single Status to be
+	 * retrieved.
+	 * @returns The requested Status.
+	 */
+	public async getStatuses(idOrName: number | string): Promise<ResponseStatus>;
+	/**
+	 * Retrieves one or all Statuses.
+	 *
+	 * @param idOrName An optional ID (number) or Name (string) used to fetch a
+	 * single Status thereby identified.
 	 * @returns The requested Status(es).
 	 */
 	public async getStatuses(idOrName?: number | string): Promise<Array<ResponseStatus> | ResponseStatus> {

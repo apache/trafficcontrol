@@ -196,14 +196,26 @@ export class DeliveryServiceService {
 		return [];
 	}
 
-	public async getDeliveryServices(id: string | number): Promise<ResponseDeliveryService>;
+	/**
+	 * Gets all Delivery Services.
+	 *
+	 * @returns All Delivery Services (visible to the user's Tenant).
+	 */
 	public async getDeliveryServices(): Promise<Array<ResponseDeliveryService>>;
 	/**
-	 * Gets a list of all visible Delivery Services
+	 * Gets a specific Delivery Service.
 	 *
-	 * @param id A unique identifier for a Delivery Service - either a numeric id or an "xml_id"
-	 * @throws TypeError if ``id`` is not a proper type
-	 * @returns An array of `DeliveryService` objects.
+	 * @param id A unique identifier for the desired Delivery Service - either
+	 * its numeric id or its "xml_id".
+	 * @returns The requested Delivery Service.
+	 */
+	public async getDeliveryServices(id: string | number): Promise<ResponseDeliveryService>;
+	/**
+	 * Gets one or all Delivery Services.
+	 *
+	 * @param id If given, only the Delivery Service with this ID (number) or
+	 * "xml_id" (string) will be returned.
+	 * @returns The requested Delivery Service(s).
 	 */
 	public async getDeliveryServices(id?: string | number): Promise<ResponseDeliveryService[] | ResponseDeliveryService> {
 		if (id !== undefined) {
@@ -548,7 +560,7 @@ export class DeliveryServiceService {
 	/**
 	 * Gets a Delivery Service's SSL Keys
 	 *
-	 * @param ds The delivery service xmlid or object
+	 * @param ds The Delivery Service or just its "xml_id".
 	 * @returns The DS ssl keys
 	 */
 	public async getSSLKeys(ds: string | ResponseDeliveryService): Promise<ResponseDeliveryServiceSSLKey> {

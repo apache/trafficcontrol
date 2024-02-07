@@ -145,12 +145,25 @@ export class TypeService {
 		}
 	];
 
-	public async getTypes(idOrName: number | string): Promise<TypeFromResponse>;
+	/**
+	 * Gets all Types.
+	 *
+	 * @returns The requested Types.
+	 */
 	public async getTypes(): Promise<Array<TypeFromResponse>>;
 	/**
-	 * Gets one or all Types from Traffic Ops
+	 * Gets a specific Type.
 	 *
-	 * @param idOrName Either the integral, unique identifier (number) or name (string) of a single Type to be returned.
+	 * @param idOrName Either the integral, unique identifier (number) or name
+	 * (string) of the Type to be returned.
+	 * @returns The requested Type.
+	 */
+	public async getTypes(idOrName: number | string): Promise<TypeFromResponse>;
+	/**
+	 * Gets one or all Types.
+	 *
+	 * @param idOrName Optionally the integral, unique identifier (number) or
+	 * name (string) of a single Type to be returned.
 	 * @returns The requested Type(s).
 	 */
 	public async getTypes(idOrName?: number | string): Promise<TypeFromResponse | Array<TypeFromResponse>> {

@@ -228,16 +228,26 @@ export class CacheGroupService extends APIService {
 		return this.post<CacheGroupQueueResponse>(path, request).toPromise();
 	}
 
-	public async getDivisions(): Promise<Array<ResponseDivision>>;
-	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
-
 	/**
-	 * Gets an array of divisions from Traffic Ops.
+	 * Gets all Divisions from Traffic Ops.
+	 *
+	 * @returns The requested Divisions.
+	 */
+	public async getDivisions(): Promise<Array<ResponseDivision>>;
+	/**
+	 * Gets a single Division from Traffic Ops.
+	 *
+	 * @param nameOrID Either the name (string) or ID (number) of the single
+	 * Division to be fetched.
+	 * @returns The requested Division.
+	 */
+	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
+	/**
+	 * Gets a Division or Divisions from Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the Division with the given name
 	 * (string) or ID (number).
-	 * @returns An Array of Division objects - or a single Division object if 'nameOrID'
-	 * was given.
+	 * @returns The requested Division or Divisions.
 	 */
 	public async getDivisions(nameOrID?: string | number): Promise<Array<ResponseDivision> | ResponseDivision> {
 		const path = "divisions";
@@ -258,10 +268,10 @@ export class CacheGroupService extends APIService {
 	}
 
 	/**
-	 * Replaces the current definition of a division with the one given.
+	 * Replaces the current definition of a Division with the one given.
 	 *
-	 * @param division The new division.
-	 * @returns The updated division.
+	 * @param division The new Division.
+	 * @returns The updated Division.
 	 */
 	public async updateDivision(division: ResponseDivision): Promise<ResponseDivision> {
 		const path = `divisions/${division.id}`;
@@ -279,26 +289,36 @@ export class CacheGroupService extends APIService {
 	}
 
 	/**
-	 * Deletes an existing division.
+	 * Deletes an existing Division.
 	 *
 	 * @param division The Division to be deleted, or just its ID.
-	 * @returns The deleted division.
+	 * @returns The deleted Division.
 	 */
 	public async deleteDivision(division: number | ResponseDivision): Promise<ResponseDivision> {
 		const id = typeof(division) === "number" ? division : division.id;
 		return this.delete<ResponseDivision>(`divisions/${id}`).toPromise();
 	}
 
-	public async getRegions(): Promise<Array<ResponseRegion>>;
-	public async getRegions(nameOrID: string | number): Promise<ResponseRegion>;
-
 	/**
-	 * Gets an array of regions from Traffic Ops.
+	 * Gets all Regions from Traffic Ops.
+	 *
+	 * @returns The requested Regions.
+	 */
+	public async getRegions(): Promise<Array<ResponseRegion>>;
+	/**
+	 * Gets a single Region from Traffic Ops.
+	 *
+	 * @param nameOrID The name (string) or ID (number) of the single Region to
+	 * be fetched.
+	 * @returns The requested Region.
+	 */
+	public async getRegions(nameOrID: string | number): Promise<ResponseRegion>;
+	/**
+	 * Gets a Region or Regions from Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the Region with the given name
 	 * (string) or ID (number).
-	 * @returns An Array of Region objects - or a single Region object if 'nameOrID'
-	 * was given.
+	 * @returns The requested Region or Regions.
 	 */
 	public async getRegions(nameOrID?: string | number): Promise<Array<ResponseRegion> | ResponseRegion> {
 		const path = "regions";
@@ -318,10 +338,10 @@ export class CacheGroupService extends APIService {
 	}
 
 	/**
-	 * Replaces the current definition of a region with the one given.
+	 * Replaces the current definition of a Region with the one given.
 	 *
-	 * @param region The new region.
-	 * @returns The updated region.
+	 * @param region The new Region.
+	 * @returns The updated Region.
 	 */
 	public async updateRegion(region: ResponseRegion): Promise<ResponseRegion> {
 		const path = `regions/${region.id}`;
@@ -329,7 +349,7 @@ export class CacheGroupService extends APIService {
 	}
 
 	/**
-	 * Creates a new region.
+	 * Creates a new Region.
 	 *
 	 * @param region The region to create.
 	 * @returns The created region.
@@ -339,26 +359,36 @@ export class CacheGroupService extends APIService {
 	}
 
 	/**
-	 * Deletes an existing region.
+	 * Deletes an existing Region.
 	 *
-	 * @param regionOrId Id of the region to delete.
-	 * @returns The deleted region.
+	 * @param regionOrId The ID of the Region to delete.
+	 * @returns The deleted Region.
 	 */
 	public async deleteRegion(regionOrId: number | ResponseRegion): Promise<void> {
 		const id = typeof(regionOrId) === "number" ? regionOrId : regionOrId.id;
 		await this.delete("regions", undefined, { id }).toPromise();
 	}
 
-	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
-	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
-
 	/**
-	 * Gets an array of coordinates from Traffic Ops.
+	 * Gets all Coordinates from Traffic Ops.
+	 *
+	 * @returns The requested Coordinates.
+	 */
+	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
+	/**
+	 * Gets a single Coordinate from Traffic Ops.
+	 *
+	 * @param nameOrID The name (string) or ID (number) of the single Coordinate
+	 * to be fetched.
+	 * @returns The requested Coordinate.
+	 */
+	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
+	/**
+	 * Gets a Coordinate or Coordinates from Traffic Ops.
 	 *
 	 * @param nameOrID If given, returns only the Coordinate with the given name
 	 * (string) or ID (number).
-	 * @returns An Array of Coordinate objects - or a single Coordinate object if 'nameOrID'
-	 * was given.
+	 * @returns The requested Coordinate or Coordinates.
 	 */
 	public async getCoordinates(nameOrID?: string | number): Promise<Array<ResponseCoordinate> | ResponseCoordinate> {
 		const path = "coordinates";
@@ -378,30 +408,30 @@ export class CacheGroupService extends APIService {
 	}
 
 	/**
-	 * Replaces the current definition of a coordinate with the one given.
+	 * Replaces the current definition of a Coordinate with the one given.
 	 *
-	 * @param coordinate The new coordinate.
-	 * @returns The updated coordinate.
+	 * @param coordinate The new Coordinate.
+	 * @returns The updated Coordinate.
 	 */
 	public async updateCoordinate(coordinate: ResponseCoordinate): Promise<ResponseCoordinate> {
 		return this.put<ResponseCoordinate>("coordinates", coordinate, { id: coordinate.id }).toPromise();
 	}
 
 	/**
-	 * Creates a new coordinate.
+	 * Creates a new Coordinate.
 	 *
-	 * @param coordinate The coordinate to create.
-	 * @returns The created coordinate.
+	 * @param coordinate The Coordinate to create.
+	 * @returns The created Coordinate.
 	 */
 	public async createCoordinate(coordinate: RequestCoordinate): Promise<ResponseCoordinate> {
 		return this.post<ResponseCoordinate>("coordinates", coordinate).toPromise();
 	}
 
 	/**
-	 * Deletes an existing coordinate.
+	 * Deletes an existing Coordinate.
 	 *
-	 * @param coordinateOrId Id of the coordinate to delete.
-	 * @returns The deleted coordinate.
+	 * @param coordinateOrId The ID of the Coordinate to delete.
+	 * @returns The deleted Coordinate.
 	 */
 	public async deleteCoordinate(coordinateOrId: number | ResponseCoordinate): Promise<void> {
 		const id = typeof(coordinateOrId) === "number" ? coordinateOrId : coordinateOrId.id;
@@ -425,7 +455,7 @@ export class CacheGroupService extends APIService {
 	/**
 	 * Gets ASNs from Traffic Ops.
 	 *
-	 * @param id If given, returns only the asn with the given ID.
+	 * @param id If given, returns only the ASN with the given ID.
 	 * @returns An Array of ASNs objects - or a single ASN object if `id`
 	 * was given.
 	 */
