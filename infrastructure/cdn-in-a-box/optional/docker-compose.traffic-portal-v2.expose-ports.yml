@@ -18,25 +18,6 @@
 version: '3.8'
 
 services:
-  tpv2-e2e-test:
-    build:
-      context: ../../..
-      dockerfile: infrastructure/cdn-in-a-box/optional/traffic_portal_v2_e2e_test/Dockerfile
-      args:
-        # Change BASE_IMAGE to centos when RHEL_VERSION=7
-        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
-        RHEL_VERSION: ${RHEL_VERSION:-8}
-    env_file:
-      - variables.env
-    environment:
-      SKIP_DIG_IP: 'true'
-    hostname: tpv2-e2e
-    domainname: infra.ciab.test
-    volumes:
-      - shared:/shared
-      - ../../../junit:/junit
-
-volumes:
-  shared:
-    external: false
-  junit:
+  trafficportalv2:
+    ports:
+      - "8443:443"
