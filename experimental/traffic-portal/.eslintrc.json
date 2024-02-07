@@ -88,7 +88,7 @@
 				],
 				"id-match": "error",
 				"import/no-deprecated": "warn",
-				"jsdoc/newline-after-description": "off",
+				"jsdoc/newline-after-description": "error",
 				"max-classes-per-file": "off",
 				"no-caller": "error",
 				"no-cond-assign": "error",
