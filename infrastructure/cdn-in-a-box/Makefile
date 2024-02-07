@@ -232,7 +232,7 @@ $(TP_DIST_RPM): $(TP_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_portal$(BUILD_SUFFIX)
 
 $(TP2_DIST_RPM): $(TP2_SOURCE)
-	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_portal_v2$(BUILD_SUFFIX)
+	"$(PKG_COMMAND)" -o $(PKG_FLAGS) traffic_portal_v2$(BUILD_SUFFIX)
 
 $(TR_DIST_RPM) $(TOMCAT_DIST_RPM): $(TR_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_router$(BUILD_SUFFIX)

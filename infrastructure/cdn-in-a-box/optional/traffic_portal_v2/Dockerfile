@@ -34,7 +34,7 @@ RUN set -o pipefail && \
     curl -sLf https://rpm.nodesource.com/setup_18.x | bash
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
-ARG TRAFFIC_PORTAL_RPM=traffic_portal_v2/traffic_portal_v2.rpm
+ARG TRAFFIC_PORTAL_RPM=optional/traffic_portal_v2/traffic_portal_v2.rpm
 
 ARG TO_HOST=$TO_HOST
 
@@ -57,7 +57,7 @@ RUN rpm -Uvh /$(basename $TRAFFIC_PORTAL_RPM) && \
     rm /$(basename $TRAFFIC_PORTAL_RPM)
 
 ADD enroller/server_template.json \
-    traffic_portal_v2/run.sh \
+    optional/traffic_portal_v2/run.sh \
     traffic_ops/to-access.sh /
 
 COPY dns/set-dns.sh \
