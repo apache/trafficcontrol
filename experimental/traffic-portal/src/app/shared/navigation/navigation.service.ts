@@ -203,7 +203,7 @@ export class NavigationService {
 					href: "/core/types",
 					name: "Types"
 				}, {
-					href: `${this.tpv1Url}/origins`,
+					href: "/core/origins",
 					name: "Origins"
 				},
 				{
