@@ -386,29 +386,84 @@ export class DeliveryServiceService {
 		};
 	}
 
-	public async getDSKBPS(d: string, s: Date, e: Date, i: string, u: boolean, dataOnly: true): Promise<Array<DataPoint>>;
-	public async getDSKBPS(d: string, start: Date, end: Date, interval: string, useMids: boolean, dataOnly?: false): Promise<DataResponse>;
 	/**
-	 * Retrieves Delivery Service throughput statistics for a given time period, averaged over a given
-	 * interval.
+	 * Retrieves Delivery Service throughput statistics for a given time period,
+	 * averaged over a given interval.
 	 *
-	 * @param d The `xml_id` of a Delivery Service
-	 * @param start A date/time from which to start data collection
-	 * @param end A date/time at which to end data collection
-	 * @param interval A unit-suffixed interval over which data will be "binned"
-	 * @param _ Unuzed - kept for compatibility with the "concrete" service.
-	 * @param dataOnly Only returns the data series, not any supplementing meta info found in the API response
-	 * @returns An Array of datapoint Arrays (length 2 containing a date string and data value)
+	 * @param d The Delivery Service for which stats will be returned or just
+	 * its "xml_id".
+	 * @param start A date/time from which to start data collection.
+	 * @param end A date/time at which to end data collection.
+	 * @param interval A unit-suffixed interval over which data will be
+	 * "binned".
+	 * @param useMids If true, the returned data will be for mid-tier caching
+	 * servers rather than edge-tier. Implementation detail: in the testing
+	 * service, this has absolutely no bearing on what is returned.
+	 * @param dataOnly If given and false (which is also the default value)
+	 * explicitly specifies that the entire data response should be returned,
+	 * and not just the data series itself.
+	 * @returns A response with some randomly generated data.
 	 */
 	public async getDSKBPS(
-		d: string,
+		d: ResponseDeliveryService | string,
+		start: Date,
+		end: Date,
+		interval: string,
+		useMids: boolean,
+		dataOnly?: false
+	): Promise<DataResponse>;
+	/**
+	 * Retrieves Delivery Service throughput statistics for a given time period,
+	 * averaged over a given interval.
+	 *
+	 * @param d The Delivery Service for which stats will be returned or just
+	 * its "xml_id".
+	 * @param start A date/time from which to start data collection.
+	 * @param end A date/time at which to end data collection.
+	 * @param interval A unit-suffixed interval over which data will be
+	 * "binned".
+	 * @param useMids If true, the returned data will be for mid-tier caching
+	 * servers rather than edge-tier. Implementation detail: in the testing
+	 * service, this has absolutely no bearing on what is returned.
+	 * @param dataOnly Only returns the data series, not any supplementing meta
+	 * info found in the API response.
+	 * @returns An Array of datapoint Arrays (length 2 containing a date string
+	 * and data value).
+	 */
+	public async getDSKBPS(
+		d: ResponseDeliveryService | string,
+		start: Date,
+		end: Date,
+		interval: string,
+		useMids: boolean,
+		dataOnly: true
+	): Promise<Array<DataPoint>>;
+	/**
+	 * Retrieves Delivery Service throughput statistics for a given time period,
+	 * averaged over a given interval.
+	 *
+	 * @param d The Delivery Service for which stats will be returned or just
+	 * its "xml_id".
+	 * @param start A date/time from which to start data collection.
+	 * @param end A date/time at which to end data collection.
+	 * @param interval A unit-suffixed interval over which data will be
+	 * "binned".
+	 * @param _ Unused - kept for compatibility with the "concrete" service.
+	 * @param dataOnly If given and `true`, only returns the data series, not
+	 * any supplementing meta info found in the API response.
+	 * @returns The response - either with or without supplementary meta info as
+	 * decided by `dataOnly`.
+	 */
+	public async getDSKBPS(
+		d: ResponseDeliveryService | string,
 		start: Date,
 		end: Date,
 		interval: string,
 		_: boolean,
 		dataOnly?: boolean
 	): Promise<Array<DataPoint> | DataResponse> {
-		const ds = this.deliveryServices.filter(service=>service.xmlId === d)[0];
+		const xmlID = typeof(d) === "string" ? d : d.xmlId;
+		const ds = this.deliveryServices.find(service=>service.xmlId === xmlID);
 		if (!ds) {
 			throw new Error(`no such Delivery Service: ${d}`);
 		}
@@ -440,21 +495,27 @@ export class DeliveryServiceService {
 	}
 
 	/**
-	 * Gets total TPS data for a Delivery Service. To get TPS data broken down by HTTP status, use {@link getAllDSTPSData}.
+	 * Gets total TPS data for a Delivery Service. To get TPS data broken down
+	 * by HTTP status, use {@link getAllDSTPSData}.
 	 *
-	 * @param d The name (xmlid) of the Delivery Service for which TPS stats will be fetched
-	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
-	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
-	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
+	 * @param d The Delivery Service for which TPS stats will be fetched, or
+	 * just its "xml_id".
+	 * @param start The desired start date/time of the data range (must not have
+	 * nonzero milliseconds!).
+	 * @param end The desired end date/time of the data range (must not have
+	 * nonzero milliseconds!).
+	 * @param interval A string that describes the interval across which to
+	 * 'bucket' data e.g. '60s'.
 	 * @returns The requested DataResponse.
 	 */
 	public async getDSTPS(
-		d: string,
+		d: ResponseDeliveryService | string,
 		start: Date,
 		end: Date,
 		interval: string,
 	): Promise<DataResponse> {
-		const ds = this.deliveryServices.filter(service=>service.xmlId === d)[0];
+		const xmlID = typeof(d) === "string" ? d : d.xmlId;
+		const ds = this.deliveryServices.find(service=>service.xmlId === xmlID);
 		if (!ds) {
 			throw new Error(`no such Delivery Service: ${d}`);
 		}
@@ -483,21 +544,27 @@ export class DeliveryServiceService {
 	}
 
 	/**
-	 * Gets total TPS data for a Delivery Service, as well as TPS data by HTTP response type.
+	 * Gets total TPS data for a Delivery Service, as well as TPS data by HTTP
+	 * response type.
 	 *
-	 * @param d The name (xmlid) of the Delivery Service for which TPS stats will be fetched
-	 * @param start The desired start date/time of the data range (must not have nonzero milliseconds!)
-	 * @param end The desired end date/time of the data range (must not have nonzero milliseconds!)
-	 * @param interval A string that describes the interval across which to 'bucket' data e.g. '60s'
+	 * @param d The Delivery Service for which TPS stats will be fetched, or
+	 * just its "xml_id".
+	 * @param start The desired start date/time of the data range (must not have
+	 * nonzero milliseconds!).
+	 * @param end The desired end date/time of the data range (must not have
+	 * nonzero milliseconds!).
+	 * @param interval A string that describes the interval across which to
+	 * 'bucket' data e.g. '60s'.
 	 * @returns The requested TPSData.
 	 */
 	public async getAllDSTPSData(
-		d: string,
+		d: ResponseDeliveryService | string,
 		start: Date,
 		end: Date,
 		interval: string,
 	): Promise<TPSData> {
-		const ds = this.deliveryServices.filter(service=>service.xmlId === d)[0];
+		const xmlID = typeof(d) === "string" ? d : d.xmlId;
+		const ds = this.deliveryServices.filter(service=>service.xmlId === xmlID);
 		if (!ds) {
 			throw new Error(`no such Delivery Service: ${d}`);
 		}
