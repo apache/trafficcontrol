@@ -28,7 +28,6 @@ import type {
 
 import {
 	CacheGroupService,
-	CoordinateService,
 	DeliveryServiceService,
 	OriginService,
 	ProfileService,
@@ -64,7 +63,6 @@ export class OriginDetailComponent implements OnInit {
 		private readonly navSvc: NavigationService,
 		private readonly log: LoggingService,
 		private readonly userService: UserService,
-		private readonly coordinateService: CoordinateService,
 		private readonly cacheGroupService: CacheGroupService,
 		private readonly profileService: ProfileService,
 		private readonly dsService: DeliveryServiceService
@@ -76,7 +74,7 @@ export class OriginDetailComponent implements OnInit {
 	public async ngOnInit(): Promise<void> {
 		this.tenants = await this.userService.getTenants();
 		this.cacheGroups = await this.cacheGroupService.getCacheGroups();
-		this.coordinates = await this.coordinateService.getCoordinates();
+		this.coordinates = await this.cacheGroupService.getCoordinates();
 		this.profiles = await this.profileService.getProfiles();
 		this.deliveryServices = await this.dsService.getDeliveryServices();
 		this.protocols = ["http", "https"];

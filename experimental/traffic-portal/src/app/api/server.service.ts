@@ -44,6 +44,12 @@ export class ServerService extends APIService {
 	}
 
 	/**
+	 * Retrieves servers from the API.
+	 *
+	 * @returns The requested servers.
+	 */
+	public async getServers(): Promise<Array<ResponseServer>>;
+	/**
 	 * Retrieves a single server from the API.
 	 *
 	 * @param idOrName Either the integral, unique identifier (number) of a
@@ -55,12 +61,6 @@ export class ServerService extends APIService {
 	 * error.
 	 */
 	public async getServers(idOrName: number | string): Promise<ResponseServer>;
-	/**
-	 * Retrieves servers from the API.
-	 *
-	 * @returns The requested servers.
-	 */
-	public async getServers(): Promise<Array<ResponseServer>>;
 	/**
 	 * Retrieves servers from the API.
 	 *
@@ -129,13 +129,26 @@ export class ServerService extends APIService {
 		return this.put<ResponseServer>(`servers/${id}`, body).toPromise();
 	}
 
+	/**
+	 * Fetches server "check" stats from Traffic Ops.
+	 *
+	 * @returns All Serverchecks Traffic Ops has.
+	 */
 	public async getServerChecks(): Promise<Servercheck[]>;
+	/**
+	 * Fetches a server's "check" stats from Traffic Ops.
+	 *
+	 * @param id The ID of the server whose "checks" will be returned.
+	 * @returns The Servercheck for the server identified by `id`.
+	 */
 	public async getServerChecks(id: number): Promise<Servercheck>;
 	/**
 	 * Fetches server "check" stats from Traffic Ops.
 	 *
-	 * @param id If given, will return only the checks for the server with that ID.
-	 * @todo Ideally this filter would be implemented server-side; the data set gets huge.
+	 * @param id If given, will return only the checks for the server with that
+	 * ID.
+	 * @todo Ideally this filter would be implemented server-side; the data set
+	 * gets huge.
 	 * @returns Serverchecks - or a single Servercheck if ID was given.
 	 */
 	public async getServerChecks(id?: number): Promise<Servercheck | Servercheck[]> {

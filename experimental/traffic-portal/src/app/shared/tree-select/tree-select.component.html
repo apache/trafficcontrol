@@ -23,7 +23,7 @@ limitations under the License.
 		</mat-form-field>
 		<mat-tree [dataSource]="treeData" [treeControl]="treeControl">
 			<mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle [style.display]="!isVisible(node) ? 'none' : 'block'">
-				<div mat-menu-item (click)="select(node)">
+				<div mat-menu-item (click)="select(node)" (keypress.enter)="select(node)">
 						{{node.name}}
 				</div>
 			</mat-tree-node>
@@ -34,7 +34,7 @@ limitations under the License.
 							{{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
 						</mat-icon>
 					</button>
-					<div mat-menu-item (click)="select(node)">
+					<div mat-menu-item (click)="select(node)" (keypress.enter)="select(node)">
 						{{node.name}}
 					</div>
 				</div>

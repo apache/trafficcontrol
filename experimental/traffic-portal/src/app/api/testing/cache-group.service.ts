@@ -194,15 +194,31 @@ export class CacheGroupService {
 
 	constructor(private readonly servers: ServerService) {}
 
-	public async getCacheGroups(idOrName: number | string): Promise<ResponseCacheGroup>;
+	/**
+	 * Gets all Cache Groups.
+	 *
+	 * @returns All stored Cache Groups.
+	 */
 	public async getCacheGroups(): Promise<Array<ResponseCacheGroup>>;
 	/**
-	 * Gets one or all CDNs from Traffic Ops
+	 * Gets a single Cache Group.
 	 *
-	 * @param idOrName Optionally either the name or integral, unique identifier of a single Cache Group to be returned.
-	 * @returns Either an Array of CacheGroup objects, or a single CacheGroup, depending on whether
-	 * `idOrName` was 	passed.
-	 * @throws {Error} In the event that `idOrName` is passed but does not match any CacheGroup.
+	 * @param idOrName Either the name or integral, unique identifier of the
+	 * single Cache Group to be returned.
+	 * @returns The requested Cache Group.
+	 * @throws {Error} In the event that `idOrName` is passed but does not match
+	 * any CacheGroup.
+	 */
+	public async getCacheGroups(idOrName: number | string): Promise<ResponseCacheGroup>;
+	/**
+	 * Gets one or all Cache Groups.
+	 *
+	 * @param idOrName Optionally either the name or integral, unique identifier
+	 * of a single Cache Group to be returned.
+	 * @returns Either all stored Cache Groups, or a single Cache Group,
+	 * depending on whether `idOrName` was 	passed.
+	 * @throws {Error} In the event that `idOrName` is passed but does not match
+	 * any CacheGroup.
 	 */
 	public async getCacheGroups(idOrName?: number | string): Promise<Array<ResponseCacheGroup> | ResponseCacheGroup> {
 		if (idOrName !== undefined) {
@@ -456,16 +472,27 @@ export class CacheGroupService {
 			serverNames,
 		};
 	}
-	public async getDivisions(): Promise<Array<ResponseDivision>>;
-	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
 
 	/**
-	 * Gets an array of divisions from Traffic Ops.
+	 * Gets all Divisions.
 	 *
-	 * @param nameOrID If given, returns only the ResponseDivision with the given name
+	 * @returns The requested Divisions.
+	 */
+	public async getDivisions(): Promise<Array<ResponseDivision>>;
+	/**
+	 * Gets a single Division.
+	 *
+	 * @param nameOrID Either the name (string) or ID (number) of the single
+	 * Division to be returned.
+	 * @returns The requested Division.
+	 */
+	public async getDivisions(nameOrID: string | number): Promise<ResponseDivision>;
+	/**
+	 * Gets a Division or Divisions.
+	 *
+	 * @param nameOrID If given, returns only the Division with the given name
 	 * (string) or ID (number).
-	 * @returns An Array of ResponseDivision objects - or a single ResponseDivision object if 'nameOrID'
-	 * was given.
+	 * @returns The requested Division or Divisions.
 	 */
 	public async getDivisions(nameOrID?: string | number): Promise<Array<ResponseDivision> | ResponseDivision> {
 		if(nameOrID) {
@@ -486,10 +513,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Replaces the current definition of a division with the one given.
+	 * Replaces the current definition of a Division with the one given.
 	 *
-	 * @param division The new division.
-	 * @returns The updated division.
+	 * @param division The new Division.
+	 * @returns The updated Division.
 	 */
 	public async updateDivision(division: ResponseDivision): Promise<ResponseDivision> {
 		const id = this.divisions.findIndex(d => d.id === division.id);
@@ -501,10 +528,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Creates a new division.
+	 * Creates a new Division.
 	 *
-	 * @param division The division to create.
-	 * @returns The created division.
+	 * @param division The Division to create.
+	 * @returns The created Division.
 	 */
 	public async createDivision(division: RequestDivision): Promise<ResponseDivision> {
 		const div = {
@@ -517,10 +544,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Deletes an existing division.
+	 * Deletes an existing Division.
 	 *
-	 * @param id Id of the division to delete.
-	 * @returns The deleted division.
+	 * @param id Id of the Division to delete.
+	 * @returns The deleted Division.
 	 */
 	public async deleteDivision(id: number): Promise<ResponseDivision> {
 		const index = this.divisions.findIndex(d => d.id === id);
@@ -530,16 +557,26 @@ export class CacheGroupService {
 		return this.divisions.splice(index, 1)[0];
 	}
 
-	public async getRegions(): Promise<Array<ResponseRegion>>;
-	public async getRegions(nameOrID: string | number): Promise<ResponseRegion>;
-
 	/**
-	 * Gets an array of regions from Traffic Ops.
+	 * Gets all Regions.
 	 *
-	 * @param nameOrID If given, returns only the ResponseRegion with the given name
+	 * @returns The requested Regions.
+	 */
+	public async getRegions(): Promise<Array<ResponseRegion>>;
+	/**
+	 * Gets a single Region.
+	 *
+	 * @param nameOrID The name (string) or ID (number) of the single Region to
+	 * be returned.
+	 * @returns The requested Region.
+	 */
+	public async getRegions(nameOrID: string | number): Promise<ResponseRegion>;
+	/**
+	 * Gets a Region or Regions.
+	 *
+	 * @param nameOrID If given, returns only the Region with the given name
 	 * (string) or ID (number).
-	 * @returns An Array of ResponseRegion objects - or a single ResponseRegion object if 'nameOrID'
-	 * was given.
+	 * @returns The requested Region or Regions.
 	 */
 	public async getRegions(nameOrID?: string | number): Promise<Array<ResponseRegion> | ResponseRegion> {
 		if(nameOrID) {
@@ -560,10 +597,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Replaces the current definition of a region with the one given.
+	 * Replaces the current definition of a Region with the one given.
 	 *
-	 * @param region The new region.
-	 * @returns The updated region.
+	 * @param region The new Region.
+	 * @returns The updated Region.
 	 */
 	public async updateRegion(region: ResponseRegion): Promise<ResponseRegion> {
 		const id = this.regions.findIndex(d => d.id === region.id);
@@ -575,10 +612,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Creates a new region.
+	 * Creates a new Region.
 	 *
-	 * @param region The region to create.
-	 * @returns The created region.
+	 * @param region The Region to create.
+	 * @returns The created Region.
 	 */
 	public async createRegion(region: RequestRegion): Promise<ResponseRegion> {
 		const reg = {
@@ -592,10 +629,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Deletes an existing region.
+	 * Deletes an existing Region.
 	 *
-	 * @param id Id of the region to delete.
-	 * @returns The deleted region.
+	 * @param id Id of the Region to delete.
+	 * @returns The deleted Region.
 	 */
 	public async deleteRegion(id: number | ResponseRegion): Promise<ResponseRegion> {
 		const index = this.regions.findIndex(d => d.id === id);
@@ -604,16 +641,27 @@ export class CacheGroupService {
 		}
 		return this.regions.splice(index, 1)[0];
 	}
-	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
-	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
 
 	/**
-	 * Gets an array of coordinates from Traffic Ops.
+	 * Gets all Coordinates from Traffic Ops.
 	 *
-	 * @param nameOrID If given, returns only the ResponseCoordinate with the given name
+	 * @returns The requested Coordinates.
+	 */
+	public async getCoordinates(): Promise<Array<ResponseCoordinate>>;
+	/**
+	 * Gets a single Coordinate from Traffic Ops.
+	 *
+	 * @param nameOrID The name (string) or ID (number) of the single Coordinate
+	 * to be fetched.
+	 * @returns The requested Coordinate.
+	 */
+	public async getCoordinates(nameOrID: string | number): Promise<ResponseCoordinate>;
+	/**
+	 * Gets a Coordinate or Coordinates from Traffic Ops.
+	 *
+	 * @param nameOrID If given, returns only the Coordinate with the given name
 	 * (string) or ID (number).
-	 * @returns An Array of ResponseCoordinate objects - or a single ResponseCoordinate object if 'nameOrID'
-	 * was given.
+	 * @returns The requested Coordinate or Coordinates.
 	 */
 	public async getCoordinates(nameOrID?: string | number): Promise<Array<ResponseCoordinate> | ResponseCoordinate> {
 		if(nameOrID) {
@@ -634,10 +682,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Replaces the current definition of a coordinate with the one given.
+	 * Replaces the current definition of a Coordinate with the one given.
 	 *
-	 * @param coordinate The new coordinate.
-	 * @returns The updated coordinate.
+	 * @param coordinate The new Coordinate.
+	 * @returns The updated Coordinate.
 	 */
 	public async updateCoordinate(coordinate: ResponseCoordinate): Promise<ResponseCoordinate> {
 		const id = this.coordinates.findIndex(c => c.id === coordinate.id);
@@ -649,10 +697,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Creates a new coordinate.
+	 * Creates a new Coordinate.
 	 *
-	 * @param coordinate The coordinate to create.
-	 * @returns The created coordinate.
+	 * @param coordinate The Coordinate to create.
+	 * @returns The created Coordinate.
 	 */
 	public async createCoordinate(coordinate: RequestCoordinate): Promise<ResponseCoordinate> {
 		const crd = {
@@ -665,10 +713,10 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Deletes an existing coordinate.
+	 * Deletes an existing Coordinate.
 	 *
-	 * @param id Id of the coordinate to delete.
-	 * @returns The deleted coordinate.
+	 * @param id Id of the Coordinate to delete.
+	 * @returns The deleted Coordinate.
 	 */
 	public async deleteCoordinate(id: number): Promise<ResponseCoordinate> {
 		const index = this.coordinates.findIndex(c => c.id === id);
@@ -678,14 +726,25 @@ export class CacheGroupService {
 		return this.coordinates.splice(index, 1)[0];
 	}
 
+	/**
+	 * Gets all ASNs.
+	 *
+	 * @returns All stored ASNs.
+	 */
 	public async getASNs(): Promise<Array<ResponseASN>>;
+	/**
+	 * Gets a single ASN.
+	 *
+	 * @param id The ID of the ASN to fetch.
+	 * @returns The ASN with the given ID.
+	 */
 	public async getASNs(id: number): Promise<ResponseASN>;
 
 	/**
-	 * Gets an array of ASNs from Traffic Ops.
+	 * Gets all ASNs.
 	 *
-	 * @param id If given, returns only the asn with the given id (number).
-	 * @returns An Array of ASNs objects - or a single ASN object if 'id'
+	 * @param id If given, returns only the ASN with the given ID.
+	 * @returns An Array of ASNs objects - or a single ASN object if `id`
 	 * was given.
 	 */
 	public async getASNs(id?: number): Promise<Array<ResponseASN> | ResponseASN> {
@@ -733,16 +792,15 @@ export class CacheGroupService {
 	}
 
 	/**
-	 * Deletes an existing asn.
+	 * Deletes an existing ASN.
 	 *
 	 * @param asn The ASN to be deleted or ID of the ASN to delete..
-	 * @returns The deleted asn.
 	 */
-	public async deleteASN(asn: ResponseASN | number): Promise<ResponseASN> {
+	public async deleteASN(asn: ResponseASN | number): Promise<void> {
 		const index = this.asns.findIndex(a => a.asn === asn);
 		if (index === -1) {
 			throw new Error(`no such asn: ${asn}`);
 		}
-		return this.asns.splice(index, 1)[0];
+		this.asns.splice(index, 1);
 	}
 }
