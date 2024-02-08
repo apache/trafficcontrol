@@ -72,7 +72,7 @@ WORKDIR /lang/traffic-portal/
 RUN npm ci
 
 COPY infrastructure/cdn-in-a-box/traffic_ops/to-access.sh \
-     infrastructure/cdn-in-a-box/traffic_portal_v2_e2e_test/run.sh \
+     infrastructure/cdn-in-a-box/optional/traffic_portal_v2_e2e_test/run.sh \
      infrastructure/cdn-in-a-box/dns/set-dns.sh \
      infrastructure/cdn-in-a-box/dns/insert-self-into-dns.sh \
      /usr/local/sbin/

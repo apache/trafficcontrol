@@ -20,7 +20,7 @@ version: '3.8'
 services:
   tpv2-e2e-test:
     build:
-      context: ../../..
+      context: ../..
       dockerfile: infrastructure/cdn-in-a-box/optional/traffic_portal_v2_e2e_test/Dockerfile
       args:
         # Change BASE_IMAGE to centos when RHEL_VERSION=7
@@ -34,7 +34,7 @@ services:
     domainname: infra.ciab.test
     volumes:
       - shared:/shared
-      - ../../../junit:/junit
+      - ../../junit:/junit
 
 volumes:
   shared:
