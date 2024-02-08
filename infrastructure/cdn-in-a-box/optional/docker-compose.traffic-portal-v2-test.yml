@@ -27,7 +27,7 @@ services:
         BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
     env_file:
-      - ../variables.env
+      - variables.env
     environment:
       SKIP_DIG_IP: 'true'
     hostname: tpv2-e2e

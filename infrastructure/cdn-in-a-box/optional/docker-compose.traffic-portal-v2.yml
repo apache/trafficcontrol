@@ -22,17 +22,17 @@ services:
   trafficportalv2:
     build:
       context: .
-      dockerfile: traffic_portal_v2/Dockerfile
+      dockerfile: optional/traffic_portal_v2/Dockerfile
       args:
         # Change BASE_IMAGE to centos when RHEL_VERSION=7
         BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
         RHEL_VERSION: ${RHEL_VERSION:-8}
-        TRAFFIC_PORTAL_RPM: traffic_portal_v2/traffic_portal_v2.rpm
+        TRAFFIC_PORTAL_RPM: optional/traffic_portal_v2/traffic_portal_v2.rpm
     depends_on:
       - enroller
     domainname: infra.ciab.test
     env_file:
-      - ../variables.env
+      - variables.env
     hostname: trafficportalv2
     image: trafficportalv2
     volumes:

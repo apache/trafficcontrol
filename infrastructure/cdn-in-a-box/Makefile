@@ -86,7 +86,7 @@ ATS_RPM := cache/trafficserver.rpm
 TM_RPM := traffic_monitor/traffic_monitor.rpm
 TO_RPM := traffic_ops/traffic_ops.rpm
 TP_RPM := traffic_portal/traffic_portal.rpm
-TP2_RPM := traffic_portal_v2/traffic_portal_v2.rpm
+TP2_RPM := optional/traffic_portal_v2/traffic_portal_v2.rpm
 TR_RPM := traffic_router/traffic_router.rpm
 TOMCAT_RPM := traffic_router/tomcat.rpm
 TS_RPM := traffic_stats/traffic_stats.rpm
@@ -232,7 +232,7 @@ $(TP_DIST_RPM): $(TP_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_portal$(BUILD_SUFFIX)
 
 $(TP2_DIST_RPM): $(TP2_SOURCE)
-	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_portal_v2$(BUILD_SUFFIX)
+	"$(PKG_COMMAND)" -o $(PKG_FLAGS) traffic_portal_v2$(BUILD_SUFFIX)
 
 $(TR_DIST_RPM) $(TOMCAT_DIST_RPM): $(TR_SOURCE)
 	"$(PKG_COMMAND)" $(PKG_FLAGS) traffic_router$(BUILD_SUFFIX)
