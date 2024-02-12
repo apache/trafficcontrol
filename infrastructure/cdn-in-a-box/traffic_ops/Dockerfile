@@ -84,7 +84,8 @@ RUN set -o nounset -o errexit -o xtrace && \
 		perl-libwww-perl     \
 		perl-TermReadKey     \
 		perl-Test-CPAN-Meta  \
-		perl-WWW-Curl;       \
+		perl-WWW-Curl        \
+		python3; \
 	dnf clean all
 
 FROM trafficops-dependencies AS trafficops

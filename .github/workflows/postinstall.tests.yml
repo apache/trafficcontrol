@@ -32,7 +32,6 @@ on:
 
 env:
   PYTHON3_VERSION: '3.6'
-  PYTHON2_VERSION: '2.7'
 
 jobs:
   postinstall-tests:
@@ -48,11 +47,6 @@ jobs:
         if: ${{ steps.checkout.outcome == 'success' }}
         with:
           python-version: '${{ env.PYTHON3_VERSION }}'
-      - name: Install Python ${{ env.PYTHON2_VERSION }}
-        uses: actions/setup-python@v4
-        if: ${{ steps.checkout.outcome == 'success' }}
-        with:
-          python-version: '${{ env.PYTHON2_VERSION }}'
       - name: Run Postinstall Tests
         if: ${{ steps.checkout.outcome == 'success' }}
         run: traffic_ops/install/bin/postinstall.test.sh

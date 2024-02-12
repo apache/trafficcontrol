@@ -19,6 +19,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7918](https://github.com/apache/trafficcontrol/pull/7918) *Traffic Portal* Fixed topology link under DS-Servers tables page
 - [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
 
+### Removed
+- [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed Perl dependency
+- [#7841](https://github.com/apache/trafficcontrol/pull/7841) *Postinstall* Removed Perl implementation and Python 2.x support
+
 ## [8.0.0] - 2023-09-20
 ### Added
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client*: Added peer monitor flag while using `strategies.yaml`.

@@ -22,34 +22,25 @@ readonly MY_DIR="$(pwd)";
 
 help_string="$(<<-'HELP_STRING' cat
 	Usage: ./postinstall.test.h [
-	    -2        Set Python version to 2
-	    -3        Set Python version to 3
 	    -b        Explicitly set the path to the Python binary as this value
 	    -h, ?     Print this help text and exit
-	    -s        Do not test Python 2 after testing Python 3
 HELP_STRING
 )"
 
-while getopts :23hsb: opt; do
+while getopts :hb: opt; do
 	case "$opt" in
-		2) python_version=2;;
-		3) python_version=3;;
 		b) python_bin="$OPTARG";;
 		h) echo "$help_string" && exit;;
-		s) skip_python2=true;;
 		?) echo "$help_string" && exit;;
 		*) echo "Invalid flag received: ${OPTARG}" >&2 && echo "$help_string" && exit 1;;
 	esac;
 done;
 
-python_version="${python_version:-3}";
-python_bin="${python_bin:-/usr/bin/python${python_version}}";
+python_bin="${python_bin:-/usr/bin/python3}";
 
-if [[ ! -x "$python_bin" && "$python_version" -ge 3 ]]; then
+if [[ ! -x "$python_bin" ]]; then
 	echo "Python 3.6+ is required to run - or test - _postinstall.py" >&2;
 	exit 1;
-elif [[ ! -x "$python_bin" && "$python_version" == 2 ]]; then
-	echo "Python ${python_version} is required to run - or test - _postinstall.py against Python 2" >&2;
 fi
 
 readonly TO_PASSWORD=twelve;
@@ -58,7 +49,6 @@ readonly ROOT_DIR="$(mktemp -d)";
 trap 'rm -rf $ROOT_DIR' EXIT;
 
 "$python_bin" <<EOF;
-from __future__ import print_function
 import importlib
 import sys
 from os.path import dirname, join
@@ -110,7 +100,6 @@ cat > "$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf" <<EOF
 EOF
 
 "$python_bin" <<TESTS 2>/dev/null | tee -a "${ROOT_DIR}/stdout";
-from __future__ import print_function
 import subprocess
 import sys
 import _postinstall
@@ -359,12 +348,8 @@ fi
 readonly USERS_JSON_FILE="$ROOT_DIR/opt/traffic_ops/install/data/json/users.json";
 
 "$python_bin" <<EOF
-from __future__ import print_function
 import json
 import sys
-
-if sys.version_info.major < 3:
-	str = unicode
 
 try:
 	with open('$USERS_JSON_FILE') as fd:
@@ -430,13 +415,9 @@ if [[ "$DB_CONF_ACTUAL" != "$DB_CONF_EXPECTED" ]]; then
 fi
 
 "$python_bin" <<EOF
-from __future__ import print_function
 import json
 import string
 import sys
-
-if sys.version_info.major < 3:
-	str = unicode
 
 try:
 	with(open('$ROOT_DIR/opt/traffic_ops/app/conf/cdn.conf')) as fd:
@@ -479,7 +460,7 @@ if conf['traffic_ops_golang']['key']!= key:
 	print('Incorrect key in cdn.conf, expected:', key, 'got:', conf['traffic_ops_golang']['key'], file=sys.stderr)
 	exit(1)
 
-if conf['traffic_ops_golang']['port'] != '443':
+if conf['traffic_ops_golang']['port'] != "443":
 	print('Incorrect traffic_ops_golang.port, expected: 443, got:', conf['traffic_ops_golang']['port'], file=sys.stderr)
 	exit(1)
 
@@ -530,7 +511,3 @@ if [[ "$KEY_FILE_TYPE" != "$KEY_FILE: PEM RSA private key" ]]; then
 	echo "Incorrect key file, expected PEM RSA private key, got: $KEY_FILE_TYPE" >&2;
 	exit 1;
 fi
-
-if [[ "$python_version" != 2 && -z "$skip_python2" ]]; then
-	exec "${MY_DIR}/$(basename "${BASH_SOURCE[0]}")" -2;
-fi;

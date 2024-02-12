@@ -33,7 +33,7 @@
     {
       "LDAP Admin Password": "",
       "config_var": "password",
-      "hidden": "1"
+      "hidden": true
     },
     {
       "LDAP Search Base": "",
@@ -64,7 +64,7 @@
     {
       "Traffic Ops database password": "dbpass",
       "config_var": "password",
-      "hidden": "1"
+      "hidden": true
     }
   ],
   "/opt/traffic_ops/app/conf/production/tv.conf": [
@@ -91,7 +91,7 @@
     {
       "Traffic Ops database password": "dbpass",
       "config_var": "password",
-      "hidden": "1"
+      "hidden": true
     }
   ],
   "/opt/traffic_ops/install/data/json/openssl_configuration.json": [
@@ -126,7 +126,7 @@
     {
       "RSA Passphrase": "password",
       "config_var": "rsaPassword",
-      "hidden": "1"
+      "hidden": true
     }
   ],
   "/opt/traffic_ops/install/data/json/profiles.json": [
@@ -151,7 +151,7 @@
     {
       "Password for the admin user": "twelve",
       "config_var": "tmAdminPw",
-      "hidden": "1"
+      "hidden": true
     }
   ],
   "/opt/traffic_ops/install/data/profiles/": [
