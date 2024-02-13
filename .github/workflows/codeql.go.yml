@@ -35,6 +35,16 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: go-version
+      run: echo "value=$(cat GO_VERSION)" >> $GITHUB_OUTPUT
+      id: go-version
+    - uses: actions/setup-go@v2
+      with:
+        go-version: ${{ steps.go-version.outputs.value }} # The Go version to download (if necessary) and use.
+    - name: Install modules
+      run: go mod vendor -v
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
