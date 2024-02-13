@@ -79,7 +79,7 @@ delayfor() {
               return
             fi
             jq_filter='.date = $date | .key = $cdn_name | .name = $domain | .ttl = 60 | .kskExpirationDays = 365 | .zskExpirationDays = 30'
-            generate_dnssec_body="$(jq -n --arg cdn_name "$CDN_NAME" --arg domain "$CDN_FQDN" --arg date "$(date --rfc-3339=seconds | sed 's/ /T/')" "$jq_filter")"
+            generate_dnssec_body="$(jq -n --arg cdn_name "$CDN_NAME" --arg domain "$CDN_FQDN" --arg date "$(date --rfc-3339=seconds)" "$jq_filter")"
             until to-post "api/${TO_API_VERSION}/cdns/dnsseckeys/generate" "$generate_dnssec_body"; do
               echo "Waiting for DNSSEC key generation request to succeed for ${CDN_FQDN}..."
               sleep 3
