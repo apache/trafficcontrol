@@ -39,7 +39,7 @@ type TCCfg struct {
 	GetData       string
 	TOClient      *toreq.TOClient
 	TOInsecure    bool
-	TOTimeoutMS   time.Duration
+	TOTimeout     time.Duration
 	TOPass        string
 	TOUser        string
 	TOURL         *url.URL
