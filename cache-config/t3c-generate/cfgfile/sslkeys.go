@@ -22,7 +22,7 @@ package cfgfile
 import (
 	"crypto/tls"
 	"encoding/base64"
-	"errors"
+	"fmt"
 
 	"github.com/apache/trafficcontrol/v8/cache-config/t3cutil"
 	"github.com/apache/trafficcontrol/v8/lib/go-atscfg"
@@ -93,7 +93,7 @@ func CheckKeyPair(keyPem []byte, certPem []byte, ds string) error {
 	_, err := tls.X509KeyPair(certPem, keyPem)
 	if err != nil {
 		log.Warnf("Issue with keypair for %s: %s", ds, err)
-		return errors.New("Issue with keypair for " + ds + ": " + err.Error())
+		return fmt.Errorf("issue with keypair for %s: %w", ds, err)
 	}
 	return nil
 }

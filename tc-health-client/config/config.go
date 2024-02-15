@@ -209,7 +209,7 @@ func ReadCredentials(cfg *Cfg, updating bool) error {
 	err := error(nil)
 	cfg.TOUrl, cfg.TOUser, cfg.TOPass, err = getCredentialsFromFile(cfg.CredentialFile.Filename)
 	if err != nil {
-		return errors.New("reading credentials from file '" + fn.Filename + "' :" + err.Error())
+		return fmt.Errorf("reading credentials from file '%s': %w", fn.Filename, err)
 	}
 
 	if cfg.TOUrl == "" || cfg.TOUser == "" || cfg.TOPass == "" {
@@ -279,7 +279,7 @@ func GetConfig() (*Cfg, error, bool) {
 	}
 
 	if err := log.InitCfg(&lcfg); err != nil {
-		return nil, errors.New("initializing loggers: " + err.Error() + "\n"), false
+		return nil, fmt.Errorf("initializing loggers: %w", err), false
 	}
 
 	cf := util.ConfigFile{
@@ -294,7 +294,7 @@ func GetConfig() (*Cfg, error, bool) {
 	}
 
 	if _, err = LoadConfig(cfg); err != nil {
-		return nil, errors.New(err.Error() + "\n"), false
+		return nil, err, false
 	}
 
 	if err = ReadCredentials(cfg, false); err != nil {
@@ -339,7 +339,7 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 	cfg.MonitorStrategiesPeers = true
 	modTime, err := util.GetFileModificationTime(configFile)
 	if err != nil {
-		return false, errors.New(err.Error())
+		return false, err
 	}
 
 	if modTime <= cfg.HealthClientConfigFile.LastModifyTime {
@@ -349,7 +349,7 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 	log.Infoln("Loading a new config file.")
 	content, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		return false, errors.New(err.Error())
+		return false, err
 	}
 	err = json.Unmarshal(content, cfg)
 	if err != nil {
@@ -357,14 +357,14 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 	}
 	cfg.TMPollingInterval, err = time.ParseDuration(cfg.TmPollIntervalSeconds)
 	if err != nil {
-		return false, errors.New("parsing TMPollingIntervalSeconds: " + err.Error())
+		return false, fmt.Errorf("parsing TMPollingIntervalSeconds: %w", err)
 	}
 	if cfg.TOLoginDispersionFactor == 0 {
 		cfg.TOLoginDispersionFactor = DefaultTOLoginDispersionFactor
 	}
 	cfg.TORequestTimeout, err = time.ParseDuration(cfg.TORequestTimeOutSeconds)
 	if err != nil {
-		return false, errors.New("parsing TORequestTimeOutSeconds: " + err.Error())
+		return false, fmt.Errorf("parsing TORequestTimeOutSeconds: %w", err)
 	}
 	if cfg.ReasonCode != "active" && cfg.ReasonCode != "local" {
 		return false, errors.New("invalid reason-code: " + cfg.ReasonCode + ", valid reason codes are 'active' or 'local'")
@@ -393,7 +393,7 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 	if cfg.TmProxyURL != "" {
 		if cfg.ParsedProxyURL, err = url.Parse(cfg.TmProxyURL); err != nil {
 			cfg.ParsedProxyURL = nil
-			return false, errors.New("parsing TmProxyUrl: " + err.Error())
+			return false, fmt.Errorf("parsing TmProxyUrl: %w", err)
 		}
 		if cfg.ParsedProxyURL.Port() == "" {
 			cfg.ParsedProxyURL = nil
@@ -407,7 +407,7 @@ func LoadConfig(cfg *Cfg) (bool, error) {
 	if cfg.HostName == "" {
 		hostName, err := os.Hostname()
 		if err != nil {
-			return false, errors.New("No hostname configured, getting from OS: " + err.Error())
+			return false, fmt.Errorf("no hostname configured, getting from OS: %w", err)
 		}
 		cfg.HostName = util.HostNameToShort(hostName)
 	}
@@ -469,19 +469,19 @@ func getCredentialsFromFile(filePath string) (string, string, string, error) {
 
 	stdOut, stdErr, code := t3cutil.Do("sh", "-c", `(source "`+filePath+`" && printf "${TO_URL}\n")`)
 	if code != 0 {
-		return "", "", "", fmt.Errorf("getting credentials from file returned error code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+		return "", "", "", fmt.Errorf("getting credentials from file returned error code %d stderr '%s' stdout '%s'", code, string(stdErr), string(stdOut))
 	}
 	toURL := strings.TrimSpace(string(stdOut))
 
 	stdOut, stdErr, code = t3cutil.Do("sh", "-c", `(source "`+filePath+`" && printf "${TO_USER}\n")`)
 	if code != 0 {
-		return "", "", "", fmt.Errorf("getting credentials from file returned error code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+		return "", "", "", fmt.Errorf("getting credentials from file returned error code %d stderr '%s' stdout '%s'", code, string(stdErr), string(stdOut))
 	}
 	toUser := strings.TrimSpace(string(stdOut))
 
 	stdOut, stdErr, code = t3cutil.Do("sh", "-c", `(source "`+filePath+`" && printf "${TO_PASS}\n")`)
 	if code != 0 {
-		return "", "", "", fmt.Errorf("getting credentials from file returned error code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+		return "", "", "", fmt.Errorf("getting credentials from file returned error code %d stderr '%s' stdout '%s'", code, string(stdErr), string(stdOut))
 	}
 	toPass := strings.TrimSpace(string(stdOut))
 

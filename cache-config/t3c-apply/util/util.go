@@ -112,7 +112,7 @@ func ExecCommand(fullCommand string, arg ...string) ([]byte, int, error) {
 
 	if err != nil {
 		return outbuf.Bytes(), cmd.ProcessState.ExitCode(),
-			errors.New("Error executing '" + fullCommand + "': " + errbuf.String())
+			errors.New("error executing '" + fullCommand + "': " + errbuf.String())
 	}
 	return outbuf.Bytes(), cmd.ProcessState.ExitCode(), err
 }
@@ -140,7 +140,7 @@ func ReadFile(fn string) ([]byte, error) {
 	data = make([]byte, size)
 	c, err := fd.Read(data)
 	if err != nil || int64(c) != size {
-		return nil, errors.New("unable to completely read from '" + fn + "': " + err.Error())
+		return nil, fmt.Errorf("unable to completely read from '%s': %w", fn, err)
 	}
 	fd.Close()
 
@@ -156,7 +156,7 @@ func GetServiceStatus(name string) (ServiceStatus, int, error) {
 	if rc == 3 {
 		return SvcNotRunning, pid, nil
 	} else if err != nil {
-		return SvcUnknown, pid, errors.New("could not get status for service '" + name + "'\n")
+		return SvcUnknown, pid, errors.New("could not get status for service '" + name + "'")
 	}
 	lines := strings.Split(string(output), "\n")
 	for ii := range lines {
@@ -181,13 +181,13 @@ func ServiceStart(service string, cmd string) (bool, error) {
 	log.Infof("ServiceStart called for '%s'\n", service)
 	svcStatus, pid, err := GetServiceStatus(service)
 	if err != nil {
-		return false, errors.New("Could not get status for '" + service + "' : " + err.Error())
+		return false, fmt.Errorf("could not get status for '%s' : %w", service, err)
 	} else if svcStatus == SvcRunning && cmd == "start" {
 		log.Infof("service '%s' is already running, pid: %d\n", service, pid)
 	} else {
 		_, rc, err := ExecCommand("/usr/sbin/service", service, cmd)
 		if err != nil {
-			return false, errors.New("Could not " + cmd + " the '" + service + "' service: " + err.Error())
+			return false, fmt.Errorf("could not %s the '%s' service: %w", cmd, service, err)
 		} else if rc == 0 {
 			// service was sucessfully started
 			return true, nil
@@ -200,19 +200,19 @@ func ServiceStart(service string, cmd string) (bool, error) {
 func WriteFileWithOwner(fn string, data []byte, uid *int, gid *int, perm os.FileMode) (int, error) {
 	fd, err := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, perm)
 	if err != nil {
-		return 0, errors.New("unable to open '" + fn + "' for writing: " + err.Error())
+		return 0, fmt.Errorf("unable to open '%s' for writing: %w", fn, err)
 	}
 
 	c, err := fd.Write(data)
 	if err != nil {
-		return 0, errors.New("error writing to '" + fn + "': " + err.Error())
+		return 0, fmt.Errorf("error writing to '%s': %w", fn, err)
 	}
 	fd.Close()
 
 	if uid != nil && gid != nil {
 		err = os.Chown(fn, *uid, *gid)
 		if err != nil {
-			return 0, errors.New("error changing ownership on '" + fn + "': " + err.Error())
+			return 0, fmt.Errorf("error changing ownership on '%s': %w", fn, err)
 		}
 	}
 	return c, nil
@@ -287,7 +287,7 @@ func PackageInfo(cmdstr string, name string) ([]string, error) {
 				result = append(result, strings.TrimSpace(pkgs[ii]))
 			}
 		} else if err != nil {
-			return nil, errors.New("rpm -q --whatprovides '" + name + "' returned: " + err.Error())
+			return nil, fmt.Errorf("rpm -q --whatprovides '%s' returned: %w", name, err)
 		}
 	case "pkg-query": // returns the package name for 'name'.
 		output, rc, err := ExecCommand("/bin/rpm", "-q", name)
@@ -296,7 +296,7 @@ func PackageInfo(cmdstr string, name string) ([]string, error) {
 		} else if rc == 0 { // add the rpm name
 			result = append(result, string(strings.TrimSpace(string(output))))
 		} else if err != nil {
-			return nil, errors.New("rpm -q '" + name + "' returned: " + err.Error())
+			return nil, fmt.Errorf("rpm -q '%s' returned: %w", name, err)
 		}
 	case "pkg-requires": // returns a list of packages that requires package 'name'
 		output, rc, err := ExecCommand("/bin/rpm", "-q", "--whatrequires", name)
@@ -308,7 +308,7 @@ func PackageInfo(cmdstr string, name string) ([]string, error) {
 				result = append(result, strings.TrimSpace(pkgs[ii]))
 			}
 		} else if err != nil {
-			return nil, errors.New("rpm -q --whatrequires '" + name + "' returned: " + err.Error())
+			return nil, fmt.Errorf("rpm -q --whatrequires '%s' returned: %w", name, err)
 		}
 	}
 	return result, nil
