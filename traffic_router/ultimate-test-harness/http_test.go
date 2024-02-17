@@ -245,7 +245,7 @@ func (b HTTPBenchmark) Run(t *testing.T, redirectsChannel chan int, failuresChan
 	for time.Now().Before(stopTime) {
 		requestURL := trafficRouterURL + paths[rand.Intn(len(paths))]
 		if req, err = http.NewRequest("GET", requestURL, nil); err != nil {
-			t.Fatalf("creating GET request to Traffic Router '%s' (IP address %s): %s",
+			t.Errorf("creating GET request to Traffic Router '%s' (IP address %s): %s",
 				trafficRouter.Hostname, trafficRouter.IPAddresses[ipAddressIndex], err.Error())
 		}
 		req.Header.Set("User-Agent", UserAgent)

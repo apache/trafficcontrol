@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7614](https://github.com/apache/trafficcontrol/pull/7614) *Traffic Ops* The database upgrade process no longer overwrites changes users may have made to the initially seeded data.
 - [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed perl dependency
 - Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
+- Updated Go version to 1.22.0
 
 ### Fixed
 - [#7917](https://github.com/apache/trafficcontrol/pull/7917) *Traffic Ops* Removed `Alerts` field from struct `ProfileExportResponse`.
