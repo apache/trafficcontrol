@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7812](https://github.com/apache/trafficcontrol/pull/7812) *Traffic Portal*: Expose the `configUpdateFailed` and `revalUpdateFailed` fields on the server table.
 - [#7870](https://github.com/apache/trafficcontrol/pull/7870) *Traffic Portal*: Adds a hyperlink to the DSR page to the DS itself for ease of navigation.
 - [#7896](https://github.com/apache/trafficcontrol/pull/7896) *ATC Build system*: Count commits since the last release, not commits
+- [#4822](https://github.com/apache/trafficcontrol/pull/4822) *Traffic Ops "check extensions"*: An alternative to the ToAutorenewCerts.pl script has been created (with the same interface) named ToAutorenewCerts.py. ToAutorenewCerts.pl is deprecated, and operators are encouraged to switch to ToAutorenewCerts.py at their earliest convenience.
 
 ### Changed
 - [#7614](https://github.com/apache/trafficcontrol/pull/7614) *Traffic Ops* The database upgrade process no longer overwrites changes users may have made to the initially seeded data.
@@ -559,7 +560,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Removed
 - Removed the unused `backend_max_connections` option from `cdn.conf`.
+<<<<<<< HEAD
 - Removed the unused `http_poll_no_sleep`, `max_stat_history`, `max_health_history`, `cache_health_polling_interval_ms`, `cache_stat_polling_interval_ms`, and `peer_polling_interval_ms` Traffic Monitor config options.
+=======
+>>>>>>> efc0d41e1 (Updated changelog)
 - Removed the `Long Description 2` and `Long Description 3` fields of `DeliveryService` from the UI, and changed the backend so that routes corresponding API 4.0 and above no longer accept or return these fields.
 - The Perl implementation of Traffic Ops has been stripped out, along with the Go implementation's "fall-back to Perl" behavior.
 - Traffic Ops no longer includes an `app/public` directory, as the static webserver has been removed along with the Perl Traffic Ops implementation. Traffic Ops also no longer attempts to download MaxMind GeoIP City databases when running the Traffic Ops Postinstall script.
