@@ -1,0 +1,37 @@
+// Define a mapping of descriptions based on the delivery service type
+const descriptions = {
+  HTTP: "HTTP Content Routing...",
+  DNS: "DNS Content Routing...",
+  DNS_LIVE_NATNL: "DNS Content routing for linear TV...",
+  // Add more descriptions for other types
+};
+
+// Component for the Delivery Service creation modal
+function DeliveryServiceModal({ selectedType }) {
+  return (
+    <div>
+      <h3>{selectedType}</h3>
+      <p>{descriptions[selectedType]}</p>
+    </div>
+  );
+}
+
+// App component
+function App() {
+  const [selectedType, setSelectedType] = useState("HTTP");
+
+  return (
+    <div>
+      <select
+        value={selectedType}
+        onChange={(e) => setSelectedType(e.target.value)}
+      >
+        <option value="HTTP">HTTP</option>
+        <option value="DNS">DNS</option>
+        <option value="DNS_LIVE_NATNL">DNS_LIVE_NATNL</option>
+        {/* Add more options for other types */}
+      </select>
+      <DeliveryServiceModal selectedType={selectedType} />
+    </div>
+  );
+}
