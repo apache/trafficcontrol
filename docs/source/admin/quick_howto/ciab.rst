@@ -119,6 +119,8 @@ To test the ``foo.kabletown.net.`` Federation:
 	# Expected response:
 	foo.kabletown.net.
 
+.. note:: Although :abbr:`DNSSEC (DNS Security Extensions)` is enabled for the CDN (sending DNS queries directly to Traffic Router), DNSSEC is not enabled for the ``dns`` service.
+
 Readiness Check
 """""""""""""""
 
