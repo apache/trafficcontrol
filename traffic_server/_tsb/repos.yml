@@ -1,7 +1,7 @@
 ats:
     src: https://github.com/apache/trafficserver
-    branch: 8.0.x
-    head: a29528dffb8ea1c6fa57fe0c76ca1ec9d0f08694
+    branch: 9.2.x
+    head: 181593ccf552f9cb4e05b86801a3d68fac7ba3d0
     extra:
         - https://github.com/jrushford/trafficserver
         - https://github.com/traeak/trafficserver
