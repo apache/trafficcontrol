@@ -1,0 +1,40 @@
+{
+	"compilerOptions": {
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
+		"baseUrl": "./src",
+		"declaration": false,
+		"downlevelIteration": true,
+		"experimentalDecorators": true,
+		"importHelpers": true,
+		"module": "es2020",
+		"moduleResolution": "node",
+		"noImplicitReturns": true,
+		"noImplicitOverride": false,
+		"esModuleInterop": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"outDir": "./dist",
+		"strict": true,
+		"target": "ES2022",
+		"lib": [
+			"es2020",
+			"dom"
+		],
+		"useDefineForClassFields": false,
+		"resolveJsonModule": true,
+	},
+	"ts-node": {
+		"compilerOptions": {
+			"module": "commonjs",
+			"target": "es5",
+			"esModuleInterop": true
+		},
+		"transpileOnly": true
+	},
+	"include": [
+		"./src",
+		"./types"
+	],
+	"extends": "@grafana/tsconfig"
+}

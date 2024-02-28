@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM grafana/grafana:10.1.5-ubuntu
+FROM grafana/grafana:10.2.3-ubuntu
 
 USER root
 ARG TRAFFIC_TS_RPM=traffic_stats/traffic_stats.rpm
@@ -28,13 +28,15 @@ ADD enroller/server_template.json \
     traffic_ops/to-access.sh \
     optional/grafana/run-grafana.sh \
     optional/grafana/datasources.yml.template \
+    optional/grafana/app.yaml.template \
     $TRAFFIC_TS_RPM \
     /
 
 RUN cd ~ \
     && 7z x /traffic_stats.rpm \
-    && 7z e traffic_stats-*.cpio *.js -r \
-    && mv *.js /usr/share/grafana/public/dashboards \
+    && 7z e traffic_stats-*.cpio module.js plugin.json module.js.map -r \
+    && mkdir -p /var/lib/grafana/plugins/trafficcontrol-scenes-app/ \
+    && mv plugin.json module.js.map module.js /var/lib/grafana/plugins/trafficcontrol-scenes-app/ \
     && rm /traffic_stats.rpm \
     && rm ~/traffic_stats-*.cpio
 

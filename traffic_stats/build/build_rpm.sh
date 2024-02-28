@@ -78,6 +78,19 @@ initBuildArea() {
 	go build -v -gcflags "$gcflags" -ldflags "$ldflags" create/create_ts_databases.go || \
 								{ echo "Could not build create_ts_databases binary"; return 1; })
 
+  # compile trafficcontrol-scenes
+  echo "Installing grafana scenes npm dependencies"
+  (cd trafficcontrol-scenes
+    npm i || \
+        { echo "Could not install packages from $TS_DIR/trafficcontrol-scenes: $?"; return 1; }
+  )
+
+  echo "Build grafana scenes"
+  (cd trafficcontrol-scenes
+    npm run build || \
+      	{ echo "Could not build $TS_DIR/trafficcontrol-scenes: $?"; return 1; }
+  )
+
 	rsync -aLv ./ "$ts_dest"/ || \
 		 { echo "Could not copy to $ts_dest: $?"; return 1; }
 	cp "$TS_DIR"/build/*.spec "$RPMBUILD"/SPECS/. || \
@@ -103,6 +116,6 @@ preBuildChecks() {
 
 importFunctions
 preBuildChecks
-checkEnvironment -i go,rsync
+checkEnvironment -i npm,go,rsync
 initBuildArea
 buildRpm traffic_stats

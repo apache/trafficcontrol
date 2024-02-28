@@ -51,3 +51,14 @@ datasources:
   database: deliveryservice_stats
   basicAuth: false
   isDefault: false
+
+- name: telegraf
+  type: influxdb
+  access: proxy
+  orgId: 1
+  url: http://$INFLUXDB_HOST:$INFLUXDB_PORT
+  password: $INFLUXDB_ADMIN_PASSWORD
+  user: $INFLUXDB_ADMIN_USER
+  database: telegraf
+  basicAuth: false
+  isDefault: false

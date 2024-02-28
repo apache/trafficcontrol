@@ -1,0 +1,53 @@
+{
+	"$schema": "https://raw.githubusercontent.com/grafana/grafana/main/docs/sources/developers/plugins/plugin.schema.json",
+	"type": "app",
+	"name": "TrafficControl Grafana Scenes",
+	"id": "trafficcontrol-scenes-app",
+	"info": {
+		"keywords": [
+			"trafficcontrol",
+			"app"
+		],
+		"description": "Visualize Traffic Stats",
+		"author": {
+			"name": "ntheanh201"
+		},
+		"logos": {
+			"small": "https://raw.githubusercontent.com/apache/trafficcontrol/master/misc/logos/ATC-SVG.svg",
+			"large": "https://raw.githubusercontent.com/apache/trafficcontrol/master/misc/logos/ATC-SVG.svg"
+		},
+		"screenshots": [],
+		"version": "%VERSION%",
+		"updated": "%TODAY%"
+	},
+	"includes": [
+		{
+			"type": "page",
+			"name": "Cache Group",
+			"path": "/a/%PLUGIN_ID%/cache-group",
+			"role": "Admin",
+			"addToNav": true,
+			"defaultNav": false
+		},
+		{
+			"type": "page",
+			"name": "Delivery Service",
+			"path": "/a/%PLUGIN_ID%/delivery-service",
+			"role": "Admin",
+			"addToNav": true,
+			"defaultNav": false
+		},
+		{
+			"type": "page",
+			"name": "Server",
+			"path": "/a/%PLUGIN_ID%/server",
+			"role": "Admin",
+			"addToNav": true,
+			"defaultNav": false
+		}
+	],
+	"dependencies": {
+		"grafanaDependency": ">=10.0.3",
+		"plugins": []
+	}
+}

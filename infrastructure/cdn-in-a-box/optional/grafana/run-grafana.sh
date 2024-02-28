@@ -58,6 +58,8 @@ export GF_SERVER_PROTOCOL="https"
 export GF_SERVER_HTTP_PORT=$GRAFANA_PORT
 export GF_SERVER_CERT_FILE=$X509_INFRA_CERT_FILE
 export GF_SERVER_CERT_KEY=$X509_INFRA_KEY_FILE
+export GF_DEFAULT_APP_MODE="development"
 envsubst < "/datasources.yml.template" > "$GF_PATHS_PROVISIONING/datasources/datasources.yml"
+envsubst < "/app.yaml.template" > "$GF_PATHS_PROVISIONING/plugins/app.yaml"
 
 /run.sh
