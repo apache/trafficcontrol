@@ -23,6 +23,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+
+	"github.com/apache/trafficcontrol/v8/lib/go-util"
 )
 
 // Errs is the concrete implementation of Errors, which is used so that we can
@@ -221,7 +223,7 @@ func NewSystemErrorf(format string, args ...any) Errors {
 // and has the appropriate response code.
 func NewUserError(err error) Errors {
 	return &Errs{
-		code:        http.StatusInternalServerError,
+		code:        http.StatusBadRequest,
 		systemError: nil,
 		userError:   err,
 	}
@@ -231,7 +233,7 @@ func NewUserError(err error) Errors {
 // having the appropriate response code and containing the given message.
 func NewUserErrorString(err string) Errors {
 	return &Errs{
-		code:        http.StatusInternalServerError,
+		code:        http.StatusBadRequest,
 		systemError: nil,
 		userError:   errors.New(err),
 	}
@@ -243,7 +245,7 @@ func NewUserErrorString(err string) Errors {
 // wrapping).
 func NewUserErrorf(format string, args ...any) Errors {
 	return &Errs{
-		code:        http.StatusInternalServerError,
+		code:        http.StatusBadRequest,
 		systemError: nil,
 		userError:   fmt.Errorf(format, args...),
 	}
@@ -256,5 +258,27 @@ func NewResourceModifiedError() Errors {
 		code:        http.StatusPreconditionFailed,
 		systemError: nil,
 		userError:   ResourceModifiedError,
+	}
+}
+
+// NewUserErrorFromErrorList creates a new user-facing error (400 Bad Request)
+// by concatenating the given list of errors. Uniquely, this can return nil
+// if the passed slice is empty (or nil).
+func NewUserErrorFromErrorList(errs []error) Errors {
+	err := util.JoinErrs(errs)
+	if err == nil {
+		return nil
+	}
+	return NewUserError(err)
+}
+
+// NewNotFoundError creates an Errors that contains an HTTP Not Found status
+// code and the given error message as a user-visible error (supports wrapping
+// with the '%w' format specifier verb).
+func NewNotFoundError(format string, args ...any) Errors {
+	return &Errs{
+		code:        http.StatusNotFound,
+		systemError: nil,
+		userError:   fmt.Errorf(format, args...),
 	}
 }

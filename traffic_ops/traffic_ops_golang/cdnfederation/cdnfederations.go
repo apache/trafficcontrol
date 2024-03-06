@@ -499,17 +499,17 @@ func addTenancyStmt(where string) string {
 	return where
 }
 
-func getCDNFederations(inf *api.Info) ([]tc.CDNFederationV5, time.Time, int, error, error) {
+func getCDNFederations(inf *api.Info) ([]tc.CDNFederationV5, time.Time, api.Errors) {
 	tenantList, err := tenant.GetUserTenantIDListTx(inf.Tx.Tx, inf.User.TenantID)
 	if err != nil {
-		return nil, time.Time{}, http.StatusInternalServerError, nil, fmt.Errorf("getting tenant list for user: %w", err)
+		return nil, time.Time{}, api.NewSystemErrorf("getting tenant list for user: %w", err)
 	}
 
 	cols := paramColumnInfo(*inf.Version)
 
 	where, orderBy, pagination, queryValues, errs := dbhelpers.BuildWhereAndOrderByAndPagination(inf.Params, cols)
 	if len(errs) > 0 {
-		return nil, time.Time{}, http.StatusBadRequest, util.JoinErrs(errs), nil
+		return nil, time.Time{}, api.NewUserErrorFromErrorList(errs)
 	}
 	queryValues["tenantIDs"] = pq.Array(tenantList)
 
@@ -520,7 +520,7 @@ func getCDNFederations(inf *api.Info) ([]tc.CDNFederationV5, time.Time, int, err
 		cont, max := ims.TryIfModifiedSinceQuery(inf.Tx, inf.RequestHeaders(), queryValues, query)
 		if !cont {
 			log.Debugln("IMS HIT")
-			return nil, max, http.StatusNotModified, nil, nil
+			return nil, max, api.NewErrors(http.StatusNotModified, nil, nil)
 		}
 		log.Debugln("IMS MISS")
 	} else {
@@ -531,7 +531,7 @@ func getCDNFederations(inf *api.Info) ([]tc.CDNFederationV5, time.Time, int, err
 	rows, err := inf.Tx.NamedQuery(query, queryValues)
 	if err != nil {
 		userErr, sysErr, code := api.ParseDBError(err)
-		return nil, time.Time{}, code, userErr, sysErr
+		return nil, time.Time{}, api.NewErrors(code, userErr, sysErr)
 	}
 	defer log.Close(rows, "closing CDNFederation rows")
 
@@ -552,21 +552,21 @@ func getCDNFederations(inf *api.Info) ([]tc.CDNFederationV5, time.Time, int, err
 			&fed.DeliveryService.XMLID,
 		)
 		if err != nil {
-			return nil, time.Time{}, http.StatusInternalServerError, nil, fmt.Errorf("scanning a CDN Federation: %w", err)
+			return nil, time.Time{}, api.NewSystemErrorf("scanning a CDN Federation: %w", err)
 		}
 
 		ret = append(ret, fed)
 	}
 
-	return ret, time.Time{}, http.StatusOK, nil, nil
+	return ret, time.Time{}, nil
 }
 
 // Read handles GET requests to `cdns/{{name}}/federations`.
-func Read(inf *api.Info) (int, error, error) {
+func Read(inf *api.Info) error {
 	api.DefaultSort(inf, "cname")
-	feds, max, code, userErr, sysErr := getCDNFederations(inf)
-	if userErr != nil || sysErr != nil {
-		return code, userErr, sysErr
+	feds, max, err := getCDNFederations(inf)
+	if err != nil {
+		return err
 	}
 	if feds == nil {
 		return inf.WriteNotModifiedResponse(max)
@@ -575,10 +575,10 @@ func Read(inf *api.Info) (int, error, error) {
 }
 
 // ReadID handles GET requests to `cdns/{{name}}/federations/{{ID}}`.
-func ReadID(inf *api.Info) (int, error, error) {
-	feds, max, code, userErr, sysErr := getCDNFederations(inf)
-	if userErr != nil || sysErr != nil {
-		return code, userErr, sysErr
+func ReadID(inf *api.Info) error {
+	feds, max, err := getCDNFederations(inf)
+	if err != nil {
+		return err
 	}
 	if feds == nil {
 		return inf.WriteNotModifiedResponse(max)
@@ -586,10 +586,10 @@ func ReadID(inf *api.Info) (int, error, error) {
 
 	id := inf.IntParams["id"]
 	if len(feds) == 0 {
-		return http.StatusNotFound, fmt.Errorf("no such Federation #%d in CDN %s", id, inf.Params["name"]), nil
+		return api.NewNotFoundError("no such Federation #%d in CDN %s", id, inf.Params["name"])
 	}
 	if len(feds) > 1 {
-		return http.StatusInternalServerError, nil, fmt.Errorf("%d CDN federations found by ID: %d", len(feds), id)
+		return fmt.Errorf("%d CDN federations found by ID: %d", len(feds), id)
 	}
 	return inf.WriteOKResponse(feds[0])
 }
@@ -611,10 +611,10 @@ func validate(fed tc.CDNFederationV5) error {
 }
 
 // Create handles POST requests to `cdns/{{name}}/federations`.
-func Create(inf *api.Info) (int, error, error) {
+func Create(inf *api.Info) error {
 	var fed tc.CDNFederationV5
 	if err := inf.DecodeBody(&fed); err != nil {
-		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
+		return api.NewUserErrorf("parsing request body: %w", err)
 	}
 
 	// You can't set this at creation time, but if it was in the request it
@@ -624,13 +624,13 @@ func Create(inf *api.Info) (int, error, error) {
 
 	err := validate(fed)
 	if err != nil {
-		return http.StatusBadRequest, err, nil
+		return api.NewUserError(err)
 	}
 
 	err = inf.Tx.Tx.QueryRow(insertQuery, fed.CName, fed.TTL, fed.Description).Scan(&fed.ID, &fed.LastUpdated)
 	if err != nil {
 		userErr, sysErr, code := api.ParseDBError(err)
-		return code, userErr, fmt.Errorf("inserting a CDN Federation: %w", sysErr)
+		return api.NewErrors(code, userErr, fmt.Errorf("inserting a CDN Federation: %w", sysErr))
 	}
 	changeLogMsg := fmt.Sprintf("CDNFEDERATION: %s, ID:%d, ACTION: Created cdnFederation", fed.CName, fed.ID)
 	api.CreateChangeLogRawTx(api.Created, changeLogMsg, inf.User, inf.Tx.Tx)
@@ -638,10 +638,10 @@ func Create(inf *api.Info) (int, error, error) {
 }
 
 // Update handles PUT requests to `cdns/{{name}}/federations/{{id}}`.
-func Update(inf *api.Info) (int, error, error) {
+func Update(inf *api.Info) error {
 	var fed tc.CDNFederationV5
 	if err := inf.DecodeBody(&fed); err != nil {
-		return http.StatusBadRequest, fmt.Errorf("parsing request body: %w", err), nil
+		return api.NewUserErrorf("parsing request body: %w", err)
 	}
 
 	id := inf.IntParams["id"]
@@ -649,10 +649,10 @@ func Update(inf *api.Info) (int, error, error) {
 	var lastModified time.Time
 	err := inf.Tx.QueryRow("SELECT last_updated FROM federation WHERE id = $1", id).Scan(&lastModified)
 	if err != nil {
-		return http.StatusInternalServerError, nil, fmt.Errorf("getting last modified time for Federation #%d: %w", id, err)
+		return fmt.Errorf("getting last modified time for Federation #%d: %w", id, err)
 	}
 	if !api.IsUnmodified(inf.RequestHeaders(), lastModified) {
-		return http.StatusPreconditionFailed, api.ResourceModifiedError, nil
+		return api.NewResourceModifiedError()
 	}
 
 	// You can't set this via a PUT request, but if it was in the request it
@@ -663,13 +663,12 @@ func Update(inf *api.Info) (int, error, error) {
 
 	err = validate(fed)
 	if err != nil {
-		return http.StatusBadRequest, err, nil
+		return api.NewUserError(err)
 	}
 
 	err = inf.Tx.Tx.QueryRow(updateQuery, fed.CName, fed.TTL, fed.Description, id).Scan(&fed.LastUpdated)
 	if err != nil {
-		userErr, sysErr, code := api.ParseDBError(err)
-		return code, userErr, sysErr
+		return inf.HandleDBError(err)
 	}
 
 	changeLogMsg := fmt.Sprintf("CDNFEDERATION: %s, ID:%d, ACTION: Updated cdnFederation", fed.CName, id)
@@ -678,14 +677,13 @@ func Update(inf *api.Info) (int, error, error) {
 }
 
 // Delete handles DELETE requests to `cdns/{{name}}/federations/{{id}}`.
-func Delete(inf *api.Info) (int, error, error) {
+func Delete(inf *api.Info) error {
 	id := inf.IntParams["id"]
 
 	var fed tc.CDNFederationV5
 	err := inf.Tx.QueryRow(deleteQuery, id).Scan(&fed.CName, &fed.Description, &fed.ID, &fed.LastUpdated, &fed.TTL)
 	if err != nil {
-		userErr, sysErr, code := api.ParseDBError(err)
-		return code, userErr, sysErr
+		return inf.HandleDBError(err)
 	}
 	changeLogMsg := fmt.Sprintf("CDNFEDERATION:%s, ID:%d, ACTION: Deleted cdnFederation", fed.CName, fed.ID)
 	api.CreateChangeLogRawTx(api.Deleted, changeLogMsg, inf.User, inf.Tx.Tx)
