@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Go version to 1.22.0
 
 ### Fixed
-- [#7956](https://github.com/apache/trafficcontrol/pull/7956) *Traffic Ops* Fix the incorrect display of delivery services assigned to ORG servers.
+- [#7957](https://github.com/apache/trafficcontrol/pull/7957) *Traffic Ops* Fix the incorrect display of delivery services assigned to ORG servers.
 - [#7917](https://github.com/apache/trafficcontrol/pull/7917) *Traffic Ops* Removed `Alerts` field from struct `ProfileExportResponse`.
 - [#7918](https://github.com/apache/trafficcontrol/pull/7918) *Traffic Portal* Fixed topology link under DS-Servers tables page
 - [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
