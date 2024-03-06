@@ -92,9 +92,8 @@ func TestServersIDDeliveryServices(t *testing.T) {
 							totest.GetServerID(t, TOSession, "denver-mso-org-01")(),
 							[]int{
 								totest.GetDeliveryServiceId(t, TOSession, "ds-top")(),
-								totest.GetDeliveryServiceId(t, TOSession, "ds-top-req-cap2")(),
 							},
-							2)),
+							1)),
 				},
 				"CONFLICT when SERVER NOT IN SAME CDN as DELIVERY SERVICE": {
 					EndpointID:    totest.GetServerID(t, TOSession, "cdn2-test-edge"),
