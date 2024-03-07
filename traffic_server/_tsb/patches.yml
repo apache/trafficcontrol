@@ -1,15 +1,4 @@
-ats:
-    - f5ac00f3606bd826c52552e59f067d3fe3fcda33 # <2018-09-11T17:18:30+00:00!jrushford@apache.org> For Nexthop, add the capability to mark down origin servers utilizing traffic_ctl.
-    - 721f8ffca6ee8782573084c671e45ce392d239ef # <2018-06-21T17:21:58+00:00!jrushford@apache.org> add a reason tag to traffic_control host subcommand.
-    - d295784ba57af7e8e2dba09b85a1cbcaacf797f3 # <2019-05-16T19:33:17+00:00!jrushford@apache.org> Add an ignore_self_detect flag to parent.config so that the local cache host may be a member of a peering cache group.
-    - ef57a68f4f9d6f6dd5563cff82cddb8adcb8c28c # <2020-05-16T00:05:44+00:00!brian_olsen2@comcast.com> forward port of slice plugin from ats7
-    - abe7a933e403b88f1b13ab7f2ebdd6ce95202b42 # <2019-04-02T13:25:48+00:00!brian_olsen2@comcast.com> url_sig debug fix for when url is missing the signature query string
-    - 9ac557ba3c0f28979c996cb49a827940bfb569d8 # <2019-09-30T19:04:12+00:00!brian_olsen2@comcast.com> url_sig: fix memory leak with urlParse and pristine flag
-    - 72e582d3de630008641e7849f7cd42b11f6f081b # <2019-02-04T12:47:10-08:00!randallmeyer@yahoo.com> lua plugin: add support for relative path scripts; moves inline script to switch
-    - ad33e0fff0091093cd31fcfd429933299cb8bf5b # <2020-02-07T00:44:14-08:00!kichan@apache.org> Fix for lua plugin coredump problem during reload
-    - 1f13f346ef9ae4c0035f5755af4fd28b6f84f1e0 # <2020-04-20T14:59:44-06:00!brian_olsen2@comcast.com> code and documentation for lua states configuration and stats printing (#6571)
-    - fc66eea820c8ba44196f2051aa41aedd7b874b0b # <2020-03-16T19:30:54+00:00!jrushford@apache.org> Fixes a bug where getHostStatus() will create a host status record when none is found. A Host status record should only be created when a host is marked up or down when traffic_ctl is used to mark a host up or down.
-    - 5b38fb26737b38267615102775d81136a843075c # <2020-07-01T13:59:15+00:00!brian_olsen2@comcast.com> CacheRead: clear dir entry if doc is found to be truncated
+ats: []
 openssl:
     - ec6788fb8ca0704b503c3a0030a142d9805895a6 # <2018-09-18T17:45:39+01:00!matt@openssl.org> Delay setting the sig algs until after the cert_cb has been called
 trafficcontrol: []
