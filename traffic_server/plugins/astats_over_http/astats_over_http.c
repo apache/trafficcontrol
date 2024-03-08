@@ -918,9 +918,9 @@ static void load_config_file(config_holder_t *config_holder) {
 			free_cont = TSContCreate(free_handler, TSMutexCreate());
 			TSContDataSet(free_cont, (void *) oldconfig);
 #if TS_VERSION_MAJOR < 9
-                        TSContSchedule(free_cont, FREE_TMOUT, TS_THREAD_POOL_TASK);
+			TSContSchedule(free_cont, FREE_TMOUT, TS_THREAD_POOL_TASK);
 #else
-            		TSContScheduleOnPool(free_cont, FREE_TMOUT, TS_THREAD_POOL_TASK);
+			TSContScheduleOnPool(free_cont, FREE_TMOUT, TS_THREAD_POOL_TASK);
 #endif
 		}
 	}
