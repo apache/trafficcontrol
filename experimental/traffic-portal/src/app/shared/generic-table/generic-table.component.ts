@@ -23,6 +23,7 @@ import {
 	Output,
 	ViewChild
 } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, type ParamMap, type Params, Router } from "@angular/router";
 import type {
 	CellContextMenuEvent,
@@ -30,7 +31,6 @@ import type {
 	ColGroupDef,
 	Column,
 	ColumnApi,
-	CsvExportParams,
 	DateFilterModel,
 	FilterChangedEvent,
 	GridApi,
@@ -43,6 +43,7 @@ import type {
 } from "ag-grid-community";
 import type { BehaviorSubject, Subscription } from "rxjs";
 
+import { DownloadOptionsDialogComponent } from "src/app/shared/generic-table/download-options/download-options-dialog.component";
 import { fuzzyScore } from "src/app/utils";
 
 import { LoggingService } from "../logging.service";
@@ -406,7 +407,10 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 		return (this.columnAPI.getColumns() ?? []).reverse();
 	}
 
-	constructor(private readonly router: Router, private readonly route: ActivatedRoute, private readonly log: LoggingService) {
+	constructor(private readonly router: Router,
+		private readonly route: ActivatedRoute,
+		private readonly dialog: MatDialog,
+		private readonly log: LoggingService) {
 		this.gridOptions = {
 			defaultColDef: {
 				filter: true,
@@ -829,15 +833,27 @@ export class GenericTableComponent<T> implements OnInit, OnDestroy {
 	 * Downloads the table data as a CSV file.
 	 */
 	public download(): void {
-		const params: CsvExportParams = {
-			onlySelected: this.gridAPI.getSelectedNodes().length > 0,
-		};
-
-		if (this.context) {
-			params.fileName = `${this.context}.csv`;
-		}
-
-		this.gridAPI.exportDataAsCsv(params);
+		const nodes = this.gridAPI.getSelectedNodes();
+		const model = this.gridAPI.getModel();
+		let visible = 0;
+		let all = 0;
+		model.forEachNode(rowNode => {
+			if(rowNode.displayed) {
+				visible++;
+			}
+			all++;
+		});
+		this.dialog.open(DownloadOptionsDialogComponent, {
+			data: {
+				allRows: all,
+				columns: this.gridAPI.getColumnDefs() ?? [],
+				name: this.context,
+				selectedRows: nodes.length > 0 ? nodes.length : undefined,
+				visibleRows: visible
+			}
+		}).afterClosed().subscribe(value => {
+			this.gridAPI.exportDataAsCsv(value);
+		});
 	}
 
 	/**
