@@ -2394,6 +2394,28 @@ class TOSession(RestApiSession):
 		:raises: Union[LoginError, OperationError]
 		"""
 
+	@api_request('post', 'types', ('3.0', '4.0', '4.1', '5.0'))
+	def create_types(self, data=None):
+		"""
+		Create a Type
+		:ref:`to-api-types`
+		:param data: The Type data to use for Type creation.
+		:type data: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+	
+	@api_request('delete', 'types', ('3.0', '4.0', '4.1', '5.0'))
+	def delete_types(self, query_params=None):
+		"""
+		Delete a Type
+		:ref:`to-api-types`
+		:param query_params: The optional url query parameters for the call
+		:type query_params: Dict[str, Any]
+		:rtype: Tuple[Union[Dict[str, Any], List[Dict[str, Any]]], requests.Response]
+		:raises: Union[LoginError, OperationError]
+		"""
+
 	#
 	# Users
 	#
