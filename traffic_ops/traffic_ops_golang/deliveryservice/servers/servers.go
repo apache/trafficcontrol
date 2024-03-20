@@ -944,9 +944,20 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 		where = "WHERE "
 	}
 
-	where += `
+	serverID, _ := strconv.Atoi(params["id"])
+	serverInfo, exists, err := dbhelpers.GetServerInfo(serverID, tx)
+	if err != nil {
+		return nil, nil, err, http.StatusInternalServerError, nil
+	}
+	if !exists {
+		return nil, fmt.Errorf("server with ID %d doesn't exist", serverID), nil, http.StatusNotFound, nil
+	}
+	if serverInfo.Type == tc.OriginTypeName {
+		where += `ds.id in (SELECT deliveryservice FROM deliveryservice_server WHERE server = :server)`
+	} else {
+		where += `
 (ds.id in (
-	SELECT deliveryService FROM deliveryservice_server WHERE server = :server
+	SELECT deliveryservice FROM deliveryservice_server WHERE server = :server
 ) OR ds.id in (
 	SELECT d.id FROM deliveryservice d
 	JOIN cdn c ON d.cdn_id = c.id
@@ -959,17 +970,16 @@ func (dss *TODSSDeliveryService) Read(h http.Header, useIMS bool) ([]interface{}
 			)))
 	AND d.cdn_id = (SELECT cdn_id FROM server WHERE id = :server)))
 AND
-(( 
-(SELECT (t.name = 'ORG') FROM type t JOIN server s ON s.type = t.id WHERE s.id = :server) 
-OR 
+((
 (SELECT COALESCE(ARRAY_AGG(ssc.server_capability), '{}') 
 FROM server_server_capability ssc 
 WHERE ssc."server" = :server) 
-@> 
+@>
 (
 SELECT COALESCE(ds.required_capabilities, '{}')
 )))
 `
+	}
 
 	tenantIDs, err := tenant.GetUserTenantIDListTx(tx, user.TenantID)
 	if err != nil {

@@ -75,6 +75,7 @@
   },
   "devDependencies": {
     "@angular-builders/custom-webpack": "^16.0.0",
+    "@angular-devkit/architect": "^0.1600.6",
     "@angular-devkit/build-angular": "^16.0.4",
     "@angular-eslint/builder": "^16.0.3",
     "@angular-eslint/eslint-plugin": "^16.0.3",
@@ -95,7 +96,7 @@
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "@typescript-eslint/parser": "^5.59.2",
     "axios": "^0.27.2",
-    "chromedriver": "^117.0.3",
+    "chromedriver": "^122.0.6",
     "codelyzer": "^6.0.0",
     "eslint": "^8.39.0",
     "eslint-plugin-import": "^2.25.3",
