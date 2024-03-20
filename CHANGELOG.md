@@ -3,30 +3,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-## [unreleased]
-### Added
-- [#7812](https://github.com/apache/trafficcontrol/pull/7812) *Traffic Portal*: Expose the `configUpdateFailed` and `revalUpdateFailed` fields on the server table.
-- [#7870](https://github.com/apache/trafficcontrol/pull/7870) *Traffic Portal*: Adds a hyperlink to the DSR page to the DS itself for ease of navigation.
-- [#7896](https://github.com/apache/trafficcontrol/pull/7896) *ATC Build system*: Count commits since the last release, not commits
-
-### Changed
-- [#7614](https://github.com/apache/trafficcontrol/pull/7614) *Traffic Ops* The database upgrade process no longer overwrites changes users may have made to the initially seeded data.
-- [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed perl dependency
-- Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
-- Updated Go version to 1.22.0
-
+## [8.0.1] - 2024-03-19
 ### Fixed
-- [#7957](https://github.com/apache/trafficcontrol/pull/7957) *Traffic Ops* Fix the incorrect display of delivery services assigned to ORG servers.
-- [#7917](https://github.com/apache/trafficcontrol/pull/7917) *Traffic Ops* Removed `Alerts` field from struct `ProfileExportResponse`.
-- [#7918](https://github.com/apache/trafficcontrol/pull/7918) *Traffic Portal* Fixed topology link under DS-Servers tables page
-- [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
-
-### Removed
-- [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed Perl dependency
-- [#7841](https://github.com/apache/trafficcontrol/pull/7841) *Postinstall* Removed Perl implementation and Python 2.x support
+- [#7957](https://github.com/apache/trafficcontrol/pull/7957) *Traffic Ops*: Fix the incorrect display of delivery services assigned to ORG servers.
+- [#7929](https://github.com/apache/trafficcontrol/pull/7929) *Traffic Ops*: Ensure read-only role can perform only GET requests.
 
 ## [8.0.0] - 2024-01-30
 ### Added
+- [#7896](https://github.com/apache/trafficcontrol/pull/7896) *ATC Build system*: Count commits since the last release, not commits.
 - [#7672](https://github.com/apache/trafficcontrol/pull/7672) *Traffic Control Health Client*: Added peer monitor flag while using `strategies.yaml`.
 - [#7609](https://github.com/apache/trafficcontrol/pull/7609) *Traffic Portal*: Added Scope Query Param to SSO login.
 - [#7450](https://github.com/apache/trafficcontrol/pull/7450) *Traffic Ops*: Removed hypnotoad section and added listen field to traffic_ops_golang section in order to simplify cdn config.
@@ -70,7 +54,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7652](https://github.com/apache/trafficcontrol/pull/7652) *Traffic Control Cache Config (t3c)*: added rpmdb checks and use package data from t3c-apply-metadata.json if rpmdb is corrupt.
 - [#7674](https://github.com/apache/trafficcontrol/issues/7674) *Traffic Ops*: Add the ability to indicate if a server failed its revalidate/config update.
 - [#7784](https://github.com/apache/trafficcontrol/pull/7784) *Traffic Portal*: Added revert certificate functionality to the ssl-keys page.
-- [#7719](https://github.com/apache/trafficcontrol/pull/7719) *t3c* self-healing will be added automatically when using the slice plugin.
+- [#7719](https://github.com/apache/trafficcontrol/pull/7719) *Traffic Control Cache Config (t3c)*: self-healing will be added automatically when using the slice plugin.
 
 ### Changed
 - [#7776](https://github.com/apache/trafficcontrol/pull/7776) *tc-health-client*: Added error message while issues interacting with Traffic Ops.
@@ -209,8 +193,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7628](https://github.com/apache/trafficcontrol/pull/7628) *Traffic Ops*: Fixed an issue where certificate chain validation failed based on leading or trailing whitespace.
 - [#7688](https://github.com/apache/trafficcontrol/pull/7688) *Traffic Ops*: Fixed secured parameters being visible when role has proper permissions.
 - [#7697](https://github.com/apache/trafficcontrol/pull/7697) *Traffic Ops*: Fixed `iloPassword` and `xmppPassword` checking for priv-level instead of using permissions.
-- [#7817](https://github.com/apache/trafficcontrol/pull/7817) *Traffic Control Cache Config (t3c)* fixed issue that would cause null ptr panic on client fallback.
-- [#7866](https://github.com/apache/trafficcontrol/pull/7866) *Traffic Control Cache Config (t3c)* fixed rpm db check to work with rocky linux 9
+- [#7817](https://github.com/apache/trafficcontrol/pull/7817) *Traffic Control Cache Config (t3c)*: Fixed issue that would cause null ptr panic on client fallback.
+- [#7866](https://github.com/apache/trafficcontrol/pull/7866) *Traffic Control Cache Config (t3c)*: Fixed rpm db check to work with rocky linux 9.
 
 ### Removed
 - [#7808](https://github.com/apache/trafficcontrol/pull/7808) *Traffic Router*: Set SOA `minimum` field to a custom value defined in the `tld.soa.minimum` param, and remove the previously added `dns.negative.caching.ttl` property.
