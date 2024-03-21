@@ -29,11 +29,11 @@
     "stopSpecOnExpectationFailure": true
   },
   "params": {
-    "apiUrl": "https://localhost:8443/api/5.0",
-    "baseUrl": "https://localhost:9090",
+    "apiUrl": "https://localhost:443/api/5.0",
+    "baseUrl": "https://localhost",
     "login": {
       "username": "admin",
-      "password": "twelve"
+      "password": "twelve12"
     },
     "junitReporter": false
   }
