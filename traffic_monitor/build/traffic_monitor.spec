@@ -48,7 +48,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/conf
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/backup
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/run
-mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
+mkdir -p "${RPM_BUILD_ROOT}"/var/log/traffic_monitor
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 
@@ -108,7 +108,7 @@ fi
 %dir /opt/traffic_monitor/backup
 %dir /opt/traffic_monitor/static
 %dir /opt/traffic_monitor/var
-%dir /opt/traffic_monitor/var/log
+%dir /var/log/traffic_monitor
 %dir /opt/traffic_monitor/var/run
 
 %attr(600, traffic_monitor, traffic_monitor) /opt/traffic_monitor/static/index.html

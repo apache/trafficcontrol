@@ -31,8 +31,8 @@ done
 
 start() {
 	service traffic_monitor start
-	touch /opt/traffic_monitor/var/log/traffic_monitor.log
-	exec tail -f /opt/traffic_monitor/var/log/traffic_monitor.log
+	touch /var/log/traffic_monitor/traffic_monitor.log
+	exec tail -f /var/log/traffic_monitor/traffic_monitor.log
 }
 
 init() {
@@ -44,10 +44,10 @@ init() {
 				"max_events": 200,
 				"health_flush_interval_ms": 20,
 				"stat_flush_interval_ms": 20,
-				"log_location_access": "/opt/traffic_monitor/var/log/access.log",
-				"log_location_event": "/opt/traffic_monitor/var/log/event.log",
-				"log_location_error": "/opt/traffic_monitor/var/log/traffic_monitor.log",
-				"log_location_warning": "/opt/traffic_monitor/var/log/traffic_monitor.log",
+				"log_location_access": "/var/log/traffic_monitor/access.log",
+				"log_location_event": "/var/log/traffic_monitor/event.log",
+				"log_location_error": "/var/log/traffic_monitor/traffic_monitor.log",
+				"log_location_warning": "/var/log/traffic_monitor/traffic_monitor.log",
 				"log_location_info": "null",
 				"log_location_debug": "null",
 				"serve_read_timeout_ms": 10000,
