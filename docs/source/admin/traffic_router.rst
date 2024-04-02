@@ -447,7 +447,7 @@ The following is an example of the request flow when a client requests the routi
 
 Troubleshooting and log files
 =============================
-Traffic Router log files can be found under :file:`/var/log/traffic_router` and :file:`/opt/tomcat/logs`. Initialization and shutdown logs are in :file:`/opt/tomcat/logs/catalina{date}.out`. Application related logging is in :file:`/var/log/traffic_router/traffic_router.log`, while access logs are written to :file:`/var/log/traffic_routeraccess.log`.
+Traffic Router log files can be found under :file:`/var/log/traffic_router` and :file:`/var/log/tomcat`. Initialization and shutdown logs are in :file:`/var/log/tomcat/catalina{date}.out`. Application related logging is in :file:`/var/log/traffic_router/traffic_router.log`, while access logs are written to :file:`/var/log/traffic_routeraccess.log`.
 
 Event Log File Format
 ---------------------
