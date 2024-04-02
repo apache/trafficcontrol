@@ -64,7 +64,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/conf
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/backup
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/run
-mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log/traffic_stats
+mkdir -p "${RPM_BUILD_ROOT}"/var/log/traffic_stats
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/var/lib/grafana/plugins/trafficcontrol-scenes-app
@@ -129,9 +129,8 @@ fi
 %dir /opt/traffic_stats/conf
 %dir /opt/traffic_stats/backup
 %dir /opt/traffic_stats/var
-%dir /opt/traffic_stats/var/log
 %dir /opt/traffic_stats/var/run
-%dir /opt/traffic_stats/var/log/traffic_stats
+%dir /var/log/traffic_stats
 %dir /var/lib/grafana/plugins/trafficcontrol-scenes-app
 %dir /opt/traffic_stats/influxdb_tools
 
