@@ -449,14 +449,14 @@ Traffic Router
 		        Waiting for Traffic Monitor to start...
 		        tail: cannot open '/opt/tomcat/logs/catalina.log' for reading: No such file or directory
 		        tail: cannot open '/opt/tomcat/logs/catalina.2020-02-21.log' for reading: No such file or directory
-		        ==> /opt/traffic_router/var/log/traffic_router.log <==
+		        ==> /var/log/traffic_router/traffic_router.log <==
 
-		        ==> /opt/traffic_router/var/log/access.log <==
+		        ==> /var/log/traffic_routr/access.log <==
 		        Tomcat started.
 		        tail: '/opt/tomcat/logs/catalina.log' has appeared;  following end of new file
 		        tail: '/opt/tomcat/logs/catalina.2020-02-21.log' has appeared;  following end of new file
 
-		        ==> /opt/traffic_router/var/log/traffic_router.log <==
+		        ==> /var/log/traffic_router/traffic_router.log <==
 		        INFO  2020-02-21T05:16:07.557 [Thread-3] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
 		        INFO  2020-02-21T05:16:07.557 [Thread-4] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
 		        INFO  2020-02-21T05:16:07.558 [Thread-5] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState

@@ -20,7 +20,7 @@ tomcat_pkg_name: "{% if tr_version is defined and tr_version != omit %}tomcat-{{
 tr_base_dir: '/opt/traffic_router'
 tr_conf_dir: "{{ tr_base_dir }}/conf"
 tr_temp_dir: "{{ tr_base_dir }}/temp"
-tr_log_dir: "{{ tr_base_dir }}/var/log"
+tr_log_dir: "/var/log/traffic_router"
 tr_db_dir: "{{ tr_base_dir }}/db"
 tr_tomcat_base_dir: '/opt/tomcat'
 tr_tomcat_logs_dir: "{{ tr_tomcat_base_dir }}/logs"
