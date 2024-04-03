@@ -12,6 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# macOS does not come with realpath, so we add a function for it.
+if ! type -p realpath; then
+	# by default, macOS does not have realpath
+	realpath() {
+		ls "$(
+			cd "$(dirname "$0")"
+			pwd -P # -P resolves symlinks
+		)/$(basename "$0")"
+	}
+	export -f realpath
+fi;
+
 # Files are relative to this script directory.
 SELF="${BASH_SOURCE[0]}"
 cd "$( dirname "${BASH_SOURCE[0]}" )"
