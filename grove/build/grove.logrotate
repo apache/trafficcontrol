@@ -45,7 +45,7 @@
         copytruncate
 }
 
-/opt/trafficserver/var/log/trafficserver/custom_ats_2.log {
+/var/log/trafficserver/custom_ats_2.log {
         hourly
         dateext
         dateformat -%Y%m%d%H
