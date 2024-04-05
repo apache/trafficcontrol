@@ -34,6 +34,8 @@ tr_purge_crconfig_cache: False
 # traffic_ops.properties
 tr_traffic_ops_username:
 tr_traffic_ops_password:
+tr_traffic_ops_use_client_certs: false
+tr_traffic_ops_use_self_signed: false
 
 # traffic_monitor.properties
 tr_tm_bootstrap_hosts: [] # Supply an array of tm fqdn that should be used
@@ -110,6 +112,9 @@ tr_connectors:
     sslProtocol: 'TLS'
     protocols: '+TLSv1.2,+TLSv1.3'
     sslImplementationName: 'org.apache.traffic_control.traffic_router.protocol.RouterSslImplementation'
+
+# https.properties
+tr_https_pkcs_file_location: "{{tr_conf_dir}}/pkcs.p12"
 
 # dns.properties
 tr_dns_tcp_port: 53
