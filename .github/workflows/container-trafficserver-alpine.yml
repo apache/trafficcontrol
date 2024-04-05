@@ -37,12 +37,11 @@ on:
     types: [ opened, reopened, ready_for_review, synchronize ]
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        platform: [ 'amd64', 'arm64' ]
+  build-amd64:
+    env:
+      PLATFORM: AMD64
     if: ${{ github.repository_owner == 'apache' || github.event_name == 'workflow_dispatch' }}
-    runs-on: ${{ matrix.toolchain == 'nightly' && ["self-hosted", "asf-arm"] || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@master
@@ -65,11 +64,11 @@ jobs:
         if: ${{ env.SHOULD_RUN == '1' }}
         run: cp .env '${{ github.env }}'
       - name: Set image name
-        run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}-${{ matrix.platform }}' >> '${{ github.env }}'
+        run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}-${{ env.PLATFORM }}' >> '${{ github.env }}'
       - name: Build ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
-        run: docker buildx build --build-arg ATS_VERSION=${{ env.ATS_VERSION }} --tag ${{ env.IMAGE_NAME }} --platform linux/${{ matrix.platform }} --load .
+        run: docker buildx build --build-arg ATS_VERSION=${{ env.ATS_VERSION }} --tag ${{ env.IMAGE_NAME }} --platform linux/${{ env.PLATFORM }} --load .
       - name: docker login ghcr.io
         if: ${{ env.SHOULD_RUN == '1' }}
         uses: docker/login-action@v2
@@ -78,13 +77,57 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push ${{ env.IMAGE_NAME }}
-        if: ${{ env.SHOULD_RUN == '1' && github.event_name != 'pull_request' }}
-        run: docker push ${{ env.IMAGE_NAME }}
+        if: ${{ env.should_run == '1' && github.event_name != 'pull_request' }}
+        run: docker push ${{ env.image_name }}
+
+  build-arm64:
+    env:
+      PLATFORM: ARM64
+    if: ${{ github.repository_owner == 'apache' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ["self-hosted", "asf-arm"]
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 5
+      - name: Check if ATS_VERSION was changed within the last 4 commits
+        run: |2
+          set -o errexit -o nounset -o xtrace
+          ats_line="$(git grep -hn ^ATS_VERSION= .env | cut -d: -f1)"
+          if [[ -z "$ats_line" ]]; then
+            echo "No line containing ATS_VERSION in .env was found"
+            exit 1
+          fi
+          if [[ "$(git log HEAD~4..HEAD -L${ats_line},${ats_line}:.env)" != '' ||
+                "$(git log HEAD~4..HEAD .github/containers/trafficserver-alpine .github/workflows/container-trafficserver-alpine.yml)" != '' ||
+                ${{ github.event_name }} == 'workflow_dispatch' ]]; then
+            echo SHOULD_RUN=1 >> ${{ github.env }}
+          fi
+      - name: Load environment
+        if: ${{ env.SHOULD_RUN == '1' }}
+        run: cp .env '${{ github.env }}'
+      - name: Set image name
+        run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}-${{ env.PLATFORM }}' >> '${{ github.env }}'
+      - name: Build ${{ env.IMAGE_NAME }}
+        if: ${{ env.SHOULD_RUN == '1' }}
+        working-directory: .github/containers/trafficserver-alpine
+        run: docker buildx build --build-arg ATS_VERSION=${{ env.ATS_VERSION }} --tag ${{ env.IMAGE_NAME }} --platform linux/${{ env.PLATFORM }} --load .
+      - name: docker login ghcr.io
+        if: ${{ env.SHOULD_RUN == '1' }}
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push ${{ env.IMAGE_NAME }}
+        if: ${{ env.should_run == '1' && github.event_name != 'pull_request' }}
+        run: docker push ${{ env.image_name }}
 
   combine-platforms:
     if: ${{ (github.repository_owner == 'apache' && github.event_name != 'pull_request') || github.event_name == 'workflow_dispatch' }}
     needs:
-      - build
+      - build-amd64
+      - build-arm64
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
