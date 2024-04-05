@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-FROM alpine:latest AS build-trafficserver
+FROM alpine:3.16 AS build-trafficserver
 ARG ATS_VERSION
 ADD https://archive.apache.org/dist/trafficserver/trafficserver-${ATS_VERSION}.tar.bz2 /tmp/
 RUN set -o errexit -o nounset -o xtrace; \
@@ -52,7 +52,7 @@ RUN set -o errexit -o nounset -o xtrace; \
     cd ..; \
     rm -r $dirname
 
-FROM alpine:latest
+FROM alpine:3.16
 COPY --from=build-trafficserver /tmp/built/ /
 RUN apk add --no-cache \
         # runtime dependencies
