@@ -18,6 +18,8 @@
 name: Container ghcr.io/${{ github.repository }}/ci/trafficserver-alpine
 
 env:
+  DOCKER_BUILDKIT: '1'
+  COMPOSE_DOCKER_CLI_BUILD: '1'
   CONTAINER: ghcr.io/${{ github.repository }}/ci/trafficserver-alpine
 
 on:
