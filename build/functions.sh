@@ -13,13 +13,17 @@
 #
 # shellcheck shell=ash
 
-if ! type -p realpath; then
+# macOS's version of realpath does not resolve symlinks, so we add a function
+# for it.
+if ! realpath -e . >/dev/null 2>&1; then
 	# by default, macOS does not have realpath
 	realpath() {
+        local path="$1"
+        shift
 		ls "$(
-			cd "$(dirname "$0")"
+			cd "$(dirname "$path")"
 			pwd -P # -P resolves symlinks
-		)/$(basename "$0")"
+		)/$(basename "$path")"
 	}
 	export -f realpath
 fi;
