@@ -74,5 +74,10 @@ func TestLoginWithCert(t *testing.T) {
 		if session == nil {
 			t.Fatalf("expected a valid session, but got nothing")
 		}
+
+		_, _, err = session.GetAbout(client.RequestOptions{})
+		if err != nil {
+			t.Fatalf("expected no error while using the client cert session to hit an authenticated endpoint, but got %v", err)
+		}
 	}
 }

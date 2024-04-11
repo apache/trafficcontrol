@@ -349,6 +349,14 @@ func LoginWithCert(
 	if err != nil {
 		return nil, nil, err
 	}
+
+	jar, err := cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+	if err != nil {
+		return nil, nil, errors.New("creating cookie jar: " + err.Error())
+	}
+
 	to := NewClient("", "", toURL, userAgent, &http.Client{
 		Timeout: requestTimeout,
 		Transport: &http.Transport{
@@ -357,6 +365,7 @@ func LoginWithCert(
 				InsecureSkipVerify: insecure,
 			},
 		},
+		Jar: jar,
 	}, apiVersions)
 
 	reqInf, err := to.login()

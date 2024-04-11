@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated Go version to 1.22.0
 
 ### Fixed
+- [#7984](https://github.com/apache/trafficcontrol/pull/7984) *Traffic Ops* Fixed TO Client cert authentication with respect to returning response cookie.
 - [#7957](https://github.com/apache/trafficcontrol/pull/7957) *Traffic Ops* Fix the incorrect display of delivery services assigned to ORG servers.
 - [#7917](https://github.com/apache/trafficcontrol/pull/7917) *Traffic Ops* Removed `Alerts` field from struct `ProfileExportResponse`.
 - [#7918](https://github.com/apache/trafficcontrol/pull/7918) *Traffic Portal* Fixed topology link under DS-Servers tables page

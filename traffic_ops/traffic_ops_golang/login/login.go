@@ -108,7 +108,7 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 </html>
 `))
 
-func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.DB, cfg config.Config, dbCtx context.Context, cancelTx context.CancelFunc, form auth.PasswordForm, authenticated bool) bool {
+func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.DB, cfg config.Config, dbCtx context.Context, cancelTx context.CancelFunc, form *auth.PasswordForm, authenticated bool) bool {
 	// No certs provided by the client. Skip to form authentication
 	if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
 		return false
@@ -171,7 +171,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		// Attempt to perform client certificate authentication. If fails, goto standard form auth. If the
 		// certificate was verified, has a UID, and the UID matches an existing user we consider this to
 		// be a successful login.
-		authenticated = clientCertAuthentication(w, r, db, cfg, dbCtx, cancelTx, form, authenticated)
+		authenticated = clientCertAuthentication(w, r, db, cfg, dbCtx, cancelTx, &form, authenticated)
 
 		// Failed certificate-based auth, perform standard form auth
 		if !authenticated {
