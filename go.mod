@@ -40,7 +40,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/kylelemons/godebug v1.1.1-0.20201107061927-e693023230a4
-	github.com/lestrrat-go/jwx v1.2.28
+	github.com/lestrrat-go/jwx v1.2.29
 	github.com/lib/pq v1.10.4
 	github.com/miekg/dns v1.1.43
 	github.com/onsi/ginkgo v1.16.5
@@ -48,9 +48,9 @@ require (
 	github.com/pborman/getopt/v2 v2.1.0
 	github.com/pkg/errors v0.9.1
 	go.etcd.io/bbolt v1.3.6
-	golang.org/x/crypto v0.17.0
-	golang.org/x/net v0.17.0
-	golang.org/x/sys v0.15.0
+	golang.org/x/crypto v0.21.0
+	golang.org/x/net v0.21.0
+	golang.org/x/sys v0.18.0
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
