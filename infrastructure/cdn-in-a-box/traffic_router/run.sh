@@ -62,8 +62,8 @@ JAVA_OPTS="\
 
 TO_PROPERTIES="$CATALINA_BASE/conf/traffic_ops.properties"
 TM_PROPERTIES="$CATALINA_BASE/conf/traffic_monitor.properties"
-LOGFILE="$CATALINA_BASE/var/log/traffic_router.log"
-ACCESSLOG="$CATALINA_BASE/var/log/access.log"
+LOGFILE="/var/log/traffic_router/traffic_router.log"
+ACCESSLOG="/var/log/traffic_router/access.log"
 
 export JAVA_HOME JAVA_OPTS
 export TO_PROPERTIES TM_PROPERTIES

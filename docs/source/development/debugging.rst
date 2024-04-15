@@ -447,27 +447,27 @@ Traffic Router
 		        Waiting for Traffic Monitor to start...
 		        Waiting for Traffic Monitor to start...
 		        Waiting for Traffic Monitor to start...
-		        tail: cannot open '/opt/tomcat/logs/catalina.log' for reading: No such file or directory
-		        tail: cannot open '/opt/tomcat/logs/catalina.2020-02-21.log' for reading: No such file or directory
-		        ==> /opt/traffic_router/var/log/traffic_router.log <==
+		        tail: cannot open '/var/log/tomcat/catalina.log' for reading: No such file or directory
+		        tail: cannot open '/var/log/tomcat/catalina.2020-02-21.log' for reading: No such file or directory
+		        ==> /var/log/traffic_router/traffic_router.log <==
 
-		        ==> /opt/traffic_router/var/log/access.log <==
+		        ==> /var/log/traffic_routr/access.log <==
 		        Tomcat started.
-		        tail: '/opt/tomcat/logs/catalina.log' has appeared;  following end of new file
-		        tail: '/opt/tomcat/logs/catalina.2020-02-21.log' has appeared;  following end of new file
+		        tail: '/var/log/tomcat/catalina.log' has appeared;  following end of new file
+		        tail: '/var/log/tomcat/catalina.2020-02-21.log' has appeared;  following end of new file
 
-		        ==> /opt/traffic_router/var/log/traffic_router.log <==
+		        ==> /var/log/traffic_router/traffic_router.log <==
 		        INFO  2020-02-21T05:16:07.557 [Thread-3] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
 		        INFO  2020-02-21T05:16:07.557 [Thread-4] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
 		        INFO  2020-02-21T05:16:07.558 [Thread-5] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
 		        INFO  2020-02-21T05:16:07.559 [Thread-6] org.apache.traffic_control.traffic_router.protocol.LanguidPoller - Waiting for state from mbean path traffic-router:name=languidState
 
-		        ==> /opt/tomcat/logs/catalina.log <==
+		        ==> /var/log/tomcat/catalina.log <==
 		        Listening for transport dt_socket at address: 5005
 
 		Watch for the line that mentions port 5005 -----------^^^^
 
-		        ==> /opt/tomcat/logs/catalina.2020-02-21.log <==
+		        ==> /var/log/tomcat/catalina.2020-02-21.log <==
 		        21-Feb-2020 05:16:07.359 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<clinit> Adding BouncyCastle provider
 		        21-Feb-2020 05:16:07.452 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains
 		        21-Feb-2020 05:16:07.459 WARNING [main] org.apache.traffic_control.traffic_router.protocol.LanguidNioProtocol.<init> Serving wildcard certs for multiple domains

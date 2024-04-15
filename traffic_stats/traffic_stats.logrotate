@@ -16,7 +16,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-/opt/traffic_stats/var/log/traffic_stats/traffic_stats.log {
+/var/log/traffic_stats/traffic_stats.log {
         compress
         maxage 30
         missingok

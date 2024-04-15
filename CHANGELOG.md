@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed perl dependency
 - Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated Go version to 1.22.0
+- [#7979](https://github.com/apache/trafficcontrol/pull/7979) *Traffic Router*, *Traffic Monitor*, *Traffic Stats*: Store logs in /var/log
 
 ### Fixed
 - [#7984](https://github.com/apache/trafficcontrol/pull/7984) *Traffic Ops* Fixed TO Client cert authentication with respect to returning response cookie.

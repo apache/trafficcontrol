@@ -447,14 +447,14 @@ The following is an example of the request flow when a client requests the routi
 
 Troubleshooting and log files
 =============================
-Traffic Router log files can be found under :file:`/opt/traffic_router/var/log` and :file:`/opt/tomcat/logs`. Initialization and shutdown logs are in :file:`/opt/tomcat/logs/catalina{date}.out`. Application related logging is in :file:`/opt/traffic_router/var/log/traffic_router.log`, while access logs are written to :file:`/opt/traffic_router/var/log/access.log`.
+Traffic Router log files can be found under :file:`/var/log/traffic_router` and :file:`/var/log/tomcat`. Initialization and shutdown logs are in :file:`/var/log/tomcat/catalina{date}.out`. Application related logging is in :file:`/var/log/traffic_router/traffic_router.log`, while access logs are written to :file:`/var/log/traffic_route/raccess.log`.
 
 Event Log File Format
 ---------------------
 
 Summary
 """""""
-All access events to Traffic Router are logged to the file :file:`/opt/traffic_router/var/log/access.log`. This file grows up to 200MB and gets rolled into older log files, ten log files total are kept (total of up to 2GB of logged events per Traffic Router instance)
+All access events to Traffic Router are logged to the file :file:`/var/log/traffic_router/access.log`. This file grows up to 200MB and gets rolled into older log files, ten log files total are kept (total of up to 2GB of logged events per Traffic Router instance)
 
 Traffic Router logs access events in a format that largely follows :abbr:`ATS (Apache Traffic Service)` `event logging format <https://docs.trafficserver.apache.org/en/6.0.x/admin/event-logging-formats.en.html>`_.
 

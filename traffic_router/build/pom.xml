@@ -162,7 +162,7 @@
 									</sources>
 								</mapping>
 								<mapping>
-									<directory>${deploy.dir}/var/log</directory>
+									<directory>/var/log/traffic_router</directory>
 									<filemode>755</filemode>
 									<username>root</username>
 									<groupname>root</groupname>
