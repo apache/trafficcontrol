@@ -107,6 +107,7 @@ RUN	pip3 install --user Sphinx
 COPY	run.sh /run.sh
 COPY	trafficserver.spec /rpmbuilddir/SPECS/trafficserver.spec
 COPY	traffic_server_jemalloc /rpmbuilddir/SOURCES/traffic_server_jemalloc
+COPY	trafficserver.env /rpmbuilddir/SOURCES/trafficserver.env
 RUN	/usr/sbin/useradd -u 176 -r ats -s /sbin/nologin -d /
 CMD if [[ ${RHEL_VERSION%%.*} -ge 8 ]]; then \
 		os_toolset=gcc-toolset-11; \

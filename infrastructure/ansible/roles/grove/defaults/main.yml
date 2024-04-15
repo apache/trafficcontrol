@@ -34,7 +34,7 @@ grovetccfg_crontab:
     job:  "/usr/sbin/grovetccfg -certdir {{ grove_certdir }} -host {{ ansible_hostname }} -insecure -pretty -tourl {{ grovetccfg_traffic_ops_url }} -touser {{ grovetccfg_traffic_ops_username }} -topass '{{ grovetccfg_traffic_ops_password }}' > /tmp/grovetccfg.log 2>&1"
 
 # Grove configuration
-grove_custom_ats2_path: "/opt/trafficserver/var/log/trafficserver/custom_ats_2.log"
+grove_custom_ats2_path: "/var/log/trafficserver/custom_ats_2.log"
 grove_ssl_cert_path: "{{ grove_config_dir }}/certs/cert.pem"
 grove_ssl_key_path: "{{ grove_config_dir }}/certs/key.pem"
 grove_remap_file_path: "{{ grove_config_dir }}/remap.json"

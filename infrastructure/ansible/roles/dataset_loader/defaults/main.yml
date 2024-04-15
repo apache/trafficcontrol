@@ -1626,7 +1626,7 @@ dl_ds_default_profile_cdntemplates:
         value: "/var/log/grove/error.log"
       - name: log_location_event
         configFile: grove.cfg
-        value: "/opt/trafficserver/var/log/trafficserver/custom_ats_2.log"
+        value: "/var/log/trafficserver/custom_ats_2.log"
       - name: log_location_info
         configFile: grove.cfg
         value: 'null'

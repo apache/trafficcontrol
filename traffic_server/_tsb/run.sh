@@ -70,7 +70,6 @@ ED
 ) || die "Failed to patch plugins makefile to include astats."
 
 # Patch trafficserver systemd service
-# This includes changing output redirection to traffic.out and adding udev-settle to wait for disks
-(sed -i 's/ExecStart=@exp_bindir@\/traffic_manager \$TM_DAEMON_ARGS/ExecStart=@exp_bindir@\/traffic_manager --bind_stdout @exp_logdir@\/traffic.out --bind_stderr @exp_logdir@\/traffic.out \$TM_DAEMON_ARGS/g' /rpmbuilddir/SOURCES/src/rc/trafficserver.service.in)
+# This includes adding udev-settle to wait for disks
 (sed -i 's/After=syslog.target network.target/Wants=systemd-udev-settle.service \nAfter=syslog.target network.target systemd-udev-settle.service/g' /rpmbuilddir/SOURCES/src/rc/trafficserver.service.in)
 rpmbuild -bb ${rpmbuild_openssl} --define "_topdir /rpmbuilddir" /rpmbuilddir/SPECS/trafficserver.spec || die "Failed to build rpm."

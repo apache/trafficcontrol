@@ -46,7 +46,7 @@ init() {
   "log_location_warning": "/var/log/grove/error.log",
   "log_location_info":    "null",
   "log_location_debug":   "null",
-  "log_location_event":   "/opt/trafficserver/var/log/trafficserver/custom_ats_2.log",
+  "log_location_event":   "/var/log/trafficserver/custom_ats_2.log",
 
   "parent_request_timeout_ms":                 10000,
   "parent_request_keep_alive_ms":              10000,
@@ -63,7 +63,7 @@ ENDOFMESSAGE
 	if [[ ! -z $REMAP_PATH ]]; then
     cp $REMAP_PATH /etc/grove/remap.json
   fi
-	mkdir -p /opt/trafficserver/var/log/trafficserver
+	mkdir -p /var/log/trafficserver
 	mkdir -p /var/log/grove/
 	touch /var/log/grove/error.log
 

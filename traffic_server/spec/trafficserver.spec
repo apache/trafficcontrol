@@ -49,6 +49,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 
 mkdir -p $RPM_BUILD_ROOT%{install_prefix}/trafficserver/etc/trafficserver/snapshots
 mkdir -p $RPM_BUILD_ROOT/etc/init.d
+mkdir -p $RPM_BUILD_ROOT/var/log/trafficserver
 cp $RPM_BUILD_DIR/%{name}-%{version}/rc/trafficserver $RPM_BUILD_ROOT/etc/init.d/
 
 %clean
@@ -89,8 +90,8 @@ fi
 /opt/trafficserver/share
 %dir /opt/trafficserver/var
 %attr(-,ats,ats) /opt/trafficserver/var/trafficserver
-%dir /opt/trafficserver/var/log
-%attr(-,ats,ats) /opt/trafficserver/var/log/trafficserver
+%dir /var/log/trafficserver
+%attr(-,ats,ats) /var/log/trafficserver
 %dir /opt/trafficserver/etc
 %attr(-,ats,ats) %dir /opt/trafficserver/etc/trafficserver
 %attr(-,ats,ats) %dir /opt/trafficserver/etc/trafficserver/snapshots

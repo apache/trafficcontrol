@@ -82,7 +82,7 @@
       "config_file": "grove.cfg"
     },
     {
-      "value": "/opt/trafficserver/var/log/trafficserver/custom_ats_2.log",
+      "value": "/var/log/trafficserver/custom_ats_2.log",
       "name": "log_location_event",
       "config_file": "grove.cfg"
     },
