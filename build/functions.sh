@@ -15,18 +15,42 @@
 
 # macOS's version of realpath does not resolve symlinks, so we add a function
 # for it.
-if ! realpath -e . >/dev/null 2>&1; then
-	# by default, macOS does not have realpath
-	realpath() {
-        local path="$1"
-        shift
-		ls "$(
-			cd "$(dirname "$path")"
-			pwd -P # -P resolves symlinks
-		)/$(basename "$path")"
-	}
-	export -f realpath
-fi;
+get_realpath() {
+	local bin
+	local found=''
+	first_realpath="$(type -P realpath)"
+	for bin in $(type -aP realpath | uniq); do
+		if "$bin" -e . >/dev/null 2>&1; then
+			found=y
+			break
+		fi
+	done
+	if [[ -n "$found" ]]; then
+		if [[ "$first_realpath" == "$bin" ]]; then
+			# Default realpath works.
+			return
+		fi
+		realpath_path="$bin"
+		# by default, macOS does not have realpath
+		eval "$(<<FUNCTION cat
+		realpath() {
+			"$realpath_path" "\$@"
+		}
+FUNCTION
+		)"
+		export -f realpath
+	else
+			cat <<'MESSAGE'
+GNU realpath is required to build Apache Traffic Control if your
+realpath binary does not support the -e flag, as is the case on BSD-like
+operating systems like macOS. Install it by running the following
+command:
+    brew install coreutils
+MESSAGE
+			exit 1
+	fi
+}
+get_realpath
 
 if { ! stat -c%u . >/dev/null && stat -f%u .; } >/dev/null 2>&1; then
 	#BSD stat uses -f as its formatting flag instead of -c
