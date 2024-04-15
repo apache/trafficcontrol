@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated Go version to 1.22.0
 - [#7979](https://github.com/apache/trafficcontrol/pull/7979) *Traffic Router*, *Traffic Monitor*, *Traffic Stats*: Store logs in /var/log
+- [#7872](https://github.com/apache/trafficcontrol/issues/7872) *Traffic Router*: Updated Apache Tomcat from 9.0.43, 9.0.67, 9.0.83, and 9.0.86 to 9.0.87.
 
 ### Fixed
 - [#7984](https://github.com/apache/trafficcontrol/pull/7984) *Traffic Ops* Fixed TO Client cert authentication with respect to returning response cookie.
