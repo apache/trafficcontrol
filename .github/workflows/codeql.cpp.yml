@@ -43,8 +43,7 @@ jobs:
           <<'SHELL_COMMANDS' docker run --rm -i rockylinux:8 |
             set -o errexit
             cd /etc/yum.repos.d
-            curl -sLOf --compressed 'https://copr.fedorainfracloud.org/coprs/jered/trafficserver/repo/epel-8/jered-trafficserver-epel-8.repo'
-            dnf -y install yum-utils
+            dnf -y install epel-release yum-utils
             yumdownloader --urls trafficserver-devel
           SHELL_COMMANDS
             tee docker-output
