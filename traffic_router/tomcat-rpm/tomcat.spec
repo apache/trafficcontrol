@@ -40,6 +40,7 @@ Built:@BUILT@
 %build
 
 %install
+mkdir -p "${RPM_BUILD_ROOT}"/var/log/tomcat
 install -d -m 755 ${RPM_BUILD_ROOT}/%{tomcat_home}/
 cp -R * ${RPM_BUILD_ROOT}/%{tomcat_home}/
 
@@ -72,6 +73,7 @@ fi
 %license LICENSE
 %defattr(-,root,root)
 %{tomcat_home}
+%dir /var/log/tomcat
 
 %post
 
