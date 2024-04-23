@@ -175,6 +175,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		// Failed certificate-based auth, perform standard form auth
 		if !authenticated {
+			log.Infof("user %s could not be authenticated using client certificates", form.Username)
 			// Perform form authentication
 			if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
 				api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
@@ -212,17 +213,25 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			if err != nil {
 				log.Errorf("checking local user password: %s\n", err)
 			}
-			var ldapErr error
-			if !authenticated && cfg.LDAPEnabled {
+			if authenticated {
+				log.Infof("user %s successfully authenticated using username/ password", form.Username)
+			} else if cfg.LDAPEnabled {
+				var ldapErr error
 				authenticated, ldapErr = auth.CheckLDAPUser(form, cfg.ConfigLDAP)
 				if ldapErr != nil {
+					log.Infof("user %s could not be successfully authenticated using LDAP", form.Username)
 					log.Errorf("checking ldap user: %s\n", ldapErr.Error())
+				} else {
+					log.Infof("user %s successfully authenticated using LDAP", form.Username)
 				}
 			}
+		} else {
+			log.Infof("user %s successfully authenticated using client certificates", form.Username)
 		}
 
 		// Failed to authenticate in either local DB or LDAP, return unauthorized
 		if !authenticated {
+			log.Infof("user %s could not be successfully authenticated using username/ password", form.Username)
 			resp = tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")
 			w.WriteHeader(http.StatusUnauthorized)
 			api.WriteRespRaw(w, r, resp)
