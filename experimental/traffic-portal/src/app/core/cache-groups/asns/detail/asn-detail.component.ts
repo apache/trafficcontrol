@@ -11,10 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Location } from "@angular/common";
+
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ResponseASN, ResponseCacheGroup } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
@@ -31,16 +31,16 @@ import { NavigationService } from "src/app/shared/navigation/navigation.service"
 	templateUrl: "./asn-detail.component.html"
 })
 export class ASNDetailComponent implements OnInit {
-	public new = false;
+	public isNew = false;
 	public asn!: ResponseASN;
-	public cachegroups!: Array<ResponseCacheGroup>;
+	public cacheGroups =  new Array<ResponseCacheGroup>();
 
 	constructor(
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location,
 		private readonly dialog: MatDialog,
-		private readonly header: NavigationService,
+		private readonly navSvc: NavigationService,
 		private readonly log: LoggingService,
 	) {
 	}
@@ -49,21 +49,28 @@ export class ASNDetailComponent implements OnInit {
 	 * Angular lifecycle hook where data is initialized.
 	 */
 	public async ngOnInit(): Promise<void> {
-		this.cachegroups = await this.cacheGroupService.getCacheGroups();
+		this.cacheGroupService.getCacheGroups().then(
+			cgs => {
+				this.cacheGroups = cgs;
+			}
+		);
+
 		const ID = this.route.snapshot.paramMap.get("id");
 		if (ID === null) {
 			this.log.error("missing required route parameter 'id'");
 			return;
 		}
 
-		if (ID === "new") {
-			this.header.headerTitle.next("New ASN");
-			this.new = true;
+		this.isNew = ID === "new";
+
+		if (this.isNew) {
+			this.setTitle();
+			this.isNew = true;
 			this.asn = {
-				asn: 1,
-				cachegroup: "test",
-				cachegroupId: 1,
-				id: 1,
+				asn: 0,
+				cachegroup: "",
+				cachegroupId: 0,
+				id: 0,
 				lastUpdated: new Date()
 			};
 			return;
@@ -75,15 +82,29 @@ export class ASNDetailComponent implements OnInit {
 		}
 
 		this.asn = await this.cacheGroupService.getASNs(numID);
-		this.header.headerTitle.next(`ASN: ${this.asn.asn}`);
+		this.setTitle();
+	}
+
+	/**
+	 * Sets the headerTitle based on current ASN state.
+	 *
+	 * @private
+	 */
+	private setTitle(): void {
+		const title = this.isNew ? "New ASN" : `ASN: ${this.asn.asn}`;
+		this.navSvc.headerTitle.next(title);
 	}
 
 	/**
 	 * Deletes the current ASN.
 	 */
 	public async deleteAsn(): Promise<void> {
-		if (this.new) {
+		if (this.isNew) {
 			this.log.error("Unable to delete new ASN");
+			return;
+		}
+		if(!this.asn.asn) {
+			this.log.error("Missing ASN number");
 			return;
 		}
 		const ref = this.dialog.open(DecisionDialogComponent, {
@@ -93,7 +114,7 @@ export class ASNDetailComponent implements OnInit {
 		ref.afterClosed().subscribe(result => {
 			if(result) {
 				this.cacheGroupService.deleteASN(this.asn.id);
-				this.location.back();
+				this.router.navigate(["core/asns"]);
 			}
 		});
 	}
@@ -106,12 +127,14 @@ export class ASNDetailComponent implements OnInit {
 	public async submit(e: Event): Promise<void> {
 		e.preventDefault();
 		e.stopPropagation();
-		if(this.new) {
+		if(this.isNew) {
 			this.asn = await this.cacheGroupService.createASN(this.asn);
-			this.new = false;
+			this.isNew = false;
+			await this.router.navigate(["core/asns", this.asn.id]);
 		} else {
 			this.asn = await this.cacheGroupService.updateASN(this.asn);
 		}
+		this.setTitle();
 	}
 
 }

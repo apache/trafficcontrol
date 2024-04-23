@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Location } from "@angular/common";
+
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -44,9 +44,8 @@ export class RoleDetailComponent implements OnInit {
 		private readonly route: ActivatedRoute,
 		private readonly router: Router,
 		private readonly userService: UserService,
-		private readonly location: Location,
 		private readonly dialog: MatDialog,
-		private readonly header: NavigationService,
+		private readonly navSvc: NavigationService,
 		private readonly log: LoggingService,
 	) { }
 
@@ -56,7 +55,7 @@ export class RoleDetailComponent implements OnInit {
 	public async ngOnInit(): Promise<void> {
 		const role = this.route.snapshot.paramMap.get("name");
 		if (role === null) {
-			this.header.headerTitle.next("New Role");
+			this.setHeader("New Role");
 			this.new = true;
 			this.role = {
 				description: "",
@@ -69,7 +68,7 @@ export class RoleDetailComponent implements OnInit {
 		this.role = await this.userService.getRoles(role);
 		this.name = this.role.name;
 		this.permissions = this.role.permissions?.join("\n")??"";
-		this.header.headerTitle.next(`Role: ${this.name}`);
+		this.navSvc.headerTitle.next(`Role: ${this.name}`);
 	}
 
 	/**
@@ -80,7 +79,7 @@ export class RoleDetailComponent implements OnInit {
 	 */
 	private setHeader(name: string): void {
 		this.name = name;
-		this.header.headerTitle.next(`Role: ${name}`);
+		this.navSvc.headerTitle.next(`Role: ${name}`);
 	}
 
 	/**
@@ -98,7 +97,7 @@ export class RoleDetailComponent implements OnInit {
 		const result = await ref.afterClosed().toPromise();
 		if(result) {
 			await this.userService.deleteRole(this.role);
-			this.location.back();
+			await this.router.navigate(["core/roles"]);
 		}
 	}
 
@@ -123,10 +122,9 @@ export class RoleDetailComponent implements OnInit {
 			this.new = false;
 		} else {
 			this.role = await this.userService.updateRole(this.name, this.role);
+			this.navSvc.headerTitle.next(`Role: ${this.role.name}`);
 		}
-		this.router.navigate([`/core/roles/${this.role.name}`], {replaceUrl: true});
-		this.setHeader(this.name);
-
+		await this.router.navigate(["core/roles", this.role.name], {replaceUrl: true});
 	}
 
 }

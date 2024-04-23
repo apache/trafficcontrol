@@ -44,18 +44,11 @@ describe("CacheGroupDetailsComponent", () => {
 			imports: [
 				APITestingModule,
 				RouterTestingModule.withRoutes([
-					{
-						component: CacheGroupDetailsComponent,
-						path: ""
-					},
-					{
-						component: CacheGroupDetailsComponent,
-						path: "cache-groups/:id"
-					}
+					{component: CacheGroupDetailsComponent, path: "core/cache-groups/:id"},
+					{component: CacheGroupDetailsComponent, path: "core/cache-groups"}
 				]),
 				MatDialogModule,
 				NoopAnimationsModule,
-
 			],
 			providers: [ { provide: NavigationService, useValue: navSvc } ]
 		}).compileComponents();

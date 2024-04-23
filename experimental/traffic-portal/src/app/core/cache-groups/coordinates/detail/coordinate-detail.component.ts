@@ -12,10 +12,9 @@
 * limitations under the License.
 */
 
-import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ResponseCoordinate } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
@@ -37,8 +36,8 @@ export class CoordinateDetailComponent implements OnInit {
 
 	constructor(
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location,
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
 		private readonly log: LoggingService,
@@ -54,8 +53,10 @@ export class CoordinateDetailComponent implements OnInit {
 			return;
 		}
 
-		if (ID === "new") {
-			this.navSvc.headerTitle.next("New Coordinate");
+		this.new = ID === "new";
+
+		if (this.new) {
+			this.setTitle();
 			this.new = true;
 			this.coordinate = {
 				id: -1,
@@ -73,7 +74,17 @@ export class CoordinateDetailComponent implements OnInit {
 		}
 
 		this.coordinate = await this.cacheGroupService.getCoordinates(numID);
-		this.navSvc.headerTitle.next(`Coordinate: ${this.coordinate.name}`);
+		this.setTitle();
+	}
+
+	/**
+	 * Sets the headerTitle based on current Coordinate state.
+	 *
+	 * @private
+	 */
+	private setTitle(): void {
+		const title = this.new ? "New Coordinate" : `Coordinate: ${this.coordinate.name}`;
+		this.navSvc.headerTitle.next(title);
 	}
 
 	/**
@@ -91,7 +102,7 @@ export class CoordinateDetailComponent implements OnInit {
 		ref.afterClosed().subscribe(result => {
 			if(result) {
 				this.cacheGroupService.deleteCoordinate(this.coordinate.id);
-				this.location.back();
+				this.router.navigate(["core/coordinates"]);
 			}
 		});
 	}
@@ -107,9 +118,11 @@ export class CoordinateDetailComponent implements OnInit {
 		if(this.new) {
 			this.coordinate = await this.cacheGroupService.createCoordinate(this.coordinate);
 			this.new = false;
+			await this.router.navigate(["core/coordinates", this.coordinate.id]);
 		} else {
 			this.coordinate = await this.cacheGroupService.updateCoordinate(this.coordinate);
 		}
+		this.setTitle();
 	}
 
 }

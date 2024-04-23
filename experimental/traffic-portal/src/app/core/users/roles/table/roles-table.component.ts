@@ -40,7 +40,7 @@ export class RolesTableComponent implements OnInit {
 
 	constructor(
 		private readonly route: ActivatedRoute,
-		private readonly headerSvc: NavigationService,
+		private readonly navSvc: NavigationService,
 		private readonly api: UserService,
 		private readonly dialog: MatDialog,
 		public readonly auth: CurrentUserService,
@@ -48,7 +48,7 @@ export class RolesTableComponent implements OnInit {
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.roles = this.api.getRoles();
-		this.headerSvc.headerTitle.next("Roles");
+		this.navSvc.headerTitle.next("Roles");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */

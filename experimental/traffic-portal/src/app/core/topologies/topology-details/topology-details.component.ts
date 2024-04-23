@@ -11,12 +11,12 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 import { NestedTreeControl } from "@angular/cdk/tree";
-import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { MatTreeNestedDataSource } from "@angular/material/tree";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ResponseTopology } from "trafficops-types";
 
 import { TopologyService, TopTreeNode } from "src/app/api";
@@ -56,8 +56,8 @@ export class TopologyDetailsComponent implements OnInit {
 
 	constructor(
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly api: TopologyService,
-		private readonly location: Location,
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
 		private readonly log: LoggingService,
@@ -130,7 +130,7 @@ export class TopologyDetailsComponent implements OnInit {
 		ref.afterClosed().subscribe(result => {
 			if (result) {
 				this.api.deleteTopology(this.topology);
-				this.location.replaceState("core/topologies");
+				this.router.navigate(["core/topologies"]);
 			}
 		});
 	}
@@ -149,6 +149,7 @@ export class TopologyDetailsComponent implements OnInit {
 		if (this.new) {
 			this.topology = await this.api.createTopology(this.topology);
 			this.new = false;
+			await this.router.navigate(["core/topologies", this.topology.name]);
 		} else {
 			this.topology = await this.api.updateTopology(this.topology, this.oldName);
 		}

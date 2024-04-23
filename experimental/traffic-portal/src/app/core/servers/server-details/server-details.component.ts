@@ -176,7 +176,7 @@ export class ServerDetailsComponent implements OnInit {
 			this.serverService.getServers(Number(ID)).then(
 				s => {
 					this.server = s;
-					this.updateTitlebar();
+					this.updateTitleBar();
 				}
 			).catch(
 				e => {
@@ -231,7 +231,7 @@ export class ServerDetailsComponent implements OnInit {
 				updPending: false,
 				xmppId: ""
 			};
-			this.updateTitlebar();
+			this.updateTitleBar();
 		}
 	}
 
@@ -240,7 +240,7 @@ export class ServerDetailsComponent implements OnInit {
 	 *
 	 * @private
 	 */
-	private updateTitlebar(): void {
+	private updateTitleBar(): void {
 		if (this.isNew) {
 			this.navSvc.headerTitle.next("New Server");
 		} else {
@@ -265,6 +265,7 @@ export class ServerDetailsComponent implements OnInit {
 					this.isNew = false;
 					this.server = s;
 					this.router.navigate(["server", s.id]);
+					this.updateTitleBar();
 				},
 				err => {
 					this.log.error("failed to create server:", err);
@@ -274,7 +275,7 @@ export class ServerDetailsComponent implements OnInit {
 			this.serverService.updateServer(this.server).then(
 				responseServer => {
 					this.server = responseServer;
-					this.updateTitlebar();
+					this.updateTitleBar();
 				},
 				err => {
 					this.log.error(`failed to update server: ${err}`);

@@ -11,10 +11,10 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Location } from "@angular/common";
+
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { ResponseDivision, ResponseRegion } from "trafficops-types";
 
 import { CacheGroupService } from "src/app/api";
@@ -37,10 +37,10 @@ export class RegionDetailComponent implements OnInit {
 
 	constructor(
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly cacheGroupService: CacheGroupService,
-		private readonly location: Location,
 		private readonly dialog: MatDialog,
-		private readonly header: NavigationService,
+		private readonly navSvc: NavigationService,
 		private readonly log: LoggingService,
 	) {
 	}
@@ -56,8 +56,10 @@ export class RegionDetailComponent implements OnInit {
 			return;
 		}
 
-		if (ID === "new") {
-			this.header.headerTitle.next("New Region");
+		this.new = ID === "new";
+
+		if (this.new) {
+			this.setTitle();
 			this.new = true;
 			this.region = {
 				division: -1,
@@ -75,7 +77,17 @@ export class RegionDetailComponent implements OnInit {
 		}
 
 		this.region = await this.cacheGroupService.getRegions(numID);
-		this.header.headerTitle.next(`Region: ${this.region.name}`);
+		this.setTitle();
+	}
+
+	/**
+	 * Sets the headerTitle based on current Region state.
+	 *
+	 * @private
+	 */
+	private setTitle(): void {
+		const title = this.new ? "New Region" : `Region: ${this.region.name}`;
+		this.navSvc.headerTitle.next(title);
 	}
 
 	/**
@@ -93,7 +105,7 @@ export class RegionDetailComponent implements OnInit {
 		ref.afterClosed().subscribe(result => {
 			if(result) {
 				this.cacheGroupService.deleteRegion(this.region.id);
-				this.location.back();
+				this.router.navigate(["core/regions"]);
 			}
 		});
 	}
@@ -109,9 +121,11 @@ export class RegionDetailComponent implements OnInit {
 		if(this.new) {
 			this.region = await this.cacheGroupService.createRegion(this.region);
 			this.new = false;
+			await this.router.navigate(["core/regions", this.region.id]);
 		} else {
 			this.region = await this.cacheGroupService.updateRegion(this.region);
 		}
+		this.setTitle();
 	}
 
 }

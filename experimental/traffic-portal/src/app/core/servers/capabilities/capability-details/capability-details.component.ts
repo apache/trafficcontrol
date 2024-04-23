@@ -11,7 +11,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Location } from "@angular/common";
+
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -46,7 +46,6 @@ export class CapabilityDetailsComponent implements OnInit {
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
 		private readonly api: ServerService,
-		private readonly location: Location
 	) {}
 
 	/**
@@ -93,7 +92,7 @@ export class CapabilityDetailsComponent implements OnInit {
 		const result = await ref.afterClosed().toPromise();
 		if(result) {
 			await this.api.deleteCapability(this.capability);
-			this.location.back();
+			await this.router.navigate(["core/capabilities"]);
 		}
 	}
 
@@ -108,10 +107,11 @@ export class CapabilityDetailsComponent implements OnInit {
 		if(this.new) {
 			this.capability = await this.api.createCapability(this.capability);
 			this.new = false;
+			this.setHeader("New Capability");
 		} else {
 			this.capability = await this.api.updateCapability(this.name, this.capability);
+			this.navSvc.headerTitle.next(`Capability: ${this.capability.name}`);
 		}
 		this.router.navigate([`/core/capabilities/${this.capability.name}`], {replaceUrl: true});
-		this.setHeader(this.name);
 	}
 }
