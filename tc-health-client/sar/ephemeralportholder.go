@@ -21,6 +21,7 @@ package sar
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strconv"
 )
@@ -42,7 +43,7 @@ func GetAndHoldEphemeralPort(addr string) (*EphemeralPortHolder, error) {
 	addr += ":0"
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		return nil, errors.New("listening: " + err.Error())
+		return nil, fmt.Errorf("listening: %w", err)
 	}
 
 	// get the port now, so EphemeralPortHolder.Port() doesn't need to return an error

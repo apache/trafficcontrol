@@ -21,6 +21,7 @@ package toreq
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -76,14 +77,14 @@ func (cl *TOClient) GetJobsCompat(opts toclient.RequestOptions) (tc.Invalidation
 	}
 	reqInf, err := cl.c.TOClient.Req(http.MethodGet, path, nil, opts.Header, &objs)
 	if err != nil {
-		return tc.InvalidationJobsResponseV4{}, reqInf, errors.New("request: " + err.Error())
+		return tc.InvalidationJobsResponseV4{}, reqInf, fmt.Errorf("request: %w", err)
 	}
 
 	resp := tc.InvalidationJobsResponseV4{Alerts: objs.Alerts}
 	for _, job := range objs.Response {
 		newJob, err := InvalidationJobV4FromLegacy(job) // (InvalidationJobV4, error) {
 		if err != nil {
-			return tc.InvalidationJobsResponseV4{}, reqInf, errors.New("converting job from possible legacy format: " + err.Error())
+			return tc.InvalidationJobsResponseV4{}, reqInf, fmt.Errorf("converting job from possible legacy format: %w", err)
 		}
 		resp.Response = append(resp.Response, newJob)
 	}
@@ -197,34 +198,6 @@ func (cl *TOClient) SetServerUpdateStatusCompat(serverName string, configApplyTi
 	reqInf, err := cl.c.TOClient.Req(http.MethodPost, path, nil, opts.Header, &alerts)
 	return alerts, reqInf, err
 }
-
-// GetServersCompat gets servers from any Traffic Ops built from the ATC `master` branch, and converts the different formats to the latest.
-// This makes t3c work with old or new Traffic Ops deployed from `master`,
-// though it doesn't make a version of t3c older than this work with a new TO,
-// which isn't logically possible from the client.
-/*func (cl *TOClient) GetServersCompat(opts toclient.RequestOptions) (tc.ServersV5Response, toclientlib.ReqInf, error) {
-	path := "/servers"
-	objs := struct {
-		Response []tc.ServerV5Response `json:"response"`
-		tc.Alerts
-	}{}
-
-	if len(opts.QueryParameters) > 0 {
-		path += "?" + opts.QueryParameters.Encode()
-	}
-	reqInf, err := cl.c.TOClient.Req(http.MethodGet, path, nil, opts.Header, &objs)
-	if err != nil {
-		return tc.ServersV5Response{}, reqInf, errors.New("request: " + err.Error())
-	}
-
-	resp := tc.ServersV5Response{Alerts: objs.Alerts}
-
-	for _, sv := range objs.Response {
-		resp.Response = append(resp.Response, sv.Response)
-	}
-
-	return resp, reqInf, nil
-}*/
 
 type ServerV40PlusLegacy struct {
 	tc.ServerV40

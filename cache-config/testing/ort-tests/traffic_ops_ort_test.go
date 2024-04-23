@@ -18,7 +18,6 @@ package orttest
 import (
 	"bytes"
 	"database/sql"
-	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -130,7 +129,7 @@ func runCheckRefs(config_file string) error {
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 	return nil
 }
@@ -154,7 +153,7 @@ func runRequest(host string, getData string) ([]byte, error) {
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return nil, errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return nil, fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 	return out.Bytes(), nil
 }
@@ -181,7 +180,7 @@ func runApply(host string, run_mode string) error {
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 	return nil
 }
