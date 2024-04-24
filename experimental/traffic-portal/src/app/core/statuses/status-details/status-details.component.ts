@@ -12,11 +12,10 @@
  * limitations under the License.
  */
 
-import { Location } from "@angular/common";
 import { Component } from "@angular/core";
 import { FormControl, FormGroup } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { RequestStatus, ResponseStatus } from "trafficops-types";
 
 import { ServerService } from "src/app/api";
@@ -52,9 +51,9 @@ export class StatusDetailsComponent {
 	constructor(
 		private readonly api: ServerService,
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
-		private readonly location: Location,
 	) {
 		// Getting id from the route
 		const id = this.route.snapshot.paramMap.get("id");
@@ -82,7 +81,7 @@ export class StatusDetailsComponent {
 		this.statusDetails = await this.api.getStatuses(Number(id));
 
 		// Set page title with status Name
-		this.navSvc.headerTitle.next(`Status ${this.statusDetails.name}`);
+		this.setTitle();
 
 		// Patch the form with existing data we got from service requested above.
 		this.statusDetailsForm.setValue({
@@ -91,6 +90,16 @@ export class StatusDetailsComponent {
 		});
 
 		this.loading = false;
+	}
+
+	/**
+	 * Sets the headerTitle based on current Status state.
+	 *
+	 * @private
+	 */
+	private setTitle(): void {
+		const title = this.new ? "New Status" : `Status: ${this.statusDetails.name}`;
+		this.navSvc.headerTitle.next(title);
 	}
 
 	/**
@@ -109,6 +118,8 @@ export class StatusDetailsComponent {
 					name: this.statusDetailsForm.controls.name.value
 				};
 				this.statusDetails = await this.api.createStatus(newData);
+				this.new = false;
+				await this.router.navigate(["core/statuses", this.statusDetails.id]);
 			} else {
 				const editData: ResponseStatus = {
 					description: this.statusDetailsForm.controls.description.value,
@@ -118,6 +129,7 @@ export class StatusDetailsComponent {
 				};
 				this.statusDetails = await this.api.updateStatusDetail(editData);
 			}
+			this.setTitle();
 		}
 	}
 
@@ -135,7 +147,7 @@ export class StatusDetailsComponent {
 		ref.afterClosed().subscribe(result => {
 			if (result) {
 				this.api.deleteStatus(this.statusDetails.id);
-				this.location.back();
+				this.router.navigate(["core/statuses"]);
 			}
 		});
 	}
