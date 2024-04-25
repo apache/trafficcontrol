@@ -168,6 +168,21 @@
 									<groupname>root</groupname>
 								</mapping>
 								<mapping>
+									<directory>${deploy.dir}/var</directory>
+									<filemode>755</filemode>
+									<username>root</username>
+									<groupname>root</groupname>
+									<sources>
+										<!-- TODO: The /opt/traffic_router/var/log symlink is deprecated and should be removed
+											 for ATC 9.0.0. -->
+										<softLinkSource>
+											<destination>log</destination>
+											<location>/var/log/traffic_router</location>
+											<failIfLocationNotExists>false</failIfLocationNotExists>
+										</softLinkSource>
+									</sources>
+								</mapping>
+								<mapping>
 									<directory>${deploy.dir}/temp</directory>
 									<filemode>755</filemode>
 									<username>root</username>
@@ -248,6 +263,11 @@
 									</sources>
 								</mapping>
 							</mappings>
+							<installScriptlet>
+								<!-- TODO: The /opt/traffic_router/var/log symlink is deprecated and should be removed
+								     for ATC 9.0.0. -->
+								<script>ln -s /var/log/traffic_router %{buildroot}${deploy.dir}/var/log</script>
+							</installScriptlet>
 							<requires>
 								<require>java-11-openjdk-headless</require>
 								<require>tzdata-java</require>

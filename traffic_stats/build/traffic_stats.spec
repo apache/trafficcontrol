@@ -65,6 +65,8 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/backup
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/run
 mkdir -p "${RPM_BUILD_ROOT}"/var/log/traffic_stats
+# TODO: The /opt/traffic_stats/var/log symlink is deprecated and should be removed for ATC 9.0.0.
+ln -s /var/log/traffic_stats "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/var/lib/grafana/plugins/trafficcontrol-scenes-app
@@ -129,6 +131,8 @@ fi
 %dir /opt/traffic_stats/conf
 %dir /opt/traffic_stats/backup
 %dir /opt/traffic_stats/var
+# TODO: The /opt/traffic_stats/var/log symlink is deprecated and should be removed for ATC 9.0.0.
+/opt/traffic_stats/var/log
 %dir /opt/traffic_stats/var/run
 %dir /var/log/traffic_stats
 %dir /var/lib/grafana/plugins/trafficcontrol-scenes-app
