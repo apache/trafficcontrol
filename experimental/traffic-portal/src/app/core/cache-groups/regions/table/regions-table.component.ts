@@ -12,10 +12,10 @@
 * limitations under the License.
 */
 
-import { Component, type OnInit } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute, type Params } from "@angular/router";
+import { ActivatedRoute, Params } from "@angular/router";
 import { BehaviorSubject } from "rxjs";
 import type { Region, ResponseRegion } from "trafficops-types";
 
@@ -44,7 +44,7 @@ export class RegionsTableComponent implements OnInit {
 
 	constructor(
 		private readonly route: ActivatedRoute,
-		private readonly headerSvc: NavigationService,
+		private readonly navSvc: NavigationService,
 		private readonly api: CacheGroupService,
 		private readonly dialog: MatDialog,
 		public readonly auth: CurrentUserService,
@@ -52,7 +52,7 @@ export class RegionsTableComponent implements OnInit {
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.regions = this.api.getRegions();
-		this.headerSvc.headerTitle.next("Regions");
+		this.navSvc.headerTitle.next("Regions");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */

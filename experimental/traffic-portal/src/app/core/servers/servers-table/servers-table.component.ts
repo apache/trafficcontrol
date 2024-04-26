@@ -12,13 +12,13 @@
 * limitations under the License.
 */
 
-import { Component , type OnInit} from "@angular/core";
+import { Component , OnInit} from "@angular/core";
 import { FormControl } from "@angular/forms";
 import { MatDialog } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import type { ITooltipParams } from "ag-grid-community";
 import { BehaviorSubject } from "rxjs";
-import { ResponseCDN, type ResponseServer, serviceAddresses } from "trafficops-types";
+import { ResponseCDN, ResponseServer, serviceAddresses } from "trafficops-types";
 
 import { CDNService, ServerService } from "src/app/api";
 import { UpdateStatusComponent } from "src/app/core/servers/update-status/update-status.component";
@@ -397,6 +397,7 @@ export class ServersTableComponent implements OnInit {
 		switch(action) {
 			case "dequeue":
 				data.title = "Clear Server Updates";
+				break;
 			case "queue":
 				const ref = this.dialog.open<CollectionChoiceDialogComponent, CollectionChoiceDialogData<number>, number | false>(
 					CollectionChoiceDialogComponent,

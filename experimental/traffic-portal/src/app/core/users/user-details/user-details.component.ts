@@ -12,14 +12,15 @@
 * limitations under the License.
 */
 
-import { Component, type OnInit } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import type { MatSelectChange } from "@angular/material/select";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import type { PostRequestUser, ResponseRole, ResponseTenant, ResponseUser, User } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { CurrentUserService } from "src/app/shared/current-user/current-user.service";
 import { LoggingService } from "src/app/shared/logging.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * UserDetailsComponent is the controller for the page for viewing/editing a
@@ -40,8 +41,10 @@ export class UserDetailsComponent implements OnInit {
 	constructor(
 		private readonly userService: UserService,
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly currentUserService: CurrentUserService,
-		private readonly log: LoggingService
+		private readonly log: LoggingService,
+		private readonly navSvc: NavigationService,
 	) { }
 
 	/** Angular lifecycle hook */
@@ -56,7 +59,10 @@ export class UserDetailsComponent implements OnInit {
 			return;
 		}
 		await rolesAndTenants;
-		if (ID === "new") {
+		this.new = ID === "new";
+
+		if (this.new) {
+			this.setTitle();
 			this.new = true;
 			this.user = {
 				confirmLocalPasswd: "",
@@ -75,6 +81,7 @@ export class UserDetailsComponent implements OnInit {
 			return;
 		}
 		this.user = await this.userService.getUsers(numID);
+		this.setTitle();
 	}
 
 	/**
@@ -91,6 +98,16 @@ export class UserDetailsComponent implements OnInit {
 	}
 
 	/**
+	 * Sets the headerTitle based on current User state.
+	 *
+	 * @private
+	 */
+	private setTitle(): void {
+		const title = this.new ? "New User" : `User: ${this.user.username}`;
+		this.navSvc.headerTitle.next(title);
+	}
+
+	/**
 	 * Handler for the user edit form submission.
 	 *
 	 * @param e The form submission event. Its default behavior of sending an
@@ -102,9 +119,10 @@ export class UserDetailsComponent implements OnInit {
 		if (this.isNew(this.user)) {
 			this.user = await this.userService.createUser(this.user);
 			this.new = false;
-			return;
+			await this.router.navigate(["core/users", this.user.id]);
 		}
 		this.user = await this.userService.updateUser(this.user);
+		this.setTitle();
 	}
 
 	/**

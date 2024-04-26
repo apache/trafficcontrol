@@ -11,14 +11,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { Location } from "@angular/common";
+
 import { Component, OnInit } from "@angular/core";
-import { ActivatedRoute } from "@angular/router";
+import { MatDialog } from "@angular/material/dialog";
+import { ActivatedRoute, Router } from "@angular/router";
 import { RequestTenant, ResponseTenant, Tenant } from "trafficops-types";
 
 import { UserService } from "src/app/api";
 import { TreeData } from "src/app/models";
+import { DecisionDialogComponent } from "src/app/shared/dialogs/decision-dialog/decision-dialog.component";
 import { LoggingService } from "src/app/shared/logging.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * TenantsDetailsComponent is the controller for the tenant add/edit form.
@@ -36,8 +39,10 @@ export class TenantDetailsComponent implements OnInit {
 
 	constructor(
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly userService: UserService,
-		private readonly location: Location,
+		private readonly dialog: MatDialog,
+		private readonly navSvc: NavigationService,
 		private readonly log: LoggingService,
 	) {
 		this.displayTenant = {
@@ -114,7 +119,10 @@ export class TenantDetailsComponent implements OnInit {
 		this.tenants = await this.userService.getTenants();
 		this.constructTreeData();
 
-		if (ID === "new") {
+		this.new = ID === "new";
+
+		if (this.new) {
+			this.setTitle();
 			this.new = true;
 			this.tenant = {
 				active: true,
@@ -134,6 +142,17 @@ export class TenantDetailsComponent implements OnInit {
 		}
 		this.tenant = tenant;
 		this.disabled = this.isRoot();
+		this.setTitle();
+	}
+
+	/**
+	 * Sets the headerTitle based on current Tenant state.
+	 *
+	 * @private
+	 */
+	private setTitle(): void {
+		const title = this.new ? "New Tenant" : `Tenant: ${this.tenant.name}`;
+		this.navSvc.headerTitle.next(title);
 	}
 
 	/**
@@ -150,9 +169,11 @@ export class TenantDetailsComponent implements OnInit {
 		if (this.new) {
 			this.tenant = await this.userService.createTenant(this.tenant as RequestTenant);
 			this.new = false;
+			await this.router.navigate(["core/tenants", (this.tenant as ResponseTenant).id]);
 		} else {
 			this.tenant = await this.userService.updateTenant(this.tenant as ResponseTenant);
 		}
+		this.setTitle();
 	}
 
 	/**
@@ -163,8 +184,16 @@ export class TenantDetailsComponent implements OnInit {
 			this.log.error("Unable to delete new tenant");
 			return;
 		}
-		await this.userService.deleteTenant((this.tenant as ResponseTenant).id);
-		this.location.back();
+		const ref = this.dialog.open(DecisionDialogComponent, {
+			data: {message: `Are you sure you want to delete tenantn ${this.tenant.name}`,
+				title: "Confirm Delete"}
+		});
+		ref.afterClosed().subscribe(result => {
+			if (result) {
+				this.userService.deleteTenant((this.tenant as ResponseTenant).id);
+				this.router.navigate(["core/tenants"]);
+			}
+		});
 	}
 
 	/**

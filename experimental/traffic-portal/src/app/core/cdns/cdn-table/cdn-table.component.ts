@@ -32,6 +32,7 @@ import type {
 	DoubleClickLink
 } from "src/app/shared/generic-table/generic-table.component";
 import { LoggingService } from "src/app/shared/logging.service";
+import { NavigationService } from "src/app/shared/navigation/navigation.service";
 
 /**
  * CDNTableComponent is the controller for the "CDNs" table.
@@ -163,12 +164,14 @@ export class CDNTableComponent implements OnInit {
 		private readonly alerts: AlertService,
 		private readonly api: CDNService,
 		public readonly auth: CurrentUserService,
+		private readonly navSvc: NavigationService,
 		private readonly dialog: MatDialog,
 		private readonly route: ActivatedRoute,
 		private readonly log: LoggingService,
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.cdns = this.api.getCDNs();
+		this.navSvc.headerTitle.next("CDNs");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */

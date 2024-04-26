@@ -58,8 +58,8 @@ describe("AsnDetailComponent", () => {
 		await fixture.whenStable();
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.asn).not.toBeNull();
-		expect(component.asn.asn).toBe(1);
-		expect(component.new).toBeTrue();
+		expect(component.asn.asn).toBe(0);
+		expect(component.isNew).toBeTrue();
 	});
 
 	it("existing asn", async () => {
@@ -72,6 +72,6 @@ describe("AsnDetailComponent", () => {
 		expect(paramMap).toHaveBeenCalled();
 		expect(component.asn).not.toBeNull();
 		expect(component.asn.asn).toBe(0);
-		expect(component.new).toBeFalse();
+		expect(component.isNew).toBeFalse();
 	});
 });

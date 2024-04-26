@@ -44,7 +44,7 @@ export class ASNsTableComponent implements OnInit {
 
 	constructor(
 		private readonly route: ActivatedRoute,
-		private readonly headerSvc: NavigationService,
+		private readonly navSvc: NavigationService,
 		private readonly api: CacheGroupService,
 		private readonly dialog: MatDialog,
 		public readonly auth: CurrentUserService,
@@ -52,7 +52,7 @@ export class ASNsTableComponent implements OnInit {
 	) {
 		this.fuzzySubject = new BehaviorSubject<string>("");
 		this.asns = this.api.getASNs();
-		this.headerSvc.headerTitle.next("ASNs");
+		this.navSvc.headerTitle.next("ASNs");
 	}
 
 	/** Initializes table data, loading it from Traffic Ops. */
