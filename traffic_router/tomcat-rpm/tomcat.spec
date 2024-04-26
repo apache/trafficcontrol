@@ -40,9 +40,11 @@ Built:@BUILT@
 %build
 
 %install
-mkdir -p "${RPM_BUILD_ROOT}"/var/log/tomcat
 install -d -m 755 ${RPM_BUILD_ROOT}/%{tomcat_home}/
+rmdir logs
+mkdir -p "${RPM_BUILD_ROOT}"/var/log/tomcat
 cp -R * ${RPM_BUILD_ROOT}/%{tomcat_home}/
+ln -s /var/log/tomcat "${RPM_BUILD_ROOT}"%{tomcat_home}/logs
 
 # Remove all webapps.
 rm -rf ${RPM_BUILD_ROOT}/%{tomcat_home}/webapps/*
