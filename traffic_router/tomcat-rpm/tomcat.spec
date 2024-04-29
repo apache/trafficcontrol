@@ -70,6 +70,21 @@ if [ -d /opt/apache-tomcat-* ]; then
 fi
 
 %pre
+old_log_dir=/opt/tomcat/logs
+new_log_dir=/var/log/tomcat
+if [[ -d "$old_log_dir" ]]; then
+	if [[ -d "$new_log_dir" ]]; then
+		(
+		# Include files starting with . in the * glob
+		shopt -s dotglob
+		mv "$old_log_dir"/* "$new_log_dir" || true
+		)
+		rmdir "$old_log_dir"
+	else
+		mv "$old_log_dir" "$new_log_dir"
+	fi
+	sync
+fi
 
 %files
 %license LICENSE
