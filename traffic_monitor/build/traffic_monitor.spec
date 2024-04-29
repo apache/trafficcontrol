@@ -50,7 +50,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/run
 mkdir -p "${RPM_BUILD_ROOT}"/var/log/traffic_monitor
 # TODO: The /opt/traffic_monitor/var/log symlink is deprecated and should be removed for ATC 9.0.0.
-ln -s /var/log/traffic_monitor "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
+ln -sT /var/log/traffic_monitor "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 
