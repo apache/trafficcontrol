@@ -266,7 +266,7 @@
 							<installScriptlet>
 								<!-- TODO: The /opt/traffic_router/var/log symlink is deprecated and should be removed
 								     for ATC 9.0.0. -->
-								<script>ln -sT /var/log/traffic_router %{buildroot}${deploy.dir}/var/log</script>
+								<script>ln -sfT /var/log/traffic_router %{buildroot}${deploy.dir}/var/log</script>
 							</installScriptlet>
 							<requires>
 								<require>java-11-openjdk-headless</require>
