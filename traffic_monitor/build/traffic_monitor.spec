@@ -49,8 +49,9 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/backup
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/static
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/run
 mkdir -p "${RPM_BUILD_ROOT}"/var/log/traffic_monitor
+
 # TODO: The /opt/traffic_monitor/var/log symlink is deprecated and should be removed for ATC 9.0.0.
-ln -s /var/log/traffic_monitor "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
+ln -sfT /var/log/traffic_monitor "${RPM_BUILD_ROOT}"/opt/traffic_monitor/var/log
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 
@@ -65,6 +66,22 @@ cp "$src"/build/traffic_monitor.init       "${RPM_BUILD_ROOT}"/etc/init.d/traffi
 cp "$src"/build/traffic_monitor.logrotate  "${RPM_BUILD_ROOT}"/etc/logrotate.d/traffic_monitor
 
 %pre
+old_log_dir=/opt/traffic_monitor/var/log
+new_log_dir=/var/log/traffic_monitor
+if [[ -d "$old_log_dir" ]]; then
+	if [[ -d "$new_log_dir" ]]; then
+		(
+		# Include files starting with . in the * glob
+		shopt -s dotglob
+		mv "$old_log_dir"/* "$new_log_dir" || true
+		)
+		rmdir "$old_log_dir"
+	else
+		mv "$old_log_dir" "$new_log_dir"
+	fi
+	sync
+fi
+
 /usr/bin/getent group traffic_monitor >/dev/null
 if [ $? -ne 0 ]; then
 	/usr/sbin/groupadd -g 423 traffic_monitor

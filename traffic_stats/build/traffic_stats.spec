@@ -66,7 +66,7 @@ mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/influxdb_tools
 mkdir -p "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/run
 mkdir -p "${RPM_BUILD_ROOT}"/var/log/traffic_stats
 # TODO: The /opt/traffic_stats/var/log symlink is deprecated and should be removed for ATC 9.0.0.
-ln -s /var/log/traffic_stats "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log
+ln -sfT /var/log/traffic_stats "${RPM_BUILD_ROOT}"/opt/traffic_stats/var/log
 mkdir -p "${RPM_BUILD_ROOT}"/etc/init.d
 mkdir -p "${RPM_BUILD_ROOT}"/etc/logrotate.d
 mkdir -p "${RPM_BUILD_ROOT}"/var/lib/grafana/plugins/trafficcontrol-scenes-app
@@ -83,6 +83,22 @@ cp "$src"/influxdb_tools/create_ts_databases  "${RPM_BUILD_ROOT}"/opt/traffic_st
 
 
 %pre
+old_log_dir=/opt/traffic_stats/var/log
+new_log_dir=/var/log/traffic_stats
+if [[ -d "$old_log_dir" ]]; then
+	if [[ -d "$new_log_dir" ]]; then
+		(
+		# Include files starting with . in the * glob
+		shopt -s dotglob
+		mv "$old_log_dir"/* "$new_log_dir" || true
+		)
+		rmdir "$old_log_dir"
+	else
+		mv "$old_log_dir" "$new_log_dir"
+	fi
+	sync
+fi
+
 /usr/bin/getent group traffic_stats >/dev/null
 
 if [ $? -ne 0 ]; then
