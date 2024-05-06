@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7933](https://github.com/apache/trafficcontrol/pull/7933), [#8005](https://github.com/apache/trafficcontrol/pull/8005) *Traffic Portal v2*: Update NodeJS version to 18.
 
 ### Fixed
+- [#8008](https://github.com/apache/trafficcontrol/pull/8008) *Traffic Router* Fix czf temp file deletion issue.
 - [#7998](https://github.com/apache/trafficcontrol/pull/7998) *Traffic Portalv2* Fixed (create and update) page titles across every feature
 - [#7984](https://github.com/apache/trafficcontrol/pull/7984) *Traffic Ops* Fixed TO Client cert authentication with respect to returning response cookie.
 - [#7957](https://github.com/apache/trafficcontrol/pull/7957) *Traffic Ops* Fix the incorrect display of delivery services assigned to ORG servers.
