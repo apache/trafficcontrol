@@ -175,7 +175,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 
 		// Failed certificate-based auth, perform standard form auth
 		if !authenticated {
-			log.Infof("user %s could not be authenticated using client certificates", form.Username)
+			log.Infof("user %s could not be successfully authenticated using client certificates", form.Username)
 			// Perform form authentication
 			if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
 				api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
@@ -307,6 +307,7 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		defer r.Body.Close()
 		var t tc.UserToken
 		if err := json.NewDecoder(r.Body).Decode(&t); err != nil {
+			log.Infof("user could not be successfully authenticated using token")
 			api.HandleErr(w, r, nil, http.StatusBadRequest, fmt.Errorf("Invalid request: %v", err), nil)
 			return
 		}
@@ -315,11 +316,13 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err != nil {
 			sysErr := fmt.Errorf("Checking token: %v", err)
 			errCode := http.StatusInternalServerError
+			log.Infof("user could not be successfully authenticated using token")
 			api.HandleErr(w, r, nil, errCode, nil, sysErr)
 			return
 		} else if !tokenMatches {
 			userErr := errors.New("Invalid token. Please contact your administrator.")
 			errCode := http.StatusUnauthorized
+			log.Infof("user could not be successfully authenticated using token")
 			api.HandleErr(w, r, nil, errCode, userErr, nil)
 			return
 		}
@@ -330,6 +333,7 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if err != nil {
 			sysErr := fmt.Errorf("Marshaling response: %v", err)
 			errCode := http.StatusInternalServerError
+			log.Infof("user could not be successfully authenticated using token")
 			api.HandleErr(w, r, nil, errCode, nil, sysErr)
 			return
 		}
@@ -337,6 +341,7 @@ func TokenLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		_, dbErr := db.Exec(UpdateLoginTimeQuery, username)
 		if dbErr != nil {
 			dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", username, dbErr)
+			log.Infof("user %s could not be successfully authenticated using token", username)
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
 			return
 		}
@@ -422,16 +427,19 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}{}
 
 		if err := json.NewDecoder(r.Body).Decode(&parameters); err != nil {
+			log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 			api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
 			return
 		}
 
 		matched, err := VerifyUrlOnWhiteList(parameters.AuthCodeTokenUrl, cfg.ConfigTrafficOpsGolang.WhitelistedOAuthUrls)
 		if err != nil {
+			log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, err)
 			return
 		}
 		if !matched {
+			log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 			api.HandleErr(w, r, nil, http.StatusForbidden, nil, errors.New("Key URL from token is not included in the whitelisted urls. Received: "+parameters.AuthCodeTokenUrl))
 			return
 		}
@@ -448,6 +456,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			req.Header.Set("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(parameters.ClientId+":"+cfg.OAuthClientSecret))) // per RFC6749 section 2.3.1
 		}
 		if err != nil {
+			log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("obtaining token using code from oauth provider: %w", err))
 			return
 		}
@@ -457,6 +466,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		}
 		response, err := client.Do(req)
 		if err != nil {
+			log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 			api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("getting an http client: %w", err))
 			return
 		}
@@ -482,12 +492,14 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			default:
 				sysErr := fmt.Errorf("Incorrect type of access_token! Expected 'string', got '%v'\n", t)
 				usrErr := errors.New("Bad response from OAuth2.0 provider")
+				log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 				api.HandleErr(w, r, nil, http.StatusBadGateway, usrErr, sysErr)
 				return
 			}
 		}
 
 		if encodedToken == "" {
+			log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 			api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("Token not found in request but is required"), nil)
 			return
 		}
@@ -503,6 +515,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 				jwt.WithVerifyAuto(false),
 				jwt.WithJWKSetFetcher(jwksFetcher),
 			); err != nil {
+				log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("error decoding token with message: %w", err))
 				return
 			}
@@ -514,6 +527,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if cfg.OAuthUserAttribute != "" {
 			attributes := decodedToken.PrivateClaims()
 			if userIDInterface, ok = attributes[cfg.OAuthUserAttribute]; !ok {
+				log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, fmt.Errorf("Non-existent OAuth attribute : %s", cfg.OAuthUserAttribute))
 				return
 			}
@@ -527,6 +541,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		defer cancelTx()
 		userAllowed, err, blockingErr := auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
 		if blockingErr != nil {
+			log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 			api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user password: %s\n", blockingErr.Error()))
 			return
 		}
@@ -537,6 +552,7 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		if userAllowed {
 			_, dbErr := db.Exec(UpdateLoginTimeQuery, form.Username)
 			if dbErr != nil {
+				log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 				dbErr = fmt.Errorf("unable to update authentication time for user '%s': %w", form.Username, dbErr)
 				api.HandleErr(w, r, nil, http.StatusInternalServerError, nil, dbErr)
 				return
@@ -546,10 +562,12 @@ func OauthLoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 			resp = struct {
 				tc.Alerts
 			}{tc.CreateAlerts(tc.SuccessLevel, "Successfully logged in.")}
+			log.Infof("user %s successfully authenticated using SSO", form.Username)
 		} else {
 			resp = struct {
 				tc.Alerts
 			}{tc.CreateAlerts(tc.ErrorLevel, "Invalid username or password.")}
+			log.Infof("user %s could not be successfully authenticated using SSO", form.Username)
 		}
 
 		respBts, err := json.Marshal(resp)
