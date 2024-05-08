@@ -19,6 +19,7 @@ name: Experimental Traffic Portal v2
 env:
   # alpine:3.13
   ALPINE_VERSION: sha256:08d6ca16c60fe7490c03d10dc339d9fd8ea67c6466dea8d558526b1330a85930
+  NODE_VERSION: 18
 
 on:
   push:
@@ -55,14 +56,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./experimental/traffic-portal/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: ${{ env.NODE_VERSION }}.x
 
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -87,14 +88,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./experimental/traffic-portal/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
+
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: ${{ env.NODE_VERSION }}.x
 
       - name: NPM install
         if: steps.restore-npm-cache.cache-hit != 'true'
@@ -119,14 +121,14 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./experimental/traffic-portal/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
       - name: Node 18
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          node-version: ${{ env.NODE_VERSION }}.x
 
       - name: Install latest Chrome
         run: sudo apt-get update && sudo apt-get install google-chrome-stable
@@ -194,7 +196,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ./experimental/traffic-portal/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
+          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
       - name: Initialize Traffic Ops Database
@@ -282,7 +284,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/.npm
-          key: ${{ runner.os }}-node-modules-${{ hashFiles('experimental/traffic-portal/**/package*.json') }}-
+          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
