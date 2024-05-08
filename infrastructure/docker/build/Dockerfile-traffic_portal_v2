@@ -16,7 +16,7 @@
 # under the License.
 ARG RHEL_VERSION=8
 FROM rockylinux:${RHEL_VERSION} as common-dependencies
-ARG RHEL_VERSION=7
+ARG RHEL_VERSION=8
 
 MAINTAINER dev@trafficcontrol.apache.org
 
