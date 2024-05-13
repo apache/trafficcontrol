@@ -61,7 +61,7 @@ jobs:
       - name: Install Python 3.10
         uses: actions/setup-python@v2
         with: { python-version: '3.10' } # Must be quoted to include the trailing 0
-      - name: Install Node 16
+      - name: Install Node 18
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
