@@ -376,15 +376,18 @@ public abstract class AbstractServiceUpdater {
 				eTag = conn.getHeaderField("ETag");
 				if (((HttpURLConnection) conn).getResponseCode() == HttpURLConnection.HTTP_NOT_MODIFIED) {
 					LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingLastModified));
+					outputFile.delete();
 					return existingDb;
 				}
 			} else if (dbURL.getProtocol().equals("file") && conn.getLastModified() > 0 && conn.getLastModified() <= existingLastModified) {
 				LOGGER.info("[" + getClass().getSimpleName() + "] " + url + " not modified since our existing database's last update time of " + new Date(existingLastModified));
+				outputFile.delete();
 				return existingDb;
 			}
 
 			IOUtils.copy(sourceCompressed ? new GZIPInputStream(in) : in, out);
 		}
+
 
 		return outputFile;
 	}
