@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7999](https://github.com/apache/trafficcontrol/pull/7999) *Traffic Router*, *Traffic Monitor*, *Traffic Stats*: Symlink from /opt/<component>/var/log to /var/log/<component>. These symlinks are deprecated with the intent of removing them in ATC 9.0.0.
 - [#7872](https://github.com/apache/trafficcontrol/issues/7872) *Traffic Router*: Updated Apache Tomcat from 9.0.43, 9.0.67, 9.0.83, and 9.0.86 to 9.0.87.
 - [#7933](https://github.com/apache/trafficcontrol/pull/7933), [#8005](https://github.com/apache/trafficcontrol/pull/8005) *Traffic Portal v2*: Update NodeJS version to 18.
+- [#8009](https://github.com/apache/trafficcontrol/pull/8009) *Traffic Portal v2*: Update NodeJS version to 20.
 
 ### Fixed
 - [#8008](https://github.com/apache/trafficcontrol/pull/8008) *Traffic Router* Fix czf temp file deletion issue.
