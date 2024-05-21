@@ -66,7 +66,9 @@ jobs:
       - name: Set image name
         run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}-${{ env.PLATFORM }}' >> '${{ github.env }}'
       - name: Docker version
-        run: docker --version
+        run: |
+          echo "docker version: $(docker --version)"
+          echo "docker buildx version: $(docker buildx version)"
       - name: Build ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
@@ -111,7 +113,9 @@ jobs:
       - name: Set image name
         run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}-${{ env.PLATFORM }}' >> '${{ github.env }}'
       - name: Docker version
-        run: docker --version
+        run: |
+          echo "docker version: $(docker --version)"
+          echo "docker buildx version: $(docker buildx version)"
       - name: Build ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
