@@ -277,23 +277,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@master
-        with:
-          fetch-depth: 5
-      - name: Cache node modules
-        id: restore-npm-cache
-        uses: actions/cache@v3
-        with:
-          path: ./experimental/traffic-portal/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-      - name: Node ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20.x
-      - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@main
         with:
           fetch-depth: 5
       - name: Cache node modules
@@ -301,6 +285,10 @@ jobs:
         with:
           path: ${{ github.workspace }}/.npm
           key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
+      - name: Node ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
       - name: Build RPM
         uses: ./.github/actions/build-rpms
         env:
