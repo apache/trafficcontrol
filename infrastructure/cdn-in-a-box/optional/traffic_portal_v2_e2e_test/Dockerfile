@@ -39,6 +39,8 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
         wget \
         GConf2 \
         git \
+        #Xvfb is required by cypress
+        xorg-x11-server-Xvfb \
         java-1.8.0-openjdk \
         net-tools \
         $utils_package && \
