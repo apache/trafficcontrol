@@ -72,7 +72,7 @@ jobs:
       - name: Build ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
-        run: docker buildx build --build-arg ATS_VERSION=${{ env.ATS_VERSION }} --tag ${{ env.IMAGE_NAME }} --platform linux/${{ env.PLATFORM }} --load .
+        run: docker build --build-arg ATS_VERSION=${{ env.ATS_VERSION }} --tag ${{ env.IMAGE_NAME }} --platform linux/${{ env.PLATFORM }} .
       - name: docker login ghcr.io
         if: ${{ env.SHOULD_RUN == '1' }}
         uses: docker/login-action@v2
@@ -119,7 +119,7 @@ jobs:
       - name: Build ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
-        run: docker buildx build --build-arg ATS_VERSION=${{ env.ATS_VERSION }} --tag ${{ env.IMAGE_NAME }} --platform linux/${{ env.PLATFORM }} --load .
+        run: docker build --build-arg ATS_VERSION=${{ env.ATS_VERSION }} --tag ${{ env.IMAGE_NAME }} --platform linux/${{ env.PLATFORM }} .
       - name: docker login ghcr.io
         if: ${{ env.SHOULD_RUN == '1' }}
         uses: docker/login-action@v2
