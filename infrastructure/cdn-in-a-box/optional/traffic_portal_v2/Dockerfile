@@ -31,7 +31,7 @@ RUN if [[ "${RHEL_VERSION%%.*}" -eq 7 ]]; then \
     fi
 
 RUN set -o pipefail && \
-    curl -sLf https://rpm.nodesource.com/setup_18.x | bash
+    curl -sLf https://rpm.nodesource.com/setup_20.x | bash
 
 # Override TRAFFIC_PORTAL_RPM arg to use a different one using --build-arg TRAFFIC_PORTAL_RPM=...  Can be local file or http://...
 ARG TRAFFIC_PORTAL_RPM=optional/traffic_portal_v2/traffic_portal_v2.rpm

@@ -61,10 +61,10 @@ jobs:
       - name: Install Python 3.10
         uses: actions/setup-python@v2
         with: { python-version: '3.10' } # Must be quoted to include the trailing 0
-      - name: Install Node 18
+      - name: Install Node 20
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 20.x
       - name: Install updater Python module and dependencies
         run: pip install .github/actions/chromedriver-updater
       - name: Run chromedriver-updater
