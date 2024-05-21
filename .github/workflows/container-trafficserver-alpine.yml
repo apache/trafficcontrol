@@ -108,6 +108,9 @@ jobs:
         run: cp .env '${{ github.env }}'
       - name: Set image name
         run: echo 'IMAGE_NAME=${{ env.CONTAINER }}:${{ env.ATS_VERSION }}-${{ env.PLATFORM }}' >> '${{ github.env }}'
+      - name: Set up Docker Buildx
+        if: ${{ env.SHOULD_RUN == '1' }}
+        uses: docker/setup-buildx-action@v3
       - name: Build ${{ env.IMAGE_NAME }}
         if: ${{ env.SHOULD_RUN == '1' }}
         working-directory: .github/containers/trafficserver-alpine
