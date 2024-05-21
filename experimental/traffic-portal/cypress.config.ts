@@ -49,6 +49,8 @@ import type {
 
 import type { CreatedData } from "./cypress/support/testing.data";
 
+import PluginEvents = Cypress.PluginEvents;
+
 /**
  * Creates mock data needed for E2E testing.
  *
@@ -389,7 +391,7 @@ export default defineConfig({
 	},
 	e2e: {
 		baseUrl: "http://localhost:4200",
-		setupNodeEvents(on) {
+		setupNodeEvents(on: PluginEvents) {
 			on("before:run", async () => {
 				const toConfig: TOConfig = JSON.parse(await fs.readFile("cypress/fixtures/to.config.json", {encoding: "utf-8"}));
 				const data = await createData(toConfig.toURL, toConfig.apiVersion, toConfig.adminUser, toConfig.adminPass);
