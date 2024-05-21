@@ -281,6 +281,22 @@ jobs:
         with:
           fetch-depth: 5
       - name: Cache node modules
+        id: restore-npm-cache
+        uses: actions/cache@v3
+        with:
+          path: ./experimental/traffic-portal/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('./experimental/traffic-portal/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Node 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 5
+      - name: Cache node modules
         uses: actions/cache@v2
         with:
           path: ${{ github.workspace }}/.npm
