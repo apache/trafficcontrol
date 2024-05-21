@@ -25,7 +25,7 @@ License:  Apache License, Version 2.0
 URL:      https://github.com/apache/trafficcontrol/
 Source:   %{_sourcedir}/traffic-portal-%{traffic_control_version}.tgz
 AutoReqProv: no
-Requires: nodejs >= 2:20.11.0
+Requires: nodejs >= 2:20.0.0
 Requires(pre): /usr/sbin/useradd, /usr/bin/getent
 
 %define traffic_portal_home /opt/traffic-portal
