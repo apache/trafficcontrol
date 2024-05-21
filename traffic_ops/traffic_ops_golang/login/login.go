@@ -32,6 +32,7 @@ import (
 	"net/http"
 	"net/url"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/apache/trafficcontrol/v8/lib/go-log"
@@ -126,10 +127,16 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 		return false
 	}
 
-	// Client provided a verified certificate. Extract UID value.
+	// Client provided a verified certificate. Extract UID value. Try Certificate first and then HTTP Header
+	clientCertSubject := r.Header.Get("Client-Cert-Subject")
 	if username, err := auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0]); err != nil {
-		log.Errorf("parsing client certificate: %s\n", err)
-		return false
+		log.Infof("parsing client certificate: %s\n", err)
+		if username, err = extractUID(clientCertSubject); err != nil {
+			log.Errorf("extracting UID from http header client-cert-subject: %s\n", err)
+			return false
+		} else {
+			form.Username = username
+		}
 	} else {
 		form.Username = username
 	}
@@ -728,4 +735,18 @@ func ResetPassword(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		w.Header().Set(rfc.ContentType, rfc.ApplicationJSON)
 		api.WriteAndLogErr(w, r, append(respBts, '\n'))
 	}
+}
+
+// Extract UID from the Client-Cert-Subject header
+func extractUID(subject string) (string, error) {
+	err := error(nil)
+	subjects := strings.Split(subject, ",")
+	for _, s := range subjects {
+		if strings.Contains(s, "UID=") {
+			return strings.TrimSpace(strings.TrimPrefix(s, "UID=")), err
+		}
+	}
+
+	err = fmt.Errorf("UID not found in Client-Cert-Subject header")
+	return "", err
 }
