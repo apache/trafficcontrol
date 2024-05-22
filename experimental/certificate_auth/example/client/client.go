@@ -53,6 +53,9 @@ func main() {
 		log.Fatalln(err)
 	}
 
+	// Uncomment the following line to set UID via Client-Cert-Subject header and change the UID value to match the user you want to authenticate
+	//req.Header.Set("Client-Cert-Subject", "CN=client,OU=client,O=client,L=client,ST=client,C=US,UID=userID")
+
 	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatalln(err)
