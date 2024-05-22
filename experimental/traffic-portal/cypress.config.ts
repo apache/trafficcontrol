@@ -14,7 +14,7 @@
 import { promises as fs } from "fs";
 import * as https from "https";
 
-import axios, { type AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { defineConfig } from "cypress";
 import type {
 	CDN,
@@ -48,6 +48,8 @@ import type {
 } from "trafficops-types";
 
 import type { CreatedData } from "./cypress/support/testing.data";
+
+import PluginEvents = Cypress.PluginEvents;
 
 /**
  * Creates mock data needed for E2E testing.
@@ -363,7 +365,7 @@ async function createData(toURL: string, apiVersion: string, adminUser: string, 
 		data.role = resp.data.response;
 	} catch (e) {
 		const ae = e as AxiosError;
-		ae.message = `Request (${ae.config.method}) failed to ${url}`;
+		ae.message = `Request (${ae.config?.method}) failed to ${url}`;
 		ae.message += ae.response ? ` with response code ${ae.response.status}` : " with no response";
 		throw ae;
 	}
@@ -389,7 +391,7 @@ export default defineConfig({
 	},
 	e2e: {
 		baseUrl: "http://localhost:4200",
-		setupNodeEvents(on) {
+		setupNodeEvents(on: PluginEvents) {
 			on("before:run", async () => {
 				const toConfig: TOConfig = JSON.parse(await fs.readFile("cypress/fixtures/to.config.json", {encoding: "utf-8"}));
 				const data = await createData(toConfig.toURL, toConfig.apiVersion, toConfig.adminUser, toConfig.adminPass);
