@@ -14,7 +14,7 @@
 import { promises as fs } from "fs";
 import * as https from "https";
 
-import axios, { type AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { defineConfig } from "cypress";
 import type {
 	CDN,
@@ -365,7 +365,7 @@ async function createData(toURL: string, apiVersion: string, adminUser: string, 
 		data.role = resp.data.response;
 	} catch (e) {
 		const ae = e as AxiosError;
-		ae.message = `Request (${ae.config.method}) failed to ${url}`;
+		ae.message = `Request (${ae.config?.method}) failed to ${url}`;
 		ae.message += ae.response ? ` with response code ${ae.response.status}` : " with no response";
 		throw ae;
 	}
