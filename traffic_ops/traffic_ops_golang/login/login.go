@@ -29,6 +29,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"net"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -109,36 +110,39 @@ Subject: {{.InstanceName}} Password Reset Request` + "\r\n\r" + `
 </html>
 `))
 
-func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.DB, cfg config.Config, dbCtx context.Context, cancelTx context.CancelFunc, form *auth.PasswordForm, authenticated bool) bool {
+func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.DB, cfg config.Config, dbCtx context.Context, cancelTx context.CancelFunc, form *auth.PasswordForm, authenticated bool) (bool, bool) {
 	// No certs provided by the client. Skip to form authentication
 	if r.TLS == nil || len(r.TLS.PeerCertificates) == 0 {
-		return false
+		return false, false
 	}
 
 	// If no configuration is set, skip to form auth
 	if cfg.ClientCertAuth == nil || len(cfg.ClientCertAuth.RootCertsDir) == 0 {
-		return false
+		return false, false
 	}
 
 	// Perform certificate verification to ensure it is valid against Root CAs
 	err := auth.VerifyClientCertificate(r, cfg.ClientCertAuth.RootCertsDir, cfg.Insecure)
 	if err != nil {
 		log.Warnf("client cert auth: error attempting to verify client provided TLS certificate. err: %s\n", err)
-		return false
+		return true, false
 	}
 
 	// Client provided a verified certificate. Extract UID value. Try Certificate first and then HTTP Header
 	clientCertSubject := r.Header.Get("Client-Cert-Subject")
+	remoteIp, _, _ := net.SplitHostPort(r.RemoteAddr)
 	if username, err := auth.ParseClientCertificateUID(r.TLS.PeerCertificates[0]); err != nil {
-		log.Infof("parsing client certificate: %s\n", err)
+		log.Warnf("parsing client certificate: %s\n", err)
 		if username, err = extractUID(clientCertSubject); err != nil {
-			log.Errorf("extracting UID from http header client-cert-subject: %s\n", err)
-			return false
+			log.Warnf("extracting UID from http header client-cert-subject: %s\n", err)
+			return true, false
 		} else {
 			form.Username = username
+			log.Infof("extracted UID from http-header client-cert-subject: %s , remoteAddress: %s", form.Username, remoteIp)
 		}
 	} else {
 		form.Username = username
+		log.Infof("extracted UID from client certificate: %s , remoteAddress: %s", form.Username, remoteIp)
 	}
 
 	// Check if user exists locally (TODB) and has a role.
@@ -146,7 +150,7 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 	authenticated, err, blockingErr = auth.CheckLocalUserIsAllowed(form.Username, db, dbCtx)
 	if blockingErr != nil {
 		api.HandleErr(w, r, nil, http.StatusServiceUnavailable, nil, fmt.Errorf("error checking local user has role: %s", blockingErr.Error()))
-		return false
+		return true, false
 	}
 	if err != nil {
 		log.Warnf("client cert auth: checking local user: %s\n", err)
@@ -160,7 +164,7 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 		}
 	}
 
-	return authenticated
+	return true, authenticated
 }
 
 // LoginHandler first attempts to verify and parse user information from an optionally
@@ -169,6 +173,7 @@ func clientCertAuthentication(w http.ResponseWriter, r *http.Request, db *sqlx.D
 func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		defer r.Body.Close()
+		triedAuthentication := false
 		authenticated := false
 		form := auth.PasswordForm{}
 		var resp tc.Alerts
@@ -178,18 +183,27 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		// Attempt to perform client certificate authentication. If fails, goto standard form auth. If the
 		// certificate was verified, has a UID, and the UID matches an existing user we consider this to
 		// be a successful login.
-		authenticated = clientCertAuthentication(w, r, db, cfg, dbCtx, cancelTx, &form, authenticated)
+		triedAuthentication, authenticated = clientCertAuthentication(w, r, db, cfg, dbCtx, cancelTx, &form, authenticated)
+
+		// skipped certificate-based auth, log and continue
+		if !triedAuthentication {
+			log.Infof("skipped certificate-based auth because either no certs provided by the client or no configuration is set")
+		}
 
 		// Failed certificate-based auth, perform standard form auth
-		if !authenticated {
-			log.Infof("user %s could not be successfully authenticated using client certificates", form.Username)
+		if triedAuthentication && !authenticated {
+			if form.Username == "" {
+				log.Infof("could not extract UID from client certificate or HTTP header & could not successfully authenticate using client certificates")
+			} else {
+				log.Infof("user %s could not be successfully authenticated using client certificates", form.Username)
+			}
 			// Perform form authentication
 			if err := json.NewDecoder(r.Body).Decode(&form); err != nil {
 				api.HandleErr(w, r, nil, http.StatusBadRequest, err, nil)
 				return
 			}
 			if form.Username == "" || form.Password == "" {
-				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("username and password are required"), nil)
+				api.HandleErr(w, r, nil, http.StatusBadRequest, errors.New("certificate-based auth failed. hence username and password are required"), nil)
 				return
 			}
 
