@@ -180,7 +180,7 @@ func ParseClientCertificateUID(cert *x509.Certificate) (string, error) {
 			foundUID = true
 		}
 	}
-	if !foundUID {
+	if !foundUID || uid == "" {
 		err = fmt.Errorf("no UID found")
 	}
 	return uid, err
