@@ -246,7 +246,7 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 					log.Infof("user %s successfully authenticated using LDAP", form.Username)
 				}
 			}
-		} else {
+		} else if triedAuthentication && authenticated {
 			log.Infof("user %s successfully authenticated using client certificates", form.Username)
 		}
 
