@@ -185,13 +185,8 @@ func LoginHandler(db *sqlx.DB, cfg config.Config) http.HandlerFunc {
 		// be a successful login.
 		triedAuthentication, authenticated = clientCertAuthentication(w, r, db, cfg, dbCtx, cancelTx, &form, authenticated)
 
-		// skipped certificate-based auth, log and continue
-		if !triedAuthentication {
-			log.Infof("skipped certificate-based auth because either no certs provided by the client or no configuration is set")
-		}
-
 		// Failed certificate-based auth, perform standard form auth
-		if triedAuthentication && !authenticated {
+		if !authenticated {
 			if form.Username == "" {
 				log.Infof("could not extract UID from client certificate or HTTP header & could not successfully authenticate using client certificates")
 			} else {
