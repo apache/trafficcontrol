@@ -19,7 +19,7 @@ get_realpath() {
 	local bin
 	local found=''
 	first_realpath="$(type -P realpath)"
-	for bin in $(type -aP realpath | uniq); do
+	for bin in $(type -aP grealpath realpath | uniq); do
 		if "$bin" -e . >/dev/null 2>&1; then
 			found=y
 			break
