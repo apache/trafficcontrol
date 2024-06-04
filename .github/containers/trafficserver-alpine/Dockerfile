@@ -41,6 +41,10 @@ RUN set -o errexit -o nounset -o xtrace; \
         --repository=https://dl-cdn.alpinelinux.org/alpine/v3.16/main/ \
         libexecinfo-dev; \
     cd $dirname; \
+    # Fix is from https://github.com/apache/trafficserver-ingress-controller/pull/151
+    sed -i 's/PTHREAD_RWLOCK_WRITER_NONRECURSIVE_INITIALIZER_NP/PTHREAD_RWLOCK_INITIALIZER/' \
+        include/tscore/ink_rwlock.h \
+        include/tscpp/util/TsSharedMutex.h; \
     ./configure \
         --disable-tests \
         --enable-experimental-plugins \
