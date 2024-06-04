@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [unreleased]
 ### Added
+- [#8014](https://github.com/apache/trafficcontrol/pull/8014) *Traffic Ops* Added logs to indicate which mechanism a client used to login to TO.
 - [#7812](https://github.com/apache/trafficcontrol/pull/7812) *Traffic Portal*: Expose the `configUpdateFailed` and `revalUpdateFailed` fields on the server table.
 - [#7870](https://github.com/apache/trafficcontrol/pull/7870) *Traffic Portal*: Adds a hyperlink to the DSR page to the DS itself for ease of navigation.
 - [#7896](https://github.com/apache/trafficcontrol/pull/7896) *ATC Build system*: Count commits since the last release, not commits
@@ -16,12 +17,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated Go version to 1.22.0
 - [#7958] Updated build ATS to 9.2.3
+- [#7979](https://github.com/apache/trafficcontrol/pull/7979) *Traffic Router*, *Traffic Monitor*, *Traffic Stats*: Store logs in /var/log
+- [#7999](https://github.com/apache/trafficcontrol/pull/7999) *Traffic Router*, *Traffic Monitor*, *Traffic Stats*: Symlink from /opt/<component>/var/log to /var/log/<component>. These symlinks are deprecated with the intent of removing them in ATC 9.0.0.
+- [#7872](https://github.com/apache/trafficcontrol/issues/7872) *Traffic Router*: Updated Apache Tomcat from 9.0.43, 9.0.67, 9.0.83, and 9.0.86 to 9.0.87.
+- [#7933](https://github.com/apache/trafficcontrol/pull/7933), [#8005](https://github.com/apache/trafficcontrol/pull/8005) *Traffic Portal v2*: Update NodeJS version to 18.
+- [#8009](https://github.com/apache/trafficcontrol/pull/8009) *Traffic Portal v2*: Update NodeJS version to 20.
 
 ### Fixed
+- [#8008](https://github.com/apache/trafficcontrol/pull/8008) *Traffic Router* Fix czf temp file deletion issue.
+- [#7998](https://github.com/apache/trafficcontrol/pull/7998) *Traffic Portalv2* Fixed (create and update) page titles across every feature
+- [#7984](https://github.com/apache/trafficcontrol/pull/7984) *Traffic Ops* Fixed TO Client cert authentication with respect to returning response cookie.
 - [#7957](https://github.com/apache/trafficcontrol/pull/7957) *Traffic Ops* Fix the incorrect display of delivery services assigned to ORG servers.
 - [#7917](https://github.com/apache/trafficcontrol/pull/7917) *Traffic Ops* Removed `Alerts` field from struct `ProfileExportResponse`.
 - [#7918](https://github.com/apache/trafficcontrol/pull/7918) *Traffic Portal* Fixed topology link under DS-Servers tables page
 - [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
+- [#8010](https://github.com/apache/trafficcontrol/pull/8010) *Traffic Stats* Omit NPM dev dependencies from Traffic Stats RPM
 
 ### Removed
 - [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed Perl dependency

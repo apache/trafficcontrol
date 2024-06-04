@@ -23,7 +23,7 @@ Environment=JAVA_HOME=/usr/lib/jvm/jre-11-openjdk
 Environment=CATALINA_PID=/opt/traffic_router/temp/tomcat.pid
 Environment=CATALINA_HOME=/opt/tomcat
 Environment=CATALINA_BASE=/opt/traffic_router
-Environment=CATALINA_OUT=/opt/tomcat/logs/catalina.log
+Environment=CATALINA_OUT=/var/log/tomcat/catalina.log
 EnvironmentFile=/opt/traffic_router/conf/startup.properties
 ExecStartPre=/bin/bash /opt/traffic_router/conf/generatingCerts.sh
 ExecStart=/opt/tomcat/bin/startup.sh

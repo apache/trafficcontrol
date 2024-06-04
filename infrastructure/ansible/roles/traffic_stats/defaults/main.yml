@@ -22,7 +22,7 @@ ts_group: traffic_stats
 # Traffic Stats Installation information
 ts_install_basedir: /opt/traffic_stats
 ts_install_confdir: "{{ ts_install_basedir }}/conf"
-ts_install_logdir: "{{ ts_install_basedir }}/var/log/traffic_stats"
+ts_install_logdir: "/var/log/traffic_stats"
 
 # Traffic Ops connection data
 ts_toUser:

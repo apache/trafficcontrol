@@ -12,6 +12,7 @@
 * limitations under the License.
 */
 import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { MatDialogModule } from "@angular/material/dialog";
 import { ActivatedRoute } from "@angular/router";
 import { RouterTestingModule } from "@angular/router/testing";
 
@@ -28,7 +29,7 @@ describe("TenantDetailsComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [ TenantDetailsComponent ],
-			imports: [ APITestingModule, RouterTestingModule ],
+			imports: [ APITestingModule, MatDialogModule, RouterTestingModule ],
 		})
 			.compileComponents();
 

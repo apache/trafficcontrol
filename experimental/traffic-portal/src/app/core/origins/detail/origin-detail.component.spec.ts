@@ -44,7 +44,10 @@ describe("OriginDetailComponent", () => {
 	beforeEach(async () => {
 		await TestBed.configureTestingModule({
 			declarations: [OriginDetailComponent],
-			imports: [APITestingModule, RouterTestingModule, MatDialogModule, NoopAnimationsModule],
+			imports: [APITestingModule, RouterTestingModule.withRoutes( [
+				{component: OriginDetailComponent, path: "core/origins/:id"},
+				{component: OriginDetailComponent, path: "core/origins"},
+			]), MatDialogModule, NoopAnimationsModule],
 			providers: [{provide: NavigationService, useValue: navSvc}],
 		}).compileComponents();
 

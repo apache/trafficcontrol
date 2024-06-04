@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-/opt/traffic_monitor/var/log/traffic_monitor.log {
+/var/log/traffic_monitor/traffic_monitor.log {
         compress
         maxage 30
         missingok
@@ -25,7 +25,7 @@
         copytruncate
 }
 
-/opt/traffic_monitor/var/log/event.log {
+/var/log/traffic_monitor/event.log {
         compress
         maxage 30
         missingok
@@ -35,7 +35,7 @@
         copytruncate
 }
 
-/opt/traffic_monitor/var/log/access.log {
+/var/log/traffic_monitor/access.log {
         compress
         maxage 30
         missingok

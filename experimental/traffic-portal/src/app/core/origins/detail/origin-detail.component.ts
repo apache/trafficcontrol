@@ -12,10 +12,9 @@
  * limitations under the License.
  */
 
-import { Location } from "@angular/common";
 import { Component, OnInit } from "@angular/core";
 import { MatDialog } from "@angular/material/dialog";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import type {
 	RequestOrigin,
 	RequestOriginResponse,
@@ -57,8 +56,8 @@ export class OriginDetailComponent implements OnInit {
 
 	constructor(
 		private readonly route: ActivatedRoute,
+		private readonly router: Router,
 		private readonly originService: OriginService,
-		private readonly location: Location,
 		private readonly dialog: MatDialog,
 		private readonly navSvc: NavigationService,
 		private readonly log: LoggingService,
@@ -84,8 +83,11 @@ export class OriginDetailComponent implements OnInit {
 			this.log.error("missing required route parameter 'id'");
 			return;
 		}
-		if (ID === "new") {
-			this.navSvc.headerTitle.next("New Origin");
+
+		this.new = ID === "new";
+
+		if (this.new) {
+			this.setTitle();
 			this.new = true;
 			this.origin = {
 				cachegroup: null,
@@ -116,7 +118,17 @@ export class OriginDetailComponent implements OnInit {
 			return;
 		}
 		this.origin = await this.originService.getOrigins(numID);
-		this.navSvc.headerTitle.next(`Origin: ${this.origin.name}`);
+		this.setTitle();
+	}
+
+	/**
+	 * Sets the headerTitle based on current Origin state.
+	 *
+	 * @private
+	 */
+	private setTitle(): void {
+		const title = this.new ? "New Origin" : `Origin: ${this.origin.name}`;
+		this.navSvc.headerTitle.next(title);
 	}
 
 	/**
@@ -136,7 +148,7 @@ export class OriginDetailComponent implements OnInit {
 		ref.afterClosed().subscribe((result) => {
 			if (result) {
 				this.originService.deleteOrigin(this.origin);
-				this.location.back();
+				this.router.navigate(["core/origins"]);
 			}
 		});
 	}
@@ -189,8 +201,10 @@ export class OriginDetailComponent implements OnInit {
 
 			this.origin = await this.originService.createOrigin(requestOrigin);
 			this.new = false;
+			await this.router.navigate(["core/origins", this.origin.id]);
 		} else {
 			this.origin = await this.originService.updateOrigin(this.origin);
 		}
+		this.setTitle();
 	}
 }

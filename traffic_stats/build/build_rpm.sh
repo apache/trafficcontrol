@@ -81,7 +81,7 @@ initBuildArea() {
   # compile trafficcontrol-scenes
   echo "Installing grafana scenes npm dependencies"
   (cd trafficcontrol-scenes
-    npm i || \
+    npm i --omit=dev || \
         { echo "Could not install packages from $TS_DIR/trafficcontrol-scenes: $?"; return 1; }
   )
 

@@ -5,7 +5,7 @@
   "main": "config.ts",
   "dependencies": {
     "@types/random-ipv6": "^1.0.0",
-    "axios": "^0.21.2",
+    "axios": "^0.28.0",
     "constants": "0.0.2",
     "download-file": "^0.1.5",
     "file-exists": "^5.0.1",
@@ -25,9 +25,9 @@
     "@types/fs-extra": "^9.0.9",
     "@types/jasmine": "^3.4.6",
     "@types/node": "^16",
-    "chromedriver": "^122.0.4",
+    "chromedriver": "^125.0.3",
     "jasmine": "^3.5.0",
-    "typescript": "^3.6.4"
+    "typescript": "^4.9.5"
   },
   "scripts": {
     "build": "tsc",

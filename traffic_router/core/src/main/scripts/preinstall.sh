@@ -13,6 +13,23 @@
 # limitations under the License.
 #
 
+set -o nounset
+old_log_dir=/opt/traffic_router/var/log
+new_log_dir=/var/log/traffic_router
+if [[ -d "$old_log_dir" ]]; then
+	if [[ -d "$new_log_dir" ]]; then
+		(
+		# Include files starting with . in the * glob
+		shopt -s dotglob
+		mv "$old_log_dir"/* "$new_log_dir" || true
+		)
+		rmdir "$old_log_dir"
+	else
+		mv "$old_log_dir" "$new_log_dir"
+	fi
+	sync
+fi
+
 # figure out which version of traffic_router is currently running
 # and then shut it down. Running both test just in case.
 set +e

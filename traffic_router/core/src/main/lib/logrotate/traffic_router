@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-/opt/traffic_router/var/log/access.log {
+/var/log/traffic_router/access.log {
     daily
     size 1k
     compress
@@ -24,7 +24,7 @@
     copytruncate
 }
 
-/opt/traffic_router/var/log/traffic_router.log {
+/var/log/traffic_router/traffic_router.log {
     daily
     size 1k
     compress

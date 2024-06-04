@@ -27,7 +27,7 @@ env:
   PROJECTS:
 
 jobs:
-  chromedriver-updater:
+  chromedriver-updater-tp:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -48,4 +48,29 @@ jobs:
           GIT_AUTHOR_NAME: asf-ci-trafficcontrol
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
-          PROJECTS: "traffic_portal/test/integration/,experimental/traffic-portal/"
+          PROJECTS: "traffic_portal/test/integration/"
+
+  chromedriver-updater-tpv2:
+    runs-on: ubuntu-latest
+    needs:
+      - chromedriver-updater-tp
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@master
+        id: checkout
+      - name: Install Python 3.10
+        uses: actions/setup-python@v2
+        with: { python-version: '3.10' } # Must be quoted to include the trailing 0
+      - name: Install Node 20
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20.x
+      - name: Install updater Python module and dependencies
+        run: pip install .github/actions/chromedriver-updater
+      - name: Run chromedriver-updater
+        uses: ./.github/actions/chromedriver-updater
+        env:
+          GIT_AUTHOR_NAME: asf-ci-trafficcontrol
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
+          PROJECTS: "experimental/traffic-portal/"
