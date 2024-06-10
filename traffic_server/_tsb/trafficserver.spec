@@ -146,7 +146,7 @@ fi
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ssl_multicert.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/storage.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/volume.config
-%if "%{ats_version}" >= "9"
+%if "%{tag}" >= "9"
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ip_allow.yaml
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/sni.yaml
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/strategies.yaml
@@ -157,7 +157,7 @@ fi
 
 %changelog
 * Thu Mar 7 2024 The Anh Nguyen <ntheanh201(at)gmail.com>
-- Modified to support ATS 9.2.3
+- Modified to support ATS 9.2.x
 * Wed Mar 10 2021 Jonathan Gray <jhg03a(at)apache.org>
 - Modified to support stop bundling openssl with ats
 * Wed Aug 26 2020 Chris Lemmons <alficles(at)gmail.com>

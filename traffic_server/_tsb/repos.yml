@@ -1,7 +1,7 @@
 ats:
     src: https://github.com/apache/trafficserver
     branch: 9.2.x
-    head: b4e3c73354d2a104ed6f00379eeb9f121a85e8bb # 9.2.3
+    head: 90fbf13db0858cef0e0a094f445d846b60a4c1ef # 9.2.4
     extra: []
 cjose:
     src: https://github.com/cisco/cjose
