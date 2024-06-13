@@ -136,7 +136,6 @@ fi
 /opt/trafficserver/etc/trafficserver/trafficserver-release
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/cache.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/hosting.config
-%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ip_allow.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/logging.yaml
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/parent.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/plugin.config
@@ -145,11 +144,20 @@ fi
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/socks.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/splitdns.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ssl_multicert.config
-%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ssl_server_name.yaml
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/storage.config
 %config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/volume.config
+%if "%{tag}" >= "9"
+%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ip_allow.yaml
+%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/sni.yaml
+%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/strategies.yaml
+%else
+%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ip_allow.config
+%config(noreplace) %attr(644,ats,ats) /opt/trafficserver/etc/trafficserver/ssl_server_name.yaml
+%endif
 
 %changelog
+* Thu Mar 7 2024 The Anh Nguyen <ntheanh201(at)gmail.com>
+- Modified to support ATS 9.2.x
 * Wed Mar 10 2021 Jonathan Gray <jhg03a(at)apache.org>
 - Modified to support stop bundling openssl with ats
 * Wed Aug 26 2020 Chris Lemmons <alficles(at)gmail.com>
