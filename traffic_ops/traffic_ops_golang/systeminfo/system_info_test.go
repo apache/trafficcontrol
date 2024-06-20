@@ -53,10 +53,12 @@ func TestGetSystemInfo(t *testing.T) {
 	firstID := 1
 	firstName := "paramname1"
 	firstVal := "val1"
+	firstCmt := "cmt1"
 
 	secondID := 2
 	secondName := "paramname2"
 	secondVal := "val2"
+	secondCmt := "cmt2"
 
 	var sysInfoParameters = []tc.ParameterNullable{
 		tc.ParameterNullable{
@@ -67,6 +69,7 @@ func TestGetSystemInfo(t *testing.T) {
 			Profiles:    json.RawMessage(`["foo","bar"]`),
 			Secure:      &secure,
 			Value:       &firstVal,
+			Comment:     &firstCmt,
 		},
 
 		tc.ParameterNullable{
@@ -77,6 +80,7 @@ func TestGetSystemInfo(t *testing.T) {
 			Profiles:    json.RawMessage(`["foo","bar"]`),
 			Secure:      &secure,
 			Value:       &secondVal,
+			Comment:     &secondCmt,
 		},
 	}
 
@@ -89,6 +93,7 @@ func TestGetSystemInfo(t *testing.T) {
 			ts.Profiles,
 			ts.Secure,
 			ts.Value,
+			ts.Comment,
 		)
 	}
 
