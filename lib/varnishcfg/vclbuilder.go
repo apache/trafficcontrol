@@ -88,5 +88,7 @@ func (vb *VCLBuilder) BuildVCLFile() (string, []string, error) {
 	dirWarnings, err := vb.configureDirectors(&v, parents)
 	warnings = append(warnings, dirWarnings...)
 
+	vb.configureCustomVCL(&v)
+
 	return fmt.Sprint(v), warnings, err
 }
