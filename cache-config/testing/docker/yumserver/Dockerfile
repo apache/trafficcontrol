@@ -20,10 +20,10 @@
 # Based on CentOS 6.6
 ############################################################
 
-FROM centos:7
+FROM rockylinux:8
 MAINTAINER dev@trafficcontrol.apache.org
 
-RUN yum install -y httpd createrepo yum-utils
+RUN dnf install -y httpd createrepo yum-utils
 
 RUN mkdir -p /var/www/html/traffic-control/7/x86_64/Packages
 RUN sed -i -e 's/#ServerName www.example.com:80/ServerName www.example.com:80/g' /etc/httpd/conf/httpd.conf
