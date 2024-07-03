@@ -20,15 +20,19 @@
 # Based on CentOS 7.2
 ############################################################
 
-FROM centos/systemd
+FROM rockylinux:8
 
-RUN yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+RUN dnf install -y \
+	epel-release \
+    libicu \
+	"https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-$(rpm --eval %_arch)/pgdg-redhat-repo-latest.noarch.rpm" && \
+    dnf -y --repo=pgdg13 install postgresql13 && \
+	dnf -y remove pgdg-redhat-repo
 
-RUN yum -y install \
-  postgresql13 \
+RUN dnf -y install \
   nmap-ncat \
   cpanminus && \
-  yum clean all
+  dnf clean all
 
 ENV POSTGRES_HOME $POSTGRES_HOME
 ENV PGPASSWORD $PGPASSWORD 
