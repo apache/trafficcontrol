@@ -55,7 +55,7 @@ BUILD_NUMBER := $(shell bash -c ' \
 	output+=".$$(git rev-parse --short=8 HEAD)"; \
 	echo "$$output"' || \
 	cat $(TC_DIR)/BUILD_NUMBER)
-BUILD_ARCH   := $(shell docker run --name=ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch --rm $(BASE_IMAGE):$(RHEL_VERSION) rpm --eval %_arch )
+BUILD_ARCH   := $(shell docker create --name=ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch --rm $(BASE_IMAGE):$(RHEL_VERSION) rpm --eval %_arch >/dev/null 2>&1 || true && docker start --attach ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch )
 TC_VERSION := $(shell cat "$(TC_DIR)/VERSION")
 TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
 TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
