@@ -41,13 +41,12 @@ checkEnvironment() {
 	export DIST="$WORKSPACE/dist"
 	# Forcing BUILD NUMBER to 1 since this is outside the tree and related to Tomcat Release
 	export BUILD_NUMBER=1
-	export RPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.${RHEL_VERSION}.noarch.rpm"
-	export SRPM="${PACKAGE}-${TOMCAT_VERSION}.${TOMCAT_RELEASE}-${BUILD_NUMBER}.${RHEL_VERSION}.src.rpm"
+	export RPM="${PACKAGE}-${TOMCAT_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}.noarch.rpm"
+	export SRPM="${PACKAGE}-${TOMCAT_VERSION}-${BUILD_NUMBER}.${RHEL_VERSION}.src.rpm"
 
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
-	echo "TOMCAT_RELEASE: $TOMCAT_RELEASE"  #defined in traffic_router
 	echo "TOMCAT_VERSION: $TOMCAT_VERSION"  #defined in traffic_router
 	echo "BUILD_NUMBER: $BUILD_NUMBER"      #defined in traffic_router
 	echo "RPM: $RPM"
@@ -61,11 +60,10 @@ initBuildArea() {
 	 cd "$RPMBUILD"
 	 mkdir -p SPECS SOURCES RPMS SRPMS BUILD BUILDROOT) || { echo "Could not create $RPMBUILD: $?"; return 1; }
 	export VERSION=$TOMCAT_VERSION
-	export RELEASE=$TOMCAT_RELEASE
 
-	echo "Downloading Tomcat $VERSION.$RELEASE..."
-	curl -fo "${RPMBUILD}/SOURCES/apache-tomcat-${VERSION}.${RELEASE}.tar.gz" "https://archive.apache.org/dist/tomcat/tomcat-${VERSION%.*}/v${VERSION}.${RELEASE}/bin/apache-tomcat-${VERSION}.${RELEASE}.tar.gz" || \
-	{ echo "Could not download Tomcat $VERSION.$RELEASE: $?"; exit 1; }
+	echo "Downloading Tomcat $VERSION..."
+	curl -fo "${RPMBUILD}/SOURCES/apache-tomcat-${VERSION}.tar.gz" "https://archive.apache.org/dist/tomcat/tomcat-${VERSION%%.*}/v${VERSION}/bin/apache-tomcat-${VERSION}.tar.gz" || \
+	{ echo "Could not download Tomcat $VERSION: $?"; exit 1; }
 
 	cp "$TR_DIR/tomcat-rpm/tomcat.service" "$RPMBUILD/SOURCES/" || { echo "Could not copy source files: $?"; exit 1; }
 	cp "$TR_DIR/tomcat-rpm/tomcat.spec" "$RPMBUILD/SPECS/" || { echo "Could not copy spec files: $?"; exit 1; }
@@ -93,7 +91,7 @@ buildRpmForEl () {
 	# build RPM with xz level 2 compression
 	rpmbuild --define "_topdir $(pwd)" \
 		--define "build_number $BUILD_NUMBER.$RHEL_VERSION" \
-		--define "tomcat_version $TOMCAT_VERSION.$TOMCAT_RELEASE" \
+		--define "tomcat_version $TOMCAT_VERSION" \
 		--define "_target_os ${RPM_TARGET_OS}" \
 		--define '%_source_payload w2.xzdio' \
 		--define '%_binary_payload w2.xzdio' \

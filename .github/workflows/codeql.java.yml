@@ -39,12 +39,14 @@ jobs:
       STARTUP_SCRIPT_LOC: ../core/src/main/lib/systemd/system
       LOGROTATE_SCRIPT_DIR: /etc/logrotate.d
       LOGROTATE_SCRIPT_LOC: ../core/src/main/lib/logrotate
-      TOMCAT_RELEASE: tomcat_release
-      TOMCAT_VERSION: tomcat_version
+      #TOMCAT_VERSION: (set from .env)
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: Load environment
+      run: cp .env '${{ github.env }}'
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

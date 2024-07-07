@@ -124,6 +124,11 @@ services:
     trafficrouter:
         build:
             context: dev/traffic_router
+            args:
+                - TOMCAT_VERSION=${TOMCAT_VERSION}
+
+        env_file: # makes TOMCAT_VERSION avaiable to the container
+          - .env
         depends_on:
             - trafficmonitor
         hostname: trafficrouter

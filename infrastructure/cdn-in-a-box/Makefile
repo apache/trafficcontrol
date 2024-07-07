@@ -57,8 +57,7 @@ BUILD_NUMBER := $(shell bash -c ' \
 	cat $(TC_DIR)/BUILD_NUMBER)
 BUILD_ARCH   := $(shell docker run --name=ciab-get-$(BASE_IMAGE)-$(RHEL_VERSION)-arch --rm $(BASE_IMAGE):$(RHEL_VERSION) rpm --eval %_arch )
 TC_VERSION := $(shell cat "$(TC_DIR)/VERSION")
-TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
-TOMCAT_RELEASE := $(shell grep '^\s*TOMCAT_RELEASE=' "$(TC_DIR)/traffic_router/build/build_rpm.sh"  | cut -d= -f2)
+TOMCAT_VERSION := $(shell grep '^\s*TOMCAT_VERSION=' "$(TC_DIR)/.env"  | cut -d= -f2)
 ATS_VERSION := $(shell $(CIAB_DIR_RELATIVE)bin/ats-version.sh)
 ifeq ($(RHEL_VERSION),7)
 # The commit hash in `git describe` is only 7 characters in CentOS 7's git 1.8
@@ -67,7 +66,7 @@ endif
 
 SPECIAL_SAUCE := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).$(BUILD_ARCH).rpm
 SPECIAL_SAUCE_NOARCH := $(TC_VERSION)-$(BUILD_NUMBER).el$(RHEL_VERSION).noarch.rpm
-SPECIAL_SEASONING := $(TOMCAT_VERSION).$(TOMCAT_RELEASE)-1.el$(RHEL_VERSION).noarch.rpm
+SPECIAL_SEASONING := $(TOMCAT_VERSION)-1.el$(RHEL_VERSION).noarch.rpm
 SPECIAL_SYRUP := $(ATS_VERSION).el$(RHEL_VERSION).$(BUILD_ARCH).rpm
 
 ATS_SOURCE := $(wildcard $(TC_DIR)/cache-config/testing/docker/trafficserver/**)

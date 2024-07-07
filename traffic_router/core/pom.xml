@@ -359,19 +359,19 @@
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-catalina</artifactId>
-			<version>9.0.87</version>
+			<version>${tomcat.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-coyote</artifactId>
-			<version>9.0.87</version>
+			<version>${tomcat.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-jni</artifactId>
-			<version>9.0.87</version>
+			<version>${tomcat.version}</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

@@ -73,7 +73,7 @@ buildRpmTrafficRouter () {
 adaptEnvironment() {
 	echo "Verifying the build configuration environment."
 	# get traffic_control src path -- relative to build_rpm.sh script
-	PACKAGE='' TC_VERSION='' RPMBUILD='' DIST='' RPM='' TOMCAT_VERSION='' TOMCAT_RELEASE=''
+	PACKAGE='' TC_VERSION='' RPMBUILD='' DIST='' RPM=''
 	PACKAGE="traffic_router"
 	TC_VERSION=$(getVersion "$TC_DIR")
 	BUILD_NUMBER=${BUILD_NUMBER:-$(getBuildNumber)}
@@ -82,15 +82,13 @@ adaptEnvironment() {
 	DIST="$WORKSPACE/dist"
 	RPM="${PACKAGE}-${TC_VERSION}-${BUILD_NUMBER}.noarch.rpm"
 	RPM_TARGET_OS="${RPM_TARGET_OS:-linux}"
-	TOMCAT_VERSION=9.0
-	TOMCAT_RELEASE=87
-	export PACKAGE TC_VERSION BUILD_NUMBER WORKSPACE RPMBUILD DIST RPM RPM_TARGET_OS TOMCAT_VERSION TOMCAT_RELEASE
+	source "${TC_DIR}/.env" # contains TOMCAT_VERSION
+	export PACKAGE TC_VERSION BUILD_NUMBER WORKSPACE RPMBUILD DIST RPM RPM_TARGET_OS TOMCAT_VERSION
 
 	echo "=================================================="
 	echo "WORKSPACE: $WORKSPACE"
 	echo "BUILD_NUMBER: $BUILD_NUMBER"
 	echo "TOMCAT_VERSION=$TOMCAT_VERSION"
-	echo "TOMCAT_RELEASE=$TOMCAT_RELEASE"
 	echo "TC_VERSION: $TC_VERSION"
 	echo "RPM: $RPM"
 	echo "--------------------------------------------------"
