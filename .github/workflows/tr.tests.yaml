@@ -26,8 +26,7 @@ env:
   STARTUP_SCRIPT_LOC: ../core/src/main/lib/systemd/system
   LOGROTATE_SCRIPT_DIR: /etc/logrotate.d
   LOGROTATE_SCRIPT_LOC: ../core/src/main/lib/logrotate
-  TOMCAT_RELEASE: tomcat_release
-  TOMCAT_VERSION: tomcat_version
+  #TOMCAT_VERSION: (set from .env)
 
 on:
   push:
@@ -47,6 +46,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@master
+      - name: Load environment # This loads TOMCAT_VERSION into the environment.
+        run: cp .env '${{ github.env }}'
       - name: Install Java dependencies
         run: sudo apt -y install libtcnative-1 maven
       - name: Cache local Maven repository

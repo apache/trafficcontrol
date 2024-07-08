@@ -42,6 +42,11 @@
 		<commons-compress.version>1.9</commons-compress.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>11</java.version>
+		<!-- TOMCAT_VERSION must be set in your environment to a release, like 9.0.90. This should
+			 be the same TOMCAT_VERSION value that .env has:
+			 https://github.com/apache/trafficcontrol/blob/master/.env
+		-->
+		<tomcat.version>${env.TOMCAT_VERSION}</tomcat.version>
 	</properties>
 
 	<scm>
