@@ -31,6 +31,8 @@ services:
       - traffic_router:/traffic_router
       - ../../junit:/junit
       - ../../.m2:/root/.m2
+    env_file: # This makes TOMCAT_VERSION avaiable to the container.
+      - .env
     environment:
       DEBUG_ENABLE: 'false' # Set to 'true' to debug the TR unit tests
       DEBUG_PORT: 8000
