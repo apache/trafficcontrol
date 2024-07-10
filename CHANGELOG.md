@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed perl dependency
 - Updated the CacheGroups Traffic Portal page to use a more performant AG-Grid-based table.
 - Updated Go version to 1.22.0
+- [#7958] Updated build ATS to 9.2.4
 - [#7979](https://github.com/apache/trafficcontrol/pull/7979) *Traffic Router*, *Traffic Monitor*, *Traffic Stats*: Store logs in /var/log
 - [#7999](https://github.com/apache/trafficcontrol/pull/7999) *Traffic Router*, *Traffic Monitor*, *Traffic Stats*: Symlink from /opt/<component>/var/log to /var/log/<component>. These symlinks are deprecated with the intent of removing them in ATC 9.0.0.
 - [#7990](https://github.com/apache/trafficcontrol/pull/7990) *Traffic Router*: Updated Apache Tomcat from 9.0.43, 9.0.67, 9.0.83, and 9.0.86 to 9.0.87.
