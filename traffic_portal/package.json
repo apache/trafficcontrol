@@ -50,7 +50,7 @@
   },
   "dependencies": {
     "@uirouter/angularjs": "0.4.3",
-    "ag-grid-community": "23.2.0",
+    "ag-grid-community": "32.0.1",
     "angular": "1.8.3",
     "angular-animate": "1.8.3",
     "angular-bootstrap-contextmenu": "1.2.1",
