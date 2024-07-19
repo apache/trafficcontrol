@@ -21,7 +21,7 @@ package util
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"io"
 
 	"github.com/apache/trafficcontrol/v8/cache-config/t3cutil"
@@ -29,7 +29,7 @@ import (
 
 func WriteConfigs(configs []t3cutil.ATSConfigFile, output io.Writer) error {
 	if err := json.NewEncoder(output).Encode(configs); err != nil {
-		return errors.New("encoding and writing configs: " + err.Error())
+		return fmt.Errorf("encoding and writing configs: %w", err)
 	}
 	return nil
 }

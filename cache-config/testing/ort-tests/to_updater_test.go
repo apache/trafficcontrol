@@ -17,7 +17,7 @@ package orttest
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"os/exec"
 	"strconv"
 	"testing"
@@ -167,7 +167,7 @@ func ExecTOUpdater(host string, configApplyTime, revalApplyTime *time.Time, conf
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 
 	return nil

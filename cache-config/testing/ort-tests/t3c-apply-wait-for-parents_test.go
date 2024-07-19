@@ -17,7 +17,7 @@ package orttest
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -311,9 +311,9 @@ func TestWaitForParentsFalse(t *testing.T) {
 func getUpdateStatus(hostName string) (atscfg.ServerUpdateStatus, error) {
 	st := atscfg.ServerUpdateStatus{}
 	if output, err := runRequest(hostName, CMDUpdateStatus); err != nil {
-		return atscfg.ServerUpdateStatus{}, errors.New("t3c-request failed: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, fmt.Errorf("t3c-request failed: %w", err)
 	} else if err = json.Unmarshal([]byte(output), &st); err != nil {
-		return atscfg.ServerUpdateStatus{}, errors.New("unmarshalling t3c-request json output: " + err.Error())
+		return atscfg.ServerUpdateStatus{}, fmt.Errorf("unmarshalling t3c-request json output: %w", err)
 	}
 	return st, nil
 }
@@ -343,7 +343,7 @@ func t3cUpdateWaitForParents(host string, runMode string, waitForParents *string
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return "", errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return "", fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 	return out.String() + "\n" + errOut.String(), nil
 }

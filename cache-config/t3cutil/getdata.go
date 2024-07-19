@@ -22,6 +22,7 @@ package t3cutil
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -74,7 +75,7 @@ func GetDataFuncs() map[string]func(TCCfg, io.Writer) error {
 func GetServerUpdateStatus(cfg TCCfg) (*atscfg.ServerUpdateStatus, error) {
 	status, _, err := cfg.TOClient.GetServerUpdateStatus(tc.CacheName(cfg.CacheHostName), nil)
 	if err != nil {
-		return nil, errors.New("getting server '" + cfg.CacheHostName + "' update status: " + err.Error())
+		return nil, fmt.Errorf("getting server '%s' update status: %w", cfg.CacheHostName, err)
 	}
 	return &status, nil
 }
@@ -103,14 +104,14 @@ const SystemInfoParamConfigFile = `global`
 func WriteSystemInfo(cfg TCCfg, output io.Writer) error {
 	paramArr, _, err := cfg.TOClient.GetConfigFileParameters(SystemInfoParamConfigFile, nil)
 	if err != nil {
-		return errors.New("getting system info parameters: " + err.Error())
+		return fmt.Errorf("getting system info parameters: %w", err)
 	}
 	params := map[string]string{}
 	for _, param := range paramArr {
 		params[param.Name] = param.Value
 	}
 	if err := json.NewEncoder(output).Encode(params); err != nil {
-		return errors.New("encoding system info parameters: " + err.Error())
+		return fmt.Errorf("encoding system info parameters: %w", err)
 	}
 	return nil
 }
@@ -121,10 +122,10 @@ func WriteSystemInfo(cfg TCCfg, output io.Writer) error {
 func WriteStatuses(cfg TCCfg, output io.Writer) error {
 	statuses, _, err := cfg.TOClient.GetStatuses(nil)
 	if err != nil {
-		return errors.New("getting statuses: " + err.Error())
+		return fmt.Errorf("getting statuses: %w", err)
 	}
 	if err := json.NewEncoder(output).Encode(statuses); err != nil {
-		return errors.New("encoding statuses: " + err.Error())
+		return fmt.Errorf("encoding statuses: %w", err)
 	}
 	return nil
 }
@@ -140,7 +141,7 @@ func WriteServerUpdateStatus(cfg TCCfg, output io.Writer) error {
 		return err
 	}
 	if err := json.NewEncoder(output).Encode(status); err != nil {
-		return errors.New("encoding server update status: " + err.Error())
+		return fmt.Errorf("encoding server update status: %w", err)
 	}
 	return nil
 }
@@ -150,10 +151,10 @@ func WriteServerUpdateStatus(cfg TCCfg, output io.Writer) error {
 func WritePackages(cfg TCCfg, output io.Writer) error {
 	packages, err := GetPackages(cfg)
 	if err != nil {
-		return errors.New("getting ORT server packages: " + err.Error())
+		return fmt.Errorf("getting ORT server packages: %w", err)
 	}
 	if err := json.NewEncoder(output).Encode(packages); err != nil {
-		return errors.New("writing packages: " + err.Error())
+		return fmt.Errorf("writing packages: %w", err)
 	}
 	return nil
 }
@@ -161,7 +162,7 @@ func WritePackages(cfg TCCfg, output io.Writer) error {
 func GetPackages(cfg TCCfg) ([]Package, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
-		return nil, errors.New("getting server: " + err.Error())
+		return nil, fmt.Errorf("getting server: %w", err)
 	} else if len(server.Profiles) == 0 {
 		return nil, errors.New("getting server: nil profile")
 	} else if server.HostName == "" {
@@ -170,12 +171,12 @@ func GetPackages(cfg TCCfg) ([]Package, error) {
 	allPackageParams, reqInf, err := cfg.TOClient.GetConfigFileParameters(atscfg.PackagesParamConfigFile, nil)
 	log.Infoln(toreq.RequestInfoStr(reqInf, "GetPackages.GetConfigFileParameters("+atscfg.PackagesParamConfigFile+")"))
 	if err != nil {
-		return nil, errors.New("getting server '" + server.HostName + "' package parameters: " + err.Error())
+		return nil, fmt.Errorf("getting server '%s' package parameters: %w", server.HostName, err)
 	}
 
 	serverPackageParams, err := atscfg.GetServerParameters(server, allPackageParams)
 	if err != nil {
-		return nil, errors.New("calculating server '" + server.HostName + "' package parameters: " + err.Error())
+		return nil, fmt.Errorf("calculating server '%s' package parameters: %w", server.HostName, err)
 	}
 
 	packages := []Package{}
@@ -195,10 +196,10 @@ type Package struct {
 func WriteChkconfig(cfg TCCfg, output io.Writer) error {
 	chkconfig, err := GetChkconfig(cfg)
 	if err != nil {
-		return errors.New("getting chkconfig: " + err.Error())
+		return fmt.Errorf("getting chkconfig: %w", err)
 	}
 	if err := json.NewEncoder(output).Encode(chkconfig); err != nil {
-		return errors.New("writing chkconfig: " + err.Error())
+		return fmt.Errorf("writing chkconfig: %w", err)
 	}
 	return nil
 }
@@ -206,7 +207,7 @@ func WriteChkconfig(cfg TCCfg, output io.Writer) error {
 func GetChkconfig(cfg TCCfg) ([]ChkConfigEntry, error) {
 	server, _, err := cfg.TOClient.GetServerByHostName(string(cfg.CacheHostName), nil)
 	if err != nil {
-		return nil, errors.New("getting server: " + err.Error())
+		return nil, fmt.Errorf("getting server: %w", err)
 	} else if len(server.Profiles) == 0 {
 		return nil, errors.New("getting server: nil profile")
 	} else if server.HostName == "" {
@@ -216,12 +217,12 @@ func GetChkconfig(cfg TCCfg) ([]ChkConfigEntry, error) {
 	allChkconfigParams, reqInf, err := cfg.TOClient.GetConfigFileParameters(atscfg.ChkconfigParamConfigFile, nil)
 	log.Infoln(toreq.RequestInfoStr(reqInf, "GetChkconfig.GetConfigFileParameters("+atscfg.ChkconfigParamConfigFile+")"))
 	if err != nil {
-		return nil, errors.New("getting server '" + server.HostName + "' chkconfig parameters: " + err.Error())
+		return nil, fmt.Errorf("getting server '%s' chkconfig parameters: %w", server.HostName, err)
 	}
 
 	serverChkconfigParams, err := atscfg.GetServerParameters(server, allChkconfigParams)
 	if err != nil {
-		return nil, errors.New("calculating server '" + server.HostName + "' chkconfig parameters: " + err.Error())
+		return nil, fmt.Errorf("calculating server '%s' chkconfig parameters: %w", server.HostName, err)
 	}
 
 	chkconfig := []ChkConfigEntry{}
@@ -241,30 +242,19 @@ func SetUpdateStatus(cfg TCCfg, serverName tc.CacheName, configApply, revalApply
 	// TODO need to move to toreq, add fallback
 	reqInf, err := cfg.TOClient.SetServerUpdateStatus(serverName, configApply, revalApply)
 	if err != nil {
-		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
+		return fmt.Errorf("setting update statuses (Traffic Ops '%s'): %w", torequtil.MaybeIPStr(reqInf.RemoteAddr), err)
 	}
 	return nil
 }
-
-// SetUpdateStatusCompat sets the queue and reval status of serverName in Traffic Ops.
-// *** Compatability requirement until ATC (v7.0+) is deployed with the timestamp features
-/*func SetUpdateStatusCompat(cfg TCCfg, serverName tc.CacheName, configApply, revalApply *time.Time, configApplyBool, revalApplyBool *bool) error {
-	// TODO need to move to toreq, add fallback
-	reqInf, err := cfg.TOClient.SetServerUpdateStatusBoolCompat(serverName, configApply, revalApply, configApplyBool, revalApplyBool)
-	if err != nil {
-		return errors.New("setting update statuses (Traffic Ops '" + torequtil.MaybeIPStr(reqInf.RemoteAddr) + "'): " + err.Error())
-	}
-	return nil
-}*/
 
 // WriteConfig writes the Traffic Ops data necessary to generate config to output.
 func WriteConfig(cfg TCCfg, output io.Writer) error {
 	cfgData, err := GetConfigData(cfg.TOClient, cfg.TODisableProxy, cfg.CacheHostName, cfg.RevalOnly, cfg.OldCfg, cfg.T3CVersion)
 	if err != nil {
-		return errors.New("getting config data: " + err.Error())
+		return fmt.Errorf("getting config data: %w", err)
 	}
 	if err := json.NewEncoder(output).Encode(cfgData); err != nil {
-		return errors.New("encoding config data: " + err.Error())
+		return fmt.Errorf("encoding config data: %w", err)
 	}
 	return nil
 }
