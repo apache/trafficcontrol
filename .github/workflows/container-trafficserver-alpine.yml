@@ -15,7 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
-name: Container ghcr.io/${{ github.repository }}/ci/trafficserver-alpine
+name: Container trafficserver-alpine
 
 env:
   CONTAINER: ghcr.io/${{ github.repository }}/ci/trafficserver-alpine
