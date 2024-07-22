@@ -116,6 +116,7 @@ COPY cache-config/testing/docker/trafficserver/traffic_server_jemalloc \
      cache-config/testing/docker/trafficserver/cjose.pic.patch  \
      cache-config/testing/docker/trafficserver/jansson.pic.patch \
      cache-config/testing/docker/trafficserver/run.sh \ 
-    / 
+     cache-config/testing/docker/trafficserver/trafficserver.env \
+    /
 
 CMD /run.sh

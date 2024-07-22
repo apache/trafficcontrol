@@ -53,6 +53,7 @@ Apache Traffic Server with Apache Traffic Control modifications and environment 
 %setup -c -T
 cp -far %{src}/. .
 cp -fa %{src}/../traffic_server_jemalloc ..
+cp -fa %{src}/../trafficserver.env ..
 autoreconf -vfi
 
 %build
@@ -81,8 +82,11 @@ make DESTDIR=$RPM_BUILD_ROOT install
 
 mkdir -p $RPM_BUILD_ROOT/opt/trafficserver/etc/trafficserver/snapshots
 mkdir -p $RPM_BUILD_ROOT/usr/lib/systemd/system
+mkdir -p $RPM_BUILD_ROOT/etc/sysconfig
 cp rc/trafficserver.service $RPM_BUILD_ROOT/usr/lib/systemd/system/
 cp ../traffic_server_jemalloc $RPM_BUILD_ROOT/opt/trafficserver/bin/
+touch $RPM_BUILD_ROOT/etc/sysconfig/trafficserver
+cp ../trafficserver.env $RPM_BUILD_ROOT/etc/sysconfig/trafficserver
 mkdir -p "${RPM_BUILD_ROOT}"/var/log/trafficserver
 
 %if %{?_with_openssl_included:1}%{!?_with_openssl_included:0}
@@ -124,6 +128,7 @@ fi
 %license LICENSE
 %defattr(-,root,root)
 %attr(644,-,-) /usr/lib/systemd/system/trafficserver.service
+%attr(644,-,-) /etc/sysconfig/trafficserver
 %dir /opt/trafficserver
 %if %{?_with_openssl_included:1}%{!?_with_openssl_included:0}
 /opt/trafficserver/openssl
