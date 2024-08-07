@@ -30,7 +30,6 @@
 #     docker compose -f docker-compose.readiness.yml up
 
 ---
-version: '3.8'
 
 services:
   readiness:
