@@ -21,7 +21,7 @@ set -ex;
 store_ciab_logs() {
 	echo 'Storing CDN-in-a-Box logs...';
 	mkdir logs;
-	for service in $($docker_compose ps --services); do
+	for service in $($docker_compose ps --services --all); do
 		$docker_compose logs --no-color --timestamps "$service" >"logs/${service}.log";
 	done;
 }
@@ -38,7 +38,7 @@ if ! timeout 12m $docker_compose logs -f readiness >/dev/null; then
 	echo "CDN-in-a-Box didn't become ready within 12 minutes - exiting" >&2;
 	exit_code=1;
 	store_ciab_logs;
-elif exit_code="$(docker inspect --format='{{.State.ExitCode}}' "$($docker_compose ps -q readiness)")"; [ "$exit_code" -ne 0 ]; then
+elif exit_code="$(docker inspect --format='{{.State.ExitCode}}' "$($docker_compose ps -q --all readiness)")"; [ "$exit_code" -ne 0 ]; then
 	echo 'Readiness container exited with an error' >&2;
 	store_ciab_logs;
 fi;

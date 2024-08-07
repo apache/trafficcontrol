@@ -112,7 +112,7 @@ jobs:
           service_by_hostname[edge]=t3c
 
           for hostname in trafficrouter edge; do
-            container_id="$(docker compose ps -q "${service_by_hostname[$hostname]}")"
+            container_id="$(docker compose ps -q --all "${service_by_hostname[$hostname]}")"
             interface="$(<<'JSON' jq
             {
               "mtu": 1500,
@@ -201,7 +201,7 @@ jobs:
         run: |
           set -o errexit -o nounset
           mkdir -p dev/logs
-          for service in $(docker compose ps --services); do
+          for service in $(docker compose ps --all --services); do
             docker compose logs --no-color --timestamps "$service" >"dev/logs/${service}.log"
           done
         if: ${{ failure() }}
