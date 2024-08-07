@@ -23,6 +23,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7933](https://github.com/apache/trafficcontrol/pull/7933), [#8005](https://github.com/apache/trafficcontrol/pull/8005) *Traffic Portal v2*: Update NodeJS version to 18.
 - [#8009](https://github.com/apache/trafficcontrol/pull/8009) *Traffic Portal v2*: Update NodeJS version to 20.
 - [#8040](https://github.com/apache/trafficcontrol/pull/8040) *Traffic Router*: Get the Tomcat version from .env and update Tomcat to 9.0.90.
+- [##8056](https://github.com/apache/trafficcontrol/pull/8056) Remove the `version` key from compose files and use `docker compose` instead of `docker-compose`.
 
 ### Fixed
 - [#8008](https://github.com/apache/trafficcontrol/pull/8008) *Traffic Router* Fix czf temp file deletion issue.
