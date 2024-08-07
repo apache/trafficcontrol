@@ -172,6 +172,6 @@ jobs:
         name: trafficserver
         path: ${{ github.workspace }}/cache-config/testing/docker/yumserver/test-rpms
     - name: Build cache config test containers
-      run: docker-compose -f ${{ github.workspace }}/cache-config/testing/docker/docker-compose.yml build --parallel
+      run: docker compose -f ${{ github.workspace }}/cache-config/testing/docker/docker-compose.yml build --parallel
     - name: Run cache config integration tests
       uses: ./.github/actions/cache-config-integration-tests

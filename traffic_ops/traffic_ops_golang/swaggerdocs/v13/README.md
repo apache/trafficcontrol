@@ -43,15 +43,15 @@ The `docker-compose.yml` will start two rendering services, a custom http servic
 
 To start the Swagger UI services (and build them if not already built) just run:
 
-```$ docker-compose up```
+```$ docker compose up```
 
 NOTE: Iterative Workflow Tips:
 
 Blow away only the local images (excluding remote ones) and bring down the container:
-```$ docker-compose down --rmi local```
+```$ docker compose down --rmi local```
 
 Blow away all the images (including remote ones) and bring down the container:
-```$ docker-compose down --rmi all```
+```$ docker compose down --rmi all```
 
 Once started navigate your browser to [http://localhost:8080](http://localhost:8080)
 
@@ -60,7 +60,7 @@ Once started navigate your browser to [http://localhost:8080](http://localhost:8
 After you generate the `swaggerspec/swagger.json` from the steps above use the `swaggerspec` Docker Compose file to convert the `swagger.json` to .rst so that it can merged in with the existing Traffic Control documentation.
 
 * `$ cd swaggerspec`
-* `$ docker-compose up` - will convert the `swagger.json` in this directory into `v13_api_docs.rst`
+* `$ docker compose up` - will convert the `swagger.json` in this directory into `v13_api_docs.rst`
 * `$ cp v13_api_docs.rst ../../../../../docs/source/development/traffic_ops_api`
 * `$ cd ../../../../../docs`
 * `$ make` - will generate all the Sphinx documentation along with the newly generated TO Swagger API 1.3 docs
@@ -68,7 +68,7 @@ After you generate the `swaggerspec/swagger.json` from the steps above use the `
 NOTE: Iterative Workflow Tips:
 
 Blow away only the local images (excluding remote ones) and bring down the container:
-```$ docker-compose down --rmi local```
+```$ docker compose down --rmi local```
 
 Blow away all the images (including remote ones) and bring down the container:
-```$ docker-compose down --rmi all```
+```$ docker compose down --rmi all```

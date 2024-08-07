@@ -19,7 +19,7 @@
 #
 # From ./infrastructure/cdn-in-a-box
 #
-# alias mydc="docker-compose "` \
+# alias mydc="docker compose "` \
 #   `"-f $PWD/docker-compose.yml "` \
 #   `"-f $PWD/docker-compose.expose-ports.yml "` \
 #   `"-f $PWD/optional/docker-compose.socksproxy.yml "` \

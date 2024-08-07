@@ -20,7 +20,7 @@
 #
 # Below is an example of how to run the main compose with this file:
 #
-#      docker-compose -f docker-compose.yml -f optional/docker-compose.traffic-vault.yml up
+#      docker compose -f docker-compose.yml -f optional/docker-compose.traffic-vault.yml up
 #
 
 ---
