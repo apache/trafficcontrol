@@ -1,4 +1,3 @@
-version: '3.7'
 services:
   zookeeper-1:
     image: 'confluentinc/cp-zookeeper:${CONFLUENT_PLATFORM_VERSION:-5.5.0}'

@@ -170,6 +170,6 @@ jobs:
     - name: display directory
       run: ls -l ${{ github.workspace }}/tc-health-client/testing/docker/health-check-test
     - name: Build health client test containers
-      run: docker-compose -f ${{ github.workspace }}/tc-health-client/testing/docker/docker-compose.yml build --parallel
+      run: docker compose -f ${{ github.workspace }}/tc-health-client/testing/docker/docker-compose.yml build --parallel
     - name: Run health client integration tests
       uses: ./.github/actions/health-client-integration-tests

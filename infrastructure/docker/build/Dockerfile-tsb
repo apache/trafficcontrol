@@ -34,12 +34,12 @@ MAINTAINER dev@trafficcontrol.apache.org
 
 RUN	yum -y install git sudo
 
-# The current configuration does not require docker-compose for tsb, so a dummy script is included instead of docker-compose.
-# If docker-compose is required, the docker socket will need to be mounted inside this container as well.
-#ADD	https://github.com/docker/compose/releases/download/1.26.2/docker-compose-Linux-x86_64 /usr/bin/docker-compose
-RUN	echo -e "#!/usr/bin/env bash\necho docker-compose is not supported in this container and the build command will not work.\nexit 1" > /usr/bin/docker-compose
+# The current configuration does not require docker compose for tsb, so a dummy script is included instead of docker-compose.
+# If docker compose is required, the docker socket will need to be mounted inside this container as well.
+#ADD	https://github.com/docker/compose/releases/download/1.26.2/docker-compose-Linux-x86_64 /usr/bin/docker compose
+RUN	echo -e "#!/usr/bin/env bash\necho docker compose is not supported in this container and the build command will not work.\nexit 1" > /usr/bin/docker compose
 
-RUN	chmod +x /usr/bin/docker-compose
+RUN	chmod +x /usr/bin/docker compose
 COPY	--from=tsb-build /usr/bin/tsb /usr/bin/tsb
 RUN	git config --global user.email "dev@trafficcontrol.apache.org"
 RUN	git config --global user.name "Apache Traffic Control"

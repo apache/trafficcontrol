@@ -51,6 +51,6 @@ jobs:
       - name: Build And Copy Traffic Ops RPM
         run: ./pkg traffic_ops_build && cp ./dist/traffic_ops-*.x86_64.rpm traffic_ops_db/test/docker/traffic_ops.rpm && cp ./dist/traffic_ops-*.x86_64.rpm traffic_ops/app/db/trafficvault/test/traffic_ops.rpm
       - name: Run Traffic Ops Database Docker Tests
-        run: cd traffic_ops_db/test/docker/ && docker-compose up --build --exit-code-from trafficops-db-admin
+        run: cd traffic_ops_db/test/docker/ && docker compose up --build --exit-code-from trafficops-db-admin
       - name: Run Traffic Vault Database Docker Tests
-        run: cd traffic_ops/app/db/trafficvault/test/ && docker-compose up --build --exit-code-from trafficvault-db-admin
+        run: cd traffic_ops/app/db/trafficvault/test/ && docker compose up --build --exit-code-from trafficvault-db-admin

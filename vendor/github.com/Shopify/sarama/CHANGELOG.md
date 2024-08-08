@@ -33,7 +33,7 @@
 # Improvements
 
 #1466 - @rubenvp8510  - Expose kerberos fast negotiation configuration
-#1695 - @KJTsanaktsidis - Use docker-compose to run the functional tests
+#1695 - @KJTsanaktsidis - Use docker compose to run the functional tests
 #1699 - @wclaeys  - Consumer group support for manually comitting offsets
 #1714 - @bai - Bump Go to version 1.14.3, golangci-lint to 1.27.0
 #1726 - @d1egoaz - Include zstd on the functional tests

@@ -26,8 +26,8 @@ fmt: ## Checks that the code is formatted correcty
 		exit 1;                                               \
 	fi
 
-docker_test: ## Run tests in a container via docker-compose
-	docker-compose build test && docker-compose run --rm test make test
+docker_test: ## Run tests in a container via docker compose
+	docker compose build test && docker compose run --rm test make test
 
 version: ## Display the version of Go
 	@@go version
