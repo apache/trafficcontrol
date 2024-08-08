@@ -61,10 +61,10 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
       - name: Vendor dependencies
         run: go mod vendor
-      - name: Build docker-compose services
+      - name: Build docker compose services
         run: |
-          docker-compose build --parallel &&
-          docker-compose pull db
+          docker compose build --parallel &&
+          docker compose pull db
       - name: Cache local Maven repository
         uses: actions/cache@v2
         with:
@@ -80,7 +80,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-modules-
       - name: Start the Dev CDN in a Box
-        run: docker-compose up -d
+        run: docker compose up -d
       - name: Wait until Traffic Ops is ready to accept requests
         run: |
           trap 'echo "Error on line ${LINENO} of setting interface IP addresses"; exit 1' ERR
@@ -112,7 +112,7 @@ jobs:
           service_by_hostname[edge]=t3c
 
           for hostname in trafficrouter edge; do
-            container_id="$(docker-compose ps -q "${service_by_hostname[$hostname]}")"
+            container_id="$(docker compose ps -q --all "${service_by_hostname[$hostname]}")"
             interface="$(<<'JSON' jq
             {
               "mtu": 1500,
@@ -201,8 +201,8 @@ jobs:
         run: |
           set -o errexit -o nounset
           mkdir -p dev/logs
-          for service in $(docker-compose ps --services); do
-            docker-compose logs --no-color --timestamps "$service" >"dev/logs/${service}.log"
+          for service in $(docker compose ps --all --services); do
+            docker compose logs --no-color --timestamps "$service" >"dev/logs/${service}.log"
           done
         if: ${{ failure() }}
       - name: Upload Dev CDN-in-a-Box logs

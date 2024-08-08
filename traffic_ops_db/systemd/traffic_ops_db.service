@@ -23,8 +23,8 @@ After=docker.service
 
 [Service]
 Restart=always
-ExecStart=/usr/bin/docker-compose -p trafficops -f /opt/traffic_ops_db/docker/docker-compose.yml up
-ExecStop=/usr/bin/docker-compose -p trafficops -f /opt/traffic_ops_db/docker/docker-compose.yml stop
+ExecStart=/usr/bin/docker compose -p trafficops -f /opt/traffic_ops_db/docker/docker-compose.yml up
+ExecStop=/usr/bin/docker compose -p trafficops -f /opt/traffic_ops_db/docker/docker-compose.yml stop
 
 [Install]
 WantedBy=default.target

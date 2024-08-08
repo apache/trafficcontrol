@@ -23,7 +23,7 @@
 #
 # Adjust the settings in `variables.env` to suit your needs.
 #
-#      docker-compose up -d
+#      docker compose up -d
 #
 # The Traffic Ops API will then be available on https://localhost:6443,
 # and the postgres database on localhost 5432.
@@ -31,7 +31,6 @@
 # Note that this setup is intended for testing and not for production use.
 
 ---
-version: '3.8'
 
 services:
   # db is the Traffic Ops database running in postgresql.  Only trafficops needs to have access to it.

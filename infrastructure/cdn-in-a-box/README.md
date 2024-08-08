@@ -30,7 +30,7 @@ minimal CDN for full system testing.
 The containers run on Docker, and require Docker (tested v17.05.0-ce) and Docker
 Compose (tested v1.9.0) to build and run. On most 'nix systems these can be installed
 via the distribution's package manager under the names `docker-ce` and
-`docker-compose`, respectively (e.g. `sudo dnf install docker-ce`).
+`docker compose`, respectively (e.g. `sudo dnf install docker-ce`).
 
 Each container (except the origin) requires an `.rpm` file to install the Traffic Control
 component for which it is responsible. You can download these `*.rpm` files from an archive
@@ -49,7 +49,7 @@ directories, such that their filenames are as follows:
 Finally, run the test CDN using the command:
 
 ```bash
-docker-compose up --build
+docker compose up --build
 ```
 
 ## Readiness
@@ -58,7 +58,7 @@ you can optionally start the "readiness" container which will test your CDN and
 exit successfully when your CDN in a Box is ready:
 
 ```bash
-docker-compose -f docker-compose.readiness.yml up --build
+docker compose -f docker-compose.readiness.yml up --build
 ```
 
 If the container does not exit successfully after a reasonable amount of time,
@@ -167,14 +167,14 @@ show you the default UI for interacting with the CDN - Traffic Portal.
 
 By default, `docker-compose.yml` does not expose ports to the host. This allows the host to be running other services on those ports, as well as allowing multiple CDN-in-a-Boxes to run on the same host, without port conflicts.
 
-To expose the ports of each service on the host, add the `docker-compose.expose-ports.yml` file. For example, `docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`.
+To expose the ports of each service on the host, add the `docker-compose.expose-ports.yml` file. For example, `docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`.
 
 ## Varnish
 
 By default, CDN-in-a-Box uses Apache Traffic Server as the cache server.
 
 To run CDN-in-a-Box with Varnish add the `docker-compose.varnish.yml` file.
-For example, `docker-compose -f docker-compose.yml -f docker-compose.varnish.yml up`
+For example, `docker compose -f docker-compose.yml -f docker-compose.varnish.yml up`
 
 ## Common Pitfalls
 
@@ -201,7 +201,7 @@ In the trafficcontrol/infrastructure/cdn-in-a-box directory run the following:
 
 - `make build-builders` ~~> this will create all the rpms and copy each rpms into its own folder in the cdn-in-a-box project. This will also create the dist folder under trafficcontrol folder structure even if you deleted yours.
 
-- `docker-compose up` ~~> this will create docker images, and if rebuild is needed, run `docker-compose up --build`.
+- `docker compose up` ~~> this will create docker images, and if rebuild is needed, run `docker compose up --build`.
 
 ### Docker v4.11 and later of Docker Desktop for Mac
 

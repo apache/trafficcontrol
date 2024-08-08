@@ -17,11 +17,10 @@
 #
 # This compose file will expose the ports of each service on the host.
 #
-#      docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up
+#      docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml up
 #
 
 ---
-version: '3.8'
 
 services:
   db:

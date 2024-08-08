@@ -70,18 +70,18 @@ else
 	COMPOSECMD=()
 fi
 
-# Check to see if docker-compose is already installed and use it directly, if possible.
+# Check to see if docker compose is already installed and use it directly, if possible.
 if [ ${#COMPOSECMD[@]} -eq 0 ]; then
-	if which docker-compose >/dev/null 2>&1; then
-		COMPOSECMD=( docker-compose )
+	if docker compose >/dev/null 2>&1; then
+		COMPOSECMD=( docker compose )
 	fi
 fi
 
-# If it's unavailable, download the image and run docker-compose inside a container.
+# If it's unavailable, download the image and run docker compose inside a container.
 # This is considerably slower, but allows for building on hosts without docker-compose.
 if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	# Pin the version of docker-compose.
-	IMAGE="docker/compose:1.11.2"
+	IMAGE="docker:latest"
 
 	# We need to either mount the docker socket or export the docker host into the container.
 	# This allows the container to manage "sibling" containers via docker.
@@ -119,7 +119,7 @@ if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 
 	# COMPOSECMD is kept as an array to significantly simplify handling paths that contain
 	# spaces and other special characters.
-	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
+	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE docker compose)
 fi
 
 # Parse command line arguments
@@ -282,7 +282,7 @@ while (( "$#" )); do
 		"${COMPOSECMD[@]}" -f $COMPOSE_FILE run "${RUN_OPTIONS[@]}" --rm $1 || exit 1
 
 		# Check for a chained compose file for this particular project.
-		# A chained compose file will be named exactly the same as main docker-compose, with .service added,
+		# A chained compose file will be named exactly the same as main docker compose, with .service added,
 		# where <service> is the name of the specific service to be chained. The file may be a symlink to another
 		# compose file, in which case the symlink will be followed before it is processed.
 		if [ -e "$COMPOSE_FILE.$1" ] ; then
