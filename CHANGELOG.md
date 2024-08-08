@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ##[8.0.2] - 2024-09-27
 - [#8081](https://github.com/apache/trafficcontrol/pull/8081) *GH Actions* Updates the versions used for actions/artifact-download and actions/artifact-upload.
+- [#8056](https://github.com/apache/trafficcontrol/pull/8056) Remove the `version` key from compose files and use `docker compose` instead of `docker-compose`.
 
 ## [8.0.1] - 2024-03-19
 ### Fixed

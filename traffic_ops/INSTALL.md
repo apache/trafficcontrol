@@ -46,7 +46,7 @@ Instructions are here: https://yum.postgresql.org/
 
 NOTE: you do *not* need postgresql13-server if running postgres within a `docker` container.
 
-Install `docker` and `docker-compose` using instructions here:
+Install `docker` and `docker compose` using instructions here:
 
     https://docs.docker.com/engine/installation/linux/centos/
     

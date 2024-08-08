@@ -28,11 +28,11 @@ if [[ "$ACTION" == "setup" ]];then
   echo "Setup complete"
 
 elif [[ "$ACTION" == "run" ]];then
-  docker-compose -f docker-compose.dev.yml -p $PROJECT_NAME up -d
+  docker compose -f docker-compose.dev.yml -p $PROJECT_NAME up -d
   echo "Started Docker container: $CONTAINER_NAME"
 
 elif [[ "$ACTION" == "stop" ]];then
-  docker-compose -f docker-compose.dev.yml -p $PROJECT_NAME down -v
+  docker compose -f docker-compose.dev.yml -p $PROJECT_NAME down -v
   echo "Stopping Docker container: $CONTAINER_NAME"
 
 elif [[ "$ACTION" == "clean" ]];then
@@ -42,7 +42,7 @@ elif [[ "$ACTION" == "clean" ]];then
   rm -rf pgdata
 
 elif [[ "$ACTION" == "seed" ]];then
-  docker-compose -f docker-compose.dev.yml -p $PROJECT_NAME down -v
+  docker compose -f docker-compose.dev.yml -p $PROJECT_NAME down -v
 else
   echo "Valid actions: 'setup', 'run', 'stop', 'clean'"
   exit 0

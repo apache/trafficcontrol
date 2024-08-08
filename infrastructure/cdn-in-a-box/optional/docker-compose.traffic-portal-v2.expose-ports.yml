@@ -15,20 +15,8 @@
 # specific language governing permissions and limitations
 # under the License.
 ---
+
 services:
-  ats_build:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        # Change BASE_IMAGE to centos when RHEL_VERSION=7
-        BASE_IMAGE: ${BASE_IMAGE:-rockylinux}
-        RHEL_VERSION: ${RHEL_VERSION:-8}
-    image: ats_build
-    volumes:
-    - ./src/jansson:/opt/src/jansson:Z
-    - ./src/cjose:/opt/src/cjose:Z
-    - ./src/openssl:/opt/src/openssl:Z
-    - ./src/ats:/rpmbuilddir/SOURCES/src:Z
-    - ./src/trafficcontrol/traffic_server/plugins/astats_over_http:/opt/src/astats_over_http:Z
-    - ../../dist:/rpmbuilddir/RPMS/x86_64:Z
+  trafficportalv2:
+    ports:
+      - "8443:443"

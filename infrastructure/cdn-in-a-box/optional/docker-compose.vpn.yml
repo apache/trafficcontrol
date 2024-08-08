@@ -20,7 +20,7 @@
 #
 # To start up CiaB with OpenVPN optional container:
 #
-# alias mydc="docker-compose "` \
+# alias mydc="docker compose "` \
 #   `"-f $PWD/docker-compose.yml "` \
 #   `"-f $PWD/docker-compose.expose-ports.yml "` \
 #   `"-f $PWD/optional/docker-compose.vpn.yml "` \
@@ -36,7 +36,6 @@
 # connect to this OpenVPN server by it.
 
 ---
-version: '3.8'
 
 services:
   vpn:

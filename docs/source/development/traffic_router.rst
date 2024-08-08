@@ -301,7 +301,7 @@ Once your IDE is listening for debugging connections, start the unit tests:
 .. code-block:: shell
 	:caption: Run the Traffic Router unit tests in Docker, with or without debugging enabled
 
-	docker-compose up
+	docker compose up
 
 RPM Packaging
 =============
