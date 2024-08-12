@@ -51,7 +51,7 @@ vendor/**/.travis.yml
 .dbInfo
 /dist
 *.pyc
-bin/docker-compose
+bin/docker compose
 /.m2/
 /.npm/
 /.github/actions/**/node_modules/

@@ -21,8 +21,8 @@
 #
 # To optionally run the test with a starter DB, put the DB dump file in ./initdb.d/
 #
-#      docker-compose build
-#      docker-compose up --exit-code-from trafficops-db-admin
+#      docker compose build
+#      docker compose up --exit-code-from trafficops-db-admin
 
 ---
 version: '3.8'

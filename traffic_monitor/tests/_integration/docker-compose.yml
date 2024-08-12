@@ -29,7 +29,7 @@
 # To run the integration tests, your current working directory must be trafficcontrol/traffic_monitor.
 # This is because Docker doesn't allow accessing files outside the current "context".
 #
-#      docker-compose up -d
+#      docker compose up -d
 #
 
 ---

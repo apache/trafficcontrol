@@ -17,7 +17,7 @@
 #
 # This compose file will run cache servers as Varnish instead of ATS.
 #
-#      docker-compose -f docker-compose.yml -f docker-compose.varnish.yml up
+#      docker compose -f docker-compose.yml -f docker-compose.varnish.yml up
 #
 
 ---
