@@ -31,7 +31,6 @@
 # Note that this setup is intended for testing and not for production use.
 #
 ---
-version: '3.8'
 
 services:
   socksproxy:

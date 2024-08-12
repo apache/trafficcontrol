@@ -37,7 +37,6 @@
 # Note that this setup is intended for testing and not for production use.
 #
 ---
-version: '3.8'
 
 services:
   # TestClient is a VNC/Proxy container for development/testing CDN-In-A-Box 
