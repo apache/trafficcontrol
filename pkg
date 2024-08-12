@@ -33,7 +33,7 @@ fi
 
 # Check to see if docker compose is already installed and use it directly, if possible.
 if [ ${#COMPOSECMD[@]} -eq 0 ]; then
-	if which docker compose >/dev/null 2>&1; then
+	if docker compose >/dev/null 2>&1; then
 		COMPOSECMD=( docker compose )
 	fi
 fi
@@ -42,7 +42,7 @@ fi
 # This is considerably slower, but allows for building on hosts without docker-compose.
 if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 	# Pin the version of docker-compose.
-	IMAGE="docker/compose:1.11.2"
+	IMAGE="docker:latest"
 
 	# We need to either mount the docker socket or export the docker host into the container.
 	# This allows the container to manage "sibling" containers via docker.
@@ -80,7 +80,7 @@ if [ ${#COMPOSECMD[@]} -eq 0 ]; then
 
 	# COMPOSECMD is kept as an array to significantly simplify handling paths that contain
 	# spaces and other special characters.
-	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE)
+	COMPOSECMD=(docker run --rm "${DOCKER_ADDR[@]}" $COMPOSE_OPTIONS "${VOLUMES[@]}" -w "$(pwd)" $IMAGE docker compose)
 fi
 
 # Parse command line arguments
