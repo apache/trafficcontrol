@@ -93,6 +93,7 @@ cd /root/rpmbuild/SOURCES
 # clone the trafficserver repo
 git clone https://github.com/apache/trafficserver.git --branch $ATS_VERSION || die "Failed to fetch the ATS Source"
 cp /traffic_server_jemalloc .
+cp /trafficserver.env .
 
 # patch in the astats plugin
 (cp -fa /astats_over_http /root/rpmbuild/SOURCES/trafficserver/plugins/astats_over_http

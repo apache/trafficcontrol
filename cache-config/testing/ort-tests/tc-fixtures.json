@@ -1617,7 +1617,7 @@
           "configFile": "records.config",
           "name": "CONFIG proxy.config.log.logfile_dir",
           "secure": false,
-          "value": "STRING /opt/trafficserver/var/log/trafficserver"
+          "value": "STRING /var/log/trafficserver"
         },
         {
           "configFile": "records.config",
@@ -2013,7 +2013,7 @@
           "configFile": "records.config",
           "name": "CONFIG proxy.config.log.logfile_dir",
           "secure": false,
-          "value": "STRING /opt/trafficserver/var/log/trafficserver"
+          "value": "STRING /var/log/trafficserver"
         },
         {
           "configFile": "records.config",
