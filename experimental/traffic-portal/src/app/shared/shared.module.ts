@@ -17,6 +17,7 @@ import { NgModule } from "@angular/core";
 import { RouterModule } from "@angular/router";
 
 import { AppUIModule } from "src/app/app.ui.module";
+import { DownloadOptionsDialogComponent } from "src/app/shared/generic-table/download-options/download-options-dialog.component";
 import { TpHeaderComponent } from "src/app/shared/navigation/tp-header/tp-header.component";
 import { TpSidebarComponent } from "src/app/shared/navigation/tp-sidebar/tp-sidebar.component";
 
@@ -64,7 +65,8 @@ import { CustomvalidityDirective } from "./validation/customvalidity.directive";
 		TextDialogComponent,
 		DecisionDialogComponent,
 		CollectionChoiceDialogComponent,
-		ImportJsonTxtComponent
+		ImportJsonTxtComponent,
+		DownloadOptionsDialogComponent
 	],
 	exports: [
 		AlertComponent,
