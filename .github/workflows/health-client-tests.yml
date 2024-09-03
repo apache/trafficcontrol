@@ -152,17 +152,17 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
     - name: Download TO RPM
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: traffic_ops
         path: ${{ github.workspace }}/tc-health-client/testing/docker/traffic_ops
     - name: Download Health Client RPM
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: tc-health-client
         path: ${{ github.workspace }}/tc-health-client/testing/docker/health-check-test
     - name: Download ATS RPM
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: trafficserver
         path: ${{ github.workspace }}/tc-health-client/testing/docker/health-check-test
