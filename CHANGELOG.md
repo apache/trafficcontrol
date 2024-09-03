@@ -35,6 +35,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7918](https://github.com/apache/trafficcontrol/pull/7918) *Traffic Portal* Fixed topology link under DS-Servers tables page
 - [#7846](https://github.com/apache/trafficcontrol/pull/7846) *Traffic Portal* Increase State character limit
 - [#8010](https://github.com/apache/trafficcontrol/pull/8010) *Traffic Stats* Omit NPM dev dependencies from Traffic Stats RPM
+- [#8071](https://github.com/apache/trafficcontrol/pull/8071) *Traffic Ops* Improve validation for the `id` field of the `PUT /deliveryservice_request_comments` endpoint.
 
 ### Removed
 - [#7832](https://github.com/apache/trafficcontrol/pull/7832) *t3c* Removed Perl dependency
