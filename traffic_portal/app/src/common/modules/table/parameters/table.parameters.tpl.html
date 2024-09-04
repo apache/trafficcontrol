@@ -31,7 +31,7 @@ under the License.
                     <span class="caret"></span>
                 </button>
                 <menu ng-click="$event.stopPropagation()" class="column-settings dropdown-menu-right dropdown-menu" uib-dropdown-menu>
-                    <li role="menuitem" ng-repeat="c in columns | orderBy:'name'">
+                    <li ng-show="show(c.name)" role="menuitem" ng-repeat="c in columns | orderBy:'name'">
                         <div class="checkbox">
                             <label><input type="checkbox" ng-model="c.visible" ng-click="toggleVisibility(c.name)"> {{::c.name}}</label>
                         </div>
@@ -51,6 +51,7 @@ under the License.
                     <th>Value</th>
                     <th>Secure</th>
                     <th>Profiles</th>
+                    <th ng-show="show('Comment')">Comment</th>
                 </tr>
             </thead>
             <tbody>
@@ -60,6 +61,7 @@ under the License.
                     <td data-search="^{{::p.value}}$">{{::p.value}}</td>
                     <td data-search="^{{::p.secure}}$">{{::p.secure}}</td>
                     <td data-search="{{::p.profiles}}" uib-popover="{{::p.profiles.sort().join(',\n')}}" popover-title="Profiles" popover-trigger="mouseenter" popover-placement="left" popover-append-to-body="true">{{p.profiles.length}}</td>
+                    <td ng-show="show('Comment')" data-search="^{{::p.comment}}$">{{::p.comment}}</td>
                 </tr>
             </tbody>
         </table>
