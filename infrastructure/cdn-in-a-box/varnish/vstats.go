@@ -31,12 +31,48 @@ import (
 	"strings"
 )
 
+type varnishstatOut struct {
+	Version   int                `json:"version"`
+	Timestamp string             `json:"timestamp"`
+	Counters  map[string]counter `json:"counters"`
+}
+
+type counter struct {
+	Description string      `json:"description"`
+	Flag        string      `json:"flag"`
+	Format      string      `json:"format"`
+	Value       interface{} `json:"value"`
+}
+
 type vstats struct {
-	ProcLoadavg  string `json:"proc.loadavg"`
-	ProcNetDev   string `json:"proc.net.dev"`
-	InfSpeed     int64  `json:"inf_speed"`
-	NotAvailable bool   `json:"not_available"`
-	// TODO: stats
+	ProcLoadavg  string                 `json:"proc.loadavg"`
+	ProcNetDev   string                 `json:"proc.net.dev"`
+	InfSpeed     int64                  `json:"inf_speed"`
+	NotAvailable bool                   `json:"not_available"`
+	Stats        map[string]interface{} `json:"stats"`
+}
+
+func getVarnishCounters() map[string]interface{} {
+	stats := make(map[string]interface{})
+	out, err := exec.Command("varnishstat", "-j", "-f", `TC*`).CombinedOutput()
+	if err != nil {
+		log.Printf("failed to execute varnishstat: %s\n", err)
+		return stats
+	}
+	varnishstatOut := varnishstatOut{}
+	if err := json.Unmarshal(out, &varnishstatOut); err != nil {
+		log.Printf("failed to parse varnishstat output: %s, due to error: %s\n", out, err)
+		return stats
+	}
+	for name, counter := range varnishstatOut.Counters {
+		counterName, ok := strings.CutPrefix(name, "TC.")
+		if !ok {
+			log.Printf("got counter without TC. prefix, that should not happen: %s", name)
+			continue
+		}
+		stats[counterName] = counter.Value
+	}
+	return stats
 }
 
 func getSystemData(inf string) vstats {
@@ -90,7 +126,11 @@ func getStats(w http.ResponseWriter, r *http.Request) {
 	}
 	inf = strings.ReplaceAll(inf, ".", "")
 	inf = strings.ReplaceAll(inf, "/", "")
+
 	vstats := getSystemData(inf)
+	stats := getVarnishCounters()
+	vstats.Stats = stats
+
 	encoder := json.NewEncoder(w)
 	err := encoder.Encode(vstats)
 	if err != nil {
