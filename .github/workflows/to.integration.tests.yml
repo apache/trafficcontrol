@@ -122,13 +122,13 @@ jobs:
         flags: traffic_ops_integration,v3
     - name: Upload v3 Vault logs
       if: ${{ steps.v3Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: v3 Traffic Vault logs
         path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
     - name: Upload v3 Ops logs
       if: ${{ steps.v3Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: v3 Traffic Ops logs
         path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
@@ -199,13 +199,13 @@ jobs:
         flags: traffic_ops_integration,v4
     - name: Upload v4 Vault logs
       if: ${{ steps.v4Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: v4 Traffic Vault logs
         path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
     - name: Upload v4 Ops logs
       if: ${{ steps.v4Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: v4 Traffic Ops logs
         path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
@@ -278,13 +278,13 @@ jobs:
         flags: traffic_ops_integration,v5
     - name: Upload v5 Vault logs
       if: ${{ steps.v5Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: v5 Traffic Vault logs
         path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
     - name: Upload v5 Ops logs
       if: ${{ steps.v5Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: v5 Traffic Ops logs
         path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log
