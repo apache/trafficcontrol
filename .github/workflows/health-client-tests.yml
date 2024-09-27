@@ -81,7 +81,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.x86_64.rpm
@@ -100,7 +100,7 @@ jobs:
           NO_SOURCE: 1
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/trafficcontrol-health-client-*.x86_64.rpm
@@ -135,7 +135,7 @@ jobs:
           actual_rpm_name="$(ls dist | grep -E '^trafficserver-[0-9.]+-[0-9]+\.[0-9a-f]+.el${{ env.RHEL_VERSION }}.${{ env.TARGET_ARCH }}.rpm$')"
           [[ "${{ steps.repo-info.outputs.expected-rpm-name }}" == "$actual_rpm_name" ]]
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.x86_64.rpm
@@ -152,17 +152,17 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
     - name: Download TO RPM
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: traffic_ops
         path: ${{ github.workspace }}/tc-health-client/testing/docker/traffic_ops
     - name: Download Health Client RPM
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: tc-health-client
         path: ${{ github.workspace }}/tc-health-client/testing/docker/health-check-test
     - name: Download ATS RPM
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: trafficserver
         path: ${{ github.workspace }}/tc-health-client/testing/docker/health-check-test
