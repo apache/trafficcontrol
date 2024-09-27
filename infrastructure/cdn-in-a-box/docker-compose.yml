@@ -37,6 +37,8 @@ services:
   # All other components access the database thru the Traffic Ops API
   db:
     build:
+      args:
+        POSTGRES_VERSION: ${POSTGRES_VERSION}
       context: .
       dockerfile: traffic_ops/Dockerfile-db
     hostname: db

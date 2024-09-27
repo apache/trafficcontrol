@@ -20,7 +20,7 @@
 ############################################################
 
 FROM rockylinux:8
-ARG POSTGRES_VERSION=13.2
+ARG POSTGRES_VERSION
 ENV POSTGRES_VERSION=$POSTGRES_VERSION
 
 # NOTE: temporary workaround for removal of golang packages from CentOS 7 base repo

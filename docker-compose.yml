@@ -38,7 +38,7 @@ services:
             - .:/go/src/github.com/apache/trafficcontrol
 
     db:
-        image: postgres:13.2-alpine
+        image: postgres:${POSTGRES_VERSION}-alpine
         ports:
             - 5432:5432
         environment:
