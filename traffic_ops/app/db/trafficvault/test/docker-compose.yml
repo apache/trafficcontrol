@@ -21,11 +21,10 @@
 #
 # To optionally run the test with a starter TVDB, put the TVDB dump file in ./initdb.d/
 #
-#      docker-compose build
-#      docker-compose up --exit-code-from trafficvault-db-admin
+#      docker compose build
+#      docker compose up --exit-code-from trafficvault-db-admin
 
 ---
-version: '3.8'
 
 services:
   tvdb:
@@ -33,7 +32,7 @@ services:
       context: .
       dockerfile: Dockerfile-tvdb
       args:
-        POSTGRES_VERSION: ${POSTGRES_VERSION:-13.2}
+        POSTGRES_VERSION: ${POSTGRES_VERSION}
     ports:
       - 5432
 
@@ -42,7 +41,7 @@ services:
       context: .
       dockerfile: Dockerfile-db-admin
       args:
-        POSTGRES_VERSION: ${POSTGRES_VERSION:-13.2}
+        POSTGRES_VERSION: ${POSTGRES_VERSION}
         TRAFFIC_OPS_RPM: traffic_ops.rpm
     depends_on:
       - tvdb

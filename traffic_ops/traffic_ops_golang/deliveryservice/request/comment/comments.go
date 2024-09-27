@@ -264,6 +264,7 @@ func Get(w http.ResponseWriter, r *http.Request) {
 // Validate is used to ensure that the DeliveryServiceRequestCommentV5 struct passed in to the function is valid.
 func Validate(dsrc tc.DeliveryServiceRequestCommentV5) error {
 	errs := validation.Errors{
+		"id":                       validation.Validate(dsrc.ID, validation.NotNil),
 		"deliveryServiceRequestId": validation.Validate(dsrc.DeliveryServiceRequestID, validation.NotNil),
 		"value":                    validation.Validate(dsrc.Value, validation.NotNil),
 	}
@@ -286,6 +287,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
 		return
 	}
+	idParam := inf.Params["id"]
+	id, parseErr := strconv.Atoi(idParam)
+	if parseErr != nil {
+		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer"), nil)
+		return
+	}
+	deliveryServiceRequestComment.ID = id
 
 	if err := Validate(deliveryServiceRequestComment); err != nil {
 		api.HandleErr(w, r, tx, http.StatusBadRequest, err, nil)
@@ -293,7 +301,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var current tc.DeliveryServiceRequestCommentV5
-	err := inf.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + inf.Params["id"]).StructScan(&current)
+	err := inf.Tx.QueryRowx(selectQuery() + `WHERE dsrc.id=` + strconv.Itoa(deliveryServiceRequestComment.ID)).StructScan(&current)
 	if err != nil {
 		api.HandleErr(w, r, tx, http.StatusInternalServerError, nil, errors.New("scanning deliveryservice_request_comment: "+err.Error()))
 		return
@@ -305,13 +313,6 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	deliveryServiceRequestComment.AuthorID = current.AuthorID
-	idParam := inf.Params["id"]
-	id, parseErr := strconv.Atoi(idParam)
-	if parseErr != nil {
-		api.HandleErr(w, r, inf.Tx.Tx, http.StatusBadRequest, errors.New("id must be an integer"), nil)
-		return
-	}
-	deliveryServiceRequestComment.ID = id
 	userErr, sysErr, sc := api.CheckIfUnModified(r.Header, inf.Tx, id, "deliveryservice_request_comment")
 	if userErr != nil || sysErr != nil {
 		api.HandleErr(w, r, tx, sc, userErr, sysErr)
