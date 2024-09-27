@@ -35,7 +35,7 @@ volumes:
 
 services:
   db:
-    image: postgres:13.2
+    image: postgres:${POSTGRES_VERSION}
     env_file:
       - variables.env
     ports: 

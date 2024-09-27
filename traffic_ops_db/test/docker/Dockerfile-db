@@ -19,9 +19,9 @@
 # Dockerfile for trafficops db
 ############################################################
 
-ARG POSTGRES_VERSION=13.2
+ARG POSTGRES_VERSION
 FROM postgres:${POSTGRES_VERSION}
-ARG POSTGRES_VERSION=13.2
+ARG POSTGRES_VERSION
 ENV POSTGRES_VERSION=$POSTGRES_VERSION
 
 ENV POSTGRES_PASSWORD=twelve

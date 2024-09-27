@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#8081](https://github.com/apache/trafficcontrol/pull/8081) *GH Actions* Updates the versions used for actions/artifact-download and actions/artifact-upload.
 - [#8071](https://github.com/apache/trafficcontrol/pull/8071) *Traffic Ops* Improve validation for the `id` field of the `PUT /deliveryservice_request_comments` endpoint.
 - [#8056](https://github.com/apache/trafficcontrol/pull/8056) Remove the `version` key from compose files and use `docker compose` instead of `docker-compose`.
+- [#8078](https://github.com/apache/trafficcontrol/pull/8078) *Traffic Ops DB* Update Postgres version to 13.16.
 
 ## [8.0.1] - 2024-03-19
 ### Fixed
