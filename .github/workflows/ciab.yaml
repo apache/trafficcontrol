@@ -185,7 +185,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
