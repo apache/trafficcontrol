@@ -207,7 +207,7 @@ jobs:
           done
         if: ${{ failure() }}
       - name: Upload Dev CDN-in-a-Box logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: dev-ciab-logs
           path: dev/logs/*.log

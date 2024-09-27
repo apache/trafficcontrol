@@ -101,7 +101,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
@@ -119,7 +119,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
@@ -137,7 +137,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/trafficcontrol-${{ github.job }}-*.rpm
@@ -162,7 +162,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
@@ -210,7 +210,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/*.rpm
@@ -228,7 +228,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
@@ -246,7 +246,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
@@ -264,7 +264,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
@@ -282,7 +282,7 @@ jobs:
         env:
           ATC_COMPONENT: ${{ github.job }}
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.rpm
@@ -317,7 +317,7 @@ jobs:
           actual_rpm_name="$(ls dist | grep -E '^trafficserver-[0-9.]+-[0-9]+\.[0-9a-f]+.el${{ env.RHEL_VERSION }}.${{ env.TARGET_ARCH }}.rpm$')"
           [[ "${{ steps.repo-info.outputs.expected-rpm-name }}" == "$actual_rpm_name" ]]
       - name: Upload RPM
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}
           path: ${{ github.workspace }}/dist/${{ github.job }}-*.x86_64.rpm
@@ -348,7 +348,7 @@ jobs:
       - name: Import cached Alpine Docker image
         run: .github/actions/save-alpine-tar/entrypoint.sh load ${{ env.ALPINE_VERSION }}
       - name: Download RPMs
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           path: ${{ github.workspace }}/dist/
       - name: Build CDN-in-a-Box images
@@ -356,7 +356,7 @@ jobs:
       - name: Start CDN-in-a-Box
         uses: ./.github/actions/run-ciab
       - name: Upload CDN-in-a-Box logs
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: ciab-logs
           path: infrastructure/cdn-in-a-box/logs/*.log
