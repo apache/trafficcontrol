@@ -21,6 +21,7 @@
 %define TRAFFIC_OPS_LOG_DIR /var/log/traffic_ops
 %define TRAFFIC_OPS_ROOT_CERTIFICATES_DIR /var/log/traffic_ops
 %define debug_package %{nil}
+%define postgres_version %{getenv:POSTGRES_VERSION}
 
 Summary:          Traffic Ops
 Name:             traffic_ops
@@ -36,7 +37,7 @@ AutoReqProv:      no
 Requires:         cpanminus, expat-devel, libcurl, libpcap-devel, mkisofs, tar
 Requires:         openssl-devel, perl, perl-core, perl-DBD-Pg, perl-DBI, perl-Digest-SHA1
 Requires:         libidn-devel, libcurl-devel, libcap
-Requires:         postgresql13 >= 13.2
+Requires:         postgresql13 >= %{postgres_version}
 Requires:         perl-JSON, perl-libwww-perl, perl-Test-CPAN-Meta, perl-WWW-Curl, perl-TermReadKey, perl-Crypt-ScryptKDF
 Requires:         python3
 Requires(pre):    /usr/sbin/useradd, /usr/bin/getent
