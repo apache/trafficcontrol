@@ -70,6 +70,33 @@ def atc_go_version(unused_typ: str,
 	strong_node = nodes.strong(major_minor_version, major_minor_version)
 	return [strong_node], []
 
+def atc_postgres_version(
+	unused_typ: None,
+	unused_rawtext: None,
+	unused_text: None,
+	lineno: int,
+	unused_inliner: None,
+	unused_options: None=None,
+	unused_content: None=None
+) -> Tuple[List[nodes.Node], List[nodes.Node]]:
+	"""
+	A role that inserts the Postgres version used/required by this version of ATC.
+
+	Example:
+
+		:atc-postgres-version:_
+	"""
+	env_file = os.path.join(os.path.dirname(__file__), "../../../.env")
+	with open(file=env_file, encoding="utf-8") as env_file:
+		env_file_contents = env_file.read()
+
+	matches = re.search(pattern=r"^POSTGRES_VERSION=(\d+\.\d+)$", string=env_file_contents, flags=re.MULTILINE)
+	if matches is None:
+		raise ValueError(f"Postgres version found that could not be parsed: '{env_file_contents}' (from line {lineno})")
+	major_minor_version = matches.group(1)
+	strong_node = nodes.strong(major_minor_version, major_minor_version)
+	return [strong_node], []
+
 # -- Issue role --------------------------------------------------------------
 from docutils import utils
 
@@ -203,6 +230,7 @@ def setup(app: object) -> dict:
 	             text=(visit_impl_node, depart_impl_node))
 	app.add_directive("impl-detail", ImplementationDetail)
 	app.add_role("atc-go-version", atc_go_version)
+	app.add_role("atc-postgres-version", atc_postgres_version)
 	app.add_role("issue", issue_role)
 	app.add_role("pr", pr_role)
 	app.add_role("pull-request", pr_role)

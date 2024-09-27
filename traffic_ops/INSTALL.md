@@ -30,7 +30,7 @@ Instructions are here: https://yum.postgresql.org/
 
     `$ sudo yum install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm`
     
-## Install Postgres 13.2 server (in a container or on the host)
+## Install Postgres 13.16 server (in a container or on the host)
 
 ### on the host:
 
@@ -46,7 +46,7 @@ Instructions are here: https://yum.postgresql.org/
 
 NOTE: you do *not* need postgresql13-server if running postgres within a `docker` container.
 
-Install `docker` and `docker-compose` using instructions here:
+Install `docker` and `docker compose` using instructions here:
 
     https://docs.docker.com/engine/installation/linux/centos/
     

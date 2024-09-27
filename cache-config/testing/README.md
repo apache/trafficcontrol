@@ -69,7 +69,7 @@ Docker containers you will need to provide the following resources:
   4.  You may copy an Apache Trafficserver RPM to the
       docker/yumserver/test-rpms directory or you can run:
 
-      **docker-compose -f docker-compose-ats-build.yml run trafficserver_build**
+      **docker compose -f docker-compose-ats-build.yml run trafficserver_build**
 
       to build an rpm which is copied to docker/yumserver/test-rpms.
 
@@ -83,8 +83,8 @@ Docker containers you will need to provide the following resources:
   6.  Build the Docker images and run the ort test:
       ``` 
       cd trafficcontrol/cache-config/testing/docker
-      docker-compose build
-      docker-compose run ort_test
+      docker compose build
+      docker compose run ort_test
       ```
       After some time, test results should be available at
       'ort-tests/test.log'
