@@ -105,13 +105,13 @@ jobs:
         version: 4
     - name: Upload Vault logs
       if: ${{ steps.v4Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v2
       with:
         name: v4 Traffic Vault logs
         path: ${{ github.workspace }}/infrastructure/cdn-in-a-box/traffic.vault.logs
     - name: Upload Ops logs
       if: ${{ steps.v4Tests.outcome != 'success' && always() }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v2
       with:
         name: v4 Traffic Ops logs
         path: ${{ github.workspace }}/traffic_ops/traffic_ops_golang/traffic.ops.log

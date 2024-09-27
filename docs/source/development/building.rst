@@ -146,11 +146,11 @@ Output :file:`{component}-{version}.rpm` files, build logs and source tarballs w
 
 .. _build-with-dc:
 
-Build Using ``docker compose``
+Build Using ``docker-compose``
 ------------------------------
-If the ``pkg`` script fails, ``docker compose`` can still be used to build the projects directly. The compose file can be found at ``infrastructure/docker/build/docker-compose.yml`` under the repository's root directory. It can be passed directly to ``docker compose``, either from the ``infrastructure/docker/build/`` directory or by explicitly passing a path to the ``infrastructure/docker/build/docker-compose.yml`` file via ``-f``. It is recommended that between builds ``docker compose down -v`` is run to prevent caching of old build steps. The service names are the same as the project names described above in `Usage`_, and similar to the ``pkg`` script, the build results, logs and source tarballs may all be found in the ``dist`` directory after completion.
+If the ``pkg`` script fails, ``docker-compose`` can still be used to build the projects directly. The compose file can be found at ``infrastructure/docker/build/docker-compose.yml`` under the repository's root directory. It can be passed directly to ``docker-compose``, either from the ``infrastructure/docker/build/`` directory or by explicitly passing a path to the ``infrastructure/docker/build/docker-compose.yml`` file via ``-f``. It is recommended that between builds ``docker-compose down -v`` is run to prevent caching of old build steps. The service names are the same as the project names described above in `Usage`_, and similar to the ``pkg`` script, the build results, logs and source tarballs may all be found in the ``dist`` directory after completion.
 
-.. note:: Calling ``docker compose`` in the way described above will build _all_ projects, not just the default projects.
+.. note:: Calling ``docker-compose`` in the way described above will build _all_ projects, not just the default projects.
 
 .. seealso:: `The Docker Compose command line reference <https://docs.docker.com/compose/reference/overview/>`_
 
@@ -227,7 +227,7 @@ By default, the RPMs will be built targeting Rocky Linux 8. CentOS 7 is also a s
 
 	export RHEL_VERSION=7
 
-.. warning:: Although there are no known issues with natively-built RPMs, the official, supported method of building the RPMs is by using :ref:`pkg <pkg>` or :ref:`docker compose <build-with-dc>`. Use natively-built RPMs at your own risk.
+.. warning:: Although there are no known issues with natively-built RPMs, the official, supported method of building the RPMs is by using :ref:`pkg <pkg>` or :ref:`docker-compose <build-with-dc>`. Use natively-built RPMs at your own risk.
 
 Building Individual Components
 ==============================
@@ -237,7 +237,7 @@ Building This Documentation
 ---------------------------
 See instructions for :ref:`building the documentation <docs-build>`.
 
-.. [#compose-optional] This is optional, but recommended. If a ``docker compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
+.. [#compose-optional] This is optional, but recommended. If a ``docker-compose`` executable is not available the ``pkg`` script will automatically download and run it using a container. This is noticeably slower than running it natively.
 .. [#optional-project] This project is "optional", which means that it cannot be built unless :option:`-o` is given.
 .. [#default-project] This is a default project, which will be built if ``pkg`` is run with no ``projects`` argument
 .. [#mac-jdk] If you are on macOS, you additionally need to :ref:`dev-tr-mac-jdk`.

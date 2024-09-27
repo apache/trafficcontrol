@@ -16,6 +16,7 @@
 # under the License.
 
 ---
+version: '3.8'
 
 networks:
   default:

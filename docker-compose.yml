@@ -16,6 +16,7 @@
 # under the License.
 
 ---
+version: '3.8'
 
 services:
     trafficops:
@@ -38,7 +39,7 @@ services:
             - .:/go/src/github.com/apache/trafficcontrol
 
     db:
-        image: postgres:${POSTGRES_VERSION}-alpine
+        image: postgres:13.2-alpine
         ports:
             - 5432:5432
         environment:

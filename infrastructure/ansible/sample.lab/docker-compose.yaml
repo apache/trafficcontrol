@@ -12,6 +12,7 @@
 # limitations under the License.
 #
 
+version: '3.8'
 
 services:
   sample.driver.playbook:

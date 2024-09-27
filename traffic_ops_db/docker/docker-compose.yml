@@ -11,14 +11,13 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
+version: '3.8'
 
 services:
   db:
     build:
       context: ..
       dockerfile: /opt/traffic_ops_db/docker/Dockerfile
-      args:
-        POSTGRES_VERSION: ${POSTGRES_VERSION}
     env_file:
       - /opt/traffic_ops_db/docker/docker-compose.env
     ports:

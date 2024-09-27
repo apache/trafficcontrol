@@ -26,7 +26,7 @@ How to use it
     .. code-block:: shell
 
         # From infrastructure/cdn-in-a-box
-        alias mydc="docker compose -f $PWD/docker-compose.yml -f $PWD/docker-compose.expose-ports.yml -f $PWD/optional/docker-compose.vpn.yml -f $PWD/optional/docker-compose.vpn.expose-ports.yml"
+        alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/docker-compose.expose-ports.yml -f $PWD/optional/docker-compose.vpn.yml -f $PWD/optional/docker-compose.vpn.expose-ports.yml"
         mydc down -v
         mydc build
         mydc up
@@ -51,13 +51,13 @@ If you want a GUI version of VPN client, you can choose `Tunnelblick <https://tu
 
 Private Subnet for Routing
 ==========================
-Since ``docker compose`` randomly create subnet, this container prepares 2 default private subnet for routing:
+Since ``docker-compose`` randomly create subnet, this container prepares 2 default private subnet for routing:
 
 * 172.16.127.0/255.255.240.0
 * 10.16.127.0/255.255.240.0
 
 The strategy of choosing default private subnet is comparing the subnet prefix.
-If the subnet prefix which ``docker compose`` selected is 192. or 10.,
+If the subnet prefix which ``docker-compose`` selected is 192. or 10.,
 this container goes to select 172.16.127.0/255.255.240.0 for its routing subnet.
 Otherwise, it selects 10.16.127.0/255.255.240.0.
 

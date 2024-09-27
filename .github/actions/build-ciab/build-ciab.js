@@ -20,7 +20,7 @@ const spawnOptions = {
 	stdio: "inherit",
 	stderr: "inherit"
 };
-const dockerCompose = ["docker", "compose", "-f", "docker-compose.yml", "-f", "docker-compose.readiness.yml"];
+const dockerCompose = ["docker-compose", "-f", "docker-compose.yml", "-f", "docker-compose.readiness.yml"];
 process.env.DOCKER_BUILDKIT = 1;
 process.env.COMPOSE_DOCKER_CLI_BUILD = 1;
 
@@ -49,5 +49,5 @@ function runProcess(...commandArguments) {
 
 moveRPMs();
 process.chdir(`${process.env.GITHUB_WORKSPACE}/infrastructure/cdn-in-a-box`);
-runProcess("make"); // Place the RPMs for docker compose build. All RPMs should have already been built.
+runProcess("make"); // Place the RPMs for docker-compose build. All RPMs should have already been built.
 runProcess(...dockerCompose, "build", "--parallel");

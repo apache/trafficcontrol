@@ -126,7 +126,7 @@ A simple scaffold for a lab directory is included at :atc-file:`infrastructure/a
 * The :atc-file:`infrastructure/ansible/sample.lab/ansible` subdirectory should be used to hold variables specific to a particular lab in either ``vars.yml`` or an encrypted Ansible ``vault``
 * The :atc-file:`infrastructure/ansible/sample.lab/inventory` directory is where it's recommended for your provisioning layer to drop a valid Ansible inventory file describing what was allocated.  When using Ansible, it's important to point the inventory source to this directory so that it will merge all available inventory files together for you.
 * The :atc-file:`infrastructure/ansible/sample.lab/out/ssl` directory is generated with the first run of the lab and holds your local copy of the lab SSL data.  The out directory is also handy for holding temporary data from the provisioning or steady-state layers to help triage failures.
-* The docker and docker compose related files are present as an optional wrapper for Linux hosts (doesn't work on OSX) around all the lab plumbing dependencies for Ansible.  This is particularly handy for automated systems who perform regular redeployments such as in a CI/CD tool.
+* The docker and docker-compose related files are present as an optional wrapper for Linux hosts (doesn't work on OSX) around all the lab plumbing dependencies for Ansible.  This is particularly handy for automated systems who perform regular redeployments such as in a CI/CD tool.
 * :atc-file:`infrastructure/ansible/sample.lab/manual.run.sh` is a scaffold for the entrypoint for performing a lab rebuild from your local system.
 
 Gilt

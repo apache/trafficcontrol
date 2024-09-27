@@ -37,7 +37,7 @@ RUN set -o nounset -o errexit && \
 	if [[ "${OS_VERSION%%.*}" -eq 7 ]]; then \
 		use_repo=''; \
 		enable_repo=''; \
-		# needed for llvm-toolset-7-clang, which is needed for postgresql13-devel-13.x-1PGDG, required by TO rpm
+		# needed for llvm-toolset-7-clang, which is needed for postgresql13-devel-13.2-1PGDG, required by TO rpm
 		dnf -y install gcc centos-release-scl-rh; \
 	else \
 		use_repo='--repo=pgdg13'; \

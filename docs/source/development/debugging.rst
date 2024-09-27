@@ -44,9 +44,9 @@ Enroller
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build/rebuild the ``enroller-debug`` image each time you have changed :atc-file:`infrastructure/cdn-in-a-box/enroller/enroller.go`. Then, start CDN-in-a-Box.
 
 	.. code-block:: shell
-		:caption: docker compose command for debugging the CDN in a Box Enroller
+		:caption: docker-compose command for debugging the CDN in a Box Enroller
 
-		alias mydc='docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 		mydc down -v
 		mydc build enroller
 		mydc up
@@ -103,9 +103,9 @@ t3c on Edge Cache
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``edge-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
 
 	.. code-block:: shell
-		:caption: docker compose command for debugging ``t3c`` running on the Edge Cache
+		:caption: docker-compose command for debugging ``t3c`` running on the Edge Cache
 
-		alias mydc='docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 		mydc down -v
 		mydc build edge
 		mydc up -d
@@ -170,9 +170,9 @@ t3c on Mid 01 Cache
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``mid-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
 
 	.. code-block:: shell
-		:caption: docker compose command for debugging ``t3c`` running on the Mid 01 Cache
+		:caption: docker-compose command for debugging ``t3c`` running on the Mid 01 Cache
 
-		alias mydc='docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 		mydc down -v
 		mydc build mid-01
 		mydc up -d
@@ -237,9 +237,9 @@ t3c on Mid 02 Cache
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``mid-debug`` image to make sure it uses our fresh ``trafficcontrol-cache-config.rpm``. Then, start CDN-in-a-Box:
 
 	.. code-block:: shell
-		:caption: docker compose command for debugging ``t3c`` running on the Mid 02 Cache
+		:caption: docker-compose command for debugging ``t3c`` running on the Mid 02 Cache
 
-		alias mydc='docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 		mydc down -v
 		mydc build mid-02
 		mydc up -d
@@ -297,9 +297,9 @@ Traffic Monitor
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficmonitor-debug`` image to make sure it uses our fresh ``traffic_monitor.rpm``. Then, start CDN-in-a-Box:
 
 	.. code-block:: shell
-		:caption: docker compose command for debugging Traffic Monitor
+		:caption: docker-compose command for debugging Traffic Monitor
 
-		alias mydc='docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 		mydc down -v
 		mydc build trafficmonitor
 		mydc up
@@ -346,9 +346,9 @@ Traffic Ops
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficops-debug`` image to make sure it uses our fresh ``traffic_ops.rpm``. Then, start CDN-in-a-Box:
 
 	.. code-block:: shell
-		:caption: docker compose command for debugging Traffic Ops
+		:caption: docker-compose command for debugging Traffic Ops
 
-		alias mydc='docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 		mydc down -v
 		mydc build trafficops
 		mydc up
@@ -393,9 +393,9 @@ Traffic Router
 * Start CDN-in-a-Box, including the "expose ports" "debugging" compose files:
 
 	.. code-block:: shell
-		:caption: docker compose command for debugging Traffic Router
+		:caption: docker-compose command for debugging Traffic Router
 
-		alias mydc='docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 		mydc down -v
 		mydc build trafficrouter
 		mydc up -d
@@ -494,9 +494,9 @@ Traffic Stats
 * Stop CDN-in-a-Box if it is running and remove any existing volumes. Build the ``trafficstats-debug`` image to make sure it uses our fresh ``traffic_stats.rpm``. Then, start CDN-in-a-Box:
 
 	.. code-block:: shell
-		:caption: docker compose command for debugging Traffic Stats
+		:caption: docker-compose command for debugging Traffic Stats
 
-		alias mydc='docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
+		alias mydc='docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml -f optional/docker-compose.debugging.yml'
 		mydc down -v
 		mydc build trafficstats
 		mydc up

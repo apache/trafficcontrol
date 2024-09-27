@@ -111,9 +111,8 @@ initBuildArea() {
 	cp "$TO_DIR"/build/traffic_ops.spec "$RPMBUILD"/SPECS/. || \
 		 { echo "Could not copy spec files: $?"; return 1; }
 
-	source "${TC_DIR}/.env"
 	PLUGINS="$(grep -l 'AddPlugin(' "${TO_DIR}/traffic_ops_golang/plugin/"*.go | grep -v 'func AddPlugin(' | xargs -I '{}' basename {} '.go')"
-	export POSTGRES_VERSION PLUGINS
+	export PLUGINS
 
 	echo "The build area has been initialized."
 }

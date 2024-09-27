@@ -20,10 +20,11 @@
 # make sure any container rpms you need are updated. Below is an
 # example of how to run the main compose with this file:
 #
-# docker compose -f docker-compose.yml -f docker-compose.traffic-portal-test.yml up -d db edge trafficportal trafficops trafficvault portal-integration-test
-# docker compose -f docker-compose.traffic-portal-test.yml logs -f portal-integration-test
+# docker-compose -f docker-compose.yml -f docker-compose.traffic-portal-test.yml up -d db edge trafficportal trafficops trafficvault portal-integration-test
+# docker-compose -f docker-compose.traffic-portal-test.yml logs -f portal-integration-test
 
 ---
+version: '3.8'
 
 services:
   portal-integration-test:

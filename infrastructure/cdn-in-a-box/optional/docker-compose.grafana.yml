@@ -18,7 +18,7 @@
 # This container provide a Grafana service.
 # To start up CiaB with optional Grafana container:
 #
-# alias mydc="docker compose "` \
+# alias mydc="docker-compose "` \
 #   `"-f $PWD/docker-compose.yml "` \
 #   `"-f $PWD/optional/docker-compose.grafana.yml "`
 #
@@ -37,6 +37,7 @@
 
 
 ---
+version: '3.8'
 
 services:
   grafana:

@@ -19,12 +19,12 @@
 
 ## CDN-In-A-Box Optional Container(s)
 
-Create an alias to utilize these container(s) with the core CDN-In-A-Box stack. Note, that the exposed port(s) have been moved to an optional docker compose file to allow for concurrent CiaB instances.
+Create an alias to utilize these container(s) with the core CDN-In-A-Box stack. Note, that the exposed port(s) have been moved to an optional docker-compose file to allow for concurrent CiaB instances.
 
 From the top-level directory of `cdn-in-a-box` create the following alias:
 
 ```
-alias mydc="docker compose "` \
+alias mydc="docker-compose "` \
         `"-f $PWD/docker-compose.yml "` \
         `"-f $PWD/docker-compose.expose-ports.yml "` \
         `"-f $PWD/optional/docker-compose.$NAME1.yml "` \
@@ -37,7 +37,7 @@ For example, to add the socksproxy and vnc optional container(s), use the follow
 
 
 ```
-alias mydc="docker compose "` \
+alias mydc="docker-compose "` \
         `"-f $PWD/docker-compose.yml "` \
         `"-f $PWD/docker-compose.expose-ports.yml "` \
         `"-f $PWD/optional/docker-compose.socksproxy.yml "` \

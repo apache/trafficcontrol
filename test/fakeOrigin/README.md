@@ -40,7 +40,7 @@ Local build pre-requesites:
   * OSX: ```brew install ffmpeg --with-rtmp-dump```
   * CentOS: [Instructions](https://linuxadmin.io/install-ffmpeg-on-centos-7/)
 
-and/or just a modern version of Docker & docker compose
+and/or just a modern version of Docker & docker-compose
 
 If you're building locally, just run ```go install github.com/apache/trafficcontrol/v8/test/fakeOrigin@latest```
 
@@ -55,10 +55,10 @@ fakeOrigin -cfg config.json (same as above, but specify the location)
 ```
 Running in docker:
 ```
-docker compose build --no-cache
-docker compose up --force-recreate
+docker-compose build --no-cache
+docker-compose up --force-recreate
 ... customize the config.json created in ./docker_host (maps to /host inside the container, it's really important to customize this appropriately)
-docker compose up --force-recreate
+docker-compose up --force-recreate
 ```
 
 On startup it will print any routes that are available after transcoding.  You should just be able to plug those m3u8 url into VLC to start streaming.

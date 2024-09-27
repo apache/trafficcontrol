@@ -22,4 +22,4 @@ fi
 
 cp "dist/$rpm"  "traffic_monitor/tests/_integration/tm/traffic_monitor.rpm"
 cd -
-docker compose build
+docker-compose build

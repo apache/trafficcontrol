@@ -87,7 +87,7 @@ Guide
 
 		to-# psql -h pg -U postgres
 		Password for user postgres:
-		psql (13.16)
+		psql (13.2)
 		Type "help" for help.
 
 		postgres=#

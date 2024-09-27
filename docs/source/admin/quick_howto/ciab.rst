@@ -38,7 +38,7 @@ The CDN in a Box directory is found within the Traffic Control repository at :fi
 
 .. note:: These can also be specified via the ``RPM`` variable to a direct Docker build of the component - with the exception of Traffic Router, which instead accepts ``TRAFFIC_ROUTER_RPM`` to specify a Traffic Router RPM and ``TOMCAT_RPM`` to specify an Apache Tomcat RPM.
 
-These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)` from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker compose build --parallel`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
+These can all be supplied manually via the steps in :ref:`dev-building` (for Traffic Control component RPMs) or via some external source. Alternatively, the :file:`infrastructure/cdn-in-a-box/Makefile` file contains recipes to build all of these - simply run :manpage:`make(1)` from the :file:`infrastructure/cdn-in-a-box/` directory. Once all RPM dependencies have been satisfied, run ``docker-compose build --parallel`` from the :file:`infrastructure/cdn-in-a-box/` directory to construct the images needed to run CDN in a Box.
 
 .. tip:: If you have gone through the steps to :ref:`dev-building-natively`, you can run ``make native`` instead of ``make`` to build the RPMs quickly. Another option is running ``make -j4`` to build 4 components at once, if your computer can handle it.
 
@@ -51,11 +51,11 @@ By default, CDN in a Box will be based on Rocky Linux 8. To base CDN in a Box on
 
 	export BASE_IMAGE=centos RHEL_VERSION=7
 	make # Builds RPMs for CentOS 7
-	docker compose build --parallel # Builds CentOS 7 CDN in a Box images
+	docker-compose build --parallel # Builds CentOS 7 CDN in a Box images
 
 Usage
 -----
-In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the environment are by default not exposed locally to the host. If this is the desired behavior when bringing up CDN in a Box the command ``docker compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`` should be run. The ports are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.expose-ports.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
+In a typical scenario, if the steps in `Building`_ have been followed, all that's required to start the CDN in a Box is to run ``docker-compose up`` - optionally with the ``-d`` flag to run without binding to the terminal - from the :file:`infrastructure/cdn-in-a-box/` directory. This will start up the entire stack and should take care of any needed initial configuration. The services within the environment are by default not exposed locally to the host. If this is the desired behavior when bringing up CDN in a Box the command ``docker-compose -f docker-compose.yml -f docker-compose.expose-ports.yml up`` should be run. The ports are configured within the :file:`infrastructure/cdn-in-a-box/docker-compose.expose-ports.yml` file, but the default ports are shown in :ref:`ciab-service-info`. Some services have credentials associated, which are totally configurable in `variables.env`_.
 
 .. _ciab-service-info:
 .. table:: Service Info
@@ -107,14 +107,14 @@ To test the demo1 Delivery Service:
 .. code-block:: shell
 	:caption: Example Command to See the CDN in Action
 
-	sudo docker compose exec enroller curl -L "http://video.demo1.mycdn.ciab.test"
+	sudo docker-compose exec enroller curl -L "http://video.demo1.mycdn.ciab.test"
 
 To test the ``foo.kabletown.net.`` Federation:
 
 .. code-block:: shell
 	:caption: Query the Federation CNAME using the Delivery Service hostname
 
-	sudo docker compose exec trafficrouter dig +short @trafficrouter.infra.ciab.test -t CNAME video.demo2.mycdn.ciab.test
+	sudo docker-compose exec trafficrouter dig +short @trafficrouter.infra.ciab.test -t CNAME video.demo2.mycdn.ciab.test
 
 	# Expected response:
 	foo.kabletown.net.
@@ -127,7 +127,7 @@ In order to check the "readiness" of your CDN, you can optionally start the Read
 .. code-block:: shell
 	:caption: Example Command to Run the Readiness Container
 
-	sudo docker compose -f docker-compose.readiness.yml up
+	sudo docker-compose -f docker-compose.readiness.yml up
 
 Integration Tests
 """""""""""""""""
@@ -137,14 +137,14 @@ There also exist TP and TO integration tests containers. Both of these container
 .. code-block:: shell
 	:caption: Running TP Integration Tests
 
-	sudo docker compose -f docker-compose.traffic-portal-test.yml up
+	sudo docker-compose -f docker-compose.traffic-portal-test.yml up
 
 .. code-block:: shell
 	:caption: Running TO Integration Tests
 
-	sudo docker compose -f docker-compose.traffic-ops-test.yml up
+	sudo docker-compose -f docker-compose.traffic-ops-test.yml up
 
-.. note:: If all CDN in a Box containers are started at once (example: ``docker compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up -d edge enroller dns db smtp trafficops trafficvault integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
+.. note:: If all CDN in a Box containers are started at once (example: ``docker-compose -f docker-compose.yml -f docker-compose.traffic-ops-test.yml up -d edge enroller dns db smtp trafficops trafficvault integration``), the :ref:`Enroller <ciab-enroller>` initial data load is skipped to prevent data conflicts with the :ref:`Traffic Ops API tests fixtures <dev-traffic-ops-fixtures>`.
 
 variables.env
 """""""""""""
@@ -285,7 +285,7 @@ Multiple optional containers may be combined by using a shell alias:
 
 	# From the infrastructure/cdn-in-a-box directory
 	# (Assuming the names of the optional services are stored in the `NAME1` and `NAME2` environment variables)
-	alias mydc="docker compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.$NAME1.yml -f  $PWD/optional/docker-compose.$NAME2.yml"
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.$NAME1.yml -f  $PWD/optional/docker-compose.$NAME2.yml"
 	docker volume prune -f
 	mydc build
 	mydc up
@@ -302,7 +302,7 @@ The TightVNC optional container provides a basic lightweight window manager (flu
 		:caption: CIAB Startup Using Bash Alias
 
 		# From infrastructure/cdn-in-a-box
-		alias mydc="docker compose "` \
+		alias mydc="docker-compose "` \
 			`"-f $PWD/docker-compose.yml "` \
 			`"-f $PWD/docker-compose.expose-ports.yml "` \
 			`"-f $PWD/optional/docker-compose.vnc.yml "` \
@@ -381,7 +381,7 @@ Dante's socks proxy is an optional container that can be used to provide browser
 		:caption: CIAB Startup Using Bash Alias
 
 		# From infrastructure/cdn-in-a-box
-		alias mydc="docker compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.socksproxy.yml"
+		alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.socksproxy.yml"
 		docker volume prune -f
 		mydc build
 		mydc kill
@@ -390,17 +390,17 @@ Dante's socks proxy is an optional container that can be used to provide browser
 
 #. Once the CDN-in-a-box stack has started, use the aforementioned browser to access Traffic Portal via the socks proxy on the docker host.
 
-.. seealso:: `The official Docker Compose documentation CLI reference <https://docs.docker.com/compose/reference/>`_ for complete instructions on how to pass service definition files to the ``docker compose`` executable.
+.. seealso:: `The official Docker Compose documentation CLI reference <https://docs.docker.com/compose/reference/>`_ for complete instructions on how to pass service definition files to the ``docker-compose`` executable.
 
 Static Subnet
 -------------
-Since ``docker compose`` will randomly create a subnet and it has a chance to conflict with your network environment, using static subnet is a good choice.
+Since ``docker-compose`` will randomly create a subnet and it has a chance to conflict with your network environment, using static subnet is a good choice.
 
 .. code-block:: shell
 	:caption: CIAB Startup with Static Subnet
 
 	# From the infrastructure/cdn-in-a-box directory
-	alias mydc="docker compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.static-subnet.yml"
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.static-subnet.yml"
 	docker volume prune -f
 	mydc build
 	mydc up
@@ -417,7 +417,7 @@ How to use it
 		:caption: CIAB Startup with VPN
 
 		# From infrastructure/cdn-in-a-box
-		alias mydc="docker compose -f $PWD/docker-compose.yml -f $PWD/docker-compose.expose-ports.yml -f $PWD/optional/docker-compose.vpn.yml -f $PWD/optional/docker-compose.vpn.expose-ports.yml"
+		alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/docker-compose.expose-ports.yml -f $PWD/optional/docker-compose.vpn.yml -f $PWD/optional/docker-compose.vpn.expose-ports.yml"
 		mydc down -v
 		mydc build
 		mydc up
@@ -444,12 +444,12 @@ If you want a GUI version of VPN client, we recommend `Tunnelblick <https://tunn
 
 Private Subnet for Routing
 """"""""""""""""""""""""""
-Since ``docker compose`` randomly creates a subnet, this container prepares 2 default private subnets for routing:
+Since ``docker-compose`` randomly creates a subnet, this container prepares 2 default private subnets for routing:
 
 * 172.16.127.0/255.255.240.0
 * 10.16.127.0/255.255.240.0
 
-The subnet that will be used is determined automatically based on the subnet prefix. If the subnet prefix which ``docker compose`` selected is ``192.`` or ``10.``, this container will select 172.16.127.0/255.255.240.0 for its routing subnet. Otherwise, it selects 10.16.127.0/255.255.240.0.
+The subnet that will be used is determined automatically based on the subnet prefix. If the subnet prefix which ``docker-compose`` selected is ``192.`` or ``10.``, this container will select 172.16.127.0/255.255.240.0 for its routing subnet. Otherwise, it selects 10.16.127.0/255.255.240.0.
 
 Of course, you can decide which routing subnet subnet by supplying the environment variables ``PRIVATE_NETWORK`` and ``PRIVATE_NETMASK``.
 
@@ -474,7 +474,7 @@ It is recommended that this be done using a custom bash alias.
 	:caption: CIAB Startup with Grafana
 
 	# From infrastructure/cdn-in-a-box
-	alias mydc="docker compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.grafana.yml -f $PWD/optional/docker-compose.grafana.expose-ports.yml"
+	alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.grafana.yml -f $PWD/optional/docker-compose.grafana.expose-ports.yml"
 	mydc down -v
 	mydc build
 	mydc up

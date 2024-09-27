@@ -27,6 +27,7 @@
 # connect to this OpenVPN server by it.
 
 ---
+version: '3.8'
 
 services:
   vpn:

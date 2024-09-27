@@ -24,7 +24,7 @@
 #
 # To start up CiaB with VNC optional container:
 # 
-# alias mydc="docker compose "` \
+# alias mydc="docker-compose "` \
 #   `"-f $PWD/docker-compose.yml "` \
 #   `"-f $PWD/docker-compose.expose-ports.yml "` \
 #   `"-f $PWD/optional/docker-compose.socksproxy.yml "` \
@@ -36,6 +36,7 @@
 # Note that this setup is intended for testing and not for production use.
 #
 ---
+version: '3.8'
 
 services:
   # Optional Socks Proxy for docker hosts that have limited bridge/ipforwarding support.

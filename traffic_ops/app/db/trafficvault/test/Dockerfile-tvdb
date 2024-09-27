@@ -19,9 +19,9 @@
 # Dockerfile for traffic vault db
 ############################################################
 
-ARG POSTGRES_VERSION
+ARG POSTGRES_VERSION=13.2
 FROM postgres:${POSTGRES_VERSION}
-ARG POSTGRES_VERSION
+ARG POSTGRES_VERSION=13.2
 ENV POSTGRES_VERSION=$POSTGRES_VERSION
 
 ENV POSTGRES_PASSWORD=twelve

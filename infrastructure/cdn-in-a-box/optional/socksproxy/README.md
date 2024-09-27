@@ -27,7 +27,7 @@ when running the CDN-In-A-Box stack on OSX/Windows docker host that lack network
 
 ```
 # From infrastructure/cdn-in-a-box
-alias mydc="docker compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.socksproxy.yml"
+alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.socksproxy.yml"
 docker volume prune -f
 mydc build 
 mydc kill 

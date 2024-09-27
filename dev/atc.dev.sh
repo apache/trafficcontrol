@@ -15,9 +15,9 @@
 # specific language governing permissions and limitations
 # under the License.
 
-alias atc-start="docker compose up -d --build";
-alias atc-build="docker compose build";
-alias atc-stop="docker compose kill && docker compose down -v --remove-orphans";
+alias atc-start="docker-compose up -d --build";
+alias atc-build="docker-compose build";
+alias atc-stop="docker-compose kill && docker-compose down -v --remove-orphans";
 
 function atc-restart {
 	if ! atc-stop $@; then

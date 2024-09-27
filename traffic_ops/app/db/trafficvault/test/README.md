@@ -30,8 +30,8 @@ NOTE: this test is similar to the TODB test found in traffic_ops_db/test/docker.
 1. Build a Traffic Ops rpm (from the project root): `./pkg traffic_ops_build`
 2. Copy the rpm to ./traffic_ops.rpm
 3. Optional: place a DB dump file in ./initdb.d (file name must end in "dump")
-4. `docker compose build`
-5. `docker compose up --exit-code-from trafficvault-db-admin`
+4. `docker-compose build`
+5. `docker-compose up --exit-code-from trafficvault-db-admin`
 
 ## Notes about data directory and AES keys
 

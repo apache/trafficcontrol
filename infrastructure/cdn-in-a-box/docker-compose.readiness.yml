@@ -15,21 +15,22 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# This docker compose file starts a readiness service that will exit
+# This docker-compose file starts a readiness service that will exit
 # successfully when it is able to successfully curl all delivery
 # service example URLs.
 #
 # For example:
 #
-#     docker compose -f docker-compose.yml -f docker-compose.readiness.yml up
+#     docker-compose -f docker-compose.yml -f docker-compose.readiness.yml up
 #
 # Or, start up the main services in the background and run the readiness
 # service in the foreground:
 #
-#     docker compose up -d
-#     docker compose -f docker-compose.readiness.yml up
+#     docker-compose up -d
+#     docker-compose -f docker-compose.readiness.yml up
 
 ---
+version: '3.8'
 
 services:
   readiness:

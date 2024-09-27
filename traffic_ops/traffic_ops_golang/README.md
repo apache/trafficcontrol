@@ -24,7 +24,7 @@
 To run `traffic_ops_golang` proxy locally the following prerequisites are needed:
 
 * Golang version greater or equal to the Go version found in the `GO_VERSION` file at the base of this repository. See: [https://golang.org/doc/install](https://golang.org/doc/install)
-* Postgres 13 or greater
+* Postgres 13.2 or greater
 
 
 ## Vendoring and Building

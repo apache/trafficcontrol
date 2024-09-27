@@ -6,4 +6,4 @@ From this directory, run `build_tests.sh`. This will build the Traffic Monitor R
 
 ## Running
 
-From this directory, run `docker compose run tmintegrationtest`
+From this directory, run `docker-compose run tmintegrationtest`

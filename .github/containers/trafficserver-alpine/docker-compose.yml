@@ -15,6 +15,7 @@
 # specific language governing permissions and limitations
 # under the License.
 
+version: '3.9'
 services:
   trafficserver:
     build:
@@ -22,11 +23,11 @@ services:
       dockerfile: Dockerfile
       args:
         ATS_VERSION: ${ATS_VERSION}
-      # This docker compose file is no longer used by the container-trafficserver-alpine.yml
+      # This docker-compose file is no longer used by the container-trafficserver-alpine.yml
       # Github Actions workflow and is here in case anyone wants to build it manually, since
       # the emulated aarch64 GitHub Actions job takes about 3 hours to run.
       # To build the trafficserver image for only your computer's own platform, run
-      #   docker compose build
+      #   docker-compose build
       #
       # To build and push a single image including both linux/amd64 and linux/arm64 platforms, run
       #   # docker/binfmt writes to /proc/sys/fs/binfmt_misc and its effects are cleared on reboot
@@ -41,4 +42,4 @@ services:
           - linux/amd64
           - linux/arm64
     # for example, ghcr.io/apache/trafficcontrol/ci/trafficserver-alpine:9.1.2
-    image: ${CONTAINER:-ghcr.io/${GITHUB_REPOSITORY:-apache/trafficcontrol}/ci/trafficserver-alpine}:${ATS_VERSION}
+    image: ${CONTAINER:-ghcr.io/apache/trafficcontrol/ci/trafficserver-alpine}:${ATS_VERSION}

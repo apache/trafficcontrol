@@ -19,8 +19,7 @@
 # Dockerfile for trafficops db
 ############################################################
 
-ARG POSTGRES_VERSION
-FROM postgres:${POSTGRES_VERSION}-alpine
+FROM postgres:13.2-alpine
 
 ENV POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 RUN apk add bind-tools \

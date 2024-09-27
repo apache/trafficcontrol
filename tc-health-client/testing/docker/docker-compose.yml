@@ -22,11 +22,12 @@
 #     container updates ../ort-tests/tc-fixtures.json with
 #     the corresponding version string)
 #
-#   Run: docker compose build
-#   Run: docker compose run ort_test
+#   Run: docker-compose build
+#   Run: docker-compose run ort_test
 #
 
 ---
+version: '3.8'
 
 volumes:
   trafficcontrol:
@@ -35,7 +36,7 @@ volumes:
 
 services:
   db:
-    image: postgres:${POSTGRES_VERSION}
+    image: postgres:13.2
     env_file:
       - variables.env
     ports: 

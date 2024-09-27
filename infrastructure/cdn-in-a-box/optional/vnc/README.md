@@ -25,7 +25,7 @@ This container provides a basic lightweight window manager (fluxbox), firefox br
 
 ```
 # From infrastructure/cdn-in-a-box
-alias mydc="docker compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vnc.yml"
+alias mydc="docker-compose -f $PWD/docker-compose.yml -f $PWD/optional/docker-compose.vnc.yml"
 docker volume prune -f
 mydc rm -fv 
 mydc kill 

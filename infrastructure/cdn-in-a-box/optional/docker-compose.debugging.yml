@@ -18,6 +18,7 @@
 # Exposes debugging ports
 
 ---
+version: '3.8'
 
 services:
   enroller:

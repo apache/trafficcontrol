@@ -53,14 +53,14 @@ if ($DOCKER -eq "") {
 
 Push-Location $PSScriptRoot;
 $COMPOSE_FILE = "./infrastructure/docker/build/docker-compose.yml";
-$COMPOSE = (Get-Command docker compose).Source;
+$COMPOSE = (Get-Command docker-compose).Source;
 $COMPOSE_ARGS = ""
 if ($COMPOSE -eq "") {
 	& $DOCKER "inspect docker-compose:latest";
 	if ($? -eq $false) {
 		& $DOCKER "pull docker-compose:latest";
 		if ($? -eq $false) {
-			Write-Error "Couldn't pull docker compose - please connect to the internet or install docker-compose." -Category NotInstalled;
+			Write-Error "Couldn't pull docker-compose - please connect to the internet or install docker-compose." -Category NotInstalled;
 			exit 1;
 		}
 	}

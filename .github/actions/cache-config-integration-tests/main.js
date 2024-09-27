@@ -19,7 +19,7 @@ const spawnOptions = {
 	stderr: "inherit",
 };
 
-const dockerCompose = ["docker", "compose", "-f", `${process.env.GITHUB_WORKSPACE}/cache-config/testing/docker/docker-compose.yml`];
+const dockerCompose = ["docker-compose", "-f", `${process.env.GITHUB_WORKSPACE}/cache-config/testing/docker/docker-compose.yml`];
 
 function runProcess(...commandArguments) {
 	console.info(...commandArguments);

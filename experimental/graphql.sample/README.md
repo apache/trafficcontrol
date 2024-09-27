@@ -1,13 +1,13 @@
 # GraphQL Testing
 
 ## Getting started
-1. Get docker and docker compose working
-2. `docker compose up -d`
+1. Get docker and docker-compose working
+2. `docker-compose up -d`
 3. Connect to PGAdmin at `localhost:80`
 4. Create a new database `traffic_ops` owned by a new role `traffic_ops`
 5. Restore a TO database dump
-6. Stop the local env `docker compose down`
-7. `docker compose up`
+6. Stop the local env `docker-compose down`
+7. `docker-compose up`
 8. Connect to the interactive query tester `localhost:5000/graphiql` and start experimenting
 
 ### PGModler (optional, mac)

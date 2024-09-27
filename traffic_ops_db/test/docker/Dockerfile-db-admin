@@ -19,18 +19,16 @@
 # Dockerfile to build Traffic Ops DB admin test environment
 ############################################################
 
-FROM rockylinux:8
-ARG POSTGRES_VERSION
+FROM centos:7
+ARG POSTGRES_VERSION=13.2
 ENV POSTGRES_VERSION=$POSTGRES_VERSION
 
-RUN dnf install -y \
-        epel-release \
-        libicu \
-        "https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-$(rpm --eval %_arch)/pgdg-redhat-repo-latest.noarch.rpm" \
+RUN yum install -y \
+		epel-release \
+		centos-release-scl-rh \
+		https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm \
     git && \
-    dnf -y --repo=pgdg13 install postgresql13 && \
-    dnf -y remove pgdg-redhat-repo && \
-    dnf -y --enablerepo=powertools install \
+    yum -y install           \
         cpanminus            \
         expat-devel          \
         libcap               \
@@ -49,8 +47,9 @@ RUN dnf install -y \
         perl-TermReadKey     \
         perl-Test-CPAN-Meta  \
         perl-WWW-Curl        \
-        python3 && \
-    dnf clean all
+        postgresql13         \
+        postgresql13-devel &&\
+    yum clean all
 
 # Override TRAFFIC_OPS_RPM arg to use a different one using --build-arg TRAFFIC_OPS_RPM=...  Can be local file or http://...
 ARG TRAFFIC_OPS_RPM=traffic_ops.rpm

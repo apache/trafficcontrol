@@ -22,8 +22,8 @@ After=docker.service
 
 [Service]
 Restart=always
-ExecStart=/usr/bin/docker compose -p traffic -f /opt/traffic_portal/docker/docker-compose.yml up
-ExecStop=/usr/bin/docker compose -p traffic -f /opt/traffic_portal/docker/docker-compose.yml down -v
+ExecStart=/usr/bin/docker-compose -p traffic -f /opt/traffic_portal/docker/docker-compose.yml up
+ExecStop=/usr/bin/docker-compose -p traffic -f /opt/traffic_portal/docker/docker-compose.yml down -v
 WorkingDirectory=/opt/traffic_portal/docker
 
 [Install]

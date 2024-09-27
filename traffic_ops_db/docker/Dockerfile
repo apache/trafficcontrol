@@ -11,8 +11,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-ARG POSTGRES_VERSION
-FROM postgres:${POSTGRES_VERSION}
+FROM postgres:13.2
 
 MAINTAINER dev@trafficcontrol.apache.org
 
