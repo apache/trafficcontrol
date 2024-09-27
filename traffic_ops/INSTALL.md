@@ -30,7 +30,7 @@ Instructions are here: https://yum.postgresql.org/
 
     `$ sudo yum install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm`
     
-## Install Postgres 13.2 server (in a container or on the host)
+## Install Postgres 13.16 server (in a container or on the host)
 
 ### on the host:
 
