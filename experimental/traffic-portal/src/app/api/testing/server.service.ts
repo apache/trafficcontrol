@@ -348,6 +348,42 @@ export class ServerService {
 	}
 
 	/**
+	 * Queues revalidations on a single server.
+	 *
+	 * @param server Either the server on which revalidations will be queued, or
+	 * its integral, unique identifier.
+	 * @returns The 'response' property of the TO server's response. See TO API
+	 * docs.
+	 */
+	public async queueReval(server: number | ResponseServer): Promise<void> {
+		const id = typeof(server) === "number" ? server : server.id;
+		const srv = this.servers.find(s=>s.id===id);
+		if (!srv) {
+			throw new Error(`no such Server: #${id}`);
+		}
+
+		srv.revalPending = true;
+	}
+
+	/**
+	 * Clears pending revalidations on a single server.
+	 *
+	 * @param server Either the server for which pending revalidations will be
+	 * cleared, or its integral, unique identifier.
+	 * @returns The 'response' property of the TO server's response. See TO API
+	 * docs.
+	 */
+	public async clearReval(server: number | ResponseServer): Promise<void> {
+		const id = typeof(server) === "number" ? server : server.id;
+		const srv = this.servers.find(s=>s.id===id);
+		if (!srv) {
+			throw new Error(`no such Server: #${id}`);
+		}
+
+		srv.revalPending = false;
+	}
+
+	/**
 	 * Updates a server's status.
 	 *
 	 * @param server Either the server that will have its status changed, or the integral, unique identifier thereof.
