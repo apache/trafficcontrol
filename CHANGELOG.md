@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
-##[8.0.2] - 2024-09-27
+## [8.0.2] - 2024-09-27
 - [#8081](https://github.com/apache/trafficcontrol/pull/8081) *GH Actions* Updates the versions used for actions/artifact-download and actions/artifact-upload.
 - [#8079](https://github.com/apache/trafficcontrol/pull/8079) *Traffic Ops DB* Update Postgres version to 13.16.
 - [#8071](https://github.com/apache/trafficcontrol/pull/8071) *Traffic Ops* Improve validation for the `id` field of the `PUT /deliveryservice_request_comments` endpoint.
