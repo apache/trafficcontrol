@@ -261,7 +261,7 @@ func (s statsRemaps) Stats(rule string) (StatsRemap, bool) {
 }
 
 func (s statsRemaps) Rules() []string {
-	rules := make([]string, len(s))
+	rules := make([]string, 0, len(s))
 	for rule := range s {
 		rules = append(rules, rule)
 	}

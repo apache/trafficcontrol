@@ -253,7 +253,7 @@ func (r literalPrefixRemapper) Remap(s string) (remapdata.RemapRule, bool) {
 }
 
 func (r literalPrefixRemapper) Rules() []remapdata.RemapRule {
-	rules := make([]remapdata.RemapRule, len(r.remap))
+	rules := make([]remapdata.RemapRule, 0, len(r.remap))
 	for _, rule := range r.remap {
 		rules = append(rules, rule)
 	}

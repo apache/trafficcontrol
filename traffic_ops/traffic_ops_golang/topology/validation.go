@@ -61,7 +61,7 @@ func checkForSelfParents(nodes []tc.TopologyNode, index int) error {
 func checkForEdgeParents(topology tc.TopologyV5, cacheGroups []tc.CacheGroupNullable, nodeIndex int) (tc.Alerts, error) {
 	var alerts tc.Alerts
 	node := topology.Nodes[nodeIndex]
-	errs := make([]error, len(node.Parents))
+	errs := make([]error, 0, len(node.Parents))
 	for parentIndex, parentCacheGroupIndex := range node.Parents {
 		if parentCacheGroupIndex < 0 || parentCacheGroupIndex >= len(topology.Nodes) {
 			errs = append(errs, fmt.Errorf("parent %d of cachegroup %s refers to a cachegroup at index %d, but no such cachegroup exists", parentIndex, node.Cachegroup, parentCacheGroupIndex))
@@ -99,7 +99,7 @@ func checkForEdgeParents(topology tc.TopologyV5, cacheGroups []tc.CacheGroupNull
 // an edge parents an edge, and returns an error if an edge parents a non-edge cachegroup.
 func (topology *TOTopology) checkForEdgeParents(cacheGroups []tc.CacheGroupNullable, nodeIndex int) error {
 	node := topology.Nodes[nodeIndex]
-	errs := make([]error, len(node.Parents))
+	errs := make([]error, 0, len(node.Parents))
 	for parentIndex, parentCacheGroupIndex := range node.Parents {
 		if parentCacheGroupIndex < 0 || parentCacheGroupIndex >= len(topology.Nodes) {
 			errs = append(errs, fmt.Errorf("parent %d of cachegroup %s refers to a cachegroup at index %d, but no such cachegroup exists", parentIndex, node.Cachegroup, parentCacheGroupIndex))
