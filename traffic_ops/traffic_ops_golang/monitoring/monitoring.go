@@ -458,7 +458,7 @@ func getProfiles(tx *sql.Tx, caches []Cache, routers []Router) ([]Profile, error
 		}
 	}
 
-	profilesArr := make([]Profile, len([]Profile{}))
+	profilesArr := make([]Profile, 0, len([]Profile{}))
 	for _, profile := range profiles {
 		profilesArr = append(profilesArr, profile)
 	}
