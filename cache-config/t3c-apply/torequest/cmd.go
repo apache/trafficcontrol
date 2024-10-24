@@ -241,7 +241,7 @@ func getPackages(cfg config.Cfg) ([]Package, error) {
 func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, configApplyBool, revalApplyBool *bool) error {
 	args := []string{
 		`update`,
-		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeout/time.Millisecond), 10),
 		"--traffic-ops-user=" + cfg.TOUser,
 		"--traffic-ops-password=" + cfg.TOPass,
 		"--traffic-ops-url=" + cfg.TOURL,
@@ -519,7 +519,7 @@ func request(cfg config.Cfg, command string) ([]byte, error) {
 	args := []string{
 		`request`,
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
-		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeout/time.Millisecond), 10),
 		"--cache-host-name=" + cfg.CacheHostName,
 		`--get-data=` + command,
 	}
@@ -577,7 +577,7 @@ func requestConfig(cfg config.Cfg) ([]byte, error) {
 	args := []string{
 		"request",
 		"--traffic-ops-insecure=" + strconv.FormatBool(cfg.TOInsecure),
-		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeoutMS), 10),
+		"--traffic-ops-timeout-milliseconds=" + strconv.FormatInt(int64(cfg.TOTimeout/time.Millisecond), 10),
 		"--cache-host-name=" + cfg.CacheHostName,
 		`--get-data=config`,
 	}
