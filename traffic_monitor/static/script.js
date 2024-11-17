@@ -131,7 +131,7 @@ function getEvents() {
 		const events = JSON.parse(r).events || [];
 		for (const event of events.slice(lastEvent+1)) {
 			lastEvent = event.index;
-			const row = document.getElementById("event-log").insertRow(0);
+			const row = document.getElementById("event-log").insertRow(-1);
 
 			row.insertCell(0).textContent = event.name;
 			row.insertCell(1).textContent = event.type;
