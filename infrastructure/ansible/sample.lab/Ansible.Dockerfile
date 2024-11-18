@@ -12,23 +12,22 @@
 # limitations under the License.
 #
 
-FROM centos:7.4.1708
-MAINTAINER Jonathan Gray
-RUN yum -y install epel-release \
-  && yum -y install \
+FROM rockylinux:8
+RUN dnf -y install epel-release \
+  && dnf -y install \
   ansible \
   git \
-  python-pip \
-  python-devel \
+  python3-pip \
+  python3-devel \
   libxml2-devel \
   libxslt-devel \
   libffi-devel \
   openssl-devel \
   gcc \
-  && yum clean all \
-  && pip install --upgrade pip \
-  && pip install --upgrade setuptools \
-  && pip install --upgrade pyOpenSSL python-gilt paramiko Jinja2
+  && dnf clean all \
+  && pip3 install --upgrade pip \
+  && pip3 install --upgrade setuptools \
+  && pip3 install --upgrade pyOpenSSL python-gilt paramiko Jinja2
 RUN mkdir -p /opt/atc/ && mkdir ~/.ssh && echo -e "Host *\n   StrictHostKeyChecking no\n   UserKnownHostsFile=/dev/null" > ~/.ssh/config
 COPY . /opt/atc
 
