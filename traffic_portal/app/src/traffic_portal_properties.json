@@ -206,6 +206,13 @@
         "baseUrl": "https://trafficstats.domain.com/dashboard/script/traffic_ops_server.js?which="
       }
     },
+    "parameters": {
+      "_comment": "Parameter settings",
+      "comment": {
+        "_comment": "Show/hide comment field",
+        "show": false
+      }
+    },
     "changeLogs": {
       "_comment": "Change log settings",
       "days": 7

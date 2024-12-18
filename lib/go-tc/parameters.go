@@ -53,6 +53,7 @@ type Parameter struct {
 	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
 	Secure      bool            `json:"secure" db:"secure"`
 	Value       string          `json:"value" db:"value"`
+	Comment     string          `json:"comment" db:"comment"`
 }
 
 // ParameterNullable is exactly like Parameter except that its properties are
@@ -68,6 +69,7 @@ type ParameterNullable struct {
 	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
 	Secure      *bool           `json:"secure" db:"secure"`
 	Value       *string         `json:"value" db:"value"`
+	Comment     *string         `json:"comment" db:"comment"`
 }
 
 // ParametersResponseV5 is an alias for the latest minor version for the major version 5.
@@ -95,6 +97,7 @@ type ParameterV50 struct {
 	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
 	Secure      bool            `json:"secure" db:"secure"`
 	Value       string          `json:"value" db:"value"`
+	Comment     string          `json:"comment" db:"comment"`
 }
 
 // ParameterNullableV5 is an alias for the latest minor version for the major version 5.
@@ -113,6 +116,7 @@ type ParameterNullableV50 struct {
 	Profiles    json.RawMessage `json:"profiles" db:"profiles"`
 	Secure      *bool           `json:"secure" db:"secure"`
 	Value       *string         `json:"value" db:"value"`
+	Comment     *string         `json:"comment" db:"comment"`
 }
 
 // ProfileParameterByName is a structure that's used to represent a Parameter

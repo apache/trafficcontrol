@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ### Added
 - [#8014](https://github.com/apache/trafficcontrol/pull/8014) *Traffic Ops* Added logs to indicate which mechanism a client used to login to TO.
 - [#7812](https://github.com/apache/trafficcontrol/pull/7812) *Traffic Portal*: Expose the `configUpdateFailed` and `revalUpdateFailed` fields on the server table.
+- [#7845](https://github.com/apache/trafficcontrol/pull/7845) *Traffic Ops, Traffic Portal*: Add `comment` field to parameters
 - [#7870](https://github.com/apache/trafficcontrol/pull/7870) *Traffic Portal*: Adds a hyperlink to the DSR page to the DS itself for ease of navigation.
 - [#7896](https://github.com/apache/trafficcontrol/pull/7896) *ATC Build system*: Count commits since the last release, not commits
 - [#7927](https://github.com/apache/trafficcontrol/pull/7927) *Traffic Stats*: Migrate dynamic scripted Grafana Dashboards to Scenes
