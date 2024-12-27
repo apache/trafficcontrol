@@ -33,6 +33,7 @@ jobs:
       PR_GITHUB_TOKEN: ${{ secrets.ASFCI_TOKEN }}
       GO_VERSION_FILE: GO_VERSION
       ENV_FILE: .env
+      GO_MOD_FILE: go.mod
     steps:
       - name: Checkout repo
         uses: actions/checkout@master

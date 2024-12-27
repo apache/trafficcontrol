@@ -45,8 +45,9 @@ Environment Variables
 +----------------------------+----------------------------------------------------------------------------------+
 | ``GO_VERSION_FILE``        | Required. The file in the repo containing the version of Go used by the repo.    |
 +----------------------------+----------------------------------------------------------------------------------+
-
-
+| ``GO_MOD_FILE``            | Optional. The go.mod file in the repo containing the version of Go used by the   |
+|                            | repo. If not provided, the action will not update the go.mod file.               |
++----------------------------+----------------------------------------------------------------------------------+
 Outputs
 =======
 
@@ -66,6 +67,7 @@ Example usage
 	    GIT_AUTHOR_NAME: asf-ci-trafficcontrol
 	    GITHUB_TOKEN: ${{ github.token }}
 	    GO_VERSION_FILE: GO_VERSION
+	    GO_MOD_FILE: go.mod
 
 Tests
 =====

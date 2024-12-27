@@ -60,7 +60,6 @@ local.tar.gz
 # Editor/IDE configuration files
 *.sublime-project
 *.sublime-workspace
-.vscode/
 __debug_bin*
 *.code-workspace
 *.pydevproject
@@ -84,3 +83,5 @@ __debug_bin*
 junit/
 # local install of Python packages in "edit" mode
 *.egg-info/
+config.bat
+node_modules
