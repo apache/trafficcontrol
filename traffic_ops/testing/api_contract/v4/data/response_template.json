@@ -2301,5 +2301,32 @@
                 ]
             }
         }
+    },
+    "types":{
+        "type": "object",
+        "required": [
+            "id",
+            "lastUpdated",
+            "name",
+            "description",
+            "useInTable"
+        ],
+        "properties": {
+            "id": {
+                "type": "integer"
+            },
+            "lastUpdated": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "description": {
+                "type": "string"
+            },
+            "useInTable": {
+                "type": "string"
+            }
+        }
     }
 }
