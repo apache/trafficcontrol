@@ -419,9 +419,11 @@
 			"replace": true
 		}
 	],
-	"federation_federation_resolver":[
+	"federation_federation_resolver": [
 		{
-			"fedResolverIds": [39],
+			"fedResolverIds": [
+				39
+			],
 			"replace": true
 		}
 	],
@@ -450,7 +452,7 @@
 	"service_category": [
 		{
 			"name": "SERVICE-CATEGORY-NAME"
-      }
+		}
 	],
 	"federation_resolver": [
 		{
@@ -467,19 +469,28 @@
 			"typeId": 41
 		}
 	],
-  "server_server_capabilities":[
+	"server_server_capabilities": [
 		{
 			"serverId": 1,
 			"serverCapability": "disk"
-    	}
-  	],
-	  "logs":[
+		}
+	],
+	"logs": [
 		{
 			"ticketNum": null,
 			"level": "APICHANGE",
 			"user": "admin",
 			"id": 444,
 			"message": "log for test purposes"
+		}
+	],
+	"delivery_service_server": [
+		{
+			"dsId": 41,
+			"replace": true,
+			"servers": [
+				71
+			]
 		}
 	]
 }
