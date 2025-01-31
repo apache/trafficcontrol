@@ -111,7 +111,6 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
-	toTimeoutMS := time.Millisecond * time.Duration(*toTimeoutMSPtr)
 	toURL := *toURLPtr
 	toUser := *toUserPtr
 	toPass := *toPassPtr
@@ -156,7 +155,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 			CacheHostName:  cacheHostName,
 			GetData:        *getDataPtr,
 			TOInsecure:     *toInsecurePtr,
-			TOTimeoutMS:    toTimeoutMS,
+			TOTimeout:      time.Millisecond * time.Duration(*toTimeoutMSPtr),
 			TOUser:         toUser,
 			TOPass:         toPass,
 			TOURL:          toURLParsed,
@@ -193,7 +192,7 @@ func (cfg Cfg) PrintConfig() {
 	log.Debugf("LoginDispersion : %s\n", cfg.LoginDispersion)
 	log.Debugf("CacheHostName: %s\n", cfg.CacheHostName)
 	log.Debugf("TOInsecure: %v\n", cfg.TOInsecure)
-	log.Debugf("TOTimeoutMS: %s\n", cfg.TOTimeoutMS)
+	log.Debugf("TOTimeout: %v\n", cfg.TOTimeout)
 	log.Debugf("TOUser: %s\n", cfg.TOUser)
 	log.Debugf("TOPass: xxxxxx\n")
 	log.Debugf("TOURL: %s\n", cfg.TOURL)

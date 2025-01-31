@@ -66,6 +66,13 @@ type TOClient struct {
 	NumRetries int
 }
 
+func (cl *TOClient) Timeout() time.Duration {
+	if cl.c != nil {
+		return cl.c.Client.Timeout
+	}
+	return cl.old.Timeout()
+}
+
 func (cl *TOClient) URL() string {
 	if cl.c == nil {
 		return cl.old.URL()
@@ -90,6 +97,7 @@ func (cl *TOClient) HTTPClient() *http.Client {
 
 // New logs into Traffic Ops, returning the TOClient which contains the logged-in client.
 func New(url *url.URL, user string, pass string, insecure bool, timeout time.Duration, userAgent string) (*TOClient, error) {
+	log.Infof("toreq.New timeout %+v\n", timeout)
 	log.Infoln("URL: '" + url.String() + "' User: '" + user + "' Pass len: '" + strconv.Itoa(len(pass)) + "'")
 
 	cookiePath := torequtil.CookieCachePath(user)

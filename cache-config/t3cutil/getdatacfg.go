@@ -185,6 +185,7 @@ func MakeReqMetaData(respHdr http.Header) ReqMetaData {
 //
 // The revalOnly arg is whether to only get data necessary to revalidate, versus all data necessary to generate cache config.
 func GetConfigData(toClient *toreq.TOClient, disableProxy bool, cacheHostName string, revalOnly bool, oldCfg *ConfigData, version string) (*ConfigData, error) {
+	log.Infof("GetConfigData cl.NumRetries: %+v cl.Client.Timeout %+v\n", toClient.NumRetries, toClient.Timeout())
 	start := time.Now()
 	defer func() { log.Infof("GetTOData took %v\n", time.Since(start)) }()
 
