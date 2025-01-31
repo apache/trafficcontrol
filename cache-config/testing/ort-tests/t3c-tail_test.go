@@ -16,7 +16,7 @@ package orttest
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"os/exec"
 	"testing"
 
@@ -93,7 +93,7 @@ func t3cUpdateWithTail(host string, runMode string, withTail bool) ([]byte, erro
 	cmd.Stderr = &errOut
 	err := cmd.Run()
 	if err != nil {
-		return nil, errors.New(err.Error() + ": " + "stdout: " + out.String() + " stderr: " + errOut.String())
+		return nil, fmt.Errorf("%w: stdout: %s stderr: %s", err, out.String(), errOut.String())
 	}
 	return errOut.Bytes(), nil
 }

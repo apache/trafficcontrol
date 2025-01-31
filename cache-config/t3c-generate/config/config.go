@@ -128,7 +128,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	if *verbosePtr > 2 {
-		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
+		return Cfg{}, errors.New("too many verbose options; the maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
 	// The flag takes the full version, for forward-compatibility in case we need it in the future,
@@ -138,7 +138,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		err := error(nil)
 		atsMajorVersion, err = atscfg.GetATSMajorVersionFromATSVersion(*atsVersion)
 		if err != nil {
-			return Cfg{}, errors.New("parsing ATS version '" + *atsVersion + "': " + err.Error())
+			return Cfg{}, fmt.Errorf("parsing ATS version '%s': %w", *atsVersion, err)
 		}
 	}
 
@@ -190,7 +190,7 @@ func GetCfg(appVersion string, gitRevision string) (Cfg, error) {
 		Cache:              *cache,
 	}
 	if err := log.InitCfg(cfg); err != nil {
-		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
+		return Cfg{}, fmt.Errorf("initializing loggers: %w", err)
 	}
 	return cfg, nil
 }
