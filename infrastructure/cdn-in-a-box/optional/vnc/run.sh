@@ -58,6 +58,26 @@ else
    sleep 1
 fi
 
-su -c "vncserver :$VNC_INSTANCE_NUM -depth $VNC_DEPTH -geometry $VNC_RESOLUTION" - "$VNC_USER" 
+su -c "Xvnc :$VNC_INSTANCE_NUM -depth $VNC_DEPTH -geometry $VNC_RESOLUTION -rfbauth /home/$VNC_USER/.vnc/passwd &" - "$VNC_USER"
+
+# Wait a moment for Xvnc to start
+sleep 2
+
+# Set DISPLAY environment variable
+export DISPLAY=:$VNC_INSTANCE_NUM
+
+# Wait for Traffic Portal to be available
+until nc 'trafficportal.infra.ciab.test' 443 </dev/null >/dev/null 2>&1; do
+  echo "Waiting for Traffic Portal to start" 
+  sleep 2
+done
+
+# Start Fluxbox and desktop components
+su -c "DISPLAY=:$VNC_INSTANCE_NUM fluxbox &" - "$VNC_USER"
+su -c "DISPLAY=:$VNC_INSTANCE_NUM xterm &" - "$VNC_USER"
+su -c "DISPLAY=:$VNC_INSTANCE_NUM firefox https://trafficportal.infra.ciab.test &" - "$VNC_USER"
+
+# Set a nice background color
+su -c "DISPLAY=:$VNC_INSTANCE_NUM xsetroot -solid '#4A7AA7' &" - "$VNC_USER"
 
 tail -F -- /home/ciabuser/.vnc/vnc*:9.log
