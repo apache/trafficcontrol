@@ -433,7 +433,7 @@ public final class RegionalGeo {
             if(!"Denied".equals(redirectURIString)){
                 routeResult.addUrl(new URL(redirectURIString));
             }else{
-                LOGGER.warn("RegionalGeo: this needs a better error message, createRedirectURIString returned denied");
+                LOGGER.debug("RegionalGeo: no availabe cache for relative path, 503 will be sent");
             }
         }
     }
@@ -468,16 +468,20 @@ public final class RegionalGeo {
     private static String createRedirectURIString(final HTTPRequest request, final DeliveryService deliveryService, 
         final Cache cache, final RegionalGeoResult regionalGeoResult) {
 
+        if (regionalGeoResult.getType() == ALTERNATE_WITHOUT_CACHE) {
+            return regionalGeoResult.getUrl();
+        }
+
+        if (cache == null) {
+            return "Denied";
+        }
+
         if (regionalGeoResult.getType() == ALLOWED) {
             return deliveryService.createURIString(request, cache);
         }
 
         if (regionalGeoResult.getType() == ALTERNATE_WITH_CACHE) {
             return deliveryService.createURIString(request, regionalGeoResult.getUrl(), cache);
-        }
-
-        if (regionalGeoResult.getType() == ALTERNATE_WITHOUT_CACHE) {
-            return regionalGeoResult.getUrl();
         }
 
         return "Denied"; // DENIED
