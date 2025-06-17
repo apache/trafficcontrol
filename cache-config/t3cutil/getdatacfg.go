@@ -894,8 +894,8 @@ func FilterDSS(dsses []tc.DeliveryServiceServer, dsIDs map[int]struct{}, serverI
 // FilterParams filters params and returns only the parameters which match configFile, name, and value.
 // If configFile, name, or value is the empty string, it is not filtered.
 // Returns a slice of parameters.
-func FilterParams(params []tc.Parameter, configFile string, name string, value string, omitName string) []tc.Parameter {
-	filtered := []tc.Parameter{}
+func FilterParams(params []tc.ParameterV5, configFile string, name string, value string, omitName string) []tc.ParameterV5 {
+	filtered := []tc.ParameterV5{}
 	for _, param := range params {
 		if configFile != "" && param.ConfigFile != configFile {
 			continue
