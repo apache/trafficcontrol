@@ -39,6 +39,7 @@ remote_ats_version() {
 	last_tag="$(<<<"$refs" grep -oE 'refs/tags/[0-9.]+$' |
 		cut -d/ -f3 |
 		grep -F "${branch::$((${#branch} - 1))}" |
+		sort -V |
 		tail -n1)"
 
 	# $release is the number of commits between $release to $branch.
