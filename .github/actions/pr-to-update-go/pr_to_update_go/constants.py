@@ -25,6 +25,8 @@ Environment variable names, and the meanings of the values of those variables:
 	ENV_ENV_FILE                - The repository-relative path to an environment file containing
 	                              a line setting the variable GO_VERSION to the Go version
 	                              (e.g. GO_VERSION=3.2.1)
+	ENV_GO_MOD_FILE             - The repository-relative path to the go.mod file containing the
+	                              version of Go used by the repo (e.g. go 3.2.1).
 
 Miscellaneous:
 
@@ -70,6 +72,13 @@ ENV_GO_VERSION_FILE: Final = 'GO_VERSION_FILE'
 The name of the environment variable set to repository-relative path to the file
 containing the Go version.
 """
+
+ENV_GO_MOD_FILE: Final = 'GO_MOD_FILE'
+"""
+The name of the environment variable set to repository-relative path to the
+go.mod file containing the version of Go used by the repo (e.g. go 3.2.1).
+"""
+
 
 ENV_ENV_FILE: Final = 'ENV_FILE'
 """
