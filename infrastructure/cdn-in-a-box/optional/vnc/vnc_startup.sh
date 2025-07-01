@@ -16,19 +16,11 @@
 # specific language governing permissions and limitations
 # under the License.
 
-VNC_DEPTH=${VNC_DEPTH:-32}
-VNC_RESOLUTION=${VNC_DEPTH:-1440x900}
+# startfluxbox &
 
-startfluxbox &
-
-sleep 3
+# sleep 3
 
 vncconfig -iconic &
-xterm -bg black -fg white +sb &
-
-until nc 'trafficportal.infra.ciab.test' 443 </dev/null >/dev/null 2>&1; do
-  echo "Waiting for Traffic Portal to start" 
-  sleep 2
-done
-
-firefox 'http://trafficportal.infra.ciab.test' &
+fluxbox &
+xsetroot -solid '#4A7AA7' &
+xterm &
