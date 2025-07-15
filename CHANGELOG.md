@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7870](https://github.com/apache/trafficcontrol/pull/7870) *Traffic Portal*: Adds a hyperlink to the DSR page to the DS itself for ease of navigation.
 - [#7896](https://github.com/apache/trafficcontrol/pull/7896) *ATC Build system*: Count commits since the last release, not commits
 - [#7927](https://github.com/apache/trafficcontrol/pull/7927) *Traffic Stats*: Migrate dynamic scripted Grafana Dashboards to Scenes
+- [#8136](https://github.com/apache/trafficcontrol/pull/8136) *Docs*: Update Python version from 3.8 to 3.12.
 
 ### Changed
 - [#7614](https://github.com/apache/trafficcontrol/pull/7614) *Traffic Ops* The database upgrade process no longer overwrites changes users may have made to the initially seeded data.
