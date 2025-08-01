@@ -50,6 +50,7 @@ from pr_to_update_go.constants import (
 	GO_REPO_NAME,
 	RELEASE_PAGE_URL,
 	ENV_GO_VERSION_FILE,
+	ENV_GO_MOD_FILE,
 	ENV_GIT_AUTHOR_NAME,
 	GIT_AUTHOR_EMAIL_TEMPLATE,
 	GO_VERSION_KEY,
@@ -375,7 +376,7 @@ class GoPRMaker:
 		Makes the commits necessary to change the Go version used by the
 		repository.
 
-		This includes updating the GO_VERSION and .env files at the repository's
+		This includes updating the GO_VERSION, GO_MOD, and .env files at the repository's
 		root.
 		"""
 		master_tip = self.repo.get_branch('master').commit
@@ -388,11 +389,18 @@ class GoPRMaker:
 		with open(go_version_file, 'w') as go_version_file_stream:
 			go_version_file_stream.write(f'{go_version}\n')
 		env_file = getenv(ENV_ENV_FILE)
+		go_mod_file = getenv(ENV_GO_MOD_FILE)
+		if go_mod_file:
+			with open(go_mod_file, 'r') as go_mod_file_stream:
+				content = go_mod_file_stream.read()
+				updated_content = re.sub(r'go \d+\.\d+(\.\d+)?', f'go {go_version}', content)
+			with open(go_mod_file, 'w') as go_mod_file_stream:
+				go_mod_file_stream.write(updated_content)
 		env_path = PurePath(os.path.dirname(env_file), ".env")
 		set_key(dotenv_path=env_path, key_to_set=GO_VERSION_KEY, value_to_set=go_version,
 			quote_mode='never')
 		return self.update_files_on_tree(head=master_tip, files_to_check=[go_version_file,
-			env_file], commit_message=commit_message, source_branch_name=source_branch_name)
+			env_file, go_mod_file], commit_message=commit_message, source_branch_name=source_branch_name)
 
 	def update_files_on_tree(self, head: Union[Commit, GitCommit], files_to_check: list[str],
 			commit_message: str, source_branch_name:
