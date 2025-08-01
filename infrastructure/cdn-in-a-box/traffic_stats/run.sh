@@ -100,6 +100,7 @@ cat <<-EOF >/opt/traffic_stats/conf/traffic_stats_seelog.xml
 </seelog>
 EOF
 
+mkdir -p /var/log/traffic_stats
 touch /var/log/traffic_stats/traffic_stats.log
 
 # Wait for influxdb
