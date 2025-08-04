@@ -141,6 +141,10 @@
 		<property name="password" value="$[traffic_ops.password]" />
 	</bean>
 
+	<bean id="authFilter" class="org.apache.traffic_control.traffic_router.core.security.ApiAuthFilter">
+		<property name="userFile" value="file:$[deploy.dir:/opt/traffic_router]/conf/users.properties"/>
+	</bean>
+
 	<bean id="maxmindGeolocationService" class="org.apache.traffic_control.traffic_router.core.loc.MaxmindGeolocationService"/>
 	<bean id="anonymousIpDatabaseService" class="org.apache.traffic_control.traffic_router.core.loc.AnonymousIpDatabaseService"/>
 	
