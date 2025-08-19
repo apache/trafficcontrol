@@ -1969,3 +1969,39 @@ def logs_data(to_session: TOSession, request_template_data: list[JSONData],
 	change_log_id = resp_obj.get("id")
 
 	yield [change_log_id, resp_obj]
+
+
+@pytest.fixture(name="delivery_service_server_post_data")
+def delivery_service_server_data_post(to_session: TOSession,
+		request_template_data: list[JSONData], delivery_services_post_data:dict[str, object],
+		server_post_data:dict[str, object]) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for delivery_service_server endpoint.
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get delivery_service_server request template.
+	:returns: Sample POST data and the actual API response.
+	"""
+
+	delivery_service_server = check_template_data(
+		request_template_data["delivery_service_server"], "delivery_service_server")
+
+	# Return new post data and post response from delivery_service_server POST request
+	deliveryServiceID = delivery_services_post_data["id"]
+	serverID = server_post_data["id"]
+	delivery_service_server["dsId"] = deliveryServiceID
+	delivery_service_server["servers"] = [serverID]
+
+	logger.info("New delivery_service_server data to hit POST method %s",
+	     delivery_service_server)
+	# Hitting delivery_service_server POST methed
+	response: tuple[JSONData, requests.Response] = to_session.assign_deliveryservice_servers_by_ids(
+		data=delivery_service_server)
+	resp_obj = check_template_data(response, "delivery_service_server")
+	yield resp_obj
+	msg = to_session.delete_deliveryservice_servers_by_id(delivery_service_id=deliveryServiceID,
+						       server_id=serverID)
+	logger.info("Deleting delivery_service_server data... %s", msg)
+	if msg is None:
+		logger.error(
+		"delivery_service_server returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
