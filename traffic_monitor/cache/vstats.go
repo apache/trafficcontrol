@@ -23,6 +23,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
+	"strings"
 
 	"github.com/apache/trafficcontrol/v8/lib/go-log"
 	"github.com/apache/trafficcontrol/v8/traffic_monitor/todata"
@@ -75,5 +77,70 @@ func vstatsParse(cacheName string, r io.Reader, _ interface{}) (Statistics, map[
 }
 
 func vstatsPrecompute(cacheName string, data todata.TOData, stats Statistics, miscStats map[string]interface{}) PrecomputedData {
-	return PrecomputedData{DeliveryServiceStats: map[string]*DSStat{}}
+	dsStats := make(map[string]*DSStat)
+	var precomputed PrecomputedData
+	precomputed.OutBytes = 0
+	precomputed.MaxKbps = 0
+	for _, iface := range stats.Interfaces {
+		precomputed.OutBytes += iface.BytesOut
+		kbps := iface.Speed * 1000
+		if kbps > precomputed.MaxKbps {
+			precomputed.MaxKbps = kbps
+		}
+	}
+
+	for name, value := range miscStats {
+		parts := strings.Split(name, ".")
+		subsubdomain := parts[0]
+		subdomain := parts[1]
+		domain := strings.Join(parts[2:len(parts)-1], ".")
+
+		ds, ok := data.DeliveryServiceRegexes.DeliveryService(domain, subdomain, subsubdomain)
+		if !ok {
+			precomputed.Errors = append(
+				precomputed.Errors,
+				fmt.Errorf("no Delivery Service match for '%s.%s.%s'", subsubdomain, subdomain, domain),
+			)
+			continue
+		}
+		if ds == "" {
+			precomputed.Errors = append(
+				precomputed.Errors,
+				fmt.Errorf("empty Delivery Service fqdn '%s.%s.%s'", subsubdomain, subdomain, domain),
+			)
+			continue
+		}
+
+		dsName := string(ds)
+
+		vstatsProcessCounter(dsStats, dsName, parts[len(parts)-1], value)
+	}
+	precomputed.DeliveryServiceStats = dsStats
+
+	return precomputed
+}
+
+func vstatsProcessCounter(dsStats map[string]*DSStat, dsName, category string, value interface{}) error {
+	if stat, ok := dsStats[dsName]; stat == nil || !ok {
+		dsStats[dsName] = new(DSStat)
+	}
+	parsedValue, ok := value.(float64)
+	if !ok {
+		// only float counters are used now
+		return fmt.Errorf("expected counter value of type float got type: %T, for value: %v", value, value)
+	}
+	statusCode, err := strconv.ParseInt(category, 10, 64)
+
+	if err == nil {
+		if statusCode >= 200 && statusCode < 300 {
+			dsStats[dsName].Status2xx += uint64(parsedValue)
+		} else if statusCode >= 300 && statusCode < 400 {
+			dsStats[dsName].Status3xx += uint64(parsedValue)
+		} else if statusCode >= 400 && statusCode < 500 {
+			dsStats[dsName].Status4xx += uint64(parsedValue)
+		} else if statusCode >= 500 && statusCode < 600 {
+			dsStats[dsName].Status5xx += uint64(parsedValue)
+		}
+	}
+	return nil
 }
