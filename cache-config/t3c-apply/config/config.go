@@ -626,9 +626,9 @@ If any of the related flags are also set, they override the mode's default behav
 
 	toURLParsed, err := url.Parse(toURL)
 	if err != nil {
-		return Cfg{}, errors.New("parsing Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
+		return Cfg{}, fmt.Errorf("parsing Traffic Ops URL from %s '%s': %w", urlSourceStr, toURL, err)
 	} else if err = validateURL(toURLParsed); err != nil {
-		return Cfg{}, errors.New("invalid Traffic Ops URL from " + urlSourceStr + " '" + toURL + "': " + err.Error())
+		return Cfg{}, fmt.Errorf("invalid Traffic Ops URL from %s '%s': %w", urlSourceStr, toURL, err)
 	}
 
 	svcManagement := getOSSvcManagement()
@@ -681,7 +681,7 @@ If any of the related flags are also set, they override the mode's default behav
 	}
 
 	if err = log.InitCfg(cfg); err != nil {
-		return Cfg{}, errors.New("Initializing loggers: " + err.Error() + "\n")
+		return Cfg{}, fmt.Errorf("initializing loggers: %w", err)
 	}
 
 	if len(fatalLogStrs) > 0 {
@@ -756,11 +756,11 @@ func GetATSVersionStr(tsHome string) (string, error) {
 
 	stdOut, stdErr, code := t3cutil.Do(`sh`, `-c`, `set -o pipefail && `+tsPath+` --version | head -1 | awk '{print $3}'`)
 	if code != 0 {
-		return "", fmt.Errorf("traffic_server --version returned code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+		return "", fmt.Errorf("traffic_server --version returned code %d stderr '%s' stdout '%s'", code, string(stdErr), string(stdOut))
 	}
 	atsVersion := strings.TrimSpace(string(stdOut))
 	if atsVersion == "" {
-		return "", fmt.Errorf("traffic_server --version returned nothing, code %v stderr '%v' stdout '%v'", code, string(stdErr), string(stdOut))
+		return "", fmt.Errorf("traffic_server --version returned nothing, code %d stderr '%s' stdout '%s'", code, string(stdErr), string(stdOut))
 	}
 	return atsVersion, nil
 }

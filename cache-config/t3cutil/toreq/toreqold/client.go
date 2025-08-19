@@ -25,7 +25,7 @@ package toreqold
  */
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -71,7 +71,7 @@ func New(url *url.URL, user string, pass string, insecure bool, timeout time.Dur
 	opts.RequestTimeout = timeout
 	toClient, inf, err := toclient.Login(toURLStr, user, pass, opts)
 	if err != nil {
-		return nil, errors.New("Logging in to Traffic Ops '" + torequtil.MaybeIPStr(inf.RemoteAddr) + "': " + err.Error())
+		return nil, fmt.Errorf("logging in to Traffic Ops '%s': %w", torequtil.MaybeIPStr(inf.RemoteAddr), err)
 	}
 
 	return &TOClient{c: toClient}, nil

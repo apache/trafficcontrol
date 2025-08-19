@@ -21,11 +21,12 @@ package toreqold
 
 import (
 	"fmt"
+	"net/http"
+	"net/url"
+
 	"github.com/apache/trafficcontrol/v8/lib/go-tc"
 	"github.com/apache/trafficcontrol/v8/traffic_ops/toclientlib"
 	toclient "github.com/apache/trafficcontrol/v8/traffic_ops/v4-client"
-	"net/http"
-	"net/url"
 )
 
 // GetParametersByConfigFile returns the parameters with the given config file from Traffic Ops.
@@ -58,9 +59,9 @@ func GetCDNByName(toClient *toclient.Session, name tc.CDNName, opts *toclient.Re
 	} else if reqInf.StatusCode == http.StatusNotModified {
 		return tc.CDN{}, reqInf, nil
 	} else if len(cdns.Response) == 0 {
-		return tc.CDN{}, reqInf, fmt.Errorf("name '"+string(name)+" ' not found (no error, but len 0) reqInf %+v cdns %+v", reqInf, cdns)
+		return tc.CDN{}, reqInf, fmt.Errorf("name '%s' not found (no error, but len 0) reqInf %+v cdns %+v", name, reqInf, cdns)
 	} else if len(cdns.Response) > 1 {
-		return tc.CDN{}, reqInf, fmt.Errorf("expected 1, got len %v val %+v", len(cdns.Response), cdns.Response)
+		return tc.CDN{}, reqInf, fmt.Errorf("expected 1, got len %d val %+v", len(cdns.Response), cdns.Response)
 	}
 	return cdns.Response[0], reqInf, nil
 }

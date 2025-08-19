@@ -206,12 +206,12 @@ func NewTrafficOpsReq(cfg config.Cfg) *TrafficOpsReq {
 func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) error {
 	if cfg.Name == "" {
 		cfg.AuditFailed = true
-		return errors.New("Config file name is empty is empty, skipping further checks.")
+		return errors.New("config file name is empty is empty, skipping further checks")
 	}
 
 	if cfg.Dir == "" {
 		cfg.AuditFailed = true
-		return errors.New("No location information for " + cfg.Name)
+		return errors.New("no location information for " + cfg.Name)
 	}
 	// return if audit has already been done.
 	if cfg.AuditComplete {
@@ -220,7 +220,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 
 	if !util.MkDirWithOwner(cfg.Dir, r.Cfg.ReportOnly, &cfg.Uid, &cfg.Gid) {
 		cfg.AuditFailed = true
-		return errors.New("Unable to create the directory '" + cfg.Dir + " for " + "'" + cfg.Name + "'")
+		return errors.New("unable to create the directory '" + cfg.Dir + " for " + "'" + cfg.Name + "'")
 	}
 
 	log.Debugf("======== Start processing config file: %s ========\n", cfg.Name)
@@ -229,7 +229,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 		err := r.processUdevRules(cfg)
 		if err != nil {
 			cfg.AuditFailed = true
-			return errors.New("unable to process udev rules in '" + cfg.Name + "': " + err.Error())
+			return fmt.Errorf("unable to process udev rules in '%s': %w", cfg.Name, err)
 		}
 	}
 
@@ -246,7 +246,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 		if err := checkRefs(r.Cfg, cfg.Body, filesAdding); err != nil {
 			r.configFileWarnings[cfg.Name] = append(r.configFileWarnings[cfg.Name], "failed to verify '"+cfg.Name+"': "+err.Error())
 			cfg.AuditFailed = true
-			return errors.New("failed to verify '" + cfg.Name + "': " + err.Error())
+			return fmt.Errorf("failed to verify '%s': %w", cfg.Name, err)
 		}
 		log.Infoln("Successfully verified plugins used by '" + cfg.Name + "'")
 	}
@@ -258,7 +258,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 		}
 		r.configFileWarnings[cfg.Name] = append(r.configFileWarnings[cfg.Name], cfg.Warnings...)
 		if fatal {
-			return errors.New(err.Error() + " for: " + cfg.Name)
+			return fmt.Errorf("%w for : %s", err, cfg.Name)
 		}
 	}
 
@@ -266,7 +266,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 
 	if err != nil {
 		cfg.AuditFailed = true
-		return errors.New("getting diff: " + err.Error())
+		return fmt.Errorf("getting diff: %w", err)
 	}
 	cfg.ChangeNeeded = changeNeeded
 	cfg.AuditComplete = true
@@ -279,7 +279,7 @@ func (r *TrafficOpsReq) checkConfigFile(cfg *ConfigFile, filesAdding []string) e
 // the status retrieved from Traffic Ops.
 func (r *TrafficOpsReq) checkStatusFiles(svrStatus string) error {
 	if svrStatus == "" {
-		return errors.New("Returning; did not find status from Traffic Ops!")
+		return errors.New("did not find status from Traffic Ops")
 	} else {
 		log.Debugf("Found %s status from Traffic Ops.\n", svrStatus)
 	}
@@ -290,7 +290,7 @@ func (r *TrafficOpsReq) checkStatusFiles(svrStatus string) error {
 	}
 	statuses, err := getStatuses(r.Cfg)
 	if err != nil {
-		return fmt.Errorf("could not retrieves a statuses list from Traffic Ops: %s\n", err)
+		return fmt.Errorf("could not retrieves a statuses list from Traffic Ops: %w", err)
 	}
 
 	for f := range statuses {
@@ -310,13 +310,13 @@ func (r *TrafficOpsReq) checkStatusFiles(svrStatus string) error {
 
 	if !r.Cfg.ReportOnly {
 		if !util.MkDir(config.StatusDir, r.Cfg.ReportOnly) {
-			return fmt.Errorf("unable to create '%s'\n", config.StatusDir)
+			return fmt.Errorf("unable to create '%s'", config.StatusDir)
 		}
 		fileExists, _ := util.FileExists(statusFile)
 		if !fileExists {
 			err = util.Touch(statusFile)
 			if err != nil {
-				return fmt.Errorf("unable to touch %s - %s\n", statusFile, err)
+				return fmt.Errorf("unable to touch %s - %w", statusFile, err)
 			}
 		}
 	}
@@ -363,7 +363,7 @@ func (r *TrafficOpsReq) processRemapOverrides(cfg *ConfigFile) error {
 			}
 		}
 	} else {
-		return errors.New("The " + cfg.Name + " file is empty, nothing to process.")
+		return errors.New("the " + cfg.Name + " file is empty, nothing to process")
 	}
 	if overrideCount > 0 {
 		log.Infof("Overrode %d old remap rule(s) with %d new remap rule(s).\n",
@@ -465,7 +465,7 @@ func (r *TrafficOpsReq) readCfgFile(cfg *ConfigFile, dir string) ([]byte, error)
 	data = make([]byte, size)
 	c, err := fd.Read(data)
 	if err != nil || int64(c) != size {
-		return nil, errors.New("unable to completely read from '" + cfg.Name + "': " + err.Error())
+		return nil, fmt.Errorf("unable to completely read from '%s': %w", cfg.Name, err)
 	}
 	fd.Close()
 
@@ -492,12 +492,12 @@ func (r *TrafficOpsReq) replaceCfgFile(cfg *ConfigFile) (*FileRestartData, error
 	// we'd end up with malformed files.
 
 	if _, err := util.WriteFileWithOwner(tmpFileName, cfg.Body, &cfg.Uid, &cfg.Gid, cfg.Perm); err != nil {
-		return &FileRestartData{Name: cfg.Name}, errors.New("Failed to write temp config file '" + tmpFileName + "': " + err.Error())
+		return &FileRestartData{Name: cfg.Name}, fmt.Errorf("failed to write temp config file '%s': %w", tmpFileName, err)
 	}
 
 	log.Infof("Copying temp file '%s' to real '%s'\n", tmpFileName, cfg.Path)
 	if err := os.Rename(tmpFileName, cfg.Path); err != nil {
-		return &FileRestartData{Name: cfg.Name}, errors.New("Failed to move temp '" + tmpFileName + "' to real '" + cfg.Path + "': " + err.Error())
+		return &FileRestartData{Name: cfg.Name}, fmt.Errorf("failed to move temp '%s' to real '%s': %w", tmpFileName, cfg.Path, err)
 	}
 	cfg.ChangeApplied = true
 	r.changedFiles = append(r.changedFiles, cfg.Path)
@@ -573,7 +573,7 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 			out, rc, err := util.ExecCommand("/bin/systemctl", "enable", name)
 			if err != nil {
 				log.Errorf(string(out))
-				return errors.New("Unable to enable service " + name + ": " + err.Error())
+				return fmt.Errorf("unable to enable service %s: %w", name, err)
 			}
 			if rc == 0 {
 				log.Infof("The %s service has been enabled\n", name)
@@ -582,7 +582,7 @@ func (r *TrafficOpsReq) CheckSystemServices() error {
 			levelValue := strings.Join(level, "")
 			_, rc, err := util.ExecCommand("/bin/chkconfig", "--level", levelValue, name, "on")
 			if err != nil {
-				return errors.New("Unable to enable service " + name + ": " + err.Error())
+				return fmt.Errorf("unable to enable service %s: %w", name, err)
 			}
 			if rc == 0 {
 				log.Infof("The %s service has been enabled\n", name)
@@ -656,7 +656,7 @@ func (r *TrafficOpsReq) GetConfigFileList() error {
 
 	allFiles, err := generate(r.Cfg)
 	if err != nil {
-		return errors.New("requesting data generating config files: " + err.Error())
+		return fmt.Errorf("requesting data generating config files: %w", err)
 	}
 
 	r.configFiles = map[string]*ConfigFile{}
@@ -715,7 +715,7 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 	serverStatus, err := getUpdateStatus(r.Cfg)
 	if err != nil {
 		log.Errorln("getting update status: " + err.Error())
-		return UpdateTropsNotNeeded, errors.New("getting update status: " + err.Error())
+		return UpdateTropsNotNeeded, fmt.Errorf("getting update status: %w", err)
 	}
 	log.Infof("my status: %s\n", serverStatus.Status)
 	if serverStatus.UseRevalPending == false {
@@ -743,7 +743,7 @@ func (r *TrafficOpsReq) CheckRevalidateState(sleepOverride bool) (UpdateStatus, 
 
 	err = r.checkStatusFiles(serverStatus.Status)
 	if err != nil {
-		log.Errorln(errors.New("checking status files: " + err.Error()))
+		log.Errorln(fmt.Errorf("checking status files: %w", err))
 	} else {
 		log.Infoln("CheckRevalidateState checkStatusFiles returned nil error")
 	}
@@ -923,7 +923,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 	// get the package list for this cache from Traffic Ops.
 	pkgs, err := getPackages(r.Cfg)
 	if err != nil {
-		return errors.New("getting packages: " + err.Error())
+		return fmt.Errorf("getting packages: %w", err)
 	}
 	log.Infof("ProcessPackages got %+v\n", pkgs)
 
@@ -937,7 +937,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 		// check to see if any package by name is installed.
 		arr, err := util.PackageInfo("pkg-query", pkgs[ii].Name)
 		if err != nil {
-			return errors.New("PackgeInfo pkg-query: " + err.Error())
+			return fmt.Errorf("util.PackgeInfo pkg-query: %w", err)
 		}
 		// go needs the ternary operator :)
 		if len(arr) == 1 {
@@ -963,7 +963,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 				// for deletion.
 				arr, err = util.PackageInfo("pkg-requires", instpkg)
 				if err != nil {
-					return errors.New("PackgeInfo pkg-requires: " + err.Error())
+					return fmt.Errorf("util.PackgeInfo pkg-requires: %w", err)
 				}
 				if len(arr) > 0 {
 					for jj := range arr {
@@ -1016,7 +1016,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 			for ii := range install {
 				result, err := util.PackageAction("info", install[ii])
 				if err != nil || result != true {
-					return errors.New("Package " + install[ii] + " is not available to install: " + err.Error())
+					return fmt.Errorf("package %s is not available to install: %w", install[ii], err)
 				}
 			}
 			log.Infoln("All packages available.. proceding..")
@@ -1027,7 +1027,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 					log.Infof("Uninstalling %s\n", uninstall[jj])
 					r, err := util.PackageAction("remove", uninstall[jj])
 					if err != nil {
-						return errors.New("Unable to uninstall " + uninstall[jj] + " : " + err.Error())
+						return fmt.Errorf("unable to uninstall %s : %w", uninstall[jj], err)
 					} else if r == true {
 						log.Infof("Package %s was uninstalled\n", uninstall[jj])
 					}
@@ -1039,7 +1039,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 					log.Infof("Installing %s\n", pkg)
 					result, err := util.PackageAction("install", pkg)
 					if err != nil {
-						return errors.New("Unable to install " + pkg + " : " + err.Error())
+						return fmt.Errorf("unable to install %s : %w", pkg, err)
 					} else if result == true {
 						r.Pkgs[pkg] = true
 						r.installedPkgs[pkg] = struct{}{}
@@ -1051,7 +1051,7 @@ func (r *TrafficOpsReq) ProcessPackages() error {
 		if r.Cfg.ReportOnly && len(install) > 0 {
 			for ii := range install {
 				log.Errorf("\nIn Report mode and %s needs installation.\n", install[ii])
-				return errors.New("In Report mode and packages need installation")
+				return errors.New("in Report mode and packages need installation")
 			}
 		}
 	}
@@ -1124,7 +1124,7 @@ func (r *TrafficOpsReq) RevalidateWhileSleeping(metaData *t3cutil.ApplyMetaData,
 		}
 
 		if err := r.StartServices(&updateStatus, metaData, cfg); err != nil {
-			return updateStatus, errors.New("failed to start services: " + err.Error())
+			return updateStatus, fmt.Errorf("failed to start services: %w", err)
 		}
 
 		if err := r.UpdateTrafficOps(&updateStatus); err != nil {
@@ -1147,7 +1147,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 	} else {
 		err := error(nil)
 		if serviceNeeds, err = checkReload(r.changedFiles); err != nil {
-			return errors.New("determining if service needs restarted - not reloading or restarting! : " + err.Error())
+			return fmt.Errorf("determining if service needs restarted - not reloading or restarting! : %w", err)
 		}
 	}
 
@@ -1174,7 +1174,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 
 	svcStatus, _, err := util.GetServiceStatus(packageName)
 	if err != nil {
-		return errors.New("getting trafficserver service status: " + err.Error())
+		return fmt.Errorf("getting trafficserver service status: %w", err)
 	}
 
 	if r.Cfg.ReportOnly {
@@ -1228,7 +1228,7 @@ func (r *TrafficOpsReq) StartServices(syncdsUpdate *UpdateStatus, metaData *t3cu
 				if *syncdsUpdate == UpdateTropsNeeded {
 					*syncdsUpdate = UpdateTropsFailed
 				}
-				return errors.New("ATS configuration has changed and 'traffic_ctl config reload' failed, check ATS logs: " + err.Error())
+				return fmt.Errorf("configuration for ATS has changed and 'traffic_ctl config reload' failed, check ATS logs: %w", err)
 			}
 			t3cutil.WriteActionLog(t3cutil.ActionLogActionATSReload, t3cutil.ActionLogStatusSuccess, metaData)
 
@@ -1265,7 +1265,7 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 
 	serverStatus, err := getUpdateStatus(r.Cfg)
 	if err != nil {
-		return errors.New("failed to update Traffic Ops: " + err.Error())
+		return fmt.Errorf("failed to update Traffic Ops: %w", err)
 	}
 
 	if *syncdsUpdate == UpdateTropsNotNeeded && (serverStatus.UpdatePending == true || serverStatus.RevalPending == true) {
@@ -1307,7 +1307,7 @@ func (r *TrafficOpsReq) UpdateTrafficOps(syncdsUpdate *UpdateStatus) error {
 			err = sendUpdate(r.Cfg, nil, serverStatus.RevalidateUpdateTime, nil, &b)
 		}
 		if err != nil {
-			return errors.New("Traffic Ops Update failed: " + err.Error())
+			return fmt.Errorf("Traffic Ops update failed: %w", err)
 		}
 		log.Infoln("Traffic Ops has been updated.")
 		r.ShowUpdateStatus(apply, start, serverStatus.UpdatePending, b)

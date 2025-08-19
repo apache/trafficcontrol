@@ -22,13 +22,14 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/apache/trafficcontrol/v8/lib/go-log"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/apache/trafficcontrol/v8/lib/go-log"
 )
 
 func main() {
@@ -128,7 +129,7 @@ func updateNewClientUsage(appDir string) error {
 			return nil
 		})
 	if err != nil {
-		return errors.New("reading directory: " + err.Error() + "\n")
+		return fmt.Errorf("reading directory: %w", err)
 	}
 
 	toClientNewRe := regexp.MustCompile(`(\s+)([^\s]+), (.+), (.+) := (.+).TOClientNew.(.+)$`)
@@ -136,12 +137,12 @@ func updateNewClientUsage(appDir string) error {
 	for _, path := range paths {
 		// gofmt the file, because the parsing relies on things being in that exact format.
 		if err := exec.Command(`gofmt`, `-w`, path).Run(); err != nil {
-			return errors.New("running gofmt on '" + path + ": " + err.Error() + "\n")
+			return fmt.Errorf("running gofmt on '%s: %w", path, err)
 		}
 
 		bts, err := ioutil.ReadFile(path)
 		if err != nil {
-			return errors.New("reading file '" + path + "': " + err.Error() + "\n")
+			return fmt.Errorf("reading file '%s': %w", path, err)
 		}
 
 		lines := strings.Split(string(bts), "\n")
@@ -163,7 +164,7 @@ func updateNewClientUsage(appDir string) error {
 					matches := toClientNewRe.FindStringSubmatch(line)
 					if len(matches) != 7 {
 						// TODO is this really an error? Skip and continue?
-						return fmt.Errorf("parsing file '"+path+"': line contains TOClientNew, but is unexpected format (only %v matches): '"+line+"'\n", len(matches))
+						return fmt.Errorf("parsing file '%s': line contains TOClientNew, but is unexpected format (only %d matches): '%s'", path, len(matches), line)
 					}
 					spacePrefix = matches[1]
 					objVar = matches[2]
@@ -188,7 +189,7 @@ func updateNewClientUsage(appDir string) error {
 					state = stateInTOClientNewUnsupportedBlock
 					continue // continue without adding this line - we want to remove the check-and-fallback
 				}
-				return errors.New("parsing file '" + path + "': line contains TOClientNew, but is unexpected format: not followed by a check for the unsupported bool (or the parser failed to understand it)\n")
+				return errors.New("parsing file '" + path + "': line contains TOClientNew, but is unexpected format: not followed by a check for the unsupported bool (or the parser failed to understand it)")
 			case stateInTOClientNewUnsupportedBlock:
 				// This is why we have to gofmt - if we didn't, we couldn't be guarnateed the block closing would be prefixed by exactly this many spaces. Then we'd have to parse the AST to find it. Ick.
 				if line == spacePrefix+`}` {
@@ -199,13 +200,13 @@ func updateNewClientUsage(appDir string) error {
 			}
 		}
 		if state != stateStart {
-			return errors.New("parsing modified file '" + path + "': appeared to be malformed (or maybe our parser is just broken, sorry)\n")
+			return errors.New("parsing modified file '" + path + "': appeared to be malformed (or maybe our parser is just broken, sorry)")
 		}
 
 		newFile := strings.Join(newLines, "\n")
 
 		if err := ioutil.WriteFile(path, []byte(newFile), 0644); err != nil {
-			return errors.New("writing modified file '" + path + "': " + err.Error() + "\n")
+			return fmt.Errorf("writing modified file '%s': %w", path, err)
 		}
 	}
 	return nil
@@ -218,23 +219,23 @@ func updateVendoredTOClient(appDir string, branch string) error {
 
 	vendorFileInfo, err := os.Stat(vendorClientDir)
 	if err != nil {
-		return errors.New("getting vendor dir '" + vendorDir + "' info: " + err.Error())
+		return fmt.Errorf("getting vendor dir '%s' info: %w", vendorDir, err)
 	}
 	if !vendorFileInfo.IsDir() {
 		return errors.New("getting vendor dir '" + vendorDir + "' info: not a directory")
 	}
 	if err := os.RemoveAll(vendorClientDir); err != nil {
-		return errors.New("removing vendor dir '" + vendorDir + "': " + err.Error())
+		return fmt.Errorf("removing vendor dir '%s': %w", vendorDir, err)
 	}
 	if err := os.Mkdir(vendorClientDir, 0755); err != nil {
-		return errors.New("creating vendor dir '" + vendorDir + "': " + err.Error())
+		return fmt.Errorf("creating vendor dir '%s': %w", vendorDir, err)
 	}
 
 	cmd := exec.Command(`git`, `show`, branch+`:../../client`)
 	cmd.Dir = appDir
 	clientFileListBts, err := cmd.Output()
 	if err != nil {
-		return errors.New("getting files from git: " + err.Error())
+		return fmt.Errorf("getting files from git: %w", err)
 	}
 	clientFileListStr := string(clientFileListBts)
 	clientFileList := strings.Split(clientFileListStr, "\n")
@@ -253,10 +254,10 @@ func updateVendoredTOClient(appDir string, branch string) error {
 		cmd.Dir = appDir
 		fileBts, err := cmd.Output()
 		if err != nil {
-			return errors.New("getting client file '" + clientFile + "' from git: " + err.Error())
+			return fmt.Errorf("getting client file '%s' from git: %w", clientFile, err)
 		}
 		if err := ioutil.WriteFile(vendorClientDir+`/`+clientFile, fileBts, 0644); err != nil {
-			return errors.New("Error writing vendored file '" + clientFile + "': " + err.Error())
+			return fmt.Errorf("writing vendored file '%s': %w", clientFile, err)
 		}
 	}
 
@@ -265,26 +266,26 @@ func updateVendoredTOClient(appDir string, branch string) error {
 	cmd.Dir = appDir
 	versionBts, err := cmd.Output()
 	if err != nil {
-		return errors.New("getting VERSION file from git: " + err.Error())
+		return fmt.Errorf("getting VERSION file from git: %w", err)
 	}
 
 	versionPath := filepath.Join(vendorTCDir, `VERSION`)
 	if err := ioutil.WriteFile(versionPath, versionBts, 0644); err != nil {
-		return errors.New("Error writing vendored VERSION file '" + versionPath + "': " + err.Error())
+		return fmt.Errorf("writing vendored VERSION file '%s': %w", versionPath, err)
 	}
 
 	cmd = exec.Command(`git`, `rev-parse`, branch)
 	cmd.Dir = appDir
 	changesetBts, err := cmd.Output()
 	if err != nil {
-		return errors.New("getting VERSION file from git: " + err.Error())
+		return fmt.Errorf("getting VERSION file from git: %w", err)
 	}
 
 	changesetTxt := branch + "\n" + string(changesetBts)
 
 	changesetTxtPath := filepath.Join(vendorTCDir, `changeset.txt`)
 	if err := ioutil.WriteFile(changesetTxtPath, []byte(changesetTxt), 0644); err != nil {
-		return errors.New("Error writing vendored changeset.txt file '" + changesetTxtPath + "': " + err.Error())
+		return fmt.Errorf("writing vendored changeset.txt file '%s': %w", changesetTxtPath, err)
 	}
 
 	return nil

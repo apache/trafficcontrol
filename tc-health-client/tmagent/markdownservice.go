@@ -21,7 +21,7 @@ package tmagent
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -477,7 +477,7 @@ func execTrafficCtl(fqdn string, available bool, reason string, atsBinDir string
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		return errors.New("marking " + fqdn + " " + status + ": " + TrafficCtl + " error: " + err.Error())
+		return fmt.Errorf("marking %s %s: %s error: %w", fqdn, status, TrafficCtl, err)
 	}
 
 	return nil

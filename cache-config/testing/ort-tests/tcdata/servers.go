@@ -25,7 +25,7 @@ import (
 func (r *TCData) QueueUpdatesForServer(hostname string, queue bool) error {
 	respServer, _, err := toreq.GetServerByHostName(TOSession, hostname)
 	if err != nil {
-		return fmt.Errorf("cannot GET Server by hostname '%s': %v", hostname, err)
+		return fmt.Errorf("cannot GET Server by hostname '%s': %w", hostname, err)
 	}
 	if respServer.ID == 0 {
 		return fmt.Errorf("server '%s' had nil ID", hostname)

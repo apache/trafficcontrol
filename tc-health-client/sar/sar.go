@@ -59,7 +59,7 @@ func SARAddr(log llog.Log, addr string, port int, timeout time.Duration) (time.D
 
 	localAddrStr, err := GetLocalAddr()
 	if err != nil {
-		return 0, errors.New("getting local address: " + err.Error())
+		return 0, fmt.Errorf("getting local address: %w", err)
 	}
 
 	localAddr := net.ParseIP(localAddrStr)
@@ -72,7 +72,7 @@ func SARAddr(log llog.Log, addr string, port int, timeout time.Duration) (time.D
 
 	ephemeralPortHolder, err := GetAndHoldEphemeralPort(localAddrStr)
 	if err != nil {
-		return 0, errors.New("failed to listen on ephemeral port: " + err.Error())
+		return 0, fmt.Errorf("failed to listen on ephemeral port: %w", err)
 	}
 	defer ephemeralPortHolder.Close()
 
@@ -94,7 +94,7 @@ func SARAddr(log llog.Log, addr string, port int, timeout time.Duration) (time.D
 	}
 	hdrBts, err := TCPHdrFromNative(native)
 	if err != nil {
-		return 0, errors.New("converting native header to byte: " + err.Error())
+		return 0, fmt.Errorf("converting native header to byte: %w", err)
 	}
 	// the hdrBts packet is still missing the checksum, since we couldn't compute that until we had the marshalled bytes of the packet
 
@@ -120,13 +120,13 @@ func SARAddr(log llog.Log, addr string, port int, timeout time.Duration) (time.D
 
 	sendTime, err := SendPacket(hdrBts, remoteAddr.String())
 	if err != nil {
-		return 0, errors.New("sending packet: " + err.Error())
+		return 0, fmt.Errorf("sending packet: %w", err)
 	}
 
 	wg.Wait()
 
 	if receiveSARErr != nil {
-		return 0, errors.New("receiving SAR: " + receiveSARErr.Error())
+		return 0, fmt.Errorf("receiving SAR: %w", receiveSARErr)
 	}
 
 	return receiveTime.Sub(sendTime), nil
@@ -139,9 +139,9 @@ func SARHost(log llog.Log, host string, port int, timeout time.Duration) (time.D
 	log = llog.LibInit(log)
 	addrs, err := net.LookupHost(host)
 	if err != nil {
-		return 0, errors.New("lookup up host: " + err.Error())
+		return 0, fmt.Errorf("lookup up host: %w", err)
 	} else if len(addrs) == 0 {
-		return 0, errors.New("looking up host succeeded, but no addresses were found.")
+		return 0, errors.New("looking up host succeeded, but no addresses were found")
 	}
 	return SARAddr(log, addrs[0], port, timeout)
 }
@@ -151,7 +151,7 @@ func SARHost(log llog.Log, host string, port int, timeout time.Duration) (time.D
 func GetLocalAddr() (string, error) {
 	_, localAddr, err := FindNetInterfaceAddr()
 	if err != nil {
-		return "", errors.New("finding interface and address: " + err.Error())
+		return "", fmt.Errorf("finding interface and address: %w", err)
 	}
 	laddr := strings.Split(localAddr.String(), "/")[0] // remove any CIDR
 	return laddr, nil
@@ -164,7 +164,7 @@ func GetLocalAddr() (string, error) {
 func FindNetInterfaceAddr() (string, net.Addr, error) {
 	interfaces, err := net.Interfaces()
 	if err != nil {
-		return "", nil, errors.New("getting interfaces: " + err.Error())
+		return "", nil, fmt.Errorf("getting interfaces: %w", err)
 	}
 	if len(interfaces) == 0 {
 		return "", nil, errors.New("no interfaces found")
@@ -206,17 +206,17 @@ func SendPacket(packet TCPHdr, addr string) (time.Time, error) {
 	// Rather, the port will be determined from the dest port in the packet.
 	conn, err := net.Dial("ip4:tcp", addr)
 	if err != nil {
-		return time.Time{}, errors.New("dialing address: " + err.Error())
+		return time.Time{}, fmt.Errorf("dialing address: %w", err)
 	}
 	defer conn.Close()
 
 	sendTime := time.Now()
 	numBtsSent, err := conn.Write(packet)
 	if err != nil {
-		return time.Time{}, errors.New("writing: " + err.Error())
+		return time.Time{}, fmt.Errorf("writing: %w", err)
 	}
 	if numBtsSent != len(packet) {
-		return time.Time{}, fmt.Errorf("tried to write %v bytes, but only %v sent but no error", len(packet), numBtsSent)
+		return time.Time{}, fmt.Errorf("tried to write %d bytes, but only %d sent but no error", len(packet), numBtsSent)
 	}
 	return sendTime, nil
 }
@@ -228,13 +228,13 @@ func SendPacket(packet TCPHdr, addr string) (time.Time, error) {
 func receiveSAR(log llog.Log, localAddrStr string, remoteAddr string, localAddrIP net.IP, remoteAddrIP net.IP, timeout time.Duration, srcPort int, dstPort int, ackNum int) (time.Time, error) {
 	localAddr, err := net.ResolveIPAddr("ip4", localAddrStr)
 	if err != nil {
-		return time.Time{}, errors.New("resolving local address: " + err.Error())
+		return time.Time{}, fmt.Errorf("resolving local address: %w", err)
 	}
 	// listen on the local IP for the SynAck
 	// TODO should this ListenPacket, to let Go automatically choose the port for us?
 	conn, err := net.ListenIP("ip4:tcp", localAddr)
 	if err != nil {
-		return time.Time{}, errors.New("listening for syn-ack response: " + err.Error())
+		return time.Time{}, fmt.Errorf("listening for syn-ack response: %w", err)
 	}
 	defer conn.Close()
 
@@ -242,7 +242,7 @@ func receiveSAR(log llog.Log, localAddrStr string, remoteAddr string, localAddrI
 	// If we wanted to set the timeout for each individual packet read,
 	// we could call conn.SetDeadline inside the for-loop immediately before each conn.ReadFrom call.
 	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
-		return time.Time{}, errors.New("setting deadline timeout to listen for syn-ack response: " + err.Error())
+		return time.Time{}, fmt.Errorf("setting deadline timeout to listen for syn-ack response: %w", err)
 	}
 
 	for {
@@ -255,7 +255,7 @@ func receiveSAR(log llog.Log, localAddrStr string, remoteAddr string, localAddrI
 		numBts, readRemoteAddr, err := conn.ReadFrom(buf)
 		readTime := time.Now()
 		if err != nil {
-			return time.Time{}, errors.New("reading response: " + err.Error())
+			return time.Time{}, fmt.Errorf("reading response: %w", err)
 		}
 
 		if readRemoteAddr.String() != remoteAddr {
@@ -284,7 +284,7 @@ func receiveSAR(log llog.Log, localAddrStr string, remoteAddr string, localAddrI
 
 		tcpHdr, err := TCPHdrToNative(tcpHdrRaw)
 		if err != nil {
-			return time.Time{}, errors.New("decoding tcp header: " + err.Error())
+			return time.Time{}, fmt.Errorf("decoding tcp header: %w", err)
 		}
 
 		if tcpHdr.RST {
@@ -333,7 +333,7 @@ func sendRST(log llog.Log, remoteAddrStr string, localAddr net.IP, remoteAddr ne
 	}
 	hdrBts, err := TCPHdrFromNative(native)
 	if err != nil {
-		return errors.New("converting native header to byte: " + err.Error())
+		return fmt.Errorf("converting native header to byte: %w", err)
 	}
 	// the hdrBts packet is still missing the checksum, since we couldn't compute that until we had the marshalled bytes of the packet
 
@@ -342,7 +342,7 @@ func sendRST(log llog.Log, remoteAddrStr string, localAddr net.IP, remoteAddr ne
 	hdrBts.SetChecksum(checksum)
 
 	if _, err := SendPacket(hdrBts, remoteAddrStr); err != nil {
-		return errors.New("sending packet: " + err.Error())
+		return fmt.Errorf("sending packet: %w", err)
 	}
 	return nil
 }

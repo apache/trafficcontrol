@@ -357,7 +357,7 @@ type ApplyMetaDataAction struct {
 func (md *ApplyMetaData) Format() ([]byte, error) {
 	bts, err := json.MarshalIndent(md, "", "  ")
 	if err != nil {
-		return nil, errors.New("marshalling metadata file: " + err.Error())
+		return nil, fmt.Errorf("marshalling metadata file: %w", err)
 	}
 	bts = append(bts, '\n') // newline at the end of the file, so it's a valid POSIX text file
 

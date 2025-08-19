@@ -43,25 +43,27 @@ func EnsureConfigDirIsGitRepo(cfg config.Cfg) (bool, error) {
 
 	errPipe, err := cmd.StderrPipe()
 	if err != nil {
-		return false, errors.New("getting stderr pipe for command: " + err.Error())
+		return false, fmt.Errorf("getting stderr pipe for command: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
+		var exitError *exec.ExitError
+		if ok := errors.As(err, &exitError); !ok {
 			// this means Go failed to run the command, not that the command returned an error.
-			return false, errors.New("git status returned: " + err.Error())
+			return false, fmt.Errorf("git status returned: %w", err)
 		}
 	}
 
 	errOutput, err := ioutil.ReadAll(errPipe)
 	if err != nil {
-		return false, errors.New("reading stderr: " + err.Error())
+		return false, fmt.Errorf("reading stderr: %w", err)
 	}
 
 	if err := cmd.Wait(); err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
+		var exitError *exec.ExitError
+		if ok := errors.As(err, &exitError); !ok {
 			// this means Go failed to run the command, not that the command returned an error.
-			return false, errors.New("waiting for git command: " + err.Error())
+			return false, fmt.Errorf("waiting for git command: %w", err)
 		}
 	}
 
@@ -73,7 +75,7 @@ func EnsureConfigDirIsGitRepo(cfg config.Cfg) (bool, error) {
 	}
 
 	if err := makeConfigDirGitRepo(cfg); err != nil {
-		return true, errors.New("making config dir '" + cfg.TsConfigDir + "' a git repo: " + err.Error())
+		return true, fmt.Errorf("making config dir '%s' a git repo: %w", cfg.TsConfigDir, err)
 	}
 
 	return true, nil
@@ -90,7 +92,7 @@ func GetGitConfigSafeDir(cfg config.Cfg) error {
 	cmd.Dir = cfg.TsConfigDir
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("git config returned err %v", string(output))
+		return fmt.Errorf("git config returned err %s", string(output))
 	}
 	if !bytes.Contains(output, []byte(safeDir)) {
 		if err := addGitSafeDir(GitSafeDir, cfg.TsConfigDir); err != nil {
@@ -105,7 +107,7 @@ func addGitSafeDir(safeDir string, path string) error {
 	cmd.Dir = path
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("git config add '%v' returned err %v", safeDir, string(output))
+		return fmt.Errorf("git config add '%s' returned err %s", safeDir, string(output))
 	}
 	return nil
 }
@@ -114,19 +116,19 @@ func makeConfigDirGitRepo(cfg config.Cfg) error {
 	cmd := exec.Command("git", "init")
 	cmd.Dir = cfg.TsConfigDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("git init in config dir '%v' returned err %v msg '%v'", cfg.TsConfigDir, err, string(output))
+		return fmt.Errorf("git init in config dir '%s' returned err %w msg '%s'", cfg.TsConfigDir, err, string(output))
 	}
 
 	if err := makeConfigDirGitUser(cfg); err != nil {
-		return fmt.Errorf("git creating user in config dir '%v': %v", cfg.TsConfigDir, err)
+		return fmt.Errorf("git creating user in config dir '%s': %w", cfg.TsConfigDir, err)
 	}
 
 	if err := makeInitialGitCommit(cfg); err != nil {
-		return errors.New("creating initial git commit: " + err.Error())
+		return fmt.Errorf("creating initial git commit: %w", err)
 	}
 
 	if err := MakeGitCommitAll(cfg, GitChangeIsSelf, true); err != nil {
-		return errors.New("creating first files git commit: " + err.Error())
+		return fmt.Errorf("creating first files git commit: %w", err)
 	}
 
 	return nil
@@ -140,14 +142,14 @@ func makeConfigDirGitUser(cfg config.Cfg) error {
 		cmd := exec.Command("git", "config", "user.email", gitEmail)
 		cmd.Dir = cfg.TsConfigDir
 		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("git config user.email in config dir '%v' returned err %v msg '%v'", cfg.TsConfigDir, err, string(output))
+			return fmt.Errorf("git config user.email in config dir '%s' returned err %w msg '%s'", cfg.TsConfigDir, err, string(output))
 		}
 	}
 	{
 		cmd := exec.Command("git", "config", "user.name", gitUser)
 		cmd.Dir = cfg.TsConfigDir
 		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("git config user.email in config dir '%v' returned err %v msg '%v'", cfg.TsConfigDir, err, string(output))
+			return fmt.Errorf("git config user.email in config dir '%s' returned err %w msg '%s'", cfg.TsConfigDir, err, string(output))
 		}
 	}
 	return nil
@@ -161,7 +163,7 @@ func makeInitialGitCommit(cfg config.Cfg) error {
 	cmd := exec.Command("git", "commit", "--allow-empty", "-m", "Initial commit")
 	cmd.Dir = cfg.TsConfigDir
 	if output, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("git initial commit error: in config dir '%v' returned err %v msg '%v'", cfg.TsConfigDir, err, string(output))
+		return fmt.Errorf("git initial commit error: in config dir '%s' returned err %w msg '%s'", cfg.TsConfigDir, err, string(output))
 	}
 	return nil
 }
@@ -178,7 +180,7 @@ func MakeGitCommitAll(cfg config.Cfg, self bool, success bool) error {
 		output, err := cmd.CombinedOutput()
 		output = bytes.TrimSpace(output)
 		if err != nil {
-			return fmt.Errorf("git status error: in config dir '%v' returned err %v msg '%v'", cfg.TsConfigDir, err, string(output))
+			return fmt.Errorf("git status error: in config dir '%s' returned err %w msg '%s'", cfg.TsConfigDir, err, string(output))
 		}
 		if len(output) == 0 {
 			// no error and no output means there were zero changes, so just return
@@ -190,7 +192,7 @@ func MakeGitCommitAll(cfg config.Cfg, self bool, success bool) error {
 		cmd := exec.Command("git", "add", "-A")
 		cmd.Dir = cfg.TsConfigDir
 		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("git add error: in config dir '%v' returned err %v msg '%v'", cfg.TsConfigDir, err, string(output))
+			return fmt.Errorf("git add error: in config dir '%s' returned err %w msg '%s'", cfg.TsConfigDir, err, string(output))
 		}
 	}
 
@@ -201,7 +203,7 @@ func MakeGitCommitAll(cfg config.Cfg, self bool, success bool) error {
 		cmd := exec.Command("git", "commit", "--message", msg)
 		cmd.Dir = cfg.TsConfigDir
 		if output, err := cmd.CombinedOutput(); err != nil {
-			return fmt.Errorf("git commit error: in config dir '%v' returned err %v msg '%v'", cfg.TsConfigDir, err, string(output))
+			return fmt.Errorf("git commit error: in config dir '%s' returned err %w msg '%s'", cfg.TsConfigDir, err, string(output))
 		}
 	}
 
@@ -237,7 +239,7 @@ func makeGitCommitMsg(cfg config.Cfg, now time.Time, self bool, success bool) st
 func IsGitLockFileOld(lockFile string, now time.Time, maxAge time.Duration) (bool, error) {
 	lockFileInfo, err := os.Stat(lockFile)
 	if err != nil {
-		return false, fmt.Errorf("stat returned error: %v on file %v", err, lockFile)
+		return false, fmt.Errorf("stat returned error: %w on file %s", err, lockFile)
 	}
 	if diff := now.Sub(lockFileInfo.ModTime()); diff > maxAge {
 		return true, nil
@@ -248,7 +250,7 @@ func IsGitLockFileOld(lockFile string, now time.Time, maxAge time.Duration) (boo
 func RemoveGitLock(lockFile string) error {
 	err := os.Remove(lockFile)
 	if err != nil {
-		return fmt.Errorf("error removing file: %v, %v", lockFile, err.Error())
+		return fmt.Errorf("error removing file: %s, %w", lockFile, err)
 	}
 	return nil
 }

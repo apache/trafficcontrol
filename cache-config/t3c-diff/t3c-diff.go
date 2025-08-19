@@ -20,7 +20,6 @@ package main
  */
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -168,7 +167,7 @@ func readFileOrStdin(fileOrStdin string) (string, bool, error) {
 	if strings.ToLower(fileOrStdin) == "stdin" {
 		bts, err := ioutil.ReadAll(os.Stdin)
 		if err != nil {
-			return "", false, errors.New("reading stdin: " + err.Error())
+			return "", false, fmt.Errorf("reading stdin: %w", err)
 		}
 		return string(bts), true, nil
 	}
@@ -177,7 +176,7 @@ func readFileOrStdin(fileOrStdin string) (string, bool, error) {
 		if os.IsNotExist(err) {
 			return "", false, nil
 		}
-		return "", false, errors.New("reading file: " + err.Error())
+		return "", false, fmt.Errorf("reading file: %w", err)
 	}
 	return string(bts), true, nil
 }

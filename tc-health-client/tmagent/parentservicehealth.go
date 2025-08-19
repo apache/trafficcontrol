@@ -23,6 +23,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -90,7 +91,7 @@ func DeserializeParentServiceHealth(bts []byte) (*ParentServiceHealth, error) {
 	ph := &ParentServiceHealth{}
 	err := json.Unmarshal(bts, ph)
 	if err != nil {
-		return nil, errors.New("unmarshalling json: " + err.Error())
+		return nil, fmt.Errorf("unmarshalling json: %w", err)
 	}
 
 	// this can be smarter if and when we have a new version that can be converted from an old.
@@ -261,19 +262,19 @@ func pollParentService(parentURI string, timeout time.Duration) (*ParentServiceH
 	req, err := http.NewRequest(http.MethodGet, parentURI, nil)
 	if err != nil {
 		// TODO log?
-		return nil, errors.New("making request: " + err.Error())
+		return nil, fmt.Errorf("making request: %w", err)
 	}
 
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return nil, errors.New("requesting: " + err.Error())
+		return nil, fmt.Errorf("requesting: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		bts, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return nil, errors.New("code " + strconv.Itoa(resp.StatusCode) + " reading: " + err.Error())
+			return nil, fmt.Errorf("code %d reading: %w", resp.StatusCode, err)
 		}
 		bts = bytes.ReplaceAll(bts, []byte("\n"), []byte(`\n`)) // we don't want newlines in the error log
 		return nil, errors.New("code " + strconv.Itoa(resp.StatusCode) + " body: " + string(bts))
@@ -281,11 +282,11 @@ func pollParentService(parentURI string, timeout time.Duration) (*ParentServiceH
 
 	parentServiceHealth := &ParentServiceHealth{}
 	if err := json.NewDecoder(resp.Body).Decode(parentServiceHealth); err != nil {
-		return nil, errors.New("code " + strconv.Itoa(resp.StatusCode) + " decoding: " + err.Error())
+		return nil, fmt.Errorf("code %d decoding: %w", resp.StatusCode, err)
 	}
 
 	if err := resp.Body.Close(); err != nil {
-		return nil, errors.New("closing body: " + err.Error())
+		return nil, fmt.Errorf("closing body: %w", err)
 	}
 
 	return parentServiceHealth, nil

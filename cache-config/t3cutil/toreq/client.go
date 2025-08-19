@@ -28,7 +28,6 @@ package toreq
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -121,10 +120,10 @@ func newWithPassword(url *url.URL, user string, pass string, insecure bool, time
 	toClient, inf, err := toclient.Login(toURLStr, user, pass, opts)
 	if err != nil {
 		if errIsUnsupportedVersion := inf.StatusCode == 404 || inf.StatusCode == 501; errIsUnsupportedVersion {
-			log.Infof("toreqnew.New logging into Traffic Ops '%v': got %v, falling back to older client\n", torequtil.MaybeIPStr(inf.RemoteAddr), inf.StatusCode)
+			log.Infof("toreqnew.New logging into Traffic Ops '%s': got %d, falling back to older client\n", torequtil.MaybeIPStr(inf.RemoteAddr), inf.StatusCode)
 			return checkLatestAndFallBack(nil, url, user, pass, insecure, timeout, userAgent)
 		}
-		return nil, fmt.Errorf("Logging in to Traffic Ops '%v' code %v: %v", torequtil.MaybeIPStr(inf.RemoteAddr), inf.StatusCode, err)
+		return nil, fmt.Errorf("logging in to Traffic Ops '%s' code %d: %w", torequtil.MaybeIPStr(inf.RemoteAddr), inf.StatusCode, err)
 	}
 
 	// we successfully logged in, but the login may not have used the latest API,
@@ -139,13 +138,14 @@ func newWithCookie(url *url.URL, user string, pass string, insecure bool, timeou
 	toClient := toclient.NewSession(user, pass, toURLStr, userAgent, &http.Client{
 		Timeout: timeout,
 		Transport: &http.Transport{
+			// TODO: Make this configurable - why is it insecure at all, though?
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
 		},
 	}, false)
 	err := error(nil)
 	toClient.Client.Jar, err = cookiejar.New(nil)
 	if err != nil {
-		return nil, errors.New("error creating cookie jar: " + err.Error())
+		return nil, fmt.Errorf("error creating cookie jar: %w", err)
 	}
 	toClient.Client.Jar.SetCookies(url, fsCookie.GetHTTPCookies())
 	return checkLatestAndFallBack(toClient, url, user, pass, insecure, timeout, userAgent)
@@ -161,19 +161,19 @@ func newWithCookie(url *url.URL, user string, pass string, insecure bool, timeou
 func checkLatestAndFallBack(client *toclient.Session, url *url.URL, user string, pass string, insecure bool, timeout time.Duration, userAgent string) (*TOClient, error) {
 	latestSupported, toAddr, err := IsLatestSupported(client)
 	if err != nil {
-		return nil, errors.New("checking Traffic Ops '" + torequtil.MaybeIPStr(toAddr) + "' support: " + err.Error())
+		return nil, fmt.Errorf("checking Traffic Ops '%s' support: %w", torequtil.MaybeIPStr(toAddr), err)
 	}
 
 	if latestSupported {
-		log.Infof("Traffic Ops '%v' supports this client's latest API version %v, using latest client\n", torequtil.MaybeIPStr(toAddr), client.APIVersion())
+		log.Infof("Traffic Ops '%s' supports this client's latest API version %s, using latest client\n", torequtil.MaybeIPStr(toAddr), client.APIVersion())
 		return &TOClient{c: client}, nil
 	}
 
-	log.Warnf("Traffic Ops '%v' does not support the latest client API version %v, falling back to the previous\n", torequtil.MaybeIPStr(toAddr), LatestKnownAPIVersion())
+	log.Warnf("Traffic Ops '%s' does not support the latest client API version %s, falling back to the previous\n", torequtil.MaybeIPStr(toAddr), LatestKnownAPIVersion())
 
 	oldClient, err := toreqold.New(url, user, pass, insecure, timeout, userAgent)
 	if err != nil {
-		return nil, errors.New("logging into old client: " + err.Error())
+		return nil, fmt.Errorf("logging into old client: %w", err)
 	}
 
 	log.Warnf("Latest Traffic Ops client version %v not supported, falling back to %v\n", LatestKnownAPIVersion(), oldClient.APIVersion())
