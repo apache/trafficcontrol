@@ -231,6 +231,49 @@ export class ServerService extends APIService {
 	}
 
 	/**
+	 * Queues revalidations on a single server.
+	 *
+	 * @param server Either the server on which revalidations will be queued, or
+	 * its integral, unique identifier.
+	 * @returns The 'response' property of the TO server's response. See TO API
+	 * docs.
+	 */
+	public async queueReval(server: number | ResponseServer): Promise<void> {
+		const id = typeof(server) === "number" ? server : server.id;
+		const params = {
+			// This param casing is in the API specification, so it must have
+			// this casing.
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			reval_updated: true
+			// TODO: This is really confusing; `reval_updated = true` means that
+			// revalidations **haven't** been updated, and need to be done.
+		};
+		return this.post(`servers/${id}/update`, undefined, params).toPromise();
+	}
+
+	/**
+	 * Clears pending revalidations on a single server.
+	 *
+	 * @param server Either the server for which pending revalidations will be
+	 * cleared, or its integral, unique identifier.
+	 * @returns The 'response' property of the TO server's response. See TO API
+	 * docs.
+	 */
+	public async clearReval(server: number | ResponseServer): Promise<void> {
+		const id = typeof(server) === "number" ? server : server.id;
+		const params = {
+			// This param casing is in the API specification, so it must have
+			// this casing.
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			reval_updated: false
+			// TODO: This is really confusing; `reval_updated = false` means
+			// that revalidations **have** been updated, and no longer need to
+			// be done.
+		};
+		return this.post(`servers/${id}/update`, undefined, params).toPromise();
+	}
+
+	/**
 	 * Updates a server's status.
 	 *
 	 * @param server Either the server that will have its status changed, or the

@@ -17,7 +17,7 @@ limitations under the License.
 	<button mat-flat-button type="button" title="clear all active filters" (click)="clearFilters()"><mat-icon>filter_list</mat-icon> Clear</button>
 	<button mat-flat-button type="button"*ngFor="let btn of tableTitleButtons" (click)="emitTitleButtonAction(btn.action)">{{btn.text}}</button>
 	<div class="toggle-columns" role="group" title="Select Table Columns">
-		<button type="button" mat-flat-button [matMenuTriggerFor]="menu" #trigger="matMenuTrigger">
+		<button type="button" mat-flat-button  aria-label="column visibility menu" [matMenuTriggerFor]="menu" #trigger="matMenuTrigger">
 			<mat-icon>view_column</mat-icon>&nbsp;
 			<mat-icon class="caret" [ngClass]="{'rotate': trigger.menuOpen}">expand_more</mat-icon>
 		</button>
