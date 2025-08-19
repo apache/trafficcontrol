@@ -1969,3 +1969,41 @@ def logs_data(to_session: TOSession, request_template_data: list[JSONData],
 	change_log_id = resp_obj.get("id")
 
 	yield [change_log_id, resp_obj]
+
+
+@pytest.fixture(name="types_post_data")
+def types_data_post(to_session: TOSession, request_template_data: list[JSONData],
+			 ) -> dict[str, object]:
+	"""
+	PyTest Fixture to create POST data for types endpoint.
+
+	:param to_session: Fixture to get Traffic Ops session.
+	:param request_template_data: Fixture to get types data from a prerequisites file.
+  	:returns: Sample POST data and the actual API response.
+	"""
+
+	types = check_template_data(request_template_data["types"], "types")
+
+	# Return new post data and post response from types POST request
+	randstr = str(randint(0, 1000))
+	try:
+		name = types["name"]
+		if not isinstance(name, str):
+			raise TypeError(f"name must be str, not '{type(name)}'")
+		type_name = name[:4] + randstr
+		types["name"] = generate_unique_data(to_session=to_session,
+						base_name=type_name, object_type="types")
+	except KeyError as e:
+		raise TypeError(f"missing Type property '{e.args[0]}'") from e
+
+	logger.info("New Types data to hit POST method %s", types)
+	# Hitting Types POST method
+	response: tuple[JSONData, requests.Response] = to_session.create_types(data=types)
+	resp_obj = check_template_data(response, "types")
+	yield resp_obj
+	type_id = resp_obj.get("id")
+	msg = to_session.delete_types(type_id=type_id)
+	logger.info("Deleting types data... %s", msg)
+	if msg is None:
+		logger.error("Type returned by Traffic Ops is missing an 'id' property")
+		pytest.fail("Response from delete request is empty, Failing test_case")
