@@ -176,7 +176,6 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	dispersion := time.Second * time.Duration(*dispersionPtr)
-	toTimeoutMS := time.Millisecond * time.Duration(*toTimeoutMSPtr)
 	toURL := *toURLPtr
 	toUser := *toUserPtr
 	toPass := *toPassPtr
@@ -225,7 +224,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 			CacheHostName: cacheHostName,
 			GetData:       "update-status",
 			TOInsecure:    *toInsecurePtr,
-			TOTimeoutMS:   toTimeoutMS,
+			TOTimeout:     time.Millisecond * time.Duration(*toTimeoutMSPtr),
 			TOUser:        toUser,
 			TOPass:        toPass,
 			TOURL:         toURLParsed,
