@@ -351,11 +351,11 @@ func TestDeleteHandler(t *testing.T) {
 // The constructed handler will return an error if fail is true, or nothing
 // special otherwise.
 func testingHandler(fail bool) Handler {
-	return func(inf *Info) (int, error, error) {
+	return func(inf *Info) error {
 		if fail {
-			return http.StatusBadRequest, errors.New("testing user error"), errors.New("testing system error")
+			return NewErrors(http.StatusBadRequest, errors.New("testing user error"), errors.New("testing system error"))
 		}
-		return http.StatusOK, nil, nil
+		return nil
 	}
 }
 
@@ -415,4 +415,43 @@ func TestWrap(t *testing.T) {
 	if err = mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("not all expectations were met: %v", err)
 	}
+}
+
+func TestWrap_HandleSimpleErrors(t *testing.T) {
+	var handler Handler = func(inf *Info) error {
+		return errors.New("testquest")
+	}
+
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("failed to open a stub database connection: %v", err)
+	}
+	defer func() {
+		mock.ExpectClose()
+		err := db.Close()
+		if err != nil {
+			t.Errorf("failed to close database: %v", err)
+		}
+		err = mock.ExpectationsWereMet()
+		if err != nil {
+			t.Errorf("expectations unmet: %v", err)
+		}
+	}()
+
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r = wrapContext(r, ConfigContextKey, &config.Config{ConfigTrafficOpsGolang: config.ConfigTrafficOpsGolang{DBQueryTimeoutSeconds: 1000}})
+	r = wrapContext(r, DBContextKey, &sqlx.DB{DB: db})
+	r = wrapContext(r, TrafficVaultContextKey, &disabled.Disabled{})
+	r = wrapContext(r, ReqIDContextKey, uint64(0))
+	r = wrapContext(r, auth.CurrentUserKey, auth.CurrentUser{})
+	r = wrapContext(r, PathParamsKey, make(map[string]string))
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+	h := Wrap(handler, nil, nil)
+	h(w, r)
+	if w.Code != http.StatusInternalServerError {
+		t.Errorf("wrong status code when the trivial handler is used without an API version; want: %d, got: %d", http.StatusInternalServerError, w.Code)
+	}
+
 }

@@ -679,10 +679,13 @@ func parseMultipleCreates(data []byte, desiredType reflect.Type, inf *Info) ([]C
 }
 
 // A Handler is an API endpoint handlers. They take in Info helper objects and
-// return - in order - an HTTP response status code, a user-facing error (if one
-// occurred), and a system-only error not safe for exposure to clients (if one
-// occurred).
-type Handler = func(*Info) (int, error, error)
+// return errors that occur in handling. If no error occurs, the response MUST
+// have been written. It is strongly recommended that the returned error be an
+// Errors type as defined by this package, as that will allow for the most
+// versatile handling. Any other kind of error returned by a Handler is treated
+// as a "system-only" error, which returns no information to the user beyond
+// that the request failed.
+type Handler = func(*Info) error
 
 // Wrap wraps an API endpoint handler in the more generic HTTP request handler
 // type from the http package. This constructs and provides the Info for the
@@ -709,9 +712,16 @@ func Wrap(h Handler, requiredParams, intParams []string) http.HandlerFunc {
 		}
 		inf.w = w
 
-		errCode, userErr, sysErr = h(inf)
-		if userErr != nil || sysErr != nil {
-			HandleErr(w, r, inf.Tx.Tx, errCode, userErr, sysErr)
+		err := h(inf)
+		if err == nil {
+			return
+		}
+
+		var apiErr Errors
+		if errors.As(err, &apiErr) {
+			inf.HandleErrors(apiErr)
+		} else {
+			HandleErr(w, r, inf.Tx.Tx, http.StatusInternalServerError, nil, err)
 		}
 	}
 }

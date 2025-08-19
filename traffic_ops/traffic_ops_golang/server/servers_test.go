@@ -148,13 +148,16 @@ func TestCheckTypeChangeSafety(t *testing.T) {
 		ID:     testServers[0].Server.ID,
 	}
 
-	userErr, _, errCode := checkTypeChangeSafety(s, db.MustBegin())
-	if errCode != 409 {
-		t.Errorf("Update servers: Expected error code of %v, but got %v", 409, errCode)
+	e := checkTypeChangeSafety(s, db.MustBegin())
+	if e == nil {
+		t.Fatalf("Expected an error to occur")
+	}
+	if e.Code() != http.StatusConflict {
+		t.Errorf("Update servers: Expected error code of %d, but got %d", http.StatusConflict, e.Code())
 	}
 	expectedErr := "server cdn can not be updated when it is currently assigned to delivery services"
-	if userErr == nil {
-		t.Errorf("Update expected error: %v, but got no error with status: %s", expectedErr, http.StatusText(errCode))
+	if e.UserError() == nil {
+		t.Errorf("Update expected error: %s, but got no error with status: %s", expectedErr, http.StatusText(e.Code()))
 	}
 }
 
@@ -265,13 +268,13 @@ func TestGetServersByCachegroup(t *testing.T) {
 
 	version := api.Version{Major: 4, Minor: 0}
 
-	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version, false)
-	if userErr != nil || sysErr != nil {
-		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
+	servers, _, _, err := getServers(nil, v, db.MustBegin(), &user, false, version, false)
+	if err != nil {
+		t.Errorf("getServers expected: no errors, actual: %+v", err)
 	}
 
 	if len(servers) != 3 {
-		t.Errorf("getServers expected: len(servers) == 3, actual: %v", len(servers))
+		t.Errorf("getServers expected: len(servers) == 3, actual: %d", len(servers))
 	}
 }
 
@@ -381,10 +384,10 @@ func TestGetMidServers(t *testing.T) {
 
 	user := auth.CurrentUser{}
 	version := api.Version{Major: 4, Minor: 0}
-	servers, _, userErr, sysErr, errCode, _ := getServers(nil, v, db.MustBegin(), &user, false, version, false)
+	servers, _, _, err := getServers(nil, v, db.MustBegin(), &user, false, version, false)
 
-	if userErr != nil || sysErr != nil {
-		t.Errorf("getServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
+	if err != nil {
+		t.Errorf("getServers expected: no errors, actual: %+v", err)
 	}
 
 	cols2 := []string{"cachegroup", "cachegroup_id", "cdn_id", "cdn_name", "domain_name", "guid", "host_name",
@@ -496,10 +499,10 @@ func TestGetMidServers(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectQuery("SELECT").WillReturnRows(rows2)
-	mid, userErr, sysErr, errCode := getMidServers(serverIDs, serverMap, 0, 0, db.MustBegin(), false)
+	mid, err := getMidServers(serverIDs, serverMap, 0, 0, db.MustBegin(), false)
 
-	if userErr != nil || sysErr != nil {
-		t.Fatalf("getMidServers expected: no errors, actual: %v %v with status: %s", userErr, sysErr, http.StatusText(errCode))
+	if err != nil {
+		t.Fatalf("getMidServers expected: no errors, actual: %+v", err)
 	}
 	if len(mid) != 1 {
 		t.Fatalf("getMidServers expected: len(mid) == 1, actual: %v", len(mid))
@@ -570,9 +573,9 @@ func TestV3Validations(t *testing.T) {
 
 	tx := db.MustBegin().Tx
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err != nil {
-		t.Errorf("Unexpected error validating test server: %v", err)
+		t.Errorf("Unexpected error validating test server: %#v", err)
 	}
 
 	testServer.Interfaces = []tc.ServerInterfaceInfo{}
@@ -582,11 +585,11 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no interfaces to be invalid")
 	} else {
-		t.Logf("Got expected error validating server with no interfaces: %v", err)
+		t.Logf("Got expected error validating server with no interfaces: %+v", err)
 	}
 
 	testServer.Interfaces = nil
@@ -596,11 +599,11 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with nil interfaces to be invalid")
 	} else {
-		t.Logf("Got expected error validating server with nil interfaces: %v", err)
+		t.Logf("Got expected error validating server with nil interfaces: %+v", err)
 	}
 
 	badIface := goodInterface
@@ -613,11 +616,11 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server an MTU < 1280 to be invalid")
 	} else {
-		t.Logf("Got expected error validating server with an MTU < 1280: %v", err)
+		t.Logf("Got expected error validating server with an MTU < 1280: %+v", err)
 	}
 
 	badIface.MTU = nil
@@ -629,11 +632,11 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no IP addresses to be invalid")
 	} else {
-		t.Logf("Got expected error validating server with no IP addresses: %v", err)
+		t.Logf("Got expected error validating server with no IP addresses: %+v", err)
 	}
 
 	badIface.IPAddresses = nil
@@ -644,11 +647,11 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with nil IP addresses to be invalid")
 	} else {
-		t.Logf("Got expected error validating server with nil IP addresses: %v", err)
+		t.Logf("Got expected error validating server with nil IP addresses: %+v", err)
 	}
 
 	badIface = goodInterface
@@ -665,11 +668,11 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no service addresses to be invalid")
 	} else {
-		t.Logf("Got expected error validating server with no service addresses: %v", err)
+		t.Logf("Got expected error validating server with no service addresses: %+v", err)
 	}
 
 	testServer.Interfaces = []tc.ServerInterfaceInfo{goodInterface, goodInterface}
@@ -679,11 +682,11 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with too many interfaces with service addresses to be invalid")
 	} else {
-		t.Logf("Got expected error validating server with too many interfaces with service addresses: %v", err)
+		t.Logf("Got expected error validating server with too many interfaces with service addresses: %+v", err)
 	}
 
 	badIface = goodInterface
@@ -699,11 +702,11 @@ func TestV3Validations(t *testing.T) {
 	mock.ExpectQuery("SELECT name, use_in_table").WillReturnRows(typeRows)
 	mock.ExpectQuery("SELECT").WillReturnRows(cdnRows)
 
-	_, err, _ = validateV3(&testServer, tx)
+	_, err = validateV3(&testServer, tx)
 	if err == nil {
 		t.Errorf("Expected a server with no service addresses to be invalid")
 	} else {
-		t.Logf("Got expected error validating server with no service addresses: %v", err)
+		t.Logf("Got expected error validating server with no service addresses: %+v", err)
 	}
 }
 
@@ -734,12 +737,9 @@ func TestUpdateStatusLastUpdatedTime(t *testing.T) {
 	mock.ExpectExec("UPDATE").WithArgs(lastUpdated, 1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	sysErr, _, code := updateStatusLastUpdatedTime(1, &lastUpdated, db.MustBegin().Tx)
-	if sysErr != nil {
-		t.Errorf("unable to update time, system error: %v", sysErr)
-	}
-	if code != http.StatusOK {
-		t.Errorf("updated time failed with status code:%d", code)
+	err = updateStatusLastUpdatedTime(1, &lastUpdated, db.MustBegin().Tx)
+	if err != nil {
+		t.Errorf("unable to update time, system error: %+v", err)
 	}
 }
 
@@ -767,15 +767,9 @@ func TestCreateInterfaces(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	usrErr, sysErr, code := createInterfaces(1, iface, db.MustBegin().Tx)
-	if usrErr != nil {
-		t.Errorf("unable to create interface, user error: %v", usrErr)
-	}
-	if sysErr != nil {
-		t.Errorf("unable to create interface, system error: %v", sysErr)
-	}
-	if code != http.StatusOK {
-		t.Errorf("unable to create interface, failed with status code:%d", code)
+	err = createInterfaces(1, iface, db.MustBegin().Tx)
+	if err != nil {
+		t.Errorf("unable to create interface, error: %+v", err)
 	}
 }
 
@@ -795,15 +789,9 @@ func TestDeleteInterfaces(t *testing.T) {
 	mock.ExpectExec("DELETE FROM interface").WithArgs(1).WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	usrErr, sysErr, code := deleteInterfaces(1, db.MustBegin().Tx)
-	if usrErr != nil {
-		t.Errorf("unable to delete interface, user error: %v", usrErr)
-	}
-	if sysErr != nil {
-		t.Errorf("unable to delete interface, system error: %v", sysErr)
-	}
-	if code != http.StatusOK {
-		t.Errorf("unable to delete interface, failed with status code:%d", code)
+	err = deleteInterfaces(1, db.MustBegin().Tx)
+	if err != nil {
+		t.Errorf("unable to delete interface, error: %+v", err)
 	}
 }
 
@@ -823,15 +811,9 @@ func TestInsertServerProfile(t *testing.T) {
 	mock.ExpectExec("INSERT INTO").WithArgs(1, pq.Array(profileName), pq.Array(priority)).WillReturnResult(sqlmock.NewResult(2, 2))
 	mock.ExpectCommit()
 
-	usrErr, sysErr, code := insertServerProfile(1, profileName, db.MustBegin().Tx)
-	if usrErr != nil {
-		t.Errorf("unable to insert profile, user error: %v", usrErr)
-	}
-	if sysErr != nil {
-		t.Errorf("unable to insert profile, system error: %v", sysErr)
-	}
-	if code != http.StatusOK {
-		t.Errorf("unable to insert profile, failed with status code:%d", code)
+	err = insertServerProfile(1, profileName, db.MustBegin().Tx)
+	if err != nil {
+		t.Errorf("unable to insert profile, error: %+v", err)
 	}
 }
 
@@ -1088,17 +1070,11 @@ func TestUpdateServer(t *testing.T) {
 		WillReturnRows(rows)
 	mock.ExpectCommit()
 
-	sid, code, usrErr, sysErr := updateServer(db.MustBegin(), server)
-	if usrErr != nil {
-		t.Errorf("unable to update v4 server, user error: %v", usrErr)
-	}
-	if sysErr != nil {
-		t.Errorf("unable to update v4 server, system error: %v", sysErr)
+	sid, err := updateServer(db.MustBegin(), server)
+	if err != nil {
+		t.Errorf("unable to update v4 server, error: %+v", err)
 	}
 	if sid != int64(server.ID) {
 		t.Errorf("updated incorrect server, expected: %d, got: %d", server.ID, sid)
-	}
-	if code != http.StatusOK {
-		t.Errorf("failed to update server with id: %d, expected: %d, got: %d", server.ID, http.StatusOK, code)
 	}
 }

@@ -106,25 +106,28 @@ func gettingUserTenantListFails(t *testing.T) {
 		tx.Rollback()
 	}()
 
-	err := errors.New("unknown failure")
-	mock.ExpectQuery("WITH RECURSIVE").WillReturnError(err)
-	_, _, code, userErr, sysErr := getCDNFederations(&api.Info{Tx: tx, User: &auth.CurrentUser{TenantID: 1}})
+	e := errors.New("unknown failure")
+	mock.ExpectQuery("WITH RECURSIVE").WillReturnError(e)
+	_, _, err := getCDNFederations(&api.Info{Tx: tx, User: &auth.CurrentUser{TenantID: 1}})
+	if err == nil {
+		t.Fatal("expected an error to occur")
+	}
 
-	if code != http.StatusInternalServerError {
+	if code := err.Code(); code != http.StatusInternalServerError {
 		t.Errorf("Incorrect response code when getting user tenants fails; want: %d, got: %d", http.StatusInternalServerError, code)
 	}
-	if userErr != nil {
+	if userErr := err.UserError(); userErr != nil {
 		t.Errorf("Unexpected user-facing error: %v", userErr)
 	}
-	if sysErr == nil {
+	if err.SystemError() == nil {
 		t.Fatal("Expected a system error but didn't get one")
 	}
 
 	// You can't use `errors.Is` here because sqlmock doesn't wrap the error you
 	// give it, so we have to resort to comparing text and praying there's no
 	// weird coincidence going on behind the scenes.
-	if !strings.Contains(sysErr.Error(), err.Error()) {
-		t.Errorf("Incorrect system error returned; want: %v, got: %v", err, sysErr)
+	if !strings.Contains(err.SystemError().Error(), e.Error()) {
+		t.Errorf("Incorrect system error returned; want: %v, got: %v", e, err.SystemError())
 	}
 }
 
@@ -149,18 +152,22 @@ func buildingQueryPartsFails(t *testing.T) {
 		User:    &auth.CurrentUser{TenantID: 1},
 		Version: &api.Version{Major: 5},
 	}
-	_, _, code, userErr, sysErr := getCDNFederations(&inf)
-	if code != http.StatusBadRequest {
+	_, _, err := getCDNFederations(&inf)
+	if err == nil {
+		t.Fatal("Expected an error to occur")
+	}
+
+	if code := err.Code(); code != http.StatusBadRequest {
 		t.Errorf("Incorrect response code when getting user tenants fails; want: %d, got: %d", http.StatusBadRequest, code)
 	}
-	if sysErr != nil {
+	if sysErr := err.SystemError(); sysErr != nil {
 		t.Errorf("Unexpected system error: %v", sysErr)
 	}
-	if userErr == nil {
+	if err.UserError() == nil {
 		t.Fatal("Expected a user-facing error, but didn't get one")
 	}
-	if !strings.Contains(userErr.Error(), "dsID") {
-		t.Errorf("Incorrect user error; expected it to mention 'dsID', but it didn't: %v", userErr)
+	if !strings.Contains(err.UserError().Error(), "dsID") {
+		t.Errorf("Incorrect user error; expected it to mention 'dsID', but it didn't: %v", err.UserError())
 	}
 }
 
@@ -193,12 +200,9 @@ func everythingWorks(t *testing.T) {
 	fedRows.AddRow(1, fed.ID, fed.CName, fed.TTL, fed.Description, fed.LastUpdated, fed.DeliveryService.ID, fed.DeliveryService.XMLID)
 	mock.ExpectQuery("SELECT").WillReturnRows(fedRows)
 
-	feds, _, _, userErr, sysErr := getCDNFederations(&api.Info{Tx: tx, User: &auth.CurrentUser{TenantID: 1}, Version: &api.Version{Major: 5}})
-	if userErr != nil {
-		t.Errorf("Unexpected user-facing error: %v", userErr)
-	}
-	if sysErr != nil {
-		t.Errorf("Unexpected system error: %v", sysErr)
+	feds, _, err := getCDNFederations(&api.Info{Tx: tx, User: &auth.CurrentUser{TenantID: 1}, Version: &api.Version{Major: 5}})
+	if err != nil {
+		t.Errorf("Unexpected error: %+v", err)
 	}
 	if l := len(feds); l != 1 {
 		t.Fatalf("Expected one federation to be returned; got: %d", l)

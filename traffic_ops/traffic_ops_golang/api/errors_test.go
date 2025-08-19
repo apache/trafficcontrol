@@ -160,17 +160,32 @@ func ExampleNewSystemErrorf() {
 }
 func ExampleNewUserError() {
 	fmt.Println(NewUserError(errors.New("testquest")).String())
-	// Output: 500 Internal Server Error, SystemError='<nil>', UserError='testquest'
+	// Output: 400 Bad Request, SystemError='<nil>', UserError='testquest'
 }
 func ExampleNewUserErrorString() {
 	fmt.Println(NewUserErrorString("testquest").String())
-	// Output: 500 Internal Server Error, SystemError='<nil>', UserError='testquest'
+	// Output: 400 Bad Request, SystemError='<nil>', UserError='testquest'
 }
 func ExampleNewUserErrorf() {
 	fmt.Println(NewUserErrorf("test: %w", errors.New("quest")).String())
-	// Output: 500 Internal Server Error, SystemError='<nil>', UserError='test: quest'
+	// Output: 400 Bad Request, SystemError='<nil>', UserError='test: quest'
 }
 func ExampleNewResourceModifiedError() {
 	fmt.Println(NewResourceModifiedError().String())
 	// Output: 412 Precondition Failed, SystemError='<nil>', UserError='resource was modified since the time specified by the request headers'
+}
+func ExampleNewUserErrorFromErrorList() {
+	errs := []error{}
+	fmt.Println(NewUserErrorFromErrorList(errs))
+
+	errs = append(errs, errors.New("Test"))
+	errs = append(errs, errors.New("Quest"))
+	fmt.Println(NewUserErrorFromErrorList(errs))
+
+	// Output: <nil>
+	// Test, Quest
+}
+func ExampleNewNotFoundError() {
+	fmt.Println(NewNotFoundError("test: %s", "quest").String())
+	// Output: 404 Not Found, SystemError='<nil>', UserError='test: quest'
 }
