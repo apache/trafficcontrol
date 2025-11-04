@@ -26,7 +26,7 @@
 		<license rdf:resource="https://spdx.org/licenses/Apache-2.0" />
 		<name>Apache Traffic Control</name>
 		<homepage rdf:resource="https://trafficcontrol.apache.org" />
-		<asfext:pmc rdf:resource="https://trafficcontrol.apache.org" />
+		<asfext:pmc rdf:resource="https://attic.apache.org" />
 		<shortdesc>Apache Traffic Control allows you to build a large scale content delivery network using open source.</shortdesc>
 		<description>With Apache Traffic Control, operators can setup a Content Delivery Network to quickly and efficiently deliver content to their users. Traffic Control is a highly distributed, scalable and redundant solution meeting the needs of operators from small to large.</description>
 		<bug-database rdf:resource="https://github.com/apache/trafficcontrol/issues" />
@@ -38,6 +38,7 @@
 		<category rdf:resource="https://projects.apache.org/category/cloud" />
 		<category rdf:resource="https://projects.apache.org/category/http" />
 		<category rdf:resource="https://projects.apache.org/category/network-server" />
+		<category rdf:resource="http://projects.apache.org/category/retired" />
 		<release>
 			<Version>
 				<name>Apache Traffic Control v5.1.2</name>
