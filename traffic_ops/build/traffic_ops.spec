@@ -172,7 +172,7 @@ if [ "$1" == "2" ]; then
 fi
 
 %post
-%__cp %{PACKAGEDIR}/etc/init.d/traffic_ops /etc/init.d/traffic_ops
+%__cp %{PACKAGEDIR}/etc/systemd/system/traffic_ops.service /etc/systemd/system/traffic_ops.service
 %__mkdir -p /var/www/files
 %__mkdir -p /etc/cron.d/
 %__cp %{PACKAGEDIR}/etc/cron.d/trafops_dnssec_refresh /etc/cron.d/trafops_dnssec_refresh
@@ -182,14 +182,13 @@ fi
 %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_golang /etc/logrotate.d/traffic_ops_golang
 %__cp %{PACKAGEDIR}/etc/logrotate.d/traffic_ops_access /etc/logrotate.d/traffic_ops_access
 %__cp %{PACKAGEDIR}/etc/profile.d/traffic_ops.sh /etc/profile.d/traffic_ops.sh
-%__chown root:root /etc/init.d/traffic_ops
+%__chown root:root /etc/systemd/system/traffic_ops.service
 %__chown root:root /etc/cron.d/trafops_dnssec_refresh
 %__chown root:root /etc/cron.d/autorenew_certs
 %__chown root:root /etc/cron.d/trafops_clean_isos
 %__chown root:root /etc/logrotate.d/traffic_ops
 %__chown root:root /etc/logrotate.d/traffic_ops_golang
 %__chown root:root /etc/logrotate.d/traffic_ops_access
-%__chmod +x /etc/init.d/traffic_ops
 %__chmod +x %{PACKAGEDIR}/install/bin/*
 /sbin/chkconfig --add traffic_ops
 
@@ -231,7 +230,7 @@ fi
 if [ "$1" = "0" ]; then
 	# this is an uninstall
 	%__rm -rf %{PACKAGEDIR}
-	%__rm /etc/init.d/traffic_ops
+	%__rm /etc/systemd/system/traffic_ops.service
 	/usr/bin/getent passwd %{TRAFFIC_OPS_USER} || /usr/sbin/userdel %{TRAFFIC_OPS_USER}
 	/usr/bin/getent group %{TRAFFIC_OPS_GROUP} || /usr/sbin/groupdel %{TRAFFIC_OPS_GROUP}
 fi
