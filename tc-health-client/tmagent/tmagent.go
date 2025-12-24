@@ -284,7 +284,7 @@ func NewParentInfo(cfgPtr *util.AtomicPtr[config.Cfg]) (*ParentInfo, error) {
 	parentConfig := filepath.Join(cfg.TrafficServerConfigDir, ParentsFile)
 	modTime, err := util.GetFileModificationTime(parentConfig)
 	if err != nil {
-		return nil, errors.New("error reading " + ParentsFile + ": " + err.Error())
+		return nil, fmt.Errorf("error reading %s: %w", ParentsFile, err)
 	}
 	parents := util.ConfigFile{
 		Filename:       parentConfig,
@@ -294,7 +294,7 @@ func NewParentInfo(cfgPtr *util.AtomicPtr[config.Cfg]) (*ParentInfo, error) {
 	stratyaml := filepath.Join(cfg.TrafficServerConfigDir, StrategiesFile)
 	modTime, err = util.GetFileModificationTime(stratyaml)
 	if err != nil {
-		return nil, errors.New("error reading " + StrategiesFile + ": " + err.Error())
+		return nil, fmt.Errorf("error reading %s: %w", StrategiesFile, err)
 	}
 
 	strategies := util.ConfigFile{
@@ -311,12 +311,12 @@ func NewParentInfo(cfgPtr *util.AtomicPtr[config.Cfg]) (*ParentInfo, error) {
 
 	// read the 'parent.config'.
 	if err := parentInfo.readParentConfig(); err != nil {
-		return nil, errors.New("loading " + ParentsFile + " file: " + err.Error())
+		return nil, fmt.Errorf("loading %s file: %w", ParentsFile, err)
 	}
 
 	// read the strategies.yaml.
 	if err := parentInfo.readStrategies(cfg.MonitorStrategiesPeers); err != nil {
-		return nil, errors.New("loading parent " + StrategiesFile + " file: " + err.Error())
+		return nil, fmt.Errorf("loading parent %s file: %w", StrategiesFile, err)
 	}
 
 	// collect the trafficserver parent status from the HostStatus subsystem.
@@ -357,16 +357,16 @@ func NewParentInfo(cfgPtr *util.AtomicPtr[config.Cfg]) (*ParentInfo, error) {
 func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
 	ptime, err := util.GetFileModificationTime(pi.ParentDotConfig.Filename)
 	if err != nil {
-		return errors.New("error reading " + ParentsFile + ": " + err.Error())
+		return fmt.Errorf("error reading %s: %w", ParentsFile, err)
 	}
 	stime, err := util.GetFileModificationTime(pi.StrategiesDotYaml.Filename)
 	if err != nil {
-		return errors.New("error reading " + StrategiesFile + ": " + err.Error())
+		return fmt.Errorf("error reading %s: %w", StrategiesFile, err)
 	}
 	if pi.ParentDotConfig.LastModifyTime < ptime {
 		// read the 'parent.config'.
 		if err := pi.readParentConfig(); err != nil {
-			return errors.New("updating " + ParentsFile + " file: " + err.Error())
+			return fmt.Errorf("updating %s file: %w", ParentsFile, err)
 		} else {
 			// log.Infof("updated parents from new %s, total parents: %d\n", ParentsFile, len(pi.Parents))
 			// TODO track map len
@@ -377,7 +377,7 @@ func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
 	if pi.StrategiesDotYaml.LastModifyTime < stime {
 		// read the 'strategies.yaml'.
 		if err := pi.readStrategies(cfg.MonitorStrategiesPeers); err != nil {
-			return errors.New("updating parent " + StrategiesFile + " file: " + err.Error())
+			return fmt.Errorf("updating parent %s file: %w", StrategiesFile, err)
 		} else {
 			// log.Infof("updated parents from new %s total parents: %d\n", StrategiesFile, len(pi.Parents))
 			// TODO track map len
@@ -387,7 +387,7 @@ func (pi *ParentInfo) UpdateParentInfo(cfg *config.Cfg) error {
 
 	// collect the trafficserver current host status.
 	if err := pi.readHostStatus(cfg); err != nil {
-		return errors.New("trafficserver may not be running: " + err.Error())
+		return fmt.Errorf("trafficserver may not be running: %w", err)
 	}
 
 	return nil
@@ -397,11 +397,11 @@ func (pi *ParentInfo) WritePollState() error {
 	cfg := pi.Cfg.Get()
 	data, err := json.MarshalIndent(pi, "", "\t")
 	if err != nil {
-		return fmt.Errorf("marshaling configuration state: %s\n", err.Error())
+		return fmt.Errorf("marshaling configuration state: %w", err)
 	} else {
 		err = os.WriteFile(cfg.PollStateJSONLog, data, 0644)
 		if err != nil {
-			return fmt.Errorf("writing configuration state: %s\n", err.Error())
+			return fmt.Errorf("writing configuration state: %w", err)
 		}
 	}
 	return nil
@@ -468,13 +468,13 @@ func (pi *ParentInfo) readParentConfig() error {
 	f, err := os.Open(fn)
 
 	if err != nil {
-		return errors.New("failed to open + " + fn + " :" + err.Error())
+		return fmt.Errorf("failed to open + %s :%w", fn, err)
 	}
 	defer f.Close()
 
 	finfo, err := os.Stat(fn)
 	if err != nil {
-		return errors.New("failed to Stat + " + fn + " :" + err.Error())
+		return fmt.Errorf("failed to Stat + %s :%w", fn, err)
 	}
 	pi.ParentDotConfig.LastModifyTime = finfo.ModTime().UnixNano()
 
@@ -548,13 +548,13 @@ func (pi *ParentInfo) readStrategies(monitorPeers bool) error {
 	// open the strategies file for scanning.
 	f, err := os.Open(fn)
 	if err != nil {
-		return errors.New("failed to open + " + fn + " :" + err.Error())
+		return fmt.Errorf("failed to open + %s :%w", fn, err)
 	}
 	defer f.Close()
 
 	finfo, err := os.Stat(fn)
 	if err != nil {
-		return errors.New("failed to Stat + " + fn + " :" + err.Error())
+		return fmt.Errorf("failed to Stat + %s :%w", fn, err)
 	}
 	pi.StrategiesDotYaml.LastModifyTime = finfo.ModTime().UnixNano()
 
@@ -583,7 +583,7 @@ func (pi *ParentInfo) readStrategies(monitorPeers bool) error {
 		log.Debugf("loading %s\n", includeFile)
 		content, err := ioutil.ReadFile(includeFile)
 		if err != nil {
-			return errors.New(err.Error())
+			return err
 		}
 
 		yamlContent = yamlContent + string(content)
@@ -592,7 +592,7 @@ func (pi *ParentInfo) readStrategies(monitorPeers bool) error {
 	strategies := Strategies{}
 
 	if err := yaml.Unmarshal([]byte(yamlContent), &strategies); err != nil {
-		return errors.New("failed to unmarshall " + fn + ": " + err.Error())
+		return fmt.Errorf("failed to unmarshall %s: %w", fn, err)
 	}
 
 	// If we are to not monitor peers, this will set the hosts to non-peer hosts only
@@ -607,14 +607,14 @@ func (pi *ParentInfo) readStrategies(monitorPeers bool) error {
 		var yamlPeers YAMLHosts
 
 		if err := yaml.Unmarshal([]byte(yamlContent), &yamlPeers); err != nil {
-			return errors.New("failed to unmarshall " + fn + ": " + err.Error())
+			return fmt.Errorf("failed to unmarshall %s: %w", fn, err)
 		}
 
 		for _, host := range yamlPeers.Hosts {
 			if host.Anchor[0:4] != "peer" {
 				var hostObj Host
 				if err := host.Decode(&hostObj); err != nil {
-					return errors.New("Failed to unmarshall non-peer object. " + fn + ": " + err.Error())
+					return fmt.Errorf("failed to unmarshall non-peer object %s: %w", fn, err)
 				}
 
 				strategies.Hosts = append(strategies.Hosts, hostObj)
@@ -668,10 +668,10 @@ func (pi *ParentInfo) GetTOData(cfg *config.Cfg) error {
 		// next time we'll login again and get a new session.
 		toData.TOClient = nil
 		pi.TOData.Set(toData)
-		return errors.New("error fetching Trafficmonitor server list: " + err.Error())
+		return fmt.Errorf("error fetching Trafficmonitor server list: %w", err)
 	} else if reqInf.StatusCode >= 300 || reqInf.StatusCode < 200 {
 		// Provide logging around a potential issue
-		return fmt.Errorf("Traffic Ops returned a non 2xx status code. Expected 2xx, got %v", reqInf.StatusCode)
+		return fmt.Errorf("Traffic Ops returned a non 2xx status code: %d", reqInf.StatusCode)
 	}
 
 	toData.Monitors = map[string]struct{}{}

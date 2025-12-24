@@ -51,7 +51,7 @@ func GetAllConfigs(
 	configFiles, warnings, err := MakeConfigFilesList(toData, cfg.Dir, cfg.ATSMajorVersion)
 	logWarnings("generating config files list: ", warnings)
 	if err != nil {
-		return nil, errors.New("creating meta: " + err.Error())
+		return nil, fmt.Errorf("creating meta: %w", err)
 	}
 
 	genTime := time.Now()
@@ -65,7 +65,7 @@ func GetAllConfigs(
 		}
 		txt, contentType, secure, lineComment, warnings, err := GetConfigFile(toData, fi, hdrCommentTxt, cfg)
 		if err != nil {
-			return nil, errors.New("getting config file '" + fi.Name + "': " + err.Error())
+			return nil, fmt.Errorf("getting config file '%s': %w", fi.Name, err)
 		}
 		if fi.Name == atscfg.SSLMultiCertConfigFileName {
 			hasSSLMultiCertConfig = true
@@ -84,7 +84,7 @@ func GetAllConfigs(
 	if hasSSLMultiCertConfig {
 		sslConfigs, err := GetSSLCertsAndKeyFiles(toData)
 		if err != nil {
-			return nil, errors.New("getting ssl key and cert config files: " + err.Error())
+			return nil, fmt.Errorf("getting ssl key and cert config files: %w", err)
 		}
 		configs = append(configs, sslConfigs...)
 	}
@@ -98,7 +98,7 @@ const HdrLineComment = "Line-Comment"
 // WriteConfigs writes the given configs as a RFC2046§5.1 MIME multipart/mixed message.
 func WriteConfigs(configs []t3cutil.ATSConfigFile, output io.Writer) error {
 	if err := json.NewEncoder(output).Encode(configs); err != nil {
-		return errors.New("encoding and writing configs: " + err.Error())
+		return fmt.Errorf("encoding and writing configs: %w", err)
 	}
 	return nil
 }

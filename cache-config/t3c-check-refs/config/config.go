@@ -109,7 +109,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	if *verbosePtr > 2 {
-		return Cfg{}, errors.New("Too many verbose options. The maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
+		return Cfg{}, errors.New("too many verbose options; the maximum log verbosity level is 2 (-vv or --verbose=2) for errors (0), warnings (1), and info (2)")
 	}
 
 	filesAddingInput := false
@@ -135,7 +135,7 @@ func InitConfig(appVersion string, gitRevision string) (Cfg, error) {
 	}
 
 	if err := log.InitCfg(cfg); err != nil {
-		return Cfg{}, errors.New("initializing loggers: " + err.Error())
+		return Cfg{}, fmt.Errorf("initializing loggers: %w", err)
 	}
 
 	return cfg, nil

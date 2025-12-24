@@ -24,6 +24,7 @@ package torequtil
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"math"
 	"net"
@@ -74,10 +75,10 @@ func GetRetry(numRetries int, objName string, obj interface{}, getter func(obj i
 		}
 		if strings.Contains(strings.ToLower(err.Error()), "not found") {
 			// if the server returned a 404, retrying won't help
-			return errors.New("getting uncached: " + err.Error())
+			return fmt.Errorf("getting uncached: %w", err)
 		}
 		if currentRetry == numRetries {
-			return errors.New("getting uncached: " + err.Error())
+			return fmt.Errorf("getting uncached: %w", err)
 		}
 
 		sleepSeconds := RetryBackoffSeconds(currentRetry)

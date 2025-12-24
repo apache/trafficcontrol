@@ -194,12 +194,12 @@ func parseDBConfig() error {
 	dbConfig := dbConfig{}
 	err = yaml.Unmarshal(confBytes, &dbConfig)
 	if err != nil {
-		return errors.New("unmarshalling DB conf yaml: " + err.Error())
+		return fmt.Errorf("unmarshalling DB conf yaml: %w", err)
 	}
 
 	envConfig, err := dbConfig.getEnvironmentConfig(environment)
 	if err != nil {
-		return errors.New("getting environment config: " + err.Error())
+		return fmt.Errorf("getting environment config: %w", err)
 	}
 
 	dbDriver = envConfig.Driver
@@ -378,11 +378,11 @@ func maybeMigrateFromGoose() bool {
 func runFirstMigration() error {
 	sourceDriver, sourceDriverErr := source.Open("file:" + dbMigrationsDir)
 	if sourceDriverErr != nil {
-		return fmt.Errorf("opening the migration source driver: " + sourceDriverErr.Error())
+		return fmt.Errorf("opening the migration source driver: %w", sourceDriverErr)
 	}
 	dbDriver, dbDriverErr := database.Open(connectionString)
 	if dbDriverErr != nil {
-		return fmt.Errorf("opening the dbdriver: " + dbDriverErr.Error())
+		return fmt.Errorf("opening the dbdriver: %w", dbDriverErr)
 	}
 	firstMigration, firstMigrationName, migrationReadErr := sourceDriver.ReadUp(firstMigrationTimestamp)
 	if migrationReadErr != nil {

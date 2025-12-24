@@ -17,6 +17,7 @@ package util
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,7 +26,7 @@ import (
 
 func readFile(fileName string) ([]byte, error) {
 	if fileName == "" {
-		return nil, errors.New("filename is empty.")
+		return nil, errors.New("filename is empty")
 	}
 
 	fileInfo, err := os.Stat(fileName)
@@ -43,7 +44,7 @@ func readFile(fileName string) ([]byte, error) {
 	fileData := make([]byte, size)
 	cnt, err := fd.Read(fileData)
 	if err != nil || int64(cnt) != size {
-		return nil, errors.New("unable to completely read from '" + fileName + "' : " + err.Error())
+		return nil, fmt.Errorf("unable to completely read from '%s' : %w", fileName, err)
 	}
 
 	return fileData, nil
@@ -99,9 +100,10 @@ func gitDiffFiles(firstFile string, secondFile string) (string, error) {
 
 	errOutput, err := cmd.CombinedOutput()
 	if err != nil {
-		if _, ok := err.(*exec.ExitError); !ok {
+		var exitError *exec.ExitError
+		if ok := errors.As(err, &exitError); !ok {
 			// this means Go failed to run the command, not that the command returned an error.
-			return "", errors.New("git status returned: " + err.Error())
+			return "", fmt.Errorf("git status returned: %w", err)
 		}
 	}
 

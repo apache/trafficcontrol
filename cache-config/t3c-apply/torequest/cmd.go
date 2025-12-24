@@ -67,7 +67,7 @@ var t3cpath string = filepath.Join(t3cutil.InstallDir(), `t3c`)
 func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	configData, err := requestConfig(cfg)
 	if err != nil {
-		return nil, errors.New("requesting: " + err.Error())
+		return nil, fmt.Errorf("requesting: %w", err)
 	}
 	args := []string{
 		`generate`,
@@ -110,18 +110,18 @@ func generate(cfg config.Cfg) ([]t3cutil.ATSConfigFile, error) {
 	if code != 0 {
 		logSubAppErr(t3cgen+` stdout`, generatedFiles)
 		logSubAppErr(t3cgen+` stderr`, stdErr)
-		return nil, fmt.Errorf("%s returned non-zero exit code %v, see log for output", t3cgen, code)
+		return nil, fmt.Errorf("%s returned non-zero exit code %d, see log for output", t3cgen, code)
 	}
 	logSubApp(t3cgen, stdErr)
 
 	preprocessedBytes, err := preprocess(cfg, configData, generatedFiles)
 	if err != nil {
-		return nil, errors.New("preprocessing config files: " + err.Error())
+		return nil, fmt.Errorf("preprocessing config files: %w", err)
 	}
 
 	allFiles := []t3cutil.ATSConfigFile{}
 	if err := json.Unmarshal(preprocessedBytes, &allFiles); err != nil {
-		return nil, errors.New("unmarshalling generated files: " + err.Error())
+		return nil, fmt.Errorf("unmarshalling generated files: %w", err)
 	}
 
 	return allFiles, nil
@@ -149,31 +149,31 @@ func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byt
 
 	stdinPipe, err := cmd.StdinPipe()
 	if err != nil {
-		return nil, errors.New("getting command pipe: " + err.Error())
+		return nil, fmt.Errorf("getting command pipe: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		return nil, errors.New("starting command: " + err.Error())
+		return nil, fmt.Errorf("starting command: %w", err)
 	}
 
 	if _, err := stdinPipe.Write([]byte(`{"data":`)); err != nil {
-		return nil, errors.New("writing opening json to input: " + err.Error())
+		return nil, fmt.Errorf("writing opening json to input: %w", err)
 	} else if _, err := stdinPipe.Write(configData); err != nil {
-		return nil, errors.New("writing config data to input: " + err.Error())
+		return nil, fmt.Errorf("writing config data to input: %w", err)
 	} else if _, err := stdinPipe.Write([]byte(`,"files":`)); err != nil {
-		return nil, errors.New("writing files key to input: " + err.Error())
+		return nil, fmt.Errorf("writing files key to input: %w", err)
 	} else if _, err := stdinPipe.Write(generatedFiles); err != nil {
-		return nil, errors.New("writing generated files to input: " + err.Error())
+		return nil, fmt.Errorf("writing generated files to input: %w", err)
 	} else if _, err := stdinPipe.Write([]byte(`}`)); err != nil {
-		return nil, errors.New("writing closing json input: " + err.Error())
+		return nil, fmt.Errorf("writing closing json input: %w", err)
 	} else if err := stdinPipe.Close(); err != nil {
-		return nil, errors.New("closing stdin writer: " + err.Error())
+		return nil, fmt.Errorf("closing stdin writer: %w", err)
 	}
 
 	code := 0 // if cmd.Wait returns no error, that means the command returned 0
 	if err := cmd.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); !ok {
-			return nil, errors.New("error running command: " + err.Error())
+			return nil, fmt.Errorf("error running command: %w", err)
 		} else {
 			code = exitErr.ExitCode()
 		}
@@ -184,7 +184,7 @@ func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byt
 	if code != 0 {
 		logSubAppErr(t3cpreproc+` stdout`, stdOut)
 		logSubAppErr(t3cpreproc+` stderr`, stdErr)
-		return nil, fmt.Errorf("%s returned non-zero exit code %v, see log for output", t3cpreproc, code)
+		return nil, fmt.Errorf("%s returned non-zero exit code %d, see log for output", t3cpreproc, code)
 	}
 	logSubApp(t3cpreproc, stdErr)
 	return stdOut, nil
@@ -193,7 +193,7 @@ func preprocess(cfg config.Cfg, configData []byte, generatedFiles []byte) ([]byt
 func getStatuses(cfg config.Cfg) ([]string, error) {
 	statuses := []tc.StatusNullable{}
 	if err := requestJSON(cfg, "statuses", &statuses); err != nil {
-		return nil, errors.New("requesting json: " + err.Error())
+		return nil, fmt.Errorf("requesting json: %w", err)
 	}
 	sl := []string{}
 	for val := range statuses {
@@ -207,7 +207,7 @@ func getStatuses(cfg config.Cfg) ([]string, error) {
 func getChkconfig(cfg config.Cfg) ([]map[string]string, error) {
 	result := []map[string]string{}
 	if err := requestJSON(cfg, "chkconfig", &result); err != nil {
-		return nil, errors.New("requesting json: " + err.Error())
+		return nil, fmt.Errorf("requesting json: %w", err)
 	}
 	return result, nil
 }
@@ -215,7 +215,7 @@ func getChkconfig(cfg config.Cfg) ([]map[string]string, error) {
 func getUpdateStatus(cfg config.Cfg) (*atscfg.ServerUpdateStatus, error) {
 	status := atscfg.ServerUpdateStatus{}
 	if err := requestJSON(cfg, "update-status", &status); err != nil {
-		return nil, errors.New("requesting json: " + err.Error())
+		return nil, fmt.Errorf("requesting json: %w", err)
 	}
 	return &status, nil
 }
@@ -223,7 +223,7 @@ func getUpdateStatus(cfg config.Cfg) (*atscfg.ServerUpdateStatus, error) {
 func getSystemInfo(cfg config.Cfg) (map[string]interface{}, error) {
 	result := map[string]interface{}{}
 	if err := requestJSON(cfg, "system-info", &result); err != nil {
-		return nil, errors.New("requesting json: " + err.Error())
+		return nil, fmt.Errorf("requesting json: %w", err)
 	}
 	return result, nil
 }
@@ -231,7 +231,7 @@ func getSystemInfo(cfg config.Cfg) (map[string]interface{}, error) {
 func getPackages(cfg config.Cfg) ([]Package, error) {
 	pkgs := []Package{}
 	if err := requestJSON(cfg, "packages", &pkgs); err != nil {
-		return nil, errors.New("requesting json: " + err.Error())
+		return nil, fmt.Errorf("requesting json: %w", err)
 	}
 	return pkgs, nil
 }
@@ -289,7 +289,7 @@ func sendUpdate(cfg config.Cfg, configApplyTime, revalApplyTime *time.Time, conf
 	if code != 0 {
 		logSubAppErr(t3cupd+` stdout`, stdOut)
 		logSubAppErr(t3cupd+` stderr`, stdErr)
-		return fmt.Errorf("%s returned non-zero exit code %v, see log for output", t3cupd, code)
+		return fmt.Errorf("%s returned non-zero exit code %d, see log for output", t3cupd, code)
 	}
 	logSubApp(t3cupd, stdErr)
 	log.Infoln(t3cupd + " succeeded")
@@ -351,7 +351,7 @@ func diff(cfg config.Cfg, newFile []byte, fileLocation string, reportOnly bool, 
 
 	stdOut, stdErr, code := t3cutil.DoInput(newFile, diffpath, args...)
 	if code > 1 {
-		return false, fmt.Errorf("%s returned error code %v stdout '%v' stderr '%v'", t3cdiff, code, string(stdOut), string(stdErr))
+		return false, fmt.Errorf("%s returned error code %d stdout '%s' stderr '%s'", t3cdiff, code, string(stdOut), string(stdErr))
 	}
 	logSubApp(t3cdiff, stdErr)
 
@@ -405,7 +405,7 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 
 	inputBts, err := json.Marshal(&t3cutil.CheckRefsInputFileAndAdding{File: cfgFile, Adding: filesAdding})
 	if err != nil {
-		return errors.New("marshalling json input: " + err.Error())
+		return fmt.Errorf("marshalling json input: %w", err)
 	}
 
 	stdOut, stdErr, code := t3cutil.DoInput(inputBts, t3cpath, args...)
@@ -413,7 +413,7 @@ func checkRefs(cfg config.Cfg, cfgFile []byte, filesAdding []string) error {
 	if code != 0 {
 		logSubAppErr(t3cchkrefs+` stdout`, stdOut)
 		logSubAppErr(t3cchkrefs+` stderr`, stdErr)
-		return fmt.Errorf("%d plugins failed to verify. See log for details.", code)
+		return fmt.Errorf("%d plugins failed to verify - see log for details", code)
 	}
 	logSubApp(t3cchkrefs+` stdout`, stdOut)
 	logSubApp(t3cchkrefs+` stderr`, stdErr)
@@ -427,15 +427,15 @@ func checkCert(c []byte) (error, bool) {
 	if block == nil {
 		log.Errorln("Bad Certificate:\n'", string(c), "'")
 		fatal = true
-		return errors.New("Error Decoding Certificate"), fatal
+		return errors.New("error decoding certificate"), fatal
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
 		fatal = true
-		return errors.New("Error Parsing Certificate: " + err.Error()), fatal
+		return fmt.Errorf("error parsing certificate: %w", err), fatal
 	}
 	if cert.NotAfter.Unix() < time.Now().Unix() {
-		err = errors.New("Certificate expired: " + cert.NotAfter.Format(config.TimeAndDateLayout))
+		err = errors.New("certificate expired: " + cert.NotAfter.Format(config.TimeAndDateLayout))
 		log.Warnf(err.Error())
 	} else {
 		log.Infof("Certificate valid until %s ", cert.NotAfter.Format(config.TimeAndDateLayout))
@@ -458,27 +458,27 @@ func checkReload(changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
 
 	stdinPipe, err := cmd.StdinPipe()
 	if err != nil {
-		return t3cutil.ServiceNeedsInvalid, errors.New("getting command pipe: " + err.Error())
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("getting command pipe: %w", err)
 	}
 
 	if err := cmd.Start(); err != nil {
-		return t3cutil.ServiceNeedsInvalid, errors.New("starting command: " + err.Error())
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("starting command: %w", err)
 	}
 
 	if _, err := stdinPipe.Write([]byte(`{"changed_files":"`)); err != nil {
-		return t3cutil.ServiceNeedsInvalid, errors.New("writing opening json to input: " + err.Error())
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("writing opening json to input: %w", err)
 	} else if _, err := stdinPipe.Write(changedFiles); err != nil {
-		return t3cutil.ServiceNeedsInvalid, errors.New("writing changed files to input: " + err.Error())
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("writing changed files to input: %w", err)
 	} else if _, err := stdinPipe.Write([]byte(`"}`)); err != nil {
-		return t3cutil.ServiceNeedsInvalid, errors.New("writing closing json input: " + err.Error())
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("writing closing json input: %w", err)
 	} else if err := stdinPipe.Close(); err != nil {
-		return t3cutil.ServiceNeedsInvalid, errors.New("closing stdin writer: " + err.Error())
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("closing stdin writer: %w", err)
 	}
 
 	code := 0 // if cmd.Wait returns no error, that means the command returned 0
 	if err := cmd.Wait(); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); !ok {
-			return t3cutil.ServiceNeedsInvalid, errors.New("error running command: " + err.Error())
+			return t3cutil.ServiceNeedsInvalid, fmt.Errorf("error running command: %w", err)
 		} else {
 			code = exitErr.ExitCode()
 		}
@@ -490,7 +490,7 @@ func checkReload(changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
 	if code != 0 {
 		logSubAppErr(t3cchkreload+` stdout`, stdOut)
 		logSubAppErr(t3cchkreload+` stderr`, stdErr)
-		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("%s returned error code %d - see log for details.", t3cchkreload, code)
+		return t3cutil.ServiceNeedsInvalid, fmt.Errorf("%s returned error code %d - see log for details", t3cchkreload, code)
 	}
 
 	logSubApp(t3cchkreload, stdErr)
@@ -506,10 +506,10 @@ func checkReload(changedConfigFiles []string) (t3cutil.ServiceNeeds, error) {
 func requestJSON(cfg config.Cfg, command string, obj interface{}) error {
 	stdOut, err := request(cfg, command)
 	if err != nil {
-		return errors.New("requesting: " + err.Error())
+		return fmt.Errorf("requesting: %w", err)
 	}
 	if err := json.Unmarshal(stdOut, obj); err != nil {
-		return errors.New("unmarshalling '" + string(stdOut) + "': " + err.Error())
+		return fmt.Errorf("unmarshaling '%s': %w", stdOut, err)
 	}
 	return nil
 }
@@ -547,7 +547,7 @@ func request(cfg config.Cfg, command string) ([]byte, error) {
 	if code != 0 {
 		logSubAppErr(t3creq+` stdout`, stdOut)
 		logSubAppErr(t3creq+` stderr`, stdErr)
-		return nil, fmt.Errorf("%s returned non-zero exit code %v, see log for output", t3creq, code)
+		return nil, fmt.Errorf("%s returned non-zero exit code %d, see log for output", t3creq, code)
 	}
 
 	logSubApp(t3creq, stdErr)
@@ -613,7 +613,7 @@ func requestConfig(cfg config.Cfg) ([]byte, error) {
 	if code != 0 {
 		logSubAppErr(t3creq+` stdout`, stdOut)
 		logSubAppErr(t3creq+` stderr`, stdErr)
-		return nil, fmt.Errorf("t3c returned non-zero exit code %v, see log for details", code)
+		return nil, fmt.Errorf("t3c returned non-zero exit code %d, see log for details", code)
 	}
 	logSubApp(t3creq, stdErr)
 

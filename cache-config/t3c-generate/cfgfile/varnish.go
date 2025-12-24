@@ -20,7 +20,7 @@ package cfgfile
  */
 
 import (
-	"errors"
+	"fmt"
 	"path/filepath"
 
 	"github.com/apache/trafficcontrol/v8/cache-config/t3c-generate/config"
@@ -60,7 +60,7 @@ func GetVarnishConfigs(toData *t3cutil.ConfigData, cfg config.Cfg) ([]t3cutil.AT
 
 	sslConfigs, err := GetSSLCertsAndKeyFiles(toData)
 	if err != nil {
-		return nil, errors.New("getting ssl key and cert config files: " + err.Error())
+		return nil, fmt.Errorf("getting ssl key and cert config files: %w", err)
 	}
 	for i := range sslConfigs {
 		// path changed manually because GetSSLCertsAndKeyFiles hardcodes the directory certs and keys are written to.

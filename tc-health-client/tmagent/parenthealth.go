@@ -22,6 +22,7 @@ package tmagent
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -82,7 +83,7 @@ func DeserializeParentHealth(bts []byte) (*ParentHealth, error) {
 	ph := &ParentHealth{}
 	err := json.Unmarshal(bts, ph)
 	if err != nil {
-		return nil, errors.New("unmarshalling json: " + err.Error())
+		return nil, fmt.Errorf("unmarshalling json: %w", err)
 	}
 
 	// this can be smarter if and when we have a new version that can be converted from an old.

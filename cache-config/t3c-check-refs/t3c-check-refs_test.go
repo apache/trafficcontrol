@@ -21,7 +21,7 @@ package main
 
 import (
 	"bytes"
-	"errors"
+	"fmt"
 	"os/exec"
 	"testing"
 )
@@ -44,7 +44,7 @@ func t3c_check_refs_exec(filename string, t *testing.T) (int, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		return -1, errors.New("error from t3c-check-refs: " + err.Error() + ": " + errbuf.String())
+		return -1, fmt.Errorf("error from t3c-check-refs: %w: %s", err, errbuf.String())
 	}
 
 	return cmd.ProcessState.ExitCode(), nil

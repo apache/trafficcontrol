@@ -20,7 +20,7 @@ package util
  */
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -38,13 +38,13 @@ type ConfigFile struct {
 func GetFileModificationTime(fn string) (int64, error) {
 	f, err := os.Open(fn)
 	if err != nil {
-		return 0, errors.New("opening " + fn + ": " + err.Error())
+		return 0, fmt.Errorf("opening %s: %w", fn, err)
 	}
 	defer f.Close()
 
 	finfo, err := f.Stat()
 	if err != nil {
-		return 0, errors.New("unable to get file status for " + fn + ": " + err.Error())
+		return 0, fmt.Errorf("unable to get file status for %s: %w", fn, err)
 	}
 	return finfo.ModTime().UnixNano(), nil
 }

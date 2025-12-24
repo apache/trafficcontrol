@@ -58,7 +58,7 @@ func TCPHdrToNative(hdr TCPHdr) (TCPHdrNative, error) {
 	native := TCPHdrNative{}
 	const minTCPHdrSize = 20
 	if len(hdr) < minTCPHdrSize {
-		return TCPHdrNative{}, fmt.Errorf("malformed header, minimum TCP header size is %v but hdr was %v bytes", minTCPHdrSize, len(hdr))
+		return TCPHdrNative{}, fmt.Errorf("malformed header, minimum TCP header size is %d but hdr was %d bytes", minTCPHdrSize, len(hdr))
 	}
 
 	native.SrcPort = hdr.SrcPort()

@@ -21,7 +21,7 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -484,13 +484,13 @@ func LoadMetaData(cfg config.Cfg) (*t3cutil.ApplyMetaData, error) {
 
 	bts, err := os.ReadFile(metaDataFilePath)
 	if err != nil {
-		return nil, errors.New("reading metadata file '" + metaDataFilePath + "': " + err.Error())
+		return nil, fmt.Errorf("reading metadata file '%s': %w", metaDataFilePath, err)
 	}
 
 	metaData := &t3cutil.ApplyMetaData{}
 
 	if err := json.Unmarshal(bts, &metaData); err != nil {
-		return nil, errors.New("unmarshalling metadata file: " + err.Error())
+		return nil, fmt.Errorf("unmarshalling metadata file: %w", err)
 	}
 
 	return metaData, nil

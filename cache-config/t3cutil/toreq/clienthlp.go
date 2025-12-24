@@ -47,9 +47,9 @@ func GetProfileByName(toClient *toclient.Session, name string, opts *toclient.Re
 	} else if reqInf.StatusCode == http.StatusNotModified {
 		return tc.ProfileV5{}, reqInf, nil
 	} else if len(profiles.Response) == 0 {
-		return tc.ProfileV5{}, reqInf, fmt.Errorf("name '"+string(name)+" ' not found (no error, but len 0) reqInf %+v profiles %+v", reqInf, profiles)
+		return tc.ProfileV5{}, reqInf, fmt.Errorf("name '%s' not found (no error, but len 0) reqInf %+v profiles %+v", name, reqInf, profiles)
 	} else if len(profiles.Response) > 1 {
-		return tc.ProfileV5{}, reqInf, fmt.Errorf("expected 1 profile, got len %v val %+v", len(profiles.Response), profiles.Response)
+		return tc.ProfileV5{}, reqInf, fmt.Errorf("expected 1 profile, got len %d val %+v", len(profiles.Response), profiles.Response)
 	}
 	return profiles.Response[0], reqInf, nil
 }
@@ -99,9 +99,9 @@ func GetCDNByName(toClient *toclient.Session, name tc.CDNName, opts *toclient.Re
 	} else if reqInf.StatusCode == http.StatusNotModified {
 		return tc.CDNV5{}, reqInf, nil
 	} else if len(cdns.Response) == 0 {
-		return tc.CDNV5{}, reqInf, fmt.Errorf("name '"+string(name)+" ' not found (no error, but len 0) reqInf %+v cdns %+v", reqInf, cdns)
+		return tc.CDNV5{}, reqInf, fmt.Errorf("name '%s' not found (no error, but len 0) reqInf %+v cdns %+v", name, reqInf, cdns)
 	} else if len(cdns.Response) > 1 {
-		return tc.CDNV5{}, reqInf, fmt.Errorf("expected 1, got len %v val %+v", len(cdns.Response), cdns.Response)
+		return tc.CDNV5{}, reqInf, fmt.Errorf("expected 1, got len %d val %+v", len(cdns.Response), cdns.Response)
 	}
 	return cdns.Response[0], reqInf, nil
 }
