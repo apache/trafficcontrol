@@ -68,8 +68,19 @@
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
 
+    <filter>
+        <filter-name>authFilter</filter-name>
+        <filter-class>org.springframework.web.filter.DelegatingFilterProxy</filter-class>
+    </filter>
+
+    <filter-mapping>
+       <filter-name>authFilter</filter-name>
+        <url-pattern>/crs/consistenthash/patternbased/regex</url-pattern>
+    </filter-mapping>
+
     <servlet-mapping>
         <servlet-name>status</servlet-name>
         <url-pattern>/crs/*</url-pattern>
     </servlet-mapping>
+
 </web-app>

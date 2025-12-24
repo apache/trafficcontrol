@@ -175,6 +175,9 @@ For the most part, the configuration files and :term:`Parameters` used by Traffi
 	| web.xml                    | various parameters                        | Default settings for all Web Applications running in the Traffic Router instance | N/A                                                |
 	|                            |                                           | of Tomcat                                                                        |                                                    |
 	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
+	| users.properties           | API users credentials                     | Users allowed to access /crs/consistenthash/patternbased/regex and               | N/A                                                |
+	|                            |                                           | /crs/consistenthash/patternbased/deliveryservice                                 |                                                    |
+	+----------------------------+-------------------------------------------+----------------------------------------------------------------------------------+----------------------------------------------------+
 
 .. _tr-profile:
 

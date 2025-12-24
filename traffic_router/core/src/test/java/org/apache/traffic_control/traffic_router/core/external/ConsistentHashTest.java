@@ -46,6 +46,19 @@ import static org.hamcrest.number.OrderingComparison.greaterThan;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.HttpClients;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.junit.Test;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 @Category(ExternalTest.class)
 public class ConsistentHashTest {
 	private CloseableHttpClient closeableHttpClient;
@@ -54,6 +67,21 @@ public class ConsistentHashTest {
 	String steeringDeliveryServiceId;
 	String consistentHashRegex;
 	List<String> steeredDeliveryServices = new ArrayList<String>();
+
+    private String[] readCredentials() throws Exception {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("users.properties")) {
+            if (inputStream == null) {
+                throw new RuntimeException("test-creds.txt not found in classpath");
+            }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String line = reader.readLine();
+                if (line == null || !line.contains(":")) {
+                    throw new RuntimeException("Invalid format in test-creds.txt, expected format 'username:password'");
+                }
+                return line.split(":", 2);
+            }
+        }
+    }
 
 	@Before
 	public void before() throws Exception {
@@ -78,6 +106,7 @@ public class ConsistentHashTest {
 
 		resourcePath = "publish/CrConfig.json";
 		inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath);
+
 		if (inputStream == null) {
 			fail("Could not find file '" + resourcePath + "' needed for test from the current classpath as a resource!");
 		}
@@ -266,7 +295,7 @@ public class ConsistentHashTest {
 	}
 
 	@Test
-	public void itUsesRegexToStandardizeRequestPath() throws Exception {
+	public void itUsesRegexToStandardizeRequestPathWithoutCreds() throws Exception {
 		CloseableHttpResponse response = null;
 
 		try {
@@ -276,22 +305,48 @@ public class ConsistentHashTest {
 
 			response = closeableHttpClient.execute(httpGet);
 
-			assertThat("Expected to get 200 response from /consistenthash/patternbased/regex endpoint", response.getStatusLine().getStatusCode(), equalTo(200));
-
-			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
-			JsonNode resp = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
-			String resultingPathToConsistentHash = resp.get("resultingPathToConsistentHash").asText();
-
-			requestPath = URLEncoder.encode("/other/path/other_thing.m3u8", "UTF-8");
-			httpGet = new HttpGet("http://localhost:3333/crs/consistenthash/patternbased/regex?regex=" + encodedConsistentHashRegex + "&requestPath=" + requestPath);
-
-			response = closeableHttpClient.execute(httpGet);
-
-			resp = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
-
-			assertThat(JsonUtils.optString(resp, "resultingPathToConsistentHash"),equalTo(resultingPathToConsistentHash));
+			assertThat("Expected to get 401 response from /consistenthash/patternbased/regex endpoint", response.getStatusLine().getStatusCode(), equalTo(401));
 		} finally {
 			if (response != null) response.close();
+		}
+	}
+
+	@Test
+	public void itUsesRegexToStandardizeRequestPathWithCreds() throws Exception {
+		String[] creds = readCredentials();
+		String username = creds[0];
+		String password = creds[1];
+
+		CredentialsProvider credsProvider = new BasicCredentialsProvider();
+		credsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
+
+		try (CloseableHttpClient httpClient = HttpClients.custom()
+			.setDefaultCredentialsProvider(credsProvider)
+			.build()) {
+
+			ObjectMapper objectMapper = new ObjectMapper(new JsonFactory());
+
+			String requestPath = URLEncoder.encode("/some/path/thing.m3u8", "UTF-8");
+			String encodedConsistentHashRegex = URLEncoder.encode(consistentHashRegex, "UTF-8");
+
+			String baseUrl = "http://localhost:3333/crs/consistenthash/patternbased/regex";
+			String url = baseUrl + "?regex=" + encodedConsistentHashRegex + "&requestPath=" + requestPath;
+
+			HttpGet httpGet = new HttpGet(url);
+			try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+				assertThat("Expected 200 response", response.getStatusLine().getStatusCode(), equalTo(200));
+				JsonNode resp = objectMapper.readTree(EntityUtils.toString(response.getEntity()));
+				String resultingPathToConsistentHash = resp.get("resultingPathToConsistentHash").asText();
+
+				requestPath = URLEncoder.encode("/other/path/other_thing.m3u8", "UTF-8");
+				url = baseUrl + "?regex=" + encodedConsistentHashRegex + "&requestPath=" + requestPath;
+
+				HttpGet secondRequest = new HttpGet(url);
+				try (CloseableHttpResponse response2 = httpClient.execute(secondRequest)) {
+					JsonNode secondResp = objectMapper.readTree(EntityUtils.toString(response2.getEntity()));
+					assertThat(secondResp.get("resultingPathToConsistentHash").asText(), equalTo(resultingPathToConsistentHash));
+				}
+			}
 		}
 	}
 
