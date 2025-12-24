@@ -341,7 +341,19 @@ export class ServersTableComponent implements OnInit {
 			disabled: (data: Array<AugmentedServer>): boolean => !data.every(serverIsCache),
 			multiRow: true,
 			name: "Clear Queued Updates"
-		}
+		},
+		{
+			action: "reval",
+			disabled: (data: Array<AugmentedServer>): boolean => !data.every(serverIsCache),
+			multiRow: true,
+			name: "Queue Content Revalidation",
+		},
+		{
+			action: "unreval",
+			disabled: (data: Array<AugmentedServer>): boolean => !data.every(serverIsCache),
+			multiRow: true,
+			name: "Clear Queued Content Revalidations",
+		},
 	];
 
 	/** A subject that child components can subscribe to for access to the fuzzy search query text */
@@ -405,7 +417,7 @@ export class ServersTableComponent implements OnInit {
 				);
 				const result = await ref.afterClosed().toPromise();
 				if (typeof(result) === "number") {
-					if (data.title.indexOf("Clear") > -1) {
+					if (data.title.includes("Clear")) {
 						await this.cdn.dequeueServerUpdates(result);
 					} else {
 						await this.cdn.queueServerUpdates(result);
@@ -421,27 +433,29 @@ export class ServersTableComponent implements OnInit {
 	 * @param action The emitted context menu action event.
 	 */
 	public async handleContextMenu(action: ContextMenuActionEvent<AugmentedServer>): Promise<void> {
+		const arrData = Array.isArray( action.data) ? action.data : [action.data];
 		switch (action.action) {
 			case "updateStatus":
 				const dialogRef = this.dialog.open(UpdateStatusComponent, {
-					data: action.data instanceof Array ? action.data : [action.data]
+					data: arrData
 				});
-				dialogRef.afterClosed().subscribe(result => {
-					if(result) {
-						this.reloadServers();
-					}
-				});
+				const result = await dialogRef.afterClosed().toPromise();
+				if (result) {
+					return this.reloadServers();
+				}
 				break;
 			case "queue":
-				const queueServers = action.data instanceof Array ? action.data : [action.data];
-				await Promise.all(queueServers.map(async s => this.api.queueUpdates(s)));
-				await this.reloadServers();
-				break;
+				await Promise.all(arrData.map(async s => this.api.queueUpdates(s)));
+				return this.reloadServers();
 			case "dequeue":
-				const dequeueServers = action.data instanceof Array ? action.data : [action.data];
-				await Promise.all(dequeueServers.map(async s => this.api.clearUpdates(s)));
-				await this.reloadServers();
-				break;
+				await Promise.all(arrData.map(async s => this.api.clearUpdates(s)));
+				return this.reloadServers();
+			case "reval":
+				await Promise.all(arrData.map(async s => this.api.queueReval(s)));
+				return this.reloadServers();
+			case "unreval":
+				await Promise.all(arrData.map(async s => this.api.clearReval(s)));
+				return this.reloadServers();
 			default:
 				throw new Error(`unknown context menu item clicked: ${action.action}`);
 		}
