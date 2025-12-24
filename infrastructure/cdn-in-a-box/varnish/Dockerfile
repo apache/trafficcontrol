@@ -41,6 +41,11 @@ RUN dnf install -y bind-utils kyotocabinet-libs initscripts iproute net-tools nm
     dnf install -y jq logrotate findutils && \
     dnf clean all
 
+# for building libvmod-dyncounters.
+RUN yum -y config-manager --set-enabled powertools && yum install -y libtool automake make autoconf-archive python3.11 python3-docutils varnish-devel
+
+RUN git clone https://github.com/ehocdet/libvmod-dyncounters.git && cd libvmod-dyncounters && ./autogen.sh && ./configure && make && make install \
+    && cd .. && rm -rf libvmod-dyncounters
 
 COPY infrastructure/cdn-in-a-box/varnish/run.sh infrastructure/cdn-in-a-box/traffic_ops/to-access.sh infrastructure/cdn-in-a-box/enroller/server_template.json /
 

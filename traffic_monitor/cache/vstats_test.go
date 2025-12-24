@@ -20,8 +20,11 @@ package cache
  */
 
 import (
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/apache/trafficcontrol/traffic_monitor/todata"
 )
 
 var vstatsData = `{
@@ -57,4 +60,48 @@ func TestVstatsParse(t *testing.T) {
 	if systemStats.NotAvailable {
 		t.Errorf("expected NotAvailable to be false")
 	}
+}
+
+func TestVstatsPrecompute(t *testing.T) {
+	to := todata.New()
+	to.DeliveryServiceRegexes.DirectMatches["infra.origin.ciab.test"] = "demo1"
+	stats := Statistics{
+		Interfaces: map[string]Interface{
+			"eth0": {
+				Speed:    1000,
+				BytesIn:  2000,
+				BytesOut: 3000,
+			},
+			"eth1": {
+				Speed:    2000,
+				BytesIn:  3000,
+				BytesOut: 4000,
+			},
+		},
+	}
+	counters := map[string]interface{}{
+		"infra.origin.ciab.test.200":     float64(5),
+		"infra.origin.ciab.test.201":     float64(5),
+		"infra.origin.ciab.test.300":     float64(6),
+		"infra.origin.ciab.test.404":     float64(3),
+		"not-found.origin.ciab.test.404": float64(10), // should not affect other stats and return error
+	}
+	dsDtats := map[string]*DSStat{
+		"demo1": {Status2xx: 10, Status3xx: 6, Status4xx: 3},
+	}
+	precomputedData := vstatsPrecompute("cache", *to, stats, counters)
+
+	if !reflect.DeepEqual(precomputedData.DeliveryServiceStats, dsDtats) {
+		t.Errorf("expected %v got %v", dsDtats, precomputedData.DeliveryServiceStats)
+	}
+	if precomputedData.OutBytes != 7000 {
+		t.Errorf("expected 7000 got %d", precomputedData.OutBytes)
+	}
+	if precomputedData.MaxKbps != 2000000 {
+		t.Errorf("expected 2000000 got %d", precomputedData.MaxKbps)
+	}
+	if len(precomputedData.Errors) != 1 {
+		t.Errorf("expected one error got %v", precomputedData.Errors)
+	}
+
 }
