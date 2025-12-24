@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-FROM centos:7
+FROM rockylinux:8
 ARG DIR=github.com/apache/trafficcontrol
 
 VOLUME ["/junit"]
@@ -19,13 +19,13 @@ VOLUME ["/junit"]
 WORKDIR /go/src/$DIR/traffic_router
 
 RUN set -o errexit; \
-	yum -y update; \
-	yum -y install \
+	dnf -y update; \
+	dnf -y install \
 		maven \
 		java-11-openjdk \
 		epel-release; \
-	yum -y install tomcat-native; \
-	yum -y clean all
+	dnf -y install tomcat-native; \
+	dnf -y clean all
 
 ADD traffic_router /go/src/$DIR/traffic_router
 
