@@ -257,9 +257,9 @@ func (inf *Info) Close() {
 //
 // This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
-func (inf Info) WriteOKResponse(resp any) (int, error, error) {
+func (inf Info) WriteOKResponse(resp any) error {
 	WriteResp(inf.w, inf.request, resp)
-	return http.StatusOK, nil, nil
+	return nil
 }
 
 // WriteOKResponseWithSummary writes a 200 OK response with the given object as
@@ -272,9 +272,9 @@ func (inf Info) WriteOKResponse(resp any) (int, error, error) {
 // Deprecated: Summary sections on responses were intended to cover up for a
 // deficiency in jQuery-based tables on the front-end, so now that we aren't
 // using those anymore it serves no purpose.
-func (inf Info) WriteOKResponseWithSummary(resp any, count uint64) (int, error, error) {
+func (inf Info) WriteOKResponseWithSummary(resp any, count uint64) error {
 	WriteRespWithSummary(inf.w, inf.request, resp, count)
-	return http.StatusOK, nil, nil
+	return nil
 }
 
 // WriteNotModifiedResponse writes a 304 Not Modified response with the given
@@ -282,19 +282,19 @@ func (inf Info) WriteOKResponseWithSummary(resp any, count uint64) (int, error, 
 //
 // This CANNOT be used by any Info that wasn't constructed for the caller by
 // Wrap - ing a Handler (yet).
-func (inf Info) WriteNotModifiedResponse(lastModified time.Time) (int, error, error) {
+func (inf Info) WriteNotModifiedResponse(lastModified time.Time) error {
 	inf.w.Header().Set(rfc.LastModified, FormatLastModified(lastModified))
 	inf.w.WriteHeader(http.StatusNotModified)
 	setRespWritten(inf.request)
-	return http.StatusNotModified, nil, nil
+	return nil
 }
 
 // WriteSuccessResponse writes the given response object as the `response`
 // property of the response body, with the accompanying message as a
 // success-level Alert.
-func (inf Info) WriteSuccessResponse(resp any, message string) (int, error, error) {
+func (inf Info) WriteSuccessResponse(resp any, message string) error {
 	WriteAlertsObj(inf.w, inf.request, http.StatusOK, tc.CreateAlerts(tc.SuccessLevel, message), resp)
-	return http.StatusOK, nil, nil
+	return nil
 }
 
 // WriteCreatedResponse writes the given response object as the `response`
@@ -302,11 +302,11 @@ func (inf Info) WriteSuccessResponse(resp any, message string) (int, error, erro
 // accompanying message as a success-level Alert. It also sets the Location
 // header to the given path. This will be automatically prefaced with the
 // correct path to the API version the client requested.
-func (inf Info) WriteCreatedResponse(resp any, message, path string) (int, error, error) {
+func (inf Info) WriteCreatedResponse(resp any, message, path string) error {
 	inf.w.Header().Set(rfc.Location, strings.Join([]string{"/api", inf.Version.String(), strings.TrimPrefix(path, "/")}, "/"))
 	inf.w.WriteHeader(http.StatusCreated)
 	WriteAlertsObj(inf.w, inf.request, http.StatusCreated, tc.CreateAlerts(tc.SuccessLevel, message), resp)
-	return http.StatusCreated, nil, nil
+	return nil
 }
 
 // RequestHeaders returns the headers sent by the client in the API request.
@@ -426,4 +426,19 @@ func (inf Info) DefaultSort(param string) {
 	if _, ok := inf.Params["orderby"]; !ok {
 		inf.Params["orderby"] = param
 	}
+}
+
+// HandleErrors handles errors that occur during handling API operations - as
+// represented by an appropriate Errors.
+func (inf Info) HandleErrors(errs Errors) {
+	HandleErr(inf.w, inf.request, inf.Tx.Tx, errs.Code(), errs.UserError(), errs.SystemError())
+}
+
+// HandleDBError handles errors from database actions. This is identical to
+// ParseDBError followed by handling what that returns, but does the
+// intermediary step for you.
+func (inf Info) HandleDBError(err error) error {
+	userErr, sysErr, code := ParseDBError(err)
+	HandleErr(inf.w, inf.request, inf.Tx.Tx, code, userErr, sysErr)
+	return nil
 }
