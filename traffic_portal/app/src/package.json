@@ -3,7 +3,7 @@
     "dependencies": {
         "connect-modrewrite": "0.10.2",
         "connect-timeout": "1.9.0",
-        "express": "4.21.0",
+        "express": "4.21.1",
         "morgan": "1.10.0",
         "pm2": "5.3.1",
         "requirejs": "2.3.6",
