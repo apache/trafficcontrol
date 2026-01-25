@@ -48,7 +48,7 @@ var DialogSelectStatusController = function(server, statuses, $scope, $uibModalI
 
 	$scope.offline = function () {
 		var selectedStatus = _.find(statuses, function(status){ return parseInt(status.id) == parseInt($scope.selectedStatusId) });
-		return selectedStatus && (selectedStatus.name == "ADMIN_DOWN" || selectedStatus.name == "OFFLINE");
+		return selectedStatus && (selectedStatus.name != "ONLINE" && selectedStatus.name != "REPORTED");
 	};
 
 };
