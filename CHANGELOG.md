@@ -240,6 +240,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 - [#7271](https://github.com/apache/trafficcontrol/pull/7271) Removed `traffic_ops/install/bin/install_go.sh`, `traffic_ops/install/bin/todb_bootstrap.sh` and `traffic_ops/install/bin/install_goose.sh` are no longer in use.
 - [#7829](https://github.com/apache/trafficcontrol/pull/7829) Removed `cache-config/supermicro_udev_mapper.pl` and `traffic_ops_ort.pl` and any references
 
+### Fixed
+- [#7007](https://github.com/apache/trafficcontrol/issues/7007) Fixed t3c timeout and retries not working.
+
 ## [7.0.0] - 2022-07-19
 ### Added
 - [Traffic Portal] Added Layered Profile feature to /servers/

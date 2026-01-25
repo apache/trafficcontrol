@@ -40,6 +40,12 @@ var Version = "0.4"
 // This is overwritten by the build with the current project version.
 var GitRevision = "nogit"
 
+// NumTrafficOpsRetries is the number of times to exponentially backoff and retry Traffic Ops failures.
+//
+// The exponential backoff is 2^retry seconds, so
+// 6 retries backs off up to about 2 minutes with the last try waiting about a minute.
+const NumTrafficOpsRetries = 6 // TODO make configurable
+
 func main() {
 	cfg, err := config.InitConfig(Version, GitRevision)
 	if err != nil {
@@ -54,13 +60,14 @@ func main() {
 		cfg.TOUser,
 		cfg.TOPass,
 		cfg.TOInsecure,
-		cfg.TOTimeoutMS,
+		cfg.TOTimeout,
 		cfg.UserAgent(),
 	)
 	if err != nil {
 		log.Errorf("%s\n", err)
 		os.Exit(2)
 	}
+	cfg.TCCfg.TOClient.NumRetries = NumTrafficOpsRetries
 	if cfg.TCCfg.TOClient.FellBack() {
 		log.Warnln("Traffic Ops does not support the latest version supported by this app! Falling back to previous major Traffic Ops API version!")
 	}
